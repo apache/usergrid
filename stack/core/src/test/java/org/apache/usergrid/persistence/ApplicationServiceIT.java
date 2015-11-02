@@ -30,6 +30,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
@@ -76,7 +77,6 @@ public class ApplicationServiceIT extends AbstractCoreIT {
         count = ids.count().toBlocking().last();
         Assert.assertEquals(count, 5);
         this.app.refreshIndex();
-        Thread.sleep(5000);
         Injector injector = SpringResource.getInstance().getBean(Injector.class);
         GraphManagerFactory factory = injector.getInstance(GraphManagerFactory.class);
         GraphManager graphManager = factory.createEdgeManager(appScope);
@@ -86,9 +86,16 @@ public class ApplicationServiceIT extends AbstractCoreIT {
             , Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
             Optional.<Edge>absent() );
 
-        Iterator<Edge> results = graphManager.loadEdgesFromSource(simpleSearchByEdgeType).toBlocking().getIterator();
+        Iterator<MarkedEdge>
+            results = graphManager.loadEdgesFromSource(simpleSearchByEdgeType).toBlocking().getIterator();
         if(results.hasNext()){
-            Assert.fail("should be empty");
+            int i = 0;
+
+            while(results.hasNext()){
+                results.next();
+                i++;
+            }
+            Assert.fail("should be empty but has "+i);
 
         }else{
             Results searchCollection = entityManager.searchCollection(entityManager.getApplication(), "tests", Query.all());

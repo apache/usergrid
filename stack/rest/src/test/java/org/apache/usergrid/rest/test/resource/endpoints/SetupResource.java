@@ -17,16 +17,13 @@
 package org.apache.usergrid.rest.test.resource.endpoints;
 
 
-import javax.ws.rs.core.MediaType;
-
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
-import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 
 /**
  * Functions as the endpoint for all resources that hit /system/ * /setup
@@ -39,14 +36,13 @@ public class SetupResource extends NamedResource {
 
     public Entity put(QueryParameters queryParameters){
 
-        WebResource resource = getResource();
+        WebTarget resource = getTarget();
         resource = addParametersToResource( resource, queryParameters );
 
-        //added httpBasicauth filter to all setup calls because they all do verification this way.
-        HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser","superpassword" );
-        resource.addFilter( httpBasicAuthFilter );
+        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
+            .credentials( "superuser", "superpassword" ).build();
 
-        return resource.type( MediaType.APPLICATION_JSON_TYPE ).accept( MediaType.APPLICATION_JSON )
-                                .put( Entity.class);
+        return resource.register( feature ).request()
+            .accept( MediaType.APPLICATION_JSON ).put( javax.ws.rs.client.Entity.json(""), Entity.class );
     }
 }

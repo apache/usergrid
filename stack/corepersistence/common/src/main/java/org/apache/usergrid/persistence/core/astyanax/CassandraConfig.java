@@ -34,25 +34,25 @@ public interface CassandraConfig {
      * Get the currently configured ReadCL
      * @return
      */
-    public ConsistencyLevel getReadCL();
+    ConsistencyLevel getReadCL();
 
     /**
      * Get the currently configured ReadCL that is more consitent than getReadCL
      * @return
      */
-    public ConsistencyLevel getConsistentReadCL();
+    ConsistencyLevel getConsistentReadCL();
 
     /**
      * Get the currently configured write CL
      * @return
      */
-    public ConsistencyLevel getWriteCL();
+    ConsistencyLevel getWriteCL();
 
     /**
      * Return the number of shards that has been set in the property file
      * @return
      */
-    public int[] getShardSettings();
+    int[] getShardSettings();
 
 
 

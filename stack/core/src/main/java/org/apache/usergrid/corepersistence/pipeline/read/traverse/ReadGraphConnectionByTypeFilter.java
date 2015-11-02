@@ -26,6 +26,7 @@ import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -42,7 +43,7 @@ import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getEdgeType
 /**
  * Command for reading graph edges on a connection
  */
-public class ReadGraphConnectionByTypeFilter extends AbstractPathFilter<Id, Id, Edge>{
+public class ReadGraphConnectionByTypeFilter extends AbstractPathFilter<Id, Id, MarkedEdge>{
 
     private final GraphManagerFactory graphManagerFactory;
     private final String connectionName;
@@ -77,12 +78,14 @@ public class ReadGraphConnectionByTypeFilter extends AbstractPathFilter<Id, Id, 
         return filterResultObservable.flatMap( idFilterResult -> {
 
               //set our our constant state
-            final Optional<Edge> startFromCursor = getSeekValue();
+            final Optional<MarkedEdge> startFromCursor = getSeekValue();
             final Id id = idFilterResult.getValue();
+
+            final Optional<Edge> typeWrapper = Optional.fromNullable(startFromCursor.orNull());
 
             final SimpleSearchByIdType search =
                 new SimpleSearchByIdType( id, edgeName, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-                    entityType, startFromCursor );
+                    entityType, typeWrapper );
 
             return graphManager.loadEdgesFromSourceByType( search ).map(
                 edge -> createFilterResult( edge.getTargetNode(), edge, idFilterResult.getPath() ));
@@ -91,7 +94,7 @@ public class ReadGraphConnectionByTypeFilter extends AbstractPathFilter<Id, Id, 
 
 
     @Override
-    protected CursorSerializer<Edge> getCursorSerializer() {
+    protected CursorSerializer<MarkedEdge> getCursorSerializer() {
         return EdgeCursorSerializer.INSTANCE;
     }
 

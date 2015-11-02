@@ -17,27 +17,29 @@
 package org.apache.usergrid.rest.applications;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.representation.Form;
 import junit.framework.Assert;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.shiro.codec.Base64;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.management.ManagementService;
-import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.mgmt.OrganizationResource;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 import org.apache.usergrid.utils.MapUtils;
+import org.glassfish.jersey.client.ClientProperties;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,12 +64,12 @@ public class ApplicationResourceIT extends AbstractRestIT {
         Credentials orgCredentials = getOrgCredentials();
 
         //retrieve the app using only the org credentials
-        ApiResponse apiResponse = this.org().app(clientSetup.getAppName()).getResource(false)
+        ApiResponse apiResponse = this.org().app( clientSetup.getAppName() ).getTarget( false )
             .queryParam("grant_type", "client_credentials")
             .queryParam("client_id", orgCredentials.getClientId())
-            .queryParam("client_secret", orgCredentials.getClientSecret())
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
+            .queryParam( "client_secret", orgCredentials.getClientSecret() )
+            .request()
+            .accept( MediaType.APPLICATION_JSON )
             .get(ApiResponse.class);
         //assert that a valid response is returned without error
         assertNotNull(apiResponse);
@@ -84,12 +86,11 @@ public class ApplicationResourceIT extends AbstractRestIT {
         Credentials appCredentials = getAppCredentials();
 
         //retrieve the app using only the org credentials
-        ApiResponse apiResponse = this.app().getResource(false)
+        ApiResponse apiResponse = this.app().getTarget( false )
             .queryParam("grant_type", "client_credentials")
             .queryParam("client_id", appCredentials.getClientId())
             .queryParam("client_secret", appCredentials.getClientSecret())
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
+            .request()
             .get(ApiResponse.class);
         //assert that a valid response is returned without error
         assertNotNull(apiResponse);
@@ -106,13 +107,13 @@ public class ApplicationResourceIT extends AbstractRestIT {
         Credentials appCredentials = getAppCredentials();
 
         //retrieve the app using only the org credentials
-        ApiResponse apiResponse = this.app().collection( "roles" ).getResource( false )
-                                      .queryParam( "grant_type", "client_credentials" )
-                                      .queryParam("client_id", appCredentials.getClientId())
-                                      .queryParam("client_secret", appCredentials.getClientSecret())
-                                      .accept(MediaType.APPLICATION_JSON)
-                                      .type(MediaType.APPLICATION_JSON_TYPE)
-                                      .get(ApiResponse.class);
+        ApiResponse apiResponse = this.app().collection( "roles" ).getTarget( false )
+            .queryParam( "grant_type", "client_credentials" )
+            .queryParam("client_id", appCredentials.getClientId())
+            .queryParam("client_secret", appCredentials.getClientSecret())
+            .request()
+            .accept(MediaType.APPLICATION_JSON)
+            .get(ApiResponse.class);
         //assert that a valid response is returned without error
         assertNotNull(apiResponse);
         assertNull(apiResponse.getError());
@@ -209,12 +210,12 @@ public class ApplicationResourceIT extends AbstractRestIT {
         Credentials orgCredentials = getOrgCredentials();
 
         //retrieve the users collection without setting the "Accept" header
-        WebResource.Builder builder = this.app().collection("users").getResource(false)
+        Invocation.Builder builder = this.app().collection( "users" ).getTarget( false )
             //Add the org credentials to the query
-            .queryParam("grant_type", "client_credentials")
-            .queryParam("client_id", orgCredentials.getClientId())
-            .queryParam("client_secret", orgCredentials.getClientSecret())
-            .type(MediaType.APPLICATION_JSON_TYPE);
+            .queryParam( "grant_type", "client_credentials" )
+            .queryParam("client_id", orgCredentials.getClientId() )
+            .queryParam( "client_secret", orgCredentials.getClientSecret() )
+            .request();
 
         ApiResponse apiResponse = builder.get(ApiResponse.class);
         Collection users = new Collection(apiResponse);
@@ -229,6 +230,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
      * (for backwards compatibility)
      */
     @Test
+    @Ignore("this form of backwards compatibility no longer needed")
     public void jsonForAcceptsTextHtml() throws Exception {
 
         //Create the organization resource
@@ -241,15 +243,17 @@ public class ApplicationResourceIT extends AbstractRestIT {
         String clientSecret = orgCredentials.getClientSecret();
 
         //retrieve the users collection, setting the "Accept" header to text/html
-        WebResource.Builder builder = this.app().collection("users").getResource(false)
+        Invocation.Builder builder = this.app().collection( "users" ).getTarget()
             //Add the org credentials to the query
-            .queryParam("grant_type", "client_credentials")
-            .queryParam("client_id", clientId)
-            .queryParam("client_secret", clientSecret)
-            .accept(MediaType.TEXT_HTML)
-            .type(MediaType.APPLICATION_JSON_TYPE);
+            .queryParam( "grant_type", "client_credentials" )
+            .queryParam( "client_id", clientId )
+            .queryParam( "client_secret", clientSecret )
+            .request();
 
-        ApiResponse apiResponse = builder.get(ApiResponse.class);
+        ApiResponse apiResponse = builder
+            .accept(MediaType.TEXT_HTML)
+            .get(ApiResponse.class);
+
         Collection users = new Collection(apiResponse);
         //make sure that a valid response is returned without error
         assertNotNull(users);
@@ -301,12 +305,12 @@ public class ApplicationResourceIT extends AbstractRestIT {
         //retrieve the credentials
         Credentials orgCredentials = getOrgCredentials();
 
-        ApiResponse apiResponse = this.app().getResource(false)
-            .queryParam("grant_type", "client_credentials")
+        ApiResponse apiResponse = this.app().getTarget( false )
+            .queryParam( "grant_type", "client_credentials" )
             .queryParam("client_id", orgCredentials.getClientId())
-            .queryParam("client_secret", orgCredentials.getClientSecret())
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
+            .queryParam( "client_secret", orgCredentials.getClientSecret() )
+            .request()
+            .accept( MediaType.APPLICATION_JSON )
             .get(ApiResponse.class);
 
         // assert that the response returns the correct URI
@@ -319,12 +323,12 @@ public class ApplicationResourceIT extends AbstractRestIT {
         assertEquals(String.format("%s/%s", orgName, appName), application.get("name"));
 
         //retrieve the application's roles collection
-        apiResponse = this.app().collection("roles").getResource(false)
-            .queryParam("grant_type", "client_credentials")
+        apiResponse = this.app().collection( "roles" ).getTarget( false )
+            .queryParam( "grant_type", "client_credentials" )
             .queryParam("client_id", orgCredentials.getClientId())
-            .queryParam("client_secret", orgCredentials.getClientSecret())
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
+            .queryParam( "client_secret", orgCredentials.getClientSecret() )
+            .request()
+            .accept( MediaType.APPLICATION_JSON )
             .get(ApiResponse.class);
         Collection roles = new Collection(apiResponse);
         //assert that we have the correct number of default roles
@@ -374,11 +378,11 @@ public class ApplicationResourceIT extends AbstractRestIT {
         String orgName = clientSetup.getOrganizationName().toLowerCase();
         String appName = clientSetup.getAppName().toLowerCase();
 
-        ApiResponse apiResponse = resource().path(String.format("/%s/%s", orgName, appName))
-            .queryParam("access_token", this.getAdminToken().getAccessToken())
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .delete(ApiResponse.class);
+        ApiResponse apiResponse = target().path( String.format( "/%s/%s", orgName, appName ) )
+            .queryParam( "access_token", this.getAdminToken().getAccessToken() )
+            .request()
+            .accept( MediaType.APPLICATION_JSON )
+            .delete( ApiResponse.class );
 
         assertNotNull(apiResponse.getError());
     }
@@ -408,14 +412,14 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         try {
             //POST the updated TTL, anticipating an exception
-            resource().path(String.format("/%s/%s/token", orgName, appName))
+            target().path(String.format("/%s/%s/token", orgName, appName))
+                .request()
                 .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(ApiResponse.class, entity);
+                .post( javax.ws.rs.client.Entity.entity(entity, MediaType.APPLICATION_JSON_TYPE ), ApiResponse.class);
             fail("This should cause an exception");
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             assertEquals(
-                String.valueOf(Status.BAD_REQUEST.getStatusCode()),
+                String.valueOf( Response.Status.BAD_REQUEST.getStatusCode()),
                 String.valueOf(uie.getResponse().getStatus()));
         }
     }
@@ -442,13 +446,13 @@ public class ApplicationResourceIT extends AbstractRestIT {
         refreshIndex();
 
         //Retrieve an authentication token for the user, setting the TTL
-        Token apiResponse = resource().path(String.format("/%s/%s/token", orgName, appName))
+        Token apiResponse = target().path( String.format( "/%s/%s/token", orgName, appName ) )
             .queryParam("grant_type", "password")
             .queryParam("username", username)
             .queryParam("password", "password")
-            .queryParam("ttl", String.valueOf(ttl))
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
+            .queryParam( "ttl", String.valueOf( ttl ) )
+            .request()
+            .accept( MediaType.APPLICATION_JSON )
             .get(Token.class);
 
         //Set a start time so we can calculate then the token should expire
@@ -479,8 +483,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
             this.app().collection("users").entity(entity).get(
                 new QueryParameters().addParam("access_token", token), false);
             fail("The expired token should cause an exception");
-        } catch (UniformInterfaceException uie) {
-            assertEquals(Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus());
+        } catch (ClientErrorException uie) {
+            assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), uie.getResponse().getStatus());
         }
 
     }
@@ -508,20 +512,20 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         try {
             //Retrieve a token for the new user, setting the TTL to an invalid value
-            resource().path(String.format("/%s/%s/token", orgName, appName))
-                .queryParam("grant_type", "password")
+            target().path( String.format( "/%s/%s/token", orgName, appName ) )
+                .queryParam( "grant_type", "password" )
                 .queryParam("username", username)
                 .queryParam("password", "password")
                 .queryParam("ttl", "derp")
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
-                .get(ApiResponse.class);
+                .request()
+                .accept( MediaType.APPLICATION_JSON )
+                .get( ApiResponse.class );
             fail("The invalid TTL should cause an exception");
 
-        } catch (UniformInterfaceException uie) {
-            //TODO should this be handled and returned as a Status.BAD_REQUEST?
+        } catch (InternalServerErrorException uie) {
+            // TODO should this be handled and returned as a Status.BAD_REQUEST?
             //Status.INTERNAL_SERVER_ERROR is thrown because Jersey throws a NumberFormatException
-            assertEquals(Status.INTERNAL_SERVER_ERROR, uie.getResponse().getClientResponseStatus());
+            assertEquals( Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), uie.getResponse().getStatus());
         }
 
     }
@@ -545,12 +549,12 @@ public class ApplicationResourceIT extends AbstractRestIT {
         assertNotNull(entity);
         refreshIndex();
         //Retrieve an authentication token for the user
-        Token tokenResponse = this.app().getResource(false).path("token")
-            .queryParam("grant_type", "password")
-            .queryParam("username", username)
+        Token tokenResponse = this.app().getTarget( false ).path( "token" )
+            .queryParam( "grant_type", "password" )
+            .queryParam( "username", username )
             .queryParam("password", "password")
+            .request()
             .accept( MediaType.APPLICATION_JSON )
-            .type( MediaType.APPLICATION_JSON_TYPE )
             .get( Token.class );
 
         String token = tokenResponse.getAccessToken();
@@ -561,19 +565,21 @@ public class ApplicationResourceIT extends AbstractRestIT {
         assertEquals(604800, expires_in);
 
         //Set the default TTL of the application to a date far in the future
-        this.app().getResource(false)
-            .queryParam("access_token", token)
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .put(Token.class, new MapUtils.HashMapBuilder<String, String>().map("accesstokenttl", "31536000000"));
+        final MapUtils.HashMapBuilder<String, String> map =
+            new MapUtils.HashMapBuilder<String, String>().map( "accesstokenttl", "31536000000" );
+        this.app().getTarget( false )
+            .queryParam( "access_token", token )
+            .request()
+            .accept( MediaType.APPLICATION_JSON )
+            .put( javax.ws.rs.client.Entity.entity( map, MediaType.APPLICATION_JSON_TYPE ), Token.class );
 
         //Create a new token for the user
-        tokenResponse = this.app().token().getResource(false)
+        tokenResponse = this.app().token().getTarget( false )
             .queryParam("grant_type", "password")
             .queryParam("username", username)
-            .queryParam("password", "password")
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
+            .queryParam( "password", "password" )
+            .request()
+            .accept( MediaType.APPLICATION_JSON )
             .get(Token.class);
 
         //assert that the new token has the new default TTL
@@ -589,15 +595,17 @@ public class ApplicationResourceIT extends AbstractRestIT {
     public void authorizationCodeWithWrongCredentials() throws Exception {
         //Create form input with bogus credentials
         Form payload = new Form();
-        payload.add("username", "wrong_user");
-        payload.add("password", "wrong_password");
-        payload.add("response_type", "code");
-        payload.add("scope", "none");
-        payload.add("redirect_uri", "http://www.my_test.com");
+        payload.param( "username", "wrong_user" );
+        payload.param( "password", "wrong_password" );
+        payload.param( "response_type", "code" );
+        payload.param( "scope", "none" );
+        payload.param( "redirect_uri", "http://www.my_test.com" );
 
         //POST the form to the authorization endpoint
-        String apiResponse = clientSetup.getRestClient().management().authorize().getResource()
-            .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).accept(MediaType.TEXT_HTML).post(String.class, payload);
+        String apiResponse = clientSetup.getRestClient().management().authorize().getTarget()
+            .request()
+            .accept( MediaType.TEXT_HTML )
+            .post( javax.ws.rs.client.Entity.form( payload ), String.class );
 
         //Assert that an appropriate error message is returned
         assertTrue(apiResponse.contains("Username or password do not match"));
@@ -611,11 +619,12 @@ public class ApplicationResourceIT extends AbstractRestIT {
     //we have authorize response only with username/password - client_id/secret not considered
     public void authorizeWithInvalidClientIdRaisesError() throws Exception {
         //GET the application authorization endpoint using bogus client credentials
-        String apiResponse = clientSetup.getRestClient().management().authorize().getResource(true)
-            .queryParam("response_type", "code")
+        String apiResponse = clientSetup.getRestClient().management().authorize().getTarget( true )
+            .queryParam( "response_type", "code" )
             .queryParam("client_id", "invalid_client_id")
             .queryParam("redirect_uri", "http://www.my_test.com")
-            .accept(MediaType.TEXT_HTML)
+            .request()
+            .accept( MediaType.TEXT_HTML )
             .get(String.class);
         //Assert that an appropriate error message is returned
         //assertTrue(apiResponse.contains("Unable to authenticate (OAuth). Invalid client_id."));
@@ -632,22 +641,25 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         //Create form input with valid credentials
         Form payload = new Form();
-        payload.add("response_type", "code");
-        payload.add("grant_type", "client_credentials");
-        payload.add("client_id", orgCredentials.getClientId());
-        payload.add("client_secret", orgCredentials.getClientSecret());
-        payload.add("scope", "none");
-        payload.add("redirect_uri", "http://www.my_test.com");
+        payload.param( "response_type", "code" );
+        payload.param( "grant_type", "client_credentials" );
+        payload.param( "client_id", orgCredentials.getClientId() );
+        payload.param( "client_secret", orgCredentials.getClientSecret() );
+        payload.param( "scope", "none" );
+        payload.param( "redirect_uri", "http://www.my_test.com" );
 
         //Set the client to not follow the initial redirect returned by the stack
-        client().setFollowRedirects(false);
 
         try {
             //POST the form to the authorization endpoint
             clientSetup.getRestClient().management().authorize()
-                .getResource().accept(MediaType.TEXT_HTML).post(String.class, payload);
-        } catch (UniformInterfaceException uie) {
-            assertEquals(String.valueOf(Status.TEMPORARY_REDIRECT.getStatusCode()), uie.getResponse().getStatus());
+                .getTarget()
+                .property( ClientProperties.FOLLOW_REDIRECTS, Boolean.TRUE )
+                .request()
+                .accept( MediaType.TEXT_HTML )
+                .post( javax.ws.rs.client.Entity.form( payload ), String.class );
+        } catch (ClientErrorException uie) {
+            assertEquals(String.valueOf( Response.Status.TEMPORARY_REDIRECT.getStatusCode()), uie.getResponse().getStatus());
         }
 
     }
@@ -669,12 +681,12 @@ public class ApplicationResourceIT extends AbstractRestIT {
         Map<String, String> map = new HashMap<>(1);
         map.put("grant_type", "client_credentials");
         //GET the token endpoint, adding the basic auth header
-        Token apiResponse = clientSetup.getRestClient().management().token().getResource(false)
+        Token apiResponse = clientSetup.getRestClient().management().token().getTarget( false )
             //add the auth header
-            .header("Authorization", "Basic " + token)
+            .request()
+            .header( "Authorization", "Basic " + token )
             .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .post(Token.class, map);
+            .post( javax.ws.rs.client.Entity.entity(map, MediaType.APPLICATION_JSON_TYPE), Token.class );
 
         //Assert that a valid token with a valid TTL is returned
         assertNotNull("A valid response was returned.", apiResponse);
@@ -699,12 +711,13 @@ public class ApplicationResourceIT extends AbstractRestIT {
             .post(Token.class,new Token("client_credentials", clientId, clientSecret));
 
         //GET the token endpoint, adding authorization header
-        Token apiResponse = this.app().token().getResource(false)
+        Token apiResponse = this.app().token().getTarget( false )
             //add the auth header
-            .header("Authorization", "Bearer " + token.getAccessToken())
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .post(Token.class, hashMap("grant_type", "client_credentials"));
+            .request()
+            .header( "Authorization", "Bearer " + token.getAccessToken() )
+            .accept( MediaType.APPLICATION_JSON )
+            .post(javax.ws.rs.client.Entity.entity(
+                hashMap( "grant_type", "client_credentials" ), MediaType.APPLICATION_JSON_TYPE ), Token.class );
 
         //Assert that a valid token with a valid TTL is returned
         assertNotNull("A valid response was returned.", apiResponse);
@@ -725,15 +738,14 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         //Create form input
         Form payload = new Form();
-        payload.add("grant_type", "client_credentials");
-        payload.add("client_id", clientId);
-        payload.add("client_secret", clientSecret);
+        payload.param( "grant_type", "client_credentials" );
+        payload.param( "client_id", clientId );
+        payload.param( "client_secret", clientSecret );
 
         //POST the form to the application token endpoint
-        Token apiResponse = this.app().token().getResource(false)
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-            .post(Token.class, payload);
+        Token apiResponse = this.app().token().getTarget( false ).request()
+            .accept( MediaType.APPLICATION_JSON )
+            .post( javax.ws.rs.client.Entity.form(payload), Token.class);
 
         //Assert that a valid token with a valid TTL is returned
         assertNotNull("It has access_token.", apiResponse.getAccessToken());
@@ -756,11 +768,11 @@ public class ApplicationResourceIT extends AbstractRestIT {
         String token = Base64.encodeToString(clientCredentials.getBytes());
 
         //POST the form to the application token endpoint along with the payload
-        Token apiResponse = this.app().token().getResource(false)
-            .header("Authorization", "Basic " + token)
-            .accept(MediaType.APPLICATION_JSON)
-            .type(MediaType.APPLICATION_JSON_TYPE)
-            .post(Token.class, hashMap("grant_type", "client_credentials"));
+        Token apiResponse = this.app().token().getTarget( false ).request()
+            .header( "Authorization", "Basic " + token )
+            .accept( MediaType.APPLICATION_JSON )
+            .post(javax.ws.rs.client.Entity.entity(
+                hashMap("grant_type", "client_credentials"), MediaType.APPLICATION_JSON_TYPE), Token.class);
 
         //Assert that a valid token with a valid TTL is returned
         assertNotNull("It has access_token.", apiResponse.getAccessToken());
@@ -771,24 +783,25 @@ public class ApplicationResourceIT extends AbstractRestIT {
      * Ensure that the Apigee Mobile Analytics config returns valid JSON
      */
     @Test
+    @Ignore
     public void validateApigeeApmConfigAPP() throws IOException {
         String orgName = clientSetup.getOrganizationName().toLowerCase();
         String appName = clientSetup.getAppName().toLowerCase();
 
         try {
             //GET the APM endpoint
-            String response = resource().path(String.format("/%s/%s/apm/apigeeMobileConfig", orgName, appName))
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON_TYPE)
+            String response = target().path( String.format( "/%s/%s/apm/apigeeMobileConfig", orgName, appName ) )
+                .request()
+                .accept( MediaType.APPLICATION_JSON )
                 .get(String.class);
             //Parse the response
             JsonNode node = mapper.readTree(response);
 
             //if things are kosher then JSON should have value for instaOpsApplicationId
             assertTrue("it's valid json for APM", node.has("instaOpsApplicationId"));
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             //Validate that APM config exists
-            assertNotEquals("APM Config API exists", Status.NOT_FOUND,
+            assertNotEquals("APM Config API exists", Response.Status.NOT_FOUND,
                 uie.getResponse().getStatus()); //i.e It should not be "Not Found"
         }
     }
@@ -815,7 +828,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         assertEquals(604800, ttl);
 
         //retrieve the users collection for the application using the new token
-        ApiResponse response = this.app().collection("users").getResource(true, token).get(ApiResponse.class);
+        ApiResponse response = this.app().collection( "users" ).getTarget( true, token ).request()
+            .get(ApiResponse.class);
         //assert that we did not receive an error
         assertNull(response.getError());
     }
@@ -842,7 +856,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
         assertEquals(604800, ttl);
 
         //retrieve the users collection for the application using the new token
-        ApiResponse response = this.app().collection("users").getResource(true, token).get(ApiResponse.class);
+        ApiResponse response = this.app().collection( "users" ).getTarget( true, token ).request()
+            .get( ApiResponse.class);
         //assert that we did not receive an error
         assertNull(response.getError());
     }
@@ -852,7 +867,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
         try {
             Collection collection = this.app().collection("apm/apigeeMobileConfig").get();
             fail();
-        }catch (UniformInterfaceException e){
+        } catch (NotFoundException e){
             Assert.assertEquals(404, e.getResponse().getStatus());
         }
     }

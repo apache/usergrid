@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.index.*;
 import org.junit.Before;
 import org.junit.Rule;
@@ -135,7 +136,7 @@ public abstract class AsyncIndexServiceTest {
          */
 
 
-        final List<Edge> connectionSearchEdges = Observable.range( 0, 500 ).flatMap(integer -> {
+        final List<MarkedEdge> connectionSearchEdges = Observable.range( 0, 500 ).flatMap(integer -> {
             final Id connectingId = createId("connecting");
             final Edge edge = CpNamingUtils.createConnectionEdge(connectingId, "likes", testEntity.getId());
 
@@ -189,7 +190,7 @@ public abstract class AsyncIndexServiceTest {
             }
 
             try {
-                Thread.sleep( 100 );
+                Thread.sleep( 10000 );
             }
             catch ( InterruptedException e ) {
                 //swallow

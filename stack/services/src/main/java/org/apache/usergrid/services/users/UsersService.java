@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.cache.CacheScope;
+import org.apache.usergrid.persistence.cache.ScopedCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.UserInfo;
@@ -212,6 +214,8 @@ public class UsersService extends AbstractCollectionService {
             }
 
             em.grantUserPermission( entityRef.getUuid(), permission );
+            ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
+            scopedCache.invalidate();
 
             return genericServiceResults().withData( em.getUserPermissions( entityRef.getUuid() ) );
         }
@@ -279,6 +283,9 @@ public class UsersService extends AbstractCollectionService {
             for ( String permission : permissions ) {
                 em.revokeUserPermission( entityRef.getUuid(), permission );
             }
+
+            ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
+            scopedCache.invalidate();
 
             return genericServiceResults().withData( em.getUserPermissions( entityRef.getUuid() ) );
         }

@@ -20,11 +20,7 @@
 package org.apache.usergrid.corepersistence.asyncevents.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.model.entity.Id;
 
 public final class EntityDeleteEvent extends AsyncEvent {
 
@@ -33,9 +29,11 @@ public final class EntityDeleteEvent extends AsyncEvent {
     protected EntityIdScope entityIdScope;
 
     public EntityDeleteEvent() {
+        super();
     }
 
-    public EntityDeleteEvent(EntityIdScope entityIdScope) {
+    public EntityDeleteEvent(String sourceRegion, EntityIdScope entityIdScope) {
+        super(sourceRegion);
         this.entityIdScope =  entityIdScope;
     }
 

@@ -128,8 +128,6 @@ public class EventBuilderImpl implements EventBuilder {
 
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
 
-        //needs get versions here.
-
 
         //TODO: change this to be an observable
         //so we get these versions and loop through them until we find the MvccLogEntry that is marked as delete.
@@ -155,10 +153,14 @@ public class EventBuilderImpl implements EventBuilder {
         //observable of entries as the batches are deleted
         final Observable<List<MvccLogEntry>> entries =
             ecm.getVersions( entityId ).buffer( serializationFig.getBufferSize() )
-               .doOnNext( buffer -> ecm.delete( buffer ) ).doOnCompleted( () -> gm.compactNode( entityId ) );
+               .doOnNext( buffer -> ecm.delete( buffer ) );
 
 
-        return new EntityDeleteResults( edgeObservable, entries );
+        // observable of the edge delete from graph
+        final Observable<Id> compactedNode = gm.compactNode(entityId);
+
+
+        return new EntityDeleteResults( edgeObservable, entries, compactedNode );
     }
 
 
@@ -181,8 +183,9 @@ public class EventBuilderImpl implements EventBuilder {
                     return true;
                 }
 
+                //entityIndexOperation.getUpdatedSince will always be 0 except for reindexing the application
                 //only re-index if it has been updated and been updated after our timestamp
-                return  modified.getValue() >= entityIndexOperation.getUpdatedSince();
+                return modified.getValue() >= entityIndexOperation.getUpdatedSince();
             } )
             //perform indexing on the task scheduler and start it
             .flatMap( entity -> indexService.indexEntity( applicationScope, entity ) );

@@ -192,7 +192,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running">Running</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#running-usergrid">Running Usergrid</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#build-the-java-sdk">Build The Java Sdk</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#build-the-java-sdk">Build The Java SDK</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#build-the-stack-itself">Build The Stack Itself</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#deploying-the-stack-locally">Deploying the Stack Locally</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#running-the-portal-locally">Running The Portal Locally</a></li>
@@ -259,7 +259,8 @@
 <li><a class="reference external" href="http://cassandra.apache.org/download/">Cassandra 1.2.1*</a></li>
 <li><a class="reference external" href="https://www.elastic.co/downloads/elasticsearch">ElasticSearch
 1.4+</a></li>
-<li><a class="reference external" href="https://github.com/apache/usergrid/tree/two-dot-o">Usergrid 2.0</a></li>
+<li><a class="reference external" href="https://github.com/apache/usergrid/tree/2.1-release">Usergrid
+2.1</a></li>
 </ul>
 </div>
 <div class="section" id="running">
@@ -279,7 +280,7 @@ elasticsearch and run <code class="docutils literal"><span class="pre">/bin/elas
 <div class="section" id="running-usergrid">
 <h3>Running Usergrid<a class="headerlink" href="#running-usergrid" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="build-the-java-sdk">
-<h4>Build The Java Sdk<a class="headerlink" href="#build-the-java-sdk" title="Permalink to this headline">¶</a></h4>
+<h4>Build The Java SDK<a class="headerlink" href="#build-the-java-sdk" title="Permalink to this headline">¶</a></h4>
 <ol class="arabic simple">
 <li>Navigate to where you cloned the usergrid repo</li>
 <li>Navigate to the <code class="docutils literal"><span class="pre">sdks/java</span></code> directory</li>
@@ -305,19 +306,27 @@ usergrid-deployment.properties. ( An example file is provided below)</li>
 run <code class="docutils literal"><span class="pre">./bin/catalina.sh</span> <span class="pre">start</span></code></li>
 </ol>
 </li>
-<li>Go to a web browser and input the following to initilizing the
-database <code class="docutils literal"><span class="pre">localhost:8080/system/database/setup</span></code>.<ol class="loweralpha">
-<li>The credentials it asks for are the admin credentialls and
-password as defined in the usergrid-deployment.properties.</li>
-<li>You can also do a curl call with basic auth to automatically
-authenticate the call instead of using the web browser.</li>
 </ol>
-</li>
-<li>Then using the same steps as before call
-<code class="docutils literal"><span class="pre">localhost:8080/system/superuser/setup</span></code></li>
-</ol>
+<p>Next, you need to make some API calls to initialize Usergrid&#8217;s storage
+and indexing systems. You can make these API calls using curl or your
+favorite HTTP client. These calls can only be done with the superuser
+credentials that appear in your <strong>usergrid-deployment.properties</strong> file.
+Here&#8217;s how to do the calls with curl (and assuming your superuser
+password is &#8216;test&#8217;):</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X PUT http://localhost:8080/system/database/setup -u superuser:test
+curl -X PUT http://localhost:8080/system/database/bootstrap -u superuser:test
+curl -X GET http://localhost:8080/system/superuser/setup -u superuser:test
+</pre></div>
+</div>
+<p>Once those three calls execute without error, then you are done. If you
+do see errors the double-check that you have Cassandra and ElasticSearch
+running and that your properties files lists your Cassandra and
+ElasticSearch hostnames correctly. Also check that ElasticSearch cluster
+name (in elasticsearch.yml) matches the one in the Usergrid properties
+file. If the problem persists come talk to us on the Usergrid mailing
+list, we might be able to help.</p>
 <p>The stack is now ready to be queried against, but to get the most out of
-it you&#8217;ll need to initilize and use our portal!</p>
+it you&#8217;ll need to initialize and use our portal!</p>
 </div>
 <div class="section" id="running-the-portal-locally">
 <h4>Running The Portal Locally<a class="headerlink" href="#running-the-portal-locally" title="Permalink to this headline">¶</a></h4>

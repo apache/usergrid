@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -80,6 +82,9 @@ public class IndexServiceTest {
     public GraphManagerFactory graphManagerFactory;
 
     @Inject
+    public IndexProducer indexProducer;
+
+    @Inject
     public EntityCollectionManagerFactory entityCollectionManagerFactory;
 
     @Inject
@@ -121,6 +126,7 @@ public class IndexServiceTest {
 
         //real users should never call to blocking, we're not sure what we'll get
         final IndexOperationMessage results = indexed.toBlocking().last();
+        indexProducer.put(results).subscribe();
 
         final Set<IndexOperation> indexRequests = results.getIndexRequests();
 
@@ -170,7 +176,8 @@ public class IndexServiceTest {
 
 
         //now index
-        final int batches = indexService.indexEntity( applicationScope, testEntity ).count().toBlocking().last();
+        final int batches = indexService.indexEntity( applicationScope, testEntity )
+            .flatMap(mesage -> indexProducer.put(mesage)).count().toBlocking().last();
 
 
         assertEquals(1, batches);
@@ -238,7 +245,7 @@ public class IndexServiceTest {
 //        final int edgeCount = indexFig.getIndexBatchSize()*2;
         final int edgeCount = 100;
 
-        final List<Edge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
+        final List<MarkedEdge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
             final Id connectingId = createId( "connecting" );
             final Edge edge = CpNamingUtils.createConnectionEdge( connectingId, "likes", testEntity.getId() );
 
@@ -255,7 +262,8 @@ public class IndexServiceTest {
 
 
         //now index
-        final int batches = indexService.indexEntity( applicationScope, testEntity ).count().toBlocking().last();
+        final int batches = indexService.indexEntity( applicationScope, testEntity )
+            .flatMap(mesage -> indexProducer.put(mesage)).count().toBlocking().last();
 
         //take our edge count + 1 and divided by batch sizes
         final int expectedSize = ( int ) Math.ceil( ( (double)edgeCount + 1 ) / indexFig.getIndexBatchSize() );
@@ -370,9 +378,10 @@ public class IndexServiceTest {
         //Write multiple connection edges
         final int edgeCount = 5;
 
-        final List<Edge> connectionSearchEdges = createConnectionSearchEdges( testEntity, graphManager, edgeCount );
+        final List<MarkedEdge>
+            connectionSearchEdges = createConnectionSearchEdges( testEntity, graphManager, edgeCount );
 
-        indexService.indexEntity( applicationScope, testEntity ).toBlocking().getIterator();
+        indexService.indexEntity( applicationScope, testEntity ).flatMap(mesage -> indexProducer.put(mesage)).toBlocking().getIterator();
 
         //query until results are available for collections
         final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
@@ -396,7 +405,7 @@ public class IndexServiceTest {
 
             //step 2
             IndexOperationMessage indexOperationMessage =
-                indexService.deleteIndexEdge( applicationScope, toBeDeletedEdge ).toBlocking().lastOrDefault( null );
+                indexService.deleteIndexEdge( applicationScope, toBeDeletedEdge ) .flatMap(mesage ->indexProducer.put(mesage)).toBlocking().lastOrDefault( null );
 
             //not sure if this is still valid.
             assertEquals( 1, indexOperationMessage.getDeIndexRequests().size() );
@@ -436,7 +445,8 @@ public class IndexServiceTest {
         final Edge connectionSearch = graphManager.writeEdge( connectionEdge ).toBlocking().last();
 
         //now index
-        indexService.indexEntity( applicationScope, testEntity ).count().toBlocking().last();
+        indexService.indexEntity( applicationScope, testEntity)
+            .flatMap(mesage ->indexProducer.put(mesage)).count().toBlocking().last();
 
         //query until results are available for collections
         final SearchEdge collectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( collectionEdge );
@@ -477,10 +487,10 @@ public class IndexServiceTest {
     }
 
 
-    private List<Edge> createConnectionSearchEdges(
-        final Entity testEntity, final GraphManager graphManager, final int edgeCount ) {
+    private List<MarkedEdge> createConnectionSearchEdges( final Entity testEntity, final GraphManager graphManager,
+                                                          final int edgeCount ) {
 
-        final List<Edge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
+        final List<MarkedEdge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
 
             //create our connection edge.
             final Id connectingId = createId( "connecting" );

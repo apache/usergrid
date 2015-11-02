@@ -59,6 +59,7 @@ import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
@@ -126,9 +127,10 @@ public class CpRelationManager implements RelationManager {
 
     public CpRelationManager( final ManagerCache managerCache,
                               final AsyncEventService indexService, final CollectionService collectionService,
-                              final ConnectionService connectionService, final EntityManager em,
+                              final ConnectionService connectionService,
+                              final EntityManager em,
                               final EntityManagerFig entityManagerFig, final UUID applicationId,
-                              final EntityRef headEntity ) {
+                              final EntityRef headEntity) {
 
 
         Assert.notNull( em, "Entity manager cannot be null" );
@@ -227,14 +229,9 @@ public class CpRelationManager implements RelationManager {
 
         Observable<Edge> edges =
             gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( cpHeadEntity.getId(), edgeType, null ) )
-              .flatMap( new Func1<String, Observable<Edge>>() {
-                  @Override
-                  public Observable<Edge> call( final String edgeType ) {
-                      return gm.loadEdgesToTarget(
-                          new SimpleSearchByEdgeType( cpHeadEntity.getId(), edgeType, Long.MAX_VALUE,
-                              SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() ) );
-                  }
-              } );
+              .flatMap( edgeType1 -> gm.loadEdgesToTarget(
+                  new SimpleSearchByEdgeType( cpHeadEntity.getId(), edgeType1, Long.MAX_VALUE,
+                      SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() ) ) );
 
         //if our limit is set, take them.  Note this logic is still borked, we can't possibly fit everything in memmory
         if ( limit > -1 ) {
@@ -268,7 +265,7 @@ public class CpRelationManager implements RelationManager {
         } );
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
-        Observable<Edge> edges = gm.loadEdgeVersions( CpNamingUtils
+        Observable<MarkedEdge> edges = gm.loadEdgeVersions( CpNamingUtils
             .createEdgeFromConnectionType( new SimpleId( headEntity.getUuid(), headEntity.getType() ), connectionType,
                 entityId ) );
 
@@ -288,7 +285,7 @@ public class CpRelationManager implements RelationManager {
         } );
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
-        Observable<Edge> edges = gm.loadEdgeVersions( CpNamingUtils
+        Observable<MarkedEdge> edges = gm.loadEdgeVersions( CpNamingUtils
             .createEdgeFromCollectionName( new SimpleId( headEntity.getUuid(), headEntity.getType() ), collectionName,
                 entityId ) );
 
@@ -488,11 +485,9 @@ public class CpRelationManager implements RelationManager {
                 Entity itemEntity = em.get( itemRef );
                 if ( itemEntity != null ) {
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
-                    em.deleteRole( roleRef.getApplicationRoleName() );
+                    em.deleteRole(roleRef.getApplicationRoleName(), Optional.fromNullable(itemEntity) );
                     return;
                 }
-                em.delete( itemEntity );
-                return;
             }
             em.delete( itemRef );
             return;
@@ -518,8 +513,8 @@ public class CpRelationManager implements RelationManager {
         //run our delete
         gm.loadEdgeVersions(
             CpNamingUtils.createEdgeFromCollectionName( cpHeadEntity.getId(), collectionName, memberEntity.getId() ) )
-          .flatMap( edge -> gm.markEdge( edge ) ).flatMap( edge -> gm.deleteEdge( edge ) ).toBlocking()
-          .lastOrDefault( null );
+          .flatMap(edge -> gm.markEdge(edge)).flatMap(edge -> gm.deleteEdge(edge)).toBlocking()
+          .lastOrDefault(null);
 
 
         /**
@@ -527,16 +522,10 @@ public class CpRelationManager implements RelationManager {
          *
          */
 
-        final EntityIndex ei = managerCache.getEntityIndex( applicationScope );
-        final EntityIndexBatch batch = ei.createBatch();
 
-        // remove item from collection index
-        SearchEdge indexScope = createCollectionSearchEdge( cpHeadEntity.getId(), collectionName );
-
-        batch.deindex( indexScope, memberEntity );
-
-
-        batch.execute();
+        //TODO: this should not happen here, needs to go to  SQS
+        //indexProducer.put(batch).subscribe();
+        indexService.queueEntityDelete(applicationScope,memberEntity.getId());
 
 
         // special handling for roles collection of a group
@@ -551,7 +540,7 @@ public class CpRelationManager implements RelationManager {
                         em.get( new SimpleEntityRef( memberEntity.getId().getType(), memberEntity.getId().getUuid() ) );
 
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
-                    em.deleteRole( roleRef.getApplicationRoleName() );
+                    em.deleteRole( roleRef.getApplicationRoleName(), Optional.fromNullable(itemEntity) );
                 }
             }
         }
@@ -697,7 +686,7 @@ public class CpRelationManager implements RelationManager {
 
         //write new edge
 
-        gm.writeEdge( edge ).subscribe();
+        gm.writeEdge(edge).toBlocking().lastOrDefault(null); //throw an exception if this fails
 
         indexService.queueNewEdge( applicationScope, targetEntity, edge );
 
@@ -709,21 +698,21 @@ public class CpRelationManager implements RelationManager {
 
 
         //load our versions, only retain the most recent one
-        gm.loadEdgeVersions( searchByEdge ).skip( 1 ).flatMap( edgeToDelete -> {
-            if ( logger.isDebugEnabled() ) {
-                logger.debug( "Marking edge {} for deletion", edgeToDelete );
+        gm.loadEdgeVersions(searchByEdge).skip(1).flatMap(edgeToDelete -> {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Marking edge {} for deletion", edgeToDelete);
             }
-            return gm.markEdge( edgeToDelete );
-        } ).lastOrDefault( null ).doOnNext( lastEdge -> {
+            return gm.markEdge(edgeToDelete );
+        }).lastOrDefault(null).doOnNext(lastEdge -> {
             //no op if we hit our default
-            if(lastEdge == null){
+            if (lastEdge == null) {
                 return;
             }
 
             //don't queue delete b/c that de-indexes, we need to delete the edges only since we have a version still existing to index.
 
-            gm.deleteEdge( lastEdge ).subscribe();
-        }).subscribe();
+            gm.deleteEdge(lastEdge).toBlocking().lastOrDefault(null); // this should throw an exception
+        }).toBlocking().lastOrDefault(null);//this should throw an exception
 
 
         return connection;

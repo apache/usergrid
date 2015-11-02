@@ -20,9 +20,10 @@
 package org.apache.usergrid.rest.applications.assets.aws;
 
 
-import java.util.Map;
-import java.util.Properties;
-
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.SDKGlobalConfiguration;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
 import org.junit.Assume;
 import org.junit.internal.runners.model.MultipleFailureException;
 import org.junit.rules.TestRule;
@@ -30,12 +31,8 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
-import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.SDKGlobalConfiguration;
-import com.sun.jersey.api.client.UniformInterfaceException;
+import java.util.Map;
+import java.util.Properties;
 
 
 /**

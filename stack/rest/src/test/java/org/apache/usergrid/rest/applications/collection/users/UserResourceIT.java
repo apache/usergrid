@@ -18,6 +18,10 @@ package org.apache.usergrid.rest.applications.collection.users;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +31,8 @@ import java.util.UUID;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource.model.*;
+
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -36,9 +42,13 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.rest.applications.utils.UserRepo;
 import org.apache.usergrid.utils.UUIDUtils;
 
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.api.client.UniformInterfaceException;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
+
+import javax.ws.rs.core.MediaType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -381,7 +391,8 @@ public class UserResourceIT extends AbstractRestIT {
 
         refreshIndex();
 
-        Collection results = usersResource.get(new QueryParameters().setQuery(String.format("username = '%s'", username)));
+        Collection results = usersResource.get(
+            new QueryParameters().setQuery(String.format("username = '%s'", username)));
         assertEquals(0, results.getResponse().getEntities().size());
 
         // now create that same user again, it should work
@@ -422,14 +433,16 @@ public class UserResourceIT extends AbstractRestIT {
 
         // plural collection name
 
-        Entity conn1 = usersResource.entity(firstCreatedId.toString()).connection("conn1").entity(secondCreatedId.toString()).post();
+        Entity conn1 = usersResource.entity(
+            firstCreatedId.toString()).connection("conn1").entity(secondCreatedId.toString()).post();
 
         assertEquals(secondCreatedId.toString(), conn1.getUuid().toString());
 
         refreshIndex();
 
 
-        Entity conn2 = usersResource.entity(firstCreatedId.toString()).connection("conn2").entity(secondCreatedId.toString()).post();
+        Entity conn2 = usersResource.entity(
+            firstCreatedId.toString()).connection("conn2").entity(secondCreatedId.toString()).post();
 
         assertEquals(secondCreatedId.toString(), conn2.getUuid().toString());
 
@@ -437,19 +450,23 @@ public class UserResourceIT extends AbstractRestIT {
 
         Collection conn1Connections = usersResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        assertEquals(secondCreatedId.toString(), ((Entity) conn1Connections.getResponse().getEntities().get(0)).getUuid().toString());
+        assertEquals(secondCreatedId.toString(),
+            ((Entity) conn1Connections.getResponse().getEntities().get(0)).getUuid().toString());
 
         conn1Connections = userResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        assertEquals(secondCreatedId.toString(), ((Entity) conn1Connections.getResponse().getEntities().get(0)).getUuid().toString());
+        assertEquals(secondCreatedId.toString(),
+            ((Entity) conn1Connections.getResponse().getEntities().get(0)).getUuid().toString());
 
         Collection conn2Connections = usersResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        assertEquals(secondCreatedId.toString(), ((Entity) conn2Connections.getResponse().getEntities().get(0)).getUuid().toString());
+        assertEquals(secondCreatedId.toString(),
+            ((Entity) conn2Connections.getResponse().getEntities().get(0)).getUuid().toString());
 
         conn2Connections = userResource.entity(firstCreatedId.toString()).connection("conn1").get();
 
-        assertEquals(secondCreatedId.toString(), ((Entity) conn2Connections.getResponse().getEntities().get(0)).getUuid().toString());
+        assertEquals(secondCreatedId.toString(),
+            ((Entity) conn2Connections.getResponse().getEntities().get(0)).getUuid().toString());
     }
 
 
@@ -482,7 +499,8 @@ public class UserResourceIT extends AbstractRestIT {
         refreshIndex();
 
         // named entity in collection name
-        Entity conn1 = usersResource.entity(firstCreatedId.toString()).connection("conn1", "users").entity(secondCreatedId.toString()).post();
+        Entity conn1 = usersResource.entity(firstCreatedId.toString()).connection("conn1", "users")
+            .entity(secondCreatedId.toString()).post();
 
         assertEquals(secondCreatedId.toString(), conn1.getUuid().toString());
 
@@ -523,7 +541,8 @@ public class UserResourceIT extends AbstractRestIT {
         perms.put("permission", "get:/stuff/**");
 
 
-        Entity perms1 = this.app().collection("roles").entity(roleId1.toString()).connection("permissions").post(new Entity(perms));
+        Entity perms1 = this.app().collection("roles").entity(roleId1.toString()).connection("permissions")
+            .post(new Entity(perms));
 
 
         //Create the second role
@@ -538,10 +557,12 @@ public class UserResourceIT extends AbstractRestIT {
 
         perms = new HashMap<>();
         perms.put("permission", "get:/stuff/**");
-        Entity perms2 = this.app().collection("roles").entity(roleId2.toString()).connection("permissions").post(new Entity(perms));
+        Entity perms2 = this.app().collection("roles").entity(roleId2.toString()).connection("permissions")
+            .post(new Entity(perms));
         refreshIndex();
         //connect the entities where role is the root
-        Entity perms3 = this.app().collection("roles").entity(roleId1.toString()).connection("users").entity(userId.toString()).post();
+        Entity perms3 = this.app().collection("roles").entity(roleId1.toString()).connection("users")
+            .entity(userId.toString()).post();
 
         // now create a connection of "likes" between the first user and the
         // second using pluralized form
@@ -557,12 +578,14 @@ public class UserResourceIT extends AbstractRestIT {
 
         refreshIndex();
         //query the second role, it should work
-        Collection userRoles = this.app().collection("roles").entity(roleId2).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
+        Collection userRoles = this.app().collection("roles").entity(roleId2).connection("users")
+            .get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
         assertEquals(userId.toString(), ((Entity) userRoles.iterator().next()).getUuid().toString());
 
 
         //query the first role, it should work
-        userRoles = this.app().collection("roles").entity(roleId1).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
+        userRoles = this.app().collection("roles").entity(roleId1).connection("users")
+            .get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
         assertEquals(userId.toString(), ((Entity) userRoles.iterator().next()).getUuid().toString());
 
 
@@ -572,14 +595,16 @@ public class UserResourceIT extends AbstractRestIT {
 
         //query the first role, it should 404
         try {
-            userRoles = this.app().collection("roles").entity(roleId1).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
+            userRoles = this.app().collection("roles").entity(roleId1).connection("users")
+                .get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
             assertNull(userRoles);
-        } catch (UniformInterfaceException e) {
-            assertEquals(Status.NOT_FOUND.getStatusCode(), e.getResponse().getStatus());
+        } catch (ClientErrorException e) {
+            assertEquals( Response.Status.NOT_FOUND.getStatusCode(), e.getResponse().getStatus());
         }
 
         //query the second role, it should work
-        userRoles = this.app().collection("roles").entity(roleId2).connection("users").get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
+        userRoles = this.app().collection("roles").entity(roleId2).connection("users")
+            .get(new QueryParameters().setQuery("select%20*%20where%20username%20=%20'" + email + "'"));
 
         assertEquals(userId.toString(), userRoles.getResponse().getEntities().get(0).getUuid().toString());
     }
@@ -613,7 +638,8 @@ public class UserResourceIT extends AbstractRestIT {
         // second using pluralized form
 
         // named entity in collection name
-        Entity conn1 = usersResource.entity(firstCreatedId).connection("conn1").collection("pizzas").entity(secondCreatedId).post();
+        Entity conn1 = usersResource.entity(firstCreatedId).connection("conn1").collection("pizzas")
+            .entity(secondCreatedId).post();
 
         assertEquals(secondCreatedId.toString(), conn1.getUuid().toString());
 
@@ -706,7 +732,8 @@ public class UserResourceIT extends AbstractRestIT {
         String userName = String.format("test%s", newUserUuid);
 
         User entity =
-                (User) new User(userName, "Ed Anuff", String.format("%s@anuff.com", newUserUuid), "sesame").chainPut("pin", "1234");
+                (User) new User(userName, "Ed Anuff", String.format("%s@anuff.com", newUserUuid), "sesame")
+                    .chainPut("pin", "1234");
 
         usersResource.post(entity);
         refreshIndex();
@@ -728,7 +755,8 @@ public class UserResourceIT extends AbstractRestIT {
         refreshIndex();
         boolean fail = false;
         try {
-            Entity changeResponse = usersResource.entity("edanuff").collection("password").post(new ChangePasswordEntity("foo", "bar"));
+            Entity changeResponse = usersResource.entity("edanuff").collection("password")
+                .post(new ChangePasswordEntity("foo", "bar"));
         } catch (Exception e) {
             fail = true;
         }
@@ -762,7 +790,8 @@ public class UserResourceIT extends AbstractRestIT {
 
         // if this was successful, we need to re-set the password for other
         // tests
-        Entity changeResponse = usersResource.entity("edanuff").collection("password").post(new ChangePasswordEntity("sesame1", "sesame"));
+        Entity changeResponse = usersResource.entity("edanuff").collection("password")
+            .post(new ChangePasswordEntity("sesame1", "sesame"));
         refreshIndex();
         assertNotNull(changeResponse);
 
@@ -776,7 +805,8 @@ public class UserResourceIT extends AbstractRestIT {
         refreshIndex();
 
         // change the password as admin. The old password isn't required
-        Entity node = usersResource.entity("edanuff").connection("password").post(new ChangePasswordEntity(newPassword));
+        Entity node = usersResource.entity("edanuff").connection("password")
+            .post(new ChangePasswordEntity(newPassword));
         assertNotNull(node);
 
         refreshIndex();
@@ -797,7 +827,7 @@ public class UserResourceIT extends AbstractRestIT {
         int responseStatus = 0;
         try {
             usersResource.entity("edanuff").connection("password").post(data);
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             responseStatus = uie.getResponse().getStatus();
         }
 
@@ -849,8 +879,8 @@ public class UserResourceIT extends AbstractRestIT {
             role = usersResource.entity(createdId).collection("roles").entity(roleName).get();
 
             assertNull(role);
-        } catch (UniformInterfaceException e) {
-            assertEquals(e.getResponse().getStatus(), Status.NOT_FOUND.getStatusCode());
+        } catch (ClientErrorException e) {
+            assertEquals(e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode());
         }
     }
 
@@ -871,7 +901,8 @@ public class UserResourceIT extends AbstractRestIT {
         assertNotNull(entity1);
 
         assertNotNull(entity2);
-        Token adminToken = this.clientSetup.getRestClient().management().token().post(false,Token.class,new Token(clientSetup.getUsername(), clientSetup.getUsername()),null);
+        Token adminToken = this.clientSetup.getRestClient().management().token()
+            .post( false, Token.class, new Token( clientSetup.getUsername(), clientSetup.getUsername() ), null );
         // now revoke the tokens
         this.app().token().setToken(adminToken);
 
@@ -886,11 +917,11 @@ public class UserResourceIT extends AbstractRestIT {
 
             usersResource.entity("edanuff").get();
             assertFalse(true);
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), status);
 
         status = 0;
 
@@ -898,11 +929,11 @@ public class UserResourceIT extends AbstractRestIT {
             this.app().token().setToken(token2);
 
             usersResource.entity("edanuff").get();
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), status);
 
         Token token3 = this.app().token().post(new Token("edanuff", "sesame"));
         Token token4 = this.app().token().post(new Token("edanuff", "sesame"));
@@ -919,7 +950,8 @@ public class UserResourceIT extends AbstractRestIT {
         assertNotNull(entity2);
 
         // now revoke the token3
-        adminToken = this.clientSetup.getRestClient().management().token().post(false,Token.class,new Token(clientSetup.getUsername(), clientSetup.getUsername()),null);
+        adminToken = this.clientSetup.getRestClient().management().token()
+            .post( false, Token.class, new Token( clientSetup.getUsername(), clientSetup.getUsername() ), null );
         // now revoke the tokens
         this.app().token().setToken(adminToken);
         usersResource.entity("edanuff").connection("revoketokens").post();
@@ -933,11 +965,11 @@ public class UserResourceIT extends AbstractRestIT {
             this.app().token().setToken(token3);
             usersResource.entity("edanuff").get();
 
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), status);
 
         status = 0;
 
@@ -946,12 +978,12 @@ public class UserResourceIT extends AbstractRestIT {
             usersResource.entity("edanuff").get();
 
 
-            status = Status.OK.getStatusCode();
-        } catch (UniformInterfaceException uie) {
+            status = Response.Status.OK.getStatusCode();
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), status);
     }
 
 
@@ -977,33 +1009,37 @@ public class UserResourceIT extends AbstractRestIT {
 
         // bad access token
         try {
-            userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", "blah"), false);
+            userResource.entity("test_1").connection("token").get(
+                new QueryParameters().addParam("access_token", "blah"), false);
             assertTrue(false);
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
-            log.info("Error Response Body: " + uie.getResponse().getEntity(String.class));
+            log.info("Error Response Body: " + uie.getResponse().readEntity(String.class));
         }
 
-        assertEquals(Status.UNAUTHORIZED.getStatusCode(), status);
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), status);
 
         try {
-            userResource.entity("test_2").connection("token").get(new QueryParameters().addParam("access_token", token.getAccessToken()), false);
+            userResource.entity("test_2").connection("token").get(
+                new QueryParameters().addParam("access_token", token.getAccessToken()), false);
             assertTrue(false);
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
-            log.info("Error Response Body: " + uie.getResponse().getEntity(String.class));
+            log.info("Error Response Body: " + uie.getResponse().readEntity(String.class));
         }
 
-        assertEquals(Status.FORBIDDEN.getStatusCode(), status);
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), status);
 
 
         String adminToken = this.getAdminToken().getAccessToken();
-        Collection tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", adminToken), false);
+        Collection tokens = userResource.entity("test_1").connection("token").get(
+            new QueryParameters().addParam("access_token", adminToken), false);
 
 
         assertTrue(tokens.getResponse().getProperties().get("user") != null);
 
-        tokens = userResource.entity("test_1").connection("token").get(new QueryParameters().addParam("access_token", adminToken), false);
+        tokens = userResource.entity("test_1").connection("token").get(
+            new QueryParameters().addParam("access_token", adminToken), false);
 
         assertTrue(tokens.getResponse().getProperties().get("user") != null);
 
@@ -1015,9 +1051,9 @@ public class UserResourceIT extends AbstractRestIT {
         try {
             this.app().token().post(new Token("test_1", "test123"));
             fail("request for deactivated user should fail");
-        } catch (UniformInterfaceException uie) {
+        } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
-            JsonNode body = mapper.readTree(uie.getResponse().getEntity(String.class));
+            JsonNode body = mapper.readTree(uie.getResponse().readEntity(String.class));
             assertEquals("user not activated", body.findPath("error_description").textValue());
         }
     }
@@ -1102,5 +1138,112 @@ public class UserResourceIT extends AbstractRestIT {
         Collection response = this.app().collection("curts").get(new QueryParameters().setQuery(ql));
 
         assertEquals(response.getResponse().getEntities().get(0).get("uuid").toString(), userId.toString());
+    }
+
+
+
+    @Test
+    public void testCredentialsTransfer() throws Exception {
+
+        usersResource.post(new User("test_1", "Test1 User", "test_1@test.com", "test123")); // client.setApiUrl(apiUrl);
+        refreshIndex();
+
+        //Entity appInfo = this.app().get().getResponse().getEntities().get(0);
+
+        Token token = this.app().token().post(new Token("test_1", "test123"));
+
+        assertNotNull(token.getAccessToken());
+
+        final String superUserName = this.clientSetup.getSuperuserName();
+        final String superUserPassword = this.clientSetup.getSuperuserPassword();
+
+
+        //get the credentials info
+        final CollectionEndpoint collection  = userResource.entity("test_1").collection( "credentials" );
+
+        final WebTarget resource  = collection.getTarget();
+
+
+        final HttpAuthenticationFeature httpBasicAuth = HttpAuthenticationFeature.basicBuilder()
+            .credentials( superUserName, superUserPassword ).build();
+
+
+        final ApiResponse response =  resource.register( httpBasicAuth ).request()
+                    .accept( MediaType.APPLICATION_JSON ).get(
+            org.apache.usergrid.rest.test.resource.model.ApiResponse.class );
+
+
+
+
+        //now get the credentials sub object
+
+        final Map<String, Object> credentials = ( Map<String, Object> ) response.getProperties().get( "credentials" );
+
+
+
+        //get out the hash and change it so we can validate
+        final String originalSecret = ( String ) credentials.get( "secret" );
+
+
+        //here we modify the hash a little, this way we can break password validation, then re-set it to ensure we're actually updating the credentials info correctly.
+        final String borkedSecret = originalSecret.substring( 0, originalSecret.length() -1 );
+
+        credentials.put( "secret", borkedSecret );
+
+        //now PUT it
+
+
+        final Map<String, Map<String, Object>> wrapper = new HashMap<>(  );
+        wrapper.put( "credentials", credentials );
+
+        final WebTarget putResource  = collection.getTarget();
+
+
+
+       putResource.register( httpBasicAuth ).request()
+                   .accept( MediaType.APPLICATION_JSON )
+                   .put( javax.ws.rs.client.Entity.json(wrapper),  org.apache.usergrid.rest.test.resource.model.ApiResponse.class );
+
+
+        //now try to get a password, it should fail because the hash is no longer correct
+
+        int status = 0;
+
+        // bad access token
+        try {
+            this.app().token().post(new Token("test_1", "test123"));
+            fail("Should have thrown an exception");
+        } catch (BadRequestException uie) {
+            status = uie.getResponse().getStatus();
+            log.info("Error Response Body: {}" , uie.getResponse().getEntity());
+        }
+
+        assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), status);
+
+
+        //now put the correct one
+
+
+        credentials.put( "secret", originalSecret );
+
+
+        final WebTarget putResource2  = collection.getTarget();
+
+
+
+        putResource2.register( httpBasicAuth ).request()
+                          .accept( MediaType.APPLICATION_JSON )
+                          .put( javax.ws.rs.client.Entity.json( wrapper ),
+                              org.apache.usergrid.rest.test.resource.model.ApiResponse.class );
+
+
+
+
+
+        //now auth, should be good
+        final Token nextToken = this.app().token().post(new Token("test_1", "test123"));
+
+        assertNotNull( nextToken.getAccessToken() );
+
     }
 }

@@ -16,6 +16,7 @@
 package org.apache.usergrid.corepersistence;
 
 
+import org.apache.usergrid.persistence.cache.guice.CacheModule;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
@@ -77,15 +78,12 @@ public class CoreModule  extends AbstractModule {
 
 
 
-    public static final String EVENTS_DISABLED = "corepersistence.events.disabled";
-
-
 
     @Override
     protected void configure() {
 
-
         install( new CommonModule());
+        install( new CacheModule());
         install( new CollectionModule() {
             /**
              * configure our migration data provider for all entities in the system

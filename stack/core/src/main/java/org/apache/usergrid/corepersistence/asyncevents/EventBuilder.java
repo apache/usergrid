@@ -80,17 +80,25 @@ public interface EventBuilder {
 
     /**
      * A bean to hold both our observables so the caller can choose the subscription mechanism.  Note that
-     * indexOperationMessages should be subscribed and completed BEFORE the getEntitiesCompacted is subscribed
+     * indexOperationMessages should be subscribed and completed BEFORE the getEntitiesDeleted is subscribed
      */
     final class EntityDeleteResults {
         private final Observable<IndexOperationMessage> indexOperationMessageObservable;
-        private final Observable<List<MvccLogEntry>> entitiesCompacted;
+        private final Observable<List<MvccLogEntry>> entitiesDeleted;
+
+
+
+        private final Observable<Id> compactedNode;
+
+
 
 
         public EntityDeleteResults( final Observable<IndexOperationMessage> indexOperationMessageObservable,
-                                    final Observable<List<MvccLogEntry>> entitiesCompacted ) {
+                                    final Observable<List<MvccLogEntry>> entitiesDeleted,
+                                    final Observable<Id> compactedNode) {
             this.indexOperationMessageObservable = indexOperationMessageObservable;
-            this.entitiesCompacted = entitiesCompacted;
+            this.entitiesDeleted = entitiesDeleted;
+            this.compactedNode = compactedNode;
         }
 
 
@@ -98,9 +106,14 @@ public interface EventBuilder {
             return indexOperationMessageObservable;
         }
 
-
-        public Observable<List<MvccLogEntry>> getEntitiesCompacted() {
-            return entitiesCompacted;
+        public Observable<List<MvccLogEntry>> getEntitiesDeleted() {
+            return entitiesDeleted;
         }
+
+        public Observable<Id> getCompactedNode() {
+            return compactedNode;
+        }
+
+
     }
 }

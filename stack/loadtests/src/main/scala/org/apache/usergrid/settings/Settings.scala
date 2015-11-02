@@ -181,6 +181,14 @@ object Settings {
   private val queryParamConfig = initStrSetting(ConfigProperties.QueryParams)
   val queryParamMap: Map[String,String] = mapFromQueryParamConfigString(queryParamConfig)
   val csvFeedPattern = initStrSetting(ConfigProperties.CsvFeedPattern)
+  val flushCsv:Long = initLongSetting(ConfigProperties.FlushCsv)
+  val unlimitedFeed:Boolean = initBoolSetting(ConfigProperties.UnlimitedFeed)
+  // unlimited feed forces interleaved worker feed
+  val interleavedWorkerFeed:Boolean = if (unlimitedFeed) true else initBoolSetting(ConfigProperties.InterleavedWorkerFeed)
+  val newCsvOnFlush:Boolean = initBoolSetting(ConfigProperties.NewCsvOnFlush)
+  val deleteAfterSuccessfulAudit:Boolean = initBoolSetting(ConfigProperties.DeleteAfterSuccessfulAudit)
+  val usergridRegion = initStrSetting(ConfigProperties.UsergridRegion)
+  val saveInvalidResponse = initBoolSetting(ConfigProperties.SaveInvalidResponse)
 
   val multiPropertyPrefix = initStrSetting(ConfigProperties.MultiPropertyPrefix)
   val multiPropertyCount:Int = initIntSetting(ConfigProperties.MultiPropertyCount)
@@ -204,8 +212,9 @@ object Settings {
   private val leftOver:Int = totalNumEntities % entityWorkerCount  // will be 0 if only one worker
   private val extraEntity:Int = if (entityWorkerNum <= leftOver) 1 else 0
   private val zeroBasedWorkerNum:Int = entityWorkerNum - 1
-  val entitySeed:Int = overallEntitySeed + zeroBasedWorkerNum * entitiesPerWorkerFloor + (if (extraEntity == 1) zeroBasedWorkerNum else leftOver)
-  val numEntities:Int = entitiesPerWorkerFloor + extraEntity
+  val entitySeed:Int = if (unlimitedFeed) overallEntitySeed else overallEntitySeed + zeroBasedWorkerNum * entitiesPerWorkerFloor + (if (extraEntity == 1) zeroBasedWorkerNum else leftOver)
+  // numEntities is used for random name generation, must be >= 0 even if not used for entity counting (as in unlimitedFeed=true)
+  val numEntities:Int = if (unlimitedFeed) 1000000000 else entitiesPerWorkerFloor + extraEntity
 
   // UUID log file, have to go through this because creating a csv feeder with an invalid csv file fails at maven compile time
   private val dummyTestCsv = ConfigProperties.getDefault(ConfigProperties.UuidFilename).toString
@@ -281,17 +290,62 @@ object Settings {
 
   val purgeUsers:Int = initIntSetting(ConfigProperties.PurgeUsers)
 
-  private var uuidMap: Map[Int, String] = Map()
-  private var entityCounter: Long = 0
-  private var lastEntityCountPrinted: Long = 0
-  def addUuid(num: Int, uuid: String): Unit = {
+  val uuidsHeader = "collection,name,uuid,modified,status"
+  val uuidsFailHeader = "collection,name,uuid,modified,status,error,lastStatus"
+  case class AuditList(var collection: String, var entityName: String, var uuid: String, var modified: Long, var status: Int)
+  case class AuditFailList(var collection: String, var entityName: String, var uuid: String, var modified: Long,
+                           var status: Int, var error: String, var lastStatus: String)
+
+  //private var uuidMap: Map[Int, String] = Map()
+  private var uuidList: mutable.MutableList[AuditList] = mutable.MutableList[AuditList]()
+  private val statusCounts: mutable.Map[Int,Long] = mutable.Map[Int,Long]().withDefaultValue(0L)
+  private var entityCounter: Long = 0L
+  private var lastEntityCountPrinted: Long = 0L
+  private var flushCounter: Long = 0L
+  private var firstFlush: Boolean = true
+  private var numberFlushes: Long = 0L
+  private var uuidWriter: PrintWriter = null
+
+  def addStatus(status: Int): Unit = {
+    statusCounts.synchronized {
+      statusCounts(status) += 1L
+    }
+  }
+
+  def addUuid(uuid: String, collection: String, entityName: String, modified: Long, status: Int): Unit = {
     if (captureUuids) {
-      uuidMap.synchronized {
-        uuidMap += (num -> uuid)
-        entityCounter += 1
+      uuidList.synchronized {
+        uuidList += AuditList(collection, entityName, uuid, modified, status)
+        entityCounter += 1L
+        flushCounter += 1L
         if (logEntityProgress && (entityCounter >= lastEntityCountPrinted + entityProgressCount)) {
           println(s"Entity: $entityCounter")
           lastEntityCountPrinted = entityCounter
+        }
+        if (flushCsv > 0 && flushCounter >= flushCsv) {
+          if (uuidWriter == null) {
+            uuidWriter = {
+              val fileWithSuffix = f"$captureUuidFilename.$numberFlushes%04d"
+              val fos = new FileOutputStream(if (newCsvOnFlush) fileWithSuffix else captureUuidFilename)
+              new PrintWriter(fos, false)
+            }
+          }
+          if (newCsvOnFlush || firstFlush) {
+            uuidWriter.println(uuidsHeader)
+          }
+          val sortedUuidList: List[AuditList] = uuidList.toList.sortBy(e => (e.collection, e.entityName, e.modified))
+          sortedUuidList.foreach { e =>
+            uuidWriter.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified},${e.status}")
+          }
+          uuidWriter.flush()
+          if (newCsvOnFlush) {
+            uuidWriter.close()
+            uuidWriter = null
+          }
+          flushCounter = 0L
+          numberFlushes += 1L
+          uuidList.clear()
+          firstFlush = false
         }
       }
     }
@@ -300,34 +354,40 @@ object Settings {
 
   def writeUuidsToFile(): Unit = {
     if (captureUuids) {
-      val writer = {
-        val fos = new FileOutputStream(captureUuidFilename)
-        new PrintWriter(fos, false)
+      if (uuidWriter == null) {
+        uuidWriter = {
+          val fileWithSuffix = f"$captureUuidFilename.$numberFlushes%04d"
+          val fos = new FileOutputStream(if (newCsvOnFlush) fileWithSuffix else captureUuidFilename)
+          new PrintWriter(fos, false)
+        }
       }
-      writer.println("name,uuid")
-      val uuidList: List[(Int, String)] = uuidMap.toList.sortBy(l => l._1)
-      uuidList.foreach { l =>
-        writer.println(s"${Settings.entityPrefix}${l._1},${l._2}")
+      if (newCsvOnFlush || firstFlush) {
+        uuidWriter.println(uuidsHeader)
       }
-      writer.flush()
-      writer.close()
+      val sortedUuidList: List[AuditList] = uuidList.toList.sortBy(e => (e.collection, e.entityName, e.modified))
+      sortedUuidList.foreach { e =>
+        uuidWriter.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified},${e.status}")
+      }
+      uuidWriter.flush()
+      uuidWriter.close()
+      numberFlushes += 1L
+      uuidList.clear()
+      firstFlush = false
     }
   }
 
 
-  val auditUuidsHeader = "collection,name,uuid,modified"
-
-  case class AuditList(var collection: String, var entityName: String, var uuid: String, var modified: Long)
 
   // key: uuid, value: collection
-  private var auditEntityCounter: Long = 0
-  private var lastAuditEntityCountPrinted: Long = 0
-  private var auditUuidList: mutable.MutableList[AuditList] = mutable.MutableList[AuditList]()
-  def addAuditUuid(uuid: String, collection: String, entityName: String, modified: Long): Unit = {
+  private var auditEntityCounter: Long = 0L
+  private var lastAuditEntityCountPrinted: Long = 0L
+  private var auditUuidList: mutable.MutableList[AuditFailList] = mutable.MutableList[AuditFailList]()
+  def addAuditUuid(uuid: String, collection: String, entityName: String, modified: Long, status: Int, error: String,
+                    lastStatus: String): Unit = {
     if (captureAuditUuids) {
       auditUuidList.synchronized {
-        auditUuidList += AuditList(collection, entityName, uuid, modified)
-        auditEntityCounter += 1
+        auditUuidList += AuditFailList(collection, entityName, uuid, modified, status, error, lastStatus)
+        auditEntityCounter += 1L
         if (logEntityProgress && (auditEntityCounter >= lastAuditEntityCountPrinted + entityProgressCount)) {
           println(s"Entity: $auditEntityCounter")
           lastAuditEntityCountPrinted = auditEntityCounter
@@ -343,10 +403,10 @@ object Settings {
         val fos = new FileOutputStream(captureAuditUuidFilename)
         new PrintWriter(fos, false)
       }
-      writer.println(auditUuidsHeader)
-      val uuidList: List[AuditList] = auditUuidList.toList.sortBy(e => (e.collection, e.entityName, e.modified))
+      writer.println(uuidsFailHeader)
+      val uuidList: List[AuditFailList] = auditUuidList.toList.sortBy(e => (e.collection, e.entityName, e.modified, e.status))
       uuidList.foreach { e =>
-        writer.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified}")
+        writer.println(s"${e.collection},${e.entityName},${e.uuid},${e.modified},${e.status},${e.error},${e.lastStatus}")
       }
       writer.flush()
       writer.close()
@@ -381,27 +441,57 @@ object Settings {
   }
 
   private val countAuditSuccess = new AtomicInteger(0)
-  private val countAuditNotFound = new AtomicInteger(0)
+  private val countAuditNotFoundViaQuery = new AtomicInteger(0)
+  private val countAuditNotFoundAtAll = new AtomicInteger(0)
   private val countAuditBadResponse = new AtomicInteger(0)
+  private val countAuditPayloadUuidError = new AtomicInteger(0)
+  private val countAuditPayloadNameError = new AtomicInteger(0)
+  private val countAuditEntryDeleteSuccess = new AtomicInteger(0)
+  private val countAuditEntryDeleteFailure = new AtomicInteger(0)
 
   def incAuditSuccess(): Unit = {
     countAuditSuccess.incrementAndGet()
   }
 
-  def incAuditNotFound(): Unit = {
-    countAuditNotFound.incrementAndGet()
+  def incAuditNotFoundViaQuery(): Unit = {
+    countAuditNotFoundViaQuery.incrementAndGet()
+  }
+
+  def incAuditNotFoundAtAll(): Unit = {
+    countAuditNotFoundAtAll.incrementAndGet()
   }
 
   def incAuditBadResponse(): Unit = {
     countAuditBadResponse.incrementAndGet()
   }
 
+  def incAuditPayloadUuidError(): Unit = {
+    countAuditPayloadUuidError.incrementAndGet()
+  }
+
+  def incAuditPayloadNameError(): Unit = {
+    countAuditPayloadNameError.incrementAndGet()
+  }
+
+  def incAuditEntryDeleteSuccess(): Unit = {
+    countAuditEntryDeleteSuccess.incrementAndGet()
+  }
+
+  def incAuditEntryDeleteFailure(): Unit = {
+    countAuditEntryDeleteFailure.incrementAndGet()
+  }
+
   def printAuditResults(): Unit = {
     if (scenarioType == ScenarioType.AuditVerifyCollectionEntities) {
       val countSuccess = countAuditSuccess.get
-      val countNotFound = countAuditNotFound.get
+      val countNotFoundViaQuery = countAuditNotFoundViaQuery.get
+      val countNotFoundAtAll = countAuditNotFoundAtAll.get
       val countBadResponse = countAuditBadResponse.get
-      val countTotal = countSuccess + countNotFound + countBadResponse
+      val countPayloadUuidErrors = countAuditPayloadUuidError.get
+      val countPayloadNameErrors = countAuditPayloadNameError.get
+      val countDeleteSuccess = countAuditEntryDeleteSuccess.get
+      val countDeleteFailure = countAuditEntryDeleteFailure.get
+      val countTotal = countSuccess + countNotFoundViaQuery + countBadResponse
 
       val seconds = ((testEndTime - testStartTime) / 1000).toInt
       val s:Int = seconds % 60
@@ -415,8 +505,20 @@ object Settings {
       println("-----------------------------------------------------------------------------")
       println()
       println(s"Successful:          $countSuccess")
-      println(s"Not Found:           $countNotFound")
+      println(s"Not Found via query: $countNotFoundViaQuery (found via direct access)")
+      println(s"Not Found at all:    $countNotFoundAtAll")
       println(s"Bad Response:        $countBadResponse")
+      if (deleteAfterSuccessfulAudit) {
+        println()
+        println(s"Delete Successes:    $countDeleteSuccess")
+        println(s"Delete Failures:     $countDeleteFailure")
+      }
+      if (countPayloadUuidErrors > 0 || countPayloadNameErrors > 0) {
+        println()
+        println(s"Payload Mismatches/Errors")
+        println(s"  UUID:              $countPayloadUuidErrors")
+        println(s"  Name:              $countPayloadNameErrors")
+      }
       println(s"Total:               $countTotal")
       println()
       println(s"Start Timestamp(ms): $testStartTime")

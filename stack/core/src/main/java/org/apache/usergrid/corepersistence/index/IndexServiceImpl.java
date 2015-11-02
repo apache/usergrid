@@ -104,10 +104,6 @@ public class IndexServiceImpl implements IndexService {
 
         //do our observable for batching
         //try to send a whole batch if we can
-
-
-        //do our observable for batching
-        //try to send a whole batch if we can
         final Observable<IndexOperationMessage>  batches =  sourceEdgesToIndex.buffer( indexFig.getIndexBatchSize() )
 
             //map into batches based on our buffer size
@@ -118,7 +114,7 @@ public class IndexServiceImpl implements IndexService {
                     batch.index( indexEdge, entity );
                 } )
                     //return the future from the batch execution
-                .flatMap( batch -> batch.execute() ) );
+                .map( batch -> batch.build() ) );
 
         return ObservableTimer.time( batches, indexTimer );
     }
@@ -136,7 +132,7 @@ public class IndexServiceImpl implements IndexService {
             }
 
             throw new IllegalArgumentException("target not equal to entity + "+entity.getId());
-        } ).flatMap( indexEdge -> {
+        } ).map( indexEdge -> {
 
             final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
@@ -146,7 +142,7 @@ public class IndexServiceImpl implements IndexService {
 
             batch.index( indexEdge, entity );
 
-            return batch.execute();
+            return batch.build();
         } );
 
         return ObservableTimer.time( batches, addTimer  );
@@ -164,7 +160,7 @@ public class IndexServiceImpl implements IndexService {
                                                               final Edge edge ) {
 
         final Observable<IndexOperationMessage> batches =
-            Observable.just( edge ).flatMap( edgeValue -> {
+            Observable.just( edge ).map( edgeValue -> {
                 final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
                 EntityIndexBatch batch = ei.createBatch();
 
@@ -189,7 +185,7 @@ public class IndexServiceImpl implements IndexService {
 
                 batch = deindexBatchIteratorResolver( fromTarget, sourceEdgesToBeDeindexed, batch );
 
-                return batch.execute();
+                return batch.build();
             } );
 
         return ObservableTimer.time( batches, addTimer );
@@ -208,8 +204,9 @@ public class IndexServiceImpl implements IndexService {
 
         //If we get no search results, its possible that something was already deleted or
         //that it wasn't indexed yet. In either case we can't delete anything and return an empty observable..
-        if(crs.isEmpty())
+        if(crs.isEmpty()) {
             return Observable.empty();
+        }
 
         UUID timeUUID = UUIDUtils.isTimeBased(entityId.getUuid()) ? entityId.getUuid() : UUIDUtils.newTimeUUID();
         //not actually sure about the timestamp but ah well. works.
@@ -222,10 +219,10 @@ public class IndexServiceImpl implements IndexService {
                 //collect results into a single batch
                 .collect( () -> ei.createBatch(), ( batch, candidateResult ) -> {
                     logger.debug( "Deindexing on edge {} for entity {} added to batch",searchEdge , entityId );
-                    batch.deindex( searchEdge, candidateResult );
+                    batch.deindex( candidateResult );
                 } )
                     //return the future from the batch execution
-                .flatMap( batch -> batch.execute() );
+                .map( batch ->batch.build() );
 
         return ObservableTimer.time(batches, indexTimer);
     }

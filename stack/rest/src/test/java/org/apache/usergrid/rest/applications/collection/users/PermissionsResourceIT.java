@@ -28,18 +28,16 @@ import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.sun.jersey.api.client.ClientResponse.Status;
-import com.sun.jersey.api.client.UniformInterfaceException;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 
 import static org.junit.Assert.*;
 
 
 /**
- * Tests permissions of adding and removing users from roles as well as groups
- *
+ * Tests permissions of adding and removing users from roles as well as groups.
  */
-
 public class PermissionsResourceIT extends AbstractRestIT {
 
     private static final String ROLE = "permtestrole";
@@ -106,7 +104,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         int status = 0;
         try {
             node = this.app().collection("users").entity(USER).collection("roles").entity(ROLE).get();
-        }catch (UniformInterfaceException e){
+        }catch (ClientErrorException e){
             status = e.getResponse().getStatus();
         }
 
@@ -147,7 +145,8 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         // now delete the group
 
-        ApiResponse response = this.app().collection("groups").entity(groupPath).collection("users").entity(user).delete();
+        ApiResponse response = this.app()
+            .collection("groups").entity(groupPath).collection("users").entity(user).delete();
 
         assertNull( response.getError() );
 
@@ -156,9 +155,10 @@ public class PermissionsResourceIT extends AbstractRestIT {
         //Check that the user no longer exists in the group
         int status = 0;
         try {
-            this.app().collection("users").entity(user).collection("groups").entity( groupPath ).collection( "users" ).entity( user ).get();
+            this.app().collection("users").entity(user)
+                .collection("groups").entity( groupPath ).collection( "users" ).entity( user ).get();
             fail("Should not have been able to retrieve the user as it was deleted");
-        }catch (UniformInterfaceException e){
+        }catch (ClientErrorException e){
             status=e.getResponse().getStatus();
             assertEquals( 404,status );
         }
@@ -167,9 +167,9 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
 
     /**
-     * For the record, you should NEVER allow the guest role to add roles. This is a gaping security hole and a VERY BAD
-     * IDEA! That being said, this should technically work, and needs testing.
-     *
+     * For the record, you should NEVER allow the guest role to add roles.
+     * This is a gaping security hole and a VERY BAD IDEA!
+     * That being said, this should technically work, and needs testing.
      * Tests that you can allow a guest role to add additional roles.
      */
     @Test
@@ -195,10 +195,10 @@ public class PermissionsResourceIT extends AbstractRestIT {
     @Test
     public void getNonExistantEntityReturns404() throws Exception {
 
-        //Call a get on a existing entity with no access token and check if we get a 401
+        // Call a get on a existing entity with no access token and check if we get a 401
         try {
             this.app().collection( "roles" ).entity( "guest" ).get( false );
-        }catch(UniformInterfaceException uie){
+        } catch(ClientErrorException uie){
             assertEquals( 401,uie.getResponse().getStatus() );
         }
 
@@ -206,16 +206,16 @@ public class PermissionsResourceIT extends AbstractRestIT {
         addPermission(  "guest", "get:/**" );
 
 
-        //Call a get on a non existing entity that doesn't need permissions and check it we get a 404.
+        // Call a get on a non existing entity that doesn't need permissions and check it we get a 404.
         try {
             this.app().collection( "roles" ).entity( "banana" ).get( false );
-        }catch(UniformInterfaceException uie){
+        } catch(ClientErrorException uie){
             assertEquals( 404,uie.getResponse().getStatus() );
         }
 
         try {
             this.app().collection( "roles" ).entity( UUIDUtils.newTimeUUID() ).get( false );
-        }catch(UniformInterfaceException uie){
+        } catch(ClientErrorException uie){
             assertEquals( 404,uie.getResponse().getStatus() );
         }
     }
@@ -228,13 +228,14 @@ public class PermissionsResourceIT extends AbstractRestIT {
      */
     @Test
     public void applicationPermissions() throws Exception {
-        //Creates two new roles: reviewer1 and reviewer2
+
+        // Creates two new roles: reviewer1 and reviewer2
         createRoleUser( "reviewer1",  "reviewer1@usergrid.com" );
-        createRoleUser(  "reviewer2", "reviewer2@usergrid.com" );
+        createRoleUser( "reviewer2", "reviewer2@usergrid.com" );
 
         Entity  data = new Entity().chainPut("name", "reviewer");
 
-        //Creates a new role "reviewer"
+        // Creates a new role "reviewer"
         Entity node = this.app().collection("roles").post(data);
 
         assertNull( node.getError() );
@@ -253,37 +254,38 @@ public class PermissionsResourceIT extends AbstractRestIT {
         // Grants a permission GET on the guests for the reviews url
         addPermission(  "guest", "get:/reviews/**" );
 
-        //Creates a reviewer group
+        // Creates a reviewer group
         Entity group = new Entity().chainPut( "path", "reviewergroup" ).chainPut("name","reviewergroup");
 
         this.app().collection("groups").post(group);
 
         refreshIndex();
 
-        //Adds the reviewer to the reviewerGroup
+        // Adds the reviewer to the reviewerGroup
         this.app().collection("groups").entity("reviewergroup").collection("roles").entity("reviewer").post();
 
         refreshIndex();
 
-        //Adds reviewer2 user to the reviewergroup
+        // Adds reviewer2 user to the reviewergroup
         this.app().collection("users").entity("reviewer2").collection("groups").entity("reviewergroup").post();
 
         refreshIndex();
 
-        //Adds reviewer1 to the reviewer role
+        // Adds reviewer1 to the reviewer role
         this.app().collection("users").entity("reviewer1").collection("roles").entity("reviewer").post();
 
         refreshIndex();
 
-        //Set the current context to reviewer1
+        // Set the current context to reviewer1
         this.app().token().post(new Token("reviewer1","password"));
 
-        //Post reviews to the reviews collection as reviewer1
-        Entity review =
-                new Entity().chainPut("rating", "4").chainPut("name", "noca").chainPut("review", "Excellent service and food");
+        // Post reviews to the reviews collection as reviewer1
+        Entity review = new Entity()
+            .chainPut("rating", "4").chainPut("name", "noca").chainPut("review", "Excellent service and food");
         this.app().collection("reviews").post( review );
 
-        review = new Entity().chainPut ("rating", "4").chainPut( "name", "4peaks").chainPut("review", "Huge beer selection" );
+        review = new Entity()
+            .chainPut ("rating", "4").chainPut( "name", "4peaks").chainPut("review", "Huge beer selection" );
         this.app().collection("reviews").post(review);
 
         refreshIndex();
@@ -296,30 +298,30 @@ public class PermissionsResourceIT extends AbstractRestIT {
         assertEquals( "noca",reviews.next().get("name") );
         assertEquals("4peaks", reviews.next().get( "name" ));
 
-        //Try to delete the reviews, but it should fail due to have having delete permission in the grants.
+        // Try to delete the reviews, but it should fail due to have having delete permission in the grants.
         int status = 0;
         try {
             this.app().collection("reviews").entity("noca").delete();
             fail( "this should have failed due to having insufficient permissions" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( ClientErrorException uie ) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), status );
 
         status = 0;
 
-        //Try to delete the reviews, but it should fail due to have having delete permission in the grants.
+        // Try to delete the reviews, but it should fail due to have having delete permission in the grants.
         try {
             this.app().collection("reviews").entity("4peaks").delete();
             fail( "this should have failed due to having insufficient permissions" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( ClientErrorException uie ) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), status );
 
         refreshIndex();
 
@@ -329,10 +331,12 @@ public class PermissionsResourceIT extends AbstractRestIT {
         this.app().token().post(new Token("reviewer2", "password"));
 
         // post 2 reviews as reviewer2
-        review = new Entity().chainPut("rating", "4").chainPut("name", "cowboyciao").chainPut("review", "Great atmosphoere");
+        review = new Entity()
+            .chainPut("rating", "4").chainPut("name", "cowboyciao").chainPut("review", "Great atmosphoere");
         this.app().collection("reviews").post(review);
 
-        review = new Entity().chainPut( "rating", "4" ).chainPut("name", "currycorner").chainPut( "review", "Authentic" );
+        review = new Entity()
+            .chainPut( "rating", "4" ).chainPut("name", "currycorner").chainPut( "review", "Authentic" );
         this.app().collection("reviews").post(review);
 
         refreshIndex();
@@ -355,11 +359,11 @@ public class PermissionsResourceIT extends AbstractRestIT {
             this.app().collection("reviews").entity("cowboyciao").delete();
             fail( "this should have failed due to having insufficient permissions" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( ClientErrorException uie ) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), status );
 
         refreshIndex();
 
@@ -369,11 +373,11 @@ public class PermissionsResourceIT extends AbstractRestIT {
             this.app().collection("reviews").entity("currycorner").delete();
             fail( "this should have failed due to having insufficient permissions" );
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( ClientErrorException uie ) {
             status = uie.getResponse().getStatus();
         }
 
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), status );
     }
 
 
@@ -472,10 +476,10 @@ public class PermissionsResourceIT extends AbstractRestIT {
             this.app().collection("books").post(book);
 
         }
-        catch ( UniformInterfaceException uie ) {
+        catch ( ClientErrorException uie ) {
             status = uie.getResponse().getStatus();
         }
-        assertEquals( Status.UNAUTHORIZED.getStatusCode(), status );
+        assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), status );
 
         //Gets all books that user1 reviewed\
         this.app().collection("users").entity("me").connection("reviewed").collection("books").get();
@@ -527,7 +531,8 @@ public class PermissionsResourceIT extends AbstractRestIT {
         this.app().token().post(new Token("examplepatient","password"));
         refreshIndex();
         //not working yet, used to be ignored
-//        this.app().collection("users").entity("exampledoctor").connection("following").collection("users").entity("examplepatient").post();
+        //        this.app().collection("users").entity("exampledoctor").connection("following")
+        // .collection("users").entity("examplepatient").post();
     }
 
     /**

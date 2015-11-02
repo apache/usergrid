@@ -371,6 +371,20 @@ public class ShardEntryGroupTest {
 
         assertFalse( "Shard added", result );
     }
+
+
+    @Test
+    public void minShardNotDeleted() {
+        Shard minShard = Shard.MIN_SHARD;
+
+        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 1 );
+
+        shardEntryGroup.addShard( minShard );
+
+        assertTrue( minShard.isMinShard() );
+
+        assertFalse( shardEntryGroup.canBeDeleted( minShard ) );
+    }
 }
 
 

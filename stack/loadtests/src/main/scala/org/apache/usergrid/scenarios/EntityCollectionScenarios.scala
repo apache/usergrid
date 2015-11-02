@@ -16,9 +16,13 @@
  */
 package org.apache.usergrid.scenarios
 
+import java.nio.charset.StandardCharsets
+
 import io.gatling.core.Predef._
 import io.gatling.core.feeder.RecordSeqFeederBuilder
 import io.gatling.http.Predef._
+import io.gatling.http.response.ResponseWrapper
+import io.gatling.http.response.StringResponseBody
 import org.apache.usergrid.datagenerators.FeederGenerator
 import org.apache.usergrid.enums.{CsvFeedPatternType, EndConditionType, AuthType}
 import org.apache.usergrid.helpers.Extractors._
@@ -35,7 +39,10 @@ object EntityCollectionScenarios {
 
   //The value for the cursor
   val SessionVarCursor: String = "cursor"
+  val SessionVarStatus: String = "status"
   val SessionVarUuid: String = "createUuid"
+  val SessionVarModified: String = "createModified"
+  val SessionVarBodyString: String = "bodyString"
 
   def entityGetUrl(useCursor: Boolean): String = {
     val url = s"/${Settings.collection}?" +
@@ -72,6 +79,7 @@ object EntityCollectionScenarios {
     http("GET entities")
       .get(entityGetUrl(false))
       .headers(Headers.authToken)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200), maybeExtractCursor(SessionVarCursor))
   )
 
@@ -79,6 +87,7 @@ object EntityCollectionScenarios {
     http("GET entities")
       .get(entityGetUrl(true))
       .headers(Headers.authToken)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200), maybeExtractCursor(SessionVarCursor))
   )
 
@@ -109,6 +118,7 @@ object EntityCollectionScenarios {
     http("GET entity by name (anonymous)")
       .get(randomEntityNameUrl())
       .headers(Headers.authAnonymous)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200))
   )
 
@@ -116,6 +126,7 @@ object EntityCollectionScenarios {
     http("GET entity by name (token)")
       .get(randomEntityNameUrl())
       .headers(Headers.authToken)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200))
   )
 
@@ -124,7 +135,7 @@ object EntityCollectionScenarios {
     .exec(injectAuthType())
     .doIfOrElse(_ => Settings.endConditionType == EndConditionType.MinutesElapsed) {
     asLongAs(_ => Settings.continueMinutesTest) {
-      tryMax(Settings.retryCount) {
+      tryMax(1+Settings.retryCount) {
         doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
           exec(getRandomEntityAnonymous)
         } {
@@ -134,7 +145,7 @@ object EntityCollectionScenarios {
     }
   } {
     repeat(_ => Settings.endRequestCount.toInt) {
-      tryMax(Settings.retryCount) {
+      tryMax(1+Settings.retryCount) {
         doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
           exec(getRandomEntityAnonymous)
         } {
@@ -152,6 +163,7 @@ object EntityCollectionScenarios {
       .get("/" + Settings.collection + "/${uuid}")
       .queryParamMap(Settings.queryParamMap)
       .headers(Headers.authAnonymous)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200))
   )
 
@@ -160,6 +172,7 @@ object EntityCollectionScenarios {
       .get("/" + Settings.collection + "/${uuid}")
       .queryParamMap(Settings.queryParamMap)
       .headers(Headers.authToken)
+      .headers(Headers.usergridRegionHeaders)
       .check(status.is(200))
   )
 
@@ -173,7 +186,7 @@ object EntityCollectionScenarios {
             session => println(s"UUID: ${session("uuid").as[String]}")
             session
             }*/
-            .tryMax(Settings.retryCount) {
+            .tryMax(1+Settings.retryCount) {
             doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
               exec(getRandomEntityByUuidAnonymous)
             } {
@@ -188,7 +201,7 @@ object EntityCollectionScenarios {
             session => println(s"UUID: ${session("uuid").as[String]}")
             session
             }*/
-            .tryMax(Settings.retryCount) {
+            .tryMax(1+Settings.retryCount) {
               doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
                 exec(getRandomEntityByUuidAnonymous)
               } {
@@ -206,12 +219,39 @@ object EntityCollectionScenarios {
       exec(http("POST load entity")
         .post(_ => "/" + Settings.collection)
         .headers(Headers.authToken)
+        .headers(Headers.usergridRegionHeaders)
         .body(StringBody("""${entity}"""))
+        .transformResponse {
+          case response if response.isReceived =>
+            new ResponseWrapper(response) {
+              val contentType = response.header("content-type").getOrElse("").toLowerCase
+              val bodyStr = if (contentType.contains("json")) response.body.string else "[]"
+              if (bodyStr == "[]") { println(">>>>>>>>>>> USING EMPTY BODY") }
+              override val body = StringResponseBody(bodyStr, response.charset)
+            }
+        }
         // 200 for success, 400 if already exists
-        .check(status.in(Seq(200)), extractCreateUuid(SessionVarUuid)))
+        .check(status.saveAs(SessionVarStatus), bodyString.saveAs(SessionVarBodyString), extractEntityUuid(SessionVarUuid), extractEntityModified(SessionVarModified)))
         .exec(session => {
-          Settings.addUuid(session("seededEntityNum").as[String].toInt, session(SessionVarUuid).as[String])
-          session
+          val saveFailures = Settings.saveInvalidResponse
+          val status = session(SessionVarStatus).as[Int]
+          Settings.addStatus(status)
+          if (saveFailures || status == 200) {
+            val uuid = if (status == 200) session(SessionVarUuid).as[String] else ""
+            val entityName = session("entityName").as[String]
+            val modified = if (status == 200) session(SessionVarModified).as[Long] else 0
+            val collectionName = session("collectionName").as[String]
+            Settings.addUuid(uuid, collectionName, entityName, modified, status)
+            if (status != 200) {
+              val bodyString = session(SessionVarBodyString).as[String]
+              println(s">>>>>>>> LOAD ERROR - Status: $status\nBody:\n$bodyString")
+              session.markAsFailed
+            } else {
+              session
+            }
+          } else {
+            session.markAsFailed
+          }
         })
     }
   )
@@ -226,7 +266,7 @@ object EntityCollectionScenarios {
           session
         }*/
         .doIf(session => session("validEntity").as[String] == "yes") {
-          tryMax(Settings.retryCount) {
+          tryMax(if (Settings.saveInvalidResponse) 1 else 1+Settings.retryCount) {
             exec(loadEntity)
           }
         }
@@ -239,6 +279,7 @@ object EntityCollectionScenarios {
     http("DELETE entity")
       .delete("""${entityUrl}""")
       .headers(Headers.authToken)
+      .headers(Headers.usergridRegionHeaders)
       // 200 for success, 404 if doesn't exist
       .check(status.in(Seq(200)))
   )
@@ -253,7 +294,7 @@ object EntityCollectionScenarios {
         session
       }*/
       .doIf(session => session("validEntity").as[String] == "yes") {
-        tryMax(Settings.retryCount) {
+        tryMax(1+Settings.retryCount) {
           exec(deleteEntity)
         }
       }
@@ -266,6 +307,7 @@ object EntityCollectionScenarios {
     http("UPDATE entity")
       .put("""${entityUrl}""")
       .headers(Headers.authToken)
+      .headers(Headers.usergridRegionHeaders)
       .body(StringBody(Settings.updateBody))
       // 200 for success, 404 if doesn't exist
       .check(status.in(Seq(200)))
@@ -294,11 +336,23 @@ object EntityCollectionScenarios {
         .get("/" + Settings.collection + "/${entityName}")
         .queryParamMap(Settings.queryParamMap)
         .headers(Headers.authAnonymous)
-        .check(status.is(200), extractCreateUuid(SessionVarUuid)))
+        .headers(Headers.usergridRegionHeaders)
+        .check(status.saveAs(SessionVarStatus), extractEntityUuid(SessionVarUuid), extractEntityModified(SessionVarModified)))
         .exec(session => {
-          Settings.addUuid(session("seededEntityNum").as[String].toInt, session(SessionVarUuid).as[String])
-          session
-        })
+          val saveFailures = Settings.saveInvalidResponse
+          val status = session(SessionVarStatus).as[Int]
+          Settings.addStatus(status)
+          if (saveFailures || status == 200) {
+            val uuid = if (status == 200) session(SessionVarUuid).as[String] else ""
+            val entityName = session("entityName").as[String]
+            val modified = if (status == 200) session(SessionVarModified).as[Long] else 0
+            val collectionName = session("collectionName").as[String]
+            Settings.addUuid(uuid, collectionName, entityName, modified, status)
+            session
+          } else {
+            session.markAsFailed
+          }
+        }).exitHereIfFailed
     }
   )
 
@@ -308,11 +362,23 @@ object EntityCollectionScenarios {
         .get("/" + Settings.collection + "/${entityName}")
         .queryParamMap(Settings.queryParamMap)
         .headers(Headers.authToken)
-        .check(status.is(200), extractCreateUuid(SessionVarUuid)))
+        .headers(Headers.usergridRegionHeaders)
+        .check(status.saveAs(SessionVarStatus), extractEntityUuid(SessionVarUuid), extractEntityModified(SessionVarModified)))
         .exec(session => {
-        Settings.addUuid(session("seededEntityNum").as[String].toInt, session(SessionVarUuid).as[String])
-        session
-      })
+          val saveFailures = Settings.saveInvalidResponse
+          val status = session(SessionVarStatus).as[Int]
+          Settings.addStatus(status)
+          if (saveFailures || status == 200) {
+            val uuid = if (status == 200) session(SessionVarUuid).as[String] else ""
+            val entityName = session("entityName").as[String]
+            val modified = if (status == 200) session(SessionVarModified).as[Long] else 0
+            val collectionName = session("collectionName").as[String]
+            Settings.addUuid(uuid, collectionName, entityName, modified, status)
+            session
+          } else {
+            session.markAsFailed
+          }
+      }).exitHereIfFailed
     }
   )
 
@@ -326,7 +392,7 @@ object EntityCollectionScenarios {
           session
         }*/
         .doIf(session => session("validEntity").as[String] == "yes") {
-          tryMax(Settings.retryCount) {
+          tryMax(if (Settings.saveInvalidResponse) 1 else 1+Settings.retryCount) {
             doIfOrElse(_ => Settings.authType == AuthType.Anonymous) {
               exec(getEntityByNameSequentialAnonymous)
             } {

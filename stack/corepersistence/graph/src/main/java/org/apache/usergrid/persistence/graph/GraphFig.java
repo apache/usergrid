@@ -90,7 +90,8 @@ public interface GraphFig extends GuicyFig {
     @Key( SHARD_SIZE )
     long getShardSize();
 
-    @Default( "10" )
+
+    @Default( "20" )
     @Key( SHARD_AUDIT_WORKERS )
     int getShardAuditWorkerCount();
 

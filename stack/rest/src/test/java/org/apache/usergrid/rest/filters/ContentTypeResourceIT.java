@@ -16,40 +16,35 @@
  */
 package org.apache.usergrid.rest.filters;
 
-
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.representation.Form;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
-
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.Organization;
 import org.apache.usergrid.rest.test.resource.model.Token;
 import org.apache.usergrid.rest.test.resource.model.User;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
-import org.junit.Ignore;
+import org.glassfish.jersey.client.ClientResponse;
 import org.junit.Test;
 
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.*;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-
-import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 
 
 /**
@@ -80,10 +75,11 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
         HttpHost host = new HttpHost( super.getBaseURI().getHost(), super.getBaseURI().getPort() );
 
-        HttpPost post = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+        HttpPost post = new HttpPost( String.format("/%s/%s/games",
+            this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
         post.setEntity(new StringEntity(json));
         post.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken());
-        post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+        post.setHeader( HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON );
         post.setHeader(HttpHeaders.CONTENT_TYPE, "*/*");
 
         HttpResponse rsp = client.execute( host, post );
@@ -108,7 +104,7 @@ public class ContentTypeResourceIT extends AbstractRestIT {
     @Test
     public void textPlainContentType() throws Exception {
         User user = new User("shawn","shawn","shawn@email.com","aliensquirrel");
-        this.app().collection("users").post(user);
+        this.app().collection("users").post( user );
         Token token = this.app().token().post(new Token("shawn","aliensquirrel"));
         Map<String, String> data = hashMap( "name", "Solitaire2" );
 
@@ -118,7 +114,8 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
         HttpHost host = new HttpHost( super.getBaseURI().getHost(), super.getBaseURI().getPort() );
 
-        HttpPost post = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+        HttpPost post = new HttpPost( String.format("/%s/%s/games",
+            this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
 
         post.setEntity( new StringEntity( json ) );
         post.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken() );
@@ -142,11 +139,11 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
 
         Form payload = new Form();
-        payload.add( "organization", "formContentOrg" + UUIDUtils.newTimeUUID() );
-        payload.add( "username", "formContentOrg" + UUIDUtils.newTimeUUID() );
-        payload.add( "name", "Test User" + UUIDUtils.newTimeUUID() );
-        payload.add( "email", UUIDUtils.newTimeUUID() + "@usergrid.org" );
-        payload.add( "password", "foobar" );
+        payload.param( "organization", "formContentOrg" + UUIDUtils.newTimeUUID() );
+        payload.param( "username", "formContentOrg" + UUIDUtils.newTimeUUID() );
+        payload.param( "name", "Test User" + UUIDUtils.newTimeUUID() );
+        payload.param( "email", UUIDUtils.newTimeUUID() + "@usergrid.org" );
+        payload.param( "password", "foobar" );
 
         //checks that the organization was created using a form encoded content type, this is checked else where so
         //this test should be depreciated eventually.
@@ -173,7 +170,8 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
         HttpHost host = new HttpHost( super.getBaseURI().getHost(), super.getBaseURI().getPort() );
 
-        HttpPost post = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+        HttpPost post = new HttpPost( String.format("/%s/%s/games",
+            this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
 
         post.setEntity( new StringEntity( json ) );
         post.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken() );
@@ -193,8 +191,8 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
 
     /**
-     * Creates a simple entity of type game. Does not set the Accepts header. The type should be set to json to match the
-     * body.  Then does a get without Accept type, it should return application/json, not text/csv
+     * Creates a simple entity of type game. Does not set the Accepts header. The type should be set to json
+     * to match the body.  Then does a get without Accept type, it should return application/json, not text/csv
      */
     @Test
     public void noAcceptGet() throws Exception {
@@ -209,7 +207,8 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
         HttpHost host = new HttpHost( super.getBaseURI().getHost(), super.getBaseURI().getPort() );
 
-        HttpPost post = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+        HttpPost post = new HttpPost( String.format("/%s/%s/games",
+            this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
 
         post.setEntity( new StringEntity( json ) );
         post.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken() );
@@ -219,25 +218,32 @@ public class ContentTypeResourceIT extends AbstractRestIT {
         HttpResponse rsp = client.execute( host, post );
 
 
-        WebResource.Builder builder = app().collection("games").getResource(true)
-            .queryParam("access_token", this.getAdminToken().getAccessToken())
-            .type(MediaType.APPLICATION_JSON_TYPE);
+        Invocation.Builder builder = app().collection( "games" ).getTarget()
+            .queryParam( "access_token", this.getAdminToken().getAccessToken() )
+            .request();
 
-        ClientResponse clientResponse = builder.post(ClientResponse.class, JsonUtils.mapToJsonString(hashMap("name", "bar2")));
+        Response clientResponse = builder.post(
+            javax.ws.rs.client.Entity.json( new HashMap() {{ put( "name", "bar2" ); }} ), Response.class );
 
         assertEquals(200, clientResponse.getStatus());
 
-        MultivaluedMap<String, String> headers = clientResponse.getHeaders();
+        MultivaluedMap<String, Object> headers = clientResponse.getHeaders();
 
-        List<String> contentType = headers.get("Content-Type");
+        List contentType = headers.get( "Content-Type" );
         assertEquals(1, contentType.size());
         assertEquals(MediaType.APPLICATION_JSON, contentType.get(0));
 
         //do the get with no content type, it should get set to application/json
-        HttpPost get = new HttpPost( String.format("/%s/%s/games", this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+
+        builder = app().collection( "games" ).getTarget()
+            .queryParam( "access_token", this.getAdminToken().getAccessToken() )
+            .request();
+
+        HttpGet get = new HttpGet( String.format("/%s/%s/games",
+            this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
 
         get.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken() );
-        clientResponse = builder.get(ClientResponse.class);
+        clientResponse = builder.get( Response.class );
 
         assertEquals(200, clientResponse.getStatus());
 

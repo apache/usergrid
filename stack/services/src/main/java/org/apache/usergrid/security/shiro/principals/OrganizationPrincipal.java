@@ -17,14 +17,27 @@
 package org.apache.usergrid.security.shiro.principals;
 
 
+import java.util.Map;
 import java.util.UUID;
 
+import com.google.common.collect.HashBiMap;
+import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.security.shiro.Realm;
+import org.apache.usergrid.security.shiro.UsergridAuthorizationInfo;
+import org.apache.usergrid.security.tokens.TokenService;
 
 
 public class OrganizationPrincipal extends PrincipalIdentifier {
 
-    final OrganizationInfo organization;
+    OrganizationInfo organization;
+
+
+    public OrganizationPrincipal() {}
 
 
     public OrganizationPrincipal( OrganizationInfo organization ) {
@@ -45,5 +58,51 @@ public class OrganizationPrincipal extends PrincipalIdentifier {
     @Override
     public String toString() {
         return organization.toString();
+    }
+
+    @Override
+    public UUID getApplicationId() {
+        return CpNamingUtils.MANAGEMENT_APPLICATION_ID;
+    }
+
+    @Override
+    public void grant(
+        UsergridAuthorizationInfo info,
+        EntityManagerFactory emf,
+        ManagementService management,
+        TokenService tokens) {
+
+        // OrganizationPrincipals are usually only through OAuth
+        // They have access to a single organization
+
+        Map<UUID, String> organizationSet = HashBiMap.create();
+        Map<UUID, String> applicationSet = HashBiMap.create();
+        ApplicationInfo application = null;
+
+        role( info, Realm.ROLE_ORGANIZATION_ADMIN );
+        role( info, Realm.ROLE_APPLICATION_ADMIN );
+
+        grant( info, "organizations:access:" + organization.getUuid() );
+        organizationSet.put( organization.getUuid(), organization.getName() );
+
+        Map<UUID, String> applications = null;
+        try {
+            applications = management.getApplicationsForOrganization( organization.getUuid() );
+        }
+        catch ( Exception e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        if ( ( applications != null ) && !applications.isEmpty() ) {
+            grant( info, "applications:admin,access,get,put,post,delete:" + StringUtils
+                .join(applications.keySet(), ',') );
+
+            applicationSet.putAll( applications );
+        }
+
+        info.setOrganization(organization);
+        info.addOrganizationSet(organizationSet);
+        info.setApplication(application);
+        info.addApplicationSet(applicationSet);
     }
 }

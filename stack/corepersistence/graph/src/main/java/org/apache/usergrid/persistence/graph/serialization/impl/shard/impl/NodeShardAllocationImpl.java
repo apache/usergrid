@@ -61,8 +61,6 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
     private static final Logger logger = LoggerFactory.getLogger( NodeShardAllocationImpl.class );
 
-    private static final Shard MIN_SHARD = new Shard( 0, 0, true );
-
     private static final NoOpCompaction NO_OP_COMPACTION = new NoOpCompaction();
 
     private final EdgeShardSerialization edgeShardSerialization;
@@ -102,19 +100,24 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             existingShards = edgeShardSerialization.getShardMetaDataLocal( scope, maxShardId, directedEdgeMeta );
         }
 
-        if ( existingShards == null || !existingShards.hasNext() ) {
+            /**
+             * We didn't get anything out of cassandra, so we need to create the minumum shard
+             */
+            if ( existingShards == null || !existingShards.hasNext() ) {
 
 
-            final MutationBatch batch = edgeShardSerialization.writeShardMeta( scope, MIN_SHARD, directedEdgeMeta );
-            try {
-                batch.execute();
+                final MutationBatch batch = edgeShardSerialization.writeShardMeta( scope, Shard.MIN_SHARD, directedEdgeMeta );
+                try {
+                    batch.execute();
+                }
+                catch ( ConnectionException e ) {
+                    throw new RuntimeException( "Unable to connect to casandra", e );
+                }
+
+                existingShards = Collections.singleton( Shard.MIN_SHARD ).iterator();
             }
-            catch ( ConnectionException e ) {
-                throw new RuntimeException( "Unable to connect to casandra", e );
-            }
-
-            existingShards = Collections.singleton( MIN_SHARD ).iterator();
         }
+
 
         return new ShardEntryGroupIterator( existingShards, shardGroupCompaction, scope, directedEdgeMeta );
     }

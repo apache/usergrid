@@ -54,7 +54,7 @@ public interface EntityIndex {
     /**
      * Refresh the index.
      */
-    Observable<IndexRefreshCommand.IndexRefreshCommandInfo> refreshAsync();
+    Observable<IndexRefreshCommandInfo> refreshAsync();
 
 
     /**
@@ -70,6 +70,7 @@ public interface EntityIndex {
 
     /**
      * get total entity size by an edge ->   "term":{"edgeName":"zzzcollzzz|roles"}
+     *
      * @param edge
      * @return
      */
@@ -147,6 +148,23 @@ public interface EntityIndex {
      */
     enum AliasType {
         Read, Write
+    }
+    class IndexRefreshCommandInfo{
+        private final boolean hasFinished;
+        private final long executionTime;
+
+        public IndexRefreshCommandInfo(boolean hasFinished, long executionTime){
+            this.hasFinished = hasFinished;
+            this.executionTime = executionTime;
+        }
+
+        public boolean hasFinished() {
+            return hasFinished;
+        }
+
+        public long getExecutionTime() {
+            return executionTime;
+        }
     }
 
 }

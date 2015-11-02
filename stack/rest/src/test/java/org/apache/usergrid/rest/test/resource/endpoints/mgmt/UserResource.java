@@ -16,15 +16,15 @@
  */
 package org.apache.usergrid.rest.test.resource.endpoints.mgmt;
 
-import javax.ws.rs.core.MediaType;
-
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
 
-import com.sun.jersey.api.client.WebResource;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+
 
 
 /**
@@ -71,17 +71,19 @@ public class UserResource extends NamedResource {
     }
 
     public Entity get() {
-        WebResource resource = getResource( true );
-        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
-                                       .accept( MediaType.APPLICATION_JSON ).get( ApiResponse.class );
+        WebTarget resource = getTarget( true );
+        ApiResponse response = resource.request()
+            .accept( MediaType.APPLICATION_JSON )
+            .get( ApiResponse.class );
         return new Entity(response);
     }
 
     public Entity put(Entity userPayload){
-        WebResource resource = getResource(true);
+        WebTarget resource = getTarget( true );
 
-        ApiResponse response = resource.type( MediaType.APPLICATION_JSON_TYPE )
-                                       .accept( MediaType.APPLICATION_JSON ).put( ApiResponse.class, userPayload);
+        ApiResponse response = resource.request()
+            .accept( MediaType.APPLICATION_JSON )
+            .put( javax.ws.rs.client.Entity.json(userPayload), ApiResponse.class);
         return new Entity(response);
     }
 

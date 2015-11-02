@@ -81,6 +81,13 @@ object ConfigProperties {
   val EntityNumberProperty = "entityNumberProperty"
   val QueryParams = "queryParams"
   val CsvFeedPattern = "csvFeedPattern"
+  val UnlimitedFeed = "unlimitedFeed"
+  val FlushCsv = "flushCsv"
+  val InterleavedWorkerFeed = "interleavedWorkerFeed"
+  val NewCsvOnFlush = "newCsvOnFlush"
+  val DeleteAfterSuccessfulAudit = "deleteAfterSuccessfulAudit"
+  val UsergridRegion = "usergridRegion"
+  val SaveInvalidResponse = "saveInvalidResponse"
 
   val Values = Seq(Org,App,AdminUser,AdminPassword,BaseUrl,AuthType,TokenType,SkipSetup,CreateOrg,CreateApp,LoadEntities,
     ScenarioType,RampUsers,ConstantUsersPerSec,ConstantUsersDuration,UserSeed,AppUser,AppUserPassword,NumEntities,
@@ -89,7 +96,8 @@ object ConfigProperties {
     OrgCreationName,OrgCreationEmail,OrgCreationPassword,UpdateProperty,UpdateValue,EntityWorkerCount,EntityWorkerNum,
     UuidFilename,AuditUuidFilename,FailedUuidFilename,SandboxCollection,PurgeUsers,RetryCount,LaterThanTimestamp,
     EntityProgressCount,InjectionList,PrintFailedRequests,GetViaQuery,MultiPropertyPrefix,MultiPropertyCount,
-    MultiPropertySizeInK,EntityNumberProperty,QueryParams,CsvFeedPattern)
+    MultiPropertySizeInK,EntityNumberProperty,QueryParams,CsvFeedPattern,UnlimitedFeed,FlushCsv,InterleavedWorkerFeed,
+    NewCsvOnFlush,DeleteAfterSuccessfulAudit,UsergridRegion,SaveInvalidResponse)
 
   def isValid(str: String): Boolean = {
     Values.contains(str)
@@ -146,7 +154,7 @@ object ConfigProperties {
         case FailedUuidFilename => "/tmp/dummyFailedUuid.csv"
         case SandboxCollection => false
         case PurgeUsers => 100
-        case RetryCount => 5
+        case RetryCount => 0
         case LaterThanTimestamp => 0L
         case EntityProgressCount => 10000L
         case InjectionList => "rampUsers(10,60)"
@@ -158,6 +166,13 @@ object ConfigProperties {
         case EntityNumberProperty => ""
         case QueryParams => ""
         case CsvFeedPattern => org.apache.usergrid.enums.CsvFeedPatternType.Random
+        case UnlimitedFeed => false
+        case FlushCsv => 0L
+        case InterleavedWorkerFeed => false
+        case NewCsvOnFlush => false
+        case DeleteAfterSuccessfulAudit => false
+        case UsergridRegion => ""
+        case SaveInvalidResponse => false
       }
     } else {
       null

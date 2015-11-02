@@ -1,0 +1,151 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<!doctype html>
+<html lang="en" ng-app="appservices">
+
+<head>
+  <meta charset="utf-8">
+  <title>Usergrid Admin Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <link id="libScript" href="js/libs/bootstrap/custom/css/bootstrap.min.css" rel="stylesheet">
+  <link id="libScript" rel="stylesheet" href="bower_components/intro.js/introjs.css">
+  <link id="libScript" href="css/main.min.css" rel="stylesheet">
+
+  <!--styles for jquery ui calendar component-->
+  <link id="libScript" rel="stylesheet" type="text/css" href="js/libs/jqueryui/jquery-ui-1.8.9.custom.css">
+  <link id="libScript" rel="stylesheet" type="text/css" href="js/libs/jqueryui/jquery-ui-timepicker.css">
+</head>
+<body ng-controller="PageCtrl" ng-intro-onchange="help.introjs_ChangeEvent" ng-intro-options="help.IntroOptions" ng-intro-onexit="help.introjs_ExitEvent" ng-intro-oncomplete="help.introjs_CompleteEvent" ng-intro-method="startHelp" ng-intro-autostart="false">
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-N52333" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-N52333');</script>
+<!-- End Google Tag Manager -->
+<header ng-cloak="">
+  <nav class="navbar navbar-static-top">
+    <div class="container-fluid">
+      <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="brand" href="#"><img src="img/logo.png"></a>
+
+
+      <div class="nav-collapse collapse" ng-show="loaded">
+        <div class="navbar-text pull-left" ng-if="activeUI">
+          <button class="helpButton" ng-class="{helpButtonClicked:help.helpTooltipsEnabled}" ng-click="help.toggleTooltips()" ng-show="help.showHelpButtons">{{help.helpButtonStatus}}</button>
+          <button class="helpButton" ng-click="startHelp(); help.introjs_StartEvent();" ng-show="help.showHelpButtons">Take the Tour</button>
+        </div>
+        <div class="navbar-text pull-right" ng-if="activeUI">
+          <span class="navbar-text" id="userEmail">{{userEmail}}</span> |
+          <span ng-controller="LoginCtrl"><a id="logout-link" ng-click="logout()" title="logout"><i class="pictogram">&#59201</i></a></span> |
+          <span><a ng-click="profile()" title="profile"><i class="pictogram">&#59170</i></a></span> | <span><a href="#!/organizations" title="organizations"><i class="pictogram">&#128362;</i></a></span>
+        </div>
+
+      </div>
+    </div>
+  </nav>
+</header>
+<section class="side-menu" ng-cloak="" ng-show="activeUI">
+  <div class="sidebar-nav">
+    <div id="intro-1-org" class="nav-collapse collapse">
+
+      <org-menu context="orgmenu"></org-menu>
+
+    </div>
+    <div id="intro-3-side-menu">
+        <div class="nav-collapse collapse" id="sideMenu" ng-include="&apos;menu.html&apos;">
+        </div>
+    </div>
+  </div>
+</section>
+
+<section class="main-content" ng-cloak="" ng-show="loaded">
+  <div class="container-fluid">
+    <div class="row-fluid">
+      <div class="span12">
+        <bsmodal id="tooltips" title="Help Tooltips Enabled" close="hideModal" closelabel="OK" ng-cloak="">
+          <p>Hover your cursor over the '(?)' icons to get helpful tips and information.</p>
+        </bsmodal>
+        <!--header app/org context nav-->
+
+        <nav class="navbar secondary" ng-show="activeUI">
+          <div class="container-fluid">
+            <div class="row-fluid">
+              <div class="span12">
+                <div class="span5" id="intro-2-app-menu">
+                  <app-menu></app-menu>
+                </div>
+                <div class="span7 button-area">
+                  <div class="nav-collapse collapse">
+                    <ul class="helper-links nav span12">
+                      <li class="sdks span12">
+                        <ul id="intro-9-sdks" class="pull-right">
+                          <li class="title"><label>SDKs and Modules</label></li>
+                          <li><a target="_blank" href="https://github.com/apache/usergrid/tree/master/sdks"><i class="sdk-icon-ios"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/usergrid/tree/master/sdks"><i class="sdk-icon-android"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/usergrid/tree/master/sdks"><i class="sdk-icon-js"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/usergrid/tree/master/sdks"><i class="sdk-icon-node"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/usergrid/tree/master/sdks"><i class="sdk-icon-ruby"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/usergrid/tree/master/sdks"><i class="sdk-icon-net"></i></a></li>
+                          <li><a target="_blank" href="https://github.com/apache/usergrid/tree/master/sdks"><i class="sdk-icon-perl"></i></a></li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
+        <!--for demo mode-->
+        <!--todo - this needs a style applied only when shown ng-class-->
+        <div ng-controller="AlertCtrl" ng-cloak="" class="alert-holder main-alert">
+          <alerti ng-repeat="alert in alerts" type="alert.type" closeable="true" index="$index" ng-cloak="">{{alert.msg}}</alerti>
+        </div>
+
+        <insecure-banner></insecure-banner>
+        <!--Dynamic Content-->
+        <div ng-view="" class="page-holder"></div>
+
+        <footer>
+          <hr>
+          <p class="pull-right">&copy; Apache Usergrid 2015</p>
+        </footer>
+      </div>
+    </div>
+  </div>
+</section>
+<script id="libScript" src="js/generated/usergrid-libs.min.js"></script>
+<script id="libScript" src="js/libs/bootstrap/custom/js/bootstrap.min.js"></script>
+<!--todo - remove this. temporarily including jquery ui for calendar in push-->
+<script id="libScript" src="js/libs/jqueryui/jquery.ui.timepicker.min.js" type="text/javascript"></script>
+<!-- In dev use: <script src="js/libs/angular-1.1.5.js"></script> -->
+<!--<script type="text/javascript" src="js/libs/angular-ui-ng-grid/ng-grid-2.0.2.debug.js"></script>-->
+<script src="config.js"></script>
+<script id="main-script" src="js/generated/usergrid.min.js"></script>
+</body>
+</html>

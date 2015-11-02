@@ -47,6 +47,7 @@ import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsExcept
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
@@ -165,7 +166,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
             .doOnCompleted( () -> {
                 migrationInfoSerialization.setVersion( getName(), getMaxVersion() );
                 observer.complete();
-            } ).subscribe();
+            } ).subscribe();//let this run through since it handles errors
     }
 
 
@@ -177,6 +178,8 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         Map oldAppInfoMap = CpEntityMapUtils.toMap( oldAppInfoEntity );
 
         final String name = ( String ) oldAppInfoMap.get( PROPERTY_NAME );
+
+        logger.info( "Attempting to migrate app {}", name );
 
         try {
             final String orgName = name.split( "/" )[0];
@@ -190,6 +193,15 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
             //avoid management org
 
             EntityRef orgRef = managementEm.getAlias( Group.ENTITY_TYPE, orgName );
+
+            /**
+             * No op, we couldn't find the org, so we can't roll the app forward
+             */
+            if(orgRef == null){
+                logger.error( "Unable to retrieve ref for org {}.  Not migrating app {}", orgName, appName );
+                return;
+            }
+
             // create and connect new APPLICATION_INFO oldAppInfo to Organization
             managementService.createApplication( orgRef.getUuid(), name, applicationId, null );
 
@@ -228,7 +240,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         final EntityCollectionManager managementCollectionManager =
             entityCollectionManagerFactory.createCollectionManager( managementAppScope );
 
-        Observable<Edge> edgesObservable = getApplicationInfoEdges( appId );
+        Observable<MarkedEdge> edgesObservable = getApplicationInfoEdges( appId );
         //get the graph for all app infos
         Observable<org.apache.usergrid.persistence.model.entity.Entity> entityObs = edgesObservable.flatMap( edge -> {
             final Id appInfoId = edge.getTargetNode();
@@ -288,7 +300,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
     }
 
 
-    public Observable<Edge> getApplicationInfoEdges( final UUID applicationId ) {
+    public Observable<MarkedEdge> getApplicationInfoEdges( final UUID applicationId ) {
         final ApplicationScope managementAppScope = getApplicationScope( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
         final GraphManager gm = graphManagerFactory.createEdgeManager( managementAppScope );
 

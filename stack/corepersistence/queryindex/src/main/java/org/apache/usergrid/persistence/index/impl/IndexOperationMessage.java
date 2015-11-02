@@ -23,30 +23,32 @@ package org.apache.usergrid.persistence.index.impl;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.apache.usergrid.persistence.core.future.FutureObservable;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import rx.Observable;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 
 
 /**
  * Container for index operations.
  */
 public class IndexOperationMessage implements Serializable {
+    @JsonProperty
     private final Set<IndexOperation> indexRequests;
+
+    @JsonProperty
     private final Set<DeIndexOperation> deIndexRequests;
 
+    @JsonProperty
     private long creationTime;
 
 
-    private final FutureObservable<IndexOperationMessage> containerFuture;
 
 
     public IndexOperationMessage() {
         this.indexRequests = new HashSet<>();
         this.deIndexRequests = new HashSet<>();
-        this.containerFuture = new FutureObservable<>( this );
         this.creationTime = System.currentTimeMillis();
     }
 
@@ -78,15 +80,6 @@ public class IndexOperationMessage implements Serializable {
         return indexRequests.isEmpty() && deIndexRequests.isEmpty();
     }
 
-    /**
-     * return the promise
-     */
-    @JsonIgnore
-    public Observable<IndexOperationMessage> observable() {
-        return containerFuture.observable();
-    }
-
-
     @Override
     public boolean equals( final Object o ) {
         if ( this == o ) {
@@ -116,12 +109,13 @@ public class IndexOperationMessage implements Serializable {
         return result;
     }
 
-    public void done() {
-        //if this has been serialized, it could be null. don't NPE if it is, there's nothing to ack
-        containerFuture.done();
-    }
 
     public long getCreationTime() {
         return creationTime;
+    }
+
+    public void ingest(IndexOperationMessage singleMessage) {
+        this.indexRequests.addAll(singleMessage.getIndexRequests().stream().collect(Collectors.toList()));
+        this.deIndexRequests.addAll(singleMessage.getDeIndexRequests().stream().collect(Collectors.toList()));
     }
 }

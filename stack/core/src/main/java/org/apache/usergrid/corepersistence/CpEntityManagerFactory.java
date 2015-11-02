@@ -63,10 +63,10 @@ import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.IndexRefreshCommand;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -477,9 +477,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}",
             new Object[]{edgeType, managementId.getType(), managementId.getUuid()});
 
-        Observable<Edge> edges = gm.loadEdgesFromSource( new SimpleSearchByEdgeType(
-                managementId, edgeType, Long.MAX_VALUE,
-                SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent() ));
+        Observable<MarkedEdge> edges = gm.loadEdgesFromSource(
+            new SimpleSearchByEdgeType( managementId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+                Optional.<Edge>absent() ) );
 
         final EntityCollectionManager ecm = managerCache.getEntityCollectionManager( appScope );
 
@@ -689,7 +689,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     /**
      * TODO, these 3 methods are super janky.  During refactoring we should clean this model up
      */
-    public IndexRefreshCommand.IndexRefreshCommandInfo refreshIndex(UUID applicationId) {
+    public EntityIndex.IndexRefreshCommandInfo refreshIndex(UUID applicationId) {
         return getEntityManager(applicationId).refreshIndex();
     }
 

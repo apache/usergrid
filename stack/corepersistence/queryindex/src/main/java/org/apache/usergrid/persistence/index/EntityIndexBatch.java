@@ -18,9 +18,9 @@ package org.apache.usergrid.persistence.index;/*
  */
 
 
+import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.future.FutureObservable;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -63,11 +63,13 @@ public interface EntityIndexBatch {
     EntityIndexBatch deindex( final SearchEdge searchEdge, final Id id, final UUID version );
 
 
+    EntityIndexBatch deindex( final CandidateResult candidateResult);
+
     /**
-     * Execute the batch
+     * get the batches
      * @return future to guarantee execution
      */
-    Observable<IndexOperationMessage> execute();
+    IndexOperationMessage build();
 
     /**
      * Get the number of operations in the batch

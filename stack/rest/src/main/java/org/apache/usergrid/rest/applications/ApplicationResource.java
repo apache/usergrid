@@ -17,8 +17,8 @@
 package org.apache.usergrid.rest.applications;
 
 
-import com.sun.jersey.api.json.JSONWithPadding;
-import com.sun.jersey.api.view.Viewable;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
@@ -38,6 +38,7 @@ import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.assets.AssetsResource;
 import org.apache.usergrid.rest.applications.events.EventsResource;
 import org.apache.usergrid.rest.applications.queues.QueueResource;
@@ -47,8 +48,10 @@ import org.apache.usergrid.rest.exceptions.NotFoundExceptionMapper;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
+import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
+import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -338,7 +341,9 @@ public class ApplicationResource extends ServiceResource {
     @GET
     @Path("credentials")
     @RequireApplicationAccess
-    public JSONWithPadding getKeys( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getKeys( @Context UriInfo ui,
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
@@ -352,17 +357,16 @@ public class ApplicationResource extends ServiceResource {
                 new ClientCredentialsInfo( management.getClientIdForApplication( services.getApplicationId() ),
                         management.getClientSecretForApplication( services.getApplicationId() ) );
 
-        return new JSONWithPadding(
-                createApiResponse().withCredentials( kp ).withAction( "get application keys" ).withSuccess(),
-                callback );
+        return   createApiResponse().withCredentials( kp ).withAction( "get application keys" ).withSuccess();
     }
 
 
     @POST
     @Path("credentials")
     @RequireApplicationAccess
-    @Produces(MediaType.APPLICATION_JSON)
-    public JSONWithPadding generateKeys( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse generateKeys( @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         logger.debug( "AuthResource.keys" );
@@ -375,9 +379,7 @@ public class ApplicationResource extends ServiceResource {
             management.getClientIdForApplication( services.getApplicationId() ),
             management.newClientSecretForApplication( services.getApplicationId() ) );
 
-        return new JSONWithPadding(
-                createApiResponse().withCredentials( kp ).withAction( "generate application keys" ).withSuccess(),
-                callback );
+        return createApiResponse().withCredentials( kp ).withAction( "generate application keys" ).withSuccess();
     }
 
 
@@ -482,7 +484,7 @@ public class ApplicationResource extends ServiceResource {
     @Override
     @DELETE
     @RequireOrganizationAccess
-    public JSONWithPadding executeDelete( @Context final UriInfo ui, @DefaultValue( "callback" ) final String callback,
+    public ApiResponse executeDelete( @Context final UriInfo ui, @DefaultValue( "callback" ) final String callback,
                                           final String confirmAppDelete ) throws Exception {
         throw new UnsupportedOperationException( "Delete must be done from the management endpoint" );
     }
@@ -583,7 +585,9 @@ public class ApplicationResource extends ServiceResource {
 
     @GET
     @Path("apm/apigeeMobileConfig")
-    public JSONWithPadding getAPMConfig( @Context UriInfo ui,
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public Object getAPMConfig( @Context UriInfo ui,
                                          @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
         EntityManager em = emf.getEntityManager( applicationId );
@@ -599,6 +603,54 @@ public class ApplicationResource extends ServiceResource {
         if(value==null){
             throw new EntityNotFoundException("apigeeMobileConfig not found, it is possibly not enabled for your config.");
         }
-        return new JSONWithPadding( value, callback );
+        return value;
     }
+
+    // Specifically require superuser access as this is setting app properties directly (only way to currently do this
+    // with Apigee's apigeeMobileConfig
+    @RequireOrganizationAccess
+    @POST
+    @Path("apm/apigeeMobileConfig")
+    @Consumes(APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String setAPMConfig( @Context UriInfo ui,
+                                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
+                                Map<String, Object> json ) throws Exception {
+
+        if(json == null || json.size() < 1){
+            logger.error("Param {} cannot be null for POST apm/apigeeMobileConfig", APIGEE_MOBILE_APM_CONFIG_JSON_KEY);
+            throw new IllegalArgumentException("Request body cannot be empty and must include apigeeMobileConfig params");
+        }
+
+        final String requestAppUUID = (String) json.get("applicationUUID");
+        if(!requestAppUUID.equalsIgnoreCase(applicationId.toString())){
+            logger.error("Provided application UUID {} does not match actual application UUID {}",
+                requestAppUUID,
+                applicationId.toString());
+            throw new IllegalArgumentException(
+                String.format("Provided application UUID %s does not match actual application UUID %s",
+                requestAppUUID,
+                applicationId.toString())
+            );
+        }
+
+        final String apmConfig = new ObjectMapper().writeValueAsString(json);
+        if(logger.isDebugEnabled()){
+            logger.debug("Received request to set apigeeMobileConfig properties with: {}", apmConfig);
+        }
+
+
+        EntityManager em = emf.getEntityManager( applicationId );
+        em.setProperty(new SimpleEntityRef(Application.ENTITY_TYPE, applicationId),
+            APIGEE_MOBILE_APM_CONFIG_JSON_KEY,
+            apmConfig
+        );
+
+        logger.info("Successfully set apigeeMobileConfig properties with: {}", apmConfig);
+
+        return apmConfig;
+
+    }
+
+
 }

@@ -18,6 +18,7 @@ package org.apache.usergrid.management.cassandra;
 
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.inject.Injector;
@@ -35,6 +36,9 @@ import org.apache.usergrid.management.*;
 import org.apache.usergrid.management.exceptions.*;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.Query.Level;
+import org.apache.usergrid.persistence.cache.CacheFactory;
+import org.apache.usergrid.persistence.cache.CacheScope;
+import org.apache.usergrid.persistence.cache.ScopedCache;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
@@ -44,6 +48,7 @@ import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsE
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.security.crypto.EncryptionService;
@@ -150,6 +155,8 @@ public class ManagementServiceImpl implements ManagementService {
     protected Injector injector;
 
     protected EncryptionService encryptionService;
+
+    protected CacheFactory cacheFactory;
 
 
 
@@ -1610,7 +1617,8 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public ApplicationInfo createApplication( UUID organizationId, String applicationName ) throws Exception {
 
-        return createApplication( organizationId, applicationName,null, null );
+        // DO NOT CHANGE THIS AS SOME EXTERNAL CLASSES MAY RELY ON THIS BEHAVIOR WHEN EXTENDING
+        return createApplication( organizationId, applicationName, null );
     }
 
 
@@ -1658,7 +1666,12 @@ public class ManagementServiceImpl implements ManagementService {
                     + ")</a> created a new application named " + applicationName, null );
         }
 
-
+        if ( cacheFactory == null ) {
+            cacheFactory = injector.getInstance( CacheFactory.class );
+        }
+        ScopedCache scopedCache = cacheFactory.getScopedCache(
+            new CacheScope( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" )));
+        scopedCache.invalidate();
 
         return new ApplicationInfo( applicationId, appInfo.getName() );
     }
@@ -1717,7 +1730,9 @@ public class ManagementServiceImpl implements ManagementService {
                     + ")</a> restored an application named " + appInfo.getName(), null );
         }
 
-
+        ScopedCache scopedCache = cacheFactory.getScopedCache(
+            new CacheScope( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" )));
+        scopedCache.invalidate();
 
         return new ApplicationInfo( applicationId, appInfo.getName() );
     }
@@ -2805,9 +2820,46 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
+    public void setAppUserCredentialsInfo( final UUID applicationId, final UUID userId,
+                                           final CredentialsInfo credentialsInfo ) throws Exception {
+
+        Preconditions.checkNotNull( applicationId, "applicationId is required" );
+        Preconditions.checkNotNull( userId, "userId is required" );
+        Preconditions.checkNotNull( credentialsInfo, "credentialsInfo is required" );
+
+        final User user = emf.getEntityManager( applicationId ).get(userId, User.class);
+
+        if(user == null){
+            throw new EntityNotFoundException( "User with id " + userId + " cannot be found" );
+        }
+
+        writeUserPassword(applicationId, user, credentialsInfo);
+    }
+
+
+    @Override
+    public CredentialsInfo getAppUserCredentialsInfo( final UUID applicationId, final UUID userId ) throws Exception {
+
+        final User user = emf.getEntityManager( applicationId ).get( userId, User.class );
+
+        if(user == null){
+            throw new EntityNotFoundException("Could not find user with id " + userId + " in application" + applicationId  );
+        }
+
+        final CredentialsInfo ci = readUserPasswordCredentials( applicationId, userId, User.ENTITY_TYPE );
+
+        if ( ci == null ) {
+            throw new EntityNotFoundException("Could not find credentials for user with id " + userId + " in application" + applicationId );
+        }
+
+        return ci;
+    }
+
+
+    @Override
     public User verifyAppUserPasswordCredentials( UUID applicationId, String name, String password ) throws Exception {
 
-        User user = findUserEntity(applicationId, name);
+        User user = findUserEntity( applicationId, name );
         if ( user == null ) {
             return null;
         }

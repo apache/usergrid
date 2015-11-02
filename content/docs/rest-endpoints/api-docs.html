@@ -287,16 +287,16 @@
 Definitions</a>.</p>
 <h2><p>Table of Contents</p>
 </h2><ul class="simple">
-<li><a class="reference external" href="#Access-Tokens">Access-Tokens</a></li>
-<li><a class="reference external" href="#Activities">Activities</a></li>
-<li><a class="reference external" href="#Admin-Users">Admin-Users</a></li>
-<li><a class="reference external" href="#App-Users">App-Users</a></li>
-<li><a class="reference external" href="#Entities-Collections">Entities-Collections</a></li>
-<li><a class="reference external" href="#Events">Events</a></li>
-<li><a class="reference external" href="#Groups">Groups</a></li>
-<li><a class="reference external" href="#Notifications">Notifications</a></li>
-<li><a class="reference external" href="#Organizations-Applications">Organizations-Applications</a></li>
-<li><a class="reference external" href="#Permissions-Roles">Permissions-Roles</a></li>
+<li><a class="reference external" href="#access-tokens">Access-Tokens</a></li>
+<li><a class="reference external" href="#activities">Activities</a></li>
+<li><a class="reference external" href="#admin-users">Admin-Users</a></li>
+<li><a class="reference external" href="#app-users">App-Users</a></li>
+<li><a class="reference external" href="#entities-collections">Entities-Collections</a></li>
+<li><a class="reference external" href="#events">Events</a></li>
+<li><a class="reference external" href="#groups">Groups</a></li>
+<li><a class="reference external" href="#notifications">Notifications</a></li>
+<li><a class="reference external" href="#organizations-applications">Organizations-Applications</a></li>
+<li><a class="reference external" href="#permissions-roles">Permissions-Roles</a></li>
 </ul>
 <div class="section" id="methods">
 <h1>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h1>
@@ -314,12 +314,12 @@ in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: Object containing access_token.</li>
-<li>Schema: <a class="reference external" href="#AccessTokenResponse">AccessTokenResponse</a></li>
+<li>Schema: <a class="reference external" href="#accesstokenresponse">AccessTokenResponse</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/token</p>
 </h2><p>Login with App-User or Application credentials.</p>
@@ -333,12 +333,12 @@ in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: Object containing access_token.</li>
-<li>Schema: <a class="reference external" href="#AccessTokenResponse">AccessTokenResponse</a></li>
+<li>Schema: <a class="reference external" href="#accesstokenresponse">AccessTokenResponse</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 </div>
 <div class="section" id="activities">
@@ -358,12 +358,12 @@ name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of group&#8217;s activity.</li>
-<li>Schema: <a class="reference external" href="#ActivityFeed">ActivityFeed</a></li>
+<li>Schema: <a class="reference external" href="#activityfeed">ActivityFeed</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/users/{userId}/activities</p>
 </h2><p>Create an activity in the activities collection.</p>
@@ -382,12 +382,12 @@ sets of activity properties. (Specified in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of user&#8217;s activity.</li>
-<li>Schema: <a class="reference external" href="#ActivityFeed">ActivityFeed</a></li>
+<li>Schema: <a class="reference external" href="#activityfeed">ActivityFeed</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /{orgId}/{appId}/users/{userId}/feed</p>
 </h2><p>Retrieve a user&#8217;s feed through providing all the identifications.</p>
@@ -404,12 +404,12 @@ username or UUID. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of user&#8217;s activity feed.</li>
-<li>Schema: <a class="reference external" href="#ActivityFeed">ActivityFeed</a></li>
+<li>Schema: <a class="reference external" href="#activityfeed">ActivityFeed</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 </div>
 <div class="section" id="admin-users">
@@ -425,12 +425,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved Admin user&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-DELETE-heading"><p>DELETE /management/orgs/{orgId}/users/{userId}</p>
 </h2><p>Remove an admin user from an organization through providing both Id of
@@ -446,12 +446,12 @@ username, email address or UUID. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of deleted Admin user&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /management/users</p>
 </h2><p>Create a whole new admin user.</p>
@@ -465,12 +465,12 @@ entity with fields required for User creation. (Specified in body).</li>
 <ul class="simple">
 <li>Description: An API Response with a entities array containing the
 newly created Admin User.</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /management/users/resetpw</p>
 </h2><p>Initiate the reset of an admin user&#8217;s password.</p>
@@ -482,12 +482,12 @@ newly created Admin User.</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of complete messages.</li>
-<li>Schema: <a class="reference external" href="#Action">Action</a></li>
+<li>Schema: <a class="reference external" href="#action">Action</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /management/users/resetpw</p>
 </h2><p>Complete the password reset through getting the newpassword and the old
@@ -507,7 +507,7 @@ challenge, and the admin user&#8217;s email address. (Specified in body).</li>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description:</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /management/users/{userId}</p>
 </h2><p>Retrieve details about an admin user.</p>
@@ -521,12 +521,12 @@ username, real name, email address or UUID. (Specified in path).</li>
 <ul class="simple">
 <li>Description: An API Response with a entities array containing the
 Admin User.</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-PUT-heading"><p>PUT /management/users/{userId}</p>
 </h2><p>Update the info of an admin user.</p>
@@ -540,12 +540,12 @@ username, real name, email address or UUID. (Specified in path).</li>
 <ul class="simple">
 <li>Description: An API Response with a entities array containing the
 updated Admin User</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /management/users/{userId}/activate</p>
 </h2><p>Activate an admin user from a link provIded in an email notification.</p>
@@ -562,12 +562,12 @@ confimation email or not. (Specified in query).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of complete messages.</li>
-<li>Schema: <a class="reference external" href="#Action">Action</a></li>
+<li>Schema: <a class="reference external" href="#action">Action</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-PUT-heading"><p>PUT /management/users/{userId}/password</p>
 </h2><p>Update an admin user&#8217;s password through getting the newpassword and the
@@ -583,12 +583,12 @@ username, real name, email address or UUID. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of complete messages.</li>
-<li>Schema: <a class="reference external" href="#Action">Action</a></li>
+<li>Schema: <a class="reference external" href="#action">Action</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /management/users/{userId}/reactivate</p>
 </h2><p>Reactivate an expired admin user.</p>
@@ -601,12 +601,12 @@ username, real name, email address or UUID. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of complete messages.</li>
-<li>Schema: <a class="reference external" href="#Action">Action</a></li>
+<li>Schema: <a class="reference external" href="#action">Action</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 </div>
 <div class="section" id="app-users">
@@ -626,12 +626,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved user&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/users</p>
 </h2><p>Create a user in the users collection through providing all the
@@ -649,12 +649,12 @@ user. (Specified in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of created user&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /{orgId}/{appId}/users/{userId}</p>
 </h2><p>Retrieve a user through providing all the identifications.</p>
@@ -671,12 +671,12 @@ username, email address or UUID. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved user&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-PUT-heading"><p>PUT /{orgId}/{appId}/users/{userId}</p>
 </h2><p>Update a user through providing all the identifications.</p>
@@ -693,12 +693,12 @@ username or UUID. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of updated user&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-DELETE-heading"><p>DELETE /{orgId}/{appId}/users/{userId}</p>
 </h2><p>Remove a user through providing all the identifications.</p>
@@ -715,12 +715,12 @@ username or UUID. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of deleted user&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/users/{user}/password</p>
 </h2><p>Set a user&#8217;s password or reset the user&#8217;s existing password.</p>
@@ -738,12 +738,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of complete messages.</li>
-<li>Schema: <a class="reference external" href="#Action">Action</a></li>
+<li>Schema: <a class="reference external" href="#action">Action</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 </div>
 <div class="section" id="entities-collections">
@@ -767,12 +767,12 @@ username or UUID. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of user&#8217;s collections info.</li>
-<li>Schema: <a class="reference external" href="#Entity">Entity</a></li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /{orgId}/{appId}/{collectionId}</p>
 </h2><p>Retrieve collection through query statement.</p>
@@ -791,12 +791,12 @@ statement should be enclosed in single-quotes. (Specified in query).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved collection&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Entity">Entity</a></li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-PUT-heading"><p>PUT /{orgId}/{appId}/{collectionId}</p>
 </h2><p>Update collection through query statement.</p>
@@ -815,12 +815,12 @@ statement should be enclosed in single-quotes. (Specified in query).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of updated collection&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Entity">Entity</a></li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}</p>
 </h2><p>Add an entity to a collection through providing all the identifications.</p>
@@ -841,12 +841,12 @@ which includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of added entity&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Entity">Entity</a></li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-DELETE-heading"><p>DELETE
 /{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}</p>
@@ -869,12 +869,12 @@ which includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of deleted entity&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Entity">Entity</a></li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /{orgId}/{appId}/{collectionId}/{entityId}</p>
 </h2><p>Retrieve an entity through providing Id of application, organization,
@@ -894,12 +894,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved entity&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Entity">Entity</a></li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-PUT-heading"><p>PUT /{orgId}/{appId}/{collectionId}/{entityId}</p>
 </h2><p>One or more properties can be updated with a single request.</p>
@@ -920,12 +920,12 @@ properties of the entity. (Specified in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of updated entity&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Entity">Entity</a></li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-DELETE-heading"><p>DELETE /{orgId}/{appId}/{collectionId}/{entityId}</p>
 </h2><p>Delete an entity from the collection.</p>
@@ -944,12 +944,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of deleted entity&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Entity">Entity</a></li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/{entitytype}</p>
 </h2><p>When a new entity is created, Usergrid will automatically create a
@@ -970,12 +970,12 @@ properties of the entity. (Specified in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of created custom entity&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Entity">Entity</a></li>
+<li>Schema: <a class="reference external" href="#entity">Entity</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 </div>
 <div class="section" id="events">
@@ -996,12 +996,12 @@ property of the event. (Specified in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of created event&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Event">Event</a></li>
+<li>Schema: <a class="reference external" href="#event">Event</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 </div>
 <div class="section" id="groups">
@@ -1022,12 +1022,12 @@ the created group. (Specified in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of created group&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Group">Group</a></li>
+<li>Schema: <a class="reference external" href="#group">Group</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/groups/{groupId}/activities</p>
 </h2><p>Create an activity to a specific group. In this case the activity is
@@ -1052,12 +1052,12 @@ sets of activity properties. (Specified in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description:</li>
-<li>Schema: <a class="reference external" href="#ActivityFeed">ActivityFeed</a></li>
+<li>Schema: <a class="reference external" href="#activityfeed">ActivityFeed</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/groups/{groupId}/users/{userId}</p>
 </h2><p>Add a user to a group through providing all the identifications.</p>
@@ -1076,12 +1076,12 @@ username or UUID. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of added user&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-DELETE-heading"><p>DELETE /{orgId}/{appId}/groups/{groupId}/users/{userId}</p>
 </h2><p>Delete user from a group through providing all the identifications.</p>
@@ -1100,12 +1100,12 @@ username or UUID. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of deleted user&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /{org_Id}/{app_Id}/groups/{groupId}</p>
 </h2><p>Get a group through through providing all the identifications.</p>
@@ -1122,12 +1122,12 @@ name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved group&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Group">Group</a></li>
+<li>Schema: <a class="reference external" href="#group">Group</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-PUT-heading"><p>PUT /{org_Id}/{app_Id}/groups/{groupId}</p>
 </h2><p>Update a group through providing all the identifications.</p>
@@ -1144,12 +1144,12 @@ name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of updated group&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Group">Group</a></li>
+<li>Schema: <a class="reference external" href="#group">Group</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 </div>
 <div class="section" id="notifications">
@@ -1173,12 +1173,12 @@ the user. (Specified in query).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of created notification&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Notification">Notification</a></li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{applicationId}/devices/*/notifications</p>
 </h2><p>Create notifications for all devices. This request will target all
@@ -1197,12 +1197,12 @@ the request. (Specified in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of created notification&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Notification">Notification</a></li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{applicationId}/devices/{deviceId}/notifications</p>
 </h2><p>Create notifications for a single device. This request will target a
@@ -1223,12 +1223,12 @@ the request. (Specified in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of created notification&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Notification">Notification</a></li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{applicationId}/groups/{path}/notifications</p>
 </h2><p>Create notifications for a group. This request will target all users
@@ -1248,12 +1248,12 @@ the request. (Specified in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of created notification&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Notification">Notification</a></li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /{orgId}/{applicationId}/notifications</p>
 </h2><p>Retrieve one or more notifications through providing all the
@@ -1269,12 +1269,12 @@ which includes name or uuid (same as appId). (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved notification&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Notification">Notification</a></li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-PUT-heading"><p>PUT /{orgId}/{applicationId}/notifications/{notificationId}</p>
 </h2><p>Update a Notification in order to cancel the notifcation or set a new
@@ -1295,12 +1295,12 @@ Object with Notification fields to be updated. (Specified in body).</li>
 <ul class="simple">
 <li>Description: An API Response object containing an entity of type
 Notification.</li>
-<li>Schema: <a class="reference external" href="#Notification">Notification</a></li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-DELETE-heading"><p>DELETE /{orgId}/{applicationId}/notifications/{notificationId}</p>
 </h2><p>Delete an unsent Notification from the system.</p>
@@ -1318,12 +1318,12 @@ which includes name or uuid. (Specified in path).</li>
 <ul class="simple">
 <li>Description: API Response containing Notification entity that was
 deleted.</li>
-<li>Schema: <a class="reference external" href="#Notification">Notification</a></li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /{orgId}/{applicationId}/receipts</p>
 </h2><p>Retrieve one or more receipts through providing all the identifications.</p>
@@ -1338,12 +1338,12 @@ which includes name or uuid (same as appId). (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved receipt&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Receipt">Receipt</a></li>
+<li>Schema: <a class="reference external" href="#receipt">Receipt</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{applicationId}/users/{userId}/notifications</p>
 </h2><p>Create notifications for a user. This request will target a specific
@@ -1364,12 +1364,12 @@ the request. (Specified in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of created notification&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Notification">Notification</a></li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /{orgId}/{applicationId}/{deviceId}/*/receipts</p>
 </h2><p>Retrieve receipts associated with one or more devices through providing
@@ -1387,12 +1387,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved receipt&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Receipt">Receipt</a></li>
+<li>Schema: <a class="reference external" href="#receipt">Receipt</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /{orgId}/{applicationId}/{notificationId}/*/queue</p>
 </h2><p>Retrieve the list of devices associated with one or more notifications
@@ -1411,12 +1411,12 @@ which includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved device&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Device">Device</a></li>
+<li>Schema: <a class="reference external" href="#device">Device</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /{orgId}/{applicationId}/{notificationId}/*/receipts</p>
 </h2><p>Retrieve receipts for one or more notifications through providing all
@@ -1434,12 +1434,12 @@ which includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved receipt&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Receipt">Receipt</a></li>
+<li>Schema: <a class="reference external" href="#receipt">Receipt</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /{orgId}/{applicationId}/{receiptId}/*/notifications</p>
 </h2><p>Retrieve notifications associated with one or more receipts through
@@ -1457,12 +1457,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved notification&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Notification">Notification</a></li>
+<li>Schema: <a class="reference external" href="#notification">Notification</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 </div>
 <div class="section" id="organizations-applications">
@@ -1478,12 +1478,12 @@ properties supplied through a form. (Specified in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of created Organization.</li>
-<li>Schema: <a class="reference external" href="#Organization">Organization</a></li>
+<li>Schema: <a class="reference external" href="#organization">Organization</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}</p>
 </h2><p>Retrieve an organization given a specified UUID or username.</p>
@@ -1496,12 +1496,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of created Organization.</li>
-<li>Schema: <a class="reference external" href="#Organization">Organization</a></li>
+<li>Schema: <a class="reference external" href="#organization">Organization</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}/activate</p>
 </h2><p>Activate an organization from a link provIded in an email notification.</p>
@@ -1517,12 +1517,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of complete messages.</li>
-<li>Schema: <a class="reference external" href="#Action">Action</a></li>
+<li>Schema: <a class="reference external" href="#action">Action</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}/apps</p>
 </h2><p>Retrieve the applications in an organization through providing both Id
@@ -1536,12 +1536,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved application data.</li>
-<li>Schema: <a class="reference external" href="#AppData">AppData</a></li>
+<li>Schema: <a class="reference external" href="#appdata">AppData</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-DELETE-heading"><p>DELETE /management/orgs/{orgId}/apps/{appId}</p>
 </h2><p>Remove an application from an organization through providing both Id of
@@ -1557,12 +1557,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of deleted application info.</li>
-<li>Schema: <a class="reference external" href="#AppData">AppData</a></li>
+<li>Schema: <a class="reference external" href="#appdata">AppData</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}/apps/{appId}/credentials</p>
 </h2><p>Retrieve the client Id and client secret credentials for an application
@@ -1578,12 +1578,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved credentials info.</li>
-<li>Schema: <a class="reference external" href="#Credential">Credential</a></li>
+<li>Schema: <a class="reference external" href="#credential">Credential</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /management/orgs/{orgId}/apps/{appId}/credentials</p>
 </h2><p>Generate the client Id and client secret credentials for an application
@@ -1599,12 +1599,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of generated credentials info.</li>
-<li>Schema: <a class="reference external" href="#Credential">Credential</a></li>
+<li>Schema: <a class="reference external" href="#credential">Credential</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}/credentials</p>
 </h2><p>Retrieve the credentials for an organization client.</p>
@@ -1617,12 +1617,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of Credential</li>
-<li>Schema: <a class="reference external" href="#Credential">Credential</a></li>
+<li>Schema: <a class="reference external" href="#credential">Credential</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /management/orgs/{orgId}/credentials</p>
 </h2><p>Generate whole new credentials for an organization client.</p>
@@ -1635,12 +1635,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of Credential</li>
-<li>Schema: <a class="reference external" href="#Credential">Credential</a></li>
+<li>Schema: <a class="reference external" href="#credential">Credential</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}/feed</p>
 </h2><p>Retrieve an organization&#8217;s activity feed.</p>
@@ -1653,12 +1653,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of the organization&#8217;s ActivityFeed.</li>
-<li>Schema: <a class="reference external" href="#ActivityFeed">ActivityFeed</a></li>
+<li>Schema: <a class="reference external" href="#activityfeed">ActivityFeed</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /management/orgs/{orgId}/reactivate</p>
 </h2><p>Reactivate an expired organization.</p>
@@ -1671,12 +1671,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of complete messages.</li>
-<li>Schema: <a class="reference external" href="#Action">Action</a></li>
+<li>Schema: <a class="reference external" href="#action">Action</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /management/users/{userId}/feed</p>
 </h2><p>Retrieve an admin user&#8217;s activity feed.</p>
@@ -1689,12 +1689,12 @@ username, real name, email address or UUID. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of user&#8217;s activity</li>
-<li>Schema: <a class="reference external" href="#ActivityFeed">ActivityFeed</a></li>
+<li>Schema: <a class="reference external" href="#activityfeed">ActivityFeed</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 </div>
 <div class="section" id="permissions-roles">
@@ -1713,12 +1713,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of retrieved role&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Role">Role</a></li>
+<li>Schema: <a class="reference external" href="#role">Role</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/roles</p>
 </h2><p>Create a new role through providing all the identifications.</p>
@@ -1735,12 +1735,12 @@ the role. (Specified in body).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of created role&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Role">Role</a></li>
+<li>Schema: <a class="reference external" href="#role">Role</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-DELETE-heading"><p>DELETE /{orgId}/{appId}/roles/{roleId}/permissions</p>
 </h2><p>Remove permissions from a role.</p>
@@ -1760,12 +1760,12 @@ of the url pattern. (Specified in body).</li>
 <ul class="simple">
 <li>Description: Permissions object with array of the deleated Usergrid
 Permission strings.</li>
-<li>Schema: <a class="reference external" href="#Permissions">Permissions</a></li>
+<li>Schema: <a class="reference external" href="#permissions">Permissions</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /{orgId}/{appId}/roles/{roleId}/users</p>
 </h2><p>Retrieve the users in a role through providing all the identifications.</p>
@@ -1782,12 +1782,12 @@ name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An API Response with a entities array of Users.</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{appId}/roles/{roleId}/users/{userId}</p>
 </h2><p>Add a user to a role through providing all the identifications.</p>
@@ -1806,12 +1806,12 @@ username or UUID. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of added user&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-DELETE-heading"><p>DELETE /{orgId}/{appId}/roles/{roleId}/users/{userId}</p>
 </h2><p>Remove a user from a role through providing all the identifications.</p>
@@ -1830,12 +1830,12 @@ username or UUID. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of deleted user&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#User">User</a></li>
+<li>Schema: <a class="reference external" href="#user">User</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-DELETE-heading"><p>DELETE /{orgId}/{appId}/roles/{rolename}</p>
 </h2><p>Remove a role through providing all the identifications.</p>
@@ -1851,12 +1851,12 @@ includes name or uuid. (Specified in path).</li>
 </h3><p><strong>200</strong></p>
 <ul class="simple">
 <li>Description: An array of deleted role&#8217;s info.</li>
-<li>Schema: <a class="reference external" href="#Role">Role</a></li>
+<li>Schema: <a class="reference external" href="#role">Role</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-GET-heading"><p>GET /{orgId}/{applicationId}/roles/{roleId}/permissions</p>
 </h2><p>Retrieve permissions for a Role.</p>
@@ -1874,12 +1874,12 @@ name or uuid. (Specified in path).</li>
 <ul class="simple">
 <li>Description: Permissions object with array of Usergrid Permission
 strings.</li>
-<li>Schema: <a class="reference external" href="#Permissions">Permissions</a></li>
+<li>Schema: <a class="reference external" href="#permissions">Permissions</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 <h2 class="usergrid-POST-heading"><p>POST /{orgId}/{applicationId}/roles/{roleId}/permissions</p>
 </h2><p>Add permissions to a role through providing all the identifications.</p>
@@ -1900,12 +1900,12 @@ body).</li>
 <ul class="simple">
 <li>Description: Permissions object with array of Usergrid Permission
 strings.</li>
-<li>Schema: <a class="reference external" href="#Permission">Permission</a></li>
+<li>Schema: <a class="reference external" href="#permission">Permission</a></li>
 </ul>
 <p><strong>default</strong></p>
 <ul class="simple">
 <li>Description: Unexpected error.</li>
-<li>Schema: <a class="reference external" href="#Error">Error</a></li>
+<li>Schema: <a class="reference external" href="#error">Error</a></li>
 </ul>
 </div>
 </div>
@@ -1956,12 +1956,7 @@ strings.</li>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-MhD5hWgRwK">/management/token</a></li>
-<li><a class="reference external" href="#op-9TDlDc0BL3">/{orgId}/{appId}/token</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="action">
 <h2>Action<a class="headerlink" href="#action" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -2026,17 +2021,7 @@ strings.</li>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-AiNhPeeyiq">/management/users/resetpw</a></li>
-<li><a class="reference external" href="#op-d0NWF6YZuK">/{orgId}/{appId}/users/{user}/password</a></li>
-<li><a class="reference external" href="#op-5138i0P1q8">/management/orgs/{orgId}/activate</a></li>
-<li><a class="reference external" href="#op-c9LsV7Ulbr">/management/users/{userId}/activate</a></li>
-<li><a class="reference external" href="#op-RIuF55JkgX">/management/orgs/{orgId}/reactivate</a></li>
-<li><a class="reference external" href="#op-jk8tbzHamj">/management/users/{userId}/reactivate</a></li>
-<li><a class="reference external" href="#op-yjg1hntm4R">/management/users/{userId}/password</a></li>
-</ul>
-<p><strong>Referring Definitions</strong></p>
+</table><p><strong>Referring Definitions</strong></p>
 <ul class="simple">
 <li><a class="reference external" href="#receipt">Receipt</a></li>
 <li><a class="reference external" href="#device">Device</a></li>
@@ -2141,16 +2126,7 @@ strings.</li>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-SgbcdXdHSq">/{orgId}/{appId}/users/{userId}/activities</a></li>
-<li><a class="reference external" href="#op-JOpALhJR9x">/{orgId}/{appId}/users/{userId}/feed</a></li>
-<li><a class="reference external" href="#op-FsWAA6TQ6j">/management/orgs/{orgId}/feed</a></li>
-<li><a class="reference external" href="#op-vjWBovszxD">/{orgId}/{appId}/groups/{groupId}/feed</a></li>
-<li><a class="reference external" href="#op-oyQqxIeMTj">/management/users/{userId}/feed</a></li>
-<li><a class="reference external" href="#op-Y8sHuGSnUK">/{orgId}/{appId}/groups/{groupId}/activities</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="addrole">
 <h2>AddRole<a class="headerlink" href="#addrole" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -2185,11 +2161,7 @@ strings.</li>
       <td><p>true</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-77UvdX1AKS">/{orgId}/{appId}/roles</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="appdata">
 <h2>AppData<a class="headerlink" href="#appdata" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -2243,12 +2215,7 @@ strings.</li>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-FxESea37Iw">/management/orgs/{orgId}/apps</a></li>
-<li><a class="reference external" href="#op-dfDXMn6FHh">/management/orgs/{orgId}/apps/{appId}</a></li>
-</ul>
-<p><strong>Referring Definitions</strong></p>
+</table><p><strong>Referring Definitions</strong></p>
 <ul class="simple">
 <li><a class="reference external" href="#organization">Organization</a></li>
 </ul>
@@ -2321,12 +2288,7 @@ strings.</li>
       <td><p>true</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-SgbcdXdHSq">/{orgId}/{appId}/users/{userId}/activities</a></li>
-<li><a class="reference external" href="#op-Y8sHuGSnUK">/{orgId}/{appId}/groups/{groupId}/activities</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="createadminuser">
 <h2>CreateAdminUser<a class="headerlink" href="#createadminuser" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -2377,11 +2339,7 @@ strings.</li>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-OrsKI3OblZ">/management/users</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="createentities">
 <h2>CreateEntities<a class="headerlink" href="#createentities" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -2396,12 +2354,7 @@ strings.</li>
       <th><p>Required</p>
 </th>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-vhYugcLtOU">/{orgId}/{appId}/{entitytype}</a></li>
-<li><a class="reference external" href="#op-rIFHtzBMnq">/{orgId}/{appId}/{collectionId}/{entityId}</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="createevent">
 <h2>CreateEvent<a class="headerlink" href="#createevent" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -2425,11 +2378,7 @@ strings.</li>
       <td><p>true</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-tbL4sW2gO4">/{orgId}/{appId}/events</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="creategroup">
 <h2>CreateGroup<a class="headerlink" href="#creategroup" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -2464,11 +2413,7 @@ strings.</li>
       <td><p>true</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-cSFYOwc349">/{orgId}/{appId}/groups</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="createnotifications">
 <h2>CreateNotifications<a class="headerlink" href="#createnotifications" title="Permalink to this headline">¶</a></h2>
 <p>An array of Notifications to be created.</p>
@@ -2484,15 +2429,7 @@ strings.</li>
       <th><p>Required</p>
 </th>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-HcxsWWHJuW">/{orgId}/{applicationId}/groups/{path}/notifications</a></li>
-<li><a class="reference external" href="#op-tHQHlcVc6O">/{orgId}/{applicationId}/devices</a></li>
-<li><a class="reference external" href="#op-DhaimEfP36">/{orgId}/{applicationId}/devices/{deviceId}/notifications</a></li>
-<li><a class="reference external" href="#op-GqqUlXEpw0">/{orgId}/{applicationId}/users/{userId}/notifications</a></li>
-<li><a class="reference external" href="#op-9Av28Sb6xD">/{orgId}/{applicationId}/devices/*/notifications</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="createorg">
 <h2>CreateOrg<a class="headerlink" href="#createorg" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -2552,11 +2489,7 @@ strings.</li>
       <td><p>true</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-10Xly2uR81">/management/orgs</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="createuser">
 <h2>CreateUser<a class="headerlink" href="#createuser" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -2580,11 +2513,7 @@ strings.</li>
       <td><p>true</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-B3JxnPdQnX">/{orgId}/{appId}/users</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="credential">
 <h2>Credential<a class="headerlink" href="#credential" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -2628,14 +2557,7 @@ strings.</li>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-yvf6XFwT9U">/management/orgs/{orgId}/credentials</a></li>
-<li><a class="reference external" href="#op-BQVtNYKbr6">/management/orgs/{orgId}/apps/{appId}/credentials</a></li>
-<li><a class="reference external" href="#op-x2rOvoWwdu">/management/orgs/{orgId}/credentials</a></li>
-<li><a class="reference external" href="#op-l2sf6CY3kb">/management/orgs/{orgId}/apps/{appId}/credentials</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="device">
 <h2>Device<a class="headerlink" href="#device" title="Permalink to this headline">¶</a></h2>
 <p>Represents a single Device that is registered for recieving of Push
@@ -2720,11 +2642,7 @@ Notifications.</p>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-813WAQfcPn">/{orgId}/{applicationId}/{notificationId}/*/queue</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="entity">
 <h2>Entity<a class="headerlink" href="#entity" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -2807,19 +2725,7 @@ Notifications.</p>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-6bY9NIsNDh">/{orgId}/{appId}/{collectionId}/{entityId}</a></li>
-<li><a class="reference external" href="#op-uUIPNDp91Q">/{orgId}/{appId}/{collectionId}</a></li>
-<li><a class="reference external" href="#op-p76OEoqzeq">/{orgId}/{appId}/users/{userId}/{relation}</a></li>
-<li><a class="reference external" href="#op-fqEhlK2uYz">/{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}</a></li>
-<li><a class="reference external" href="#op-gMtdxV5Km7">/{orgId}/{appId}/{collectionId}/{entityId}</a></li>
-<li><a class="reference external" href="#op-JNUUZzf2XB">/{orgId}/{appId}/{collectionId}</a></li>
-<li><a class="reference external" href="#op-vhYugcLtOU">/{orgId}/{appId}/{entitytype}</a></li>
-<li><a class="reference external" href="#op-HEKlO2fyjg">/{orgId}/{appId}/{collectionId}/{entityId1}/{relation}/{entityId2}</a></li>
-<li><a class="reference external" href="#op-rIFHtzBMnq">/{orgId}/{appId}/{collectionId}/{entityId}</a></li>
-</ul>
-<p><strong>Referring Definitions</strong></p>
+</table><p><strong>Referring Definitions</strong></p>
 <ul class="simple">
 <li><a class="reference external" href="#role">Role</a></li>
 <li><a class="reference external" href="#event">Event</a></li>
@@ -2950,11 +2856,7 @@ Notifications.</p>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-tbL4sW2gO4">/{orgId}/{appId}/events</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="group">
 <h2>Group<a class="headerlink" href="#group" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -3047,13 +2949,7 @@ Notifications.</p>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-cSFYOwc349">/{orgId}/{appId}/groups</a></li>
-<li><a class="reference external" href="#op-DN1sgDsfHL">/{org_Id}/{app_Id}/groups/{groupId}</a></li>
-<li><a class="reference external" href="#op-WJCUsLbpoy">/{org_Id}/{app_Id}/groups/{groupId}</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="logincredentials">
 <h2>LoginCredentials<a class="headerlink" href="#logincredentials" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -3122,12 +3018,7 @@ Notifications.</p>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-MhD5hWgRwK">/management/token</a></li>
-<li><a class="reference external" href="#op-9TDlDc0BL3">/{orgId}/{appId}/token</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="notification">
 <h2>Notification<a class="headerlink" href="#notification" title="Permalink to this headline">¶</a></h2>
 <p>Represents a Push Notification that is either scheduled, finished or
@@ -3244,19 +3135,7 @@ or &#8216;CANCELED&#8217;.</p>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-xHUyW9SEKp">/{orgId}/{applicationId}/notifications/{notificationId}</a></li>
-<li><a class="reference external" href="#op-p1JCjxXaT6">/{orgId}/{applicationId}/notifications/{notificationId}</a></li>
-<li><a class="reference external" href="#op-tMb27wddix">/{orgId}/{applicationId}/{receiptId}/*/notifications</a></li>
-<li><a class="reference external" href="#op-HcxsWWHJuW">/{orgId}/{applicationId}/groups/{path}/notifications</a></li>
-<li><a class="reference external" href="#op-tHQHlcVc6O">/{orgId}/{applicationId}/devices</a></li>
-<li><a class="reference external" href="#op-EVJZ1t5REk">/{orgId}/{applicationId}/notifications</a></li>
-<li><a class="reference external" href="#op-DhaimEfP36">/{orgId}/{applicationId}/devices/{deviceId}/notifications</a></li>
-<li><a class="reference external" href="#op-GqqUlXEpw0">/{orgId}/{applicationId}/users/{userId}/notifications</a></li>
-<li><a class="reference external" href="#op-9Av28Sb6xD">/{orgId}/{applicationId}/devices/*/notifications</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="notificationupdate">
 <h2>NotificationUpdate<a class="headerlink" href="#notificationupdate" title="Permalink to this headline">¶</a></h2>
 <p>Represents fields that may be updated on a Notification to cause changes
@@ -3306,11 +3185,7 @@ expired.</p>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-xHUyW9SEKp">/{orgId}/{applicationId}/notifications/{notificationId}</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="organization">
 <h2>Organization<a class="headerlink" href="#organization" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -3463,12 +3338,7 @@ expired.</p>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-10Xly2uR81">/management/orgs</a></li>
-<li><a class="reference external" href="#op-fMZQcXXAv8">/management/orgs/{orgId}</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="permissions">
 <h2>Permissions<a class="headerlink" href="#permissions" title="Permalink to this headline">¶</a></h2>
 <p>Represents a set of Permissions associated with a User or a Role, each
@@ -3525,13 +3395,7 @@ being a Usergrid Permission String.</p>
       <td><p>true</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-fB9nGqslMj">/{orgId}/{applicationId}/roles/{roleId}/permissions</a></li>
-<li><a class="reference external" href="#op-kaaoh5SC55">/{orgId}/{appId}/roles/{roleId}/permissions</a></li>
-<li><a class="reference external" href="#op-9VeULLNiHw">/{orgId}/{applicationId}/roles/{roleId}/permissions</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="receipt">
 <h2>Receipt<a class="headerlink" href="#receipt" title="Permalink to this headline">¶</a></h2>
 <p>Represents response received from Notification service indicating
@@ -3647,13 +3511,7 @@ notification fails entirely.</p>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-4ltskxwFlh">/{orgId}/{applicationId}/{notificationId}/*/receipts</a></li>
-<li><a class="reference external" href="#op-Jrx6MJpfDT">/{orgId}/{applicationId}/receipts</a></li>
-<li><a class="reference external" href="#op-dcBSAaCDdl">/{orgId}/{applicationId}/{deviceId}/*/receipts</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="resetpw">
 <h2>ResetPW<a class="headerlink" href="#resetpw" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -3686,12 +3544,7 @@ notification fails entirely.</p>
       <td><p>true</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-d0NWF6YZuK">/{orgId}/{appId}/users/{user}/password</a></li>
-<li><a class="reference external" href="#op-yjg1hntm4R">/management/users/{userId}/password</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="resetpwmsg">
 <h2>ResetPWMsg<a class="headerlink" href="#resetpwmsg" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -3735,11 +3588,7 @@ notification fails entirely.</p>
       <td><p>true</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-XfnvemSsD8">/management/users/resetpw</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="role">
 <h2>Role<a class="headerlink" href="#role" title="Permalink to this headline">¶</a></h2>
 <p><strong>Properties</strong></p>
@@ -3842,13 +3691,7 @@ notification fails entirely.</p>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-Xs9X9TSi8B">/{orgId}/{appId}/roles</a></li>
-<li><a class="reference external" href="#op-77UvdX1AKS">/{orgId}/{appId}/roles</a></li>
-<li><a class="reference external" href="#op-OVMDaZHUiZ">/{orgId}/{appId}/roles/{rolename}</a></li>
-</ul>
-</div>
+</table></div>
 <div class="section" id="user">
 <h2>User<a class="headerlink" href="#user" title="Permalink to this headline">¶</a></h2>
 <p>Represents a User account which may be a user within an Application&#8217;s
@@ -4014,25 +3857,7 @@ User collection, or may be an Admin User.</p>
       <td><p>false</p>
 </td>
   </tr>
-</table><p><strong>Referring API Paths</strong></p>
-<ul class="simple">
-<li><a class="reference external" href="#op-z7AQVyIzPn">/management/orgs/{orgId}/users</a></li>
-<li><a class="reference external" href="#op-Rq1TkYSvPN">/{orgId}/{appId}/users</a></li>
-<li><a class="reference external" href="#op-Vh6g9ZgYMh">/management/users/{userId}</a></li>
-<li><a class="reference external" href="#op-tTRCEhAz0z">/{orgId}/{appId}/groups/{groupId}/users/{userId}</a></li>
-<li><a class="reference external" href="#op-Hscxz1kxfu">/{orgId}/{appId}/roles/{roleId}/users/{userId}</a></li>
-<li><a class="reference external" href="#op-EeS4c1jZT1">/{orgId}/{appId}/groups/{groupId}/users/{userId}</a></li>
-<li><a class="reference external" href="#op-SrpcXlZC86">/management/users/{userId}</a></li>
-<li><a class="reference external" href="#op-0bju5bw1ZH">/{orgId}/{appId}/users/{userId}</a></li>
-<li><a class="reference external" href="#op-tRnoDrscSy">/{orgId}/{appId}/users/{userId}</a></li>
-<li><a class="reference external" href="#op-D4YceDJCBp">/{orgId}/{appId}/roles/{roleId}/users/{userId}</a></li>
-<li><a class="reference external" href="#op-B3JxnPdQnX">/{orgId}/{appId}/users</a></li>
-<li><a class="reference external" href="#op-XQZui6aKiZ">/management/orgs/{orgId}/users/{userId}</a></li>
-<li><a class="reference external" href="#op-UG5vx2zh0S">/{orgId}/{appId}/roles/{roleId}/users</a></li>
-<li><a class="reference external" href="#op-RDt20tQoio">/{orgId}/{appId}/users/{userId}</a></li>
-<li><a class="reference external" href="#op-OrsKI3OblZ">/management/users</a></li>
-</ul>
-<p><strong>Referring Definitions</strong></p>
+</table><p><strong>Referring Definitions</strong></p>
 <ul class="simple">
 <li><a class="reference external" href="#accesstokenresponse">AccessTokenResponse</a></li>
 </ul>

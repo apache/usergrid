@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.index.*;
@@ -41,7 +42,6 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     private final IndexAlias alias;
 
     private final IndexLocationStrategy indexLocationStrategy;
-    private final IndexBufferConsumer indexBatchBufferProducer;
 
     private final EntityIndex entityIndex;
     private final ApplicationScope applicationScope;
@@ -49,12 +49,10 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
     public EsEntityIndexBatchImpl( final IndexLocationStrategy locationStrategy,
-                                   final IndexBufferConsumer indexBatchBufferProducer,
                                    final EntityIndex entityIndex
     ) {
         this.indexLocationStrategy = locationStrategy;
 
-        this.indexBatchBufferProducer = indexBatchBufferProducer;
         this.entityIndex = entityIndex;
         this.applicationScope = indexLocationStrategy.getApplicationScope();
 
@@ -66,8 +64,8 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     @Override
     public EntityIndexBatch index( final IndexEdge indexEdge, final Entity entity ) {
-        IndexValidationUtils.validateIndexEdge( indexEdge );
-        ValidationUtils.verifyEntityWrite( entity );
+        IndexValidationUtils.validateIndexEdge(indexEdge);
+        ValidationUtils.verifyEntityWrite(entity);
         ValidationUtils.verifyVersion( entity.getVersion() );
 
         final String writeAlias = alias.getWriteAlias();
@@ -78,7 +76,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         }
 
         //add app id for indexing
-        container.addIndexRequest( new IndexOperation( writeAlias, applicationScope, indexEdge, entity ) );
+        container.addIndexRequest(new IndexOperation(writeAlias, applicationScope, indexEdge, entity));
         return this;
     }
 
@@ -86,23 +84,42 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
     @Override
     public EntityIndexBatch deindex( final SearchEdge searchEdge, final Id id, final UUID version ) {
 
-        IndexValidationUtils.validateSearchEdge( searchEdge );
-        ValidationUtils.verifyIdentity( id );
+        IndexValidationUtils.validateSearchEdge(searchEdge);
+        ValidationUtils.verifyIdentity(id);
         ValidationUtils.verifyVersion( version );
 
         String[] indexes = entityIndex.getIndexes();
         //get the default index if no alias exists yet
         if ( indexes == null || indexes.length == 0 ) {
-           throw new IllegalStateException("No indexes exist for " + indexLocationStrategy.getAlias().getWriteAlias());
+            throw new IllegalStateException("No indexes exist for " + indexLocationStrategy.getAlias().getWriteAlias());
         }
 
         if ( log.isDebugEnabled() ) {
             log.debug( "Deindexing to indexes {} with scope {} on edge {} with id {} and version {} ",
-                    new Object[] { indexes, applicationScope, searchEdge, id, version } );
+                new Object[] { indexes, applicationScope, searchEdge, id, version } );
         }
 
 
-        container.addDeIndexRequest( new DeIndexOperation( indexes, applicationScope, searchEdge, id, version ) );
+        container.addDeIndexRequest(new DeIndexOperation(indexes, applicationScope, searchEdge, id, version));
+
+        return this;
+    }
+
+    public EntityIndexBatch deindexWithDocId( final String docId ) {
+
+        String[] indexes = entityIndex.getIndexes();
+        //get the default index if no alias exists yet
+        if ( indexes == null || indexes.length == 0 ) {
+            throw new IllegalStateException("No indexes exist for " + indexLocationStrategy.getAlias().getWriteAlias());
+        }
+
+        if ( log.isDebugEnabled() ) {
+            log.debug( "Deindexing to indexes {} with with documentId {} ",
+                new Object[] { indexes, docId } );
+        }
+
+
+        container.addDeIndexRequest( new DeIndexOperation( indexes, docId ) );
 
         return this;
     }
@@ -115,20 +132,20 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
 
     @Override
-    public EntityIndexBatch deindex( final SearchEdge searchEdge, final CandidateResult entity ) {
+    public EntityIndexBatch deindex(final SearchEdge searchEdge, final CandidateResult entity) {
 
         return deindex( searchEdge, entity.getId(), entity.getVersion() );
     }
-
-
     @Override
-    public Observable execute() {
-        IndexOperationMessage tempContainer = container;
-        container = new IndexOperationMessage();
+    public EntityIndexBatch deindex( final CandidateResult entity ) {
 
-        return indexBatchBufferProducer.put( tempContainer );
+        return deindexWithDocId(entity.getDocId());
     }
 
+    @Override
+    public IndexOperationMessage build() {
+        return container;
+    }
 
     @Override
     public int size() {

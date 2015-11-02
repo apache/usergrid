@@ -37,31 +37,55 @@ object Extractors {
     jsonPath("$.cursor").transformOption(extract => {
       //it may or may not be present.  If it is, save it, otherwise save it as an empty string
       extract.orElse(Some(""))
-    }).saveAs(saveAsName)
+    }).optional.saveAs(saveAsName)
   }
 
   /**
-   * Will extract the uuid from the create response.  If the uuid is not present, an empty string will be set
+   * Will extract the uuid from the response.  If the uuid is not present, an empty string will be set
    */
-  def extractCreateUuid(saveAsName: String) = {
+  def extractEntityUuid(saveAsName: String) = {
     jsonPath("$.entities[0].uuid").transformOption(extract => {
       //it may or may not be present.  If it is, save it, otherwise save it as an empty string
       extract.orElse(Some(""))
-    }).saveAs(saveAsName)
+    }).optional.saveAs(saveAsName)
+  }
+
+  /**
+   * Will extract the name from the response.  If the name is not present, an empty string will be set
+   */
+  def extractEntityName(saveAsName: String) = {
+    jsonPath("$.entities[0].name").transformOption(extract => {
+      //it may or may not be present.  If it is, save it, otherwise save it as an empty string
+      extract.orElse(Some(""))
+    }).optional.saveAs(saveAsName)
+  }
+
+  /**
+   * Will extract the modified date from the response.  If the modified field is not present, -1 will be set
+   */
+  def extractEntityModified(saveAsName: String) = {
+    jsonPath("$.entities[0].modified").ofType[Long].transformOption(extract => {
+      //it may or may not be present.  If it is, save it, otherwise save it as -1
+      extract.orElse(Some(-1))
+    }).optional.saveAs(saveAsName)
   }
 
   /**
    * Will extract the audit entities from the get collection response.
    */
   def extractAuditEntities(saveAsName: String) = {
-    jsonPath("$.entities[*]").ofType[Map[String,Any]].findAll.transformOption(extract => { extract.orElse(Some(Seq.empty)) }).saveAs(saveAsName)
+    jsonPath("$.entities[*]").ofType[Map[String,Any]].findAll.transformOption(extract => {
+      extract.orElse(Some(Seq.empty))
+    }).optional.saveAs(saveAsName)
   }
 
   /**
    * Will extract the audit entities from the get collection response.
    */
   def extractAuditEntity(saveAsName: String) = {
-    jsonPath("$.entities[0]").ofType[Map[String,Any]].findAll.transformOption(extract => { extract.orElse(Some(Seq.empty)) }).saveAs(saveAsName)
+    jsonPath("$.entities[0]").ofType[Map[String,Any]].findAll.transformOption(extract => {
+      extract.orElse(Some(Seq.empty))
+    }).saveAs(saveAsName)
   }
 
   /**
@@ -80,7 +104,7 @@ object Extractors {
   def maybeExtractEntities(saveAsName: String) = {
     jsonPath("$.entities").ofType[Seq[Any]].transformOption(extract => {
       extract.orElse(Some(Seq()))
-    }).saveAs(saveAsName)
+    }).optional.saveAs(saveAsName)
   }
 
   /**

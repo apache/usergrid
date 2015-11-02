@@ -20,7 +20,7 @@ public interface QueueFig extends GuicyFig {
      */
     @Key( "usergrid.queue.region" )
     @Default("us-east-1")
-    String getRegion();
+    String getPrimaryRegion();
 
     /**
      * Flag to determine if Usergrid should use a multi-region Amazon queue
@@ -56,10 +56,10 @@ public interface QueueFig extends GuicyFig {
     String getDeadletterRetentionPeriod();
 
     /**
-     * The maximum number of messages to deliver to a dead letter queue.
+     * The maximum number of attempts to attempt to deliver before failing into the DLQ
      */
     @Key( "usergrid.queue.deliveryLimit" )
-    @Default("5")
+    @Default("10")
     String getQueueDeliveryLimit();
 
     @Key("usergrid.use.default.queue")
@@ -74,4 +74,12 @@ public interface QueueFig extends GuicyFig {
     @Key("usergrid.queue.publish.queuesize")
     @Default("850000")
     int getAsyncQueueSize();
+
+    /**
+     * Set the visibility timeout (in milliseconds) for faster retries
+     * @return
+     */
+    @Key( "usergrid.queue.visibilityTimeout" )
+    @Default("5000") // 5 seconds
+    int getVisibilityTimeout();
 }

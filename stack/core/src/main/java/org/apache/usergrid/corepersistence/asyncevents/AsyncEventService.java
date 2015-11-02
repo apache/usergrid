@@ -25,6 +25,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
+import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -76,6 +77,11 @@ public interface AsyncEventService extends ReIndexAction {
      */
     void queueEntityDelete(final ApplicationScope applicationScope, final Id entityId);
 
+    /**
+     *
+     * @param indexOperationMessage
+     */
+    void queueIndexOperationMessage( final IndexOperationMessage indexOperationMessage );
 
     /**
      * current queue depth

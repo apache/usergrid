@@ -54,13 +54,14 @@ import org.apache.usergrid.persistence.graph.serialization.impl.TargetIdObservab
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.EdgeDataMigrationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphMigration;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphMigrationPlugin;
-import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.AsyncTaskExecutor;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardGroupSearch;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupCompaction;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupDeletion;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeShardSerializationImpl;
@@ -109,6 +110,12 @@ public abstract class GraphModule extends AbstractModule {
         bind(NodeShardAllocation.class).to( NodeShardAllocationImpl.class );
         bind( NodeShardGroupSearch.class ).to( NodeShardGroupSearchImpl.class );
 
+
+        /**
+         * Binding for task tracker
+         */
+        bind( AsyncTaskExecutor.class ).to( AsyncTaskExecutorImpl.class );
+        bind( ShardGroupDeletion.class ).to( ShardGroupDeletionImpl.class );
 
         /**
          * Bind our strategies based on their internal annotations.

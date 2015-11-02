@@ -32,10 +32,12 @@ import org.apache.usergrid.persistence.model.entity.Id;
 public class CandidateResult implements EntityVersion {
     private final Id entityId;
     private final UUID entityVersion;
+    private final String docId;
 
-    public CandidateResult( Id entityId, UUID entityVersion ) {
+    public CandidateResult( Id entityId, UUID entityVersion, String docId ) {
         this.entityId = entityId;
         this.entityVersion = entityVersion;
+        this.docId = docId;
     }
 
     @Override
@@ -46,6 +48,10 @@ public class CandidateResult implements EntityVersion {
     @Override
     public Id getId() {
         return entityId;
+    }
+
+    public String getDocId() {
+        return docId;
     }
 
 
@@ -64,6 +70,9 @@ public class CandidateResult implements EntityVersion {
             return false;
         }
         if ( !entityVersion.equals( that.entityVersion ) ) {
+            return false;
+        }
+        if ( !docId.equals( that.docId ) ) {
             return false;
         }
 

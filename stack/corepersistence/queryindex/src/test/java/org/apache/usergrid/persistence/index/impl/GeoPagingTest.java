@@ -70,7 +70,6 @@ public class GeoPagingTest extends BaseIT {
     @Inject
     public EntityIndexFactory eif;
 
-
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
@@ -80,6 +79,9 @@ public class GeoPagingTest extends BaseIT {
 
     @Inject
     public CassandraFig cassandraFig;
+
+    @Inject
+    public IndexProducer indexProducer;
 
     @Inject
     @Rule
@@ -128,7 +130,7 @@ public class GeoPagingTest extends BaseIT {
 
         }
 
-        batch.execute().toBlocking().last();
+        indexProducer.put( batch.build()).subscribe();
 
         entityIndex.refreshAsync().toBlocking().last();
 

@@ -48,10 +48,6 @@ public interface IndexFig extends GuicyFig {
 
     String ELASTICSEARCH_FORCE_REFRESH = "elasticsearch.force_refresh";
 
-    String INDEX_BUFFER_SIZE = "elasticsearch.buffer_size";
-
-    String INDEX_BUFFER_TIMEOUT = "elasticsearch.buffer_timeout";
-
     String INDEX_BATCH_SIZE = "elasticsearch.batch_size";
 
     String INDEX_WRITE_CONSISTENCY_LEVEL = "elasticsearch.write_consistency_level";
@@ -63,6 +59,8 @@ public interface IndexFig extends GuicyFig {
     String ELASTICSEARCH_WRITE_TIMEOUT= "elasticsearch.write.timeout";
 
     String ELASTICSEARCH_CLIENT_TYPE = "elasticsearch.client.type";
+
+    String ELASTICSEARCH_VERSION_QUERY_LIMIT = "elasticsearch.version_query_limit";
 
 
     /**
@@ -153,21 +151,7 @@ public interface IndexFig extends GuicyFig {
     @Default( "2" )
     int getIndexCacheMaxWorkers();
 
-    /**
-     * The maximum time to wait before the buffer flushes and sends index write requests to Elasticsearch.
-     * This is used so the application doesn't wait forever for the buffer to reach its size before writing
-     * data to Elasticsearch.
-     */
-    @Default( "250" )
-    @Key( INDEX_BUFFER_TIMEOUT )
-    long getIndexBufferTimeout();
 
-    /**
-     * The maximum buffer size to use before sending index write requests to Elasticsearch.
-     */
-    @Default( "1000" )
-    @Key( INDEX_BUFFER_SIZE )
-    int getIndexBufferSize();
 
     /**
      * The number of worker threads used for flushing batches of index write requests
@@ -214,4 +198,11 @@ public interface IndexFig extends GuicyFig {
     long getWriteTimeout();
 
 
+    @Default("1000")
+    @Key( "elasticsearch_queue_error_sleep_ms" )
+    long getSleepTimeForQueueError();
+
+    @Default("1000")
+    @Key( ELASTICSEARCH_VERSION_QUERY_LIMIT )
+    int getVersionQueryLimit();
 }
