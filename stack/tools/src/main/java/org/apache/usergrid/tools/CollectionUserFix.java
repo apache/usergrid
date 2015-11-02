@@ -104,15 +104,6 @@ public class CollectionUserFix extends ExportingToolBase {
 
 
     /**
-     * psudeo code
-     * if org id is present then ignore the application id
-     *      go through everysingle application/users entity. And check to see if it can be queried by username.
-     * else if app id is present
-     *      go through the applications/users
-     *
-     *
-     * Take the list of applications to go through and go through them one by one. ( in the latter else case we will only
-     *
      * @param line
      * @throws Exception
      */
@@ -149,8 +140,6 @@ public class CollectionUserFix extends ExportingToolBase {
         System.out.println("Repair Complete");
     }
 
-
-    //make
     private void startCollectionFlow(final EntityManager entityManager, final Set<Application> app, final String queryString )
             throws Exception {// search for all orgs
 
@@ -159,51 +148,21 @@ public class CollectionUserFix extends ExportingToolBase {
             query = query.fromQL( queryString );
         }
         query.setLimit( PAGE_SIZE );
-        Results r = null;
         EntityManager em = null;
-        int numberOfUsers = 0;
         Identifier identifier = new Identifier();
 
 
         for ( Application application : app ) {
-            //This will hold all of the applications users. This will be stored in memory to do a simple check to see if
-            //there are any duped usernames in the collection.
-            //Memory concerns means that
 
-            //This means that we need to set it for each and every single application thus it gets set here instead of
-            //the method that calls us.
-            if(entityManager == null){
+            if(entityManager == null || !em.getApplication().equals( application )){
                 em = emf.getEntityManager( application.getUuid() );
             }
             else {
                 em = entityManager;
             }
-//
-//            do {
-//                Multimap<String, UUID> usernames = HashMultimap.create();
-//
-//
-//                //get all users in the management app and page for each set of a PAGE_SIZE
-//                r = em.searchCollection( application, "users", query );
-//                numberOfUsers+=r.size();
-//                System.out.println("found "+numberOfUsers+" users");
-//
-//                for ( Entity entity : r.getEntities() ) {
-//                    //grab all usernames returned.
-//                    usernames.put( entity.getProperty( "username" ).toString().toLowerCase(), entity.getUuid() );
-//                }
-//
-//                query.setCursor( r.getCursor() );
-//
-//                System.out.println("Starting username crawl of "+usernames.size()+" number of usernames");
-//                usernameVerificationFix( em, usernames );
-//
-//
-//            }
-//            while ( r != null && r.size() == PAGE_SIZE);
 
-            r = em.searchCollection( application, "users", query );
-            PagingResultsIterator pagingResultsIterator = new PagingResultsIterator( r );
+            PagingResultsIterator pagingResultsIterator =
+                    new PagingResultsIterator( em.searchCollection( application, "users", query ) );
 
             while(pagingResultsIterator.hasNext()){
                 Entity entity = ( Entity ) pagingResultsIterator.next();
@@ -211,86 +170,8 @@ public class CollectionUserFix extends ExportingToolBase {
                 em.getUserByIdentifier( identifier.fromName( username ) );
 
             }
-//
-//            for ( Entity entity : r.getEntities() ) {
-//                //grab all usernames returned.
-//                usernames.put( entity.getProperty( "username" ).toString().toLowerCase(), entity.getUuid() );
-//            }
-//
-//            query.setCursor( r.getCursor() );
-//
-//            System.out.println("Starting username crawl of "+usernames.size()+" number of usernames");
-//            usernameVerificationFix( em,  entity.getProperty( "username" ).toString().toLowerCase());
-
-
-
-
-
-
 
             System.out.println("Repair Complete");
-            //do  a get on a specific username, if it shows up more than once then remove it
-        }
-    }
-
-
-    private void usernameVerificationFix( final EntityManager em, final Multimap<String, UUID> usernames )
-            throws Exception {
-        Identifier identifier = new Identifier();
-        for ( String username : usernames.keySet() ) {
-          //  Collection<UUID> ids = usernames.get( username );
-
-//            if ( ids.size() > 1 ) {
-//                logger.info( "Found multiple users with the username {}", username );
-//                System.out.println( "Found multiple users with the username: " + username );
-//            }
-
-            //UserInfo targetUser = managementService.getAdminUserByEmail( email );
-            em.getUserByIdentifier( identifier.fromName( username ) );
-
-
-
-//            if ( targetUser == null ) {
-//                //This means that the username isn't properly associated with targetUser
-//                List<UUID> tempIds = new ArrayList<UUID>( ids );
-//                //Collections.sort( tempIds );
-//
-//                UUID toLoad = tempIds.get( 0 );
-//
-//                logger.warn( "Could not load target user by username {}, loading by UUID {} instead", username, toLoad );
-//                System.out.println( "Could not load the target user by username: " + username
-//                        + ". Loading by the following uuid instead: " + toLoad.toString() );
-//
-//                User targetUserEntity = null;
-//                try {
-//                    targetUserEntity = em.get( toLoad, User.class );
-//                }catch(Exception e){
-//                    System.out.println("The follow uuid has no data in this cassandra node: "+toLoad.toString());
-//                    throw e;
-//                }
-//
-//
-//                try {
-//                    if ( targetUserEntity != null&& targetUserEntity.getUuid().equals( toLoad )) {
-//                        System.out.println("Updating uuid: "+targetUserEntity.getUuid().toString());
-//                        em.update( targetUserEntity );
-//                    }
-//                }
-//                catch ( DuplicateUniquePropertyExistsException dup ) {
-//                    System.out.println( "Found duplicate unique property: " + dup.getPropertyName() + ". "
-//                            + "Duplicate property is: "
-//                            + dup.getPropertyValue() );
-//                    //if there are duplicate unique properties then
-//                    if ( dup.getPropertyName().equals( "username" ) ) {
-//                        System.out.println("can I replace this with a different value since these are duplicated in the code base");
-//                        //targetUserEntity.setUsername( targetUserEntity.getUsername() );
-//                    }
-//                    //else throw dup;
-//                }
-//                catch (Exception e){
-//                    System.out.println("There was an issue with updating: "+e.getMessage());
-//                }
-//            }
         }
     }
 }
