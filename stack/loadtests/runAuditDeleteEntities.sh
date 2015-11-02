@@ -25,22 +25,21 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #APP=
 #AUTH_TYPE=
 #TOKEN_TYPE=
-#SEARCH_QUERY=
-#SEARCH_LIMIT=
-#LATER_THAN_TIMESTAMP=  #may be overridden on command line
-#ENTITY_PROGRESS_COUNT=
+#RETRY_COUNT=
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
-[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) UUID_FILENAME [LATER_THAN_TIMESTAMP(ms)]"
+[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) AUDIT_UUID_FILENAME [FAILED_UUID_FILENAME [USERGRID_REGION]]"
+
 RAMP_USERS="$1"
 RAMP_TIME="$2"
-UUID_FILENAME="$3"
-[ "$#" -ge 4 ] && LATER_THAN_TIMESTAMP="$4"
+AUDIT_UUID_FILENAME="$3"
+FAILED_UUID_FILENAME="$4"
+[ "$#" -ge 5 ] && USERGRID_REGION="$5"
 
-shift 3
+shift $#
 
-SCENARIO_TYPE=auditGetCollectionEntities
+SCENARIO_TYPE=auditDeleteEntities
 
 #Compile everything
 mvn compile
@@ -54,15 +53,13 @@ mvn gatling:execute \
 -Dapp=${APP} \
 -DauthType=${AUTH_TYPE} \
 -DtokenType=${TOKEN_TYPE} \
--DsearchQuery=${SEARCH_QUERY} \
--DsearchLimit=${SEARCH_LIMIT} \
--DlaterThanTimestamp=${LATER_THAN_TIMESTAMP} \
--DentityProgressCount=${ENTITY_PROGRESS_COUNT} \
+-DretryCount=${RETRY_COUNT} \
 -DscenarioType=${SCENARIO_TYPE} \
 -DrampUsers=${RAMP_USERS}  \
 -DrampTime=${RAMP_TIME}  \
--DuuidFilename=${UUID_FILENAME} \
+-DauditUuidFilename=${AUDIT_UUID_FILENAME} \
+-DfailedUuidFilename=${FAILED_UUID_FILENAME} \
 -DprintFailedRequests=${PRINT_FAILED_REQUESTS} \
+-DusergridRegion=${USERGRID_REGION} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.AuditSimulation
-
 
