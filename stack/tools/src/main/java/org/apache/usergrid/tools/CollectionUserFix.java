@@ -154,12 +154,7 @@ public class CollectionUserFix extends ExportingToolBase {
 
         for ( Application application : app ) {
 
-            if(entityManager == null || !em.getApplication().equals( application )){
-                em = emf.getEntityManager( application.getUuid() );
-            }
-            else {
-                em = entityManager;
-            }
+            em = emf.getEntityManager( application.getUuid() );
 
             PagingResultsIterator pagingResultsIterator =
                     new PagingResultsIterator( em.searchCollection( application, "users", query ) );
@@ -168,10 +163,9 @@ public class CollectionUserFix extends ExportingToolBase {
                 Entity entity = ( Entity ) pagingResultsIterator.next();
                 String username =  entity.getProperty( "username" ).toString().toLowerCase();
                 em.getUserByIdentifier( identifier.fromName( username ) );
-
             }
 
-            System.out.println("Repair Complete");
+            System.out.println("Repair of application: "+ application.getApplicationName() + " complete");
         }
     }
 }
