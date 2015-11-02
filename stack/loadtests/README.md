@@ -9,6 +9,9 @@ The test scripts are found in the top level loadtests directory. Look inside the
 ###testConfig.sh
 Contains defaults that are used for all the other test scripts.
 
+###runAuditDeleteEntities.sh
+For a specified organization and given CSV file, delete all entities, writing those that fail to delete to another CSV file.
+
 ###runAuditGetAllAppCollectionEntities.sh
 For a specified organization, finds all apps, and for each app, finds all collections and writes a CSV file line containing collection name, UUID, entity name, and modified timestamp for each entity in each collection.
 
@@ -16,7 +19,7 @@ For a specified organization, finds all apps, and for each app, finds all collec
 For a specified organization and application, finds all collections and writes a CSV file line containing collection name, UUID, entity name, and modified timestamp for each entity in each collection.
 
 ###runAuditVerifyCollectionEntities.sh
-For a specified organization and given CSV file, verify that all entities are retrievable, writing those that fail to another CSV file.
+For a specified organization and given CSV file, verify that all entities are retrievable via query, writing those that fail to another CSV file, optionally deleting verified entities.
 
 ###runCollectionQueryTest.sh
 For a given collection, retrieve all entities using a cursor and a query.
@@ -115,6 +118,13 @@ Defaults listed are those that are specified by the Usergrid Gatling code, not n
 * getViaQuery (**false**) - retrieve entities via query instead of via name or uuid
 * queryParams (**""**) - additional query parameters (currently used for get by entity or by name)
 * csvFeedPattern (**"random"**) - pattern to use when feeding from a CSV ("random" is random, "circular" goes through CSV sequentially and restarts from beginning when it reaches the end)
+* unlimitedFeed (**false**) - continue loading with no limit on number of entities (forces interleavedWorkerFeed=true); hit CTRL-c to abort
+* flushCsv (**0**) - if > 0, flush CSV file when that number of CSV entries has been received
+* interleavedWorkerFeed (**false**) - for multiple gatling servers, shard the entities via interleaving rather than splitting into separate chunks; for example, for 10 workers over 1M entities, interleaving would cause one worker to have 1, 11, 21, 31, etc. instead of 1-100000 
+* newCsvOnFlush (**false**) - when the output CSV file is flushed, create a new CSV file
+* deleteAfterSuccessfulAudit (**false**) - delete a record that is successfully verified via query
+* usergridRegion (**""**) - send specified region in the UsergridRegion header for all requests -- this allows Edge proxy to call different regions for testing
+* saveInvalidResponse (**false**) - on audit, do not retry but immediately save failure to output CSV file
 
 The following settings are currently not used (were used by deprecated tests, but may be valid in the future):
 
