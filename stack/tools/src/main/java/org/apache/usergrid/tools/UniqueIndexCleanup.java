@@ -61,6 +61,7 @@ import static org.apache.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX_ENTRIES;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.INDEX_ENTRY_LIST_COUNT;
@@ -255,6 +256,8 @@ public class UniqueIndexCleanup extends ToolBase {
                                                     "Could not find reference to value '{}' for property '{}' on entity "
                                                             +
                                                             "{} in collection {}. " + " Forcing reindex", new Object[] { propValue, prop, id, collectionName } );
+                                            Object key = key( applicationId, collectionName, prop, id );
+                                            addDeleteToMutator( m, ENTITY_UNIQUE, key, timestamp, id );
 
                                             addDeleteToMutator( m, ENTITY_INDEX, rowKey, index.getName().duplicate(),
                                                     timestamp );
@@ -263,6 +266,8 @@ public class UniqueIndexCleanup extends ToolBase {
                                         }
 
                                         if ( entries.size() > 1 ) {
+                                            Object key = key( applicationId, collectionName, prop, id );
+                                            addDeleteToMutator( m, ENTITY_UNIQUE, key, timestamp, id );
                                             logger.info(
                                                     "Found more than 1 entity referencing unique index for property "
                                                             + "'{}' "
