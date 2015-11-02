@@ -181,7 +181,7 @@ public class UniqueIndexCleanup extends ToolBase {
                 for ( final String bucketName : indexBucketLocator.getBuckets() ) {
 
                     IndexScanner scanner =
-                            cass.getIdList( key( applicationId, DICTIONARY_COLLECTIONS, collectionName ), null, null,
+                            cass.getIdList( key( applicationId, ENTITY_UNIQUE, collectionName ), null, null,
                                     PAGE_SIZE, false, bucketName, applicationId, false );
 
                     SliceIterator itr = new SliceIterator( scanner, new UUIDIndexSliceParser( null ) );
@@ -211,72 +211,92 @@ public class UniqueIndexCleanup extends ToolBase {
 
                             try {
 
-                                for ( String prop : indexed ) {
+                                Entity entity = em.get( id );
 
-                                    String bucket = indexBucketLocator
-                                            .getBucket( id );
-
-                                    Object rowKey = key( applicationId, collection.getName(), prop, bucket );
-
-                                    List<HColumn<ByteBuffer, ByteBuffer>> indexCols =
-                                            scanIndexForAllTypes( ko, indexBucketLocator, applicationId, rowKey, id,
-                                                    prop );
-
-                                    // loop through the indexed values and verify them as present in
-                                    // our entity_index_entries. If they aren't, we need to delete the
-                                    // from the secondary index, and mark
-                                    // this object for re-index via n update
-                                    for ( HColumn<ByteBuffer, ByteBuffer> index : indexCols ) {
-
-                                        DynamicComposite secondaryIndexValue = DynamicComposite.fromByteBuffer( index
-                                                .getName().duplicate() );
-
-                                        Object code = secondaryIndexValue.get( 0 );
-                                        Object propValue = secondaryIndexValue.get( 1 );
-                                        UUID timestampId = ( UUID ) secondaryIndexValue.get( 3 );
-
-                                        DynamicComposite existingEntryStart = new DynamicComposite( prop, code,
-                                                propValue, timestampId );
-                                        DynamicComposite existingEntryFinish = new DynamicComposite( prop, code,
-                                                propValue, timestampId );
-
-                                        setEqualityFlag( existingEntryFinish, ComponentEquality.GREATER_THAN_EQUAL );
-
-                                        // now search our EntityIndexEntry for previous values, see if
-                                        // they don't match this one
-
-                                        List<HColumn<ByteBuffer, ByteBuffer>> entries =
-                                                cass.getColumns( ko, ENTITY_INDEX_ENTRIES, id, existingEntryStart,
-                                                        existingEntryFinish, INDEX_ENTRY_LIST_COUNT, false );
-
-                                        // we wouldn't find this column in our entity_index_entries
-                                        // audit. Delete it, then mark this entity for update
-                                        if ( entries.size() == 0 ) {
-                                            logger.info(
-                                                    "Could not find reference to value '{}' for property '{}' on entity "
-                                                            +
-                                                            "{} in collection {}. " + " Forcing reindex", new Object[] { propValue, prop, id, collectionName } );
-                                            Object key = key( applicationId, collectionName, prop, id );
-                                            addDeleteToMutator( m, ENTITY_UNIQUE, key, timestamp, id );
-
-                                            addDeleteToMutator( m, ENTITY_INDEX, rowKey, index.getName().duplicate(),
-                                                    timestamp );
-
-                                            reIndex = true;
-                                        }
-
-                                        if ( entries.size() > 1 ) {
-                                            Object key = key( applicationId, collectionName, prop, id );
-                                            addDeleteToMutator( m, ENTITY_UNIQUE, key, timestamp, id );
-                                            logger.info(
-                                                    "Found more than 1 entity referencing unique index for property "
-                                                            + "'{}' "
-                                                            +
-                                                            "with value " + "'{}'", prop, propValue );
-                                            reIndex = true;
-                                        }
-                                    }
+                                //entity may not exist, but we should have deleted rows from the index
+                                if ( entity == null ) {
+                                    logger.warn( "Entity with id {} did not exist in app {}", id, applicationId );
+                                    //now execute the cleanup. In this case the entity is gone,
+                                    // so we'll want to remove references from
+                                    // the secondary index also remove from unique entity.
+                                    Object key = key( applicationId, collectionName,"username", id ); 
+                                    addDeleteToMutator( m, ENTITY_UNIQUE, key, timestamp, id );
+                                    m.execute();
+                                    continue;
                                 }
+
+                                logger.info( "Reindex complete for entity with id '{} ", id );
+
+                                //now execute the cleanup. This way if the above update fails,
+                                // we still have enough data to run again
+                                // later
+                                m.execute();
+
+//
+//                                for ( String prop : indexed ) {
+//
+//                                    String bucket = indexBucketLocator
+//                                            .getBucket( id );
+//
+//                                    Object rowKey = key( applicationId, collection.getName(), prop, bucket );
+//
+//                                    List<HColumn<ByteBuffer, ByteBuffer>> indexCols =
+//                                            scanIndexForAllTypes( ko, indexBucketLocator, applicationId, rowKey, id,
+//                                                    prop );
+//
+//                                    // loop through the indexed values and verify them as present in
+//                                    // our entity_index_entries. If they aren't, we need to delete the
+//                                    // from the secondary index, and mark
+//                                    // this object for re-index via n update
+//                                    for ( HColumn<ByteBuffer, ByteBuffer> index : indexCols ) {
+//
+//                                        DynamicComposite secondaryIndexValue = DynamicComposite.fromByteBuffer( index
+//                                                .getName().duplicate() );
+//
+//                                        Object code = secondaryIndexValue.get( 0 );
+//                                        Object propValue = secondaryIndexValue.get( 1 );
+//                                        UUID timestampId = ( UUID ) secondaryIndexValue.get( 3 );
+//
+//                                        DynamicComposite existingEntryStart = new DynamicComposite( prop, code,
+//                                                propValue, timestampId );
+//                                        DynamicComposite existingEntryFinish = new DynamicComposite( prop, code,
+//                                                propValue, timestampId );
+//
+//                                        setEqualityFlag( existingEntryFinish, ComponentEquality.GREATER_THAN_EQUAL );
+//
+//                                        // now search our EntityIndexEntry for previous values, see if
+//                                        // they don't match this one
+//
+//                                        List<HColumn<ByteBuffer, ByteBuffer>> entries =
+//                                                cass.getColumns( ko, ENTITY_INDEX_ENTRIES, id, existingEntryStart,
+//                                                        existingEntryFinish, INDEX_ENTRY_LIST_COUNT, false );
+//
+//                                        // we wouldn't find this column in our entity_index_entries
+//                                        // audit. Delete it, then mark this entity for update
+//                                        if ( entries.size() == 0 ) {
+//                                            logger.info(
+//                                                    "Could not find reference to value '{}' for property '{}' on entity "
+//                                                            +
+//                                                            "{} in collection {}. " + " Forcing reindex", new Object[] { propValue, prop, id, collectionName } );
+//
+//                                            addDeleteToMutator( m, ENTITY_INDEX, rowKey, index.getName().duplicate(),
+//                                                    timestamp );
+//
+//                                            reIndex = true;
+//                                        }
+//
+//                                        if ( entries.size() > 1 ) {
+//                                            Object key = key( applicationId, collectionName, prop, id );
+//                                            addDeleteToMutator( m, ENTITY_UNIQUE, key, timestamp, id );
+//                                            logger.info(
+//                                                    "Found more than 1 entity referencing unique index for property "
+//                                                            + "'{}' "
+//                                                            +
+//                                                            "with value " + "'{}'", prop, propValue );
+//                                            reIndex = true;
+//                                        }
+//                                    }
+//                                }
 
                                 //force this entity to be updated
                                 if ( reIndex ) {
@@ -287,7 +307,9 @@ public class UniqueIndexCleanup extends ToolBase {
                                         logger.warn( "Entity with id {} did not exist in app {}", id, applicationId );
                                         //now execute the cleanup. In this case the entity is gone,
                                         // so we'll want to remove references from
-                                        // the secondary index
+                                        // the secondary index also remove from unique entity.
+
+
                                         m.execute();
                                         continue;
                                     }
