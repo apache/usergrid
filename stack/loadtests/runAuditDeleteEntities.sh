@@ -27,22 +27,19 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #TOKEN_TYPE=
 #RETRY_COUNT=
 
-DELETE_AFTER_SUCCESSFUL_AUDIT=false
-
 die() { echo "$@" 1>&2 ; exit 1; }
 
-[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) AUDIT_UUID_FILENAME [FAILED_UUID_FILENAME [DELETE_AFTER_SUCCESSFUL_AUDIT(true/false) [USERGRID_REGION]]]"
+[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) AUDIT_UUID_FILENAME [FAILED_UUID_FILENAME [USERGRID_REGION]]"
 
 RAMP_USERS="$1"
 RAMP_TIME="$2"
 AUDIT_UUID_FILENAME="$3"
 FAILED_UUID_FILENAME="$4"
-[ "$#" -ge 5 ] && DELETE_AFTER_SUCCESSFUL_AUDIT="$5"
-[ "$#" -ge 6 ] && USERGRID_REGION="$6"
+[ "$#" -ge 5 ] && USERGRID_REGION="$5"
 
 shift $#
 
-SCENARIO_TYPE=auditVerifyCollectionEntities
+SCENARIO_TYPE=auditDeleteEntities
 
 #Compile everything
 mvn compile
@@ -63,7 +60,6 @@ mvn gatling:execute \
 -DauditUuidFilename=${AUDIT_UUID_FILENAME} \
 -DfailedUuidFilename=${FAILED_UUID_FILENAME} \
 -DprintFailedRequests=${PRINT_FAILED_REQUESTS} \
--DdeleteAfterSuccessfulAudit=${DELETE_AFTER_SUCCESSFUL_AUDIT} \
 -DusergridRegion=${USERGRID_REGION} \
 -Dgatling.simulationClass=org.apache.usergrid.simulations.AuditSimulation
 

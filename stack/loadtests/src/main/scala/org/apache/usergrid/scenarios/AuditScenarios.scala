@@ -147,7 +147,6 @@ object AuditScenarios {
       .get("/${collectionName}/${accessField}")
       .headers(Headers.authToken)
       .headers(Headers.usergridRegionHeaders)
-      .check()
       .check(status.in(Seq(200,404)),status.saveAs(SessionVarStatus),extractAuditEntities(SessionVarCollectionEntities),
         extractEntityUuid(SessionVarEntityUuid),extractEntityName(SessionVarEntityName)))
       .exec(session => {
@@ -282,7 +281,7 @@ object AuditScenarios {
         // }
       }
 
-  val verifyCollections = scenario("Verify collections")
+  val verifyAuditedEntities = scenario("Verify audited entities")
     .exec(injectTokenIntoSession())
     .exec(injectAuthType())
     .asLongAs(session => session("validEntity").asOption[String].map(validEntity => validEntity != "no").getOrElse[Boolean](true)) {
@@ -294,4 +293,50 @@ object AuditScenarios {
       }
     }
 
+  val deleteEntity = exec(
+    http("DELETE entity")
+      .delete("/${collectionName}/${accessField}")
+      .headers(Headers.authToken)
+      .headers(Headers.usergridRegionHeaders)
+      .check(status.saveAs(SessionVarStatus)))
+    .exec(session => {
+    val saveFailures = Settings.saveInvalidResponse
+    val status = session(SessionVarStatus).as[Int]
+    val collectionName = session(SessionVarCollectionName).as[String]
+    val modified = session("modified").as[String].toLong
+    val uuid = session("uuid").as[String]
+    val reqName = session("name").as[String]
+    val lastStatus = session("lastStatus").as[String]
+    if (status == 200) {
+      // success
+      Settings.incAuditSuccess()
+      session
+    } else if (status == 401 || status == 404) {
+      // didn't exist (currently returns 401, but 404 would be more appropriate)
+      Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, s"NotFound", lastStatus)
+      Settings.incAuditEntryDeleteFailure()
+      session
+    } else if (saveFailures) {
+      // a different error
+      Settings.addAuditUuid(uuid, collectionName, reqName, modified, status, s"Error", lastStatus)
+      Settings.incAuditEntryDeleteFailure()
+      println(s"DELETE ERROR (status=$status): $collectionName.$reqName ($uuid)")
+      session.markAsFailed
+    } else {
+      session.markAsFailed
+    }
+
+  })
+
+  val deleteAuditedEntities = scenario("Delete audited entities")
+    .exec(injectTokenIntoSession())
+    .exec(injectAuthType())
+    .asLongAs(session => session("validEntity").asOption[String].map(validEntity => validEntity != "no").getOrElse[Boolean](true)) {
+      feed(FeederGenerator.collectionCsvFeeder)
+        .doIf(session => session("validEntity").as[String] == "yes") {
+          tryMax(if (Settings.saveInvalidResponse) 1 else 1+Settings.retryCount) {
+            exec(deleteEntity)
+          }
+        }
+    }
 }
