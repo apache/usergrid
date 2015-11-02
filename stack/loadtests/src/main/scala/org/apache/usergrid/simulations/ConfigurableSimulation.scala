@@ -99,7 +99,7 @@ class ConfigurableSimulation extends Simulation {
     Settings.printSettingsSummary(true)
   }
 
-  sys addShutdownHook(endHandler)
+  sys addShutdownHook endHandler
 
 }
 
