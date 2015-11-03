@@ -82,6 +82,8 @@ public class NodeShardAllocationTest {
 
         when( graphFig.getShardSize() ).thenReturn( 20000l );
 
+        when(graphFig.getShardDeleteDelta()).thenReturn( 60000l );
+
     }
 
 
@@ -114,7 +116,7 @@ public class NodeShardAllocationTest {
         final Shard firstShard = new Shard( 0l, 0l, true );
         final Shard futureShard = new Shard( 10000l, timeservicetime, false );
 
-        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup( );
+        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup(10000l  );
         shardEntryGroup.addShard( futureShard );
         shardEntryGroup.addShard( firstShard );
 
@@ -160,7 +162,7 @@ public class NodeShardAllocationTest {
 
         final Shard futureShard = new Shard( 10000l, timeservicetime, true );
 
-        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup( );
+        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup(10000l );
         shardEntryGroup.addShard( futureShard );
 
 
@@ -209,7 +211,7 @@ public class NodeShardAllocationTest {
 
         final Shard firstShard = new Shard( 0l, 0l, true );
 
-        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup(  );
+        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup(10000l  );
         shardEntryGroup.addShard( firstShard );
 
         final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType( nodeId, type, subType );
@@ -323,7 +325,7 @@ public class NodeShardAllocationTest {
 
         final Shard firstShard = new Shard( 0l, 0l, true );
 
-        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup( );
+        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup(10000l );
         shardEntryGroup.addShard( firstShard );
 
         final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType( nodeId, type, subType );
@@ -413,7 +415,7 @@ public class NodeShardAllocationTest {
 
         final Shard firstShard = new Shard( 0l, 0l, true );
 
-        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup(  );
+        final ShardEntryGroup shardEntryGroup = new ShardEntryGroup(10000l  );
         shardEntryGroup.addShard( firstShard );
 
         final DirectedEdgeMeta targetEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType( nodeId, type, subType );

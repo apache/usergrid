@@ -94,7 +94,7 @@ public class NodeShardGroupSearchTest {
         final Optional max = Optional.absent();
 
 
-        final ShardEntryGroup group = new ShardEntryGroup();
+        final ShardEntryGroup group = new ShardEntryGroup(10000l);
         group.addShard( new Shard( 0, 0, true ) );
 
 
@@ -168,14 +168,14 @@ public class NodeShardGroupSearchTest {
         /**
          * Simulate returning all shards
          */
-        final ShardEntryGroup minShardGroup = new ShardEntryGroup();
+        final ShardEntryGroup minShardGroup = new ShardEntryGroup(10000l);
         minShardGroup.addShard( minShard );
 
-        final ShardEntryGroup midShardGroup = new ShardEntryGroup();
+        final ShardEntryGroup midShardGroup = new ShardEntryGroup(10000l);
         midShardGroup.addShard( midShard );
 
 
-        final ShardEntryGroup maxShardGroup = new ShardEntryGroup();
+        final ShardEntryGroup maxShardGroup = new ShardEntryGroup(10000l);
         maxShardGroup.addShard( maxShard );
 
 
@@ -211,7 +211,7 @@ public class NodeShardGroupSearchTest {
 
             //use "thenAnswer" so we always return the value, even if  it's invoked more than 1 time.
             .thenAnswer( answer -> new ShardEntryGroupIterator( Collections.singleton( minShard ).iterator(),
-                NoOpShardCompaction.INSTANCE, scope, directedEdgeMeta ) );
+                10000l, NoOpShardCompaction.INSTANCE, scope, directedEdgeMeta ) );
 
 
         /**
@@ -243,7 +243,7 @@ public class NodeShardGroupSearchTest {
 
             //use "thenAnswer" so we always return the value, even if  it's invoked more than 1 time.
             .thenAnswer( answer -> new ShardEntryGroupIterator( Arrays.asList( midShard, minShard ).iterator(),
-                NoOpShardCompaction.INSTANCE, scope, directedEdgeMeta ) );
+                10000l, NoOpShardCompaction.INSTANCE, scope, directedEdgeMeta ) );
 
 
         /**
@@ -276,7 +276,7 @@ public class NodeShardGroupSearchTest {
             //use "thenAnswer" so we always return the value, even if  it's invoked more than 1 time.
             .thenAnswer(
                 answer -> new ShardEntryGroupIterator( Arrays.asList( maxShard, midShard, minShard ).iterator(),
-                    NoOpShardCompaction.INSTANCE, scope, directedEdgeMeta ) );
+                    10000l, NoOpShardCompaction.INSTANCE, scope, directedEdgeMeta ) );
 
 
         //check getting equal to our min, mid and max

@@ -40,7 +40,7 @@ public class ShardEntryGroupTest {
 
         Shard rootShard = new Shard( 0, 0, false );
 
-        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( );
+        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 10000l );
 
         final boolean result = shardEntryGroup.addShard( rootShard );
 
@@ -62,7 +62,7 @@ public class ShardEntryGroupTest {
         Shard secondShard = new Shard( 1000, 1001, false );
 
 
-        ShardEntryGroup shardEntryGroup = new ShardEntryGroup(  );
+        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 10000l );
 
         boolean result = shardEntryGroup.addShard( secondShard );
 
@@ -73,7 +73,6 @@ public class ShardEntryGroupTest {
         assertTrue( "Shard added", result );
 
 
-
         assertFalse( "First shard cannot be deleted", shardEntryGroup.canBeDeleted( firstShard ) );
 
         assertFalse( "Second shard cannot be deleted", shardEntryGroup.canBeDeleted( secondShard ) );
@@ -81,9 +80,6 @@ public class ShardEntryGroupTest {
         assertFalse( "Duplicate shard id cannot be deleted", shardEntryGroup.canBeDeleted( secondShard ) );
 
         assertNull( "Can't compact, no min compacted shard present", shardEntryGroup.getCompactionTarget() );
-
-
-
     }
 
 
@@ -97,7 +93,7 @@ public class ShardEntryGroupTest {
         Shard secondShard = new Shard( 1000, 1001, false );
 
 
-        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( );
+        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 10000l );
 
         boolean result = shardEntryGroup.addShard( secondShard );
 
@@ -123,9 +119,7 @@ public class ShardEntryGroupTest {
 
         //we should compact these
         assertTrue( "Merge should be run", shardEntryGroup.shouldCompact() );
-
     }
-
 
 
     @Test
@@ -139,7 +133,7 @@ public class ShardEntryGroupTest {
         Shard compactedShard = new Shard( 500, 200, true );
 
 
-        ShardEntryGroup shardEntryGroup = new ShardEntryGroup(  );
+        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 10000l );
 
         boolean result = shardEntryGroup.addShard( firstShard );
 
@@ -154,17 +148,13 @@ public class ShardEntryGroupTest {
         assertTrue( "Shard added", result );
 
 
+        assertFalse( "First shard cannot be deleted", shardEntryGroup.canBeDeleted( secondShard ) );
 
-        assertFalse( "First shard cannot be deleted", shardEntryGroup.canBeDeleted( secondShard  ) );
+        assertTrue( "Second shard can be deleted", shardEntryGroup.canBeDeleted( firstShard ) );
 
-        assertTrue( "Second shard can be deleted", shardEntryGroup.canBeDeleted( firstShard  ) );
-
-        assertEquals( "Can't compact, no min compacted shard present", secondShard, shardEntryGroup.getCompactionTarget() );
-
-
-
+        assertEquals( "Can't compact, no min compacted shard present", secondShard,
+            shardEntryGroup.getCompactionTarget() );
     }
-
 
 
     @Test
@@ -179,7 +169,7 @@ public class ShardEntryGroupTest {
         Shard compactedShard2 = new Shard( 800, 7000, true );
 
 
-        ShardEntryGroup shardEntryGroup = new ShardEntryGroup(  );
+        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 10000l );
 
         boolean result = shardEntryGroup.addShard( firstShard );
 
@@ -197,7 +187,7 @@ public class ShardEntryGroupTest {
 
         assertFalse( "Shouldn't add since it's compacted", result );
 
-        ShardEntryGroup secondGroup = new ShardEntryGroup(  );
+        ShardEntryGroup secondGroup = new ShardEntryGroup( 10000l );
 
         result = secondGroup.addShard( compactedShard2 );
 
@@ -214,7 +204,7 @@ public class ShardEntryGroupTest {
         Shard compactedShard1 = new Shard( 900, 8000, true );
 
 
-        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( );
+        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 10000l );
 
         boolean result = shardEntryGroup.addShard( firstShard );
 
@@ -236,9 +226,7 @@ public class ShardEntryGroupTest {
         assertEquals( "Same shard for merge target", secondShard, shardEntryGroup.getCompactionTarget() );
 
         //Should return true, we can merge
-        assertTrue( "Merge cannot be run within min time",
-                shardEntryGroup.shouldCompact() );
-
+        assertTrue( "Merge cannot be run within min time", shardEntryGroup.shouldCompact() );
     }
 
 
@@ -255,7 +243,7 @@ public class ShardEntryGroupTest {
         Shard compactedShard1 = new Shard( 900, 8000, true );
 
 
-        ShardEntryGroup shardEntryGroup = new ShardEntryGroup(  );
+        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 10000l );
 
         boolean result = shardEntryGroup.addShard( firstShard );
 
@@ -292,7 +280,7 @@ public class ShardEntryGroupTest {
         Shard compactedShard = new Shard( 900, 8000, true );
 
 
-        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( );
+        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 10000l );
 
         boolean result = shardEntryGroup.addShard( ignoredProposedShard );
 
@@ -307,7 +295,7 @@ public class ShardEntryGroupTest {
         assertTrue( "Shard added", result );
 
 
-        Collection<Shard> writeShards = shardEntryGroup.getWriteShards(newAllocatedCompactionTarget.getShardIndex() );
+        Collection<Shard> writeShards = shardEntryGroup.getWriteShards( newAllocatedCompactionTarget.getShardIndex() );
 
         assertEquals( "Shard size correct", 1, writeShards.size() );
 
@@ -319,7 +307,6 @@ public class ShardEntryGroupTest {
         assertEquals( "Shard size correct", 1, writeShards.size() );
 
         assertTrue( "Lowest new shard present", writeShards.contains( compactedShard ) );
-
     }
 
 
@@ -332,7 +319,7 @@ public class ShardEntryGroupTest {
 
         Shard rootShard = new Shard( 0, 0, false );
 
-        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( );
+        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 10000l );
 
         boolean result = shardEntryGroup.addShard( secondShard );
 
@@ -357,7 +344,7 @@ public class ShardEntryGroupTest {
 
         Shard lowShard = new Shard( 10000, 1000, false );
 
-        ShardEntryGroup shardEntryGroup = new ShardEntryGroup(  );
+        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 10000l );
 
         boolean result = shardEntryGroup.addShard( highShard );
 

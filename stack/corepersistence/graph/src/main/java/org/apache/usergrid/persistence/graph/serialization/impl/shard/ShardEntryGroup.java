@@ -43,6 +43,10 @@ public class ShardEntryGroup {
 
     private List<Shard> shards;
 
+    private final long delta;
+
+    private long maxCreatedTime;
+
     private Shard compactionTarget;
 
     private Shard rootShard;
@@ -51,7 +55,9 @@ public class ShardEntryGroup {
     /**
      * The max delta we accept in milliseconds for create time to be considered a member of this group
      */
-    public ShardEntryGroup() {
+    public ShardEntryGroup( final long delta ) {
+        Preconditions.checkArgument( delta > 0, "delta must be greater than 0" );
+        this.delta = delta;
         this.shards = new ArrayList<>();
     }
 
@@ -100,6 +106,8 @@ public class ShardEntryGroup {
      */
     private void addShardInternal( final Shard shard ) {
         shards.add( shard );
+
+        maxCreatedTime = Math.max( maxCreatedTime, shard.getCreatedTime() );
 
         //we're changing our structure, unset the compaction target
         compactionTarget = null;
@@ -293,6 +301,7 @@ public class ShardEntryGroup {
          * We don't have enough shards to compact, ignore
          */
         return getCompactionTarget() != null;
+
     }
 
 
@@ -346,8 +355,11 @@ public class ShardEntryGroup {
     @Override
     public String toString() {
         return "ShardEntryGroup{" +
-            "shards=" + shards +
-            ", compactionTarget=" + compactionTarget +
+            "compactionTarget=" + compactionTarget +
+            ", shards=" + shards +
+            ", delta=" + delta +
+            ", maxCreatedTime=" + maxCreatedTime +
+            ", rootShard=" + rootShard +
             '}';
     }
 }

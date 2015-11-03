@@ -43,7 +43,6 @@ public interface GraphFig extends GuicyFig {
      *
      * You will want to set this value to no more than 2x tombstone_failure_threshold to avoid failures on read during
      * shard compaction.
-     *
      */
     String SHARD_SIZE = "usergrid.graph.shard.size";
 
@@ -68,6 +67,14 @@ public interface GraphFig extends GuicyFig {
 
     String COUNTER_WRITE_FLUSH_QUEUE_SIZE = "usergrid.graph.shard.counter.queue.size";
 
+    /**
+     * The minimum amount of time than can occur (in millis) between shard allocation and deletion.
+     *
+     * Note that you should also pad this for node clock drift.  A good value for this would be 60 seconds, assuming you
+     * have NTP and your nodes are reasonably (< 1 second) synced
+     */
+    String SHARD_DELETE_DELTA = "usergrid.graph.shard.delete.delta";
+
 
     @Default( "1000" )
     @Key( SCAN_PAGE_SIZE )
@@ -80,9 +87,9 @@ public interface GraphFig extends GuicyFig {
 
 
     /**
-     * A 1% repair chance.  On average we'll check to repair on 1 out of every 100 reads
+     * A 2% repair chance.  On average we'll check to repair on 2 out of every 100 reads
      */
-    @Default( ".01" )
+    @Default( ".02" )
     @Key( SHARD_REPAIR_CHANCE )
     double getShardRepairChance();
 
@@ -104,6 +111,11 @@ public interface GraphFig extends GuicyFig {
     @Key( COUNTER_WRITE_FLUSH_QUEUE_SIZE )
     int getCounterFlushQueueSize();
 
+    @Default( "60000" )
+    @Key( SHARD_DELETE_DELTA )
+    long getShardDeleteDelta();
+
+
     @Default( "CL_EACH_QUORUM" )
     @Key( SHARD_WRITE_CONSISTENCY )
     String getShardWriteConsistency();
@@ -114,7 +126,5 @@ public interface GraphFig extends GuicyFig {
     @Default( "CL_LOCAL_QUORUM" )
     @Key( SHARD_READ_CONSISTENCY )
     String getShardReadConsistency();
-
-
 }
 

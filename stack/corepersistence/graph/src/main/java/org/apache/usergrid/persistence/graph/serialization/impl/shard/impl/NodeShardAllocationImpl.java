@@ -74,8 +74,9 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     @Inject
     public NodeShardAllocationImpl( final EdgeShardSerialization edgeShardSerialization,
                                     final EdgeColumnFamilies edgeColumnFamilies,
-                                    final ShardedEdgeSerialization shardedEdgeSerialization, final TimeService timeService,
-                                    final GraphFig graphFig, final ShardGroupCompaction shardGroupCompaction) {
+                                    final ShardedEdgeSerialization shardedEdgeSerialization,
+                                    final TimeService timeService, final GraphFig graphFig,
+                                    final ShardGroupCompaction shardGroupCompaction ) {
         this.edgeShardSerialization = edgeShardSerialization;
         this.edgeColumnFamilies = edgeColumnFamilies;
         this.shardedEdgeSerialization = shardedEdgeSerialization;
@@ -100,26 +101,26 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             existingShards = edgeShardSerialization.getShardMetaDataLocal( scope, maxShardId, directedEdgeMeta );
         }
 
-            /**
-             * We didn't get anything out of cassandra, so we need to create the minumum shard
-             */
-            if ( existingShards == null || !existingShards.hasNext() ) {
+        /**
+         * We didn't get anything out of cassandra, so we need to create the minumum shard
+         */
+        if ( existingShards == null || !existingShards.hasNext() ) {
 
 
-                final MutationBatch batch = edgeShardSerialization.writeShardMeta( scope, Shard.MIN_SHARD, directedEdgeMeta );
-                try {
-                    batch.execute();
-                }
-                catch ( ConnectionException e ) {
-                    throw new RuntimeException( "Unable to connect to casandra", e );
-                }
-
-                existingShards = Collections.singleton( Shard.MIN_SHARD ).iterator();
+            final MutationBatch batch =
+                edgeShardSerialization.writeShardMeta( scope, Shard.MIN_SHARD, directedEdgeMeta );
+            try {
+                batch.execute();
             }
+            catch ( ConnectionException e ) {
+                throw new RuntimeException( "Unable to connect to casandra", e );
+            }
+
+            existingShards = Collections.singleton( Shard.MIN_SHARD ).iterator();
         }
 
 
-        return new ShardEntryGroupIterator( existingShards, shardGroupCompaction, scope, directedEdgeMeta );
+        return new ShardEntryGroupIterator( existingShards, graphFig.getShardDeleteDelta(), shardGroupCompaction, scope, directedEdgeMeta );
     }
 
 
@@ -171,7 +172,6 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         }
 
 
-
         final long shardSize = graphFig.getShardSize();
 
 
@@ -203,8 +203,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
         if ( !edges.hasNext() ) {
-            logger.debug(
-                "Tried to allocate a new shard for group {}, but no max value could be found in that row",
+            logger.debug( "Tried to allocate a new shard for group {}, but no max value could be found in that row",
                 readShards );
             return false;
         }
@@ -225,14 +224,12 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             //we hit a pivot shard, set it since it could be the last one we encounter
             if ( i % shardSize == 0 ) {
                 marked = edges.next();
-                logger.debug("Found an edge {} to split at index {}", marked, i);
+                logger.debug( "Found an edge {} to split at index {}", marked, i );
             }
             else {
                 edges.next();
             }
         }
-
-
 
 
         /**
@@ -323,13 +320,13 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             return Collections.<ShardEntryGroup>emptyList().iterator();
         }
 
-        return new ShardEntryGroupIterator( shards, NO_OP_COMPACTION, scope, directedEdgeMeta );
+        return new ShardEntryGroupIterator( shards, graphFig.getShardDeleteDelta(), NO_OP_COMPACTION, scope, directedEdgeMeta );
     }
 
 
     /**
-     * Class that just ignores compaction events, since we're already evaluating the events.  A bit of a hack
-     * that shows we need some refactoring
+     * Class that just ignores compaction events, since we're already evaluating the events.  A bit of a hack that shows
+     * we need some refactoring
      */
     private final static class NoOpCompaction implements ShardGroupCompaction {
 
@@ -342,6 +339,4 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             return Futures.immediateFuture( AuditResult.NOT_CHECKED );
         }
     }
-
-
 }

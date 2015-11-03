@@ -59,7 +59,7 @@ public class ShardEntryGroupIteratorTest {
         final Iterator<Shard> noShards = Collections.<Shard>emptyList().iterator();
 
         //should blow up, our iterator is empty
-        new ShardEntryGroupIterator( noShards, shardGroupCompaction, scope, directedEdgeMeta );
+        new ShardEntryGroupIterator( noShards, 10000l,  shardGroupCompaction, scope, directedEdgeMeta );
     }
 
 
@@ -77,7 +77,7 @@ public class ShardEntryGroupIteratorTest {
         final Iterator<Shard> noShards = Collections.singleton( minShard ).iterator();
 
         ShardEntryGroupIterator entryGroupIterator =
-            new ShardEntryGroupIterator( noShards, shardGroupCompaction, scope, directedEdgeMeta );
+            new ShardEntryGroupIterator( noShards, 10000l, shardGroupCompaction, scope, directedEdgeMeta );
 
 
         assertTrue( "Root shard always present", entryGroupIterator.hasNext() );
@@ -154,7 +154,7 @@ public class ShardEntryGroupIteratorTest {
 
 
         ShardEntryGroupIterator entryGroupIterator =
-            new ShardEntryGroupIterator( noShards, shardGroupCompaction, scope, directedEdgeMeta );
+            new ShardEntryGroupIterator( noShards, 10000l, shardGroupCompaction, scope, directedEdgeMeta );
 
         assertTrue( "max group present", entryGroupIterator.hasNext() );
 
