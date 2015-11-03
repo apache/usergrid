@@ -232,7 +232,6 @@ class Migrate:
                             break
 
             # Migrate app info
-
             if self.is_appinfo_migrated():
                 self.logger.info('AppInfo already migrated. Resetting version for re-migration.')
                 self.reset_appinfo_migration()
@@ -251,11 +250,24 @@ class Migrate:
                     break
             self.logger.info('AppInfo Migration Ended.')
 
+            # De-dup management app
+            job = self.start_dedup(MANAGEMENT_APP_ID)
+            self.logger.info('Started management dedup.  App=[%s], Job=[%s]', MANAGEMENT_APP_ID, job)
+            is_running = True
+            while is_running:
+                time.sleep(STATUS_INTERVAL_SECONDS)
+                is_running = self.is_dedup_running(job)
+                if not is_running:
+                    break
+
+            self.logger.info("Finished dedup. App=[%s], Job=[%s]", MANAGEMENT_APP_ID, job)
+            self.metrics['dedup_end_' + MANAGEMENT_APP_ID] = get_current_time()
+
             # Reindex management app
 
             job = self.start_app_reindex(MANAGEMENT_APP_ID)
             self.metrics['reindex_start'] = get_current_time()
-            self.logger.info('Started Re-index.  Job=[%s]', job)
+            self.logger.info('Started management Re-index.  Job=[%s]', job)
             is_running = True
             while is_running:
                 time.sleep(STATUS_INTERVAL_SECONDS)
@@ -263,7 +275,7 @@ class Migrate:
                 if not is_running:
                     break
 
-            self.logger.info("Finished Re-index. Job=[%s]", job)
+            self.logger.info("Finished management Re-index. Job=[%s]", job)
             self.metrics['reindex_end'] = get_current_time()
 
             # Dedup and re-index all of organization's apps
@@ -517,7 +529,7 @@ class Migrate:
             body = json.dumps({'updated': self.start_date})
 
         try:
-            r = requests.post(url=self.get_reindex_url(), data=body, auth=(self.super_user, self.super_pass))
+            r = requests.post(url=self.get_reindex_url() + "/" + appId, data=body, auth=(self.super_user, self.super_pass))
 
             if r.status_code == 200:
                 response = r.json()
