@@ -202,11 +202,15 @@ public class EntityMappingParser implements FieldParser {
      */
     private void iterate( final Map<String, ?> map ) {
 
+        lastCollection.push( map );
+
         for ( final Map.Entry<String, ?> jsonField : map.entrySet() ) {
             pushField( jsonField.getKey() );
             visitValue( jsonField.getValue() );
             popField();
         }
+
+        lastCollection.pop();
     }
 
 
