@@ -16,7 +16,6 @@
 
 return [
 
-    'usergrid' => [
 
         'url' => 'https://api.usergrid.com',
         'version' => '1.0.0',
@@ -49,5 +48,5 @@ return [
          * if you want to manage your own auth flow by calling the token api and setting the token your self just set this to false
          * */
         'enable_oauth2_plugin' => true
-    ]
+
 ];

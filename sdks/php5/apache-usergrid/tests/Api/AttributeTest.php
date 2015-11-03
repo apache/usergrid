@@ -46,9 +46,7 @@ class AttributeTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @test
-     * @group internet
-     */
+    /** @test */
     public function it_should_have_attribute()
     {
         $this->assertTrue(method_exists('Apache\Usergrid\Api\Models\User', 'deviceAttribute'),
