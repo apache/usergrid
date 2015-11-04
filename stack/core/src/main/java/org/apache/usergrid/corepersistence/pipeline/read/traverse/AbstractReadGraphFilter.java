@@ -245,8 +245,8 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
     private Observable.Transformer<IndexOperationMessage, IndexOperationMessage> applyCollector() {
 
         return observable -> observable
-            .filter((IndexOperationMessage msg) -> !msg.isEmpty())
             .collect(() -> new IndexOperationMessage(), (collector, single) -> collector.ingest(single))
+            .filter(msg -> !msg.isEmpty())
             .doOnNext(indexOperation -> {
                 asyncEventService.queueIndexOperationMessage(indexOperation);
             });
