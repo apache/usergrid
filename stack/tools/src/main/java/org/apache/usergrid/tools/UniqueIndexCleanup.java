@@ -30,10 +30,12 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.cassandra.db.RowIteratorFactory;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.io.Charsets;
 
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.persistence.Entity;
@@ -43,30 +45,51 @@ import org.apache.usergrid.persistence.Identifier;
 import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.EntityManagerImpl;
+import org.apache.usergrid.persistence.cassandra.Serializers;
+import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
+import org.apache.usergrid.persistence.cassandra.index.UUIDStartToBytes;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.query.ir.result.ScanColumn;
 import org.apache.usergrid.persistence.query.ir.result.SliceIterator;
 import org.apache.usergrid.persistence.query.ir.result.UUIDIndexSliceParser;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 
+import me.prettyprint.cassandra.service.KeyIterator;
+import me.prettyprint.cassandra.service.RangeSlicesIterator;
 import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.AbstractComposite.ComponentEquality;
+import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.beans.OrderedRows;
+import me.prettyprint.hector.api.beans.Row;
+import me.prettyprint.hector.api.beans.Rows;
+import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
+import me.prettyprint.hector.api.query.QueryResult;
+import me.prettyprint.hector.api.query.RangeSlicesQuery;
+import me.prettyprint.hector.api.query.SliceQuery;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import static me.prettyprint.hector.api.factory.HFactory.createRangeSlicesQuery;
+import static me.prettyprint.hector.api.factory.HFactory.createSliceQuery;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX_ENTRIES;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_PROPERTIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.INDEX_ENTRY_LIST_COUNT;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
-import static org.apache.usergrid.utils.CompositeUtils.setEqualityFlag;
+import static org.apache.usergrid.persistence.cassandra.Serializers.dce;
+import static org.apache.usergrid.persistence.cassandra.Serializers.le;
+import static org.apache.usergrid.persistence.cassandra.Serializers.se;
+import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
+import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 
@@ -127,7 +150,7 @@ public class UniqueIndexCleanup extends ToolBase {
         options.addOption( appOption );
 
         Option collectionOption = OptionBuilder.withArgName( COLLECTION_ARG ).hasArg().isRequired( false )
-                                               .withDescription( "colleciton name" ).create( COLLECTION_ARG );
+                                               .withDescription( "collection name" ).create( COLLECTION_ARG );
 
         options.addOption( collectionOption );
 
@@ -166,9 +189,10 @@ public class UniqueIndexCleanup extends ToolBase {
             }
 
             CassandraService cass = em.getCass();
-            IndexBucketLocator indexBucketLocator = em.getIndexBucketLocator();
 
-            Keyspace ko = cass.getApplicationKeyspace( applicationId );
+            Keyspace ko = cass.getUsergridApplicationKeyspace();
+            Mutator<ByteBuffer> m = createMutator( ko, be );
+
 
             UUID timestampUuid = newTimeUUID();
             long timestamp = getTimestampInMicros( timestampUuid );
@@ -177,159 +201,130 @@ public class UniqueIndexCleanup extends ToolBase {
             // go through each collection and audit the values
             for ( String collectionName : getCollectionNames( em, line ) ) {
 
-
-                for ( final String bucketName : indexBucketLocator.getBuckets() ) {
-
-                    IndexScanner scanner =
-                            cass.getIdList( key( applicationId, ENTITY_UNIQUE, collectionName ), null, null,
-                                    PAGE_SIZE, false, bucketName, applicationId, false );
-
-                    SliceIterator itr = new SliceIterator( scanner, new UUIDIndexSliceParser( null ) );
-
-
-                    while ( itr.hasNext() ) {
-
-                        Set<ScanColumn> ids = itr.next();
-
-                        CollectionInfo collection = getDefaultSchema().getCollection( "application", collectionName );
+                RangeSlicesQuery<ByteBuffer, ByteBuffer, ByteBuffer> rangeSlicesQuery = HFactory
+                        .createRangeSlicesQuery( ko, be, be, be )
+                        .setColumnFamily( ENTITY_UNIQUE.getColumnFamily() )
+                        //not sure if I trust the lower two ssettings as it might iterfere with paging or set arbitrary limits and what I want to retrieve.
+                        //That needs to be verified.
+                        .setKeys( null, null )
+                        .setRange( null, null, false, 100 );
 
 
-                        //We shouldn't have to do this, but otherwise the cursor won't work
-                        Set<String> indexed = collection.getPropertiesIndexed();
 
-                        // what's left needs deleted, do so
+                RangeSlicesIterator rangeSlicesIterator = new RangeSlicesIterator( rangeSlicesQuery,null,null );
+                QueryResult<OrderedRows<ByteBuffer, ByteBuffer, ByteBuffer>> result = rangeSlicesQuery.execute();
+                OrderedRows<ByteBuffer, ByteBuffer, ByteBuffer> rows = result.get();
+                result.get().getList().get( 0 ).getColumnSlice();
 
-                        logger.info( "Auditing {} entities for collection {} in app {}", new Object[] {
-                                ids.size(), collectionName, app.getValue()
-                        } );
+                while(rangeSlicesIterator.hasNext()){
+                    //UUID returned_uuid = UUID.nameUUIDFromBytes(((ByteBuffer)rangeSlicesIterator.next().getKey()).array());
+                    Row rangeSliceValue = rangeSlicesIterator.next();
 
-                        for ( ScanColumn col : ids ) {
-                            final UUID id = col.getUUID();
-                            boolean reIndex = false;
+                    String returnedRowKey = new String( ((ByteBuffer)rangeSliceValue.getKey()).array(), Charsets.UTF_8);
+                    if ( returnedRowKey.contains( "users" ) || returnedRowKey.contains( "username" ) || returnedRowKey.contains( "email" ) ) {
+                        ColumnSlice<ByteBuffer,ByteBuffer> columnSlice = rangeSliceValue.getColumnSlice();
+                    if(columnSlice.getColumns().size()!=0) {
+                            System.out.println( returnedRowKey );
+                        List<HColumn<ByteBuffer, ByteBuffer>> cols = columnSlice.getColumns();
 
-                            Mutator<ByteBuffer> m = createMutator( ko, be );
+                        for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
+                            UUID entityId = ue.fromByteBuffer( col.getName() );
 
-                            try {
+                            if(em.get( entityId )==null){
+                                logger.warn( "Entity with id {} did not exist in app {}", entityId, applicationId );
+                                System.out.println("Deleting column uuid: "+entityId.toString());
 
-                                Entity entity = em.get( id );
 
-                                //entity may not exist, but we should have deleted rows from the index
-                                if ( entity == null ) {
-                                    logger.warn( "Entity with id {} did not exist in app {}", id, applicationId );
-                                    //now execute the cleanup. In this case the entity is gone,
-                                    // so we'll want to remove references from
-                                    // the secondary index also remove from unique entity.
-                                    Object key = key( applicationId, collectionName,"username", id ); 
-                                    addDeleteToMutator( m, ENTITY_UNIQUE, key, timestamp, id );
-                                    m.execute();
-                                    continue;
-                                }
-
-                                logger.info( "Reindex complete for entity with id '{} ", id );
-
-                                //now execute the cleanup. This way if the above update fails,
-                                // we still have enough data to run again
-                                // later
+                                Object key = key( applicationId, collectionName,"username", entityId );
+                                addDeleteToMutator(m,ENTITY_UNIQUE,key,entityId,timestamp);
                                 m.execute();
-
-//
-//                                for ( String prop : indexed ) {
-//
-//                                    String bucket = indexBucketLocator
-//                                            .getBucket( id );
-//
-//                                    Object rowKey = key( applicationId, collection.getName(), prop, bucket );
-//
-//                                    List<HColumn<ByteBuffer, ByteBuffer>> indexCols =
-//                                            scanIndexForAllTypes( ko, indexBucketLocator, applicationId, rowKey, id,
-//                                                    prop );
-//
-//                                    // loop through the indexed values and verify them as present in
-//                                    // our entity_index_entries. If they aren't, we need to delete the
-//                                    // from the secondary index, and mark
-//                                    // this object for re-index via n update
-//                                    for ( HColumn<ByteBuffer, ByteBuffer> index : indexCols ) {
-//
-//                                        DynamicComposite secondaryIndexValue = DynamicComposite.fromByteBuffer( index
-//                                                .getName().duplicate() );
-//
-//                                        Object code = secondaryIndexValue.get( 0 );
-//                                        Object propValue = secondaryIndexValue.get( 1 );
-//                                        UUID timestampId = ( UUID ) secondaryIndexValue.get( 3 );
-//
-//                                        DynamicComposite existingEntryStart = new DynamicComposite( prop, code,
-//                                                propValue, timestampId );
-//                                        DynamicComposite existingEntryFinish = new DynamicComposite( prop, code,
-//                                                propValue, timestampId );
-//
-//                                        setEqualityFlag( existingEntryFinish, ComponentEquality.GREATER_THAN_EQUAL );
-//
-//                                        // now search our EntityIndexEntry for previous values, see if
-//                                        // they don't match this one
-//
-//                                        List<HColumn<ByteBuffer, ByteBuffer>> entries =
-//                                                cass.getColumns( ko, ENTITY_INDEX_ENTRIES, id, existingEntryStart,
-//                                                        existingEntryFinish, INDEX_ENTRY_LIST_COUNT, false );
-//
-//                                        // we wouldn't find this column in our entity_index_entries
-//                                        // audit. Delete it, then mark this entity for update
-//                                        if ( entries.size() == 0 ) {
-//                                            logger.info(
-//                                                    "Could not find reference to value '{}' for property '{}' on entity "
-//                                                            +
-//                                                            "{} in collection {}. " + " Forcing reindex", new Object[] { propValue, prop, id, collectionName } );
-//
-//                                            addDeleteToMutator( m, ENTITY_INDEX, rowKey, index.getName().duplicate(),
-//                                                    timestamp );
-//
-//                                            reIndex = true;
-//                                        }
-//
-//                                        if ( entries.size() > 1 ) {
-//                                            Object key = key( applicationId, collectionName, prop, id );
-//                                            addDeleteToMutator( m, ENTITY_UNIQUE, key, timestamp, id );
-//                                            logger.info(
-//                                                    "Found more than 1 entity referencing unique index for property "
-//                                                            + "'{}' "
-//                                                            +
-//                                                            "with value " + "'{}'", prop, propValue );
-//                                            reIndex = true;
-//                                        }
-//                                    }
-//                                }
-
-                                //force this entity to be updated
-                                if ( reIndex ) {
-                                    Entity entity = em.get( id );
-
-                                    //entity may not exist, but we should have deleted rows from the index
-                                    if ( entity == null ) {
-                                        logger.warn( "Entity with id {} did not exist in app {}", id, applicationId );
-                                        //now execute the cleanup. In this case the entity is gone,
-                                        // so we'll want to remove references from
-                                        // the secondary index also remove from unique entity.
-
-
-                                        m.execute();
-                                        continue;
-                                    }
-
-
-                                    logger.info( "Reindex complete for entity with id '{} ", id );
-                                    em.update( entity );
-
-                                    //now execute the cleanup. This way if the above update fails,
-                                    // we still have enough data to run again
-                                    // later
-                                    m.execute();
-                                }
-                            }
-                            catch ( Exception e ) {
-                                logger.error( "Unable to process entity with id '{}'", id, e );
+                                continue;
                             }
                         }
-                    }
+
+
+                   // }
                 }
+              //  rangeSlicesIterator.next()
+
+              //  UUID.nameUUIDFromBytes(rows.getList().get( 0 ).getKey().array());
+
+
+
+
+
+                //                for ( String key : keyIterator ) {
+//                    System.out.printf("Current key: %s \n",key);
+//                    keyCount++;
+//                }
+//                System.out.printf( "Iterated over %d keys \n", keyCount );
+
+//
+//                for ( final String bucketName : indexBucketLocator.getBuckets() ) {
+//
+//                    System.out.println("Entity Unique to be scanned");
+//                    Set<String> columns = cass.getAllColumnNames(cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE,key( applicationId, collectionName,"username" )  );
+//                    Rows<UUID, String, ByteBuffer> results =
+//                            cass.getRows( cass.getApplicationKeyspace( applicationId ), ENTITY_PROPERTIES, entityIds, ue, se, be );
+
+
+                    //Set results  = cass.getRowKeySet( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, Serializers.ue );
+                    //Set<String> columnStrings = cass.getAllColumnNames(cass.getApplicationKeyspace( applicationId ),ENTITY_UNIQUE, key( applicationId, collectionName ) );
+//                    Object key = createUniqueIndexKey( ownerEntityId, collectionNameInternal, propertyName, propertyValue );
+//
+//                    List<HColumn<ByteBuffer, ByteBuffer>> cols =
+//                            cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, null, null, 2,
+//                                    false );
+
+
+//                    IndexScanner scanner =new IndexBucketScanner<UUID>( cass, ENTITY_UNIQUE, UUIDStartToBytes.INSTANCE, applicationId, key( applicationId, collectionName,"username" )
+//                            , bucketName, null,
+//                            null, false, PAGE_SIZE, true );
+////                            cass.getIdList( key( applicationId, DICTIONARY_, collectionName ), null, null,
+////                                    PAGE_SIZE, false, bucketName, applicationId, false );
+//
+//
+//                    SliceIterator itr = new SliceIterator( scanner, new UUIDIndexSliceParser( null ) );
+//
+//
+//                    while ( itr.hasNext() ) {
+//                        System.out.println("Iterating on collections.");
+//
+//                        Set<ScanColumn> ids = itr.next();
+//
+//                        CollectionInfo collection = getDefaultSchema().getCollection( "application", collectionName );
+//
+//                        logger.info( "Auditing {} entities for collection {} in app {}", new Object[] {
+//                                ids.size(), collectionName, app.getValue()
+//                        } );
+//
+//                        for ( ScanColumn col : ids ) {
+//                            final UUID id = col.getUUID();
+//                            Mutator<ByteBuffer> m = createMutator( ko, be );
+//
+//                            try {
+//                                System.out.println("Verifying uuid: "+id.toString());
+//                                Entity entity = em.get( id );
+//
+//                                //entity may not exist, but we should have deleted rows from the index
+//                                if ( entity == null ) {
+//                                    logger.warn( "Entity with id {} did not exist in app {}", id, applicationId );
+//                                    System.out.println("Deleting uuid: "+id.toString());
+//
+//                                    Object key = key( applicationId, collectionName,"username", id );
+//                                    addDeleteToMutator( m, ENTITY_UNIQUE, key, timestamp, id );
+//                                    m.execute();
+//                                    continue;
+//                                }
+//                                logger.info( "Reindex complete for entity with id '{} ", id );
+//                                m.execute();
+//                            }
+//                            catch ( Exception e ) {
+//                                logger.error( "Unable to process entity with id '{}'", id, e );
+//                            }
+//                        }
+//                    }
+//                }
             }
         }
 
