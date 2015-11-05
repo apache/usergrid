@@ -318,6 +318,7 @@ public class ShardGroupDeletionImplTest {
     }
 
 
+
     private DirectedEdgeMeta getDirectedEdgeMeta() {
 
         final Id sourceId = createId( "source" );
@@ -327,6 +328,8 @@ public class ShardGroupDeletionImplTest {
 
         return directedEdgeMeta;
     }
+
+
 
 
     private void initExecutor( final int numberThreads, final int queueLength ) {
