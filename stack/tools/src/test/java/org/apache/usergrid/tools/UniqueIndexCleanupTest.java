@@ -68,8 +68,6 @@ public class UniqueIndexCleanupTest {
 
             UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
             uniqueIndexCleanup.startTool( new String[]{
-                    "-app", "942712f0-7ce2-11e5-b81a-17ac5477fa5c",
-                    "-col", "users",
                     "-host", "localhost:9160"
             }, false );
 

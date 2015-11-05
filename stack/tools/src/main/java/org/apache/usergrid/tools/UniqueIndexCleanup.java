@@ -18,79 +18,36 @@ package org.apache.usergrid.tools;
 
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.cassandra.db.RowIteratorFactory;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.Charsets;
 
-import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.Identifier;
-import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.EntityManagerImpl;
-import org.apache.usergrid.persistence.cassandra.Serializers;
-import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
-import org.apache.usergrid.persistence.cassandra.index.IndexScanner;
-import org.apache.usergrid.persistence.cassandra.index.UUIDStartToBytes;
-import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.query.ir.result.ScanColumn;
-import org.apache.usergrid.persistence.query.ir.result.SliceIterator;
-import org.apache.usergrid.persistence.query.ir.result.UUIDIndexSliceParser;
-import org.apache.usergrid.persistence.schema.CollectionInfo;
 
-import me.prettyprint.cassandra.service.KeyIterator;
 import me.prettyprint.cassandra.service.RangeSlicesIterator;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
-import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.beans.OrderedRows;
 import me.prettyprint.hector.api.beans.Row;
-import me.prettyprint.hector.api.beans.Rows;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
-import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
-import me.prettyprint.hector.api.query.SliceQuery;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
-import static me.prettyprint.hector.api.factory.HFactory.createRangeSlicesQuery;
-import static me.prettyprint.hector.api.factory.HFactory.createSliceQuery;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_COLLECTIONS;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_ID_SETS;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_PROPERTIES;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
-import static org.apache.usergrid.persistence.cassandra.Serializers.dce;
-import static org.apache.usergrid.persistence.cassandra.Serializers.le;
-import static org.apache.usergrid.persistence.cassandra.Serializers.se;
 import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
-import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 
@@ -112,16 +69,6 @@ public class UniqueIndexCleanup extends ToolBase {
 
     private static final Logger logger = LoggerFactory.getLogger( UniqueIndexCleanup.class );
 
-    /**
-     *
-     */
-    private static final String APPLICATION_ARG = "app";
-
-    /**
-     *
-     */
-    private static final String COLLECTION_ARG = "col";
-
 
     @Override
     @SuppressWarnings( "static-access" )
@@ -136,19 +83,6 @@ public class UniqueIndexCleanup extends ToolBase {
 
 
         options.addOption( hostOption );
-
-
-        Option appOption = OptionBuilder.withArgName( APPLICATION_ARG ).hasArg().isRequired( false )
-                                        .withDescription( "application id or app name" ).create( APPLICATION_ARG );
-
-
-        options.addOption( appOption );
-
-        Option collectionOption = OptionBuilder.withArgName( COLLECTION_ARG ).hasArg().isRequired( false )
-                                               .withDescription( "collection name" ).create( COLLECTION_ARG );
-
-        options.addOption( collectionOption );
-
         return options;
     }
 
@@ -176,7 +110,7 @@ public class UniqueIndexCleanup extends ToolBase {
                         //not sure if I trust the lower two settings as it might iterfere with paging or set
                         // arbitrary limits and what I want to retrieve.
                         //That needs to be verified.
-                        .setKeys( null, null ).setRange( null, null, false, 100 );
+                        .setKeys( null, null ).setRange( null, null, false, PAGE_SIZE );
 
 
         RangeSlicesIterator rangeSlicesIterator = new RangeSlicesIterator( rangeSlicesQuery, null, null );
