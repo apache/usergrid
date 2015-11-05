@@ -68,7 +68,7 @@ public class UniqueIndexCleanup extends ToolBase {
     /**
      *
      */
-    private static final int PAGE_SIZE = 1;
+    private static final int PAGE_SIZE = 100;
 
 
     private static final Logger logger = LoggerFactory.getLogger( UniqueIndexCleanup.class );
@@ -84,6 +84,8 @@ public class UniqueIndexCleanup extends ToolBase {
         Option hostOption =
                 OptionBuilder.withArgName( "host" ).hasArg().isRequired( true ).withDescription( "Cassandra host" )
                              .create( "host" );
+
+        
 
 
         options.addOption( hostOption );
@@ -136,30 +138,39 @@ public class UniqueIndexCleanup extends ToolBase {
             EntityManagerImpl em = ( EntityManagerImpl ) emf.getEntityManager( applicationId );
             Boolean cleanup = false;
 
-            //TODO: make parsed row key more human friendly. Anybody looking at it doesn't know what value means what.
-            if ( parsedRowKey[1].equals( "users" ) ) {
+            if ( collectionName.equals( "users" ) ) {
 
                 ColumnSlice<ByteBuffer, ByteBuffer> columnSlice = rangeSliceValue.getColumnSlice();
                 if ( columnSlice.getColumns().size() != 0 ) {
                     System.out.println( returnedRowKey );
                     List<HColumn<ByteBuffer, ByteBuffer>> cols = columnSlice.getColumns();
+                    if(cols.size()==0){
+                       System.out.println("Found 0 uuid's associated with: "+uniqueValue);
+                        UUID timestampUuid = newTimeUUID();
+                        long timestamp = getTimestampInMicros( timestampUuid );
+                        Object key = key( applicationId, collectionName, uniqueValueKey, uniqueValue );
+                        addDeleteToMutator( m,ENTITY_UNIQUE,key,timestamp );
+                        m.execute();
 
-                    for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
-                        UUID entityId = ue.fromByteBuffer( col.getName() );
+                    }
+                    else {
+                        for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
+                            UUID entityId = ue.fromByteBuffer( col.getName() );
 
-                        if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) ) {
-                            if ( managementService.getAdminUserByUuid( entityId ) == null ) {
+                            if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) ) {
+                                if ( managementService.getAdminUserByUuid( entityId ) == null ) {
+                                    cleanup = true;
+                                }
+                            }
+                            else if ( em.get( entityId ) == null ) {
                                 cleanup = true;
                             }
-                        }
-                        else if ( em.get( entityId ) == null ) {
-                            cleanup = true;
-                        }
 
-                        if ( cleanup == true ) {
-                            DeleteUniqueValue( m, applicationId, collectionName, uniqueValueKey, uniqueValue,
-                                    entityId );
-                            cleanup = false;
+                            if ( cleanup == true ) {
+                                DeleteUniqueValue( m, applicationId, collectionName, uniqueValueKey, uniqueValue,
+                                        entityId );
+                                cleanup = false;
+                            }
                         }
                     }
                 }
