@@ -264,13 +264,13 @@ public class UnionIterator extends MultiIterator {
             if ( this == o ) {
                 return true;
             }
-            if ( !( o instanceof UnionScanColumn ) ) {
+            if ( !( o instanceof ScanColumn ) ) {
                 return false;
             }
 
-            final UnionScanColumn that = ( UnionScanColumn ) o;
+            final ScanColumn that = ( ScanColumn ) o;
 
-            return delegate.getUUID().equals( that.delegate.getUUID() );
+            return getUUID().equals( that.getUUID() );
         }
 
 

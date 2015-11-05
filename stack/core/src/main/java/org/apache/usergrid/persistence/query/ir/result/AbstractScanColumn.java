@@ -69,7 +69,7 @@ public abstract class AbstractScanColumn implements ScanColumn {
 
         ScanColumn that = ( ScanColumn ) o;
 
-        return uuid.equals( that.getUUID() );
+        return getUUID().equals( that.getUUID() );
     }
 
 
