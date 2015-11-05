@@ -29,7 +29,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.commons.io.Charsets;
 import org.apache.thrift.TBaseHelper;
 
 import org.apache.usergrid.persistence.cassandra.EntityManagerImpl;
@@ -43,7 +42,6 @@ import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
-import sun.text.normalizer.UTF16;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
@@ -73,6 +71,14 @@ public class UniqueIndexCleanup extends ToolBase {
 
     private static final Logger logger = LoggerFactory.getLogger( UniqueIndexCleanup.class );
 
+    private static final String APPLICATION_ARG = "app";
+
+    private static final String COLLECTION_ARG = "col";
+
+    private static final String ENTITY_UNIQUE_PROPERTY_NAME = "property";
+
+    private static final String ENTITY_UNIQUE_PROPERTY_VALUE = "value";
+
 
     @Override
     @SuppressWarnings( "static-access" )
@@ -85,10 +91,31 @@ public class UniqueIndexCleanup extends ToolBase {
                 OptionBuilder.withArgName( "host" ).hasArg().isRequired( true ).withDescription( "Cassandra host" )
                              .create( "host" );
 
-        
-
-
         options.addOption( hostOption );
+
+
+        Option appOption = OptionBuilder.withArgName( APPLICATION_ARG ).hasArg().isRequired( false )
+                                        .withDescription( "application id" ).create( APPLICATION_ARG );
+
+
+        options.addOption( appOption );
+
+        Option collectionOption = OptionBuilder.withArgName( COLLECTION_ARG ).hasArg().isRequired( false )
+                                               .withDescription( "collection name" ).create( COLLECTION_ARG );
+
+        options.addOption( collectionOption );
+
+        Option entityUniquePropertyName =
+                OptionBuilder.withArgName( ENTITY_UNIQUE_PROPERTY_NAME ).hasArg().isRequired( false )
+                             .withDescription( "Entity Unique Property Name" ).create( ENTITY_UNIQUE_PROPERTY_NAME );
+        options.addOption( entityUniquePropertyName );
+
+        Option entityUniquePropertyValue =
+                OptionBuilder.withArgName( ENTITY_UNIQUE_PROPERTY_VALUE ).hasArg().isRequired( false )
+                             .withDescription( "Entity Unique Property Value" ).create( ENTITY_UNIQUE_PROPERTY_VALUE );
+        options.addOption( entityUniquePropertyValue );
+
+
         return options;
     }
 
@@ -110,67 +137,55 @@ public class UniqueIndexCleanup extends ToolBase {
         Keyspace ko = cass.getUsergridApplicationKeyspace();
         Mutator<ByteBuffer> m = createMutator( ko, be );
 
-        RangeSlicesQuery<ByteBuffer, ByteBuffer, ByteBuffer> rangeSlicesQuery =
-                HFactory.createRangeSlicesQuery( ko, be, be, be ).setColumnFamily( ENTITY_UNIQUE.getColumnFamily() )
-                        //not sure if I trust the lower two settings as it might iterfere with paging or set
-                        // arbitrary limits and what I want to retrieve.
-                        //That needs to be verified.
-                        .setKeys( null, null ).setRange( null, null, false, PAGE_SIZE );
+        if ( line.hasOption( ENTITY_UNIQUE_PROPERTY_NAME ) || line.hasOption( ENTITY_UNIQUE_PROPERTY_VALUE ) ) {
+            deleteInvalidValuesForUniqueProperty(m ,line );
+        }
+        else {
+
+            RangeSlicesQuery<ByteBuffer, ByteBuffer, ByteBuffer> rangeSlicesQuery =
+                    HFactory.createRangeSlicesQuery( ko, be, be, be ).setColumnFamily( ENTITY_UNIQUE.getColumnFamily() )
+                            //not sure if I trust the lower two settings as it might iterfere with paging or set
+                            // arbitrary limits and what I want to retrieve.
+                            //That needs to be verified.
+                            .setKeys( null, null ).setRange( null, null, false, PAGE_SIZE );
 
 
-        RangeSlicesIterator rangeSlicesIterator = new RangeSlicesIterator( rangeSlicesQuery, null, null );
+            RangeSlicesIterator rangeSlicesIterator = new RangeSlicesIterator( rangeSlicesQuery, null, null );
 
-        while ( rangeSlicesIterator.hasNext() ) {
-            Row rangeSliceValue = rangeSlicesIterator.next();
+            while ( rangeSlicesIterator.hasNext() ) {
+                Row rangeSliceValue = rangeSlicesIterator.next();
 
 
-            ByteBuffer buf = ( TBaseHelper.rightSize(( ByteBuffer ) rangeSliceValue.getKey() ) );
-            //Cassandra client library returns ByteBuffers that are views on top of a larger byte[]. These larger ones return garbage data.
-            //Discovered thanks due to https://issues.apache.org/jira/browse/NUTCH-1591
-            String returnedRowKey = new String(buf.array(), buf.arrayOffset() + buf.position(), buf.remaining(), Charset.defaultCharset()).trim();
+                ByteBuffer buf = ( TBaseHelper.rightSize( ( ByteBuffer ) rangeSliceValue.getKey() ) );
+                //Cassandra client library returns ByteBuffers that are views on top of a larger byte[]. These larger
+                // ones return garbage data.
+                //Discovered thanks due to https://issues.apache.org/jira/browse/NUTCH-1591
+                String returnedRowKey = new String( buf.array(), buf.arrayOffset() + buf.position(), buf.remaining(),
+                        Charset.defaultCharset() ).trim();
 
-            String[] parsedRowKey = returnedRowKey.split( ":" );
-            UUID applicationId = UUID.fromString(uuidGarbageParser( parsedRowKey[0]) );
-            String collectionName = parsedRowKey[1];
-            String uniqueValueKey = parsedRowKey[2];
-            String uniqueValue = parsedRowKey[3];
+                String[] parsedRowKey = returnedRowKey.split( ":" );
+                UUID applicationId = UUID.fromString( uuidGarbageParser( parsedRowKey[0] ) );
+                String collectionName = parsedRowKey[1];
+                String uniqueValueKey = parsedRowKey[2];
+                String uniqueValue = parsedRowKey[3];
 
-            EntityManagerImpl em = ( EntityManagerImpl ) emf.getEntityManager( applicationId );
-            Boolean cleanup = false;
 
-            if ( collectionName.equals( "users" ) ) {
+                if ( collectionName.equals( "users" ) ) {
 
-                ColumnSlice<ByteBuffer, ByteBuffer> columnSlice = rangeSliceValue.getColumnSlice();
-                if ( columnSlice.getColumns().size() != 0 ) {
-                    System.out.println( returnedRowKey );
-                    List<HColumn<ByteBuffer, ByteBuffer>> cols = columnSlice.getColumns();
-                    if(cols.size()==0){
-                       System.out.println("Found 0 uuid's associated with: "+uniqueValue);
-                        UUID timestampUuid = newTimeUUID();
-                        long timestamp = getTimestampInMicros( timestampUuid );
-                        Object key = key( applicationId, collectionName, uniqueValueKey, uniqueValue );
-                        addDeleteToMutator( m,ENTITY_UNIQUE,key,timestamp );
-                        m.execute();
-
-                    }
-                    else {
-                        for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
-                            UUID entityId = ue.fromByteBuffer( col.getName() );
-
-                            if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) ) {
-                                if ( managementService.getAdminUserByUuid( entityId ) == null ) {
-                                    cleanup = true;
-                                }
-                            }
-                            else if ( em.get( entityId ) == null ) {
-                                cleanup = true;
-                            }
-
-                            if ( cleanup == true ) {
-                                DeleteUniqueValue( m, applicationId, collectionName, uniqueValueKey, uniqueValue,
-                                        entityId );
-                                cleanup = false;
-                            }
+                    ColumnSlice<ByteBuffer, ByteBuffer> columnSlice = rangeSliceValue.getColumnSlice();
+                    if ( columnSlice.getColumns().size() != 0 ) {
+                        System.out.println( returnedRowKey );
+                        List<HColumn<ByteBuffer, ByteBuffer>> cols = columnSlice.getColumns();
+                        if ( cols.size() == 0 ) {
+                            System.out.println( "Found 0 uuid's associated with: " + uniqueValue );
+                            UUID timestampUuid = newTimeUUID();
+                            long timestamp = getTimestampInMicros( timestampUuid );
+                            Object key = key( applicationId, collectionName, uniqueValueKey, uniqueValue );
+                            addDeleteToMutator( m, ENTITY_UNIQUE, key, timestamp );
+                            m.execute();
+                        }
+                        else {
+                            entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols );
                         }
                     }
                 }
@@ -181,14 +196,65 @@ public class UniqueIndexCleanup extends ToolBase {
     }
 
 
+    private void entityUUIDDelete( final Mutator<ByteBuffer> m, final UUID applicationId, final String collectionName,
+                                   final String uniqueValueKey, final String uniqueValue,
+                                   final List<HColumn<ByteBuffer, ByteBuffer>> cols )
+            throws Exception {
+        Boolean cleanup = false;
+        EntityManagerImpl em = ( EntityManagerImpl ) emf.getEntityManager( applicationId );
+
+        for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
+            UUID entityId = ue.fromByteBuffer( col.getName() );
+
+            if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) ) {
+                if ( managementService.getAdminUserByUuid( entityId ) == null ) {
+                    cleanup = true;
+                }
+            }
+            else if ( em.get( entityId ) == null ) {
+                cleanup = true;
+            }
+
+            if ( cleanup == true ) {
+                deleteUniqueValue( m, applicationId, collectionName, uniqueValueKey, uniqueValue,
+                        entityId );
+                cleanup = false;
+            }
+        }
+    }
+
+
+    //really only deletes ones that aren't existant for a specific value
+    private void deleteInvalidValuesForUniqueProperty(Mutator<ByteBuffer> m,CommandLine line) throws Exception{
+        UUID applicationId = UUID.fromString( line.getOptionValue( APPLICATION_ARG ) );
+        String collectionName = line.getOptionValue( COLLECTION_ARG );
+        String uniqueValueKey = line.getOptionValue( ENTITY_UNIQUE_PROPERTY_NAME );
+        String uniqueValue = line.getOptionValue( ENTITY_UNIQUE_PROPERTY_VALUE );
+
+        Object key = key( applicationId, collectionName, uniqueValueKey, uniqueValue );
+
+
+        List<HColumn<ByteBuffer, ByteBuffer>> cols =
+                cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, null, null, 2,
+                        false );
+
+        if ( cols.size() == 0 ) {
+            System.out.println("Zero entities were found for this unique value. Its possible it doesn't exist.");
+        }
+
+        entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols );
+
+    }
+
     private String uuidGarbageParser( final String garbageString ) {
         int index = 1;
         String stringToBeTruncated = garbageString;
-        while( !UUIDUtils.isUUID( stringToBeTruncated ) ){
-            if( stringToBeTruncated.length()>36)
+        while ( !UUIDUtils.isUUID( stringToBeTruncated ) ) {
+            if ( stringToBeTruncated.length() > 36 ) {
                 stringToBeTruncated = stringToBeTruncated.substring( index );
+            }
             else {
-                System.out.println(garbageString+" is unparsable");
+                System.out.println( garbageString + " is unparsable" );
                 break;
             }
         }
@@ -196,7 +262,7 @@ public class UniqueIndexCleanup extends ToolBase {
     }
 
 
-    private void DeleteUniqueValue( final Mutator<ByteBuffer> m, final UUID applicationId, final String collectionName,
+    private void deleteUniqueValue( final Mutator<ByteBuffer> m, final UUID applicationId, final String collectionName,
                                     final String uniqueValueKey, final String uniqueValue, final UUID entityId )
             throws Exception {
         logger.warn( "Entity with id {} did not exist in app {}", entityId, applicationId );
