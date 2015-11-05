@@ -167,6 +167,13 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
                 continue;
             }
 
+            //The shard is not compacted, we cannot remove it.  This should never happen, a bit of an "oh shit" scenario.
+            //the isCompactionPending should return false in this case
+            if(!shard.isCompacted()){
+                logger.warn( "Shard {} in group {} is not compacted yet was checked.  Short circuiting", shard, shardEntryGroup );
+                return DeleteResult.NO_OP;
+            }
+
 
             final MutationBatch shardRemovalMutation =
                 edgeShardSerialization.removeShardMeta( applicationScope, shard, directedEdgeMeta );
