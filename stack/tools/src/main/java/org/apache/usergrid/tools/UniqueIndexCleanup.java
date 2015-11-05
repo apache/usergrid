@@ -98,12 +98,7 @@ import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 /**
  * This is a utility to audit all available entity ids in the secondary index. It then checks to see if any index value
  * is not present in the Entity_Index_Entries. If it is not, the value from the index is removed, and a forced re-index
- * is triggered
- * <p/>
- * USERGRID-323
- * <p/>
- * <p/>
- * UniqueIndexCleanup -app [appid] -col [collectionname]
+ * is triggered <p/> USERGRID-323 <p/> <p/> UniqueIndexCleanup -app [appid] -col [collectionname]
  *
  * @author tnine
  */
@@ -113,7 +108,6 @@ public class UniqueIndexCleanup extends ToolBase {
      *
      */
     private static final int PAGE_SIZE = 100;
-
 
 
     private static final Logger logger = LoggerFactory.getLogger( UniqueIndexCleanup.class );
@@ -130,7 +124,7 @@ public class UniqueIndexCleanup extends ToolBase {
 
 
     @Override
-    @SuppressWarnings("static-access")
+    @SuppressWarnings( "static-access" )
     public Options createOptions() {
 
 
@@ -169,97 +163,66 @@ public class UniqueIndexCleanup extends ToolBase {
     public void runTool( CommandLine line ) throws Exception {
         startSpring();
 
-        logger.info( "Starting entity cleanup" );
-
-        Map<String, UUID> apps = getApplications( emf, line );
+        logger.info( "Starting entity unique index cleanup" );
 
 
-        for ( Entry<String, UUID> app : apps.entrySet() ) {
 
-            logger.info( "Starting cleanup for app {}", app.getKey() );
+        // go through each collection and audit the values
+        Keyspace ko = cass.getUsergridApplicationKeyspace();
+        Mutator<ByteBuffer> m = createMutator( ko, be );
 
-            UUID applicationId = app.getValue();
-            EntityManagerImpl em = ( EntityManagerImpl ) emf.getEntityManager( applicationId );
-
-            //sanity check for corrupt apps
-            Application appEntity = em.getApplication();
-
-            if ( appEntity == null ) {
-                logger.warn( "Application does not exist in data. {}", app.getKey() );
-                continue;
-            }
-
-            CassandraService cass = em.getCass();
-
-            Keyspace ko = cass.getUsergridApplicationKeyspace();
-            Mutator<ByteBuffer> m = createMutator( ko, be );
-
-
-            UUID timestampUuid = newTimeUUID();
-            long timestamp = getTimestampInMicros( timestampUuid );
-
-
-            // go through each collection and audit the values
-            for ( String collectionName : getCollectionNames( em, line ) ) {
-
-                RangeSlicesQuery<ByteBuffer, ByteBuffer, ByteBuffer> rangeSlicesQuery = HFactory
-                        .createRangeSlicesQuery( ko, be, be, be )
-                        .setColumnFamily( ENTITY_UNIQUE.getColumnFamily() )
-                        //not sure if I trust the lower two settings as it might iterfere with paging or set arbitrary limits and what I want to retrieve.
+        RangeSlicesQuery<ByteBuffer, ByteBuffer, ByteBuffer> rangeSlicesQuery =
+                HFactory.createRangeSlicesQuery( ko, be, be, be ).setColumnFamily( ENTITY_UNIQUE.getColumnFamily() )
+                        //not sure if I trust the lower two settings as it might iterfere with paging or set
+                        // arbitrary limits and what I want to retrieve.
                         //That needs to be verified.
-                        .setKeys( null, null )
-                        .setRange( null, null, false, 100 );
+                        .setKeys( null, null ).setRange( null, null, false, 100 );
 
 
+        RangeSlicesIterator rangeSlicesIterator = new RangeSlicesIterator( rangeSlicesQuery, null, null );
 
-                RangeSlicesIterator rangeSlicesIterator = new RangeSlicesIterator( rangeSlicesQuery,null,null );
-                QueryResult<OrderedRows<ByteBuffer, ByteBuffer, ByteBuffer>> result = rangeSlicesQuery.execute();
-                OrderedRows<ByteBuffer, ByteBuffer, ByteBuffer> rows = result.get();
-                result.get().getList().get( 0 ).getColumnSlice();
+        while ( rangeSlicesIterator.hasNext() ) {
+            Row rangeSliceValue = rangeSlicesIterator.next();
 
-                while(rangeSlicesIterator.hasNext()) {
-                    Row rangeSliceValue = rangeSlicesIterator.next();
+            String returnedRowKey =
+                    new String( ( ( ByteBuffer ) rangeSliceValue.getKey() ).array(), Charsets.UTF_8 ).trim();
 
-                    String returnedRowKey =
-                            new String( ( ( ByteBuffer ) rangeSliceValue.getKey() ).array(), Charsets.UTF_8 ).trim();
+            String[] parsedRowKey = returnedRowKey.split( ":" );
+            UUID applicationId = UUID.fromString( parsedRowKey[0] );
+            String collectionName = parsedRowKey[1];
+            String uniqueValueKey = parsedRowKey[2];
+            String uniqueValue = parsedRowKey[3];
 
-                    String[] parsedRowKey = returnedRowKey.split( ":" );
-                    if ( parsedRowKey[1].equals( "users" ) ) {
+            EntityManagerImpl em = ( EntityManagerImpl ) emf.getEntityManager( applicationId );
+            Boolean cleanup = false;
 
-                        ColumnSlice<ByteBuffer, ByteBuffer> columnSlice = rangeSliceValue.getColumnSlice();
-                        if ( columnSlice.getColumns().size() != 0 ) {
-                            System.out.println( returnedRowKey );
-                            List<HColumn<ByteBuffer, ByteBuffer>> cols = columnSlice.getColumns();
+            //TODO: make parsed row key more human friendly. Anybody looking at it doesn't know what value means what.
+            if ( parsedRowKey[1].equals( "users" ) ) {
 
-                            for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
-                                UUID entityId = ue.fromByteBuffer( col.getName() );
+                ColumnSlice<ByteBuffer, ByteBuffer> columnSlice = rangeSliceValue.getColumnSlice();
+                if ( columnSlice.getColumns().size() != 0 ) {
+                    System.out.println( returnedRowKey );
+                    List<HColumn<ByteBuffer, ByteBuffer>> cols = columnSlice.getColumns();
 
-                                if(parsedRowKey[0].equals( MANAGEMENT_APPLICATION_ID.toString() )){
-                                    if(managementService.getAdminUserByUuid( entityId )==null ){
-                                        logger.warn( "Entity with id {} did not exist in app {}", entityId, applicationId );
-                                        System.out.println( "Deleting column uuid: " + entityId.toString() );
+                    for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
+                        UUID entityId = ue.fromByteBuffer( col.getName() );
 
-
-                                        Object key = key( applicationId, collectionName, parsedRowKey[2], parsedRowKey[3]);
-                                        addDeleteToMutator( m, ENTITY_UNIQUE, key, entityId, timestamp );
-                                        m.execute();
-                                        continue;
-                                    }
-                                }
-                                else if ( em.get( entityId ) == null ) {
-                                    logger.warn( "Entity with id {} did not exist in app {}", entityId, applicationId );
-                                    System.out.println( "Deleting column uuid: " + entityId.toString() );
-
-                                    Object key = key( applicationId, collectionName, parsedRowKey[2], parsedRowKey[3]);
-                                    addDeleteToMutator( m, ENTITY_UNIQUE, key, entityId, timestamp );
-                                    m.execute();
-                                    continue;
-                                }
+                        if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) ) {
+                            if ( managementService.getAdminUserByUuid( entityId ) == null ) {
+                                cleanup = true;
                             }
+                        }
+                        else if ( em.get( entityId ) == null ) {
+                            cleanup =true;
+                        }
+
+                        if(cleanup == true){
+                            DeleteUniqueValue( m, applicationId, collectionName, uniqueValueKey, uniqueValue,
+                                    entityId );
+                            cleanup = false;
                         }
                     }
                 }
-
             }
         }
 
@@ -267,78 +230,17 @@ public class UniqueIndexCleanup extends ToolBase {
     }
 
 
-    private Map<String, UUID> getApplications( EntityManagerFactory emf, CommandLine line ) throws Exception {
-        String appName = line.getOptionValue( APPLICATION_ARG );
+    private void DeleteUniqueValue( final Mutator<ByteBuffer> m, final UUID applicationId,
+                                    final String collectionName, final String uniqueValueKey, final String uniqueValue,
+                                    final UUID entityId ) throws Exception {
+        logger.warn( "Entity with id {} did not exist in app {}", entityId, applicationId );
+        System.out.println( "Deleting column uuid: " + entityId.toString() );
+        UUID timestampUuid = newTimeUUID();
+        long timestamp = getTimestampInMicros( timestampUuid );
 
-        if ( appName == null ) {
-            return emf.getApplications();
-        }
-
-        ApplicationInfo app = managementService.getApplicationInfo( Identifier.from( appName ) );
-
-        if ( app == null ) {
-            logger.error( "Could not find application with id or name {}", appName );
-            System.exit( 3 );
-        }
-
-
-        Map<String, UUID> apps = new HashMap<String, UUID>();
-
-        apps.put( app.getName(), app.getId() );
-
-        return apps;
-    }
-
-
-    private Set<String> getCollectionNames( EntityManager em, CommandLine line ) throws Exception {
-
-        String collectionName = line.getOptionValue( COLLECTION_ARG );
-
-        if ( collectionName == null ) {
-            return em.getApplicationCollections();
-        }
-
-
-        Set<String> names = new HashSet<String>();
-        names.add( collectionName );
-
-        return names;
-    }
-
-
-    private List<HColumn<ByteBuffer, ByteBuffer>> scanIndexForAllTypes( Keyspace ko,
-                                                                        IndexBucketLocator indexBucketLocator,
-                                                                        UUID applicationId, Object rowKey,
-                                                                        UUID entityId, String prop ) throws Exception {
-
-        //TODO Determine the index bucket.  Scan the entire index for properties with this entityId.
-
-
-        DynamicComposite start = null;
-
-        List<HColumn<ByteBuffer, ByteBuffer>> cols;
-
-        List<HColumn<ByteBuffer, ByteBuffer>> results = new ArrayList<HColumn<ByteBuffer, ByteBuffer>>();
-
-
-        do {
-            cols = cass.getColumns( ko, ENTITY_INDEX, rowKey, start, null, 100, false );
-
-            for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
-                DynamicComposite secondaryIndexValue = DynamicComposite.fromByteBuffer( col.getName().duplicate() );
-
-                UUID storedId = ( UUID ) secondaryIndexValue.get( 2 );
-
-                //add it to the set.  We can't short circuit due to property ordering
-                if ( entityId.equals( storedId ) ) {
-                    results.add( col );
-                }
-
-                start = secondaryIndexValue;
-            }
-        }
-        while ( cols.size() == 100 );
-
-        return results;
+        Object key = key( applicationId, collectionName, uniqueValueKey, uniqueValue );
+        addDeleteToMutator( m, ENTITY_UNIQUE, key, entityId, timestamp );
+        m.execute();
+        return;
     }
 }
