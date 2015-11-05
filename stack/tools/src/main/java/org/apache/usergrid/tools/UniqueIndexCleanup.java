@@ -83,6 +83,7 @@ import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNI
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.dce;
@@ -204,7 +205,7 @@ public class UniqueIndexCleanup extends ToolBase {
                 RangeSlicesQuery<ByteBuffer, ByteBuffer, ByteBuffer> rangeSlicesQuery = HFactory
                         .createRangeSlicesQuery( ko, be, be, be )
                         .setColumnFamily( ENTITY_UNIQUE.getColumnFamily() )
-                        //not sure if I trust the lower two ssettings as it might iterfere with paging or set arbitrary limits and what I want to retrieve.
+                        //not sure if I trust the lower two settings as it might iterfere with paging or set arbitrary limits and what I want to retrieve.
                         //That needs to be verified.
                         .setKeys( null, null )
                         .setRange( null, null, false, 100 );
@@ -217,15 +218,14 @@ public class UniqueIndexCleanup extends ToolBase {
                 result.get().getList().get( 0 ).getColumnSlice();
 
                 while(rangeSlicesIterator.hasNext()) {
-                    //UUID returned_uuid = UUID.nameUUIDFromBytes(((ByteBuffer)rangeSlicesIterator.next().getKey()).array());
                     Row rangeSliceValue = rangeSlicesIterator.next();
 
                     String returnedRowKey =
                             new String( ( ( ByteBuffer ) rangeSliceValue.getKey() ).array(), Charsets.UTF_8 ).trim();
 
                     String[] parsedRowKey = returnedRowKey.split( ":" );
-                    if ( parsedRowKey[1].equals( "users" ) || returnedRowKey.contains( "username" ) || returnedRowKey
-                            .contains( "email" ) ) {
+                    if ( parsedRowKey[1].equals( "users" ) ) {
+
                         ColumnSlice<ByteBuffer, ByteBuffer> columnSlice = rangeSliceValue.getColumnSlice();
                         if ( columnSlice.getColumns().size() != 0 ) {
                             System.out.println( returnedRowKey );
@@ -234,13 +234,23 @@ public class UniqueIndexCleanup extends ToolBase {
                             for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
                                 UUID entityId = ue.fromByteBuffer( col.getName() );
 
+                                if(parsedRowKey[0].equals( MANAGEMENT_APPLICATION_ID.toString() )){
+                                    if(managementService.getAdminUserByUuid( entityId )==null ){
+                                        logger.warn( "Entity with id {} did not exist in app {}", entityId, applicationId );
+                                        System.out.println( "Deleting column uuid: " + entityId.toString() );
 
-                                if ( em.get( entityId ) == null && managementService.getAdminUserByUuid( entityId )==null ) {
+
+                                        Object key = key( applicationId, collectionName, parsedRowKey[2], parsedRowKey[3]);
+                                        addDeleteToMutator( m, ENTITY_UNIQUE, key, entityId, timestamp );
+                                        m.execute();
+                                        continue;
+                                    }
+                                }
+                                else if ( em.get( entityId ) == null ) {
                                     logger.warn( "Entity with id {} did not exist in app {}", entityId, applicationId );
                                     System.out.println( "Deleting column uuid: " + entityId.toString() );
 
-
-                                    Object key = key( applicationId, collectionName, "username", entityId );
+                                    Object key = key( applicationId, collectionName, parsedRowKey[2], parsedRowKey[3]);
                                     addDeleteToMutator( m, ENTITY_UNIQUE, key, entityId, timestamp );
                                     m.execute();
                                     continue;
