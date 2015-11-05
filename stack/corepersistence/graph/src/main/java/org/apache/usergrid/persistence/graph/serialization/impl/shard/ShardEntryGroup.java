@@ -188,7 +188,8 @@ public class ShardEntryGroup {
      * Return true if we have a pending compaction
      */
     public boolean isCompactionPending() {
-        return !isTooSmallToCompact();
+        //if we have a compaction target, a compaction is pending
+        return getCompactionTarget() != null;
     }
 
 
