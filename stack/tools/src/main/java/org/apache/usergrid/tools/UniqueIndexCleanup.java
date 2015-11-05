@@ -18,6 +18,7 @@ package org.apache.usergrid.tools;
 
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,8 +30,10 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.Charsets;
+import org.apache.thrift.TBaseHelper;
 
 import org.apache.usergrid.persistence.cassandra.EntityManagerImpl;
+import org.apache.usergrid.utils.UUIDUtils;
 
 import me.prettyprint.cassandra.service.RangeSlicesIterator;
 import me.prettyprint.hector.api.Keyspace;
@@ -40,6 +43,7 @@ import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
+import sun.text.normalizer.UTF16;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
@@ -64,7 +68,7 @@ public class UniqueIndexCleanup extends ToolBase {
     /**
      *
      */
-    private static final int PAGE_SIZE = 100;
+    private static final int PAGE_SIZE = 1;
 
 
     private static final Logger logger = LoggerFactory.getLogger( UniqueIndexCleanup.class );
@@ -100,7 +104,6 @@ public class UniqueIndexCleanup extends ToolBase {
         logger.info( "Starting entity unique index cleanup" );
 
 
-
         // go through each collection and audit the values
         Keyspace ko = cass.getUsergridApplicationKeyspace();
         Mutator<ByteBuffer> m = createMutator( ko, be );
@@ -118,11 +121,14 @@ public class UniqueIndexCleanup extends ToolBase {
         while ( rangeSlicesIterator.hasNext() ) {
             Row rangeSliceValue = rangeSlicesIterator.next();
 
-            String returnedRowKey =
-                    new String( ( ( ByteBuffer ) rangeSliceValue.getKey() ).array(), Charsets.UTF_8 ).trim();
+
+            ByteBuffer buf = ( TBaseHelper.rightSize(( ByteBuffer ) rangeSliceValue.getKey() ) );
+            //Cassandra client library returns ByteBuffers that are views on top of a larger byte[]. These larger ones return garbage data.
+            //Discovered thanks due to https://issues.apache.org/jira/browse/NUTCH-1591
+            String returnedRowKey = new String(buf.array(), buf.arrayOffset() + buf.position(), buf.remaining(), Charset.defaultCharset()).trim();
 
             String[] parsedRowKey = returnedRowKey.split( ":" );
-            UUID applicationId = UUID.fromString( parsedRowKey[0] );
+            UUID applicationId = UUID.fromString(uuidGarbageParser( parsedRowKey[0]) );
             String collectionName = parsedRowKey[1];
             String uniqueValueKey = parsedRowKey[2];
             String uniqueValue = parsedRowKey[3];
@@ -147,10 +153,10 @@ public class UniqueIndexCleanup extends ToolBase {
                             }
                         }
                         else if ( em.get( entityId ) == null ) {
-                            cleanup =true;
+                            cleanup = true;
                         }
 
-                        if(cleanup == true){
+                        if ( cleanup == true ) {
                             DeleteUniqueValue( m, applicationId, collectionName, uniqueValueKey, uniqueValue,
                                     entityId );
                             cleanup = false;
@@ -164,9 +170,24 @@ public class UniqueIndexCleanup extends ToolBase {
     }
 
 
-    private void DeleteUniqueValue( final Mutator<ByteBuffer> m, final UUID applicationId,
-                                    final String collectionName, final String uniqueValueKey, final String uniqueValue,
-                                    final UUID entityId ) throws Exception {
+    private String uuidGarbageParser( final String garbageString ) {
+        int index = 1;
+        String stringToBeTruncated = garbageString;
+        while( !UUIDUtils.isUUID( stringToBeTruncated ) ){
+            if( stringToBeTruncated.length()>36)
+                stringToBeTruncated = stringToBeTruncated.substring( index );
+            else {
+                System.out.println(garbageString+" is unparsable");
+                break;
+            }
+        }
+        return stringToBeTruncated;
+    }
+
+
+    private void DeleteUniqueValue( final Mutator<ByteBuffer> m, final UUID applicationId, final String collectionName,
+                                    final String uniqueValueKey, final String uniqueValue, final UUID entityId )
+            throws Exception {
         logger.warn( "Entity with id {} did not exist in app {}", entityId, applicationId );
         System.out.println( "Deleting column uuid: " + entityId.toString() );
         UUID timestampUuid = newTimeUUID();
