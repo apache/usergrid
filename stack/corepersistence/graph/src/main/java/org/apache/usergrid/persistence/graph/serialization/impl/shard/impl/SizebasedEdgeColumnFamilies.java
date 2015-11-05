@@ -42,6 +42,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.seria
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.serialize.RowSerializer;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.serialize.RowTypeSerializer;
 
+import com.google.common.base.Optional;
 import com.netflix.astyanax.serializers.LongSerializer;
 
 import static org.apache.usergrid.persistence.core.astyanax.ColumnTypes.LONG_TYPE_REVERSED;
@@ -140,7 +141,8 @@ public class SizebasedEdgeColumnFamilies implements EdgeColumnFamilies {
                         graphCf( TARGET_NODE_SOURCE_TYPE ),
                         new MultiTennantColumnFamilyDefinition( EDGE_VERSIONS, BytesType.class.getSimpleName(),
                                 ColumnTypes.LONG_TYPE_REVERSED, BytesType.class.getSimpleName(),
-                                MultiTennantColumnFamilyDefinition.CacheOption.KEYS ) );
+                                MultiTennantColumnFamilyDefinition.CacheOption.KEYS, Optional
+                                                                .absent() ) );
     }
 
 
@@ -149,6 +151,7 @@ public class SizebasedEdgeColumnFamilies implements EdgeColumnFamilies {
      */
     private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
         return new MultiTennantColumnFamilyDefinition( cf, BytesType.class.getSimpleName(), EDGE_DYNAMIC_COMPOSITE_TYPE,
-                BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS, Optional
+                                                .absent() );
     }
 }

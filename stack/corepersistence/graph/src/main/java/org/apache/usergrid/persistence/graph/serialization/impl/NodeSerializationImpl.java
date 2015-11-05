@@ -107,7 +107,8 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
         return Collections.singleton(
                 new MultiTennantColumnFamilyDefinition( GRAPH_DELETE, BytesType.class.getSimpleName(),
                         BooleanType.class.getSimpleName(), BytesType.class.getSimpleName(),
-                        MultiTennantColumnFamilyDefinition.CacheOption.ALL ) );
+                        MultiTennantColumnFamilyDefinition.CacheOption.ALL, Optional
+                                                        .absent() ) );
     }
 
 

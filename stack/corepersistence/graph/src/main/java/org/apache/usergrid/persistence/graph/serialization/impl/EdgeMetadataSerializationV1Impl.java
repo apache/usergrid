@@ -47,6 +47,7 @@ import org.apache.usergrid.persistence.graph.serialization.EdgeMetadataSerializa
 import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -383,7 +384,8 @@ public class EdgeMetadataSerializationV1Impl implements EdgeMetadataSerializatio
     private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
         return new MultiTennantColumnFamilyDefinition( cf, BytesType.class.getSimpleName(),
                 UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                MultiTennantColumnFamilyDefinition.CacheOption.KEYS, Optional
+                                                .absent() );
     }
 
 

@@ -32,8 +32,8 @@ import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
 import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
@@ -62,8 +62,8 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
      * Edge shards
      */
     private static final MultiTennantColumnFamily<ScopedRowKey<DirectedEdgeMeta>, Long> EDGE_SHARDS =
-            new MultiTennantColumnFamily<>( "Edge_Shards",
-                    new ScopedRowKeySerializer<>( EdgeShardRowKeySerializer.INSTANCE ), LongSerializer.get() );
+        new MultiTennantColumnFamily<>( "Edge_Shards",
+            new ScopedRowKeySerializer<>( EdgeShardRowKeySerializer.INSTANCE ), LongSerializer.get() );
 
 
     private static final ShardColumnParser COLUMN_PARSER = new ShardColumnParser();
@@ -72,20 +72,22 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
     protected final Keyspace keyspace;
     protected final CassandraConfig cassandraConfig;
     protected final GraphFig graphFig;
+    protected final ShardConsistency shardConsistency;
 
 
     @Inject
     public EdgeShardSerializationImpl( final Keyspace keyspace, final CassandraConfig cassandraConfig,
-                                       final GraphFig graphFig ) {
+                                       final GraphFig graphFig, final ShardConsistency shardConsistency ) {
         this.keyspace = keyspace;
         this.cassandraConfig = cassandraConfig;
         this.graphFig = graphFig;
+        this.shardConsistency = shardConsistency;
     }
 
 
     @Override
-    public MutationBatch writeShardMeta( final ApplicationScope scope,
-                                         final Shard shard,   final DirectedEdgeMeta metaData) {
+    public MutationBatch writeShardMeta( final ApplicationScope scope, final Shard shard,
+                                         final DirectedEdgeMeta metaData ) {
 
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateDirectedEdgeMeta( metaData );
@@ -98,7 +100,8 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
         final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope.getApplication(), metaData );
 
-        final MutationBatch batch = keyspace.prepareMutationBatch();
+        final MutationBatch batch =
+            keyspace.prepareMutationBatch().withConsistencyLevel( shardConsistency.getShardWriteConsistency() );
 
         batch.withTimestamp( shard.getCreatedTime() ).withRow( EDGE_SHARDS, rowKey )
              .putColumn( shard.getShardIndex(), shard.isCompacted() );
@@ -108,8 +111,9 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
 
     @Override
-    public Iterator<Shard> getShardMetaData( final ApplicationScope scope,
-                                             final Optional<Shard> start,   final DirectedEdgeMeta metaData  ) {
+    public Iterator<Shard> getShardMetaDataLocal( final ApplicationScope scope, final Optional<Shard> start,
+                                                  final DirectedEdgeMeta metaData ) {
+
 
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateDirectedEdgeMeta( metaData );
@@ -134,27 +138,28 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
 
         final RowQuery<ScopedRowKey<DirectedEdgeMeta>, Long> query =
-                keyspace.prepareQuery( EDGE_SHARDS ).setConsistencyLevel( cassandraConfig.getReadCL() ).getKey( rowKey )
-                        .autoPaginate( true ).withColumnRange( rangeBuilder.build() );
+            keyspace.prepareQuery( EDGE_SHARDS ).setConsistencyLevel( shardConsistency.getShardReadConsistency()  ).getKey( rowKey )
+                    .autoPaginate( true ).withColumnRange( rangeBuilder.build() );
 
 
         return new ColumnNameIterator<>( query, COLUMN_PARSER, false );
     }
 
 
-    @Override
-    public MutationBatch removeShardMeta( final ApplicationScope scope,
-                                          final Shard shard,   final DirectedEdgeMeta metaData) {
 
+
+    @Override
+    public MutationBatch removeShardMeta( final ApplicationScope scope, final Shard shard,
+                                          final DirectedEdgeMeta metaData ) {
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.valiateShard( shard );
         GraphValidation.validateDirectedEdgeMeta( metaData );
 
 
-
         final ScopedRowKey rowKey = ScopedRowKey.fromKey( scope.getApplication(), metaData );
 
-        final MutationBatch batch = keyspace.prepareMutationBatch();
+        final MutationBatch batch =
+            keyspace.prepareMutationBatch().withConsistencyLevel( shardConsistency.getShardWriteConsistency( ));
 
         batch.withRow( EDGE_SHARDS, rowKey ).deleteColumn( shard.getShardIndex() );
 
@@ -164,17 +169,12 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
     @Override
     public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
-
-
         return Collections.singleton(
-                new MultiTennantColumnFamilyDefinition( EDGE_SHARDS, BytesType.class.getSimpleName(),
-                        ColumnTypes.LONG_TYPE_REVERSED, BytesType.class.getSimpleName(),
-                        MultiTennantColumnFamilyDefinition.CacheOption.KEYS ) );
+            new MultiTennantColumnFamilyDefinition( EDGE_SHARDS, BytesType.class.getSimpleName(),
+                ColumnTypes.LONG_TYPE_REVERSED, BytesType.class.getSimpleName(),
+                //we need to cache all shards if possible
+                MultiTennantColumnFamilyDefinition.CacheOption.ALL, Optional.absent() ) );
     }
-
-
-
-
 
 
     private static class ShardColumnParser implements ColumnParser<Long, Shard> {

@@ -46,8 +46,7 @@ public class TestGraphModule extends TestModule {
                 //configure our migration data provider
 
                 TestMigrationDataProvider<GraphNode> migrationDataProvider = new TestMigrationDataProvider<>();
-                bind( new TypeLiteral<MigrationDataProvider<GraphNode>>() {} )
-                        .toInstance( migrationDataProvider );
+                bind( new TypeLiteral<MigrationDataProvider<GraphNode>>() {} ).toInstance( migrationDataProvider );
             }
         } );
     }

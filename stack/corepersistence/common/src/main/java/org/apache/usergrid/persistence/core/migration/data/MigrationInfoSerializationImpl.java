@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -211,6 +212,7 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
         return Collections.singletonList(
                 new MultiTennantColumnFamilyDefinition( CF_MIGRATION_INFO, BytesType.class.getSimpleName(),
                         UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName(),
-                        MultiTennantColumnFamilyDefinition.CacheOption.KEYS ) );
+                        MultiTennantColumnFamilyDefinition.CacheOption.KEYS, Optional
+                                                        .absent() ) );
     }
 }

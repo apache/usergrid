@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
@@ -79,13 +80,15 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
     private static final int[] NUM_BUCKETS = {20};
 
     /** How to funnel keys for buckets */
-    private static final Funnel<String> MAP_KEY_FUNNEL = new Funnel<String>() {
+    private static final Funnel<String> MAP_KEY_FUNNEL =
+        ( Funnel<String> ) ( key, into ) -> into.putString(key, StringHashUtils.UTF8 );
 
-        @Override
-        public void funnel( final String key, final PrimitiveSink into ) {
-            into.putString(key, StringHashUtils.UTF8);
-        }
-    };
+
+    /**
+     * One second gc grace since our columns expire
+     */
+    private static final int GC_GRACE = 1;
+
 
     /**
      * Locator to get us all buckets
@@ -252,18 +255,6 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
     }
 
 
-    private class MutationBatchExec implements Callable<Void> {
-        private final MutationBatch myBatch;
-        private MutationBatchExec(MutationBatch batch) {
-            myBatch = batch;
-        }
-        @Override
-        public Void call() throws Exception {
-            myBatch.execute();
-            return null;
-        }
-    }
-
 
     private OperationResult<Void> executeBatch(MutationBatch batch) {
         try {
@@ -284,7 +275,7 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
                 BytesType.class.getSimpleName(),
                 BytesType.class.getSimpleName(),
                 BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                MultiTennantColumnFamilyDefinition.CacheOption.KEYS, Optional.of(GC_GRACE) );
 
         return Arrays.asList(scopedCache);
     }

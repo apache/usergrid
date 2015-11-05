@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -98,7 +99,8 @@ public class MvccLogEntrySerializationStrategyV2Impl extends MvccLogEntrySeriali
         MultiTennantColumnFamilyDefinition cf =
             new MultiTennantColumnFamilyDefinition( CF_ENTITY_LOG_V2, BytesType.class.getSimpleName(),
                 ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")",
-                IntegerType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                IntegerType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS, Optional
+                                .absent() );
 
 
         return Collections.singleton( cf );

@@ -32,7 +32,7 @@ public enum NodeType {
     private final int ordinal;
 
 
-    private NodeType( final int ordinal ) {this.ordinal = ordinal;}
+    NodeType( final int ordinal ) {this.ordinal = ordinal;}
 
 
     public int getStorageValue() {

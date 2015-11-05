@@ -33,15 +33,15 @@ import org.safehaus.guicyfig.Key;
 public interface CassandraFig extends GuicyFig {
 
 
-    public static final String READ_CONSISTENT_CL = "usergrid.consistent.read.cl";
+    String READ_CONSISTENT_CL = "usergrid.consistent.read.cl";
 
-    public static final String READ_CL = "usergrid.read.cl";
+    String READ_CL = "usergrid.read.cl";
 
-    public static final String WRITE_CL = "usergrid.write.cl";
+    String WRITE_CL = "usergrid.write.cl";
 
-    public static final String SHARD_VALUES = "cassandra.shardvalues";
+    String SHARD_VALUES = "cassandra.shardvalues";
 
-    public static final String THRIFT_TRANSPORT_SIZE = "cassandra.thrift.transport.frame";
+    String THRIFT_TRANSPORT_SIZE = "cassandra.thrift.transport.frame";
 
 
     @Key( "cassandra.hosts" )

@@ -37,6 +37,7 @@ import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -90,12 +91,14 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
         final MultiTennantColumnFamilyDefinition uniqueLookupCF =
             new MultiTennantColumnFamilyDefinition( CF_UNIQUE_VALUES, BytesType.class.getSimpleName(),
                 ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                MultiTennantColumnFamilyDefinition.CacheOption.KEYS, Optional
+                                                .absent() );
 
         final MultiTennantColumnFamilyDefinition uniqueLogCF =
             new MultiTennantColumnFamilyDefinition( CF_ENTITY_UNIQUE_VALUE_LOG, BytesType.class.getSimpleName(),
                 ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                MultiTennantColumnFamilyDefinition.CacheOption.KEYS, Optional
+                                                .absent() );
 
         return Arrays.asList( uniqueLookupCF, uniqueLogCF );
     }

@@ -25,8 +25,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -54,9 +54,11 @@ import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardGroupSearch;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardAllocationImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.codahale.metrics.Meter;
@@ -80,7 +82,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 
-//@Ignore( "Kills cassandra, needs to be part of functional testing" )
 public class GraphManagerShardConsistencyIT {
     private static final Logger log = LoggerFactory.getLogger( GraphManagerShardConsistencyIT.class );
 
@@ -96,10 +97,6 @@ public class GraphManagerShardConsistencyIT {
 
     protected Object originalShardSize;
 
-    protected Object originalShardTimeout;
-
-    protected Object originalShardDelta;
-
     protected ListeningExecutorService executor;
 
 
@@ -109,22 +106,8 @@ public class GraphManagerShardConsistencyIT {
 
         originalShardSize = ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_SIZE );
 
-        originalShardTimeout = ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_CACHE_TIMEOUT );
-
-        originalShardDelta = ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_MIN_DELTA );
-
 
         ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_SIZE, 500 );
-
-
-        final long cacheTimeout = 2000;
-        //set our cache timeout to the above value
-        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_CACHE_TIMEOUT, cacheTimeout );
-
-
-        final long minDelta = ( long ) ( cacheTimeout * 2.5 );
-
-        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_MIN_DELTA, minDelta );
 
 
         //get the system property of the UUID to use.  If one is not set, use the defualt
@@ -144,10 +127,14 @@ public class GraphManagerShardConsistencyIT {
 
     @After
     public void tearDown() {
-        reporter.stop();
-        reporter.report();
+        if(reporter != null) {
+            reporter.stop();
+            reporter.report();
+        }
 
-        executor.shutdownNow();
+        if(executor != null) {
+            executor.shutdownNow();
+        }
     }
 
 
@@ -156,7 +143,8 @@ public class GraphManagerShardConsistencyIT {
     }
 
 
-    @Test
+
+    @Test(timeout = 60000)//should never take longer than a minute
     public void writeThousandsSingleSource()
         throws InterruptedException, ExecutionException, MigrationException, UnsupportedEncodingException {
 
@@ -184,11 +172,12 @@ public class GraphManagerShardConsistencyIT {
         };
 
 
+        //                final int numInjectors = 4;
         //        final int numInjectors = 2;
         final int numInjectors = 1;
 
         /**
-         * create 3 injectors.  This way all the caches are independent of one another.  This is the same as
+         * create multiple injectors.  This way all the caches are independent of one another.  This is the same as
          * multiple nodes
          */
         final List<Injector> injectors = createInjectors( numInjectors );
@@ -199,32 +188,30 @@ public class GraphManagerShardConsistencyIT {
         final long shardSize = graphFig.getShardSize();
 
 
-        //we don't want to starve the cass runtime since it will be on the same box. Only take 50% of processing
-        // power for writes
-        final int numProcessors = Runtime.getRuntime().availableProcessors() / 2;
+        final int numWorkersPerInjector = 1;
 
-        final int numWorkersPerInjector = numProcessors / numInjectors;
+
+        final long fullShardCount = 4;
+
 
 
         /**
-         * Do 4x shard size so we should have approximately 4 shards
+         * Do 4x expected shard size so we have 4 shards
          */
-        final long numberOfEdges = shardSize * 4;
+        final long numberOfEdges = shardSize * fullShardCount;
 
 
-        final long workerWriteLimit = numberOfEdges / numWorkersPerInjector / numInjectors;
+        final long expectedShardCount = fullShardCount + 1;
 
 
-        final long expectedShardCount = numberOfEdges / shardSize;
+        final long workerWriteLimit = numberOfEdges-1 / numWorkersPerInjector / numInjectors;
 
 
-        createExecutor( numWorkersPerInjector );
+        final ListeningExecutorService executor =
+            MoreExecutors.listeningDecorator( Executors.newFixedThreadPool( numWorkersPerInjector * numInjectors ) );
+
 
         final AtomicLong writeCounter = new AtomicLong();
-
-
-        //min stop time the min delta + 1 cache cycle timeout
-        final long minExecutionTime = graphFig.getShardMinDelta() + graphFig.getShardCacheTimeout();
 
 
         log.info( "Writing {} edges per worker on {} workers in {} injectors", workerWriteLimit, numWorkersPerInjector,
@@ -234,13 +221,15 @@ public class GraphManagerShardConsistencyIT {
         final List<Future<Boolean>> futures = new ArrayList<>();
 
 
+        //create multiple instances of injectors.  This simulates multiple nodes, so that we can ensure we're not
+        //sharing state in our guice DI
         for ( Injector injector : injectors ) {
             final GraphManagerFactory gmf = injector.getInstance( GraphManagerFactory.class );
 
 
             for ( int i = 0; i < numWorkersPerInjector; i++ ) {
                 Future<Boolean> future =
-                    executor.submit( new Worker( gmf, generator, workerWriteLimit, minExecutionTime, writeCounter ) );
+                    executor.submit( new Worker( gmf, generator, workerWriteLimit, writeCounter ) );
 
                 futures.add( future );
             }
@@ -253,8 +242,10 @@ public class GraphManagerShardConsistencyIT {
             future.get();
         }
 
+        log.info( "Completed writing all edges for test, beginning read" );
+
         //now get all our shards
-        final NodeShardCache cache = getInstance( injectors, NodeShardCache.class );
+        final NodeShardGroupSearch shardSearch = getInstance( injectors, NodeShardGroupSearch.class );
 
         final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( sourceId, edgeType );
 
@@ -269,35 +260,41 @@ public class GraphManagerShardConsistencyIT {
         /**
          * Start reading continuously while we migrate data to ensure our view is always correct
          */
-        final ListenableFuture<Long> future =
-            executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
 
         final List<Throwable> failures = new ArrayList<>();
 
 
-        //add the future
-        Futures.addCallback( future, new FutureCallback<Long>() {
+        for ( Injector injector : injectors ) {
+            final GraphManagerFactory readGmf = injector.getInstance( GraphManagerFactory.class );
 
-            @Override
-            public void onSuccess( @Nullable final Long result ) {
-                log.info( "Successfully ran the read, re-running" );
-                executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
+
+            for ( int i = 0; i < numWorkersPerInjector; i++ ) {
+                final ListenableFuture<Long> future =
+                    executor.submit( new ReadWorker( readGmf, generator, writeCount, readMeter ) );
+
+                //add the future
+                Futures.addCallback( future, new FutureCallback<Long>() {
+
+                    @Override
+                    public void onSuccess( @Nullable final Long result ) {
+                        log.info( "Successfully ran the read, re-running" );
+                        executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
+                    }
+
+
+                    @Override
+                    public void onFailure( final Throwable t ) {
+                        failures.add( t );
+                        log.error( "Failed test!", t );
+                    }
+                } );
             }
-
-
-            @Override
-            public void onFailure( final Throwable t ) {
-                failures.add( t );
-                log.error( "Failed test!", t );
-            }
-        } );
-
+        }
 
         int compactedCount;
 
 
         //now start our readers
-
         while ( true ) {
 
             if ( !failures.isEmpty() ) {
@@ -323,9 +320,10 @@ public class GraphManagerShardConsistencyIT {
             //reset our count.  Ultimately we'll have 4 groups once our compaction completes
             compactedCount = 0;
 
-            //we have to get it from the cache, because this will trigger the compaction process
-            final Iterator<ShardEntryGroup> groups = cache.getReadShardGroup( scope, Long.MAX_VALUE, directedEdgeMeta );
-            final Set<ShardEntryGroup> shardEntryGroups = new HashSet<>();
+            //we have to get it from the shardSearch, because this will trigger the compaction process
+            final Iterator<ShardEntryGroup> groups =
+                shardSearch.getReadShardGroup( scope, Long.MAX_VALUE, directedEdgeMeta );
+            final Set<ShardEntryGroup> shardEntryGroups = new LinkedHashSet<>();
 
             while ( groups.hasNext() ) {
 
@@ -334,6 +332,8 @@ public class GraphManagerShardConsistencyIT {
 
                 log.info( "Compaction pending status for group {} is {}", group, group.isCompactionPending() );
 
+                //we don't count compaction pending groups, we need to ensure they're completed compacting before
+                // testing
                 if ( !group.isCompactionPending() ) {
                     compactedCount++;
                 }
@@ -342,23 +342,52 @@ public class GraphManagerShardConsistencyIT {
 
             //we're done
             if ( compactedCount >= expectedShardCount ) {
-                log.info( "All compactions complete, sleeping" );
+                log.info( "All compactions complete.  Compacted shards are {}.  Expected at least expectedShardCount" );
 
-                //                final Object mutex = new Object();
-                //
-                //                synchronized ( mutex ){
-                //
-                //                    mutex.wait();
-                //                }
+
+                /**
+                 * Build a useful error message
+                 */
+                if ( expectedShardCount != compactedCount ) {
+                    final StringBuilder builder = new StringBuilder();
+
+                    builder.append( "expected " ).append( expectedShardCount ).append( " shards but returned " )
+                           .append( compactedCount ).append( ".  Shards are" );
+
+                    builder.append( logShardGroup( shardEntryGroups ) );
+
+                    fail(builder.toString());
+                }
+
+
+                log.info( "Shards are {}", logShardGroup( shardEntryGroups ) );
+
 
                 break;
+            }
+            else {
+                log.info( "Compactions not complete.  Compacted {} shards", compactedCount );
+                log.info( "Shard are {}", logShardGroup( shardEntryGroups ) );
             }
 
 
             Thread.sleep( 2000 );
         }
+    }
 
-        executor.shutdownNow();
+
+    private String logShardGroup( final Set<ShardEntryGroup> shardEntryGroups ) {
+        final StringBuilder builder = new StringBuilder();
+
+
+        /**
+         * Groups
+         */
+        for ( ShardEntryGroup group : shardEntryGroups ) {
+            builder.append( "\n\t" ).append( group.toString() );
+        }
+
+        return builder.toString();
     }
 
 
@@ -453,10 +482,6 @@ public class GraphManagerShardConsistencyIT {
         final AtomicLong writeCounter = new AtomicLong();
 
 
-        //min stop time the min delta + 1 cache cycle timeout
-        final long minExecutionTime = graphFig.getShardMinDelta() + graphFig.getShardCacheTimeout();
-
-
         log.info( "Writing {} edges per worker on {} workers in {} injectors", workerWriteLimit, numWorkersPerInjector,
             numInjectors );
 
@@ -467,10 +492,9 @@ public class GraphManagerShardConsistencyIT {
         for ( Injector injector : injectors ) {
             final GraphManagerFactory gmf = injector.getInstance( GraphManagerFactory.class );
 
-
             for ( int i = 0; i < numWorkersPerInjector; i++ ) {
                 Future<Boolean> future =
-                    executor.submit( new Worker( gmf, generator, workerWriteLimit, minExecutionTime, writeCounter ) );
+                    executor.submit( new Worker( gmf, generator, workerWriteLimit, writeCounter ) );
 
                 futures.add( future );
             }
@@ -484,7 +508,7 @@ public class GraphManagerShardConsistencyIT {
         }
 
         //now get all our shards
-        final NodeShardCache cache = getInstance( injectors, NodeShardCache.class );
+        final NodeShardGroupSearch nodeShardGroupSearch = getInstance( injectors, NodeShardGroupSearch.class );
 
         final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( sourceId, edgeType );
 
@@ -500,7 +524,7 @@ public class GraphManagerShardConsistencyIT {
 
 
         final Iterator<ShardEntryGroup> existingShardGroups =
-            cache.getReadShardGroup( scope, Long.MAX_VALUE, directedEdgeMeta );
+            nodeShardGroupSearch.getReadShardGroup( scope, Long.MAX_VALUE, directedEdgeMeta );
         int shardCount = 0;
 
         while ( existingShardGroups.hasNext() ) {
@@ -590,7 +614,7 @@ public class GraphManagerShardConsistencyIT {
             shardCount = 0;
 
             //we have to get it from the cache, because this will trigger the compaction process
-            final Iterator<ShardEntryGroup> groups = cache.getReadShardGroup( scope, Long.MAX_VALUE, directedEdgeMeta );
+            final Iterator<ShardEntryGroup> groups = nodeShardGroupSearch.getReadShardGroup( scope, Long.MAX_VALUE, directedEdgeMeta );
 
             ShardEntryGroup group = null;
 
@@ -625,16 +649,14 @@ public class GraphManagerShardConsistencyIT {
         private final GraphManagerFactory factory;
         private final EdgeGenerator generator;
         private final long writeLimit;
-        private final long minExecutionTime;
         private final AtomicLong writeCounter;
 
 
         private Worker( final GraphManagerFactory factory, final EdgeGenerator generator, final long writeLimit,
-                        final long minExecutionTime, final AtomicLong writeCounter ) {
+                        final AtomicLong writeCounter ) {
             this.factory = factory;
             this.generator = generator;
             this.writeLimit = writeLimit;
-            this.minExecutionTime = minExecutionTime;
             this.writeCounter = writeCounter;
         }
 
@@ -644,10 +666,9 @@ public class GraphManagerShardConsistencyIT {
             GraphManager manager = factory.createEdgeManager( scope );
 
 
-            final long startTime = System.currentTimeMillis();
+            long i;
 
-
-            for ( long i = 0; i < writeLimit || System.currentTimeMillis() - startTime < minExecutionTime; i++ ) {
+            for ( i = 0; i < writeLimit; i++ ) {
 
                 Edge edge = generator.newEdge();
 
@@ -666,6 +687,8 @@ public class GraphManagerShardConsistencyIT {
                     log.info( "   Wrote: " + i );
                 }
             }
+
+            log.info( "Completed writing {} edges on worker", i );
 
 
             return true;
@@ -724,12 +747,12 @@ public class GraphManagerShardConsistencyIT {
         /**
          * Create a new edge to persiste
          */
-        public Edge newEdge();
+        Edge newEdge();
 
         /**
          * Perform the search returning an observable edge
          */
-        public Observable<MarkedEdge> doSearch( final GraphManager manager );
+        Observable<MarkedEdge> doSearch( final GraphManager manager );
     }
 }
 

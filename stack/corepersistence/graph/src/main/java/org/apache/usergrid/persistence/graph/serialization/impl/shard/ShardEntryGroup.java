@@ -20,11 +20,9 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,11 +59,12 @@ public class ShardEntryGroup {
         Preconditions.checkArgument( delta > 0, "delta must be greater than 0" );
         this.delta = delta;
         this.shards = new ArrayList<>();
-        this.maxCreatedTime = 0;
     }
 
 
     /**
+     * Shard insertion order is assumed to be  from Shard.shardIndex == Long.MAX to Shard.shardIndex == Long.MIN
+     *
      * Only add a shard if it is within the rules require to meet a group.  The rules are outlined below.
      *
      * Case 1)  First shard in the group, always added
@@ -98,8 +97,6 @@ public class ShardEntryGroup {
         }
 
 
-
-
         return false;
     }
 
@@ -118,9 +115,23 @@ public class ShardEntryGroup {
 
 
     /**
-     * Return the minum shard based on time indexes
+     * Return the minimum shard based on time indexes
      */
     public Shard getMinShard() {
+        final int size = shards.size();
+
+        if ( size < 1 ) {
+            return null;
+        }
+
+        return shards.get( size - 1 );
+    }
+
+
+    /**
+     * Get the max shard based on time indexes
+     */
+    public Shard getMaxShard() {
         final int size = shards.size();
 
         if ( size < 1 ) {
@@ -141,46 +152,49 @@ public class ShardEntryGroup {
         final Shard compactionTarget = getCompactionTarget();
 
 
-
-        if(compactionTarget != null){
+        if ( compactionTarget != null ) {
             LOG.debug( "Returning shards {} and {} as read shards", compactionTarget, staticShard );
-            return Arrays.asList( compactionTarget, staticShard );
+            //if we have a compaction target, we need to read from all shards to ensure we're aggregating data correctly
+            return shards;
         }
 
 
         LOG.debug( "Returning shards {} read shard", staticShard );
-        return  Collections.singleton( staticShard );
+        return Collections.singleton( staticShard );
     }
 
 
-
-
     /**
-     * Get the entries, with the max shard time being first. We write to all shards until they're migrated
+     * Get the entries, with the earliest allocated uncompacted shard being first
      */
-    public Collection<Shard> getWriteShards( long currentTime ) {
+    public Collection<Shard> getWriteShards( final long edgeIndex ) {
 
         /**
          * The shards in this set can be combined, we should only write to the compaction target to avoid
          * adding data to other shards
          */
-        if ( !isTooSmallToCompact() && shouldCompact( currentTime ) ) {
+        if ( !isTooSmallToCompact() && shouldCompact() ) {
 
             final Shard compactionTarget = getCompactionTarget();
 
-            LOG.debug( "Returning shard {} as write shard", compactionTarget);
+            LOG.debug( "Returning shard {} as write shard", compactionTarget );
 
-            return Collections.singleton( compactionTarget  );
+            //should go into the compaction target, it's a <= the edge value of the compaction
+            if ( compactionTarget.getShardIndex() <= edgeIndex ) {
+                return Collections.singleton( compactionTarget );
+            }
+
+            //otherwise the edge should go into the root shard
 
         }
+
 
         final Shard staticShard = getRootShard();
 
 
-        LOG.debug( "Returning shard {} as write shard", staticShard);
+        LOG.debug( "Returning shard {} as write shard", staticShard );
 
         return Collections.singleton( staticShard );
-
     }
 
 
@@ -194,21 +208,21 @@ public class ShardEntryGroup {
 
     /**
      * Get the root shard that was created in this group
-     * @return
      */
-    private Shard getRootShard(){
-        if(rootShard != null){
+    private Shard getRootShard() {
+        if ( rootShard != null ) {
             return rootShard;
         }
 
-        final Shard rootCandidate = shards.get( shards.size() -1 );
+        final Shard rootCandidate = shards.get( shards.size() - 1 );
 
-        if(rootCandidate.isCompacted()){
+        if ( rootCandidate.isCompacted() ) {
             rootShard = rootCandidate;
         }
 
         return rootShard;
     }
+
 
     /**
      * Get the shard all compactions should write to.  Null indicates we cannot find a shard that could be used as a
@@ -238,18 +252,23 @@ public class ShardEntryGroup {
             return null;
         }
 
-        //Start seeking from the end of our group.  The first shard we encounter that is not compacted is our
-        // compaction target
+        Shard compactionCandidate = null;
+
+        //Start seeking from the end of our group.  The lowest timestamp uncompacted shard is our target
         //NOTE: This does not mean we can compact, rather it's just an indication that we have a target set.
-        for ( int i = lastIndex - 1; i > -1; i-- ) {
-            final Shard compactionCandidate = shards.get( i );
+        for ( int i = 0; i < lastIndex; i++ ) {
+            final Shard currentTargetCompaction = shards.get( i );
 
 
-            if ( !compactionCandidate.isCompacted() ) {
-                compactionTarget = compactionCandidate;
-                break;
+            //the shard is not compacted, and we've either never set a candidate
+            //or the candidate has a higher created timestamp than our current shard
+            if ( !currentTargetCompaction.isCompacted() && ( compactionCandidate == null
+                || currentTargetCompaction.getCreatedTime() < compactionCandidate.getCreatedTime() ) ) {
+                compactionCandidate = currentTargetCompaction;
             }
         }
+
+        compactionTarget = compactionCandidate;
 
         return compactionTarget;
     }
@@ -274,24 +293,15 @@ public class ShardEntryGroup {
     /**
      * Returns true if the newest created shard is path the currentTime - delta
      *
-     * @param currentTime The current system time in milliseconds
-     *
      * @return True if these shards can safely be combined into a single shard, false otherwise
      */
-    public boolean shouldCompact( final long currentTime ) {
+    public boolean shouldCompact() {
 
         /**
          * We don't have enough shards to compact, ignore
          */
-        return getCompactionTarget() != null
+        return getCompactionTarget() != null;
 
-
-                /**
-                 * If something was created within the delta time frame, not everyone may have seen it due to
-                 * cache refresh, we can't compact yet.
-                 */
-
-                && !isNew( currentTime );
     }
 
 
@@ -316,18 +326,40 @@ public class ShardEntryGroup {
         final Shard compactionTarget = getCompactionTarget();
 
 
-        return !shard.isCompacted() && !shard.isMinShard() &&  ( compactionTarget != null && compactionTarget.getShardIndex() != shard
-                .getShardIndex() );
+        return !shard.isCompacted() && ( compactionTarget != null && compactionTarget.getShardIndex() != shard
+            .getShardIndex() );
+    }
+
+
+    @Override
+    public boolean equals( final Object o ) {
+        if ( this == o ) {
+            return true;
+        }
+        if ( !( o instanceof ShardEntryGroup ) ) {
+            return false;
+        }
+
+        final ShardEntryGroup that = ( ShardEntryGroup ) o;
+
+        return shards.equals( that.shards );
+    }
+
+
+    @Override
+    public int hashCode() {
+        return shards.hashCode();
     }
 
 
     @Override
     public String toString() {
         return "ShardEntryGroup{" +
-                "shards=" + shards +
-                ", delta=" + delta +
-                ", maxCreatedTime=" + maxCreatedTime +
-                ", compactionTarget=" + compactionTarget +
-                '}';
+            "compactionTarget=" + compactionTarget +
+            ", shards=" + shards +
+            ", delta=" + delta +
+            ", maxCreatedTime=" + maxCreatedTime +
+            ", rootShard=" + rootShard +
+            '}';
     }
 }

@@ -40,16 +40,18 @@ public interface EdgeShardSerialization extends Migration{
      * @param shard The shard to write
      * @param directedEdgeMeta The edge meta data to use
      */
-    public MutationBatch writeShardMeta( ApplicationScope scope, Shard shard, DirectedEdgeMeta directedEdgeMeta );
+    MutationBatch writeShardMeta( ApplicationScope scope, Shard shard, DirectedEdgeMeta directedEdgeMeta );
 
     /**
-     * Get an iterator of all meta data and types.  Returns a range from High to low
+     * Get an iterator of all meta data and types.  Returns a range from High to low.  Only reads the local region
      * @param scope The organization scope
      * @param start The shard time to start seeking from.  Values <= this value will be returned.
      * @param directedEdgeMeta The edge meta data to use
      * @return
      */
-    public Iterator<Shard> getShardMetaData( ApplicationScope scope, Optional<Shard> start,  DirectedEdgeMeta directedEdgeMeta);
+    Iterator<Shard> getShardMetaDataLocal( ApplicationScope scope, Optional<Shard> start,
+                                           DirectedEdgeMeta directedEdgeMeta );
+
 
     /**
      * Remove the shard from the edge meta data from the types.
@@ -59,6 +61,6 @@ public interface EdgeShardSerialization extends Migration{
      * @param directedEdgeMeta The edge meta data to use
      * @return
      */
-    public MutationBatch removeShardMeta( ApplicationScope scope, Shard shard,  DirectedEdgeMeta directedEdgeMeta );
+    MutationBatch removeShardMeta( ApplicationScope scope, Shard shard, DirectedEdgeMeta directedEdgeMeta );
 
 }

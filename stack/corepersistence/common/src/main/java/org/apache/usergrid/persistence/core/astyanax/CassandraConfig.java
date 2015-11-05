@@ -55,4 +55,5 @@ public interface CassandraConfig {
     int[] getShardSettings();
 
 
+
 }
