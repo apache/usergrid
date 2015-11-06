@@ -76,6 +76,8 @@ Example __usergrid-deployment.properties__ file
 ```
 # core persistence properties
 
+usergrid.cluster_name property=usergrid
+
 cassandra.embedded=false
 cassandra.version=1.2.18
 cassandra.timeout=2000
