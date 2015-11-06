@@ -25,6 +25,8 @@ import java.util.*;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
+import org.apache.usergrid.persistence.model.field.DistanceField;
+import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -197,6 +199,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
 
             final Candidate candidate = filterResult.getValue();
             final CandidateResult candidateResult = candidate.getCandidateResult();
+            final boolean isGeo = candidateResult instanceof GeoCandidateResult;
             final SearchEdge searchEdge = candidate.getSearchEdge();
             final Id candidateId = candidateResult.getId();
             final UUID candidateVersion = candidateResult.getVersion();
@@ -252,6 +255,9 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             //they're the same add it
 
             final Entity returnEntity = entity.getEntity().get();
+            if(isGeo){
+                returnEntity.setField(new DistanceField(((GeoCandidateResult)candidateResult).getDistance()));
+            }
 
             final Optional<EdgePath> parent = filterResult.getPath();
 
