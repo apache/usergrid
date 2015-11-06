@@ -29,16 +29,17 @@ import java.util.UUID;
 import static org.junit.Assert.assertEquals;
 
 
+// Created for https://issues.apache.org/jira/browse/USERGRID-1099
 public class ParenthesisProblemIT extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( ParenthesisProblemIT.class );
 
-    @Test // this test passes
+    @Test
     public void parenthesisProblem1() throws Exception {
         // C = c and ( A > a or B = false )
         parenthesisProblem(1, "color = 'tabby' and (age > 7 or large = true)");
     }
     
-    @Test // this test fails
+    @Test 
     public void parenthesisProblem2() throws Exception {
         // same as #1 except for order of things listed in 'and' operation
         // ( A > a or B = false ) and C = c
