@@ -69,15 +69,11 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
 
         if ( status >= 500 ) {
             // only log real errors as errors
-            logger.error( e.getClass().getCanonicalName() + " Server Error (" + status + ")", e );
+            logger.error( e.getClass().getCanonicalName() + " 5XX Uncaught Exception (" + status + ")", e );
 
         } else {
             if (logger.isDebugEnabled()) {
-                logger.debug(e.getClass().getCanonicalName() + " Server Error (" + status + ")", e);
-            }
-            switch (status){
-                case 200 : logger.debug("Uncaught Exception", e); break;
-                default: logger.error("Uncaught Exception", e);
+                logger.debug(e.getClass().getCanonicalName() + " Uncaught Exception (" + status + ")", e);
             }
         }
 
