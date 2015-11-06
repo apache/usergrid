@@ -18,7 +18,7 @@
  *
  */
 
-package org.apache.usergrid.rest;
+package org.apache.usergrid.rest.system;
 
 
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
@@ -29,6 +29,9 @@ import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.index.utils.ConversionUtils;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
+import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -59,7 +59,7 @@ public interface QueueFig extends GuicyFig {
      * The maximum number of attempts to attempt to deliver before failing into the DLQ
      */
     @Key( "usergrid.queue.deliveryLimit" )
-    @Default("20")
+    @Default("10")
     String getQueueDeliveryLimit();
 
     @Key("usergrid.use.default.queue")

@@ -20,7 +20,10 @@ package org.apache.usergrid.persistence;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.base.Preconditions;
+
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -118,6 +121,11 @@ public class CredentialsInfo implements Comparable<CredentialsInfo>,Serializable
     }
 
 
+    public void setCreated( final Long created ) {
+        this.created = created;
+    }
+
+
     @JsonAnySetter
     public void setProperty( String key, Object value ) {
         properties.put( key, value );
@@ -171,5 +179,43 @@ public class CredentialsInfo implements Comparable<CredentialsInfo>,Serializable
             return 1;
         }
         return o.created.compareTo( created );
+    }
+
+
+    /**
+     * Parse the json representation into an object
+     * @param json
+     * @return
+     */
+    public static CredentialsInfo fromJson(final Map<String, Object> json){
+        final boolean recoverable = ( boolean ) json.get( "recoverable");
+
+        final boolean encrypted = ( boolean ) json.get("encrypted");
+        final String hashType = ( String ) json.get( "hashType");
+        final long created = ( long ) json.get( "created");
+        final String secret = ( String ) json.get(  "secret" );
+
+        final List<String>  cryptoChain = ( List<String> ) json.get( "cryptoChain");
+
+        Preconditions.checkNotNull(created, "created is required");
+        Preconditions.checkNotNull(secret, "secret is required");
+        Preconditions.checkNotNull(cryptoChain, "cryptoChain is required");
+
+        Preconditions.checkArgument(cryptoChain.size() >= 1, "cryptoChain must have 1 or more entries");
+
+
+        final String[] cryptoString = new String[cryptoChain.size()];
+
+        cryptoChain.toArray( cryptoString );
+
+
+        final CredentialsInfo credentialsInfo = new CredentialsInfo();
+        credentialsInfo.setEncrypted( encrypted );
+        credentialsInfo.setHashType( hashType );
+        credentialsInfo.setCreated( created );
+        credentialsInfo.setSecret( secret );
+        credentialsInfo.setCryptoChain( cryptoString );
+
+        return credentialsInfo;
     }
 }

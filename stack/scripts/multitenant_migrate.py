@@ -16,30 +16,64 @@
 # under the License.
 #
 #
+# To migrate multiple tenants within one cluster.
 #
-# Usage from a machine running Usergrid with the new Usergrid version:
+# STEP 1 - SETUP TENANT ONE TOMCAT RUNNING 2.1 NOT IN SERVICE AND INIT MIGRATION
 #
-# ######################################################
-# STEP 1 - BEFORE SWITCHING TRAFFIC TO NEW UG VERSION
-# ######################################################
+#   Login to the Tomcat instance and run this command, specifying both superuser and tenant organization:
 #
-# python migrate_entity_data.py --user adminuser:adminpass
+#       python migrate_entity_data.py --org <org1name> --super <user>:<pass> --init
 #
-# The above command performs an appinfo migration and system re-index only.  This creates indices in Elasticsearch with
-# the updated indexing strategy in the new Usergrid version.
+#   This command will setup and bootstrap the database, setup the migration system and update index mappings:
+#   - /system/database/setup
+#   - /system/database/bootstrap
+#   - /system/migrate/run/migration-system
+#   - /system/migrate/run/index_mapping_migration
 #
-# ######################################################
-# STEP 2 - AFTER SWITCHING TRAFFIC TO NEW UG VERSION
-# ######################################################
+#   Then it will migrate appinfos, re-index the management app and then for each of the specified org's apps
+#   it will de-dup connections and re-index the app.
 #
-# python migrate_entity_data.py --user adminuser:adminpass --delta --date <timestamp>
+#   Write down the 'Re-index start' timestamp when this is finished.
 #
-# The above command performs an appinfo migration, system re-index using a start date, and full data migration which
-# includes entity data.  This step is necessary to ensure Usergrid starts reading and writing data from the latest
-# entity version, including delta indexing of any documents create during the time between STEP 1 and STEP 2.  If
-# all data has already been migrated (running this a 2nd, 3rd, etc. time), then the appinfo migration will be skipped.
+# STEP 2 - PUT TENANT ONE TOMCATS IN SERVICE AND DO DELTA MIGRATION
+#
+#   On the same Tomcat instance and run this command with the --date timestamp you noted in the previous step:
+#
+#       python migrate_entity_data.py --org <org1name> --super <user>:<pass> --date <timestamp>
+#
+#   Then it will migrate appinfos, re-index the management app and then for each of the specified org's apps
+#   it will de-dup connections and re-index the app with a start-date specified so only data modified since
+#   STEP 1 will be re-indexed.
+#
+# STEP 3 - SETUP TENANT TWO TOMCAT RUNNING 2.1 NOT IN SERVICE
+#
+#   Login to the Tomcat instance and run this command, specifying both superuser and tenant organization:
+#
+#       python migrate_entity_data.py --org <org2name> --super <user>:<pass>
+#
+#   This command will migrate appinfos, re-index the management app and then for each of the specified org's apps
+#   it will de-dup connections and re-index the app.
+#
+#   Write down the 'Re-index start' timestamp when this is finished.
 
-
+# STEP 4 - PUT TENANT TWO TOMCATS IN SERVICE AND DO DELTA MIGRATION
+#
+#   On the same Tomcat instance and run this command with the --date timestamp you noted in the previous step:
+#
+#       python migrate_entity_data.py --org <org2name> --super <user>:<pass> --date <timestamp>
+#
+#   Then it will migrate appinfos, re-index the management app and then for each of the specified org's apps
+#   it will de-dup connections and re-index the app with a start-date specified so only data modified since
+#   STEP 1 will be re-indexed.
+#
+# STEP 5 - FULL DATA MIGRATION (migrates entity data to new format)
+#
+#   Login to any Tomcat instance in the cluster and run this command:
+#
+#       python migrate_entity_data.py --super <user>:<pass> --full
+#
+#   This command will run the full data migration.
+#
 
 import sys
 import logging
@@ -67,40 +101,53 @@ PLUGIN_ENTITYDATA = 'collections-entity-data'
 PLUGIN_INDEX_MAPPING = 'index_mapping_migration'
 PLUGIN_CORE_DATA = 'core-data'
 
+MANAGEMENT_APP_ID = 'b6768a08-b5d5-11e3-a495-11ddb1de66c8'
+
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Usergrid Migration Tool')
-
-    parser.add_argument('--date',
-                        help='A date from which to start the migration',
-                        type=str)
 
     parser.add_argument('--endpoint',
                         help='The endpoint to use for making API requests.',
                         type=str,
                         default='http://localhost:8080')
 
-    parser.add_argument('--user',
-                        help='System Admin Credentials used to authenticate with Usergrid  <user:pass>',
+    parser.add_argument('--super',
+                        help='Superuser username and creds <user:pass>',
                         type=str,
                         required=True)
 
-    parser.add_argument('--delta',
-                        help='Run a delta migration.',
+    parser.add_argument('--init',
+                        help='Init system and start first migration.',
+                        action='store_true',
+                        default=False)
+
+    parser.add_argument('--org',
+                        help='Name of organization on which to run migration.',
+                        type=str,
+                        required=False)
+
+    parser.add_argument('--date',
+                        help='A date from which to start the migration',
+                        type=str)
+
+    parser.add_argument('--full',
+                        help='Run full data migration (last step in cluster migration).',
                         action='store_true',
                         default=False)
 
     my_args = parser.parse_args(sys.argv[1:])
 
     arg_vars = vars(my_args)
-    creds = arg_vars['user'].split(':')
+
+    creds = arg_vars['super'].split(':')
     if len(creds) != 2:
-        print('Credentials not properly specified.  Must be "-u <user:pass>". Exiting...')
+        print('Superuser credentials not properly specified.  Must be "-u <user:pass>". Exiting...')
         exit_on_error()
     else:
-        arg_vars['user'] = creds[0]
-        arg_vars['pass'] = creds[1]
+        arg_vars['superuser'] = creds[0]
+        arg_vars['superpass'] = creds[1]
 
     return arg_vars
 
@@ -118,9 +165,11 @@ class Migrate:
                         'full_data_migration_start': '',
                         'full_data_migration_end': ''}
         self.logger = init_logging(self.__class__.__name__)
-        self.admin_user = self.args['user']
-        self.admin_pass = self.args['pass']
-        self.delta_migration = self.args['delta']
+        self.super_user = self.args['superuser']
+        self.super_pass = self.args['superpass']
+        self.org = self.args['org']
+        self.init = self.args['init']
+        self.full = self.args['full']
 
     def run(self):
         self.logger.info('Initializing...')
@@ -133,85 +182,10 @@ class Migrate:
 
         try:
 
-            self.run_database_setup()
+            if self.full:
 
-            # We need to check and roll the migration system to 1 if not already
-            migration_system_updated = self.is_migration_system_updated()
+                # Do full data migration and exit
 
-            if not migration_system_updated:
-                self.logger.info('Migration system needs to be updated.  Updating migration system..')
-                self.start_migration_system_update()
-                while not migration_system_updated:
-                    time.sleep(STATUS_INTERVAL_SECONDS)
-                    migration_system_updated = self.is_migration_system_updated()
-                    if migration_system_updated:
-                        break
-
-            index_mapping_updated = self.is_index_mapping_updated()
-
-            if not index_mapping_updated:
-                self.logger.info('Index Mapping needs to be updated.  Updating index mapping..')
-                self.start_index_mapping_migration()
-                while not index_mapping_updated:
-                    time.sleep(STATUS_INTERVAL_SECONDS)
-                    index_mapping_updated = self.is_index_mapping_updated()
-                    if index_mapping_updated:
-                        break
-
-            # Run AppInfo migration only when both appinfos and collection entity data have not been migrated
-            if not self.is_data_migrated():
-
-                #Migrate app info
-                if self.is_appinfo_migrated():
-                    self.logger.info('AppInfo already migrated. Resetting version for re-migration.')
-                    self.reset_appinfo_migration()
-                    time.sleep(STATUS_INTERVAL_SECONDS)
-
-                self.start_appinfo_migration()
-                self.logger.info('AppInfo Migration Started.')
-                self.metrics['appinfo_migration_start'] = get_current_time()
-
-                is_appinfo_migrated = False
-                while not is_appinfo_migrated:
-                    is_appinfo_migrated = self.is_appinfo_migrated()
-                    time.sleep(STATUS_INTERVAL_SECONDS)
-                    if is_appinfo_migrated:
-                        self.metrics['appinfo_migration_end'] = get_current_time()
-                        break
-                self.logger.info('AppInfo Migration Ended.')
-
-
-            else:
-                self.logger.info('Full Data Migration previously ran... skipping AppInfo migration.')
-
-
-
-            # We need to check and roll index mapping version to 1 if not already there
-
-            # Perform system re-index (it will grab date from input if provided)
-            job = self.start_reindex()
-            self.metrics['reindex_start'] = get_current_time()
-            self.logger.info('Started Re-index.  Job=[%s]', job)
-            is_running = True
-            while is_running:
-                time.sleep(STATUS_INTERVAL_SECONDS)
-                is_running = self.is_reindex_running(job)
-                if not is_running:
-                    break
-
-            self.logger.info("Finished Re-index. Job=[%s]", job)
-            self.metrics['reindex_end'] = get_current_time()
-
-            # Only when we do a delta migration do we run the full data migration (includes appinfo and entity data)
-            if self.delta_migration:
-
-                self.logger.info('Delta option provided. Performing full data migration...')
-                if self.is_data_migrated():
-                    self.reset_data_migration()
-                time.sleep(STATUS_INTERVAL_SECONDS)
-                self.is_data_migrated()
-
-                # self.start_core_data_migration()
                 self.start_fulldata_migration()
 
                 self.metrics['full_data_migration_start'] = get_current_time()
@@ -226,6 +200,107 @@ class Migrate:
                 self.metrics['full_data_migration_end'] = get_current_time()
                 self.logger.info("Full Data Migration completed")
 
+                self.log_metrics()
+                self.logger.info("Finished...")
+
+                return
+
+            if self.init:
+
+                # Init the migration system as this is the first migration done on the cluster
+
+                self.run_database_setup()
+                self.run_database_bootstrap()
+
+                migration_system_updated = self.is_migration_system_updated()
+
+                if not migration_system_updated:
+                    self.logger.info('Migration system needs to be updated.  Updating migration system..')
+                    self.start_migration_system_update()
+                    while not migration_system_updated:
+                        time.sleep(STATUS_INTERVAL_SECONDS)
+                        migration_system_updated = self.is_migration_system_updated()
+                        if migration_system_updated:
+                            break
+
+                index_mapping_updated = self.is_index_mapping_updated()
+
+                if not index_mapping_updated:
+                    self.logger.info('Index Mapping needs to be updated.  Updating index mapping..')
+                    self.start_index_mapping_migration()
+                    while not index_mapping_updated:
+                        time.sleep(STATUS_INTERVAL_SECONDS)
+                        index_mapping_updated = self.is_index_mapping_updated()
+                        if index_mapping_updated:
+                            break
+
+            # Migrate app info
+
+            if self.is_appinfo_migrated():
+                self.logger.info('AppInfo already migrated. Resetting version for re-migration.')
+                self.reset_appinfo_migration()
+                time.sleep(STATUS_INTERVAL_SECONDS)
+
+            self.start_appinfo_migration()
+            self.logger.info('AppInfo Migration Started.')
+            self.metrics['appinfo_migration_start'] = get_current_time()
+
+            is_appinfo_migrated = False
+            while not is_appinfo_migrated:
+                is_appinfo_migrated = self.is_appinfo_migrated()
+                time.sleep(STATUS_INTERVAL_SECONDS)
+                if is_appinfo_migrated:
+                    self.metrics['appinfo_migration_end'] = get_current_time()
+                    break
+            self.logger.info('AppInfo Migration Ended.')
+
+            # Reindex management app
+
+            job = self.start_app_reindex(MANAGEMENT_APP_ID)
+            self.metrics['reindex_start'] = get_current_time()
+            self.logger.info('Started Re-index.  Job=[%s]', job)
+            is_running = True
+            while is_running:
+                time.sleep(STATUS_INTERVAL_SECONDS)
+                is_running = self.is_reindex_running(job)
+                if not is_running:
+                    break
+
+            self.logger.info("Finished Re-index. Job=[%s]", job)
+            self.metrics['reindex_end'] = get_current_time()
+
+            # Dedup and re-index all of organization's apps
+
+            app_ids = self.get_app_ids()
+            for app_id in app_ids:
+
+                # De-dup app
+                job = self.start_dedup(app_id)
+                self.logger.info('Started dedup.  App=[%s], Job=[%s]', app_id, job)
+                is_running = True
+                while is_running:
+                    time.sleep(STATUS_INTERVAL_SECONDS)
+                    is_running = self.is_dedup_running(job)
+                    if not is_running:
+                        break
+
+                self.logger.info("Finished dedup. App=[%s], Job=[%s]", app_id, job)
+                self.metrics['dedup_end_' + app_id] = get_current_time()
+
+                # Re-index app
+                job = self.start_app_reindex(app_id)
+                self.metrics['reindex_start_' + app_id] = get_current_time()
+                self.logger.info('Started Re-index.  App=[%s], Job=[%s]', app_id, job)
+                is_running = True
+                while is_running:
+                    time.sleep(STATUS_INTERVAL_SECONDS)
+                    is_running = self.is_reindex_running(job)
+                    if not is_running:
+                        break
+
+                self.logger.info("Finished Re-index. App=[%s], Job=[%s]", app_id, job)
+                self.metrics['reindex_end_' + app_id] = get_current_time()
+
             self.log_metrics()
             self.logger.info("Finished...")
 
@@ -235,6 +310,10 @@ class Migrate:
 
     def get_database_setup_url(self):
         url = self.endpoint + '/system/database/setup'
+        return url
+
+    def get_database_bootstrap_url(self):
+        url = self.endpoint + '/system/database/bootstrap'
         return url
 
     def get_migration_url(self):
@@ -249,28 +328,30 @@ class Migrate:
         url = self.endpoint + '/system/migrate/status'
         return url
 
+    def get_dedup_url(self):
+        url = self.endpoint + '/system/connection/dedup'
+        return url
+
     def get_reindex_url(self):
         url = self.endpoint + '/system/index/rebuild'
         return url
 
     def get_management_reindex_url(self):
-        url = self.get_reindex_url() + "/management"
-        return url
-
+          url = self.get_reindex_url() + "/management"
+          return url
 
     def start_core_data_migration(self):
-        try:
-            r = requests.put(url=self.get_migration_url(), auth=(self.admin_user, self.admin_pass))
-            response = r.json()
-            return response
-        except requests.exceptions.RequestException as e:
-            self.logger.error('Failed to start migration, %s', e)
-            exit_on_error(str(e))
-
+           try:
+               r = requests.put(url=self.get_migration_url(), auth=(self.super_user, self.super_pass))
+               response = r.json()
+               return response
+           except requests.exceptions.RequestException as e:
+               self.logger.error('Failed to start migration, %s', e)
+               exit_on_error(str(e))
 
     def start_fulldata_migration(self):
         try:
-            r = requests.put(url=self.get_migration_url(), auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=self.get_migration_url(), auth=(self.super_user, self.super_pass))
             response = r.json()
             return response
         except requests.exceptions.RequestException as e:
@@ -279,9 +360,9 @@ class Migrate:
 
     def start_migration_system_update(self):
         try:
-            #TODO fix this URL
+            # TODO fix this URL
             migrateUrl = self.get_migration_url() + '/' + PLUGIN_MIGRATION_SYSTEM
-            r = requests.put(url=migrateUrl, auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=migrateUrl, auth=(self.super_user, self.super_pass))
             response = r.json()
             return response
         except requests.exceptions.RequestException as e:
@@ -291,7 +372,7 @@ class Migrate:
     def run_database_setup(self):
         try:
             setupUrl = self.get_database_setup_url()
-            r = requests.put(url=setupUrl, auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=setupUrl, auth=(self.super_user, self.super_pass))
             if r.status_code != 200:
                 exit_on_error('Database Setup Failed')
 
@@ -299,10 +380,21 @@ class Migrate:
             self.logger.error('Failed to run database setup, %s', e)
             exit_on_error(str(e))
 
+    def run_database_bootstrap(self):
+        try:
+            setupUrl = self.get_database_bootstrap_url()
+            r = requests.put(url=setupUrl, auth=(self.super_user, self.super_pass))
+            if r.status_code != 200:
+                exit_on_error('Database Bootstrap Failed')
+
+        except requests.exceptions.RequestException as e:
+            self.logger.error('Failed to run database bootstrap, %s', e)
+            exit_on_error(str(e))
+
     def start_index_mapping_migration(self):
         try:
             migrateUrl = self.get_migration_url() + '/' + PLUGIN_INDEX_MAPPING
-            r = requests.put(url=migrateUrl, auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=migrateUrl, auth=(self.super_user, self.super_pass))
             response = r.json()
             return response
         except requests.exceptions.RequestException as e:
@@ -312,7 +404,7 @@ class Migrate:
     def start_appinfo_migration(self):
         try:
             migrateUrl = self.get_migration_url() + '/' + PLUGIN_APPINFO
-            r = requests.put(url=migrateUrl, auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=migrateUrl, auth=(self.super_user, self.super_pass))
             response = r.json()
             return response
         except requests.exceptions.RequestException as e:
@@ -323,7 +415,7 @@ class Migrate:
         version = TARGET_ENTITY_DATA_VERSION - 1
         body = json.dumps({PLUGIN_ENTITYDATA: version, PLUGIN_APPINFO: version})
         try:
-            r = requests.put(url=self.get_reset_migration_url(), data=body, auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=self.get_reset_migration_url(), data=body, auth=(self.super_user, self.super_pass))
             response = r.json()
             self.logger.info('Resetting data migration versions to %s=[%s] '
                              'and %s=[%s]', PLUGIN_ENTITYDATA, version, PLUGIN_APPINFO, version)
@@ -336,7 +428,7 @@ class Migrate:
         version = TARGET_APPINFO_VERSION - 1
         body = json.dumps({PLUGIN_APPINFO: version})
         try:
-            r = requests.put(url=self.get_reset_migration_url(), data=body, auth=(self.admin_user, self.admin_pass))
+            r = requests.put(url=self.get_reset_migration_url(), data=body, auth=(self.super_user, self.super_pass))
             response = r.json()
             self.logger.info('Resetting appinfo migration versions to %s=[%s]', PLUGIN_APPINFO, version)
             return response
@@ -415,7 +507,7 @@ class Migrate:
     def check_data_migration_status(self):
 
         try:
-            r = requests.get(url=self.get_migration_status_url(), auth=(self.admin_user, self.admin_pass))
+            r = requests.get(url=self.get_migration_status_url(), auth=(self.super_user, self.super_pass))
             if r.status_code == 200:
                 response = r.json()
                 return response
@@ -430,20 +522,20 @@ class Migrate:
         status_url = self.get_reindex_url()+'/' + job
 
         try:
-            r = requests.get(url=status_url, auth=(self.admin_user, self.admin_pass))
+            r = requests.get(url=status_url, auth=(self.super_user, self.super_pass))
             response = r.json()
             return response['status']
         except requests.exceptions.RequestException as e:
             self.logger.error('Failed to get reindex status, %s', e)
             # exit_on_error()
 
-    def start_reindex(self):
+    def start_app_reindex(self, appId):
         body = ""
         if self.start_date is not None:
             body = json.dumps({'updated': self.start_date})
 
         try:
-            r = requests.post(url=self.get_reindex_url(), data=body, auth=(self.admin_user, self.admin_pass))
+            r = requests.post(url=self.get_reindex_url(), data=body, auth=(self.super_user, self.super_pass))
 
             if r.status_code == 200:
                 response = r.json()
@@ -458,6 +550,39 @@ class Migrate:
     def is_reindex_running(self, job):
         status = self.get_reindex_status(job)
         self.logger.info('Re-index status=[%s]', status)
+        if status != "COMPLETE":
+            return True
+        else:
+            return False
+
+    def get_dedup_status(self, job):
+        status_url = self.get_dedup_url()+'/' + job
+        try:
+            r = requests.get(url=status_url, auth=(self.super_user, self.super_pass))
+            response = r.json()
+            return response['status']['status']
+        except requests.exceptions.RequestException as e:
+            self.logger.error('Failed to get dedup status, %s', e)
+            # exit_on_error()
+
+    def start_dedup(self, app_id):
+        body = ""
+        try:
+            r = requests.post(url=self.get_dedup_url() + "/" + app_id, data=body, auth=(self.super_user, self.super_pass))
+            if r.status_code == 200:
+                response = r.json()
+                return response['status']['jobStatusId']
+            else:
+                self.logger.error('Failed to start dedup, %s', r)
+                exit_on_error(str(r))
+
+        except requests.exceptions.RequestException as e:
+            self.logger.error('Unable to make API request for dedup, %s', e)
+            exit_on_error(str(e))
+
+    def is_dedup_running(self, job):
+        status = self.get_dedup_status(job)
+        self.logger.info('Dedup status=[%s]', status)
         if status != "COMPLETE":
             return True
         else:
@@ -490,6 +615,35 @@ class Migrate:
 
         )
 
+    def get_app_ids(self):
+
+        try:
+
+            url = self.endpoint + "/management/organizations"
+            r = requests.get(url=url, auth=(self.super_user, self.super_pass))
+
+            if r.status_code != 200:
+                exit_on_error('Cannot get app ids: ' + r.text)
+
+            response_json = r.json()
+
+            app_ids = []
+            orgs = response_json["organizations"]
+            if orgs is not None:
+                for org in orgs:
+                    if org["name"] == self.org:
+                        for app in org["applications"]:
+                            app_ids.append(org["applications"][app])
+            else:
+                e = 'No Orgs in this system'
+                self.logger.error(e)
+                exit_on_error(e)
+
+            return app_ids
+
+        except requests.exceptions.RequestException as e:
+            self.logger.error('Unable to get list of application ids, %s', e)
+            exit_on_error(str(e))
 
 def get_current_time():
     return str(int(time.time()*1000))
