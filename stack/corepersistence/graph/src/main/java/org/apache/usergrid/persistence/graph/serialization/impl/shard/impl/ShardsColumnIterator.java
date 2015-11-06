@@ -6,6 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.MultiKeyColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.MultiRowColumnIterator;
@@ -27,6 +30,9 @@ import com.netflix.astyanax.util.RangeBuilder;
  * @param <T> The parsed return type
  */
 public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
+
+
+    private static final Logger logger = LoggerFactory.getLogger( ShardsColumnIterator.class );
 
     private final EdgeSearcher<R, C, T> searcher;
 
@@ -87,6 +93,8 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
      */
     private void startIterator() {
 
+        logger.trace( "Starting shards column iterator" );
+
 
         /**
          * If the edge is present, we need to being seeking from this
@@ -104,6 +112,8 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
          * Get our list of slices
          */
         final List<ScopedRowKey<R>> rowKeys = searcher.getRowKeys();
+
+        logger.trace( "Searching with row keys {}", rowKeys );
 
         currentColumnIterator = new MultiRowColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher, searcher.getComparator(), rowKeys, pageSize);
 

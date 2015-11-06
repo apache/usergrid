@@ -315,15 +315,21 @@ public class AmazonAsyncEventService implements AsyncEventService {
                 boolean validateEmptySets = true;
                 Observable<IndexOperationMessage> indexoperationObservable;
                 //merge each operation to a master observable;
-                if (event instanceof EdgeDeleteEvent) {
-                    indexoperationObservable = handleEdgeDelete(message);
-                } else if (event instanceof EdgeIndexEvent) {
-                    indexoperationObservable = handleEdgeIndex(message);
-                } else if (event instanceof EntityDeleteEvent) {
-                    indexoperationObservable = handleEntityDelete(message);
-                } else if (event instanceof EntityIndexEvent) {
-                    indexoperationObservable = handleEntityIndexUpdate(message);
-                } else if (event instanceof InitializeApplicationIndexEvent) {
+                if ( event instanceof EdgeDeleteEvent ) {
+                    indexoperationObservable = handleEdgeDelete( message );
+                }
+                else if ( event instanceof EdgeIndexEvent ) {
+                    indexoperationObservable = handleEdgeIndex( message );
+                }
+                else if ( event instanceof EntityDeleteEvent ) {
+                    indexoperationObservable = handleEntityDelete( message );
+                    validateEmptySets = false; // do not check this one for an empty set b/c it can be empty
+
+                }
+                else if ( event instanceof EntityIndexEvent ) {
+                    indexoperationObservable = handleEntityIndexUpdate( message );
+                }
+                else if ( event instanceof InitializeApplicationIndexEvent ) {
                     //does not return observable
                     handleInitializeApplicationIndex(event, message);
                     indexoperationObservable = Observable.just(new IndexOperationMessage());
@@ -577,9 +583,10 @@ public class AmazonAsyncEventService implements AsyncEventService {
             entityDeleteResults = eventBuilder.buildEntityDelete( applicationScope, entityId );
 
 
-        entityDeleteResults
-            .getEntitiesCompacted()
-            .collect(() -> new ArrayList<>(), (list, item) -> list.add(item)).toBlocking().lastOrDefault(null);
+        // Delete the entities and remove from graph separately
+        entityDeleteResults.getEntitiesDeleted().toBlocking().lastOrDefault(null);
+
+        entityDeleteResults.getCompactedNode().toBlocking().lastOrDefault(null);
 
         return entityDeleteResults.getIndexObservable();
     }
@@ -667,35 +674,45 @@ public class AmazonAsyncEventService implements AsyncEventService {
                             }
                             while ( true );
                         }
-                    } )
-                            //this won't block our read loop, just reads and proceeds
-                            .map( messages -> {
-                                if ( messages == null || messages.size() == 0 ) {
-                                    return null;
-                                }
+                    } )        //this won't block our read loop, just reads and proceeds
+                        .flatMap( sqsMessages -> {
 
-                                try {
-                                    List<IndexEventResult> indexEventResults = callEventHandlers( messages );
-                                    List<QueueMessage> messagesToAck = submitToIndex( indexEventResults );
-                                    if ( messagesToAck == null || messagesToAck.size() == 0 ) {
-                                        logger.error( "No messages came back from the queue operation should have seen "
-                                            + messages.size(), messages );
-                                        return messagesToAck;
-                                    }
-                                    if ( messagesToAck.size() < messages.size() ) {
-                                        logger.error( "Missing messages from queue post operation", messages,
-                                            messagesToAck );
-                                    }
-                                    //ack each message, but only if we didn't error.
-                                    ack( messagesToAck );
-                                    return messagesToAck;
-                                }
-                                catch ( Exception e ) {
-                                    logger.error( "failed to ack messages to sqs", e );
-                                    return null;
-                                    //do not rethrow so we can process all of them
-                                }
-                            } );
+                            //do this on a different schedule, and introduce concurrency with flatmap for faster processing
+                            return Observable.just( sqsMessages )
+
+                                             .map( messages -> {
+                                                 if ( messages == null || messages.size() == 0 ) {
+                                                     return null;
+                                                 }
+
+                                                 try {
+                                                     List<IndexEventResult> indexEventResults =
+                                                         callEventHandlers( messages );
+                                                     List<QueueMessage> messagesToAck =
+                                                         submitToIndex( indexEventResults );
+                                                     if ( messagesToAck == null || messagesToAck.size() == 0 ) {
+                                                         logger.error(
+                                                             "No messages came back from the queue operation should "
+                                                                 + "have seen "
+                                                                 + messages.size(), messages );
+                                                         return messagesToAck;
+                                                     }
+                                                     if ( messagesToAck.size() < messages.size() ) {
+                                                         logger.error( "Missing messages from queue post operation",
+                                                             messages, messagesToAck );
+                                                     }
+                                                     //ack each message, but only if we didn't error.
+                                                     ack( messagesToAck );
+                                                     return messagesToAck;
+                                                 }
+                                                 catch ( Exception e ) {
+                                                     logger.error( "failed to ack messages to sqs", e );
+                                                     return null;
+                                                     //do not rethrow so we can process all of them
+                                                 }
+                                             } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
+                            //end flatMap
+                        }, indexProcessorFig.getEventConcurrencyFactor() );
 
             //start in the background
 

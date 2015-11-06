@@ -41,6 +41,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumn
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupDeletion;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardGroupColumnIterator;
 import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
@@ -67,6 +68,7 @@ public class EdgeSerializationImpl implements EdgeSerialization {
     protected final EdgeColumnFamilies edgeColumnFamilies;
     protected final ShardedEdgeSerialization shardedEdgeSerialization;
     protected final TimeService timeService;
+    protected final ShardGroupDeletion shardGroupDeletion;
 
 
     @Inject
@@ -74,7 +76,8 @@ public class EdgeSerializationImpl implements EdgeSerialization {
                                   final GraphFig graphFig, final EdgeShardStrategy edgeShardStrategy,
                                   final EdgeColumnFamilies edgeColumnFamilies,
                                   final ShardedEdgeSerialization shardedEdgeSerialization,
-                                  final TimeService timeService ) {
+                                  final TimeService timeService, final ShardGroupDeletion shardGroupDeletion ) {
+
 
 
         checkNotNull( keyspace, "keyspace required" );
@@ -83,6 +86,7 @@ public class EdgeSerializationImpl implements EdgeSerialization {
         checkNotNull( edgeColumnFamilies, "edgeColumnFamilies required" );
         checkNotNull( shardedEdgeSerialization, "shardedEdgeSerialization required" );
         checkNotNull( timeService, "timeService required" );
+        checkNotNull( shardGroupDeletion, "shardGroupDeletion require");
 
 
         this.keyspace = keyspace;
@@ -92,6 +96,7 @@ public class EdgeSerializationImpl implements EdgeSerialization {
         this.edgeColumnFamilies = edgeColumnFamilies;
         this.shardedEdgeSerialization = shardedEdgeSerialization;
         this.timeService = timeService;
+        this.shardGroupDeletion = shardGroupDeletion;
     }
 
 
@@ -293,7 +298,7 @@ public class EdgeSerializationImpl implements EdgeSerialization {
 
         //now create a result iterator with our iterator of read shards
 
-        return new ShardGroupColumnIterator<MarkedEdge>( readShards ) {
+        return new ShardGroupColumnIterator( scope, versionMetaData, shardGroupDeletion, readShards ) {
             @Override
             protected Iterator<MarkedEdge> getIterator( final Collection<Shard> readShards ) {
                 return shardedEdgeSerialization.getEdgeVersions( edgeColumnFamilies, scope, search, readShards );
@@ -319,7 +324,7 @@ public class EdgeSerializationImpl implements EdgeSerialization {
 
         final Iterator<ShardEntryGroup> readShards = edgeShardStrategy.getReadShards( scope, maxTimestamp, directedEdgeMeta );
 
-        return new ShardGroupColumnIterator<MarkedEdge>( readShards ) {
+        return new ShardGroupColumnIterator( scope, directedEdgeMeta, shardGroupDeletion, readShards ) {
             @Override
             protected Iterator<MarkedEdge> getIterator( final Collection<Shard> readShards ) {
                 return shardedEdgeSerialization.getEdgesFromSource( edgeColumnFamilies, scope, edgeType, readShards );
@@ -346,7 +351,7 @@ public class EdgeSerializationImpl implements EdgeSerialization {
         final Iterator<ShardEntryGroup> readShards = edgeShardStrategy.getReadShards( scope, maxTimestamp, directedEdgeMeta );
 
 
-        return new ShardGroupColumnIterator<MarkedEdge>( readShards ) {
+        return new ShardGroupColumnIterator( scope, directedEdgeMeta, shardGroupDeletion, readShards ) {
             @Override
             protected Iterator<MarkedEdge> getIterator( final Collection<Shard> readShards ) {
                 return shardedEdgeSerialization
@@ -372,7 +377,7 @@ public class EdgeSerializationImpl implements EdgeSerialization {
 
         final Iterator<ShardEntryGroup> readShards = edgeShardStrategy.getReadShards( scope, maxTimestamp, directedEdgeMeta );
 
-        return new ShardGroupColumnIterator<MarkedEdge>( readShards ) {
+        return new ShardGroupColumnIterator( scope, directedEdgeMeta, shardGroupDeletion, readShards ) {
             @Override
             protected Iterator<MarkedEdge> getIterator( final Collection<Shard> readShards ) {
                 return shardedEdgeSerialization.getEdgesToTarget( edgeColumnFamilies, scope, edgeType, readShards );
@@ -400,7 +405,7 @@ public class EdgeSerializationImpl implements EdgeSerialization {
         final Iterator<ShardEntryGroup> readShards = edgeShardStrategy.getReadShards( scope, maxTimestamp, directedEdgeMeta );
 
 
-        return new ShardGroupColumnIterator<MarkedEdge>( readShards ) {
+        return new ShardGroupColumnIterator( scope, directedEdgeMeta, shardGroupDeletion, readShards ) {
             @Override
             protected Iterator<MarkedEdge> getIterator( final Collection<Shard> readShards ) {
                 return shardedEdgeSerialization

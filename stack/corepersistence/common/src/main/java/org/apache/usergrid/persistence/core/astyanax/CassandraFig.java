@@ -71,7 +71,7 @@ public interface CassandraFig extends GuicyFig {
     int getConnections();
 
     @Key( "cassandra.timeout" )
-    @Default( "5000" )
+    @Default( "10000" )
     int getTimeout();
 
     @Key("cassandra.discovery")

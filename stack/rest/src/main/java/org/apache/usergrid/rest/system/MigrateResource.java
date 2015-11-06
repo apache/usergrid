@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.rest;
+package org.apache.usergrid.rest.system;
 
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -26,6 +26,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Injector;
 import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

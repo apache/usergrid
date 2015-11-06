@@ -30,6 +30,8 @@ import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.management.ManagementResource;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
+import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -65,6 +71,33 @@ public class OrganizationsResource extends AbstractContextResource {
 
 
     public OrganizationsResource() {
+    }
+
+
+    @GET
+    @RequireSystemAccess
+    public ApiResponse getAllOrganizations() throws Exception{
+
+        ApiResponse response = createApiResponse();
+        List<OrganizationInfo> orgs = management.getOrganizations(null, 10000);
+        List<Object> jsonOrgList = new ArrayList<>();
+
+        for(OrganizationInfo org: orgs){
+
+
+            Map<String, Object> jsonOrg = new HashMap<>();
+            Map<String, UUID> apps = management.getApplicationsForOrganization(org.getUuid()).inverse();
+
+            jsonOrg.put("name", org.getName());
+            jsonOrg.put("uuid", org.getUuid());
+            jsonOrg.put("properties", org.getProperties());
+            jsonOrg.put("applications", apps);
+            jsonOrgList.add(jsonOrg);
+        }
+
+        response.setProperty("organizations", jsonOrgList);
+
+        return response;
     }
 
     @Path(RootResource.ORGANIZATION_ID_PATH)

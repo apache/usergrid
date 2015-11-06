@@ -47,7 +47,9 @@ import rx.Observable;
  *
  * TODO refactor this into a common command that both ES search and graphSearch can use for repair and verification
  */
-public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, FilterResult<Entity>>{
+public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, FilterResult<Entity>> {
+
+    private static final Logger logger = LoggerFactory.getLogger( EntityLoadVerifyFilter.class );
 
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
 
@@ -69,17 +71,19 @@ public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, Fil
         final Observable<FilterResult<Entity>> entityObservable =
             filterResultObservable.buffer( pipelineContext.getLimit() ).flatMap( bufferedIds -> {
 
-                    final Observable<EntitySet> entitySetObservable =
-                        Observable.from( bufferedIds ).map( filterResultId -> filterResultId.getValue() ).toList()
-                                  .flatMap( ids -> entityCollectionManager.load( ids ) );
+                logger.trace( "Attempting to batch load ids {}", bufferedIds );
+
+                final Observable<EntitySet> entitySetObservable =
+                    Observable.from( bufferedIds ).map( filterResultId -> filterResultId.getValue() ).toList()
+                              .flatMap( ids -> entityCollectionManager.load( ids ) );
 
 
-                    //now we have a collection, validate our canidate set is correct.
+                //now we have a collection, validate our canidate set is correct.
 
-                    return entitySetObservable.map( entitySet -> new EntityVerifier( entitySet, bufferedIds ) )
-                                              .doOnNext( entityCollector -> entityCollector.merge() ).flatMap(
-                            entityCollector -> Observable.from( entityCollector.getResults() ) );
-                } );
+                return entitySetObservable.map( entitySet -> new EntityVerifier( entitySet, bufferedIds ) )
+                                          .doOnNext( entityCollector -> entityCollector.merge() ).flatMap(
+                        entityCollector -> Observable.from( entityCollector.getResults() ) );
+            } );
 
         return entityObservable;
     }
@@ -132,7 +136,7 @@ public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, Fil
             //doesn't exist warn and drop
             if ( entity == null || !entity.getEntity().isPresent() ) {
                 logger.warn( "Read graph edge and received candidate with entityId {}, yet was not found in cassandra."
-                        + "  Ignoring since this could be a region sync issue", candidateId );
+                    + "  Ignoring since this could be a region sync issue", candidateId );
 
 
                 //TODO trigger an audit after a fail count where we explicitly try to repair from other regions

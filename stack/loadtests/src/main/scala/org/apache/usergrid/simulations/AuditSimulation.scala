@@ -33,7 +33,8 @@ class AuditSimulation extends Simulation {
   def getScenario(scenarioType: String): ScenarioBuilder = {
     scenarioType match {
       case ScenarioType.AuditGetCollectionEntities => AuditScenarios.getAllCollections
-      case ScenarioType.AuditVerifyCollectionEntities => AuditScenarios.verifyCollections
+      case ScenarioType.AuditVerifyCollectionEntities => AuditScenarios.verifyAuditedEntities
+      case ScenarioType.AuditDeleteEntities => AuditScenarios.deleteAuditedEntities
     }
   }
 
@@ -57,17 +58,29 @@ class AuditSimulation extends Simulation {
   }
 
   after {
+    endHandler
+  }
+
+  def endHandler: Unit = {
     Settings.setTestEndTime()
     if (Settings.captureAuditUuids) {
       val uuidDesc = Settings.scenarioType match {
         case ScenarioType.AuditGetCollectionEntities => "found"
         case ScenarioType.AuditVerifyCollectionEntities => "failed"
+        case ScenarioType.AuditDeleteEntities => "failed"
       }
       Settings.writeAuditUuidsToFile(uuidDesc)
     }
     Settings.printSettingsSummary(true)
     Settings.printAuditResults()
   }
+
+  def abortedEarly: Unit = {
+    println(">>>>>>>>>>>>AUDIT ABORTED")
+    endHandler
+  }
+
+  sys addShutdownHook abortedEarly
 
 }
 
