@@ -161,6 +161,48 @@ public class GeoIT extends AbstractCoreIT {
         em.delete(user);
     }
 
+
+    /**
+     * Validate the ability to query a moving entity
+     * 1. Create an entity with location
+     * 2. Query from a point near the entity's location
+     * 3. Move the entity farther away from the center point
+     * 4. Run the same query again to verify the entity is no longer in the area
+     */
+    @Test
+    public void validateDistanceQueryExists() throws Exception {
+        LOG.info("GeoIT.testMovingTarget");
+        //Get the EntityManager instance
+        EntityManager em = app.getEntityManager();
+        assertNotNull(em);
+
+        //1. Create an entity with location
+        Map<String, Object> properties = new LinkedHashMap<String, Object>() {{
+            put("username", "edanuff");
+            put("email", "ed@anuff.com");
+            put("location", new LinkedHashMap<String, Object>() {{
+                put("latitude", 37.776753);
+                put("longitude", -122.407846);
+            }});
+        }};
+        Entity user = em.create("user", properties);
+        assertNotNull(user);
+        app.refreshIndex();
+
+        final double lat = 37.776753;
+        final double lon = -122.407846;
+        //2. Query from a point near the entity's location
+        Query query = Query.fromQL("select * where location within 100 of "
+            + lat + "," + lon);
+        Results listResults = em.searchCollection(em.getApplicationRef(), "users", query);
+        assertEquals(1, listResults.size());
+        Entity entity = listResults.getEntity();
+        assertTrue(entity.getMetadata("distance")!=null);
+        assertTrue(Double.parseDouble( entity.getMetadata("distance").toString())>0);
+
+        em.delete(user);
+    }
+
     /**
      * Validate the ability to query connections within proximity of the users
      * 1. Create an entity with location

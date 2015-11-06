@@ -668,11 +668,12 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         logger.debug( "   Hit count: {} Total hits: {}", hits.length, searchHits.getTotalHits() );
 
         List<CandidateResult> candidates = new ArrayList<>( hits.length );
+        final boolean isGeo = query.getOriginalQuery().contains("location") && query.getOriginalQuery().contains("within");
 
         for ( SearchHit hit : hits ) {
+            CandidateResult candidateResult;
 
-            final CandidateResult candidateResult = parseIndexDocId( hit.getId() );
-
+            candidateResult =  parseIndexDocId( hit, isGeo );
             candidates.add( candidateResult );
         }
 
@@ -696,7 +697,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         for ( SearchHit hit : hits ) {
 
-            final CandidateResult candidateResult = parseIndexDocId( hit.getId() );
+            final CandidateResult candidateResult = parseIndexDocId( hit );
 
             // if comparing against the latestVersion, make sure we only add the candidateResult if it's
             // older than or equal to the latest marked version
