@@ -125,80 +125,90 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
                                                    final ShardEntryGroup shardEntryGroup,
                                                    final Iterator<MarkedEdge> edgeIterator ) {
 
-        logger.trace( "Beginning audit of shard group {}", shardEntryGroup );
+        //TEMPORARILY Removed until further testing
+        return DeleteResult.NO_OP;
 
-        /**
-         * Compaction is pending, we cannot check it
-         */
-        if ( shardEntryGroup.isCompactionPending() ) {
-            logger.trace( "Shard group {} is compacting, not auditing group", shardEntryGroup );
-            return DeleteResult.COMPACTION_PENDING;
-        }
-
-
-        final long currentTime = timeService.getCurrentTime();
-
-        if ( shardEntryGroup.isNew( currentTime ) ) {
-            logger.trace( "Shard group {} contains a shard that is is too new, not auditing group", shardEntryGroup );
-            return DeleteResult.TOO_NEW;
-        }
-
-        /**
-         * We have edges, and therefore cannot delete them
-         */
-        if ( edgeIterator.hasNext() ) {
-            logger.trace( "Shard group {} has edges, not deleting", shardEntryGroup );
-
-            return DeleteResult.CONTAINS_EDGES;
-        }
-
-
-        //now we can proceed based on the shard meta state and we don't have any edge
-
-        DeleteResult result = DeleteResult.NO_OP;
-
-        MutationBatch rollup = null;
-
-        for ( final Shard shard : shardEntryGroup.getReadShards() ) {
-
-            //skip the min shard
-            if(shard.isMinShard()){
-                logger.trace( "Shard {} in group {} is the minimum, not deleting", shard, shardEntryGroup );
-                continue;
-            }
-
-
-            final MutationBatch shardRemovalMutation =
-                edgeShardSerialization.removeShardMeta( applicationScope, shard, directedEdgeMeta );
-
-            if ( rollup == null ) {
-                rollup = shardRemovalMutation;
-            }
-
-            else {
-                rollup.mergeShallow( shardRemovalMutation );
-            }
-
-            result = DeleteResult.DELETED;
-
-            logger.trace( "Removing shard {} in group {}", shard, shardEntryGroup );
-        }
-
-
-       if( rollup != null) {
-
-           try {
-               rollup.execute();
-           }
-           catch ( ConnectionException e ) {
-               logger.error( "Unable to execute shard deletion", e );
-               throw new RuntimeException( "Unable to execute shard deletion", e );
-           }
-       }
-
-        logger.trace( "Completed auditing shard group {}", shardEntryGroup );
-
-        return result;
+//        logger.trace( "Beginning audit of shard group {}", shardEntryGroup );
+//
+//        /**
+//         * Compaction is pending, we cannot check it
+//         */
+//        if ( shardEntryGroup.isCompactionPending() ) {
+//            logger.trace( "Shard group {} is compacting, not auditing group", shardEntryGroup );
+//            return DeleteResult.COMPACTION_PENDING;
+//        }
+//
+//
+//        final long currentTime = timeService.getCurrentTime();
+//
+//        if ( shardEntryGroup.isNew( currentTime ) ) {
+//            logger.trace( "Shard group {} contains a shard that is is too new, not auditing group", shardEntryGroup );
+//            return DeleteResult.TOO_NEW;
+//        }
+//
+//        /**
+//         * We have edges, and therefore cannot delete them
+//         */
+//        if ( edgeIterator.hasNext() ) {
+//            logger.trace( "Shard group {} has edges, not deleting", shardEntryGroup );
+//
+//            return DeleteResult.CONTAINS_EDGES;
+//        }
+//
+//
+//        //now we can proceed based on the shard meta state and we don't have any edge
+//
+//        DeleteResult result = DeleteResult.NO_OP;
+//
+//        MutationBatch rollup = null;
+//
+//        for ( final Shard shard : shardEntryGroup.getReadShards() ) {
+//
+//            //skip the min shard
+//            if(shard.isMinShard()){
+//                logger.trace( "Shard {} in group {} is the minimum, not deleting", shard, shardEntryGroup );
+//                continue;
+//            }
+//
+//            //The shard is not compacted, we cannot remove it.  This should never happen, a bit of an "oh shit" scenario.
+//            //the isCompactionPending should return false in this case
+//            if(!shard.isCompacted()){
+//                logger.warn( "Shard {} in group {} is not compacted yet was checked.  Short circuiting", shard, shardEntryGroup );
+//                return DeleteResult.NO_OP;
+//            }
+//
+//
+//            final MutationBatch shardRemovalMutation =
+//                edgeShardSerialization.removeShardMeta( applicationScope, shard, directedEdgeMeta );
+//
+//            if ( rollup == null ) {
+//                rollup = shardRemovalMutation;
+//            }
+//
+//            else {
+//                rollup.mergeShallow( shardRemovalMutation );
+//            }
+//
+//            result = DeleteResult.DELETED;
+//
+//            logger.trace( "Removing shard {} in group {}", shard, shardEntryGroup );
+//        }
+//
+//
+//       if( rollup != null) {
+//
+//           try {
+//               rollup.execute();
+//           }
+//           catch ( ConnectionException e ) {
+//               logger.error( "Unable to execute shard deletion", e );
+//               throw new RuntimeException( "Unable to execute shard deletion", e );
+//           }
+//       }
+//
+//        logger.trace( "Completed auditing shard group {}", shardEntryGroup );
+//
+//        return result;
     }
 
 
