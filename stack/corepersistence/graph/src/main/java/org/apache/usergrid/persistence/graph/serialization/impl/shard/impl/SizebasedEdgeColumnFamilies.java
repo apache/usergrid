@@ -140,7 +140,7 @@ public class SizebasedEdgeColumnFamilies implements EdgeColumnFamilies {
                         graphCf( TARGET_NODE_SOURCE_TYPE ),
                         new MultiTennantColumnFamilyDefinition( EDGE_VERSIONS, BytesType.class.getSimpleName(),
                                 ColumnTypes.LONG_TYPE_REVERSED, BytesType.class.getSimpleName(),
-                                MultiTennantColumnFamilyDefinition.CacheOption.KEYS ) );
+                                MultiTennantColumnFamilyDefinition.CacheOption.ALL ) );
     }
 
 
@@ -149,6 +149,6 @@ public class SizebasedEdgeColumnFamilies implements EdgeColumnFamilies {
      */
     private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
         return new MultiTennantColumnFamilyDefinition( cf, BytesType.class.getSimpleName(), EDGE_DYNAMIC_COMPOSITE_TYPE,
-                BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.ALL );
     }
 }

@@ -25,9 +25,7 @@ import java.util.Iterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
 
 import com.google.inject.Inject;
@@ -42,14 +40,11 @@ public class SizebasedEdgeShardStrategy implements EdgeShardStrategy {
 
 
     private final NodeShardCache shardCache;
-    private final NodeShardApproximation shardApproximation;
 
 
     @Inject
-    public SizebasedEdgeShardStrategy( final NodeShardCache shardCache,
-                                       final NodeShardApproximation shardApproximation ) {
+    public SizebasedEdgeShardStrategy( final NodeShardCache shardCache) {
         this.shardCache = shardCache;
-        this.shardApproximation = shardApproximation;
     }
 
 
@@ -65,10 +60,4 @@ public class SizebasedEdgeShardStrategy implements EdgeShardStrategy {
         return shardCache.getReadShardGroup( scope, maxTimestamp, directedEdgeMeta );
     }
 
-
-    @Override
-    public void increment( final ApplicationScope scope, final Shard shard,
-                           final long count, final DirectedEdgeMeta directedEdgeMeta) {
-        shardApproximation.increment( scope, shard,  count, directedEdgeMeta );
-    }
 }
