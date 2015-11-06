@@ -20,7 +20,7 @@
 package org.apache.usergrid.persistence.model.field;
 
 /**
- * Classy class class.
+ * Distance field to pass distance down the parsing chain.
  */
 public class DistanceField extends DoubleField {
     public static final String NAME = "distance";

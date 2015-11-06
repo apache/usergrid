@@ -24,7 +24,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import java.util.UUID;
 
 /**
- * Classy class class.
+ * Result for Geo candidates
  */
 public class GeoCandidateResult extends CandidateResult {
     private final double distance;
