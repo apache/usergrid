@@ -222,9 +222,7 @@ public class IndexingUtils {
         builder.append( type ).append( "(" ).append( value ).append( ")" );
     }
 
-    /**
-     * Parse the document id into a candidate result
-     */
+
     public static CandidateResult parseIndexDocId( final SearchHit hit ) {
         return parseIndexDocId(hit.getId());
     }

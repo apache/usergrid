@@ -60,6 +60,7 @@ public class EntityToMapConverter {
 
         for ( Field field : entity.getFields() ) {
             if( field instanceof DistanceField){
+                //parse distance and add to metadata
                 if(!entityMap.containsKey("metadata"))entityMap.put("metadata",new HashMap<String,Object>());
                 DistanceField distanceField = (DistanceField) field;
                 Map<String,Object> metaMap = (Map) entityMap.get("metadata");

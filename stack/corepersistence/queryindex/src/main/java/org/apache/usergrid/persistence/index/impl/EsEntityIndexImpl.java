@@ -668,12 +668,13 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         logger.debug( "   Hit count: {} Total hits: {}", hits.length, searchHits.getTotalHits() );
 
         List<CandidateResult> candidates = new ArrayList<>( hits.length );
-        final boolean isGeo = query.getOriginalQuery().contains("location") && query.getOriginalQuery().contains("within");
+
+
 
         for ( SearchHit hit : hits ) {
             CandidateResult candidateResult;
 
-            candidateResult =  parseIndexDocId( hit, isGeo );
+            candidateResult =  parseIndexDocId( hit, query.isGeoQuery() );
             candidates.add( candidateResult );
         }
 
