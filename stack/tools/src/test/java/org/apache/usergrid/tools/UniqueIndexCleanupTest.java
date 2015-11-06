@@ -19,8 +19,17 @@ package org.apache.usergrid.tools;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-import org.junit.ClassRule;
+import org.junit.*;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,58 +38,141 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.ServiceITSuite;
+import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.management.OrganizationOwnerInfo;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
 
-import static org.junit.Assert.assertTrue;
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.mutation.MutationResult;
+import me.prettyprint.hector.api.mutation.Mutator;
+
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.apache.usergrid.persistence.cassandra.Serializers.be;
+import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
+import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
+import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 
 /**
  * Created by ApigeeCorporation on 11/2/15.
  */
 public class UniqueIndexCleanupTest {
-        static final Logger logger = LoggerFactory.getLogger( ExportAppTest.class );
+    static final Logger logger = LoggerFactory.getLogger( ExportAppTest.class );
 
-        int NUM_COLLECTIONS = 10;
-        int NUM_ENTITIES = 50;
-        int NUM_CONNECTIONS = 3;
+    int NUM_COLLECTIONS = 10;
+    int NUM_ENTITIES = 50;
+    int NUM_CONNECTIONS = 3;
 
-        @ClassRule
-        public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
-
-        @org.junit.Test
-        public void testBasicOperation() throws Exception {
-
-            String rand = RandomStringUtils.randomAlphanumeric( 10 );
-
-            // create app with some data
-
-            String orgName = "org_" + rand;
-            String appName = "app_" + rand;
-//
-//            ExportDataCreator creator = new ExportDataCreator();
-//            creator.startTool( new String[] {
-//                    "-organization", orgName,
-//                    "-application", appName,
-//                    "-host", "localhost:9160" //+ ServiceITSuite.cassandraResource.getRpcPort()
-//            }, false);
-
-            long start = System.currentTimeMillis();
+    @ClassRule
+    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
 
 
-            UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
-            uniqueIndexCleanup.startTool( new String[]{
-                    "-host", "localhost:9160"
-            }, false );
+    @org.junit.Test
+    public void testBasicOperation() throws Exception {
 
-            System.out.println("completed");
+        String rand = RandomStringUtils.randomAlphanumeric( 10 );
+
+        // create app with some data
+
+        String orgName = "org_" + rand;
+        String appName = "app_" + rand;
+        //
+        //            ExportDataCreator creator = new ExportDataCreator();
+        //            creator.startTool( new String[] {
+        //                    "-organization", orgName,
+        //                    "-application", appName,
+        //                    "-host", "localhost:9160" //+ ServiceITSuite.cassandraResource.getRpcPort()
+        //            }, false);
+
+        long start = System.currentTimeMillis();
+
+
+        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
+        uniqueIndexCleanup.startTool( new String[] {
+                "-host", "localhost:9160"
+        }, false );
+
+        System.out.println( "completed" );
+    }
+
+    @Test
+    public void testRepairOfSingleEntity() throws Exception{
+        String rand = RandomStringUtils.randomAlphanumeric( 10 );
+
+        String orgName = "org_" + rand;
+        String appName = "app_" +rand;
+        String username = "username_" + rand;
+        String email = username+"@derp.com";
+        String password = username;
+
+        String collectionName = "users";
+
+
+        OrganizationOwnerInfo organizationOwnerInfo = setup.getMgmtSvc().createOwnerAndOrganization( orgName,username,username,email,password );
+
+        ApplicationInfo applicationInfo = setup.getMgmtSvc().createApplication( organizationOwnerInfo.getOrganization().getUuid(),appName );
+
+        EntityManager entityManager = setup.getEmf().getEntityManager( applicationInfo.getId() );
+
+        Map<String,Object> userInfo = new HashMap<String, Object>(  );
+        userInfo.put( "username",username );
+
+        Entity entityToBeCorrupted = entityManager.create( collectionName,userInfo );
+
+        Object key = CassandraPersistenceUtils.key( applicationInfo.getId(), collectionName, "username", username );
+        CassandraService cass = setup.getCassSvc();
+
+        List<HColumn<ByteBuffer, ByteBuffer>> cols =
+                cass.getColumns( cass.getApplicationKeyspace( applicationInfo.getId() ), ENTITY_UNIQUE, key, null, null,
+                        2, false );
+
+        Set<UUID> results = new HashSet<UUID>( cols.size() );
+
+        for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
+            results.add( ue.fromByteBuffer( col.getName() ) );
         }
 
-        private static int getFileCount(File exportDir, final String ext ) {
-            return exportDir.listFiles( new FileFilter() {
-                @Override
-                public boolean accept(File pathname) {
-                    return pathname.getAbsolutePath().endsWith("." + ext);
-                }
-            } ).length;
-        }
+        UUID uuid = results.iterator().next();
+
+        UUID timestampUuid = newTimeUUID();
+        long timestamp = getTimestampInMicros( timestampUuid );
+
+        //Keyspace ko = cass.getUsergridApplicationKeyspace();
+        Keyspace ko = cass.getApplicationKeyspace( applicationInfo.getId() );
+        Mutator<ByteBuffer> m = createMutator( ko, be );
+
+        key = key( applicationInfo.getId(), collectionName, "username", username );
+        //addDeleteToMutator( m, ENTITY_UNIQUE, key, uuid, timestamp );
+        addDeleteToMutator( m, ENTITY_UNIQUE, key, timestamp, uuid );
+
+
+        MutationResult mutationResult= m.execute();
+
+
+        assertNull( entityManager.getAlias( applicationInfo.getId(),collectionName,username));
+
+        //here you need to add a delete to the mutator then recheck it and see if the entity is the same as millicoms.
+
+
+    }
+
+    private static int getFileCount( File exportDir, final String ext ) {
+        return exportDir.listFiles( new FileFilter() {
+            @Override
+            public boolean accept( File pathname ) {
+                return pathname.getAbsolutePath().endsWith( "." + ext );
+            }
+        } ).length;
+    }
 }
 

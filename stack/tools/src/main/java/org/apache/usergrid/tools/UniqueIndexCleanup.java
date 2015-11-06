@@ -137,7 +137,8 @@ public class UniqueIndexCleanup extends ToolBase {
         Keyspace ko = cass.getUsergridApplicationKeyspace();
         Mutator<ByteBuffer> m = createMutator( ko, be );
 
-        if ( line.hasOption( ENTITY_UNIQUE_PROPERTY_NAME ) || line.hasOption( ENTITY_UNIQUE_PROPERTY_VALUE ) ) {
+        if (line.hasOption( APPLICATION_ARG ) || line.hasOption( COLLECTION_ARG ) ||
+        line.hasOption( ENTITY_UNIQUE_PROPERTY_NAME ) || line.hasOption( ENTITY_UNIQUE_PROPERTY_VALUE ) ) {
             deleteInvalidValuesForUniqueProperty(m ,line );
         }
         else {
@@ -239,7 +240,7 @@ public class UniqueIndexCleanup extends ToolBase {
                         false );
 
         if ( cols.size() == 0 ) {
-            System.out.println("Zero entities were found for this unique value. Its possible it doesn't exist.");
+            System.out.println("Zero entities were found for this unique value. Its possible it doesn't exist or you typed in in wrong :p.");
         }
 
         entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols );
