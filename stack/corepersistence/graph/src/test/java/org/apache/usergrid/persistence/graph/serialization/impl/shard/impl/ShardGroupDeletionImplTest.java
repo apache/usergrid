@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
@@ -55,6 +56,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
+@Ignore("Temporarily removing until delete is re-enabled")
 public class ShardGroupDeletionImplTest {
 
 
