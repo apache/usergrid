@@ -45,6 +45,9 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
+import org.apache.usergrid.utils.UUIDUtils;
 
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -54,13 +57,17 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addInsertToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.createTimestamp;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 
 /**
@@ -105,8 +112,9 @@ public class UniqueIndexCleanupTest {
         System.out.println( "completed" );
     }
 
+    //this test is perfect for the other tool the userCollectionFix tool as this is what I believe they were seeing.
     @Test
-    public void testRepairOfSingleEntity() throws Exception{
+    public void testRepairOfSingleEntityMissingColumnWrongTool() throws Exception{
         String rand = RandomStringUtils.randomAlphanumeric( 10 );
 
         String orgName = "org_" + rand;
@@ -154,15 +162,262 @@ public class UniqueIndexCleanupTest {
         key = key( applicationInfo.getId(), collectionName, "username", username );
         //addDeleteToMutator( m, ENTITY_UNIQUE, key, uuid, timestamp );
         addDeleteToMutator( m, ENTITY_UNIQUE, key, timestamp, uuid );
+        m.execute();
 
+        assertNull( entityManager.getAlias( applicationInfo.getId(), collectionName, username ) );
 
-        MutationResult mutationResult= m.execute();
+        assertNotNull(entityManager.get( entityToBeCorrupted.getUuid() ));
 
+        //run the cleanup
+        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
+        uniqueIndexCleanup.startTool( new String[] {
+                "-host", "localhost:"+ ServiceITSuite.cassandraResource.getRpcPort()
+        }, false );
 
-        assertNull( entityManager.getAlias( applicationInfo.getId(),collectionName,username));
 
         //here you need to add a delete to the mutator then recheck it and see if the entity is the same as millicoms.
+        Thread.sleep( 2000 );
+        assertNull( entityManager.get( entityToBeCorrupted.getUuid() ) );
 
+        //When you come back you also need to emulate the tests to delete what is out of the uuid without any corresponding data.
+        //maybe it'll be easier to just do an insert into the EntityUnique row without doint it into any other row and
+        //then verify the data like that. Then you don't have to do deletes out of other things.
+
+    }
+
+    //For this test you need to insert a dummy key with a dummy column that leads to nowhere
+    //then run the unique index cleanup.
+    //checks for bug when only column doesn't exist make sure to delete the row as well.
+    @Test
+    public void testRepairOfSingleEntity() throws Exception{
+        String rand = RandomStringUtils.randomAlphanumeric( 10 );
+
+        String orgName = "org_" + rand;
+        String appName = "app_" +rand;
+        String username = "username_" + rand;
+        String adminUsername = "admin_"+rand;
+        String email = username+"@derp.com";
+        String password = username;
+
+        String collectionName = "users";
+
+
+        OrganizationOwnerInfo organizationOwnerInfo = setup.getMgmtSvc().createOwnerAndOrganization( orgName,adminUsername,adminUsername,email,password );
+
+        ApplicationInfo applicationInfo = setup.getMgmtSvc().createApplication( organizationOwnerInfo.getOrganization().getUuid(),appName );
+
+        EntityManager entityManager = setup.getEmf().getEntityManager( applicationInfo.getId() );
+
+        Map<String,Object> userInfo = new HashMap<String, Object>(  );
+        userInfo.put( "username",username );
+
+        //Entity entityToBeCorrupted = entityManager.create( collectionName,userInfo );
+
+        CassandraService cass = setup.getCassSvc();
+
+        Object key = CassandraPersistenceUtils.key( applicationInfo.getId(), collectionName, "username", username );
+
+        Keyspace ko = cass.getApplicationKeyspace( applicationInfo.getId() );
+        Mutator<ByteBuffer> m = createMutator( ko, be );
+
+        UUID testEntityUUID = UUIDUtils.newTimeUUID();
+        //this below calll should make the column family AND the column name
+        addInsertToMutator( m,ENTITY_UNIQUE,key, testEntityUUID,0,createTimestamp());
+
+        m.execute();
+
+        //verify that there is no corresponding entity with the uuid or alias provided
+        //verify it returns null.
+        assertNull(entityManager.get( testEntityUUID ));
+
+        //the below works but not needed for this test.
+        //assertNull( entityManager.getAlias("user",username));
+
+        //verify that we cannot recreate the entity due to duplicate unique property exception
+        Entity entityToBeCorrupted = null;
+        try {
+            entityToBeCorrupted = entityManager.create( collectionName, userInfo );
+            fail();
+        }catch(DuplicateUniquePropertyExistsException dup){
+
+        }
+        catch(Exception e){
+            fail("shouldn't throw something else i think");
+        }
+
+
+        //run the cleanup
+        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
+        uniqueIndexCleanup.startTool( new String[] {
+                "-host", "localhost:"+ ServiceITSuite.cassandraResource.getRpcPort()
+        }, false );
+
+
+        entityToBeCorrupted = entityManager.create( collectionName,userInfo );
+
+        assertNotNull( entityToBeCorrupted );
+        assertEquals( username,( ( User ) entityToBeCorrupted ).getUsername());
+
+    }
+
+    //For this test you need to insert a dummy key with a dummy column that leads to nowhere
+    //then run the unique index cleanup.
+    //checks for bug when only column doesn't exist make sure to delete the row as well.
+    @Test
+    public void testRepairOfMultipleEntities() throws Exception{
+        String rand = RandomStringUtils.randomAlphanumeric( 10 );
+
+        int numberOfEntitiesToCreate = 1000;
+
+        String orgName = "org_" + rand;
+        String appName = "app_" +rand;
+        String username = "username_" + rand;
+        String adminUsername = "admin_"+rand;
+        String email = username+"@derp.com";
+        String password = username;
+
+        String collectionName = "users";
+
+
+        OrganizationOwnerInfo organizationOwnerInfo = setup.getMgmtSvc().createOwnerAndOrganization( orgName,adminUsername,adminUsername,email,password );
+
+        ApplicationInfo applicationInfo = setup.getMgmtSvc().createApplication( organizationOwnerInfo.getOrganization().getUuid(),appName );
+
+        EntityManager entityManager = setup.getEmf().getEntityManager( applicationInfo.getId() );
+
+        String[] usernames = new String[numberOfEntitiesToCreate];
+
+        int index = 0;
+        while(index < numberOfEntitiesToCreate) {
+
+            usernames[index]=username+index;
+
+            Map<String, Object> userInfo = new HashMap<String, Object>();
+            userInfo.put( "username", usernames[index] );
+
+            CassandraService cass = setup.getCassSvc();
+
+            Object key = CassandraPersistenceUtils.key( applicationInfo.getId(), collectionName, "username", usernames[index] );
+
+            Keyspace ko = cass.getApplicationKeyspace( applicationInfo.getId() );
+            Mutator<ByteBuffer> m = createMutator( ko, be );
+
+            UUID testEntityUUID = UUIDUtils.newTimeUUID();
+            //this below calll should make the column family AND the column name
+            addInsertToMutator( m, ENTITY_UNIQUE, key, testEntityUUID, 0, createTimestamp() );
+
+            m.execute();
+            index++;
+
+            //the below works but not needed for this test.
+            //assertNull( entityManager.getAlias("user",username));
+
+            //verify that we cannot recreate the entity due to duplicate unique property exception
+            Entity entityToBeCorrupted = null;
+            try {
+                entityToBeCorrupted = entityManager.create( collectionName, userInfo );
+                fail();
+            }catch(DuplicateUniquePropertyExistsException dup){
+
+            }
+            catch(Exception e){
+                fail("shouldn't throw something else i think");
+            }
+
+        }
+
+
+
+        //run the cleanup
+        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
+        uniqueIndexCleanup.startTool( new String[] {
+                "-host", "localhost:"+ ServiceITSuite.cassandraResource.getRpcPort()
+        }, false );
+
+        for(String user:usernames ) {
+            Map<String, Object> userInfo = new HashMap<String, Object>();
+            userInfo.put( "username", user);
+            Entity entityToBeCorrupted = entityManager.create( collectionName, userInfo );
+
+            assertNotNull( entityToBeCorrupted );
+            assertEquals( user, ( ( User ) entityToBeCorrupted ).getUsername() );
+        }
+    }
+
+    @Test
+    public void testRepairOfOnlyOneOfTwoColumns() throws Exception{
+        String rand = RandomStringUtils.randomAlphanumeric( 10 );
+
+        String orgName = "org_" + rand;
+        String appName = "app_" +rand;
+        String username = "username_" + rand;
+        String adminUsername = "admin_"+rand;
+        String email = username+"@derp.com";
+        String password = username;
+
+        String collectionName = "users";
+
+
+        OrganizationOwnerInfo organizationOwnerInfo = setup.getMgmtSvc().createOwnerAndOrganization( orgName,adminUsername,adminUsername,email,password );
+
+        ApplicationInfo applicationInfo = setup.getMgmtSvc().createApplication( organizationOwnerInfo.getOrganization().getUuid(),appName );
+
+        EntityManager entityManager = setup.getEmf().getEntityManager( applicationInfo.getId() );
+
+        Map<String,Object> userInfo = new HashMap<String, Object>(  );
+        userInfo.put( "username",username );
+
+        //Entity entityToBeCorrupted = entityManager.create( collectionName,userInfo );
+
+        CassandraService cass = setup.getCassSvc();
+
+        Object key = CassandraPersistenceUtils.key( applicationInfo.getId(), collectionName, "username", username );
+
+        Keyspace ko = cass.getApplicationKeyspace( applicationInfo.getId() );
+        Mutator<ByteBuffer> m = createMutator( ko, be );
+
+        //create a new column
+        Entity validCoexistingEntity = entityManager.create( collectionName, userInfo );
+
+        UUID testEntityUUID = UUIDUtils.newTimeUUID();
+        //this below calll should make the column family AND the column name for an already existing column thus adding one legit and one dummy value.
+        addInsertToMutator( m,ENTITY_UNIQUE,key, testEntityUUID,0,createTimestamp());
+
+        m.execute();
+
+        //verify that there is no corresponding entity with the uuid or alias provided
+        //verify it returns null.
+        assertNull(entityManager.get( testEntityUUID ));
+
+        //the below works but not needed for this test.
+        //assertNull( entityManager.getAlias("user",username));
+
+        //verify that we cannot recreate the entity due to duplicate unique property exception
+        Entity entityToBeCorrupted = null;
+        try {
+            entityToBeCorrupted = entityManager.create( collectionName, userInfo );
+            fail();
+        }catch(DuplicateUniquePropertyExistsException dup){
+
+        }
+        catch(Exception e){
+            fail("shouldn't throw something else i think");
+        }
+
+        //should return null since we have duplicate alias. Will Cause index corruptions to be thrown.
+        assertNull( entityManager
+                .get( entityManager.getAlias( applicationInfo.getId(), collectionName, username ).getUuid() ) );
+
+
+        //run the cleanup
+        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
+        uniqueIndexCleanup.startTool( new String[] {
+                "-host", "localhost:"+ ServiceITSuite.cassandraResource.getRpcPort()
+        }, false );
+
+        //verifies it works now.
+        assertNotNull( entityManager
+                .get( entityManager.getAlias( applicationInfo.getId(), collectionName, username ).getUuid() ) );
 
     }
 

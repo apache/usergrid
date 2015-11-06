@@ -178,12 +178,7 @@ public class UniqueIndexCleanup extends ToolBase {
                         System.out.println( returnedRowKey );
                         List<HColumn<ByteBuffer, ByteBuffer>> cols = columnSlice.getColumns();
                         if ( cols.size() == 0 ) {
-                            System.out.println( "Found 0 uuid's associated with: " + uniqueValue );
-                            UUID timestampUuid = newTimeUUID();
-                            long timestamp = getTimestampInMicros( timestampUuid );
-                            Object key = key( applicationId, collectionName, uniqueValueKey, uniqueValue );
-                            addDeleteToMutator( m, ENTITY_UNIQUE, key, timestamp );
-                            m.execute();
+                            deleteRow( m, applicationId, collectionName, uniqueValueKey, uniqueValue );
                         }
                         else {
                             entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols );
@@ -197,13 +192,29 @@ public class UniqueIndexCleanup extends ToolBase {
     }
 
 
+    private void deleteRow( final Mutator<ByteBuffer> m, final UUID applicationId, final String collectionName,
+                            final String uniqueValueKey, final String uniqueValue ) throws Exception {
+        System.out.println( "Found 0 uuid's associated with: " + uniqueValue );
+        UUID timestampUuid = newTimeUUID();
+        long timestamp = getTimestampInMicros( timestampUuid );
+
+        Keyspace ko = cass.getApplicationKeyspace( applicationId );
+        Mutator<ByteBuffer> mutator = createMutator( ko, be );
+
+        Object key = key( applicationId, collectionName, uniqueValueKey, uniqueValue );
+        addDeleteToMutator( mutator, ENTITY_UNIQUE, key,timestamp );
+        mutator.execute();
+        return;
+    }
+
+
     private void entityUUIDDelete( final Mutator<ByteBuffer> m, final UUID applicationId, final String collectionName,
                                    final String uniqueValueKey, final String uniqueValue,
                                    final List<HColumn<ByteBuffer, ByteBuffer>> cols )
             throws Exception {
         Boolean cleanup = false;
         EntityManagerImpl em = ( EntityManagerImpl ) emf.getEntityManager( applicationId );
-
+        int numberOfColumnsDeleted = 0;
         for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
             UUID entityId = ue.fromByteBuffer( col.getName() );
 
@@ -217,10 +228,14 @@ public class UniqueIndexCleanup extends ToolBase {
             }
 
             if ( cleanup == true ) {
+                numberOfColumnsDeleted++;
                 deleteUniqueValue( m, applicationId, collectionName, uniqueValueKey, uniqueValue,
                         entityId );
                 cleanup = false;
             }
+        }
+        if(cols.size()==numberOfColumnsDeleted){
+            deleteRow( m,applicationId,collectionName,uniqueValueKey,uniqueValue );
         }
     }
 
@@ -270,10 +285,12 @@ public class UniqueIndexCleanup extends ToolBase {
         System.out.println( "Deleting column uuid: " + entityId.toString() );
         UUID timestampUuid = newTimeUUID();
         long timestamp = getTimestampInMicros( timestampUuid );
+        Keyspace ko = cass.getApplicationKeyspace( applicationId );
+        Mutator<ByteBuffer> mutator = createMutator( ko, be );
 
         Object key = key( applicationId, collectionName, uniqueValueKey, uniqueValue );
-        addDeleteToMutator( m, ENTITY_UNIQUE, key, entityId, timestamp );
-        m.execute();
+        addDeleteToMutator( mutator, ENTITY_UNIQUE, key, entityId, timestamp );
+        mutator.execute();
         return;
     }
 }
