@@ -405,6 +405,8 @@ public class UniqueIndexCleanupTest {
         }
 
         //should return null since we have duplicate alias. Will Cause index corruptions to be thrown.
+        //TODO: fix the below so that it fails everytime.
+        //50/50 chance to succeed or fail
         assertNull( entityManager
                 .get( entityManager.getAlias( applicationInfo.getId(), collectionName, username ).getUuid() ) );
 
@@ -421,13 +423,85 @@ public class UniqueIndexCleanupTest {
 
     }
 
-    private static int getFileCount( File exportDir, final String ext ) {
-        return exportDir.listFiles( new FileFilter() {
-            @Override
-            public boolean accept( File pathname ) {
-                return pathname.getAbsolutePath().endsWith( "." + ext );
-            }
-        } ).length;
+    @Test
+    public void testRepairOfOnlyOneOfTwoColumnsWhilePointingAtSingleValue() throws Exception{
+        String rand = RandomStringUtils.randomAlphanumeric( 10 );
+
+        String orgName = "org_" + rand;
+        String appName = "app_" +rand;
+        String username = "username_" + rand;
+        String adminUsername = "admin_"+rand;
+        String email = username+"@derp.com";
+        String password = username;
+
+        String collectionName = "users";
+
+
+        OrganizationOwnerInfo organizationOwnerInfo = setup.getMgmtSvc().createOwnerAndOrganization( orgName,adminUsername,adminUsername,email,password );
+
+        ApplicationInfo applicationInfo = setup.getMgmtSvc().createApplication( organizationOwnerInfo.getOrganization().getUuid(),appName );
+
+        EntityManager entityManager = setup.getEmf().getEntityManager( applicationInfo.getId() );
+
+        Map<String,Object> userInfo = new HashMap<String, Object>(  );
+        userInfo.put( "username",username );
+
+        //Entity entityToBeCorrupted = entityManager.create( collectionName,userInfo );
+
+        CassandraService cass = setup.getCassSvc();
+
+        Object key = CassandraPersistenceUtils.key( applicationInfo.getId(), collectionName, "username", username );
+
+        Keyspace ko = cass.getApplicationKeyspace( applicationInfo.getId() );
+        Mutator<ByteBuffer> m = createMutator( ko, be );
+
+        //create a new column
+        Entity validCoexistingEntity = entityManager.create( collectionName, userInfo );
+
+        UUID testEntityUUID = UUIDUtils.newTimeUUID();
+        //this below calll should make the column family AND the column name for an already existing column thus adding one legit and one dummy value.
+        addInsertToMutator( m,ENTITY_UNIQUE,key, testEntityUUID,0,createTimestamp());
+
+        m.execute();
+
+        //verify that there is no corresponding entity with the uuid or alias provided
+        //verify it returns null.
+        assertNull(entityManager.get( testEntityUUID ));
+
+        //the below works but not needed for this test.
+        //assertNull( entityManager.getAlias("user",username));
+
+        //verify that we cannot recreate the entity due to duplicate unique property exception
+        Entity entityToBeCorrupted = null;
+        try {
+            entityToBeCorrupted = entityManager.create( collectionName, userInfo );
+            fail();
+        }catch(DuplicateUniquePropertyExistsException dup){
+
+        }
+        catch(Exception e){
+            fail("shouldn't throw something else i think");
+        }
+
+        //should return null since we have duplicate alias. Will Cause index corruptions to be thrown.
+        assertNull( entityManager
+                .get( entityManager.getAlias( applicationInfo.getId(), collectionName, username ).getUuid() ) );
+
+
+        //run the cleanup
+        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
+        uniqueIndexCleanup.startTool( new String[] {
+                "-host", "localhost:"+ ServiceITSuite.cassandraResource.getRpcPort(),
+                "-app",applicationInfo.getId().toString(),
+                "-property","username",
+                "-value",username
+        }, false );
+
+        //verifies it works now.
+        assertNotNull( entityManager
+                .get( entityManager.getAlias( applicationInfo.getId(), collectionName, username ).getUuid() ) );
+
     }
+
 }
 
