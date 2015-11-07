@@ -315,6 +315,61 @@ public class EntityCollectionManagerIT {
 
 
     @Test
+    public void writeAndGetField2X() {
+
+
+        ApplicationScope collectionScope1 = new ApplicationScopeImpl( new SimpleId( "organization" ) );
+
+        Entity newEntity = new Entity( new SimpleId( "test" ) );
+        Field field = new StringField( "testField", "unique", true );
+        newEntity.setField( field );
+
+        EntityCollectionManager manager = factory.createCollectionManager( collectionScope1 );
+
+        Observable<Entity> observable = manager.write( newEntity );
+
+        Entity createReturned = observable.toBlocking().lastOrDefault( null );
+
+
+        assertNotNull( "Id was assigned", createReturned.getId() );
+        assertNotNull( "Version was assigned", createReturned.getVersion() );
+
+        Id id = manager.getIdField( newEntity.getId().getType(), field ).toBlocking().lastOrDefault( null );
+        assertNotNull( id );
+        assertEquals( newEntity.getId(), id );
+
+        Field fieldNull = new StringField( "testFieldNotThere", "uniquely", true );
+        id = manager.getIdField( newEntity.getId().getType(), fieldNull ).toBlocking().lastOrDefault( null );
+        assertNull( id );
+
+
+        //ensure we clean up
+
+        Field fieldSecond = new StringField( "testField", "unique2", true );
+        newEntity.setField( fieldSecond );
+
+        Observable<Entity> observableSecond = manager.write( newEntity );
+
+        Entity createReturnedSecond = observableSecond.toBlocking().lastOrDefault( null );
+
+
+        assertNotNull( "Id was assigned", createReturnedSecond.getId() );
+        assertNotNull( "Version was assigned", createReturnedSecond.getVersion() );
+
+        Id idFirst = manager.getIdField( newEntity.getId().getType(), field ).toBlocking().lastOrDefault( null );
+
+        assertNull(idFirst);
+
+        Id idSecond = manager.getIdField( newEntity.getId().getType(), fieldSecond ).toBlocking().lastOrDefault( null );
+
+        assertNotNull( idSecond );
+        assertEquals( newEntity.getId(), idSecond );
+
+
+    }
+
+
+    @Test
     public void updateVersioning() {
 
         // create entity
