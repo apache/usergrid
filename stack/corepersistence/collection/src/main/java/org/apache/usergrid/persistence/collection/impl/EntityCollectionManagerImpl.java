@@ -188,7 +188,9 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData, writeStart );
 
 
-        final Observable<Entity> write = observable.map( writeCommit );
+        final Observable<Entity> write = observable.map( writeCommit ).compose( uniqueCleanup )
+                                                                              //now extract the ioEvent we need to return
+                                                                              .map( ioEvent -> ioEvent.getEvent().getEntity().get() );
 
         return ObservableTimer.time( write, writeTimer );
     }
