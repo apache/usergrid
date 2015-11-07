@@ -89,6 +89,9 @@ public class UniqueCleanup
                 final Id entityId = mvccEntityCollectionIoEvent.getEvent().getId();
                 final ApplicationScope applicationScope = mvccEntityCollectionIoEvent.getEntityCollection();
                 final UUID entityVersion = mvccEntityCollectionIoEvent.getEvent().getVersion();
+                //if it's been deleted, we need to remove everything up to an inclusive of this version.
+                //if it has not, we want to delete everything < this version
+                final boolean isDeleted = !mvccEntityCollectionIoEvent.getEvent().getEntity().isPresent();
 
 
                 //TODO Refactor this logic into a a class that can be invoked from anywhere
@@ -108,7 +111,14 @@ public class UniqueCleanup
                             logger.debug( "Cleaning up version:{} in UniqueCleanup", entityVersion );
                             final UUID uniqueValueVersion = uniqueValue.getEntityVersion();
                             //TODO: should this be equals? That way we clean up the one marked as well
-                            return UUIDComparator.staticCompare( uniqueValueVersion, entityVersion ) > 0;
+
+
+                            if(isDeleted){
+                                return UUIDComparator.staticCompare( uniqueValueVersion, entityVersion ) > 0;
+                            }
+
+                            return UUIDComparator.staticCompare( uniqueValueVersion, entityVersion ) >= 0;
+
                         } )
 
                             //buffer our buffer size, then roll them all up in a single batch mutation

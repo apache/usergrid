@@ -485,6 +485,11 @@ public class AmazonAsyncEventService implements AsyncEventService {
      */
     public void queueIndexOperationMessage( final IndexOperationMessage indexOperationMessage ) {
 
+        // don't try to produce something with nothing
+        if(indexOperationMessage.isEmpty()){
+            return;
+        }
+
         final String jsonValue = ObjectJsonSerializer.INSTANCE.toString( indexOperationMessage );
 
         final UUID newMessageId = UUIDGenerator.newTimeUUID();
@@ -755,10 +760,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
             .map(result -> result.getQueueMessage().get())
             .collect(Collectors.toList());
 
-        //only Q it if it's empty
-        if(!combined.isEmpty()) {
             queueIndexOperationMessage( combined );
-        }
 
         return messagesToAck;
     }

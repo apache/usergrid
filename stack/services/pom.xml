@@ -474,7 +474,6 @@
               -->
           </exclusions>
       </dependency>
-
   </dependencies>
 
     <!--
