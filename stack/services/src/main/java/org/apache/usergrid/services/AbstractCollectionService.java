@@ -152,7 +152,9 @@ public class AbstractCollectionService extends AbstractService {
         Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
 
         if ( entity == null ) {
-            logger.info( "miss on entityType: {} with name: {}", getEntityType(), name );
+            if (logger.isDebugEnabled()) {
+                logger.debug("miss on entityType: {} with name: {}", getEntityType(), name);
+            }
             String msg = "Cannot find entity with name: "+name;
             throw new EntityNotFoundException( msg );
         }
