@@ -74,12 +74,7 @@ public class DefaultQueueManager implements QueueManager {
     @Override
     public  void sendMessages(List bodies) throws IOException {
         for(Object body : bodies){
-            String uuid = UUID.randomUUID().toString();
-            try {
-                queue.put(new QueueMessage(uuid, "handle_" + uuid, body, "put type here"));
-            }catch (InterruptedException ie){
-                throw new RuntimeException(ie);
-            }
+           sendMessage( ( Serializable )body);
         }
     }
 

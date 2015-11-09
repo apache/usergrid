@@ -30,7 +30,7 @@ import org.junit.Test;
 import java.util.UUID;
 
 /**
- * Classy class class.
+ * test windows phone.
  */
 public class WNSAdapterTest extends AbstractServiceIT{
     @Test
