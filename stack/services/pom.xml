@@ -435,6 +435,7 @@
       <version>2.7.0</version>
     </dependency>
       <!-- fork: https://github.com/apigee/java-wns/tree/1.2-USERGRID -->
+      <!-- forked to eliminate jackson dependency issues -->
       <dependency>
           <groupId>com.github.fernandospr</groupId>
           <artifactId>java-wns</artifactId>
