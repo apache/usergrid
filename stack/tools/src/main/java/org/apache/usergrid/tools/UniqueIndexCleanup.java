@@ -31,6 +31,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.thrift.TBaseHelper;
 
+import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.cassandra.EntityManagerImpl;
 import org.apache.usergrid.utils.StringUtils;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -138,9 +139,9 @@ public class UniqueIndexCleanup extends ToolBase {
         Keyspace ko = cass.getUsergridApplicationKeyspace();
         Mutator<ByteBuffer> m = createMutator( ko, be );
 
-        if (line.hasOption( APPLICATION_ARG ) || line.hasOption( COLLECTION_ARG ) ||
-        line.hasOption( ENTITY_UNIQUE_PROPERTY_NAME ) || line.hasOption( ENTITY_UNIQUE_PROPERTY_VALUE ) ) {
-            deleteInvalidValuesForUniqueProperty(m ,line );
+        if ( line.hasOption( APPLICATION_ARG ) || line.hasOption( COLLECTION_ARG ) ||
+                line.hasOption( ENTITY_UNIQUE_PROPERTY_NAME ) || line.hasOption( ENTITY_UNIQUE_PROPERTY_VALUE ) ) {
+            deleteInvalidValuesForUniqueProperty( m, line );
         }
         else {
 
@@ -166,25 +167,22 @@ public class UniqueIndexCleanup extends ToolBase {
                         Charset.defaultCharset() ).trim();
 
 
-
-
-
                 //defensive programming, don't have to have to parse the string if it doesn't contain users.
-                if(returnedRowKey.contains( "users" )) {
+                if ( returnedRowKey.contains( "users" ) ) {
 
                     String[] parsedRowKey = returnedRowKey.split( ":" );
 
                     //if the rowkey contains more than 4 parts then it may have some garbage appended to the front.
                     if ( parsedRowKey.length > 4 ) {
-                        parsedRowKey = garbageRowKeyParser(parsedRowKey);
+                        parsedRowKey = garbageRowKeyParser( parsedRowKey );
 
-                        if(parsedRowKey == null) {
+                        if ( parsedRowKey == null ) {
                             System.out.println( returnedRowKey + " is a invalid row key, and unparseable. Skipped..." );
                             continue;
                         }
                     }
                     //if the rowkey contains less than four parts then it is completely invalid
-                    else if ( parsedRowKey.length < 4){
+                    else if ( parsedRowKey.length < 4 ) {
                         System.out.println( returnedRowKey + " is a invalid row key and will be skipped" );
                         continue;
                     }
@@ -217,16 +215,17 @@ public class UniqueIndexCleanup extends ToolBase {
                 }
             }
         }
-        System.out.println("Completed repair.");
+        System.out.println( "Completed repair." );
 
         logger.info( "Completed audit of apps" );
     }
 
+
     //Returns a functioning rowkey if it can otherwise returns null
-    public String[] garbageRowKeyParser(String[] parsedRowKey){
+    public String[] garbageRowKeyParser( String[] parsedRowKey ) {
         String[] modifiedRowKey = parsedRowKey.clone();
-        while(modifiedRowKey!=null) {
-            if(modifiedRowKey.length < 4){
+        while ( modifiedRowKey != null ) {
+            if ( modifiedRowKey.length < 4 ) {
                 return null;
             }
 
@@ -242,15 +241,14 @@ public class UniqueIndexCleanup extends ToolBase {
             }
         }
         return modifiedRowKey;
-
     }
 
 
     private String[] getStrings( String[] modifiedRowKey, String recreatedRowKey ) {
-        for( int i = 1; i < modifiedRowKey.length; i++){
+        for ( int i = 1; i < modifiedRowKey.length; i++ ) {
 
-           recreatedRowKey = recreatedRowKey.concat( modifiedRowKey[i] );
-            if(i+1 != modifiedRowKey.length){
+            recreatedRowKey = recreatedRowKey.concat( modifiedRowKey[i] );
+            if ( i + 1 != modifiedRowKey.length ) {
                 recreatedRowKey = recreatedRowKey.concat( ":" );
             }
         }
@@ -269,7 +267,7 @@ public class UniqueIndexCleanup extends ToolBase {
         Mutator<ByteBuffer> mutator = createMutator( ko, be );
 
         Object key = key( applicationId, collectionName, uniqueValueKey, uniqueValue );
-        addDeleteToMutator( mutator, ENTITY_UNIQUE, key,timestamp );
+        addDeleteToMutator( mutator, ENTITY_UNIQUE, key, timestamp );
         mutator.execute();
         return;
     }
@@ -277,40 +275,82 @@ public class UniqueIndexCleanup extends ToolBase {
 
     private void entityUUIDDelete( final Mutator<ByteBuffer> m, final UUID applicationId, final String collectionName,
                                    final String uniqueValueKey, final String uniqueValue,
-                                   final List<HColumn<ByteBuffer, ByteBuffer>> cols )
-            throws Exception {
+                                   final List<HColumn<ByteBuffer, ByteBuffer>> cols ) throws Exception {
         Boolean cleanup = false;
         EntityManagerImpl em = ( EntityManagerImpl ) emf.getEntityManager( applicationId );
         int numberOfColumnsDeleted = 0;
+        //these columns all come from the same row key, which means they each belong to the same row key identifier
+        //thus mixing and matching them in the below if cases won't matter.
+        Entity[] entities = new Entity[cols.size()];
+
+        if(cols.size() < 2){
+            entities = new Entity[2];
+        }
+
+        int index = 0;
+
         for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
             UUID entityId = ue.fromByteBuffer( col.getName() );
 
             if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) ) {
-                if ( managementService.getAdminUserByUuid( entityId ) == null ) {
+
+                entities[index] = managementService.getAdminUserEntityByUuid( entityId );
+                if ( entities[index] == null ) {
                     cleanup = true;
                 }
+                else {
+                    index++;
+                }
             }
-            else if ( em.get( entityId ) == null ) {
-                cleanup = true;
+            else {
+                entities[index] = em.get( entityId );
+                if ( entities[index] == null ) {
+                    cleanup = true;
+                }
+                else {
+                    index++;
+                }
             }
 
             if ( cleanup == true ) {
                 numberOfColumnsDeleted++;
-                deleteUniqueValue( m, applicationId, collectionName, uniqueValueKey, uniqueValue,
-                        entityId );
+                deleteUniqueValue( m, applicationId, collectionName, uniqueValueKey, uniqueValue, entityId );
                 cleanup = false;
             }
         }
+
+        //this means that the same unique rowkey has two values associated with it
+        if(entities[0]!=null && entities[1]!=null){
+            Entity mostRecentEntity = entities[0];
+            for(Entity entity: entities){
+                if(mostRecentEntity.getModified() > entity.getModified()){
+                    em.deleteEntity( entity.getUuid() );
+                    System.out.println("Deleting "+entity.getUuid().toString()+" because it shares older unique value with: "+uniqueValue);
+                }
+                else if (mostRecentEntity.getModified() < entity.getModified()){
+                    System.out.println("Deleting "+mostRecentEntity.getUuid().toString()+" because it shares older unique value with: "+uniqueValue);
+                    em.deleteEntity( mostRecentEntity.getUuid() );
+                    mostRecentEntity = entity;
+                }
+                else if (mostRecentEntity.getModified() == entity.getModified() && !mostRecentEntity.getUuid().equals( entity.getUuid() )){
+                    System.out.println("Entities with unique value: "+uniqueValue+" has two or more entities with the same modified time."
+                            + "Please manually resolve by query or changing names. ");
+                }
+            }
+        }
+
+
+
         //a safer way to do this would be to try to do another get and verify there is nothing left in the column
         //instead of just doing a simple check since the column check happens anywhere between 2 to 1000 times.
-        if(cols.size()==numberOfColumnsDeleted){
-            deleteRow( m,applicationId,collectionName,uniqueValueKey,uniqueValue );
+        if ( cols.size() == numberOfColumnsDeleted ) {
+            deleteRow( m, applicationId, collectionName, uniqueValueKey, uniqueValue );
         }
     }
 
 
     //really only deletes ones that aren't existant for a specific value
-    private void deleteInvalidValuesForUniqueProperty(Mutator<ByteBuffer> m,CommandLine line) throws Exception{
+    private void deleteInvalidValuesForUniqueProperty( Mutator<ByteBuffer> m, CommandLine line ) throws Exception {
         UUID applicationId = UUID.fromString( line.getOptionValue( APPLICATION_ARG ) );
         String collectionName = line.getOptionValue( COLLECTION_ARG );
         String uniqueValueKey = line.getOptionValue( ENTITY_UNIQUE_PROPERTY_NAME );
@@ -324,14 +364,15 @@ public class UniqueIndexCleanup extends ToolBase {
                         false );
 
 
-
         if ( cols.size() == 0 ) {
-            System.out.println("Zero entities were found for this unique value. Its possible it doesn't exist or you typed in in wrong :p.");
+            System.out.println(
+                    "Zero entities were found for this unique value. Its possible it doesn't exist or you typed in in"
+                            + " wrong :p." );
         }
 
         entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols );
-
     }
+
 
     private String uuidGarbageParser( final String garbageString ) {
         int index = 1;
@@ -347,6 +388,7 @@ public class UniqueIndexCleanup extends ToolBase {
         }
         return stringToBeTruncated;
     }
+
 
     private String uuidStringVerifier( final String garbageString ) {
         int index = 1;
