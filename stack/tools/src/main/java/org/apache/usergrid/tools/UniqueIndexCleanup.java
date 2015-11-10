@@ -217,6 +217,7 @@ public class UniqueIndexCleanup extends ToolBase {
                 }
             }
         }
+        System.out.println("Completed repair.");
 
         logger.info( "Completed audit of apps" );
     }
