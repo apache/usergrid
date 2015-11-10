@@ -669,10 +669,12 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         List<CandidateResult> candidates = new ArrayList<>( hits.length );
 
+
+
         for ( SearchHit hit : hits ) {
+            CandidateResult candidateResult;
 
-            final CandidateResult candidateResult = parseIndexDocId( hit.getId() );
-
+            candidateResult =  parseIndexDocId( hit, query.isGeoQuery() );
             candidates.add( candidateResult );
         }
 
@@ -696,7 +698,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         for ( SearchHit hit : hits ) {
 
-            final CandidateResult candidateResult = parseIndexDocId( hit.getId() );
+            final CandidateResult candidateResult = parseIndexDocId( hit );
 
             // if comparing against the latestVersion, make sure we only add the candidateResult if it's
             // older than or equal to the latest marked version
