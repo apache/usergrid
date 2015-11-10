@@ -171,7 +171,7 @@ public class GeoIT extends AbstractCoreIT {
      */
     @Test
     public void validateDistanceQueryExists() throws Exception {
-        LOG.info("GeoIT.testMovingTarget");
+        LOG.info("GeoIT.validateDistanceQueryExists");
         //Get the EntityManager instance
         EntityManager em = app.getEntityManager();
         assertNotNull(em);
@@ -191,6 +191,7 @@ public class GeoIT extends AbstractCoreIT {
 
         final double lat = 37.776753;
         final double lon = -122.407846;
+
         //2. Query from a point near the entity's location
         Query query = Query.fromQL("select * where location within 100 of "
             + lat + "," + lon);
@@ -503,11 +504,20 @@ public class GeoIT extends AbstractCoreIT {
         int count = 0;
         Results results;
 
+        double previousDistance = 0d;
         do {
             results = em.searchCollection(em.getApplicationRef(), "stores", query);
 
             for (Entity entity : results.getEntities()) {
                 assertEquals(String.valueOf(count), entity.getName());
+
+                Object distanceObject = entity.getMetadata("distance");
+                assertNotNull( distanceObject );
+                assertTrue( distanceObject instanceof Double );
+                double distance = (Double)distanceObject;
+                assertTrue( distance >= previousDistance );
+                previousDistance = distance;
+
                 count++;
             }
 
@@ -550,12 +560,21 @@ public class GeoIT extends AbstractCoreIT {
         int count = 0;
         Results results;
 
+
+        double previousDistance = 0d;
         do {
             results = em.searchCollection(em.getApplicationRef(), "stores", query);
 
             for (Entity entity : results.getEntities()) {
                 //TODO:can we assert order
                 final int expected = numEntities - count - 1;
+
+                Object distanceObject = entity.getMetadata("distance");
+                assertNotNull( distanceObject );
+                assertTrue( distanceObject instanceof Double );
+                double distance = (Double)distanceObject;
+                assertTrue( distance >= previousDistance );
+                previousDistance = distance;
 
                 assertEquals(String.valueOf(expected), entity.getName());
                 count++;
@@ -616,8 +635,18 @@ public class GeoIT extends AbstractCoreIT {
         do {
             Results results = em.searchCollection(em.getApplicationRef(), "stores", query);
 
+            double previousDistance = 0d;
+
             for (Entity entity : results.getEntities()) {
                 assertEquals(String.valueOf(count), entity.getName());
+
+                Object distanceObject = entity.getMetadata("distance");
+                assertNotNull( distanceObject );
+                assertTrue( distanceObject instanceof Double );
+                double distance = (Double)distanceObject;
+                assertTrue( distance >= previousDistance );
+                previousDistance = distance;
+
                 count++;
             }
         }
