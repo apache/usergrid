@@ -109,6 +109,7 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
 
 import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.locking.LockHelper.getUniqueUpdateLock;
@@ -156,6 +157,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.toStorableBinaryValue;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.le;
 import static org.apache.usergrid.persistence.cassandra.Serializers.se;
@@ -538,6 +540,8 @@ public class EntityManagerImpl implements EntityManager {
 
         Object key = createUniqueIndexKey( ownerEntityId, collectionNameInternal, propertyName, propertyValue );
 
+        //need to fix by asking todd as to why 2.
+        //why is this set to 2?
         List<HColumn<ByteBuffer, ByteBuffer>> cols =
                 cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, null, null, 2,
                         false );
@@ -549,11 +553,39 @@ public class EntityManagerImpl implements EntityManager {
         }
 
         //shouldn't happen, but it's an error case
+
         if ( cols.size() > 1 ) {
             logger.error( "INDEX CORRUPTION: More than 1 unique value exists for entities in ownerId {} of type {} on "
                     + "property {} with value {}",
                     new Object[] { ownerEntityId, collectionNameInternal, propertyName, propertyValue } );
+
+            //retreive up to 100 columns
+            List<HColumn<ByteBuffer, ByteBuffer>> indexingColumns = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, null, null, 100,
+                    false );
+
+
+
+            //go through it column
+            for ( HColumn<ByteBuffer, ByteBuffer> col : indexingColumns ) {
+                UUID indexCorruptionUuid = ue.fromByteBuffer( col.getName());
+                if (get( indexCorruptionUuid ) == null ) {
+                    UUID timestampUuid = newTimeUUID();
+                    long timestamp = getTimestampInMicros( timestampUuid );
+                    Keyspace ko = cass.getApplicationKeyspace( ownerEntityId );
+                    Mutator<ByteBuffer> mutator = createMutator( ko, be );
+
+                    addDeleteToMutator( mutator, ENTITY_UNIQUE, key, indexCorruptionUuid, timestamp );
+                    mutator.execute();
+                    cols.remove( col );
+                }
+                else{
+
+                }
+            }
         }
+
+        cols = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, null, null, 2,
+                false );
 
         /**
          * Doing this in a loop sucks, but we need to account for possibly having more than 1 entry in the index due
