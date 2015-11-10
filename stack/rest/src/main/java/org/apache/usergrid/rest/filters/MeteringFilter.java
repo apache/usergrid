@@ -36,6 +36,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.ext.Provider;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,10 +47,9 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 
-// TODO: Metering for Jersey 2
-@Resource
-@PreMatching
-@Component
+// TODO: Metering for Jersey 2 (https://issues.apache.org/jira/browse/USERGRID-1103)
+
+@Provider
 public class MeteringFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
     @Override
