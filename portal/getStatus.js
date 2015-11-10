@@ -25,7 +25,6 @@ var getStatus = function(){
     http.onload= function(){
         if (http.readyState==4 || http.readyState=="complete")
         {
-            console.log('response: \n'+http.responseText);
             document.getElementById("statusResponse")
                 .innerHTML=http.responseText;
         }
