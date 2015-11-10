@@ -256,7 +256,7 @@ public class IndexingUtils {
 
         Id entityId = new SimpleId(UUID.fromString(entityUUID), entityType);
 
-        return distance>0
+        return distance >= 0
             ? new GeoCandidateResult(entityId, UUID.fromString(versionUUID), documentId, distance)
             : new CandidateResult(entityId, UUID.fromString(versionUUID), documentId);
     }
