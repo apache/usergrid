@@ -325,8 +325,10 @@ public class UniqueIndexCleanup extends ToolBase {
             for(Entity entity: entities){
                 if(mostRecentEntity.getModified() > entity.getModified()){
                     em.deleteEntity( entity.getUuid() );
+                    System.out.println("Deleting "+entity.getUuid().toString()+" because it shares older unique value with: "+uniqueValue);
                 }
                 else if (mostRecentEntity.getModified() < entity.getModified()){
+                    System.out.println("Deleting "+mostRecentEntity.getUuid().toString()+" because it shares older unique value with: "+uniqueValue);
                     em.deleteEntity( mostRecentEntity.getUuid() );
                     mostRecentEntity = entity;
                 }
