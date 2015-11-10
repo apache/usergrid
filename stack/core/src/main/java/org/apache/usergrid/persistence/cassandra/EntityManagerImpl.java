@@ -559,27 +559,45 @@ public class EntityManagerImpl implements EntityManager {
                     + "property {} with value {}",
                     new Object[] { ownerEntityId, collectionNameInternal, propertyName, propertyValue } );
 
-            //retreive up to 100 columns
+            //retrieve up to 100 columns
             List<HColumn<ByteBuffer, ByteBuffer>> indexingColumns = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, null, null, 100,
                     false );
 
 
+            Entity[] entities = new Entity[cols.size()];
+            int index = 0;
 
-            //go through it column
             for ( HColumn<ByteBuffer, ByteBuffer> col : indexingColumns ) {
                 UUID indexCorruptionUuid = ue.fromByteBuffer( col.getName());
-                if (get( indexCorruptionUuid ) == null ) {
-                    UUID timestampUuid = newTimeUUID();
-                    long timestamp = getTimestampInMicros( timestampUuid );
-                    Keyspace ko = cass.getApplicationKeyspace( ownerEntityId );
-                    Mutator<ByteBuffer> mutator = createMutator( ko, be );
 
-                    addDeleteToMutator( mutator, ENTITY_UNIQUE, key, indexCorruptionUuid, timestamp );
-                    mutator.execute();
+                entities[index] = get(indexCorruptionUuid);
+
+                if (entities[index] == null ) {
+                    deleteUniqueColumn( ownerEntityId, key, indexCorruptionUuid );
                     cols.remove( col );
                 }
                 else{
-
+                    index++;
+                }
+            }
+            //this means that the same unique rowkey has two values associated with it
+            if(entities[0]!=null && entities[1]!=null){
+                Entity mostRecentEntity = entities[0];
+                for(Entity entity: entities){
+                    if(mostRecentEntity.getModified() > entity.getModified()){
+                        deleteEntity( entity.getUuid() );
+                        logger.info( "Deleting " + entity.getUuid().toString()
+                                + " because it shares older unique value with: " + propertyValue );
+                    }
+                    else if (mostRecentEntity.getModified() < entity.getModified()){
+                        logger.info("Deleting "+mostRecentEntity.getUuid().toString()+" because it shares older unique value with: "+propertyValue);
+                        deleteEntity( mostRecentEntity.getUuid() );
+                        mostRecentEntity = entity;
+                    }
+                    else if (mostRecentEntity.getModified() == entity.getModified() && !mostRecentEntity.getUuid().equals( entity.getUuid() )){
+                        logger.info("Entities with unique value: "+propertyValue+" has two or more entities with the same modified time."
+                                + "Please manually resolve by query or changing names. ");
+                    }
                 }
             }
         }
@@ -600,6 +618,18 @@ public class EntityManagerImpl implements EntityManager {
         }
 
         return results;
+    }
+
+
+    private void deleteUniqueColumn( final UUID ownerEntityId, final Object key, final UUID indexCorruptionUuid )
+            throws Exception {
+        UUID timestampUuid = newTimeUUID();
+        long timestamp = getTimestampInMicros( timestampUuid );
+        Keyspace ko = cass.getApplicationKeyspace( ownerEntityId );
+        Mutator<ByteBuffer> mutator = createMutator( ko, be );
+
+        addDeleteToMutator( mutator, ENTITY_UNIQUE, key, indexCorruptionUuid, timestamp );
+        mutator.execute();
     }
 
 
