@@ -547,6 +547,18 @@ public class EntityManagerImpl implements EntityManager {
                         false );
 
 
+        //check to see if the single value is valid. If it is not valid then it will be zero and go through
+        //the code below.
+        if(cols.size() == 1){
+            logger.info("Verifying that column is still valid, if not will be removed");
+            UUID indexCorruptionUuid = ue.fromByteBuffer( cols.get( 0 ).getName());
+
+            if (get(indexCorruptionUuid) == null ) {
+                deleteUniqueColumn( ownerEntityId, key, indexCorruptionUuid );
+                cols.remove( 0 );
+            }
+        }
+
         //No columns at all, it's unique
         if ( cols.size() == 0 ) {
             return Collections.emptySet();
