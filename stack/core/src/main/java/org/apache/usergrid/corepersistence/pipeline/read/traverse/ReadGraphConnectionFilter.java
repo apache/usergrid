@@ -22,6 +22,7 @@ package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
+import org.apache.usergrid.corepersistence.rx.impl.AsyncRepair;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 
@@ -44,7 +45,7 @@ public class ReadGraphConnectionFilter extends AbstractReadGraphFilter {
      */
     @Inject
     public ReadGraphConnectionFilter( final GraphManagerFactory graphManagerFactory,
-                                      final RxTaskScheduler rxTaskScheduler,
+                                      @AsyncRepair final RxTaskScheduler rxTaskScheduler,
                                       final EventBuilder eventBuilder,
                                       final AsyncEventService asyncEventService,
                                       @Assisted final String connectionName ) {

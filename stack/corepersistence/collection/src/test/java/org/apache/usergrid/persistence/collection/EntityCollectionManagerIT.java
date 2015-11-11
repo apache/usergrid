@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.collection;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -58,6 +59,7 @@ import rx.Observable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -315,18 +317,17 @@ public class EntityCollectionManagerIT {
 
 
     @Test
-    public void writeAndGetField2X() {
-
-
+    public void writeAndGetField2X() throws InterruptedException {
         ApplicationScope collectionScope1 = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
-        Entity newEntity = new Entity( new SimpleId( "test" ) );
-        Field field = new StringField( "testField", "unique", true );
-        newEntity.setField( field );
+        final Id entityId = new SimpleId( "test" );
+        Entity firstInstance = new Entity( entityId  );
+        Field firstField = new StringField( "testField", "unique", true );
+        firstInstance.setField( firstField );
 
         EntityCollectionManager manager = factory.createCollectionManager( collectionScope1 );
 
-        Observable<Entity> observable = manager.write( newEntity );
+        Observable<Entity> observable = manager.write( firstInstance );
 
         Entity createReturned = observable.toBlocking().lastOrDefault( null );
 
@@ -334,21 +335,22 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Id was assigned", createReturned.getId() );
         assertNotNull( "Version was assigned", createReturned.getVersion() );
 
-        Id id = manager.getIdField( newEntity.getId().getType(), field ).toBlocking().lastOrDefault( null );
-        assertNotNull( id );
-        assertEquals( newEntity.getId(), id );
+        final Id existingId = manager.getIdField( firstInstance.getId().getType(), firstField ).toBlocking().lastOrDefault( null );
+        assertNotNull( existingId );
+        assertEquals( firstInstance.getId(), existingId );
 
         Field fieldNull = new StringField( "testFieldNotThere", "uniquely", true );
-        id = manager.getIdField( newEntity.getId().getType(), fieldNull ).toBlocking().lastOrDefault( null );
-        assertNull( id );
+        final Id noId = manager.getIdField( firstInstance.getId().getType(), fieldNull ).toBlocking().lastOrDefault( null );
+        assertNull( noId );
 
 
         //ensure we clean up
 
-        Field fieldSecond = new StringField( "testField", "unique2", true );
-        newEntity.setField( fieldSecond );
+        Entity secondInstance = new Entity( entityId  );
+        Field secondField = new StringField( firstField.getName(), "unique2", true );
+        secondInstance.setField( secondField );
 
-        Observable<Entity> observableSecond = manager.write( newEntity );
+        Observable<Entity> observableSecond = manager.write( secondInstance );
 
         Entity createReturnedSecond = observableSecond.toBlocking().lastOrDefault( null );
 
@@ -356,16 +358,27 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Id was assigned", createReturnedSecond.getId() );
         assertNotNull( "Version was assigned", createReturnedSecond.getVersion() );
 
-        Id idFirst = manager.getIdField( newEntity.getId().getType(), field ).toBlocking().lastOrDefault( null );
+        assertNotEquals( "Versions should not be equal", createReturned.getVersion(), createReturnedSecond.getVersion() );
 
+        //sanity check, get the entity to ensure it's the right version
+
+        final Entity loadedVersion = manager.load( entityId ).toBlocking().last();
+
+        assertEquals(entityId, loadedVersion.getId());
+        assertEquals(createReturnedSecond.getVersion(), loadedVersion.getVersion());
+
+        //give clean time to run.  need to finish the todo below
+        Thread.sleep( 2000 );
+
+        //TODO, we need to implement verify and repair on this
+        final Id idFirst = manager.getIdField( firstInstance.getId().getType(), firstField ).toBlocking().lastOrDefault( null );
         assertNull(idFirst);
 
-        Id idSecond = manager.getIdField( newEntity.getId().getType(), fieldSecond ).toBlocking().lastOrDefault( null );
+
+        final Id idSecond = manager.getIdField( secondInstance.getId().getType(), secondField ).toBlocking().lastOrDefault( null );
 
         assertNotNull( idSecond );
-        assertEquals( newEntity.getId(), idSecond );
-
-
+        assertEquals( secondInstance.getId(), idSecond );
     }
 
 

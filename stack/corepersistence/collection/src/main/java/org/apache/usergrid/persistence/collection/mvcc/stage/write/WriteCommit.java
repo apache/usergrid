@@ -94,7 +94,9 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         final ApplicationScope applicationScope = ioEvent.getEntityCollection();
 
         //set the version into the entity
-        EntityUtils.setVersion( mvccEntity.getEntity().get(), version );
+        final Entity entity = mvccEntity.getEntity().get();
+
+        EntityUtils.setVersion( entity, version );
 
         MvccValidationUtils.verifyMvccEntityWithEntity( ioEvent.getEvent() );
         ValidationUtils.verifyTimeUuid( version ,"version" );
