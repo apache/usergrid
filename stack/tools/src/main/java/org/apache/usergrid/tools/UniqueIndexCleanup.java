@@ -208,7 +208,7 @@ public class UniqueIndexCleanup extends ToolBase {
                                 deleteRow( m, applicationId, collectionName, uniqueValueKey, uniqueValue );
                             }
                             else {
-                                entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols );
+                                entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols,returnedRowKey );
                             }
                         }
                     }
@@ -275,7 +275,7 @@ public class UniqueIndexCleanup extends ToolBase {
 
     private void entityUUIDDelete( final Mutator<ByteBuffer> m, final UUID applicationId, final String collectionName,
                                    final String uniqueValueKey, final String uniqueValue,
-                                   final List<HColumn<ByteBuffer, ByteBuffer>> cols ) throws Exception {
+                                   final List<HColumn<ByteBuffer, ByteBuffer>> cols, String rowKey ) throws Exception {
         Boolean cleanup = false;
         EntityManagerImpl em = ( EntityManagerImpl ) emf.getEntityManager( applicationId );
         int numberOfColumnsDeleted = 0;
@@ -320,16 +320,43 @@ public class UniqueIndexCleanup extends ToolBase {
         }
 
         //this means that the same unique rowkey has two values associated with it
-        if(entities[0]!=null && entities[1]!=null){
+        if(index>2){
             Entity mostRecentEntity = entities[0];
             for(Entity entity: entities){
+                if(mostRecentEntity == null){
+                    System.out.println( "Most Recent entity is null and is being replaced by regular entity" );
+                    mostRecentEntity = entity;
+                }
+                if(entity == null){
+                    System.out.println("Entity we're cycling through is null and we need more new entities");
+                    continue;
+                }
+
+                mostRecentEntity = verifyModifiedTimestamp( mostRecentEntity );
+                entity = verifyModifiedTimestamp( entity );
+
+
                 if(mostRecentEntity.getModified() > entity.getModified()){
-                    em.deleteEntity( entity.getUuid() );
-                    System.out.println("Deleting "+entity.getUuid().toString()+" because it shares older unique value with: "+uniqueValue);
+                    System.out.println("Deleting "+entity.getUuid().toString()+" because it is the older column in the following rowkey: "+rowKey);
+                    System.out.flush();
+                    //                    try {
+                        em.deleteEntity( entity.getUuid() );
+//                    }catch(Exception e){
+//                        System.out.println("Found error when trying to delete the following uuid: "+entity.getUuid()+" Please repair manually or remote debug.");
+//                        System.out.println(e.getMessage());
+//                        break;
+//                    }
                 }
                 else if (mostRecentEntity.getModified() < entity.getModified()){
-                    System.out.println("Deleting "+mostRecentEntity.getUuid().toString()+" because it shares older unique value with: "+uniqueValue);
-                    em.deleteEntity( mostRecentEntity.getUuid() );
+                    System.out.println("Deleting "+mostRecentEntity.getUuid().toString()+" because it is the older column in the following rowkey: "+rowKey);
+                    System.out.flush();
+                    //try {
+                        em.deleteEntity( mostRecentEntity.getUuid() );
+//                    }catch(Exception e){
+//                        System.out.println("Found error when trying to delete the following uuid: "+mostRecentEntity.getUuid()+" Please repair manually or remote debug.");
+//                        System.out.println(e.getMessage());
+//                        break;
+//                    }
                     mostRecentEntity = entity;
                 }
                 else if (mostRecentEntity.getModified() == entity.getModified() && !mostRecentEntity.getUuid().equals( entity.getUuid() )){
@@ -349,6 +376,26 @@ public class UniqueIndexCleanup extends ToolBase {
     }
 
 
+    private Entity verifyModifiedTimestamp( final Entity unverifiedEntity ) {
+        Entity entity = unverifiedEntity;
+        if(entity !=null && entity.getModified()==null) {
+            if(entity.getCreated()!=null){
+                System.out.println("Setting modified timestamp to created for comparison purposes");
+                entity.setModified( entity.getCreated() );
+                return entity;
+            }
+            else{
+                System.out.println("Please delete or remake: "+entity.getUuid());
+                System.out.println("Setting timestamps to 1");
+                entity.setCreated( 1L );
+                entity.setModified( 1L );
+                return entity;
+            }
+        }
+        return entity;
+    }
+
+
     //really only deletes ones that aren't existant for a specific value
     private void deleteInvalidValuesForUniqueProperty( Mutator<ByteBuffer> m, CommandLine line ) throws Exception {
         UUID applicationId = UUID.fromString( line.getOptionValue( APPLICATION_ARG ) );
@@ -365,12 +412,13 @@ public class UniqueIndexCleanup extends ToolBase {
 
 
         if ( cols.size() == 0 ) {
-            System.out.println(
-                    "Zero entities were found for this unique value. Its possible it doesn't exist or you typed in in"
-                            + " wrong :p." );
+            System.out.println("Zero columns were found for "+ key.toString()+ ". Will delete rowkey.");
+//            System.out.println(
+//                    "Zero entities were found for this unique value. Its possible it doesn't exist or you typed in in"
+//                            + " wrong :p." );
         }
 
-        entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols );
+        entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols,key.toString() );
     }
 
 
