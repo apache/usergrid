@@ -339,24 +339,13 @@ public class UniqueIndexCleanup extends ToolBase {
                 if(mostRecentEntity.getModified() > entity.getModified()){
                     System.out.println("Deleting "+entity.getUuid().toString()+" because it is the older column in the following rowkey: "+rowKey);
                     System.out.flush();
-                    //                    try {
-                        em.deleteEntity( entity.getUuid() );
-//                    }catch(Exception e){
-//                        System.out.println("Found error when trying to delete the following uuid: "+entity.getUuid()+" Please repair manually or remote debug.");
-//                        System.out.println(e.getMessage());
-//                        break;
-//                    }
+                    em.deleteEntity( entity.getUuid() );
+
                 }
                 else if (mostRecentEntity.getModified() < entity.getModified()){
                     System.out.println("Deleting "+mostRecentEntity.getUuid().toString()+" because it is the older column in the following rowkey: "+rowKey);
                     System.out.flush();
-                    //try {
-                        em.deleteEntity( mostRecentEntity.getUuid() );
-//                    }catch(Exception e){
-//                        System.out.println("Found error when trying to delete the following uuid: "+mostRecentEntity.getUuid()+" Please repair manually or remote debug.");
-//                        System.out.println(e.getMessage());
-//                        break;
-//                    }
+                    em.deleteEntity( mostRecentEntity.getUuid() );
                     mostRecentEntity = entity;
                 }
                 else if (mostRecentEntity.getModified() == entity.getModified() && !mostRecentEntity.getUuid().equals( entity.getUuid() )){
@@ -366,8 +355,7 @@ public class UniqueIndexCleanup extends ToolBase {
             }
         }
 
-
-
+        
         //a safer way to do this would be to try to do another get and verify there is nothing left in the column
         //instead of just doing a simple check since the column check happens anywhere between 2 to 1000 times.
         if ( cols.size() == numberOfColumnsDeleted ) {
@@ -412,10 +400,7 @@ public class UniqueIndexCleanup extends ToolBase {
 
 
         if ( cols.size() == 0 ) {
-            System.out.println("Zero columns were found for "+ key.toString()+ ". Will delete rowkey.");
-//            System.out.println(
-//                    "Zero entities were found for this unique value. Its possible it doesn't exist or you typed in in"
-//                            + " wrong :p." );
+            System.out.println( "Zero columns were found for " + key.toString() + ". Will delete rowkey." );
         }
 
         entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols,key.toString() );
