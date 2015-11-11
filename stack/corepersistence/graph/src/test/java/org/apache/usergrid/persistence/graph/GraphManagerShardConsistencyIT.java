@@ -358,6 +358,11 @@ public class GraphManagerShardConsistencyIT {
             Thread.sleep( 2000 );
         }
 
+
+        //now continue reading everything for 30 seconds
+
+        Thread.sleep(30000);
+
         executor.shutdownNow();
     }
 

@@ -37,7 +37,6 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEd
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupCompaction;
@@ -63,7 +62,6 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     private final EdgeShardSerialization edgeShardSerialization;
     private final EdgeColumnFamilies edgeColumnFamilies;
     private final ShardedEdgeSerialization shardedEdgeSerialization;
-    private final NodeShardApproximation nodeShardApproximation;
     private final TimeService timeService;
     private final GraphFig graphFig;
     private final ShardGroupCompaction shardGroupCompaction;
@@ -72,13 +70,11 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     @Inject
     public NodeShardAllocationImpl( final EdgeShardSerialization edgeShardSerialization,
                                     final EdgeColumnFamilies edgeColumnFamilies,
-                                    final ShardedEdgeSerialization shardedEdgeSerialization,
-                                    final NodeShardApproximation nodeShardApproximation, final TimeService timeService,
+                                    final ShardedEdgeSerialization shardedEdgeSerialization, final TimeService timeService,
                                     final GraphFig graphFig, final ShardGroupCompaction shardGroupCompaction ) {
         this.edgeShardSerialization = edgeShardSerialization;
         this.edgeColumnFamilies = edgeColumnFamilies;
         this.shardedEdgeSerialization = shardedEdgeSerialization;
-        this.nodeShardApproximation = nodeShardApproximation;
         this.timeService = timeService;
         this.graphFig = graphFig;
         this.shardGroupCompaction = shardGroupCompaction;
@@ -166,18 +162,11 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * Check out if we have a count for our shard allocation
          */
 
-        final long count = nodeShardApproximation.getCount( scope, shard, directedEdgeMeta );
+
 
         final long shardSize = graphFig.getShardSize();
 
 
-        if ( count < shardSize ) {
-            return false;
-        }
-
-        if ( LOG.isDebugEnabled() ) {
-            LOG.debug( "Count of {} has exceeded shard config of {} will begin compacting", count, shardSize );
-        }
 
         /**
          * We want to allocate a new shard as close to the max value as possible.  This way if we're filling up a
@@ -234,10 +223,10 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
         /**
-         * Sanity check in case our counters become severely out of sync with our edge state in cassandra.
+         * Sanity check in case we audit before we have a full shard
          */
         if ( marked == null ) {
-            LOG.warn( "Incorrect shard count for shard group {}", shardEntryGroup );
+            LOG.trace( "Shard {} in shard group {} not full, not splitting", shardEntryGroup );
             return false;
         }
 
