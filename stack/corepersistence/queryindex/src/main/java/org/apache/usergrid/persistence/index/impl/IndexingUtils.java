@@ -261,6 +261,23 @@ public class IndexingUtils {
             : new CandidateResult(entityId, UUID.fromString(versionUUID), documentId);
     }
 
+    /**
+     * Parse the document id into a candidate result
+     */
+    public static UUID parseAppIdFromIndexDocId( final String documentId) {
+
+        final Matcher matcher = DOCUMENT_PATTERN.matcher(documentId);
+
+        Preconditions.checkArgument(matcher.matches(), "Pattern for document id did not match expected format");
+        Preconditions.checkArgument(matcher.groupCount() == 9, "9 groups expected in the pattern");
+
+        //Other fields can be parsed using groups.  The groups start at value 1, group 0 is the entire match
+        final String appUUID = matcher.group(1);
+
+        return UUID.fromString(appUUID);
+
+    }
+
 
     /**
      * Get the entity type
@@ -278,5 +295,9 @@ public class IndexingUtils {
         sb.append( FIELD_SEPERATOR );
         sb.append( ENTITY_TYPE_NAME).append("(" ).append( type ).append( ")" );
         return sb.toString();
+    }
+
+    public static UUID getApplicationIdFromIndexDocId(String documentId) {
+        return parseAppIdFromIndexDocId(documentId);
     }
 }

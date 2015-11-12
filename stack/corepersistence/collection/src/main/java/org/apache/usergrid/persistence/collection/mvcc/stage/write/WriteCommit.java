@@ -56,7 +56,7 @@ import rx.functions.Func1;
  * data store before returning
  */
 @Singleton
-public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity> {
+public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, CollectionIoEvent<MvccEntity>> {
 
     private static final Logger LOG = LoggerFactory.getLogger( WriteCommit.class );
 
@@ -84,7 +84,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
 
 
     @Override
-    public Entity call( final CollectionIoEvent<MvccEntity> ioEvent ) {
+    public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<MvccEntity> ioEvent ) {
 
         final MvccEntity mvccEntity = ioEvent.getEvent();
         MvccValidationUtils.verifyMvccEntityWithEntity( mvccEntity );
@@ -94,7 +94,9 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         final ApplicationScope applicationScope = ioEvent.getEntityCollection();
 
         //set the version into the entity
-        EntityUtils.setVersion( mvccEntity.getEntity().get(), version );
+        final Entity entity = mvccEntity.getEntity().get();
+
+        EntityUtils.setVersion( entity, version );
 
         MvccValidationUtils.verifyMvccEntityWithEntity( ioEvent.getEvent() );
         ValidationUtils.verifyTimeUuid( version ,"version" );
@@ -134,6 +136,6 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Entity>
         }
 
 
-        return mvccEntity.getEntity().get();
+        return ioEvent;
     }
 }
