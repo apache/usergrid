@@ -488,7 +488,7 @@ public abstract class AbstractService implements Service {
                     throw new RuntimeException(e);
                 }
             }).subscribeOn(rxScheduler);
-        }, rxSchedulerFig.getImportThreads());
+        }, rxSchedulerFig.getImportConcurrency());
 
         ObservableTimer.time(tuplesObservable, entitiesParallelGetTimer).toBlocking().lastOrDefault(null);
     }
