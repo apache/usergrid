@@ -275,7 +275,6 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     private boolean isNewNode( DirectedEdgeMeta directedEdgeMeta ) {
 
 
-        //TODO: TN this is broken....
         //The timeout is in milliseconds.  Time for a time uuid is 1/10000 of a milli, so we need to get the units
         // correct
         final long timeoutDelta = graphFig.getShardCacheTimeout();

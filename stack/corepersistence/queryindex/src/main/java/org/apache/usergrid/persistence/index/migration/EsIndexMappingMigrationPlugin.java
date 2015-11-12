@@ -94,7 +94,7 @@ public class EsIndexMappingMigrationPlugin implements MigrationPlugin {
                     migrationInfoSerialization.setVersion(getName(), getMaxVersion());
                     observer.complete();
                 })
-                .subscribe(); //should run through
+                .toBlocking().lastOrDefault( null ); //should run through
 
 
         }catch (Exception ee){
