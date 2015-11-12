@@ -151,6 +151,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                     final EventBuilder eventBuilder,
                                     final MapManagerFactory mapManagerFactory,
                                     final QueueFig queueFig,
+                                    @EventExecutionScheduler
                                     final RxTaskScheduler rxTaskScheduler ) {
         this.indexProducer = indexProducer;
 
