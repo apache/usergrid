@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.cassandra.thrift.TimedOutException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -282,6 +283,7 @@ public class UniqueIndexCleanup extends ToolBase {
         //these columns all come from the same row key, which means they each belong to the same row key identifier
         //thus mixing and matching them in the below if cases won't matter.
         Entity[] entities = new Entity[cols.size()];
+        int numberOfRetrys = 5;
 
         if(cols.size() < 2){
             entities = new Entity[2];
@@ -293,8 +295,15 @@ public class UniqueIndexCleanup extends ToolBase {
             UUID entityId = ue.fromByteBuffer( col.getName() );
 
             if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) ) {
+                for(int i = 0; i<numberOfRetrys; i++){
+                    try {
+                        entities[index] = managementService.getAdminUserEntityByUuid( entityId );
+                        break;
+                    }catch(TimedOutException toe){
+                        Thread.sleep( 2000 );
+                    }
+                }
 
-                entities[index] = managementService.getAdminUserEntityByUuid( entityId );
                 if ( entities[index] == null ) {
                     cleanup = true;
                 }
@@ -303,7 +312,15 @@ public class UniqueIndexCleanup extends ToolBase {
                 }
             }
             else {
-                entities[index] = em.get( entityId );
+
+                for(int i = 0; i<numberOfRetrys; i++){
+                    try {
+                        entities[index] = em.get( entityId );
+                        break;
+                    }catch(TimedOutException toe){
+                        Thread.sleep( 2000 );
+                    }
+                }
                 if ( entities[index] == null ) {
                     cleanup = true;
                 }
