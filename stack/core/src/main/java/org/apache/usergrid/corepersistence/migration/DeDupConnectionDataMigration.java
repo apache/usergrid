@@ -72,7 +72,7 @@ public class DeDupConnectionDataMigration implements DataMigration {
         } ).doOnNext( total -> {
             logger.info( "Completed de-duping {} edges", total );
             observer.complete();
-        } ).subscribe(); //want this to run through all records
+        } ).toBlocking().lastOrDefault( null ); //want this to run through all records
 
         return migrationVersion;
 
