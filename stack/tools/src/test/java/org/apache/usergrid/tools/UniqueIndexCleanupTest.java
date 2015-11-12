@@ -86,24 +86,6 @@ public class UniqueIndexCleanupTest {
 
     @org.junit.Test
     public void testBasicOperation() throws Exception {
-
-        String rand = RandomStringUtils.randomAlphanumeric( 10 );
-
-        // create app with some data
-
-        String orgName = "org_" + rand;
-        String appName = "app_" + rand;
-        //
-        //            ExportDataCreator creator = new ExportDataCreator();
-        //            creator.startTool( new String[] {
-        //                    "-organization", orgName,
-        //                    "-application", appName,
-        //                    "-host", "localhost:9160" //+ ServiceITSuite.cassandraResource.getRpcPort()
-        //            }, false);
-
-        long start = System.currentTimeMillis();
-
-
         UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
         uniqueIndexCleanup.startTool( new String[] {
                 "-host", "localhost:9160"
@@ -230,9 +212,6 @@ public class UniqueIndexCleanupTest {
         //verify it returns null.
         assertNull(entityManager.get( testEntityUUID ));
 
-        //the below works but not needed for this test.
-        //assertNull( entityManager.getAlias("user",username));
-
         //verify that we cannot recreate the entity due to duplicate unique property exception
         Entity entityToBeCorrupted = null;
         try {
@@ -326,8 +305,6 @@ public class UniqueIndexCleanupTest {
 
         }
 
-
-
         //run the cleanup
         UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
         uniqueIndexCleanup.startTool( new String[] {
@@ -389,9 +366,6 @@ public class UniqueIndexCleanupTest {
         //verify it returns null.
         assertNull(entityManager.get( testEntityUUID ));
 
-        //the below works but not needed for this test.
-        //assertNull( entityManager.getAlias("user",username));
-
         //verify that we cannot recreate the entity due to duplicate unique property exception
         Entity entityToBeCorrupted = null;
         try {
@@ -403,12 +377,6 @@ public class UniqueIndexCleanupTest {
         catch(Exception e){
             fail("shouldn't throw something else i think");
         }
-
-        //should return null since we have duplicate alias. Will Cause index corruptions to be thrown.
-        //TODO: fix the below so that it fails everytime.
-        //50/50 chance to succeed or fail
-//        assertNull( entityManager
-//                .get( entityManager.getAlias( applicationInfo.getId(), collectionName, username ).getUuid() ) );
 
 
         //run the cleanup
@@ -490,9 +458,6 @@ public class UniqueIndexCleanupTest {
         //verify it returns null.
         assertNull(entityManager.get( testEntityUUID ));
 
-        //the below works but not needed for this test.
-        //assertNull( entityManager.getAlias("user",username));
-
         //verify that we cannot recreate the entity due to duplicate unique property exception
         Entity entityToBeCorrupted = null;
         try {
@@ -501,14 +466,9 @@ public class UniqueIndexCleanupTest {
         }catch(DuplicateUniquePropertyExistsException dup){
 
         }
-        catch(Exception e){
-            fail("shouldn't throw something else i think");
+        catch(Exception e) {
+            fail( "shouldn't throw something else i think" );
         }
-
-        //should return null since we have duplicate alias. Will Cause index corruptions to be thrown.
-//        assertNull( entityManager
-//                .get( entityManager.getAlias( applicationInfo.getId(), collectionName, username ).getUuid() ) );
-
 
         //NEED TO FAIL MORE GRACEFULLY
         //run the cleanup
@@ -526,21 +486,5 @@ public class UniqueIndexCleanupTest {
                 .get( entityManager.getAlias( applicationInfo.getId(), collectionName, username ).getUuid() ) );
 
     }
-
-    @Test
-    public void errorchecker(){
-        System.out.println( "Started" );
-
-        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
-        uniqueIndexCleanup.startTool( new String[] {
-                "-host", "localhost:9160",
-                "-col","users",
-                "-app","00000000-0000-0000-0000-000000000001",
-                "-property","username",
-                "-value","jromero"
-        }, false );
-        System.out.println( "Finished" );
-    }
-
 }
 
