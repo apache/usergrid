@@ -170,7 +170,9 @@ public class UniqueIndexCleanupTest {
     //For this test you need to insert a dummy key with a dummy column that leads to nowhere
     //then run the unique index cleanup.
     //checks for bug when only column doesn't exist make sure to delete the row as well.
-    @Test
+
+    //due to the read repair this is no longer a valid test of hte unique index cleanup
+    @Ignore
     public void testRepairOfSingleEntity() throws Exception{
         String rand = RandomStringUtils.randomAlphanumeric( 10 );
 
@@ -210,15 +212,16 @@ public class UniqueIndexCleanupTest {
 
         //verify that there is no corresponding entity with the uuid or alias provided
         //verify it returns null.
-        assertNull(entityManager.get( testEntityUUID ));
+        //assertNull(entityManager.get( testEntityUUID ));
 
         //verify that we cannot recreate the entity due to duplicate unique property exception
+        //The Get above should have repaired the entity allowing it run
         Entity entityToBeCorrupted = null;
         try {
             entityToBeCorrupted = entityManager.create( collectionName, userInfo );
-            fail();
+            //fail();
         }catch(DuplicateUniquePropertyExistsException dup){
-
+            fail();
         }
         catch(Exception e){
             fail("shouldn't throw something else i think");
@@ -226,10 +229,10 @@ public class UniqueIndexCleanupTest {
 
 
         //run the cleanup
-        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
-        uniqueIndexCleanup.startTool( new String[] {
-                "-host", "localhost:"+ ServiceITSuite.cassandraResource.getRpcPort()
-        }, false );
+//        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
+//        uniqueIndexCleanup.startTool( new String[] {
+//                "-host", "localhost:"+ ServiceITSuite.cassandraResource.getRpcPort()
+//        }, false );
 
 
         entityToBeCorrupted = entityManager.create( collectionName,userInfo );
@@ -242,7 +245,9 @@ public class UniqueIndexCleanupTest {
     //For this test you need to insert a dummy key with a dummy column that leads to nowhere
     //then run the unique index cleanup.
     //checks for bug when only column doesn't exist make sure to delete the row as well.
+   // Due to the read repair this is no longer a valid test of unique index cleanup.
     @Test
+    @Ignore
     public void testRepairOfMultipleEntities() throws Exception{
         String rand = RandomStringUtils.randomAlphanumeric( 10 );
 
