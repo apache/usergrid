@@ -75,7 +75,7 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
 
 
         //verify the observable is correct
-        Entity result  = newStage.call( new CollectionIoEvent<MvccEntity>( context, mvccEntityInput ) );
+        Entity result  = newStage.call( new CollectionIoEvent<MvccEntity>( context, mvccEntityInput ) ).getEvent().getEntity().get();
 
 
 
