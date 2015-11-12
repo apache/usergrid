@@ -226,7 +226,7 @@ public class ServiceRequestIT {
             throw e;
         }
 
-        //verifies it works now.
+        //verifies it works when doing a get/read repair
         assertNotNull( entityManager
                 .get( entityManager.getAlias( applicationInfo.getId(), collectionName, username ).getUuid() ) );
 

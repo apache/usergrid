@@ -593,7 +593,7 @@ public class EntityManagerImpl implements EntityManager {
                 }
             }
             //this means that the same unique rowkey has two values associated with it
-            if(entities[0]!=null && entities[1]!=null){
+            if(index>1){
                 Entity mostRecentEntity = entities[0];
                 for(Entity entity: entities){
                     if(mostRecentEntity.getModified() > entity.getModified()){
