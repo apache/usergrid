@@ -570,26 +570,28 @@ public class AmazonAsyncEventService implements AsyncEventService {
      * @param indexOperationMessage
      */
     private void initializeEntityIndexes(final IndexOperationMessage indexOperationMessage) {
-        final Map<UUID,Boolean> apps = new HashMap<>(indexOperationMessage.getIndexRequests().size()+indexOperationMessage.getDeIndexRequests().size());
-        //loop through all adds
-        for(IndexOperation req : indexOperationMessage.getIndexRequests()) {
-            final UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
-            if(!apps.containsKey(appId)) {
-                ApplicationScope appScope = CpNamingUtils.getApplicationScope(appId);
-                entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(appScope));
-                apps.put(appId,true);
-            }
-        };
 
-        //loop through all deletes
-        for(DeIndexOperation req : indexOperationMessage.getDeIndexRequests()) {
-            final UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
-            if(!apps.containsKey(appId)) {
+        // create a set so we can have a unique list of appIds for which we call createEntityIndex
+        Set<UUID> appIds = new HashSet<>();
+
+        // loop through all indexRequests and add the appIds to the set
+        indexOperationMessage.getIndexRequests().forEach(req -> {
+            UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
+            appIds.add(appId);
+        });
+
+        // loop through all deindexRequests and add the appIds to the set
+        indexOperationMessage.getDeIndexRequests().forEach(req -> {
+            UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
+            appIds.add(appId);
+        });
+
+        // for each of the appIds in the unique set, call create entity index to ensure the aliases are created
+        appIds.forEach(appId -> {
                 ApplicationScope appScope = CpNamingUtils.getApplicationScope(appId);
                 entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(appScope));
-                apps.put(appId,true);
             }
-        };
+        );
     }
 
 
