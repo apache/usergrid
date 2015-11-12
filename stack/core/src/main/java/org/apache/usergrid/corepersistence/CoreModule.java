@@ -47,7 +47,7 @@ import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservableImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllNodesInGraphImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AsyncRepair;
-import org.apache.usergrid.corepersistence.rx.impl.ImportRepair;
+import org.apache.usergrid.corepersistence.rx.impl.ResponseImportTasks;
 import org.apache.usergrid.corepersistence.service.AggregationService;
 import org.apache.usergrid.corepersistence.service.AggregationServiceFactory;
 import org.apache.usergrid.corepersistence.service.AggregationServiceImpl;
@@ -77,6 +77,7 @@ import org.apache.usergrid.persistence.index.guice.IndexModule;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.Multibinder;
@@ -200,6 +201,7 @@ public class CoreModule extends AbstractModule {
     @Provides
     @Inject
     @EventExecutionScheduler
+    @Singleton
     public RxTaskScheduler getSqsTaskScheduler( final AsyncEventsSchedulerFig asyncEventsSchedulerFig ) {
 
         final String poolName = asyncEventsSchedulerFig.getIoSchedulerName();
@@ -218,6 +220,7 @@ public class CoreModule extends AbstractModule {
     @Provides
     @Inject
     @AsyncRepair
+    @Singleton
     public RxTaskScheduler getAsyncRepairScheduler( final AsyncEventsSchedulerFig asyncEventsSchedulerFig ) {
 
         final String poolName = asyncEventsSchedulerFig.getRepairPoolName();
@@ -225,7 +228,7 @@ public class CoreModule extends AbstractModule {
 
 
         final ThreadPoolExecutor executor = TaskExecutorFactory
-            .createTaskExecutor( poolName, threadCount, 1, TaskExecutorFactory.RejectionAction.DROP );
+            .createTaskExecutor( poolName, threadCount, 0, TaskExecutorFactory.RejectionAction.DROP );
 
         final RxTaskScheduler taskScheduler = new RxTaskSchedulerImpl( executor );
 
@@ -235,7 +238,8 @@ public class CoreModule extends AbstractModule {
 
     @Provides
     @Inject
-    @ImportRepair
+    @ResponseImportTasks
+    @Singleton
     public RxTaskScheduler getImportRepairScheduler( final AsyncEventsSchedulerFig asyncEventsSchedulerFig ) {
 
         final String poolName = asyncEventsSchedulerFig.getImportSchedulerName();
@@ -243,7 +247,7 @@ public class CoreModule extends AbstractModule {
 
 
         final ThreadPoolExecutor executor = TaskExecutorFactory
-            .createTaskExecutor( poolName, threadCount, 1, TaskExecutorFactory.RejectionAction.CALLERRUNS );
+            .createTaskExecutor( poolName, threadCount, 0, TaskExecutorFactory.RejectionAction.CALLERRUNS );
 
         final RxTaskScheduler taskScheduler = new RxTaskSchedulerImpl( executor );
 
