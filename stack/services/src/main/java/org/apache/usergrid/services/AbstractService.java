@@ -28,8 +28,7 @@ import java.util.UUID;
 
 import com.codahale.metrics.Timer;
 
-import org.apache.usergrid.corepersistence.rx.impl.AsyncRepair;
-import org.apache.usergrid.corepersistence.rx.impl.ImportRepair;
+import org.apache.usergrid.corepersistence.rx.impl.ResponseImportTasks;
 import org.apache.usergrid.corepersistence.service.ServiceSchedulerFig;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
@@ -121,7 +120,7 @@ public abstract class AbstractService implements Service {
         this.sm = sm;
         em = sm.getEntityManager();
         final Injector injector = sm.getApplicationContext().getBean( Injector.class );
-        rxScheduler = injector.getInstance( Key.get(RxTaskScheduler.class, ImportRepair.class)).getAsyncIOScheduler();
+        rxScheduler = injector.getInstance( Key.get(RxTaskScheduler.class, ResponseImportTasks.class ) ).getAsyncIOScheduler();
         rxSchedulerFig = injector.getInstance(ServiceSchedulerFig.class );
         metricsFactory = injector.getInstance(MetricsFactory.class);
         this.entityGetTimer = metricsFactory.getTimer(this.getClass(), "importEntity.get");

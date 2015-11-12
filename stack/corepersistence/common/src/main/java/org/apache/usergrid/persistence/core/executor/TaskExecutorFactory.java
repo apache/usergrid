@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.core.executor;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -64,7 +65,13 @@ public class TaskExecutorFactory {
                                                          final int maxQueueSize, RejectionAction rejectionAction ) {
 
 
-        final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>( maxQueueSize );
+        final BlockingQueue<Runnable> queue;
+
+        if(maxQueueSize == 0){
+            queue = new SynchronousQueue();
+        }else{
+            queue = new ArrayBlockingQueue<>( maxQueueSize );
+        }
 
 
         if ( rejectionAction == RejectionAction.ABORT ) {

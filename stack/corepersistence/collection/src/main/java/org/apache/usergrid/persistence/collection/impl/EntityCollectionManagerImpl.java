@@ -363,6 +363,9 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                         continue;
                     }
 
+                    //TODO, we need to validate the property in the entity matches the property in the unique value
+
+
                     //else add it to our result set
                     response.addEntity( expectedUnique.getField(), entity );
                 }

@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.core.rx.RxTaskSchedulerImpl;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 
 /**
@@ -77,13 +78,14 @@ public abstract class CollectionModule extends AbstractModule {
     @Provides
     @Inject
     @CollectionExecutorScheduler
+    @Singleton
     public RxTaskScheduler getRxTaskScheduler( final CollectionSchedulerFig collectionSchedulerFig ){
 
         final String poolName = collectionSchedulerFig.getIoSchedulerName();
         final int threadCount = collectionSchedulerFig.getMaxIoThreads();
 
 
-        final ThreadPoolExecutor executor = TaskExecutorFactory.createTaskExecutor( poolName, threadCount, threadCount,
+        final ThreadPoolExecutor executor = TaskExecutorFactory.createTaskExecutor( poolName, threadCount, 0,
             TaskExecutorFactory.RejectionAction.CALLERRUNS );
 
         final RxTaskScheduler taskScheduler = new RxTaskSchedulerImpl(executor  );
