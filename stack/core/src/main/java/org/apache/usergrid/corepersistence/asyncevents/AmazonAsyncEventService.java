@@ -28,7 +28,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.usergrid.persistence.index.impl.IndexingUtils;
+import org.apache.usergrid.persistence.index.impl.*;
+import org.elasticsearch.action.index.IndexRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,8 +57,6 @@ import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
-import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
-import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
@@ -571,26 +570,26 @@ public class AmazonAsyncEventService implements AsyncEventService {
      * @param indexOperationMessage
      */
     private void initializeEntityIndexes(final IndexOperationMessage indexOperationMessage) {
-        Map<UUID,Boolean> apps = new HashMap<>(indexOperationMessage.getIndexRequests().size()+indexOperationMessage.getDeIndexRequests().size());
+        final Map<UUID,Boolean> apps = new HashMap<>(indexOperationMessage.getIndexRequests().size()+indexOperationMessage.getDeIndexRequests().size());
         //loop through all adds
-        indexOperationMessage.getIndexRequests().stream().forEach(req -> {
-            UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
+        for(IndexOperation req : indexOperationMessage.getIndexRequests()) {
+            final UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
             if(!apps.containsKey(appId)) {
                 ApplicationScope appScope = CpNamingUtils.getApplicationScope(appId);
                 entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(appScope));
                 apps.put(appId,true);
             }
-        });
+        };
 
         //loop through all deletes
-        indexOperationMessage.getDeIndexRequests().stream().forEach(req -> {
-            UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
+        for(DeIndexOperation req : indexOperationMessage.getDeIndexRequests()) {
+            final UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
             if(!apps.containsKey(appId)) {
                 ApplicationScope appScope = CpNamingUtils.getApplicationScope(appId);
                 entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(appScope));
                 apps.put(appId,true);
             }
-        });
+        };
     }
 
 
