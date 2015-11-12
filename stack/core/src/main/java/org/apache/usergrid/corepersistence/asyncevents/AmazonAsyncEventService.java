@@ -22,9 +22,7 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -573,18 +571,25 @@ public class AmazonAsyncEventService implements AsyncEventService {
      * @param indexOperationMessage
      */
     private void initializeEntityIndexes(final IndexOperationMessage indexOperationMessage) {
+        Map<UUID,Boolean> apps = new HashMap<>(indexOperationMessage.getIndexRequests().size()+indexOperationMessage.getDeIndexRequests().size());
         //loop through all adds
         indexOperationMessage.getIndexRequests().stream().forEach(req -> {
             UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
-            ApplicationScope appScope = CpNamingUtils.getApplicationScope(appId);
-            entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(appScope));
+            if(!apps.containsKey(appId)) {
+                ApplicationScope appScope = CpNamingUtils.getApplicationScope(appId);
+                entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(appScope));
+                apps.put(appId,true);
+            }
         });
 
         //loop through all deletes
         indexOperationMessage.getDeIndexRequests().stream().forEach(req -> {
             UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
-            ApplicationScope appScope = CpNamingUtils.getApplicationScope(appId);
-            entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(appScope));
+            if(!apps.containsKey(appId)) {
+                ApplicationScope appScope = CpNamingUtils.getApplicationScope(appId);
+                entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(appScope));
+                apps.put(appId,true);
+            }
         });
     }
 
