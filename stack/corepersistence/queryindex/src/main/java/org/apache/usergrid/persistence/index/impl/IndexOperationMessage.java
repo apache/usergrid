@@ -115,7 +115,7 @@ public class IndexOperationMessage implements Serializable {
     }
 
     public void ingest(IndexOperationMessage singleMessage) {
-        this.indexRequests.addAll(singleMessage.getIndexRequests().stream().collect(Collectors.toList()));
-        this.deIndexRequests.addAll(singleMessage.getDeIndexRequests().stream().collect(Collectors.toList()));
+        this.indexRequests.addAll(singleMessage.getIndexRequests());
+        this.deIndexRequests.addAll(singleMessage.getDeIndexRequests());
     }
 }
