@@ -120,7 +120,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
 
                 if (isDeleted) {
 
-                    logger.trace("Edge {} is deleted, deleting the edge", markedEdge);
+                    logger.info("Edge {} is deleted when seeking, deleting the edge", markedEdge);
                     final Observable<IndexOperationMessage> indexMessageObservable = eventBuilder.buildDeleteEdge(applicationScope, markedEdge);
 
                     indexMessageObservable
@@ -133,7 +133,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                 if (isSourceNodeDeleted) {
 
                     final Id sourceNodeId = markedEdge.getSourceNode();
-                    logger.trace("Edge {} has a deleted source node, deleting the entity for id {}", markedEdge, sourceNodeId);
+                    logger.info("Edge {} has a deleted source node, deleting the entity for id {}", markedEdge, sourceNodeId);
 
                     final EventBuilderImpl.EntityDeleteResults
                         entityDeleteResults = eventBuilder.buildEntityDelete(applicationScope, sourceNodeId);
@@ -153,7 +153,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                 if (isTargetNodeDelete) {
 
                     final Id targetNodeId = markedEdge.getTargetNode();
-                    logger.trace("Edge {} has a deleted target node, deleting the entity for id {}", markedEdge, targetNodeId);
+                    logger.info("Edge {} has a deleted target node, deleting the entity for id {}", markedEdge, targetNodeId);
 
                     final EventBuilderImpl.EntityDeleteResults
                         entityDeleteResults = eventBuilder.buildEntityDelete(applicationScope, targetNodeId);
@@ -245,8 +245,8 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
     private Observable.Transformer<IndexOperationMessage, IndexOperationMessage> applyCollector() {
 
         return observable -> observable
-            .filter((IndexOperationMessage msg) -> !msg.isEmpty())
             .collect(() -> new IndexOperationMessage(), (collector, single) -> collector.ingest(single))
+            .filter(msg -> !msg.isEmpty())
             .doOnNext(indexOperation -> {
                 asyncEventService.queueIndexOperationMessage(indexOperation);
             });

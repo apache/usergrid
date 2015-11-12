@@ -1574,7 +1574,6 @@
     </plugins>
   </reporting>
 
-
     <profiles>
         <profile>
             <id>jacoco</id>
@@ -1592,8 +1591,6 @@
             </build>
         </profile>
     </profiles>
-
-<!--
     <repositories>
         <repository>
             <id>local-dependencies</id>
@@ -1601,7 +1598,6 @@
             <url>file://${project.basedir}/../m2/repository</url>
         </repository>
     </repositories>
--->
 
     <scm>
     	<url>https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</url>
