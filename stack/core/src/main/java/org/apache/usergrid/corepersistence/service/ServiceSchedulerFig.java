@@ -37,10 +37,28 @@ public interface ServiceSchedulerFig extends GuicyFig {
     String SERVICE_IMPORT_THREADS = "service.import.threads";
 
 
+    String SERVICE_IMPORT_POOL_NAME = "service.import.name";
+
+    String SERVICE_IMPORT_CONCURRENCY = "service.import.concurrency";
+
+
+
+
+    @Default( "Usergrid-Import-Pool" )
+    @Key( SERVICE_IMPORT_POOL_NAME )
+    String getRepairPoolName();
+
+
+
+    @Default("100")
+    @Key( SERVICE_IMPORT_THREADS)
+    int getImportThreadPoolSize();
+
+
 
     @Default("20")
-    @Key( SERVICE_IMPORT_THREADS)
-    int getImportThreads();
+    @Key( SERVICE_IMPORT_CONCURRENCY)
+    int getImportConcurrency();
 
 
 

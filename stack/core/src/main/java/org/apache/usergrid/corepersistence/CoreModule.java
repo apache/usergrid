@@ -240,10 +240,10 @@ public class CoreModule extends AbstractModule {
     @Inject
     @ResponseImportTasks
     @Singleton
-    public RxTaskScheduler getImportRepairScheduler( final AsyncEventsSchedulerFig asyncEventsSchedulerFig ) {
+    public RxTaskScheduler getImportRepairScheduler( final ServiceSchedulerFig serviceSchedulerFig ) {
 
-        final String poolName = asyncEventsSchedulerFig.getImportSchedulerName();
-        final int threadCount = asyncEventsSchedulerFig.getMaxImportThreads();
+        final String poolName = serviceSchedulerFig.getRepairPoolName();
+        final int threadCount = serviceSchedulerFig.getImportThreadPoolSize();
 
 
         final ThreadPoolExecutor executor = TaskExecutorFactory
