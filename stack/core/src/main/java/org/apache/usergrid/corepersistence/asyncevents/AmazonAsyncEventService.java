@@ -551,7 +551,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
             indexOperationMessage = ObjectJsonSerializer.INSTANCE.fromString( message, IndexOperationMessage.class );
         }
 
-        checkInitialize(indexOperationMessage);
+        initializeEntityIndexes(indexOperationMessage);
 
         //NOTE that we intentionally do NOT delete from the map.  We can't know when all regions have consumed the message
         //so we'll let compaction on column expiration handle deletion
@@ -567,13 +567,20 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     }
 
-    private void checkInitialize(final IndexOperationMessage indexOperationMessage) {
+    /**
+     *     this method will call initialize for each message, since we are caching the entity indexes,
+     *     we don't worry about aggregating by app id
+     * @param indexOperationMessage
+     */
+    private void initializeEntityIndexes(final IndexOperationMessage indexOperationMessage) {
+        //loop through all adds
         indexOperationMessage.getIndexRequests().stream().forEach(req -> {
             UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
             ApplicationScope appScope = CpNamingUtils.getApplicationScope(appId);
             entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(appScope));
         });
 
+        //loop through all deletes
         indexOperationMessage.getDeIndexRequests().stream().forEach(req -> {
             UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
             ApplicationScope appScope = CpNamingUtils.getApplicationScope(appId);
