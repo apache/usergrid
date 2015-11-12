@@ -444,7 +444,8 @@ public class UniqueIndexCleanupTest {
     }
 
     //POinting at single values is broken now but not entirely used right now anyways.
-    @Ignore
+    //@Ignore
+    @Test
     public void testRepairOfOnlyOneOfTwoColumnsWhilePointingAtSingleValue() throws Exception{
         String rand = RandomStringUtils.randomAlphanumeric( 10 );
 
@@ -509,10 +510,12 @@ public class UniqueIndexCleanupTest {
 //                .get( entityManager.getAlias( applicationInfo.getId(), collectionName, username ).getUuid() ) );
 
 
+        //NEED TO FAIL MORE GRACEFULLY
         //run the cleanup
         UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
         uniqueIndexCleanup.startTool( new String[] {
                 "-host", "localhost:"+ ServiceITSuite.cassandraResource.getRpcPort(),
+                "-col",collectionName,
                 "-app",applicationInfo.getId().toString(),
                 "-property","username",
                 "-value",username
@@ -522,6 +525,21 @@ public class UniqueIndexCleanupTest {
         assertNotNull( entityManager
                 .get( entityManager.getAlias( applicationInfo.getId(), collectionName, username ).getUuid() ) );
 
+    }
+
+    @Test
+    public void errorchecker(){
+        System.out.println( "Started" );
+
+        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
+        uniqueIndexCleanup.startTool( new String[] {
+                "-host", "localhost:9160",
+                "-col","users",
+                "-app","00000000-0000-0000-0000-000000000001",
+                "-property","username",
+                "-value","jromero"
+        }, false );
+        System.out.println( "Finished" );
     }
 
 }
