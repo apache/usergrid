@@ -72,8 +72,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 /**
- * TODO: Rafactor this to use shards only, no shard groups, just collections of shards.  The parent caller can aggregate
- * the results of multiple groups together, this has an impedance mismatch in the API layer.
+ *
  */
 @Singleton
 public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {

@@ -126,7 +126,6 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         }
 
         try {
-            // TODO: Async execution
             logMutation.execute();
         }
         catch ( ConnectionException e ) {

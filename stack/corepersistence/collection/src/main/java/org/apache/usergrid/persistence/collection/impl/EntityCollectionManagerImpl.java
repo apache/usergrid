@@ -84,8 +84,7 @@ import rx.functions.Action0;
 
 
 /**
- * Simple implementation.  Should perform  writes, delete and load. <p/> TODO: maybe refactor the stage operations into
- * their own classes for clarity and organization?
+ * Simple implementation.  Should perform  writes, delete and load.
  */
 public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
