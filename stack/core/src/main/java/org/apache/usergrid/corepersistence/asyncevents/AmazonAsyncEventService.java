@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.usergrid.persistence.index.impl.IndexingUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -550,6 +551,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
             indexOperationMessage = ObjectJsonSerializer.INSTANCE.fromString( message, IndexOperationMessage.class );
         }
 
+        checkInitialize(indexOperationMessage);
 
         //NOTE that we intentionally do NOT delete from the map.  We can't know when all regions have consumed the message
         //so we'll let compaction on column expiration handle deletion
@@ -565,6 +567,19 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     }
 
+    private void checkInitialize(final IndexOperationMessage indexOperationMessage) {
+        indexOperationMessage.getIndexRequests().stream().forEach(req -> {
+            UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
+            ApplicationScope appScope = CpNamingUtils.getApplicationScope(appId);
+            entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(appScope));
+        });
+
+        indexOperationMessage.getDeIndexRequests().stream().forEach(req -> {
+            UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
+            ApplicationScope appScope = CpNamingUtils.getApplicationScope(appId);
+            entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(appScope));
+        });
+    }
 
 
     @Override
