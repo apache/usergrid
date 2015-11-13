@@ -83,7 +83,7 @@ public class UserUniqueIndexCleanupTest {
     public void testBasicOperation() throws Exception {
         UserUniqueIndexCleanup userUniqueIndexCleanup = new UserUniqueIndexCleanup();
         userUniqueIndexCleanup.startTool( new String[] {
-                "-host", "localhost:9160"
+                "-host", "localhost:"+ ServiceITSuite.cassandraResource.getRpcPort()
         }, false );
 
         System.out.println( "completed" );
