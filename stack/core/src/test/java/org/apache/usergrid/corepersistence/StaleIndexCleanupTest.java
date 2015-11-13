@@ -196,7 +196,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
      * it is building search results.
      */
     @Test
-    @Ignore("Broken until search connections is fixed")
+    @Ignore("Breaks other tests - or would if we reenabled that EVENTS_DISABLED property")
     public void testStaleIndexCleanup() throws Exception {
 
 
