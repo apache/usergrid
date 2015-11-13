@@ -64,7 +64,7 @@ public class RxTest {
 
 
     @Test
-    @Ignore("This seems like it should work, yet blocks forever")
+    @Ignore("Experimental - seems like it should work, yet blocks forever")
     public void testConnectableObserver() throws InterruptedException {
 
         final int count = 10;
