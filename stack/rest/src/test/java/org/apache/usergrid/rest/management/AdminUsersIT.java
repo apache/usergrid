@@ -398,7 +398,7 @@ public class AdminUsersIT extends AbstractRestIT {
         assertFalse( inbox.isEmpty() );
     }
 
-    @Ignore("Test is broken due to viewables not being properly returned in the embedded tomcat")
+    @Ignore("Build problems - Test is broken due to viewables not being properly returned in the embedded tomcat")
     @Test
     public void checkFormPasswordReset() throws Exception {
 
@@ -434,8 +434,8 @@ public class AdminUsersIT extends AbstractRestIT {
 
         assertTrue( html.contains( "invalid token" ) );
     }
-//
-//     TODO: will work once resetpw viewables work
+
+//    // TODO: will work once resetpw viewables work
 //    @Test
 //    @Ignore( "causes problems in build" )
 //    public void passwordResetIncorrectUserName() throws Exception {
@@ -462,8 +462,6 @@ public class AdminUsersIT extends AbstractRestIT {
 //
 //        assertTrue( html.contains( "password set" ) );
 //    }
-//
-//
 
 
     /**
