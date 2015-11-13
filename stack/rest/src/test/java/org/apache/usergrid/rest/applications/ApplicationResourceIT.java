@@ -230,7 +230,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
      * (for backwards compatibility)
      */
     @Test
-    @Ignore("this form of backwards compatibility no longer needed")
+    @Ignore("no longer relevant - this type of backwards compatibility no longer needed")
     public void jsonForAcceptsTextHtml() throws Exception {
 
         //Create the organization resource
@@ -369,22 +369,6 @@ public class ApplicationResourceIT extends AbstractRestIT {
 //        assertNull(credentials.entrySet().toString());
         assertNotNull(credentials.getClientId());
         assertNotNull(credentials.getClientSecret());
-    }
-
-
-    @Test
-    @Ignore //This is implemented now
-    public void noAppDelete() throws IOException {
-        String orgName = clientSetup.getOrganizationName().toLowerCase();
-        String appName = clientSetup.getAppName().toLowerCase();
-
-        ApiResponse apiResponse = target().path( String.format( "/%s/%s", orgName, appName ) )
-            .queryParam( "access_token", this.getAdminToken().getAccessToken() )
-            .request()
-            .accept( MediaType.APPLICATION_JSON )
-            .delete( ApiResponse.class );
-
-        assertNotNull(apiResponse.getError());
     }
 
     /**
@@ -591,7 +575,6 @@ public class ApplicationResourceIT extends AbstractRestIT {
      * Retrieve an oauth authorization using invalid credentials
      */
     @Test
-    @Ignore("viewable return types are not working in embedded tomcat 7.x")
     public void authorizationCodeWithWrongCredentials() throws Exception {
         //Create form input with bogus credentials
         Form payload = new Form();
@@ -699,8 +682,8 @@ public class ApplicationResourceIT extends AbstractRestIT {
      * Retrieve an access token using HTTP Basic authentication
      */
     @Test
-    @Ignore
-    //Are we trying to generate token with token? Couldn't find enpoint that accepts token for generating token
+    @Ignore("Should fix - https://issues.apache.org/jira/browse/USERGRID-1106")
+    //Are we trying to generate token with token? Couldn't find endpoint that accepts token for generating token
     public void clientCredentialsFlowWithHeaderAuthorization() throws Exception {
         //retrieve the credentials
         Credentials orgCredentials = getAppCredentials();
@@ -783,7 +766,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
      * Ensure that the Apigee Mobile Analytics config returns valid JSON
      */
     @Test
-    @Ignore
+    @Ignore("No longer relevant - Apigee internal")
     public void validateApigeeApmConfigAPP() throws IOException {
         String orgName = clientSetup.getOrganizationName().toLowerCase();
         String appName = clientSetup.getAppName().toLowerCase();
