@@ -571,11 +571,12 @@ public class EntityManagerImpl implements EntityManager {
                     + "property {} with value {}",
                     new Object[] { ownerEntityId, collectionNameInternal, propertyName, propertyValue } );
 
-            //retrieve up to 100 columns
-            List<HColumn<ByteBuffer, ByteBuffer>> indexingColumns = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, null, null, 100,
-                    false );
+            //retrieve ALL DA columns.
+            List<HColumn<ByteBuffer, ByteBuffer>> indexingColumns = cass.getAllColumns( cass.getApplicationKeyspace( applicationId ),ENTITY_UNIQUE,key,be,be );
 
 
+            //Contains entities that weren't deleted but are still in index.
+            //maybe use a set or list so you don't have to keep track of an index.
             Entity[] entities = new Entity[cols.size()];
             int index = 0;
 
@@ -586,7 +587,8 @@ public class EntityManagerImpl implements EntityManager {
 
                 if (entities[index] == null ) {
                     deleteUniqueColumn( ownerEntityId, key, indexCorruptionUuid );
-                    cols.remove( col );
+                    //iffy since cols won't have the same values of indexingColumns.
+                    //cols.remove( col );
                 }
                 else{
                     index++;
@@ -607,7 +609,7 @@ public class EntityManagerImpl implements EntityManager {
                         mostRecentEntity = entity;
                     }
                     else if (mostRecentEntity.getModified() == entity.getModified() && !mostRecentEntity.getUuid().equals( entity.getUuid() )){
-                        logger.info("Entities with unique value: "+propertyValue+" has two or more entities with the same modified time."
+                        logger.error("Entities with unique value: "+propertyValue+" has two or more entities with the same modified time."
                                 + "Please manually resolve by query or changing names. ");
                     }
                 }
@@ -616,6 +618,12 @@ public class EntityManagerImpl implements EntityManager {
 
         cols = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, null, null, 2,
                 false );
+
+        if ( cols.size() > 1 ) {
+            logger.error( "READ REPAIR FAILURE: More than 1 unique value still exists for entities in ownerId {} of type {} on "
+                            + "property {} with value {}",
+                    new Object[] { ownerEntityId, collectionNameInternal, propertyName, propertyValue } );
+        }
 
         /**
          * Doing this in a loop sucks, but we need to account for possibly having more than 1 entry in the index due

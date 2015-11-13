@@ -17,12 +17,9 @@
 package org.apache.usergrid.tools;
 
 
-import java.io.File;
-import java.io.FileFilter;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,7 +36,6 @@ import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.ServiceITSuite;
 import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
@@ -51,7 +47,6 @@ import org.apache.usergrid.utils.UUIDUtils;
 
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.mutation.MutationResult;
 import me.prettyprint.hector.api.mutation.Mutator;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
@@ -73,7 +68,7 @@ import static org.junit.Assert.fail;
 /**
  * Created by ApigeeCorporation on 11/2/15.
  */
-public class UniqueIndexCleanupTest {
+public class UserUniqueIndexCleanupTest {
     static final Logger logger = LoggerFactory.getLogger( ExportAppTest.class );
 
     int NUM_COLLECTIONS = 10;
@@ -86,8 +81,8 @@ public class UniqueIndexCleanupTest {
 
     @org.junit.Test
     public void testBasicOperation() throws Exception {
-        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
-        uniqueIndexCleanup.startTool( new String[] {
+        UserUniqueIndexCleanup userUniqueIndexCleanup = new UserUniqueIndexCleanup();
+        userUniqueIndexCleanup.startTool( new String[] {
                 "-host", "localhost:9160"
         }, false );
 
@@ -151,8 +146,8 @@ public class UniqueIndexCleanupTest {
         assertNotNull(entityManager.get( entityToBeCorrupted.getUuid() ));
 
         //run the cleanup
-        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
-        uniqueIndexCleanup.startTool( new String[] {
+        UserUniqueIndexCleanup userUniqueIndexCleanup = new UserUniqueIndexCleanup();
+        userUniqueIndexCleanup.startTool( new String[] {
                 "-host", "localhost:"+ ServiceITSuite.cassandraResource.getRpcPort()
         }, false );
 
@@ -311,8 +306,8 @@ public class UniqueIndexCleanupTest {
         }
 
         //run the cleanup
-        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
-        uniqueIndexCleanup.startTool( new String[] {
+        UserUniqueIndexCleanup userUniqueIndexCleanup = new UserUniqueIndexCleanup();
+        userUniqueIndexCleanup.startTool( new String[] {
                 "-host", "localhost:"+ ServiceITSuite.cassandraResource.getRpcPort()
         }, false );
 
@@ -385,8 +380,8 @@ public class UniqueIndexCleanupTest {
 
 
         //run the cleanup
-        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
-        uniqueIndexCleanup.startTool( new String[] {
+        UserUniqueIndexCleanup userUniqueIndexCleanup = new UserUniqueIndexCleanup();
+        userUniqueIndexCleanup.startTool( new String[] {
                 "-host", "localhost:"+ ServiceITSuite.cassandraResource.getRpcPort()
         }, false );
 
@@ -398,17 +393,17 @@ public class UniqueIndexCleanupTest {
 
     @Test
     public void testStringParsing(){
-        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
+        UserUniqueIndexCleanup userUniqueIndexCleanup = new UserUniqueIndexCleanup();
 
-        //String garbageString = ")xƐ:�^Q��I�p\\�/2178c690-3a6f-11e4-aec6-48fa705cb26f:users:username:test";
+        //String garbageString = ")xƐ:�^Q?�I�p\\�/2178c690-3a6f-11e4-aec6-48fa705cb26f:users:username:test";
 
         UUID uuid = UUIDUtils.newTimeUUID();
 
-        String garbageString = "S2^? <-^Q��%\"�]^S:"+uuid+":users:username:2";
+        String garbageString = "S2^? >-^Q��%\"�]^S:"+uuid+":users:username:2";
 
         String[] parsedString = garbageString.split( ":" );
 
-        String[] cleanedString = uniqueIndexCleanup.garbageRowKeyParser( parsedString );
+        String[] cleanedString = userUniqueIndexCleanup.garbageRowKeyParser( parsedString );
 
         assertEquals( uuid.toString(),cleanedString[0] );
         assertEquals( "users",cleanedString[1] );
@@ -477,8 +472,8 @@ public class UniqueIndexCleanupTest {
 
         //NEED TO FAIL MORE GRACEFULLY
         //run the cleanup
-        UniqueIndexCleanup uniqueIndexCleanup = new UniqueIndexCleanup();
-        uniqueIndexCleanup.startTool( new String[] {
+        UserUniqueIndexCleanup userUniqueIndexCleanup = new UserUniqueIndexCleanup();
+        userUniqueIndexCleanup.startTool( new String[] {
                 "-host", "localhost:"+ ServiceITSuite.cassandraResource.getRpcPort(),
                 "-col",collectionName,
                 "-app",applicationInfo.getId().toString(),
