@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
  * Class to test job runtimes
  */
 
-@Ignore("These tests no longer work with shared spring context. Need to re-evaluate")
+@Ignore("These tests no longer work with shared Spring context, need to be fixed https://issues.apache.org/jira/browse/USERGRID-1105" )
 public class SchedulerRuntime2IT extends AbstractSchedulerRuntimeIT {
 	private static final Logger logger = LoggerFactory.getLogger(SchedulerRuntime2IT.class.getName());
     /** Test the scheduler ramps up correctly when there are more jobs to be read after a pause */
