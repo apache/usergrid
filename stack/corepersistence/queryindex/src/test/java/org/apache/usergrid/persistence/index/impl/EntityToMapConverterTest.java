@@ -650,4 +650,52 @@ public class EntityToMapConverterTest {
 
         assertEquals( "value", field.get( IndexingUtils.FIELD_STRING ) );
     }
+
+    /**
+     * Objects nested within arrays are allowed to be indexed (just not n+1 nested arrays themselves)
+     */
+    @Test
+    public void testObjectNestedInArray() {
+
+        final ArrayField<Object> array = new ArrayField<>("array");
+
+        // this should not get indexed
+        final ArrayField<Object> nestedArray1 = new ArrayField<>("nestedArray");
+        nestedArray1.add("1");
+
+        // this should get indexed
+        final EntityObject nestedObject1 = new EntityObject();
+        final ArrayField<Object> objectArray = new ArrayField<>("nestedArrayInObject");
+        final EntityObject nestedObject2 = new EntityObject();
+        nestedObject2.setField(new StringField("nestedKey", "nestedValue"));
+        objectArray.add(nestedObject2);
+        nestedObject1.setField(objectArray);
+
+        array.add(nestedArray1);
+        array.add(nestedObject1);
+
+        Entity rootEntity = new Entity( "test" );
+        rootEntity.setField( array );
+
+        final UUID version = UUIDGenerator.newTimeUUID();
+        EntityUtils.setVersion( rootEntity, version );
+
+        final ApplicationScope scope = new ApplicationScopeImpl( createId( "application" ) );
+        final IndexEdge indexEdge =
+            new IndexEdgeImpl( createId( "source" ), "testEdgeType", SearchEdge.NodeType.SOURCE, 1000 );
+
+        final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, rootEntity );
+        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+
+        // if size of fields is not == 1, then we either
+        // 1) did not index anything or 2) indexed the nested array that shouldn't be indexed at all
+        assertEquals( 1, fields.size() );
+        
+        final EntityField field = fields.get( 0 );
+        final String path = "array.nestedArrayInObject.nestedKey".toLowerCase();
+
+        assertEquals( path, field.get( IndexingUtils.FIELD_NAME ) );
+
+    }
+
 }

@@ -122,7 +122,7 @@ public interface ShardedEdgeSerialization {
             * @param markedEdge The edge to write
             * @param timestamp The timestamp to use
             */
-           MutationBatch deleteEdgeVersions( EdgeColumnFamilies columnFamilies, ApplicationScope scope, MarkedEdge markedEdge,
+    MutationBatch deleteEdgeVersions( EdgeColumnFamilies columnFamilies, ApplicationScope scope, MarkedEdge markedEdge,
                                               Collection<Shard> shards,  DirectedEdgeMeta sourceEdgeMeta,  UUID timestamp );
 
 
