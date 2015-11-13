@@ -55,8 +55,6 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 
-//TODO: write docs so support can run it.
-//TODO: provide support with log4j file and instructions on how to use it.
 /**
  *
  *This utility audits all values in the ENTITY_UNIQUE column family. If it finds any duplicates of users
@@ -64,11 +62,11 @@ import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
  * If there exists more than one existing column then the one with the most recent timestamp wins and the other is deleted.
  *
  *If you want the run the tool on their cluster the following is what you need to do
- * nohup java -Dlog4j.configuration=file:log4j.properties -jar usergrid-tools-1.0.2.jar UniqueIndexCleanup -host <cassandra_host_here>  > log.txt
+ * nohup java -Dlog4j.configuration=file:log4j.properties -jar usergrid-tools-1.0.2.jar UserUniqueIndexCleanup -host <cassandra_host_here>  > log.txt
  *
  * if there is a specific value you want to run the tool on then you need the following
 
- * nohup java -Dlog4j.configuration=file:log4j.properties -jar usergrid-tools-1.0.2.jar UniqueIndexCleanup -host <cassandra_host_here>
+ * nohup java -Dlog4j.configuration=file:log4j.properties -jar usergrid-tools-1.0.2.jar UserUniqueIndexCleanup -host <cassandra_host_here>
  *     -app <applicationUUID> -col <collection_name> -property <unique_property_key> -value <unique_property_value> > log.txt
  *
  * @author grey
