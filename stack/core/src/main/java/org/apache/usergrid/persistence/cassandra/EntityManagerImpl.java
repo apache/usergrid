@@ -587,8 +587,6 @@ public class EntityManagerImpl implements EntityManager {
 
                 if (entities[index] == null ) {
                     deleteUniqueColumn( ownerEntityId, key, indexCorruptionUuid );
-                    //iffy since cols won't have the same values of indexingColumns.
-                    //cols.remove( col );
                 }
                 else{
                     index++;
