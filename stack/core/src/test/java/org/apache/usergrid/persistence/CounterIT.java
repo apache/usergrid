@@ -179,7 +179,6 @@ public class CounterIT extends AbstractCoreIT {
 
 
     @Test
-    @Ignore()
     public void testCommunityCounters() throws Exception {
 
         EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
