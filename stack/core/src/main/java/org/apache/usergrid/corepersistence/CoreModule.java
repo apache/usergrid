@@ -242,7 +242,7 @@ public class CoreModule extends AbstractModule {
     @Inject
     @ResponseImportTasks
     @Singleton
-    public RxTaskScheduler getImportRepairScheduler( final ServiceSchedulerFig serviceSchedulerFig ) {
+    public RxTaskScheduler getResponseImportScheduler(final ServiceSchedulerFig serviceSchedulerFig ) {
 
         final String poolName = serviceSchedulerFig.getRepairPoolName();
         final int threadCount = serviceSchedulerFig.getImportThreadPoolSize();

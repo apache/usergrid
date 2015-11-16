@@ -55,17 +55,6 @@ public interface AsyncEventsSchedulerFig extends GuicyFig {
     String REPAIR_SCHEDULER_NAME = "repair.io.poolName";
 
 
-    /**
-     * Amount of threads to use in async processing
-     */
-    String IMPORT_SCHEDULER_THREADS = "import.io.threads";
-
-
-    /**
-     * Name of pool to use when performing scheduling
-     */
-    String IMPORT_SCHEDULER_NAME = "import.io.poolName";
-
 
     @Default( "100" )
     @Key( IO_SCHEDULER_THREADS )
@@ -84,11 +73,4 @@ public interface AsyncEventsSchedulerFig extends GuicyFig {
     @Key( REPAIR_SCHEDULER_NAME )
     String getRepairPoolName();
 
-    @Default( "100" )
-    @Key( IMPORT_SCHEDULER_THREADS )
-    int getMaxImportThreads();
-
-    @Default( "Usergrid-Import-Pool" )
-    @Key( IMPORT_SCHEDULER_NAME )
-    String getImportSchedulerName();
 }
