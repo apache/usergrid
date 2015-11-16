@@ -223,11 +223,8 @@ public class PagingResourceIT extends AbstractRestIT {
      * Pages through entities that are connected to each other
      * @throws IOException
      */
-    @Ignore("This does not return a page for any entities. It just keeps returning them in bulk."
-            + " Not sure about intended functionality")
     @Test
     public void pageThroughConnectedEntities() throws IOException {
-
 
         long created = 0;
         int numOfEntities = 100;
@@ -238,7 +235,7 @@ public class PagingResourceIT extends AbstractRestIT {
 
         for ( created = 1; created <= numOfEntities; created++ ) {
 
-            entityPayload.put( "name", "value" + created );
+            entityPayload.put( "name", created );
             Entity entity = new Entity( entityPayload );
             entity = this.app().collection( collectionName ).post( entity );
             refreshIndex();
@@ -252,11 +249,11 @@ public class PagingResourceIT extends AbstractRestIT {
 
         refreshIndex();
 
-        Collection colConnection =  this.app().collection( collectionName ).entity(connectedEntity).connection("likes").get();
-        assertNotNull(colConnection);
-        assertNotNull( colConnection.getCursor() );
-        pageAndVerifyEntities(collectionName, null, numOfPages, numOfEntities);
+        QueryParameters qp = new QueryParameters();
+        qp.setQuery("select * order by created asc");
+        qp.setLimit(10);
 
+        pageAndVerifyEntities(collectionName, qp, numOfPages, numOfEntities);
     }
 
 

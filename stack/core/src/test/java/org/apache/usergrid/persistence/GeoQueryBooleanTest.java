@@ -108,7 +108,6 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
 
 
     @Test
-    //@Ignore // work in progress
     public void testGeoQueryWithNot() throws Exception {
 
         log.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
