@@ -46,8 +46,8 @@ public class SchedulerRuntime7IT extends AbstractSchedulerRuntimeIT {
         long customRetry = sleepTime * 2;
         int numberOfRuns = 2;
 
-        OnlyOnceUnlockOnFailExceution job =
-                springResource.getBean( "onlyOnceUnlockOnFailExceution", OnlyOnceUnlockOnFailExceution.class );
+        OnlyOnceUnlockOnFailExecution job =
+                springResource.getBean( "onlyOnceUnlockOnFailExceution", OnlyOnceUnlockOnFailExecution.class );
 
         job.setTimeout( customRetry );
         job.setLatch( numberOfRuns );
