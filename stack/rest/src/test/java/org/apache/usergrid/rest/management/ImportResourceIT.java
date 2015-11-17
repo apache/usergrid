@@ -60,7 +60,7 @@ import java.util.Properties;
 import static org.junit.Assert.*;
 
 
-@Ignore
+@Ignore("Pending merge of export-feature branch. ")
 public class ImportResourceIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportResourceIT.class);

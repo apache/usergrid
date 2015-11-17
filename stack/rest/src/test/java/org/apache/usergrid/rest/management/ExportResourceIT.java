@@ -32,7 +32,7 @@ import java.util.UUID;
 import static org.junit.Assert.*;
 
 
-@Ignore
+@Ignore("Pending merge of export-feature branch. ")
 public class ExportResourceIT extends AbstractRestIT {
 
 
