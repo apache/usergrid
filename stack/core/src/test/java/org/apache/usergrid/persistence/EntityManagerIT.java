@@ -561,4 +561,6 @@ public class EntityManagerIT extends AbstractCoreIT {
         //Not an owner
         assertFalse( em.isCollectionMember( createdUser2, "devices", createdDevice ) );
     }
+
+
 }

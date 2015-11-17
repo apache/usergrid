@@ -109,6 +109,7 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
 
 import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.locking.LockHelper.getUniqueUpdateLock;
@@ -156,6 +157,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.toStorableBinaryValue;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.le;
 import static org.apache.usergrid.persistence.cassandra.Serializers.se;
@@ -538,10 +540,24 @@ public class EntityManagerImpl implements EntityManager {
 
         Object key = createUniqueIndexKey( ownerEntityId, collectionNameInternal, propertyName, propertyValue );
 
+        //need to fix by asking todd as to why 2.
+        //why is this set to 2?
         List<HColumn<ByteBuffer, ByteBuffer>> cols =
                 cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, null, null, 2,
                         false );
 
+
+        //check to see if the single value is valid. If it is not valid then it will be zero and go through
+        //the code below.
+        if(cols.size() == 1){
+            logger.info("Verifying that column is still valid, if not will be removed");
+            UUID indexCorruptionUuid = ue.fromByteBuffer( cols.get( 0 ).getName());
+
+            if (get(indexCorruptionUuid) == null ) {
+                deleteUniqueColumn( ownerEntityId, key, indexCorruptionUuid );
+                cols.remove( 0 );
+            }
+        }
 
         //No columns at all, it's unique
         if ( cols.size() == 0 ) {
@@ -549,9 +565,61 @@ public class EntityManagerImpl implements EntityManager {
         }
 
         //shouldn't happen, but it's an error case
+
         if ( cols.size() > 1 ) {
             logger.error( "INDEX CORRUPTION: More than 1 unique value exists for entities in ownerId {} of type {} on "
                     + "property {} with value {}",
+                    new Object[] { ownerEntityId, collectionNameInternal, propertyName, propertyValue } );
+
+            //retrieve ALL DA columns.
+            List<HColumn<ByteBuffer, ByteBuffer>> indexingColumns = cass.getAllColumns( cass.getApplicationKeyspace( applicationId ),ENTITY_UNIQUE,key,be,be );
+
+
+            //Contains entities that weren't deleted but are still in index.
+            //maybe use a set or list so you don't have to keep track of an index.
+            Entity[] entities = new Entity[cols.size()];
+            int index = 0;
+
+            for ( HColumn<ByteBuffer, ByteBuffer> col : indexingColumns ) {
+                UUID indexCorruptionUuid = ue.fromByteBuffer( col.getName());
+
+                entities[index] = get(indexCorruptionUuid);
+
+                if (entities[index] == null ) {
+                    deleteUniqueColumn( ownerEntityId, key, indexCorruptionUuid );
+                }
+                else{
+                    index++;
+                }
+            }
+            //this means that the same unique rowkey has two values associated with it
+            if(index>1){
+                Entity mostRecentEntity = entities[0];
+                for(Entity entity: entities){
+                    if(mostRecentEntity.getModified() > entity.getModified()){
+                        deleteEntity( entity.getUuid() );
+                        logger.info( "Deleting " + entity.getUuid().toString()
+                                + " because it shares older unique value with: " + propertyValue );
+                    }
+                    else if (mostRecentEntity.getModified() < entity.getModified()){
+                        logger.info("Deleting "+mostRecentEntity.getUuid().toString()+" because it shares older unique value with: "+propertyValue);
+                        deleteEntity( mostRecentEntity.getUuid() );
+                        mostRecentEntity = entity;
+                    }
+                    else if (mostRecentEntity.getModified() == entity.getModified() && !mostRecentEntity.getUuid().equals( entity.getUuid() )){
+                        logger.error("Entities with unique value: "+propertyValue+" has two or more entities with the same modified time."
+                                + "Please manually resolve by query or changing names. ");
+                    }
+                }
+            }
+        }
+
+        cols = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, null, null, 2,
+                false );
+
+        if ( cols.size() > 1 ) {
+            logger.error( "READ REPAIR FAILURE: More than 1 unique value still exists for entities in ownerId {} of type {} on "
+                            + "property {} with value {}",
                     new Object[] { ownerEntityId, collectionNameInternal, propertyName, propertyValue } );
         }
 
@@ -568,6 +636,18 @@ public class EntityManagerImpl implements EntityManager {
         }
 
         return results;
+    }
+
+
+    private void deleteUniqueColumn( final UUID ownerEntityId, final Object key, final UUID indexCorruptionUuid )
+            throws Exception {
+        UUID timestampUuid = newTimeUUID();
+        long timestamp = getTimestampInMicros( timestampUuid );
+        Keyspace ko = cass.getApplicationKeyspace( ownerEntityId );
+        Mutator<ByteBuffer> mutator = createMutator( ko, be );
+
+        addDeleteToMutator( mutator, ENTITY_UNIQUE, key, indexCorruptionUuid, timestamp );
+        mutator.execute();
     }
 
 
