@@ -77,7 +77,8 @@ public class AdminEmailEncodingIT extends AbstractRestIT {
      * @throws Exception
      */
     @Test
-    @Ignore //This fails. I'm not sure if it is by design, but a single quote is valid in an email address
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1117")
+    // This fails. I'm not sure if it is by design, but a single quote is valid in an email address
     public void getTokenQuote() throws Exception {
         doTest("'");
     }

@@ -18,17 +18,7 @@
 package org.apache.usergrid.persistence;
 
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.entities.Event;
@@ -39,12 +29,19 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.ImmediateCounterRule;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import net.jcip.annotations.NotThreadSafe;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 
 @NotThreadSafe
@@ -63,7 +60,8 @@ public class CounterIT extends AbstractCoreIT {
     }
 
 
-    @Ignore( "needs to have elasticsearch refreshes implemented" )
+    @Ignore( "Pending https://issues.apache.org/jira/browse/USERGRID-1120. ")
+    // needs to have elasticsearch refreshes implemented
     @Test
     public void testIncrementAndDecrement() throws Exception {
 
@@ -89,11 +87,14 @@ public class CounterIT extends AbstractCoreIT {
 
         LOG.debug( "user={}", user );
 
+        em.refreshIndex();
 
         counters = em.getEntityCounters( applicationId );
         assertEquals( new Long( 1 ), counters.get( "application.collection.users" ) );
 
         em.delete( user );
+
+        em.refreshIndex();
 
         counters = em.getEntityCounters( applicationId );
         assertEquals( new Long( 0 ), counters.get( "application.collection.users" ) );

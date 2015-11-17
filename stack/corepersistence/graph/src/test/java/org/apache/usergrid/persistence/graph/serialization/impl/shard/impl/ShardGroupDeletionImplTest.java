@@ -56,7 +56,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
-@Ignore("Temporarily removing until delete is re-enabled")
+@Ignore("Pending re-enable of delete functionality")
 public class ShardGroupDeletionImplTest {
 
 
