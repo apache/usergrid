@@ -178,6 +178,9 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
             }
 
 
+            logger.info( "Deleting shard {} at time {}  ", shard, timeService.getCurrentTime() );
+
+
             final MutationBatch shardRemovalMutation =
                 edgeShardSerialization.removeShardMeta( applicationScope, shard, directedEdgeMeta );
 
