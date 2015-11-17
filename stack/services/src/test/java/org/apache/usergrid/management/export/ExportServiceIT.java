@@ -150,7 +150,8 @@ public class ExportServiceIT {
 
 
     //Tests to make sure we can call the job with mock data and it runs.
-    @Ignore("Connections won't save when run with maven, but on local builds it will.")
+    // Connections won't save when run with maven, but on local builds it will.
+    @Ignore("Pending merge of export-feature branch")
     public void testConnectionsOnCollectionExport() throws Exception {
 
         File f = null;
@@ -746,7 +747,7 @@ public class ExportServiceIT {
 
 
     @Test
-    @Ignore // TODO: fix this test...
+    @Ignore("Pending merge of export-feature branch")
     public void testIntegration100EntitiesOn() throws Exception {
 
         logger.debug("testIntegration100EntitiesOn(): starting...");
@@ -834,8 +835,8 @@ public class ExportServiceIT {
         }
     }
 
-    @Ignore("Why is this ignored?")
     @Test
+    @Ignore("Pending merge of export-feature branch")
     public void testIntegration100EntitiesForAllApps() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -917,8 +918,8 @@ public class ExportServiceIT {
     }
 
 
-    @Ignore("Why is this ignored")
     @Test
+    @Ignore("Pending merge of export-feature branch")
     public void testIntegration100EntitiesOnOneOrg() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
