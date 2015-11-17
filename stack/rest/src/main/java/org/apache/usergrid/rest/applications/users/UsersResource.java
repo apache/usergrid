@@ -100,6 +100,9 @@ public class UsersResource extends ServiceResource {
     @Path("{itemName}")
     public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )
             throws Exception {
+        //TODO: read repair if entity ref doesn't match returned entity. Detect index corruption and delete reference if
+        //reference isn't correct.
+
 
         logger.info( "ServiceResource.addNameParameter" );
 
