@@ -319,6 +319,7 @@ public class NodeDeleteListenerTest {
      * since it has no other targets
      */
     @Test
+    @Ignore("Pending re-enable of delete functionality")
     public void testMultiDelete() throws ConnectionException, InterruptedException {
 
         GraphManager em = emf.createEdgeManager( scope );
