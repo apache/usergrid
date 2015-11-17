@@ -319,7 +319,6 @@ public class NodeDeleteListenerTest {
      * since it has no other targets
      */
     @Test
-    @Ignore("This needs to be re-enable.  The counters for sharding fall over in cass, needs fixes")
     public void testMultiDelete() throws ConnectionException, InterruptedException {
 
         GraphManager em = emf.createEdgeManager( scope );
