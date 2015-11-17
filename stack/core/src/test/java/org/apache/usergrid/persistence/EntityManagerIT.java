@@ -381,7 +381,8 @@ public class EntityManagerIT extends AbstractCoreIT {
 
 
     @Test
-    @Ignore( "There is a concurrency issue due to counters not being thread safe: see USERGRID-1753" )
+    @Ignore( "Pending https://issues.apache.org/jira/browse/USERGRID-1753. Concurrency issue.")
+    // There is a concurrency issue due to counters not being thread safe
     public void testEntityCounters() throws Exception {
         LOG.info( "EntityManagerIT#testEntityCounters" );
         EntityManager em = app.getEntityManager();

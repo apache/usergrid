@@ -41,7 +41,7 @@ import static org.apache.usergrid.services.notifications.impl.ApplicationQueueMa
 
 // todo: test reschedule on delivery time change
 // todo: test restart of queuing
-@Ignore
+@Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. ")
 public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
     private static final Logger LOG = LoggerFactory.getLogger(NotificationsServiceIT.class);
@@ -383,7 +383,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         }
     }
 
-    @Ignore("todo: how can I mock this?")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. todo: how can I mock this?")
     @Test
     public void badToken() throws Exception {
 
@@ -576,7 +576,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         checkReceipts(notification, 2);
     }
 
-    @Ignore("todo: how can I mock this?")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. todo: how can I mock this?")
     @Test
     public void badCertificate() throws Exception {
 
@@ -649,7 +649,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         assertNotNull(entity);
     }
 
-    @Ignore("todo: how can I mock this?")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. todo: how can I mock this?")
     @Test
     public void inactiveDeviceUpdate() throws Exception {
 

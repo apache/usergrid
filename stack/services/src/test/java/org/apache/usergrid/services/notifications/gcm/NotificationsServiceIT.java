@@ -142,7 +142,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     }
 
     @Test
-    @Ignore
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. ")
     public void singlePushNotification() throws Exception {
 
         app.clear();
@@ -168,7 +168,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     }
 
     @Test
-    @Ignore
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. ")
     public void singlePushNotificationViaUser() throws Exception {
 
         app.clear();
@@ -303,7 +303,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         }
     }
 
-    @Ignore("todo: how can I mock this?")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. todo: how can I mock this?")
     @Test
     public void badToken() throws Exception {
 
@@ -346,7 +346,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         assertEquals("InvalidRegistration", receipt.getErrorCode());
     }
 
-    @Ignore("todo: how can I mock this?")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. todo: how can I mock this?")
     @Test
     public void badAPIKey() throws Exception {
 
