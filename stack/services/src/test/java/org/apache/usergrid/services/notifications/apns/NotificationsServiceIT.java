@@ -41,6 +41,7 @@ import static org.apache.usergrid.services.notifications.impl.ApplicationQueueMa
 
 // todo: test reschedule on delivery time change
 // todo: test restart of queuing
+@Ignore
 public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
     private static final Logger LOG = LoggerFactory.getLogger(NotificationsServiceIT.class);

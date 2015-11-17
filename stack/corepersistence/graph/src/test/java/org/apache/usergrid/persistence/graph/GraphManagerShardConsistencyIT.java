@@ -39,10 +39,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
+import org.apache.usergrid.StressTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -393,7 +395,7 @@ public class GraphManagerShardConsistencyIT {
 
 
     @Test(timeout=120000)
-    @Ignore("This works, but is occasionally causing cassandra to fall over.  Unignore when merged with new shard strategy")
+    @Category(StressTest.class)
     public void writeThousandsDelete()
         throws InterruptedException, ExecutionException, MigrationException, UnsupportedEncodingException {
 

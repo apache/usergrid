@@ -104,6 +104,7 @@
                         <version>${surefire.plugin.version}</version>
                         <configuration>
                             <argLine>-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec</argLine>
+                            <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>

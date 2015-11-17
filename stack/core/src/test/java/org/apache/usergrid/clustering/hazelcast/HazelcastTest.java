@@ -20,10 +20,13 @@ package org.apache.usergrid.clustering.hazelcast;
 import java.util.Collection;
 import java.util.Set;
 
+import org.apache.usergrid.ExperimentalTest;
+import org.apache.usergrid.StressTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -38,7 +41,7 @@ import com.hazelcast.core.Member;
 import com.hazelcast.core.MessageListener;
 
 
-@Ignore("Experimental test")
+@Category(ExperimentalTest.class)
 public class HazelcastTest implements InstanceListener, MessageListener<Object> {
 
     private static final Logger logger = LoggerFactory.getLogger( HazelcastTest.class );

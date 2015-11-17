@@ -25,10 +25,12 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.StressTest;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -650,7 +652,7 @@ public abstract class EdgeSerializationTest {
      * Test paging by resuming the search from the edge
      */
     @Test
-    @Ignore("Kills embedded cassandra")
+    @Category(StressTest.class)
     public void pageIteration() throws ConnectionException {
 
         int size = graphFig.getScanPageSize() * 2;
@@ -690,7 +692,7 @@ public abstract class EdgeSerializationTest {
      * edge types
      */
     @Test
-    @Ignore("Kills embedded cassandra")
+    @Category(StressTest.class)
     public void testIteratorPaging() throws ConnectionException {
 
 
