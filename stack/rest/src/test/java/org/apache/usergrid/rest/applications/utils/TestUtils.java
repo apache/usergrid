@@ -27,7 +27,6 @@ import org.apache.usergrid.utils.UUIDUtils;
 
 
 /** @author tnine */
-@Ignore("Not a test")
 public class TestUtils {
 
     /** Get the uuid at the given index for the root node.  If it doesn't exist, null is returned */

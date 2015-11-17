@@ -60,6 +60,7 @@ import java.util.Properties;
 import static org.junit.Assert.*;
 
 
+@Ignore
 public class ImportResourceIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportResourceIT.class);
@@ -127,7 +128,6 @@ public class ImportResourceIT extends AbstractRestIT {
      *
      * @throws Exception
      */
-    @Ignore
     @Test
     public void importGetCollectionJobStatTest() throws Exception {
 
@@ -162,7 +162,6 @@ public class ImportResourceIT extends AbstractRestIT {
      * Verify that import job can only be read with an authorized token and cannot be read
      * with an invalid/notAllowed token.
      */
-    @Ignore
     @Test
     public void importTokenAuthorizationTest() throws Exception {
 
@@ -218,7 +217,6 @@ public class ImportResourceIT extends AbstractRestIT {
     }
 
 
-    @Ignore
     @Test
     public void importPostApplicationNullPointerProperties() throws Exception {
         String org = clientSetup.getOrganizationName();
@@ -235,7 +233,6 @@ public class ImportResourceIT extends AbstractRestIT {
         assertEquals(Response.Status.BAD_REQUEST, responseStatus);
     }
 
-    @Ignore
     @Test
     public void importPostApplicationNullPointerStorageInfo() throws Exception {
         String org = clientSetup.getOrganizationName();
@@ -256,7 +253,6 @@ public class ImportResourceIT extends AbstractRestIT {
     }
 
 
-    @Ignore
     @Test
     public void importPostApplicationNullPointerStorageProvider() throws Exception {
         String org = clientSetup.getOrganizationName();
@@ -278,7 +274,6 @@ public class ImportResourceIT extends AbstractRestIT {
     }
 
 
-    @Ignore
     @Test
     public void importPostApplicationNullPointerStorageVerification() throws Exception {
         String org = clientSetup.getOrganizationName();
@@ -412,7 +407,6 @@ public class ImportResourceIT extends AbstractRestIT {
     /**
      * TODO: Test that importing bad JSON will result in an informative error message.
      */
-    @Ignore
     @Test
     public void testImportGoodJson() throws Exception {
         // import from a bad JSON file
@@ -484,7 +478,6 @@ public class ImportResourceIT extends AbstractRestIT {
     /**
      * TODO: Test that importing bad JSON will result in an informative error message.
      */
-    @Ignore
     @Test
     public void testImportOneGoodOneBad() throws Exception {
 
@@ -532,7 +525,6 @@ public class ImportResourceIT extends AbstractRestIT {
     /**
      * TODO: Test that importing bad JSON will result in an informative error message.
      */
-    @Ignore
     @Test
     public void testImportOneBadFile() throws Exception {
         // import from a bad JSON file
@@ -581,7 +573,6 @@ public class ImportResourceIT extends AbstractRestIT {
     /**
      * TODO: Test that importing bad JSON will result in an informative error message.
      */
-    @Ignore
     @Test
     public void testImportBadJson() throws Exception {
 
