@@ -138,11 +138,13 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * Nothing to do, it's been created very recently, we don't create a new one
          */
         if ( shardEntryGroup.isCompactionPending() ) {
+            LOG.trace( "Shard entry group {} is compacting, not auditing", shardEntryGroup );
             return false;
         }
 
         //we can't allocate, we have more than 1 write shard currently.  We need to compact first
         if ( shardEntryGroup.entrySize() != 1 ) {
+            LOG.trace( "Shard entry group {} does not have 1 entry, not allocating", shardEntryGroup );
             return false;
         }
 
@@ -151,9 +153,12 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * Check the min shard in our system
          */
         final Shard shard = shardEntryGroup.getMinShard();
+        final long minTime = getMinTime();
 
 
-        if ( shard.getCreatedTime() >= getMinTime() ) {
+
+        if ( shard.getCreatedTime() >= minTime ) {
+            LOG.trace( "Shard entry group {}  and shard {} is before the minimum created time of {}.  Not allocating.does not have 1 entry, not allocating", shardEntryGroup, shard, minTime );
             return false;
         }
 
@@ -253,7 +258,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     @Override
     public long getMinTime() {
 
-        final long minimumAllowed = 2 * graphFig.getShardCacheTimeout();
+        final long minimumAllowed = ( long ) (2.5 * graphFig.getShardCacheTimeout());
 
         final long minDelta = graphFig.getShardMinDelta();
 
