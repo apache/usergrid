@@ -266,31 +266,35 @@ public class GraphManagerShardConsistencyIT {
         final Meter readMeter = registry.meter( "readThroughput" );
 
 
-        /**
-         * Start reading continuously while we migrate data to ensure our view is always correct
-         */
-        final ListenableFuture<Long> future =
-            executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
-
         final List<Throwable> failures = new ArrayList<>();
 
+        for(int i = 0; i < 2; i ++) {
 
-        //add the future
-        Futures.addCallback( future, new FutureCallback<Long>() {
 
-            @Override
-            public void onSuccess( @Nullable final Long result ) {
-                log.info( "Successfully ran the read, re-running" );
+            /**
+             * Start reading continuously while we migrate data to ensure our view is always correct
+             */
+            final ListenableFuture<Long> future =
                 executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
-            }
 
 
-            @Override
-            public void onFailure( final Throwable t ) {
-                failures.add( t );
-                log.error( "Failed test!", t );
-            }
-        } );
+            //add the future
+            Futures.addCallback( future, new FutureCallback<Long>() {
+
+                @Override
+                public void onSuccess( @Nullable final Long result ) {
+                    log.info( "Successfully ran the read, re-running" );
+                    executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
+                }
+
+
+                @Override
+                public void onFailure( final Throwable t ) {
+                    failures.add( t );
+                    log.error( "Failed test!", t );
+                }
+            } );
+        }
 
 
         int compactedCount;

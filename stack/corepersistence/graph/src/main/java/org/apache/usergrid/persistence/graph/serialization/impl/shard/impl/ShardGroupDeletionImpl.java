@@ -138,6 +138,7 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
             return DeleteResult.COMPACTION_PENDING;
         }
 
+        logger.trace( "Shard group {} has no compaction pending", shardEntryGroup );
 
         final long currentTime = timeService.getCurrentTime();
 
@@ -145,6 +146,8 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
             logger.trace( "Shard group {} contains a shard that is is too new, not auditing group", shardEntryGroup );
             return DeleteResult.TOO_NEW;
         }
+
+        logger.trace( "Shard group {} has passed the delta timeout at {}", shardEntryGroup, currentTime );
 
         /**
          * We have edges, and therefore cannot delete them
@@ -154,6 +157,9 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
 
             return DeleteResult.CONTAINS_EDGES;
         }
+
+
+        logger.trace( "Shard group {} has no edges continuing to delete", shardEntryGroup, currentTime );
 
 
         //now we can proceed based on the shard meta state and we don't have any edge
@@ -176,9 +182,6 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
                 logger.warn( "Shard {} in group {} is not compacted yet was checked.  Short circuiting", shard, shardEntryGroup );
                 return DeleteResult.NO_OP;
             }
-
-
-            logger.info( "Deleting shard {} at time {}  ", shard, timeService.getCurrentTime() );
 
 
             final MutationBatch shardRemovalMutation =
