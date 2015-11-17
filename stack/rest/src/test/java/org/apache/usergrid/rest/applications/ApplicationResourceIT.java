@@ -648,7 +648,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
      * Retrieve an access token using HTTP Basic authentication
      */
     @Test
-    @Ignore("Should fix - https://issues.apache.org/jira/browse/USERGRID-1106")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1106")
     //Are we trying to generate token with token? Couldn't find endpoint that accepts token for generating token
     public void clientCredentialsFlowWithHeaderAuthorization() throws Exception {
         //retrieve the credentials
