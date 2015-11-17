@@ -64,7 +64,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-//@Concurrent
 public class ImportServiceIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportServiceIT.class);

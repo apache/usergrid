@@ -437,7 +437,6 @@ public class AdminUsersIT extends AbstractRestIT {
 
 //    // TODO: will work once resetpw viewables work
 //    @Test
-//    @Ignore( "causes problems in build" )
 //    public void passwordResetIncorrectUserName() throws Exception {
 //
 //        String email = "test2@usergrid.com";

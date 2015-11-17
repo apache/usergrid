@@ -225,40 +225,6 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
     }
 
-    /**
-     * Verifies that we return JSON even when text/html is requested.
-     * (for backwards compatibility)
-     */
-    @Test
-    @Ignore("no longer relevant - this type of backwards compatibility no longer needed")
-    public void jsonForAcceptsTextHtml() throws Exception {
-
-        //Create the organization resource
-        OrganizationResource orgResource = clientSetup.getRestClient()
-            .management().orgs().org( clientSetup.getOrganizationName() );
-
-        //retrieve the credentials
-        Credentials orgCredentials = new Credentials( orgResource.credentials().get(ApiResponse.class));
-        String clientId = orgCredentials.getClientId();
-        String clientSecret = orgCredentials.getClientSecret();
-
-        //retrieve the users collection, setting the "Accept" header to text/html
-        Invocation.Builder builder = this.app().collection( "users" ).getTarget()
-            //Add the org credentials to the query
-            .queryParam( "grant_type", "client_credentials" )
-            .queryParam( "client_id", clientId )
-            .queryParam( "client_secret", clientSecret )
-            .request();
-
-        ApiResponse apiResponse = builder
-            .accept(MediaType.TEXT_HTML)
-            .get(ApiResponse.class);
-
-        Collection users = new Collection(apiResponse);
-        //make sure that a valid response is returned without error
-        assertNotNull(users);
-        assertNull(users.getResponse().getError());
-    }
 
     /**
      * Retrieve an application using password credentials
@@ -760,33 +726,6 @@ public class ApplicationResourceIT extends AbstractRestIT {
         //Assert that a valid token with a valid TTL is returned
         assertNotNull("It has access_token.", apiResponse.getAccessToken());
         assertNotNull("It has expires_in.", apiResponse.getExpirationDate());
-    }
-
-    /**
-     * Ensure that the Apigee Mobile Analytics config returns valid JSON
-     */
-    @Test
-    @Ignore("No longer relevant - Apigee internal")
-    public void validateApigeeApmConfigAPP() throws IOException {
-        String orgName = clientSetup.getOrganizationName().toLowerCase();
-        String appName = clientSetup.getAppName().toLowerCase();
-
-        try {
-            //GET the APM endpoint
-            String response = target().path( String.format( "/%s/%s/apm/apigeeMobileConfig", orgName, appName ) )
-                .request()
-                .accept( MediaType.APPLICATION_JSON )
-                .get(String.class);
-            //Parse the response
-            JsonNode node = mapper.readTree(response);
-
-            //if things are kosher then JSON should have value for instaOpsApplicationId
-            assertTrue("it's valid json for APM", node.has("instaOpsApplicationId"));
-        } catch (ClientErrorException uie) {
-            //Validate that APM config exists
-            assertNotEquals("APM Config API exists", Response.Status.NOT_FOUND,
-                uie.getResponse().getStatus()); //i.e It should not be "Not Found"
-        }
     }
 
 
