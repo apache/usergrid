@@ -187,7 +187,7 @@ public class AdminUsersIT extends AbstractRestIT {
      * TODO:test for parallel test that changing the properties here won't affect other tests
      * @throws Exception
      */
-    @Ignore("breaks other tests")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1115. breaks other tests")
     @Test
     public void testUnconfirmedAdminLogin()  throws Exception{
 
@@ -273,7 +273,7 @@ public class AdminUsersIT extends AbstractRestIT {
      * Test that the system admin doesn't need a confirmation email
      * @throws Exception
      */
-    @Ignore("breaks other tests")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1115. breaks other tests")
     @Test
     public void testSystemAdminNeedsNoConfirmation() throws Exception{
         //Save original properties to return them to normal at the end of the test
@@ -311,7 +311,8 @@ public class AdminUsersIT extends AbstractRestIT {
      * Test that the test account doesn't need confirmation and is created automatically.
      * @throws Exception
      */
-    @Ignore("Test doesn't pass because the test account isn't getting correct instantiated")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1115. Test account problem")
+    // Test doesn't pass because the test account isn't getting correct instantiated
     @Test
     public void testTestUserNeedsNoConfirmation() throws Exception{
         //Save original properties to return them to normal at the end of the test
@@ -347,8 +348,9 @@ public class AdminUsersIT extends AbstractRestIT {
      * Update the current management user and make sure the change persists
      * @throws Exception
      */
-    @Ignore("Fails because we cannot GET a management user with a super user token - only with an Admin level token."
-        + "But, we can PUT with a superuser token. This test will work once that issue has been resolved.")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1115.")
+    // Fails because we cannot GET a management user with a super user token - only with an Admin level token.
+    // But, we can PUT with a superuser token. This test will work once that issue has been resolved.
     @Test
     public void updateManagementUser() throws Exception {
 
@@ -398,7 +400,8 @@ public class AdminUsersIT extends AbstractRestIT {
         assertFalse( inbox.isEmpty() );
     }
 
-    @Ignore("Build problems - Test is broken due to viewables not being properly returned in the embedded tomcat")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1115. Viewables issue.")
+    // Test is broken due to viewables not being properly returned in the embedded tomcat
     @Test
     public void checkFormPasswordReset() throws Exception {
 
@@ -435,7 +438,6 @@ public class AdminUsersIT extends AbstractRestIT {
         assertTrue( html.contains( "invalid token" ) );
     }
 
-//    // TODO: will work once resetpw viewables work
 //    @Test
 //    public void passwordResetIncorrectUserName() throws Exception {
 //
@@ -636,7 +638,7 @@ public class AdminUsersIT extends AbstractRestIT {
         }
     }
 
-    @Ignore("breaks other tests")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1115. breaks other tests")
     @Test
     public void testProperties(){
         ApiResponse originalTestPropertiesResponse = clientSetup.getRestClient().testPropertiesResource().get();

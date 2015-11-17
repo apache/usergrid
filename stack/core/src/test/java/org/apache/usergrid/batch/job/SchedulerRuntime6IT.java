@@ -35,7 +35,8 @@ import static org.junit.Assert.assertTrue;
  * Class to test job runtimes
  */
 
-@Ignore("These tests no longer work with shared Spring context, need to be fixed https://issues.apache.org/jira/browse/USERGRID-1105" )
+@Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1105. Spring problems." )
+// These tests no longer work with shared Spring context, need to be fixed
 public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
 
     /**

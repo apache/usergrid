@@ -32,7 +32,8 @@ import static org.junit.Assert.assertTrue;
  */
 
 //@org.junit.Ignore( "Todd you need to take a look at this since it's not clear to me what was intended in this test." )
-@Ignore("These tests no longer work with shared Spring context, need to be fixed https://issues.apache.org/jira/browse/USERGRID-1105" )
+@Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1105. Spring problems." )
+// These tests no longer work with shared Spring context, need to be fixed
 public class SchedulerRuntime7IT extends AbstractSchedulerRuntimeIT {
 
     /** Test that we're only running once, even when a job exceeds the heartbeat time */

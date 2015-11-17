@@ -48,7 +48,7 @@ public class MessagesIT extends AbstractCoreIT {
     }
 
 
-    @Ignore
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1116. ")
     @Test
     public void testMessages() throws Exception {
         LOG.info( "MessagesIT.testMessages" );
@@ -118,7 +118,7 @@ public class MessagesIT extends AbstractCoreIT {
     }
 
 
-    @Ignore
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1116. ")
     @Test
     public void testSubscriberSearch() throws Exception {
         QueueManager qm = app.getQm();
@@ -171,7 +171,7 @@ public class MessagesIT extends AbstractCoreIT {
     }
 
 
-    @Ignore
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1116. ")
     @Test
     public void testConsumer() throws Exception {
         LOG.info( "Creating messages" );
@@ -214,7 +214,7 @@ public class MessagesIT extends AbstractCoreIT {
     }
 
 
-    @Ignore
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1116. ")
     @Test
     public void testTransactions() throws Exception {
         QueueManager qm = app.getQm();
