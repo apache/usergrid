@@ -29,10 +29,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.usergrid.StressTest;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +65,7 @@ import static org.junit.Assert.fail;
 
 @RunWith( ITRunner.class )
 @UseModules( TestGraphModule.class )
-@Ignore("Not for testing during build.  Kills embedded Cassandra")
+@Category(StressTest.class)
 public class GraphManagerLoadTest {
     private static final Logger log = LoggerFactory.getLogger( GraphManagerLoadTest.class );
 
@@ -95,7 +97,6 @@ public class GraphManagerLoadTest {
     }
 
 
-//    @Ignore
     @Test
     public void writeThousandsSingleSource() throws InterruptedException, ExecutionException {
         EdgeGenerator generator = new EdgeGenerator() {
@@ -124,7 +125,7 @@ public class GraphManagerLoadTest {
 
 
     @Test
-    @Ignore("Too heavy for normal build process")
+    @Category(StressTest.class)
     public void writeThousandsSingleTarget() throws InterruptedException, ExecutionException {
         EdgeGenerator generator = new EdgeGenerator() {
 

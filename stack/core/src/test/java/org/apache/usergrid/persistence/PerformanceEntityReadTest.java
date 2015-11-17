@@ -24,11 +24,13 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.usergrid.StressTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +46,7 @@ import com.codahale.metrics.Slf4jReporter;
 //@RunWith(JukitoRunner.class)
 //@UseModules({ GuiceModule.class })
 
-@Ignore("Kills embedded cassandra")
+@Category(StressTest.class)
 public class PerformanceEntityReadTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger(PerformanceEntityReadTest.class );
 

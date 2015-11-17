@@ -142,6 +142,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     }
 
     @Test
+    @Ignore
     public void singlePushNotification() throws Exception {
 
         app.clear();
@@ -167,6 +168,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     }
 
     @Test
+    @Ignore
     public void singlePushNotificationViaUser() throws Exception {
 
         app.clear();
