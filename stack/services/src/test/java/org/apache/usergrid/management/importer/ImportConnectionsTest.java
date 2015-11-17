@@ -58,7 +58,7 @@ public class ImportConnectionsTest {
 
 
     @Test
-    @Ignore("Because getTargetEntities() is broken")
+    @Ignore("Pending merge of export-feature branch. Because getTargetEntities() is broken")
     public void testCreateAndCountConnectionsViaGet() throws Exception {
 
         doTestCreateAndCountConnections(new ConnectionCounter() {
