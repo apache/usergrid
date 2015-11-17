@@ -50,7 +50,7 @@ public class SchedulerRuntime6IT extends AbstractSchedulerRuntimeIT {
         long customRetry = sleepTime + 1000;
         int numberOfRuns = 1;
 
-        OnlyOnceExceution job = springResource.getBean( "onlyOnceExceution", OnlyOnceExceution.class );
+        OnlyOnceExecution job = springResource.getBean( "onlyOnceExceution", OnlyOnceExecution.class );
 
         job.setTimeout( customRetry );
         job.setLatch( numberOfRuns );
