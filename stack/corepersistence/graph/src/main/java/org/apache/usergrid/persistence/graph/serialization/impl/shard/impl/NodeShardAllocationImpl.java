@@ -226,7 +226,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * Sanity check in case we audit before we have a full shard
          */
         if ( marked == null ) {
-            LOG.trace( "Shard {} in shard group {} not full, not splitting", shardEntryGroup );
+            LOG.trace( "Shard {} in shard group {} not full, not splitting",  shard, shardEntryGroup );
             return false;
         }
 
