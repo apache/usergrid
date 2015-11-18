@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
+import static org.apache.usergrid.persistence.index.impl.IndexingUtils.parseAppIdFromIndexDocId;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.parseIndexDocId;
 import static org.junit.Assert.assertEquals;
 
@@ -87,6 +88,41 @@ public class IndexingUtilsTest {
 
         assertEquals(version, parsedId.getVersion());
         assertEquals(id, parsedId.getId());
+    }
+
+
+    @Test
+    public void testAppIdFromDocumentId() {
+
+        final ApplicationScopeImpl applicationScope = new ApplicationScopeImpl( new SimpleId( "application" ) );
+
+        final Id id = new SimpleId( "id" );
+        final UUID version = UUIDGenerator.newTimeUUID();
+
+        final SearchEdgeImpl searchEdge =
+            new SearchEdgeImpl( new SimpleId( "source" ), "users", SearchEdge.NodeType.TARGET );
+
+        final String output = IndexingUtils.createIndexDocId( applicationScope, id, version, searchEdge );
+
+
+        final String expected =
+            "appId(" + applicationScope.getApplication().getUuid() + ",application).entityId(" + id.getUuid() + "," + id
+                .getType() + ").version(" + version + ").nodeId(" + searchEdge.getNodeId().getUuid() + "," + searchEdge
+                .getNodeId().getType() + ").edgeName(users).nodeType(TARGET)";
+
+
+        assertEquals( output, expected );
+
+
+        //now parse it
+
+        final CandidateResult parsedId = parseIndexDocId( output );
+
+        assertEquals(version, parsedId.getVersion());
+        assertEquals(id, parsedId.getId());
+
+        final UUID appId = parseAppIdFromIndexDocId(output);
+        assertEquals(appId,applicationScope.getApplication().getUuid());
     }
 
 

@@ -2887,7 +2887,7 @@ public class CpEntityManager implements EntityManager {
             EntityIndex.IndexRefreshCommandInfo indexRefreshCommandInfo
                 = managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
             try {
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i < 20; i++) {
                     if (searchCollection(
                         new SimpleEntityRef(org.apache.usergrid.persistence.entities.Application.ENTITY_TYPE, getApplicationId()),
                         InflectionUtils.pluralize("refresh"),

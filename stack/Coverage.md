@@ -5,7 +5,7 @@ To generate Jacoco coverage reports for Usergrid, do a build that runs the tests
 
 For example:
 
-    mvn install
+    mvn install -Pjacoco
 
 
 Note that all tests must pass, or some Jacoco files will be missing and report generation is likely to fail complete.

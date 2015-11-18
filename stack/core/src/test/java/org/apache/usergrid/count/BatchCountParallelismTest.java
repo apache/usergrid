@@ -28,9 +28,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.usergrid.ExperimentalTest;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +64,8 @@ public class BatchCountParallelismTest {
 
 
     @Test
-    @Ignore("This test causes the build to hang when all stack tests are run")
+    @Category(ExperimentalTest.class)
+    // "This test causes the build to hang when all stack tests are run"
     public void verifyConcurrentAdd() throws Exception {
 
         final long startCount = batcher.invocationCounter.count();

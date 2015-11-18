@@ -77,6 +77,11 @@ public interface AsyncEventService extends ReIndexAction {
      */
     void queueEntityDelete(final ApplicationScope applicationScope, final Id entityId);
 
+    /**
+     *
+     * @param indexOperationMessage
+     */
+    void queueIndexOperationMessage( final IndexOperationMessage indexOperationMessage );
 
     /**
      * current queue depth

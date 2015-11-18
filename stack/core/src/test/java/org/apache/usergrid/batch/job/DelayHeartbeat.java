@@ -35,7 +35,6 @@ import org.apache.usergrid.batch.JobExecution;
  * @author tnine
  */
 @Component("delayHeartbeat")
-@Ignore("Not a test")
 public class DelayHeartbeat implements Job {
 
     private static final Logger logger = LoggerFactory.getLogger( DelayHeartbeat.class );

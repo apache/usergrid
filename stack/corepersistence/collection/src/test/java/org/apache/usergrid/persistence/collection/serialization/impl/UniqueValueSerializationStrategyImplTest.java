@@ -127,7 +127,7 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
         UUID version = UUIDGenerator.newTimeUUID();
         UniqueValue stored = new UniqueValueImpl( field, entityId, version );
-        strategy.write( scope, stored, 2 ).execute();
+        strategy.write( scope, stored, 5 ).execute();
 
         Thread.sleep( 1000 );
 
@@ -139,7 +139,7 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         Assert.assertNotNull( retrieved );
         assertEquals( stored, retrieved );
 
-        Thread.sleep( 1500 );
+        Thread.sleep( 5000 );
 
         // wait another second, should be gone now
         fields = strategy.load( scope, entityId.getType(), Collections.<Field>singleton( field ) );

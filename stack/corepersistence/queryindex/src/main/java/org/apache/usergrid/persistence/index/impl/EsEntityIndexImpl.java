@@ -67,6 +67,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.metrics.sum.SumBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -413,7 +414,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final ParsedQuery parsedQuery = ParsedQueryBuilder.build(query);
 
         final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit, offset )
-            .setTimeout( TimeValue.timeValueMillis( queryTimeout ) );
+            .setTimeout(TimeValue.timeValueMillis(queryTimeout));
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Searching index (read alias): {}\n  nodeId: {}, edgeType: {},  \n type: {}\n   query: {} ",
@@ -451,57 +452,62 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
          */
         IndexValidationUtils.validateSearchEdge(edge);
-        Preconditions.checkNotNull( entityId, "entityId cannot be null" );
+        Preconditions.checkNotNull(entityId, "entityId cannot be null");
 
         SearchResponse searchResponse;
-
         List<CandidateResult> candidates = new ArrayList<>();
 
-        final ParsedQuery parsedQuery = ParsedQueryBuilder.build( "select *" );
+        //never let the limit be less than 2 as there are potential indefinite paging issues
+        final int searchLimit = Math.max(2, indexFig.getVersionQueryLimit());
+
+        final QueryBuilder entityQuery = QueryBuilders
+            .termQuery(IndexingUtils.EDGE_NODE_ID_FIELDNAME, IndexingUtils.nodeId(edge.getNodeId()));
 
         final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder();
 
-        //I can't just search on the entity Id.
-
-        FilterBuilder entityEdgeFilter = FilterBuilders.termFilter(IndexingUtils.EDGE_NODE_ID_FIELDNAME,
-            IndexingUtils.nodeId(edge.getNodeId()));
-
-        srb.setPostFilter(entityEdgeFilter);
-
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Searching for marked versions in index (read alias): {}\n  nodeId: {},\n   query: {} ",
+            logger.debug( "Searching for edges in (read alias): {}\n  nodeId: {},\n   query: {} ",
                 this.alias.getReadAlias(),entityId, srb );
         }
 
         try {
-            //Added For Graphite Metrics
 
-            //set the timeout on the scroll cursor to 6 seconds and set the number of values returned per shard to 100.
-            //The settings for the scroll aren't tested and so we aren't sure what vlaues would be best in a production enviroment
-            //TODO: review this and make them not magic numbers when acking this PR.
-            searchResponse = srb.setScroll( new TimeValue( 6000 ) ).setSize( 100 ).execute().actionGet();
-
+            long queryTimestamp = 0L;
 
             while(true){
-                //add search result hits to some sort of running tally of hits.
-                candidates = aggregateScrollResults( candidates, searchResponse );
 
-                SearchScrollRequestBuilder ssrb = searchRequestBuilderStrategyV2
-                    .getScrollBuilder( searchResponse.getScrollId() )
-                    .setScroll( new TimeValue( 6000 ) );
+                QueryBuilder timestampQuery =  QueryBuilders
+                    .rangeQuery(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME)
+                    .gte(queryTimestamp);
 
-                //TODO: figure out how to log exactly what we're putting into elasticsearch
-                //                if ( logger.isDebugEnabled() ) {
-                //                    logger.debug( "Scroll search using query: {} ",
-                //                        ssrb.toString() );
-                //                }
+                QueryBuilder finalQuery = QueryBuilders
+                    .boolQuery()
+                    .must(entityQuery)
+                    .must(timestampQuery);
 
-                searchResponse = ssrb.execute().actionGet();
+                searchResponse = srb
+                    .setQuery(finalQuery)
+                    .setSize(searchLimit)
+                    .addSort(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME, SortOrder.ASC)
+                    .execute()
+                    .actionGet();
 
-                if (searchResponse.getHits().getHits().length == 0) {
+                int responseSize = searchResponse.getHits().getHits().length;
+                if(responseSize == 0){
                     break;
                 }
 
+                // update queryTimestamp to be the timestamp of the last entity returned from the query
+                queryTimestamp = (long) searchResponse
+                    .getHits().getAt(responseSize - 1)
+                    .getSource().get(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME);
+
+                candidates = aggregateScrollResults(candidates, searchResponse, null);
+
+                if(responseSize < searchLimit){
+
+                    break;
+                }
 
             }
         }
@@ -512,7 +518,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         }
         failureMonitor.success();
 
-        return new CandidateResults( candidates, parsedQuery.getSelectFieldMappings());
+        return new CandidateResults( candidates, Collections.EMPTY_SET);
     }
 
 
@@ -520,64 +526,73 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     public CandidateResults getAllEntityVersionsBeforeMarkedVersion( final Id entityId, final UUID markedVersion ) {
 
         Preconditions.checkNotNull( entityId, "entityId cannot be null" );
-        Preconditions.checkNotNull( markedVersion, "markedVersion cannot be null" );
+        Preconditions.checkNotNull(markedVersion, "markedVersion cannot be null");
         ValidationUtils.verifyVersion(markedVersion);
 
         SearchResponse searchResponse;
-
         List<CandidateResult> candidates = new ArrayList<>();
 
-        final ParsedQuery parsedQuery = ParsedQueryBuilder.build( "select *" );
+        final long markedTimestamp = markedVersion.timestamp();
+
+        // never let the limit be less than 2 as there are potential indefinite paging issues
+        final int searchLimit = Math.max(2, indexFig.getVersionQueryLimit());
+
+        // this query will find the document for the entity itself
+        final QueryBuilder entityQuery = QueryBuilders
+            .termQuery(IndexingUtils.ENTITY_ID_FIELDNAME, IndexingUtils.entityId(entityId));
+
+        // this query will find all the documents where this entity is a source/target node
+        final QueryBuilder nodeQuery = QueryBuilders
+            .termQuery(IndexingUtils.EDGE_NODE_ID_FIELDNAME, IndexingUtils.nodeId(entityId));
 
         final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder();
 
-        FilterBuilder entityIdFilter = FilterBuilders.termFilter(IndexingUtils.ENTITY_ID_FIELDNAME,
-            IndexingUtils.entityId(entityId));
-
-        FilterBuilder entityVersionFilter = FilterBuilders.rangeFilter( IndexingUtils.ENTITY_VERSION_FIELDNAME ).lte(markedVersion);
-
-        FilterBuilder andFilter = FilterBuilders.andFilter(entityIdFilter, entityVersionFilter);
-
-        srb.setPostFilter(andFilter);
-
-
-
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Searching for marked versions in index (read alias): {}\n  nodeId: {},\n   query: {} ",
-                this.alias.getReadAlias(),entityId, srb );
-        }
-
         try {
-            //Added For Graphite Metrics
 
-            //set the timeout on the scroll cursor to 6 seconds and set the number of values returned per shard to 100.
-            //The settings for the scroll aren't tested and so we aren't sure what vlaues would be best in a production enviroment
-            //TODO: review this and make them not magic numbers when acking this PR.
-            searchResponse = srb.setScroll( new TimeValue( 6000 ) ).setSize( 100 ).execute().actionGet();
-
-            //list that will hold all of the search hits
-
+            long queryTimestamp = 0L;
 
             while(true){
-                //add search result hits to some sort of running tally of hits.
-                candidates = aggregateScrollResults( candidates, searchResponse );
 
-                SearchScrollRequestBuilder ssrb = searchRequestBuilderStrategyV2
-                    .getScrollBuilder( searchResponse.getScrollId() )
-                    .setScroll( new TimeValue( 6000 ) );
+                QueryBuilder timestampQuery =  QueryBuilders
+                    .rangeQuery(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME)
+                    .gte(queryTimestamp)
+                    .lte(markedTimestamp);
 
-                //TODO: figure out how to log exactly what we're putting into elasticsearch
-//                if ( logger.isDebugEnabled() ) {
-//                    logger.debug( "Scroll search using query: {} ",
-//                        ssrb.toString() );
-//                }
+                QueryBuilder entityQueryWithTimestamp = QueryBuilders
+                    .boolQuery()
+                    .must(entityQuery)
+                    .must(timestampQuery);
 
-                searchResponse = ssrb.execute().actionGet();
+                QueryBuilder finalQuery = QueryBuilders
+                    .boolQuery()
+                    .should(entityQueryWithTimestamp)
+                    .should(nodeQuery)
+                    .minimumNumberShouldMatch(1);
 
-                if (searchResponse.getHits().getHits().length == 0) {
+                searchResponse = srb
+                    .setQuery(finalQuery)
+                    .setSize(searchLimit)
+                    .addSort(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME, SortOrder.ASC)
+                    .execute()
+                    .actionGet();
+
+                int responseSize = searchResponse.getHits().getHits().length;
+                if(responseSize == 0){
                     break;
                 }
 
+                candidates = aggregateScrollResults(candidates, searchResponse, markedVersion);
+
+                // update queryTimestamp to be the timestamp of the last entity returned from the query
+                queryTimestamp = (long) searchResponse
+                    .getHits().getAt(responseSize - 1)
+                    .getSource().get(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME);
+
+
+                if(responseSize < searchLimit){
+
+                    break;
+                }
 
             }
         }
@@ -588,7 +603,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         }
         failureMonitor.success();
 
-        return new CandidateResults( candidates, parsedQuery.getSelectFieldMappings());
+        return new CandidateResults( candidates, Collections.EMPTY_SET);
     }
 
 
@@ -654,10 +669,12 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         List<CandidateResult> candidates = new ArrayList<>( hits.length );
 
+
+
         for ( SearchHit hit : hits ) {
+            CandidateResult candidateResult;
 
-            final CandidateResult candidateResult = parseIndexDocId( hit.getId() );
-
+            candidateResult =  parseIndexDocId( hit, query.isGeoQuery() );
             candidates.add( candidateResult );
         }
 
@@ -673,17 +690,46 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         return candidateResults;
     }
 
-    private List<CandidateResult> aggregateScrollResults( List<CandidateResult> candidates,
-                                                          final SearchResponse searchResponse ){
+    private List<CandidateResult> aggregateScrollResults(List<CandidateResult> candidates,
+                                                         final SearchResponse searchResponse, final UUID markedVersion){
 
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
 
         for ( SearchHit hit : hits ) {
 
-            final CandidateResult candidateResult = parseIndexDocId( hit.getId() );
+            final CandidateResult candidateResult = parseIndexDocId( hit );
 
-            candidates.add( candidateResult );
+            // if comparing against the latestVersion, make sure we only add the candidateResult if it's
+            // older than or equal to the latest marked version
+            if (markedVersion != null) {
+
+                if(candidateResult.getVersion().timestamp() <= markedVersion.timestamp()){
+
+                    if(logger.isDebugEnabled()){
+                        logger.debug("Candidate version {} is <= provided entity version {} for entityId {}",
+                            candidateResult.getVersion(),
+                            markedVersion,
+                            candidateResult.getId()
+                            );
+                    }
+
+                    candidates.add(candidateResult);
+
+                }else{
+                    if(logger.isDebugEnabled()){
+                        logger.debug("Candidate version {} is > provided entity version {} for entityId {}. Not" +
+                                "adding to candidate results",
+                            candidateResult.getVersion(),
+                            markedVersion,
+                            candidateResult.getId()
+                        );
+                    }
+                }
+
+            }else{
+                candidates.add(candidateResult);
+            }
         }
 
         logger.debug( "Aggregated {} out of {} hits ",candidates.size(),searchHits.getTotalHits() );

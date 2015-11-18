@@ -33,7 +33,6 @@ import me.prettyprint.hector.api.Cluster;
 
 
 /** @author zznate */
-@Ignore( "Not a test" )
 public class CoreSchemaManager implements SchemaManager {
     private static final Logger LOG = LoggerFactory.getLogger( CoreSchemaManager.class );
 

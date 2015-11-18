@@ -22,14 +22,14 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.usergrid.persistence.index.impl.*;
+import org.elasticsearch.action.index.IndexRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +57,6 @@ import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
-import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
-import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
@@ -153,6 +151,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                     final EventBuilder eventBuilder,
                                     final MapManagerFactory mapManagerFactory,
                                     final QueueFig queueFig,
+                                    @EventExecutionScheduler
                                     final RxTaskScheduler rxTaskScheduler ) {
         this.indexProducer = indexProducer;
 
@@ -315,15 +314,21 @@ public class AmazonAsyncEventService implements AsyncEventService {
                 boolean validateEmptySets = true;
                 Observable<IndexOperationMessage> indexoperationObservable;
                 //merge each operation to a master observable;
-                if (event instanceof EdgeDeleteEvent) {
-                    indexoperationObservable = handleEdgeDelete(message);
-                } else if (event instanceof EdgeIndexEvent) {
-                    indexoperationObservable = handleEdgeIndex(message);
-                } else if (event instanceof EntityDeleteEvent) {
-                    indexoperationObservable = handleEntityDelete(message);
-                } else if (event instanceof EntityIndexEvent) {
-                    indexoperationObservable = handleEntityIndexUpdate(message);
-                } else if (event instanceof InitializeApplicationIndexEvent) {
+                if ( event instanceof EdgeDeleteEvent ) {
+                    indexoperationObservable = handleEdgeDelete( message );
+                }
+                else if ( event instanceof EdgeIndexEvent ) {
+                    indexoperationObservable = handleEdgeIndex( message );
+                }
+                else if ( event instanceof EntityDeleteEvent ) {
+                    indexoperationObservable = handleEntityDelete( message );
+                    validateEmptySets = false; // do not check this one for an empty set b/c it can be empty
+
+                }
+                else if ( event instanceof EntityIndexEvent ) {
+                    indexoperationObservable = handleEntityIndexUpdate( message );
+                }
+                else if ( event instanceof InitializeApplicationIndexEvent ) {
                     //does not return observable
                     handleInitializeApplicationIndex(event, message);
                     indexoperationObservable = Observable.just(new IndexOperationMessage());
@@ -479,6 +484,11 @@ public class AmazonAsyncEventService implements AsyncEventService {
      */
     public void queueIndexOperationMessage( final IndexOperationMessage indexOperationMessage ) {
 
+        // don't try to produce something with nothing
+        if(indexOperationMessage.isEmpty()){
+            return;
+        }
+
         final String jsonValue = ObjectJsonSerializer.INSTANCE.toString( indexOperationMessage );
 
         final UUID newMessageId = UUIDGenerator.newTimeUUID();
@@ -534,6 +544,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
             indexOperationMessage = ObjectJsonSerializer.INSTANCE.fromString( message, IndexOperationMessage.class );
         }
 
+        initializeEntityIndexes(indexOperationMessage);
 
         //NOTE that we intentionally do NOT delete from the map.  We can't know when all regions have consumed the message
         //so we'll let compaction on column expiration handle deletion
@@ -549,6 +560,35 @@ public class AmazonAsyncEventService implements AsyncEventService {
 
     }
 
+    /**
+     *     this method will call initialize for each message, since we are caching the entity indexes,
+     *     we don't worry about aggregating by app id
+     * @param indexOperationMessage
+     */
+    private void initializeEntityIndexes(final IndexOperationMessage indexOperationMessage) {
+
+        // create a set so we can have a unique list of appIds for which we call createEntityIndex
+        Set<UUID> appIds = new HashSet<>();
+
+        // loop through all indexRequests and add the appIds to the set
+        indexOperationMessage.getIndexRequests().forEach(req -> {
+            UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
+            appIds.add(appId);
+        });
+
+        // loop through all deindexRequests and add the appIds to the set
+        indexOperationMessage.getDeIndexRequests().forEach(req -> {
+            UUID appId = IndexingUtils.getApplicationIdFromIndexDocId(req.documentId);
+            appIds.add(appId);
+        });
+
+        // for each of the appIds in the unique set, call create entity index to ensure the aliases are created
+        appIds.forEach(appId -> {
+                ApplicationScope appScope = CpNamingUtils.getApplicationScope(appId);
+                entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(appScope));
+            }
+        );
+    }
 
 
     @Override
@@ -577,9 +617,10 @@ public class AmazonAsyncEventService implements AsyncEventService {
             entityDeleteResults = eventBuilder.buildEntityDelete( applicationScope, entityId );
 
 
-        entityDeleteResults
-            .getEntitiesCompacted()
-            .collect(() -> new ArrayList<>(), (list, item) -> list.add(item)).toBlocking().lastOrDefault(null);
+        // Delete the entities and remove from graph separately
+        entityDeleteResults.getEntitiesDeleted().toBlocking().lastOrDefault(null);
+
+        entityDeleteResults.getCompactedNode().toBlocking().lastOrDefault(null);
 
         return entityDeleteResults.getIndexObservable();
     }
@@ -667,35 +708,45 @@ public class AmazonAsyncEventService implements AsyncEventService {
                             }
                             while ( true );
                         }
-                    } )
-                            //this won't block our read loop, just reads and proceeds
-                            .map( messages -> {
-                                if ( messages == null || messages.size() == 0 ) {
-                                    return null;
-                                }
+                    } )        //this won't block our read loop, just reads and proceeds
+                        .flatMap( sqsMessages -> {
 
-                                try {
-                                    List<IndexEventResult> indexEventResults = callEventHandlers( messages );
-                                    List<QueueMessage> messagesToAck = submitToIndex( indexEventResults );
-                                    if ( messagesToAck == null || messagesToAck.size() == 0 ) {
-                                        logger.error( "No messages came back from the queue operation should have seen "
-                                            + messages.size(), messages );
-                                        return messagesToAck;
-                                    }
-                                    if ( messagesToAck.size() < messages.size() ) {
-                                        logger.error( "Missing messages from queue post operation", messages,
-                                            messagesToAck );
-                                    }
-                                    //ack each message, but only if we didn't error.
-                                    ack( messagesToAck );
-                                    return messagesToAck;
-                                }
-                                catch ( Exception e ) {
-                                    logger.error( "failed to ack messages to sqs", e );
-                                    return null;
-                                    //do not rethrow so we can process all of them
-                                }
-                            } );
+                            //do this on a different schedule, and introduce concurrency with flatmap for faster processing
+                            return Observable.just( sqsMessages )
+
+                                             .map( messages -> {
+                                                 if ( messages == null || messages.size() == 0 ) {
+                                                     return null;
+                                                 }
+
+                                                 try {
+                                                     List<IndexEventResult> indexEventResults =
+                                                         callEventHandlers( messages );
+                                                     List<QueueMessage> messagesToAck =
+                                                         submitToIndex( indexEventResults );
+                                                     if ( messagesToAck == null || messagesToAck.size() == 0 ) {
+                                                         logger.error(
+                                                             "No messages came back from the queue operation should "
+                                                                 + "have seen "
+                                                                 + messages.size(), messages );
+                                                         return messagesToAck;
+                                                     }
+                                                     if ( messagesToAck.size() < messages.size() ) {
+                                                         logger.error( "Missing messages from queue post operation",
+                                                             messages, messagesToAck );
+                                                     }
+                                                     //ack each message, but only if we didn't error.
+                                                     ack( messagesToAck );
+                                                     return messagesToAck;
+                                                 }
+                                                 catch ( Exception e ) {
+                                                     logger.error( "failed to ack messages to sqs", e );
+                                                     return null;
+                                                     //do not rethrow so we can process all of them
+                                                 }
+                                             } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
+                            //end flatMap
+                        }, indexProcessorFig.getEventConcurrencyFactor() );
 
             //start in the background
 
@@ -738,10 +789,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
             .map(result -> result.getQueueMessage().get())
             .collect(Collectors.toList());
 
-        //only Q it if it's empty
-        if(!combined.isEmpty()) {
             queueIndexOperationMessage( combined );
-        }
 
         return messagesToAck;
     }

@@ -31,6 +31,7 @@ import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.RestClient;
 
 import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
 
@@ -291,18 +292,17 @@ public class OrganizationsIT extends AbstractRestIT {
 
     /**
      * Returns error from unimplemented delete method by trying to call the delete organization endpoint
-     * @throws IOException
      */
-    @Ignore("It should return a 501, so when this is fixed the test can be run")
     @Test
     public void noOrgDelete() throws IOException {
 
         try {
-            //Delete default organization
+            // attempt to delete default organization
             clientSetup.getRestClient().management().orgs().org( clientSetup.getOrganizationName() ).delete();
             fail( "Delete is not implemented yet" );
-        }catch(ClientErrorException uie){
-            assertEquals( Response.Status.NOT_IMPLEMENTED ,uie.getResponse().getStatus());
+
+        } catch( ServerErrorException see ){
+            assertEquals( Response.Status.NOT_IMPLEMENTED.getStatusCode(), see.getResponse().getStatus());
         }
     }
 

@@ -35,7 +35,6 @@ import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createColle
 
 public class SearchCollectionFilter extends AbstractElasticSearchFilter {
 
-    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final String collectionName;
     private final String entityType;
 
@@ -55,7 +54,6 @@ public class SearchCollectionFilter extends AbstractElasticSearchFilter {
                                    @Assisted( "collectionName" ) final String collectionName,
                                    @Assisted( "entityType" ) final String entityType ) {
         super( entityIndexFactory, metricsFactory, indexLocationStrategyFactory, query );
-        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.collectionName = collectionName;
         this.entityType = entityType;
     }

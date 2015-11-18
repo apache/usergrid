@@ -17,14 +17,6 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.pipeline;
+package org.apache.usergrid;
 
-
-public interface PipelineOperations {
-
-    /**
-     * Add the pipeline operation to the set of operations
-     * @param po
-     */
-    void add( PipelineOperation po );
-}
+public interface ExperimentalTest {}

@@ -22,7 +22,6 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 import java.util.List;
 
-import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,12 +108,10 @@ public class EventBuilderImpl implements EventBuilder {
         log.debug( "Deleting in app scope {} with edge {} }", applicationScope, edge );
 
         final Observable<IndexOperationMessage> edgeObservable =
-            indexService.deleteIndexEdge( applicationScope, edge )
-                .map( batch -> {
-                    final GraphManager gm = graphManagerFactory.createEdgeManager(applicationScope);
-                    gm.deleteEdge(edge).toBlocking().lastOrDefault(null);
-                    return batch;
-                } );
+            indexService.deleteIndexEdge( applicationScope, edge ).flatMap( batch -> {
+                final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
+                return gm.deleteEdge( edge ).map( deletedEdge -> batch );
+            } );
 
         return edgeObservable;
     }
@@ -131,8 +128,6 @@ public class EventBuilderImpl implements EventBuilder {
 
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
 
-        //needs get versions here.
-
 
         //TODO: change this to be an observable
         //so we get these versions and loop through them until we find the MvccLogEntry that is marked as delete.
@@ -143,30 +138,29 @@ public class EventBuilderImpl implements EventBuilder {
 
         //If there is nothing marked then we shouldn't return any results.
         //TODO: evaluate if we want to return null or return empty observable when we don't have any results marked as deleted.
-        if(mostRecentlyMarked == null) {
-            Observable<IndexOperationMessage> messageObservable = indexService.deleteEntityIndexes(applicationScope, entityId, UUIDUtils.newTimeUUID());
-            final Observable<List<MvccLogEntry>> entries =
-                ecm.getVersions( entityId ).buffer( serializationFig.getBufferSize() )
-                    .doOnNext( buffer -> ecm.delete( buffer ) ).doOnCompleted(() -> gm.compactNode(entityId));
-            return new EntityDeleteResults(messageObservable, entries);
-        }else {
-            //observable of index operation messages
-            //this method will need the most recent version.
-            //When we go to compact the graph make sure you turn on the debugging mode for the deleted nodes so
-            //we can verify that we mark them. That said that part seems kinda done. as we also delete the mvcc buffers.
-            final Observable<IndexOperationMessage> edgeObservable =
-                indexService.deleteEntityIndexes(applicationScope, entityId, mostRecentlyMarked.getVersion());
+        if(mostRecentlyMarked == null)
+            return null;
+
+        //observable of index operation messages
+        //this method will need the most recent version.
+        //When we go to compact the graph make sure you turn on the debugging mode for the deleted nodes so
+        //we can verify that we mark them. That said that part seems kinda done. as we also delete the mvcc buffers.
+        final Observable<IndexOperationMessage> edgeObservable =
+            indexService.deleteEntityIndexes( applicationScope, entityId, mostRecentlyMarked.getVersion() );
 
 
-            //TODO: not sure what we need the list of versions here when we search for the mark above
-            //observable of entries as the batches are deleted
-            final Observable<List<MvccLogEntry>> entries =
-                ecm.getVersions(entityId).buffer(serializationFig.getBufferSize())
-                    .doOnNext(buffer -> ecm.delete(buffer)).doOnCompleted(() -> gm.compactNode(entityId));
+        //TODO: not sure what we need the list of versions here when we search for the mark above
+        //observable of entries as the batches are deleted
+        final Observable<List<MvccLogEntry>> entries =
+            ecm.getVersions( entityId ).buffer( serializationFig.getBufferSize() )
+               .doOnNext( buffer -> ecm.delete( buffer ) );
 
 
-            return new EntityDeleteResults(edgeObservable, entries);
-        }
+        // observable of the edge delete from graph
+        final Observable<Id> compactedNode = gm.compactNode(entityId);
+
+
+        return new EntityDeleteResults( edgeObservable, entries, compactedNode );
     }
 
 

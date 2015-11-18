@@ -255,6 +255,9 @@ object FeederGenerator {
     val csvLines = if (Settings.feedAuditUuids) Source.fromFile(Settings.feedAuditUuidFilename).getLines().toArray else Array[String]()
     val csvLinesLen = csvLines.length
     var counter = new AtomicInteger(0)
+    var entityCounter: Long = 0L
+    var lastEntityCountPrinted: Long = 0L
+    var entityProgressCount: Long = Settings.entityProgressCount
 
     override def hasNext: Boolean = true
 
@@ -264,7 +267,7 @@ object FeederGenerator {
         if (i >= csvLinesLen) return null
 
         val line = csvLines(i)
-        if (line != Settings.auditUuidsHeader) return line
+        if (line != Settings.uuidsHeader) return line
 
       } while (true)
 
@@ -279,9 +282,18 @@ object FeederGenerator {
       val name = if (line != null) array(1) else ""
       val uuid = if (line != null) array(2) else ""
       val modified = if (line != null) array(3) else ""
+      val lastStatus = if (line != null) array(4) else ""
       //println(s"$collectionName|$name|$uuid|$modified")
+      val accessField = if (uuid != "") uuid else name
+      val queryField = if (uuid != "") s"uuid='$uuid'" else s"name='$name'"
 
-      Map("collectionName" -> collectionName, "name" -> name,  "uuid" -> uuid, "modified" -> modified, "validEntity" -> validEntity)
+      if (entityProgressCount > 0L && entityCounter >= lastEntityCountPrinted + entityProgressCount) {
+        println(s"CSV Entity: $entityCounter")
+        lastEntityCountPrinted = entityCounter
+      }
+
+      Map("collectionName" -> collectionName, "name" -> name,  "uuid" -> uuid, "modified" -> modified, "lastStatus" -> lastStatus,
+        "validEntity" -> validEntity, "accessField" -> accessField, "queryField" -> queryField)
     }
   }
 

@@ -103,24 +103,6 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
     }
 
-    @Ignore("Not sure that this test makes any sense")
-    @Test
-    public void postToEmptyCollection() throws IOException {
-/*
-        Entity payload = new Entity();
-        Entity entity = this.app().collection("cities").post(payload);
-        assertNull(entity.get("name"));
-
-
-        Map<String, String> payload = new HashMap<String, String>();
-
-        JsonNode node = mapper.readTree( resource().path( "/test-organization/test-app/cities" ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-                        .post( String.class, payload ));
-        assertNull( getEntity( node, 0 ) );
-        assertNull( node.get( "count" ) );
-*/
-    }
 
     @Test
     public void postToReservedField() throws Exception {

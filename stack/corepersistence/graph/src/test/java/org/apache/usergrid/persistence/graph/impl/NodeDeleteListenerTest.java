@@ -319,7 +319,7 @@ public class NodeDeleteListenerTest {
      * since it has no other targets
      */
     @Test
-    @Ignore("This needs to be re-enable.  The counters for sharding fall over in cass, needs fixes")
+    @Ignore("Pending re-enable of delete functionality")
     public void testMultiDelete() throws ConnectionException, InterruptedException {
 
         GraphManager em = emf.createEdgeManager( scope );
@@ -368,7 +368,6 @@ public class NodeDeleteListenerTest {
 
         int count = deleteListener.receive( scope, toDelete, UUIDGenerator.newTimeUUID() ).toBlocking().last();
 
-        //TODO T.N. THIS SHOULD WORK!!!!  It fails intermittently with RX 0.17.1 with too many scheduler threads (which was wrong), try this again after the next release
         assertEquals( edgeCount, count );
 
         //now verify we can't get any of the info back

@@ -36,7 +36,8 @@ import static org.junit.Assert.assertTrue;
  * Tests saturation at each point of the runtime as well
  */
 
-@Ignore("Ignored awaiting fix for USERGRID-267")
+@Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1105. Spring problems." )
+// These tests no longer work with shared Spring context, need to be fixed
 public class SchedulerRuntimeIntervalIT extends AbstractSchedulerRuntimeIT {
 
 	private static final Logger logger =
