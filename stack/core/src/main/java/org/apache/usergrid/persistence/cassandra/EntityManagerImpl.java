@@ -550,10 +550,11 @@ public class EntityManagerImpl implements EntityManager {
         //check to see if the single value is valid. If it is not valid then it will be zero and go through
         //the code below.
         if(cols.size() == 1){
-            logger.info("Verifying that column is still valid, if not will be removed");
+            logger.debug("Verifying that column is still valid, if not will be removed");
             UUID indexCorruptionUuid = ue.fromByteBuffer( cols.get( 0 ).getName());
 
             if (get(indexCorruptionUuid) == null ) {
+                logger.debug( "Deleting the following uuid: {} from the application: {}",indexCorruptionUuid,applicationId );
                 deleteUniqueColumn( ownerEntityId, key, indexCorruptionUuid );
                 cols.remove( 0 );
             }
@@ -577,7 +578,7 @@ public class EntityManagerImpl implements EntityManager {
 
             //Contains entities that weren't deleted but are still in index.
             //maybe use a set or list so you don't have to keep track of an index.
-            Entity[] entities = new Entity[cols.size()];
+            Entity[] entities = new Entity[indexingColumns.size()];
             int index = 0;
 
             for ( HColumn<ByteBuffer, ByteBuffer> col : indexingColumns ) {
@@ -586,6 +587,7 @@ public class EntityManagerImpl implements EntityManager {
                 entities[index] = get(indexCorruptionUuid);
 
                 if (entities[index] == null ) {
+                    logger.debug("deleting uuid: {} from {} because it no longer exists.",indexCorruptionUuid,ownerEntityId);
                     deleteUniqueColumn( ownerEntityId, key, indexCorruptionUuid );
                 }
                 else{
