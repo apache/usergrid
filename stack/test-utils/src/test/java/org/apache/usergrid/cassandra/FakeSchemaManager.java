@@ -17,11 +17,7 @@
 package org.apache.usergrid.cassandra;
 
 
-import org.junit.Ignore;
-
-
 /** @author zznate */
-@Ignore
 public class FakeSchemaManager implements SchemaManager {
     @Override
     public void create() {

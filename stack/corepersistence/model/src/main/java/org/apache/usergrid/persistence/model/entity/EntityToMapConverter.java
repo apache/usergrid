@@ -57,8 +57,15 @@ public class EntityToMapConverter {
     }
 
     private EntityMap toMap( EntityObject entity, EntityMap entityMap ) {
+
         for ( Field field : entity.getFields() ) {
-            if ( field instanceof ListField || field instanceof ArrayField  || field instanceof SetField) {
+            if( field instanceof DistanceField){
+                //parse distance and add to metadata
+                if(!entityMap.containsKey("metadata"))entityMap.put("metadata",new HashMap<String,Object>());
+                DistanceField distanceField = (DistanceField) field;
+                Map<String,Object> metaMap = (Map) entityMap.get("metadata");
+                metaMap.put(DistanceField.NAME, distanceField.getValue());
+            }else if ( field instanceof ListField || field instanceof ArrayField  || field instanceof SetField) {
                 Collection list = ( Collection ) field.getValue();
                 entityMap.put( field.getName(), processCollection( list )  );
             }

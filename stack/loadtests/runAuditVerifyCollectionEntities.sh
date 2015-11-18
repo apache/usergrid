@@ -31,7 +31,7 @@ DELETE_AFTER_SUCCESSFUL_AUDIT=false
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
-[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) AUDIT_UUID_FILENAME [FAILED_UUID_FILENAME [DELETE_AFTER_SUCCESSFUL_AUDIT(true/false)[USERGRID_REGION]]]"
+[ "$#" -ge 3 ] || die "At least 3 arguments required, $# provided.  Example is $0 RAMP_USERS RAMP_TIME(seconds) AUDIT_UUID_FILENAME [FAILED_UUID_FILENAME [DELETE_AFTER_SUCCESSFUL_AUDIT(true/false) [USERGRID_REGION]]]"
 
 RAMP_USERS="$1"
 RAMP_TIME="$2"

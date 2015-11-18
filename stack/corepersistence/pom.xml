@@ -54,6 +54,7 @@ limitations under the License.
                       <version>${surefire.plugin.version}</version>
                       <configuration>
                           <argLine>-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec</argLine>
+                          <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest</excludedGroups>
                       </configuration>
                   </plugin>
               </plugins>
@@ -87,7 +88,7 @@ limitations under the License.
         <junit.version>4.11</junit.version>
         <kryo-serializers.version>0.26</kryo-serializers.version>
         <log4j.version>1.2.17</log4j.version>
-        <rx.version>1.0.12</rx.version>
+        <rx.version>1.0.14</rx.version>
         <slf4j.version>1.7.2</slf4j.version>
         <surefire.version>2.16</surefire.version>
         <aws.version>1.10.6</aws.version>
@@ -126,6 +127,7 @@ limitations under the License.
                             <archaius.deployment.environment>UNIT</archaius.deployment.environment>
                         </systemPropertyVariables>
                         <argLine>-Xms2G -Xmx4G</argLine>
+                        <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest</excludedGroups>
                     </configuration>
                 </plugin>
 

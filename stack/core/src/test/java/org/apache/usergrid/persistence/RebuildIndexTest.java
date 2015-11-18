@@ -17,11 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.junit.After;
@@ -300,6 +296,118 @@ public class RebuildIndexTest extends AbstractCoreIT {
         readData( em, collectionName, ENTITIES_TO_INDEX, 3 );
     }
 
+    @Test( timeout = 120000 )
+    public void rebuildIndexGeo() throws Exception {
+
+        logger.info( "Started rebuildIndex()" );
+
+        String rand = RandomStringUtils.randomAlphanumeric( 5 );
+        final UUID appId = setup.createApplication( "org_" + rand, "app_" + rand );
+
+        final EntityManager em = setup.getEmf().getEntityManager( appId );
+
+        final ReIndexService reIndexService = setup.getInjector().getInstance( ReIndexService.class );
+
+        // ----------------- create a bunch of entities
+
+        Map<String, Object> cat1map = new HashMap<String, Object>() {{
+            put( "name", "enzo" );
+            put( "color", "grey" );
+            put("location", new LinkedHashMap<String, Object>() {{
+                put("latitude", -35.746369);
+                put("longitude", 150.952183);
+            }});
+        }};
+        final double lat = -34.746369;
+        final double lon = 152.952183;
+        Map<String, Object> cat2map = new HashMap<String, Object>() {{
+            put( "name", "marquee" );
+            put( "color", "grey" );
+            put("location", new LinkedHashMap<String, Object>() {{
+                put("latitude", lat);
+                put("longitude", lon);
+            }});
+        }};
+        Map<String, Object> cat3map = new HashMap<String, Object>() {{
+            put( "name", "bertha" );
+            put( "color", "grey" );
+            put("location", new LinkedHashMap<String, Object>() {{
+                put("latitude", -33.746369);
+                put("longitude", 150.952183);
+            }});
+        }};
+
+        Entity cat1 = em.create( "cat", cat1map );
+        Entity cat2 = em.create( "cat", cat2map );
+        Entity cat3 = em.create( "cat", cat3map );
+
+
+        logger.info( "Created {} entities", ENTITIES_TO_INDEX );
+        app.refreshIndex();
+
+        // ----------------- test that we can read them, should work fine
+
+        logger.debug( "Read the data" );
+        final String collectionName = "cats";
+        Query q = Query.fromQL( "select * where color='grey'" ).withLimit( 1000 );
+        Results results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q, 3 );
+        assertEquals(3,results.size());
+
+
+        // ----------------- delete the system and application indexes
+
+        logger.debug( "Deleting app index" );
+
+        deleteIndex( em.getApplicationId() );
+
+        // ----------------- test that we can read them, should fail
+
+        // deleting sytem app index will interfere with other concurrently running tests
+        //deleteIndex( CpNamingUtils.SYSTEM_APP_ID );
+
+        // ----------------- test that we can read them, should fail
+
+        logger.debug( "Reading data, should fail this time " );
+
+        results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q, 0 );
+        assertEquals(results.size(),0);
+
+        // ----------------- rebuild index
+
+        logger.debug( "Preparing to rebuild all indexes" );
+
+
+        try {
+
+            final ReIndexRequestBuilder builder =
+                reIndexService.getBuilder().withApplicationId( em.getApplicationId() );
+
+            ReIndexService.ReIndexStatus status = reIndexService.rebuildIndex( builder );
+
+            assertNotNull( status.getJobId(), "JobId is present" );
+
+            logger.info( "Rebuilt index" );
+
+            waitForRebuild( status, reIndexService );
+
+            logger.info( "Rebuilt index" );
+
+            app.refreshIndex();
+        }
+        catch ( Exception ex ) {
+            logger.error( "Error rebuilding index", ex );
+            fail();
+        }
+
+        // ----------------- test that we can read them
+
+        Thread.sleep( 2000 );
+        results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q, 3 );
+        assertEquals(results.size(),3);
+        q = Query.fromQL("select * where location within 100 of "+lat+", "+lon);
+        results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q, 1 );
+        assertEquals(results.size(),1);
+    }
 
 
     @Test( timeout = 120000 )

@@ -28,6 +28,9 @@ import java.util.UUID;
 
 import com.codahale.metrics.Timer;
 import org.apache.usergrid.persistence.cache.CacheFactory;
+
+import org.apache.usergrid.corepersistence.rx.impl.ResponseImportTasks;
+import org.apache.usergrid.corepersistence.service.ServiceSchedulerFig;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.slf4j.Logger;
@@ -43,7 +46,6 @@ import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.Schema;
-import org.apache.usergrid.persistence.core.rx.RxSchedulerFig;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.ServiceParameter.IdParameter;
@@ -55,6 +57,7 @@ import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationException;
 
 import com.google.inject.Injector;
+import com.google.inject.Key;
 
 import rx.Observable;
 import rx.Scheduler;
@@ -101,7 +104,7 @@ public abstract class AbstractService implements Service {
     protected Map<String, Object> defaultEntityMetadata;
 
     private Scheduler rxScheduler;
-    private RxSchedulerFig rxSchedulerFig;
+    private ServiceSchedulerFig rxSchedulerFig;
     private MetricsFactory metricsFactory;
     private Timer entityGetTimer;
     private Timer entitiesGetTimer;
@@ -119,8 +122,8 @@ public abstract class AbstractService implements Service {
         this.sm = sm;
         em = sm.getEntityManager();
         final Injector injector = sm.getApplicationContext().getBean( Injector.class );
-        rxScheduler = injector.getInstance( RxTaskScheduler.class ).getAsyncIOScheduler();
-        rxSchedulerFig = injector.getInstance(RxSchedulerFig.class);
+        rxScheduler = injector.getInstance( Key.get(RxTaskScheduler.class, ResponseImportTasks.class ) ).getAsyncIOScheduler();
+        rxSchedulerFig = injector.getInstance(ServiceSchedulerFig.class );
         metricsFactory = injector.getInstance(MetricsFactory.class);
         this.entityGetTimer = metricsFactory.getTimer(this.getClass(), "importEntity.get");
         this.entitiesGetTimer = metricsFactory.getTimer(this.getClass(), "importEntities.get");
@@ -489,7 +492,7 @@ public abstract class AbstractService implements Service {
                     throw new RuntimeException(e);
                 }
             }).subscribeOn(rxScheduler);
-        }, rxSchedulerFig.getImportThreads());
+        }, rxSchedulerFig.getImportConcurrency());
 
         ObservableTimer.time(tuplesObservable, entitiesParallelGetTimer).toBlocking().lastOrDefault(null);
     }

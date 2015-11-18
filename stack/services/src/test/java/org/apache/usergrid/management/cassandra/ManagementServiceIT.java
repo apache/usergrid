@@ -17,25 +17,11 @@
 package org.apache.usergrid.management.cassandra;
 
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.usergrid.NewOrgAppAdminRule;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-
+import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.count.SimpleBatcher;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
@@ -43,7 +29,6 @@ import org.apache.usergrid.persistence.CredentialsInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.security.crypto.command.Md5HashCommand;
 import org.apache.usergrid.security.crypto.command.Sha1HashCommand;
@@ -51,19 +36,22 @@ import org.apache.usergrid.security.tokens.TokenCategory;
 import org.apache.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
-import static org.apache.usergrid.TestHelper.newUUIDString;
-import static org.apache.usergrid.TestHelper.uniqueApp;
-import static org.apache.usergrid.TestHelper.uniqueEmail;
-import static org.apache.usergrid.TestHelper.uniqueOrg;
-import static org.apache.usergrid.TestHelper.uniqueUsername;
+import static org.apache.usergrid.TestHelper.*;
 import static org.apache.usergrid.persistence.Schema.DICTIONARY_CREDENTIALS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author zznate
@@ -462,7 +450,6 @@ public class ManagementServiceIT {
     }
 
 
-    @Ignore("Why is this ignored?")
     public void superUserGetOrganizationsPage() throws Exception {
         int beforeSize = setup.getMgmtSvc().getOrganizations().size() - 1;
         // create 15 orgs

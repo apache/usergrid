@@ -22,10 +22,6 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import com.google.common.util.concurrent.ListenableFuture;

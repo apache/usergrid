@@ -254,18 +254,18 @@ class Migrate:
         return url
 
     def get_management_reindex_url(self):
-          url = self.get_reindex_url() + "/management"
-          return url
+        url = self.get_reindex_url() + "/management"
+        return url
 
 
     def start_core_data_migration(self):
-           try:
-               r = requests.put(url=self.get_migration_url(), auth=(self.admin_user, self.admin_pass))
-               response = r.json()
-               return response
-           except requests.exceptions.RequestException as e:
-               self.logger.error('Failed to start migration, %s', e)
-               exit_on_error(str(e))
+        try:
+            r = requests.put(url=self.get_migration_url(), auth=(self.admin_user, self.admin_pass))
+            response = r.json()
+            return response
+        except requests.exceptions.RequestException as e:
+            self.logger.error('Failed to start migration, %s', e)
+            exit_on_error(str(e))
 
 
     def start_fulldata_migration(self):

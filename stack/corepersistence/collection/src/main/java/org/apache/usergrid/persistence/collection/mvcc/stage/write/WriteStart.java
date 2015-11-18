@@ -26,6 +26,8 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.functions.Func1;
 
+import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyEntityWrite;
+
 
 /**
  * This is the first stage and should be invoked immediately when a write is started.  It should
@@ -53,7 +55,9 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
 
     @Override
     public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<Entity> ioEvent ) {
-        {
+
+            verifyEntityWrite( ioEvent.getEvent() );
+
             final Entity entity = ioEvent.getEvent();
             final ApplicationScope applicationScope = ioEvent.getEntityCollection();
 
@@ -61,7 +65,6 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
 
             final UUID newVersion = UUIDGenerator.newTimeUUID();
 
-            //TODO update this when merged with George's changes
             final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, newVersion,
                     Stage.ACTIVE, MvccLogEntry.State.COMPLETE);
 
@@ -83,9 +86,7 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
             }
 
             //create the mvcc entity for the next stage
-           //TODO: we need to create a complete or partial update here (or sooner)
 
             return new CollectionIoEvent<>( applicationScope, nextStage );
-        }
     }
 }

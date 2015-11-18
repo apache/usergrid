@@ -393,7 +393,7 @@ public class GroupResourceIT extends AbstractRestIT {
      * Post a group activity and make sure it can be read back only by group members
      *
      */
-    @Ignore("Fails. See todo in the test itself.")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1119. Fails. See todo in the test itself.")
     @Test
     public void postGroupActivity() throws IOException {
 

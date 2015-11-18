@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,33 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.graph.serialization.impl.shard.count;
 
+package org.apache.usergrid;
 
-import org.apache.usergrid.persistence.core.migration.schema.Migration;
-
-import com.netflix.astyanax.MutationBatch;
-
-
-/**
- * Serialization for flushing and reading counters
- */
-public interface NodeShardCounterSerialization extends Migration {
-
-
-    /**
-     * Flush the counter to the mutation batch
-     * @param counter
-     * @return
-     */
-    public MutationBatch flush(Counter counter);
-
-
-    /**
-     * Get the count of this shard, if it exists.
-     * @param key The shard key to get
-     * @return
-     */
-    public long getCount(ShardKey key);
-
-}
+public interface StressTest {}

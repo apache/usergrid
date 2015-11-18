@@ -55,7 +55,7 @@ public class AbstractCollectionService extends AbstractService {
         if ( !isRootService() ) {
             return null;
         }
-        Entity entity = em.get( new SimpleEntityRef( getEntityType(), uuid ));
+        Entity entity = em.get(new SimpleEntityRef(getEntityType(), uuid));
         if ( entity != null ) {
             entity = importEntity( request, entity );
         }
@@ -94,7 +94,9 @@ public class AbstractCollectionService extends AbstractService {
         }
 
         if ( entity == null ) {
-            logger.info( "miss on entityType: {} with uuid: {}", getEntityType(), id );
+            if (logger.isDebugEnabled()) {
+                logger.debug("miss on entityType: {} with uuid: {}", getEntityType(), id);
+            }
             String msg = "Cannot find entity associated with uuid: " + id;
             throw new EntityNotFoundException( msg );
         }
@@ -150,7 +152,9 @@ public class AbstractCollectionService extends AbstractService {
         Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
 
         if ( entity == null ) {
-            logger.info( "miss on entityType: {} with name: {}", getEntityType(), name );
+            if (logger.isDebugEnabled()) {
+                logger.debug("miss on entityType: {} with name: {}", getEntityType(), name);
+            }
             String msg = "Cannot find entity with name: "+name;
             throw new EntityNotFoundException( msg );
         }

@@ -44,10 +44,10 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createInd
 public class DeIndexOperation implements BatchOperation {
 
     @JsonProperty
-    private String[] indexes;
+    public String[] indexes;
 
     @JsonProperty
-    private String documentId;
+    public String documentId;
 
 
     public DeIndexOperation() {
@@ -59,6 +59,11 @@ public class DeIndexOperation implements BatchOperation {
                              UUID version ) {
         this.indexes = indexes;
         this.documentId = createIndexDocId( applicationScope, id, version, searchEdge );
+    }
+
+    public DeIndexOperation( String[] indexes, String docId) {
+        this.indexes = indexes;
+        this.documentId = docId;
     }
 
 

@@ -17,15 +17,37 @@
 package org.apache.usergrid.rest.applications.users;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
-import net.tanesha.recaptcha.ReCaptchaImpl;
-import net.tanesha.recaptcha.ReCaptchaResponse;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
+import org.glassfish.jersey.server.mvc.Viewable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.commons.lang.StringUtils;
+
 import org.apache.usergrid.management.ActivationState;
+import org.apache.usergrid.persistence.CredentialsInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.query.Identifier;
@@ -34,21 +56,24 @@ import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
+import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
-import org.glassfish.jersey.server.mvc.Viewable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import java.util.Map;
-import java.util.UUID;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 
-import static javax.servlet.http.HttpServletResponse.*;
-import static org.apache.usergrid.security.shiro.utils.SubjectUtils.*;
+import net.tanesha.recaptcha.ReCaptchaImpl;
+import net.tanesha.recaptcha.ReCaptchaResponse;
+
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
+
+import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getSubjectUserId;
+import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isApplicationAdmin;
+import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isApplicationUser;
 import static org.apache.usergrid.utils.ConversionUtils.string;
 
 
@@ -146,6 +171,81 @@ public class UserResource extends ServiceResource {
         return response;
     }
 
+    @GET
+    @RequireSystemAccess
+    @Path("credentials")
+    public ApiResponse getUserCredentials(@QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
+
+        logger.info( "UserResource.getUserCredentials" );
+
+
+        final ApiResponse response = createApiResponse();
+        response.setAction( "get user credentials" );
+
+        final UUID applicationId = getApplicationId();
+        final UUID targetUserId = getUserUuid();
+
+        if ( applicationId == null ) {
+            response.setError( "Application not found" );
+            return response;
+        }
+
+        if ( targetUserId == null ) {
+            response.setError( "User not found" );
+            return response;
+        }
+
+        final CredentialsInfo credentialsInfo = management.getAppUserCredentialsInfo( applicationId, targetUserId );
+
+
+        response.setProperty( "credentials", credentialsInfo );
+
+
+        return response;
+    }
+
+
+
+    @PUT
+    @RequireSystemAccess
+    @Path("credentials")
+    public ApiResponse setUserCredentials( @Context UriInfo ui, Map<String, Object> json,
+                                               @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
+
+        logger.info( "UserResource.setUserCredentials" );
+
+        if ( json == null ) {
+            return null;
+        }
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "set user credentials" );
+        Map<String, Object> credentialsJson = ( Map<String, Object> ) json.get( "credentials" );
+
+
+        if ( credentialsJson == null ) {
+            throw new IllegalArgumentException( "credentials sub object is required" );
+        }
+
+        final CredentialsInfo credentials = CredentialsInfo.fromJson( credentialsJson );
+
+        UUID applicationId = getApplicationId();
+        UUID targetUserId = getUserUuid();
+
+        if ( targetUserId == null ) {
+            response.setError( "User not found" );
+            return response;
+        }
+
+
+        management.setAppUserCredentialsInfo( applicationId, targetUserId, credentials );
+
+
+        return response;
+    }
+
 
     @POST
     @Path("password")
@@ -203,7 +303,7 @@ public class UserResource extends ServiceResource {
     @POST
     @Path("sendpin")
     @JSONP
-    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    @Produces({ MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse postSendPin( @Context UriInfo ui,
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {

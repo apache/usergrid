@@ -38,4 +38,15 @@
         o to adjust checkstyle settings or suppress reporting please us the
           files contained under src/main/resources/usergrid
   -->
+
+    <!-- the surefire excludedGroups configuration in parent requires this dependency here -->
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit-version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
 </project>

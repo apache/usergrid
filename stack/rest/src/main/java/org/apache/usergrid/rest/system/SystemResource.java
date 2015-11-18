@@ -14,10 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.rest;
+package org.apache.usergrid.rest.system;
 
 
-import javax.ws.rs.*;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -30,13 +34,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
-
 
 
 @Path( "/system" )
@@ -108,4 +113,9 @@ public class SystemResource extends AbstractContextResource {
     public ApplicationsResource applications() {
         return getSubResource( ApplicationsResource.class );
     }
+
+
+    @Path( "connection" )
+    public ConnectionResource connection() { return getSubResource( ConnectionResource.class ); }
+
 }

@@ -29,18 +29,19 @@ import org.apache.usergrid.batch.JobExecution;
 
 
 /**
- * A job that will sleep for the amount of time specified. Used to check that our counter is only ever run once.
+ * A job that will sleep for the amount of time specified. Used to check that our counter is only ever run once.  Checks
+ * the lock is released on fail
  *
  * @author tnine
  */
-@Component("onlyOnceExceution")
-@Ignore("Not a test")
-public class OnlyOnceExceution extends OnlyOnceJob {
+@Component("onlyOnceUnlockOnFailExecution")
+public class OnlyOnceUnlockOnFailExecution extends OnlyOnceJob {
 
-    private static final Logger logger = LoggerFactory.getLogger( OnlyOnceExceution.class );
+    private static final Logger logger = LoggerFactory.getLogger( OnlyOnceUnlockOnFailExecution.class );
 
     private CountDownLatch latch = null;
-    private CountDownLatch sleptLatch = new CountDownLatch( 1 );
+    private CountDownLatch exception = new CountDownLatch( 1 );
+    private CountDownLatch completed = new CountDownLatch( 1 );
     private long timeout;
     private boolean slept = false;
     private long delay;
@@ -49,7 +50,7 @@ public class OnlyOnceExceution extends OnlyOnceJob {
     /**
      *
      */
-    public OnlyOnceExceution() {
+    public OnlyOnceUnlockOnFailExecution() {
     }
 
 
@@ -63,15 +64,18 @@ public class OnlyOnceExceution extends OnlyOnceJob {
     protected void doJob( JobExecution execution ) throws Exception {
         logger.info( "Running only once execution" );
 
-        latch.countDown();
 
+        latch.countDown();
 
         if ( !slept ) {
             logger.info( "Sleeping in only once execution" );
             Thread.sleep( timeout );
             slept = true;
-            sleptLatch.countDown();
+            exception.countDown();
+            throw new RuntimeException( "I failed to run correctly, I should be retried" );
         }
+
+        completed.countDown();
     }
 
 
@@ -99,8 +103,13 @@ public class OnlyOnceExceution extends OnlyOnceJob {
     }
 
 
-    public boolean waitForSleep( long timeout, TimeUnit unit ) throws InterruptedException {
-        return sleptLatch.await( timeout, unit );
+    public boolean waitForException( long timeout, TimeUnit unit ) throws InterruptedException {
+        return exception.await( timeout, unit );
+    }
+
+
+    public boolean waitForCompletion( long timeout, TimeUnit unit ) throws InterruptedException {
+        return completed.await( timeout, unit );
     }
 
 

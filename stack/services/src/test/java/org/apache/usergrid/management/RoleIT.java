@@ -64,7 +64,6 @@ public class RoleIT {
 
         UUID applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "test-app" ).getId();
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
-
         setup.getEntityIndex().refresh(em.getApplicationId());
 
         Map<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -74,6 +73,7 @@ public class RoleIT {
         User user = em.create( User.ENTITY_TYPE, User.class, properties );
 
         em.createRole( "logged-in", "Logged In", 2000 );
+        setup.getEntityIndex().refresh(em.getApplicationId());
         setup.getEntityIndex().refresh(em.getApplicationId());
         em.addUserToRole( user.getUuid(), "logged-in" );
 

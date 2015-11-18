@@ -35,6 +35,7 @@ import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Test creating, sending and paging through Notifications via the REST API.
  */
+@Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. ")
 public class NotificationsIT extends org.apache.usergrid.rest.test.resource.AbstractRestIT {
     private static final Logger logger = LoggerFactory.getLogger( NotificationsIT.class );
 

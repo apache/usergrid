@@ -127,7 +127,7 @@
       <usergrid.it.threads>8</usergrid.it.threads>
 
       <metrics.version>3.0.0</metrics.version>
-        <surefire.plugin.artifactName>surefire-junit47</surefire.plugin.artifactName>
+      <surefire.plugin.artifactName>surefire-junit47</surefire.plugin.artifactName>
       <surefire.plugin.version>2.18.1</surefire.plugin.version>
       <powermock.version>1.6.1</powermock.version>
 
@@ -1344,6 +1344,7 @@
                           <systemPropertyVariables>
                               <jacoco-agent.destfile>target/jacoco.exec</jacoco-agent.destfile>
                           </systemPropertyVariables>
+                          <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest</excludedGroups>
                       </configuration>
 
                       <!-- TODO, we may need an exclusion. Appears to be a classloader bug
@@ -1354,14 +1355,6 @@
                               <groupId>org.apache.maven.surefire</groupId>
                               <artifactId>${surefire.plugin.artifactName}</artifactId>
                               <version>${surefire.plugin.version}</version>
-<!--
-                              <exclusions>
-                                  <exclusion>
-                                      <groupId>org.apache.maven.surfire</groupId>
-                                      <artifactId>common-junit3</artifactId>
-                                  </exclusion>
-                              </exclusions>
--->
                           </dependency>
 
                           <!-- override plex utils, otherwise bug from above SO post happens-->
@@ -1574,7 +1567,6 @@
     </plugins>
   </reporting>
 
-
     <profiles>
         <profile>
             <id>jacoco</id>
@@ -1586,14 +1578,13 @@
                         <version>${surefire.plugin.version}</version>
                         <configuration>
                             <argLine>-javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar ${ug.argline} -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec</argLine>
+                            <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
         </profile>
     </profiles>
-
-<!--
     <repositories>
         <repository>
             <id>local-dependencies</id>
@@ -1601,7 +1592,6 @@
             <url>file://${project.basedir}/../m2/repository</url>
         </repository>
     </repositories>
--->
 
     <scm>
     	<url>https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</url>

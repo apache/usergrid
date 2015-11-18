@@ -77,8 +77,9 @@ public class WNSAdapter implements ProviderAdapter {
 
                 // set the optional TTL value used when pushing notifications
                 WnsNotificationRequestOptional opt = new WnsNotificationRequestOptional();
-                opt.ttl = String.valueOf(notification.getExpireTTLSeconds());
-
+                if(notification.getExpireTTLSeconds()>0) {
+                    opt.ttl = String.valueOf(notification.getExpireTTLSeconds());
+                }
                 switch (translatedNotification.getType()) {
                     case "toast":
                         WnsToast toast = new WnsToastBuilder().bindingTemplateToastText01(translatedNotification.getMessage().toString()).build();
