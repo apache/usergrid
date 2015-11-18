@@ -156,7 +156,8 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        batch.withRow( EDGE_SHARDS, rowKey ).deleteColumn( shard.getShardIndex() );
+        batch.withTimestamp(shard.getCreatedTime()).withRow( EDGE_SHARDS, rowKey )
+            .deleteColumn( shard.getShardIndex() );
 
         return batch;
     }

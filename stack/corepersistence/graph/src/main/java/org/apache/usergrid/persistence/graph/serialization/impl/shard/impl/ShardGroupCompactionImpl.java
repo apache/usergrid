@@ -150,7 +150,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             .checkArgument( group.shouldCompact( startTime ), "Compaction cannot be run yet.  Ignoring compaction." );
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("Compacting shard group. count is {} ", countAudits.get());
+            LOG.debug("Compacting shard group. Audit count is {} ", countAudits.get());
         }
         final CompactionResult.CompactionBuilder resultBuilder = CompactionResult.builder();
 
