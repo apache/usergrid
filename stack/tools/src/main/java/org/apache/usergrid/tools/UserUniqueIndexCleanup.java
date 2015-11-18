@@ -19,7 +19,9 @@ package org.apache.usergrid.tools;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -33,6 +35,7 @@ import org.apache.commons.cli.Options;
 import org.apache.thrift.TBaseHelper;
 
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.cassandra.EntityManagerImpl;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -55,19 +58,22 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 
+
 /**
+ * This utility audits all values in the ENTITY_UNIQUE column family. If it finds any duplicates of users then it
+ * deletes the non existing columns from the row. If there are no more columns in the row then it deletes the row. If
+ * there exists more than one existing column then the one with the most recent timestamp wins and the other is
+ * deleted.
  *
- *This utility audits all values in the ENTITY_UNIQUE column family. If it finds any duplicates of users
- * then it deletes the non existing columns from the row. If there are no more columns in the row then it deletes the row.
- * If there exists more than one existing column then the one with the most recent timestamp wins and the other is deleted.
- *
- *If you want the run the tool on their cluster the following is what you need to do
- * nohup java -Dlog4j.configuration=file:log4j.properties -jar usergrid-tools-1.0.2.jar UserUniqueIndexCleanup -host <cassandra_host_here>  > log.txt
+ * If you want the run the tool on their cluster the following is what you need to do nohup java
+ * -Dlog4j.configuration=file:log4j.properties -jar usergrid-tools-1.0.2.jar UserUniqueIndexCleanup -host
+ * <cassandra_host_here>  > log.txt
  *
  * if there is a specific value you want to run the tool on then you need the following
-
- * nohup java -Dlog4j.configuration=file:log4j.properties -jar usergrid-tools-1.0.2.jar UserUniqueIndexCleanup -host <cassandra_host_here>
- *     -app <applicationUUID> -col <collection_name> -property <unique_property_key> -value <unique_property_value> > log.txt
+ *
+ * nohup java -Dlog4j.configuration=file:log4j.properties -jar usergrid-tools-1.0.2.jar UserUniqueIndexCleanup -host
+ * <cassandra_host_here> -app <applicationUUID> -col <collection_name> -property <unique_property_key> -value
+ * <unique_property_value> > log.txt
  *
  * @author grey
  */
@@ -152,7 +158,7 @@ public class UserUniqueIndexCleanup extends ToolBase {
             deleteInvalidValuesForUniqueProperty( m, line );
         }
         else {
-//maybe put a byte buffer infront.
+            //maybe put a byte buffer infront.
             RangeSlicesQuery<ByteBuffer, ByteBuffer, ByteBuffer> rangeSlicesQuery =
                     HFactory.createRangeSlicesQuery( ko, be, be, be ).setColumnFamily( ENTITY_UNIQUE.getColumnFamily() )
                             //not sure if I trust the lower two settings as it might iterfere with paging or set
@@ -185,13 +191,13 @@ public class UserUniqueIndexCleanup extends ToolBase {
                         parsedRowKey = garbageRowKeyParser( parsedRowKey );
 
                         if ( parsedRowKey == null ) {
-                            logger.error( "{} is a invalid row key, and unparseable. Skipped...",returnedRowKey );
+                            logger.error( "{} is a invalid row key, and unparseable. Skipped...", returnedRowKey );
                             continue;
                         }
                     }
                     //if the rowkey contains less than four parts then it is completely invalid
                     else if ( parsedRowKey.length < 4 ) {
-                        logger.error( "{} is a invalid row key, and unparseable. Skipped...",returnedRowKey );
+                        logger.error( "{} is a invalid row key, and unparseable. Skipped...", returnedRowKey );
                         continue;
                     }
 
@@ -200,7 +206,7 @@ public class UserUniqueIndexCleanup extends ToolBase {
                         applicationId = UUID.fromString( uuidGarbageParser( parsedRowKey[0] ) );
                     }
                     catch ( Exception e ) {
-                        logger.error( "could not parse {} despite earlier parsing. Skipping...",parsedRowKey[0] );
+                        logger.error( "could not parse {} despite earlier parsing. Skipping...", parsedRowKey[0] );
                         continue;
                     }
                     String collectionName = parsedRowKey[1];
@@ -217,9 +223,10 @@ public class UserUniqueIndexCleanup extends ToolBase {
                             deleteRow( m, applicationId, collectionName, uniqueValueKey, uniqueValue );
                         }
                         else {
-                            entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols,returnedRowKey );
+                            entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols,
+                                    returnedRowKey );
                         }
-                       // }
+                        // }
                     }
                 }
             }
@@ -266,7 +273,7 @@ public class UserUniqueIndexCleanup extends ToolBase {
 
     private void deleteRow( final Mutator<ByteBuffer> m, final UUID applicationId, final String collectionName,
                             final String uniqueValueKey, final String uniqueValue ) throws Exception {
-        logger.debug( "Found 0 uuid's associated with {} Deleting row.",uniqueValue );
+        logger.debug( "Found 0 uuid's associated with {} Deleting row.", uniqueValue );
         UUID timestampUuid = newTimeUUID();
         long timestamp = getTimestampInMicros( timestampUuid );
 
@@ -289,111 +296,47 @@ public class UserUniqueIndexCleanup extends ToolBase {
         //these columns all come from the same row key, which means they each belong to the same row key identifier
         //thus mixing and matching them in the below if cases won't matter.
         Entity[] entities = new Entity[cols.size()];
-        int numberOfRetrys = 5;
+        int numberOfRetrys = 8;
         int numberOfTimesRetrying = 0;
 
         int index = 0;
 
-        for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
-            UUID entityId = ue.fromByteBuffer( col.getName() );
 
-            //could be the same and just do a entity get
-            if ( applicationId.equals( MANAGEMENT_APPLICATION_ID ) ) {
-                for(numberOfTimesRetrying = 0; numberOfTimesRetrying<numberOfRetrys; numberOfTimesRetrying++){
-                    try {
-                        entities[index] = managementService.getAdminUserEntityByUuid( entityId );
-                        break;
-                    }catch(TimedOutException toe){
-                        Thread.sleep( 2000 );
-                    }
-                }
-                if(numberOfTimesRetrying == numberOfRetrys ){
-                    logger.error( "Tried {} number of times to get the following uuid: {} but failed.Moving on",numberOfRetrys,entityId );
-                    continue;
-                }
-
-                if ( entities[index] == null ) {
-                    cleanup = true;
+        for ( int i = 0; i < numberOfRetrys; i++ ) {
+            try {
+                Map<String, EntityRef> results =
+                        em.getAlias( applicationId, collectionName, Collections.singletonList( uniqueValue ) );
+                if ( results.size() > 1 ) {
+                    logger.error("failed to clean up {} from application {}. Please clean manually.",uniqueValue,applicationId);
+                    break;
                 }
                 else {
-                    index++;
-                }
-            }
-            else {
-
-                for(int i = 0; i<numberOfRetrys; i++){
-                    try {
-                        entities[index] = em.get( entityId );
-                        break;
-                    }catch(TimedOutException toe){
-                        Thread.sleep( 2000 );
-                    }
-                }
-                if(numberOfTimesRetrying == numberOfRetrys ){
-                    logger.error( "Tried {} number of times to get the following uuid: {} but failed.Moving on",numberOfRetrys,entityId );
                     continue;
                 }
-
-                if ( entities[index] == null ) {
-                    cleanup = true;
-                }
-                else {
-                    index++;
-                }
             }
-
-            if ( cleanup == true ) {
-                numberOfColumnsDeleted++;
-                deleteUniqueValue(applicationId, collectionName, uniqueValueKey, uniqueValue, entityId );
-                cleanup = false;
+            catch ( Exception toe ) {
+                logger.error( "timeout doing em getAlias repair. This is the {} number of repairs attempted", i );
+                toe.printStackTrace();
+                Thread.sleep( 1000 * i );
             }
-        }
-
-        //this means that the same unique rowkey has two values associated with it
-        if(index>2){
-            Entity mostRecentEntity = entities[0];
-            for(Entity entity: entities){
-
-                mostRecentEntity = verifyModifiedTimestamp( mostRecentEntity );
-                entity = verifyModifiedTimestamp( entity );
-
-
-                if(mostRecentEntity.getModified() > entity.getModified()){
-                    logger.error( "Deleting {} because it is the older column in the following rowkey: {} ",entity.getUuid().toString(),rowKey );
-                    em.deleteEntity( entity.getUuid() );
-                }
-                else if (mostRecentEntity.getModified() < entity.getModified()){
-                    logger.error( "Deleting {} because it is the older column in the following rowkey: {} ",mostRecentEntity.getUuid().toString(),rowKey );
-                    em.deleteEntity( mostRecentEntity.getUuid() );
-                    mostRecentEntity = entity;
-                }
-                else if (mostRecentEntity.getModified() == entity.getModified() && !mostRecentEntity.getUuid().equals( entity.getUuid() )){
-                    logger.error( "Entities with unique value: {} contains two or more entities with the same modified time. Please manually fix these"
-                            + "entities by deleting one.",rowKey);
-                }
-            }
-        }
-
-        
-        //a safer way to do this would be to try to do another get and verify there is nothing left in the column
-        //instead of just doing a simple check since the column check happens anywhere between 2 to 1000 times.
-        if ( cols.size() == numberOfColumnsDeleted ) {
-            deleteRow( m, applicationId, collectionName, uniqueValueKey, uniqueValue );
         }
     }
 
 
     private Entity verifyModifiedTimestamp( final Entity unverifiedEntity ) {
         Entity entity = unverifiedEntity;
-        if(entity !=null && entity.getModified()==null) {
-            if(entity.getCreated()!=null){
-                logger.debug("{} has no modified. Subsituting created timestamp for their modified timestamp.Manually adding one for comparison purposes",entity.getUuid());
+        if ( entity != null && entity.getModified() == null ) {
+            if ( entity.getCreated() != null ) {
+                logger.debug(
+                        "{} has no modified. Subsituting created timestamp for their modified timestamp.Manually "
+                                + "adding one for comparison purposes",
+                        entity.getUuid() );
                 entity.setModified( entity.getCreated() );
                 return entity;
             }
-            else{
+            else {
                 logger.error( "Found no created or modified timestamp. Please remake the following entity: {}."
-                        + " Setting both created and modified to 1",entity.getUuid().toString() );
+                        + " Setting both created and modified to 1", entity.getUuid().toString() );
                 entity.setCreated( 1L );
                 entity.setModified( 1L );
                 return entity;
@@ -421,10 +364,10 @@ public class UserUniqueIndexCleanup extends ToolBase {
 
 
         if ( cols.size() == 0 ) {
-            logger.error( "This row key: {} has zero columns. Deleting...",key.toString() );
+            logger.error( "This row key: {} has zero columns. Deleting...", key.toString() );
         }
 
-        entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols,key.toString() );
+        entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols, key.toString() );
     }
 
 
@@ -436,7 +379,7 @@ public class UserUniqueIndexCleanup extends ToolBase {
                 stringToBeTruncated = stringToBeTruncated.substring( index );
             }
             else {
-                logger.error( "{} is unparsable",garbageString );
+                logger.error( "{} is unparsable", garbageString );
                 break;
             }
         }
@@ -459,9 +402,8 @@ public class UserUniqueIndexCleanup extends ToolBase {
     }
 
 
-    private void deleteUniqueValue( final UUID applicationId, final String collectionName,
-                                    final String uniqueValueKey, final String uniqueValue, final UUID entityId )
-            throws Exception {
+    private void deleteUniqueValue( final UUID applicationId, final String collectionName, final String uniqueValueKey,
+                                    final String uniqueValue, final UUID entityId ) throws Exception {
         logger.warn( "Entity with id {} did not exist in app {} Deleting", entityId, applicationId );
         UUID timestampUuid = newTimeUUID();
         long timestamp = getTimestampInMicros( timestampUuid );

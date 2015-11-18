@@ -32,11 +32,6 @@ public class ServiceResourceNotFoundExceptionMapper extends AbstractExceptionMap
 
     @Override
     public Response toResponse( ServiceResourceNotFoundException e ) {
-        if ( SubjectUtils.getSubjectUserId() == null ) {
-            return toResponse( UNAUTHORIZED, e );
-        }
-        else {
-            return toResponse( NOT_FOUND, e );
-        }
+        return toResponse( NOT_FOUND, e );
     }
 }
