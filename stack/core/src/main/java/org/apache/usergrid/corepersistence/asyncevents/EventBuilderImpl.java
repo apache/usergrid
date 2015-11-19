@@ -22,6 +22,7 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 import java.util.List;
 
+import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,7 +145,7 @@ public class EventBuilderImpl implements EventBuilder {
 
             ecmDeleteObservable =
                 ecm.getVersions( entityId )
-                    .filter( mvccLogEntry-> mvccLogEntry.getVersion().timestamp() <= mostRecentlyMarked.getVersion().timestamp())
+                    .filter( mvccLogEntry-> UUIDUtils.compare(mvccLogEntry.getVersion(), mostRecentlyMarked.getVersion()) < 0)
                     .buffer( serializationFig.getBufferSize() )
                     .doOnNext( buffer -> ecm.delete( buffer ) );
 
