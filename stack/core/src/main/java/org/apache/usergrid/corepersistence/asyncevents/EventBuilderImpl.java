@@ -144,7 +144,7 @@ public class EventBuilderImpl implements EventBuilder {
 
             ecmDeleteObservable =
                 ecm.getVersions( entityId )
-                    .filter( mvccLogEntry-> mvccLogEntry.getState() == MvccLogEntry.State.DELETED)
+                    .filter( mvccLogEntry-> mvccLogEntry.getVersion().timestamp() <= mostRecentlyMarked.getVersion().timestamp())
                     .buffer( serializationFig.getBufferSize() )
                     .doOnNext( buffer -> ecm.delete( buffer ) );
 
