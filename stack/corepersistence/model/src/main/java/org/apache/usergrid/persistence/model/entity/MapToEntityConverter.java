@@ -47,7 +47,8 @@ public class MapToEntityConverter{
         return fromMap( entity, map, null, null, topLevel );
     }
 
-    public Entity fromMap(final Entity entity,final  Map<String, Object> map,final  SchemaManager schemaManager, final String entityType, boolean topLevel) {
+    public Entity fromMap(final Entity entity,final  Map<String, Object> map,final
+        SchemaManager schemaManager, final String entityType, boolean topLevel) {
 
         for ( String fieldName : map.keySet() ) {
 
