@@ -131,8 +131,7 @@ public class EventBuilderImpl implements EventBuilder {
         //TODO USERGRID-1123: Implement so we don't iterate logs twice (latest DELETED version, then to get all DELETED)
 
         MvccLogEntry mostRecentlyMarked = ecm.getVersions( entityId ).toBlocking()
-                                             .firstOrDefault( null,
-                                                 mvccLogEntry -> mvccLogEntry.getState() == MvccLogEntry.State.DELETED );
+            .firstOrDefault( null, mvccLogEntry -> mvccLogEntry.getState() == MvccLogEntry.State.DELETED );
 
         // De-indexing and entity deletes don't check log entiries.  We must do that first. If no DELETED logs, then
         // return an empty observable as our no-op.
@@ -145,13 +144,11 @@ public class EventBuilderImpl implements EventBuilder {
 
             ecmDeleteObservable =
                 ecm.getVersions( entityId )
-                    .filter( mvccLogEntry-> UUIDUtils.compare(mvccLogEntry.getVersion(), mostRecentlyMarked.getVersion()) <= 0)
+                    .filter( mvccLogEntry->
+                        UUIDUtils.compare(mvccLogEntry.getVersion(), mostRecentlyMarked.getVersion()) <= 0)
                     .buffer( serializationFig.getBufferSize() )
                     .doOnNext( buffer -> ecm.delete( buffer ) );
-
-
         }
-
 
         // Graph compaction checks the versions inside compactNode, just build this up for the caller to subscribe to
         final Observable<Id> graphCompactObservable = gm.compactNode(entityId);
