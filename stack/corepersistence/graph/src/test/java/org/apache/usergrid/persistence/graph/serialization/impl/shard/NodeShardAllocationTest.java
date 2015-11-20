@@ -84,7 +84,7 @@ public class NodeShardAllocationTest {
 
         final long timeout = 30000;
         when( graphFig.getShardCacheTimeout() ).thenReturn( timeout );
-        when( graphFig.getShardMinDelta() ).thenReturn( timeout * 2 );
+        when( graphFig.getShardMinDelta() ).thenReturn( ( long ) (timeout * 2.5) );
     }
 
 
@@ -111,7 +111,7 @@ public class NodeShardAllocationTest {
 
         when( timeService.getCurrentTime() ).thenReturn( timeservicetime );
 
-        final long expected = timeservicetime - 2 * graphFig.getShardCacheTimeout();
+        final long expected = ( long ) (timeservicetime - 2.5 * graphFig.getShardCacheTimeout());
 
         final long returned = approximation.getMinTime();
 
@@ -722,7 +722,7 @@ public class NodeShardAllocationTest {
 
         //now test something that passes.
 
-        final long minDelta = cacheTimeout * 2;
+        final long minDelta = ( long ) (cacheTimeout * 2.5);
 
         when( graphFig.getShardMinDelta() ).thenReturn( minDelta );
 
