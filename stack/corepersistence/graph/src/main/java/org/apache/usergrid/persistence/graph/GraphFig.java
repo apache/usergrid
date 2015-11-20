@@ -118,7 +118,7 @@ public interface GraphFig extends GuicyFig {
     @Key(SHARD_CACHE_TIMEOUT)
     long getShardCacheTimeout();
 
-    @Default("60000")
+    @Default("90000")
     @Key(SHARD_MIN_DELTA)
     long getShardMinDelta();
 

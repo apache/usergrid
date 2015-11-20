@@ -117,6 +117,8 @@ public abstract class ShardGroupColumnIterator implements Iterator<MarkedEdge> {
      */
     protected abstract Iterator<MarkedEdge> getIterator( Collection<Shard> readShards );
 
+    protected abstract Iterator<MarkedEdge> getIteratorFullRange( Collection<Shard> readShards );
+
 
     public boolean advance() {
 
@@ -141,7 +143,7 @@ public abstract class ShardGroupColumnIterator implements Iterator<MarkedEdge> {
                 logger.trace( "Our shard is empty, we need to perform an audit on shard group {}", group );
 
                 //fire and forget if we miss it here, we'll get it next read
-                shardGroupDeletion.maybeDeleteShard(this.applicationScope, this.directedEdgeMeta, group, getIterator( group.getReadShards() ) );
+                shardGroupDeletion.maybeDeleteShard(this.applicationScope, this.directedEdgeMeta, group, getIteratorFullRange( group.getReadShards() ) );
 
 
             }

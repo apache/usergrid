@@ -47,12 +47,11 @@ public class MapToEntityConverter{
         return fromMap( entity, map, null, null, topLevel );
     }
 
-    public Entity fromMap(final Entity entity,final  Map<String, Object> map,final  SchemaManager schemaManager, final String entityType, boolean topLevel) {
+    public Entity fromMap(final Entity entity,final  Map<String, Object> map,final
+        SchemaManager schemaManager, final String entityType, boolean topLevel) {
 
         for ( String fieldName : map.keySet() ) {
-            if(fieldName.equals("size")){
-                continue;
-            }
+
             Object value = map.get( fieldName );
             boolean unique = schemaManager == null ? topLevel :  topLevel && schemaManager.isPropertyUnique(entityType, fieldName);
             //cannot store fields that aren't locations

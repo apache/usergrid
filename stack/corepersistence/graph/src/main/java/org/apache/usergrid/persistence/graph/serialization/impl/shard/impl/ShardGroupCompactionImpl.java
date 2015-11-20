@@ -150,7 +150,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             .checkArgument( group.shouldCompact( startTime ), "Compaction cannot be run yet.  Ignoring compaction." );
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("Compacting shard group. count is {} ", countAudits.get());
+            LOG.debug("Compacting shard group. Audit count is {} ", countAudits.get());
         }
         final CompactionResult.CompactionBuilder resultBuilder = CompactionResult.builder();
 
@@ -307,8 +307,9 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         countAudits.getAndIncrement();
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("Auditing shard group. count is {} ", countAudits.get());
+            LOG.debug("Auditing shard group {}. count is {} ", group, countAudits.get());
         }
+
         /**
          * Try and submit.  During back pressure, we may not be able to submit, that's ok.  Better to drop than to
          * hose the system

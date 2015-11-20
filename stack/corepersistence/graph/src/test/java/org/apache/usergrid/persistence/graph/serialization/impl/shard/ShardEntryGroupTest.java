@@ -434,6 +434,37 @@ public class ShardEntryGroupTest {
 
 
     }
+
+
+    @Test
+    public void testIsNew() {
+        //set with no shard
+
+        final long delta = 10000;
+
+        //created at 10000
+        final Shard firstShard = new Shard( 10000, 10000, true );
+
+        final Shard secondShard = new Shard( 10000, 10001, true );
+
+        final ShardEntryGroup shardGroup = new ShardEntryGroup( delta );
+
+        shardGroup.addShard( secondShard );
+        shardGroup.addShard( firstShard );
+
+        final boolean resultCreateTime = shardGroup.isNew( secondShard.getCreatedTime() );
+
+        assertTrue( "This is a new shard", resultCreateTime );
+
+        final boolean resultEqualToDelta = shardGroup.isNew( secondShard.getCreatedTime() + delta );
+
+        assertTrue( "This is a new shard", resultEqualToDelta );
+
+
+        final boolean greaterThan = shardGroup.isNew( secondShard.getCreatedTime() + delta + 1 );
+
+        assertFalse( "This is not a new shard", greaterThan );
+    }
 }
 
 
