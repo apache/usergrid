@@ -645,34 +645,41 @@ public class ApplicationResourceIT extends AbstractRestIT {
     }
 
     /**
-     * Retrieve an access token using HTTP Basic authentication
+     * Retrieve an app user access token using HTTP Basic authentication
      */
     @Test
-    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1106")
-    //Are we trying to generate token with token? Couldn't find endpoint that accepts token for generating token
     public void clientCredentialsFlowWithHeaderAuthorization() throws Exception {
-        //retrieve the credentials
-        Credentials orgCredentials = getAppCredentials();
-        String clientId = orgCredentials.getClientId();
-        String clientSecret = orgCredentials.getClientSecret();
 
+        // get app credentials from /<org>/<app>/credentials end-point (using admin credentials)
+        Credentials appCredentials = getAppCredentials();
+        String clientId = appCredentials.getClientId();
+        String clientSecret = appCredentials.getClientSecret();
+
+        // use app credentials to admin user access token
         Token token = clientSetup.getRestClient().management().token()
             .post(Token.class,new Token("client_credentials", clientId, clientSecret));
 
-        //GET the token endpoint, adding authorization header
-        Token apiResponse = this.app().token().getTarget( false )
+        String clientCredentials = clientId + ":" + clientSecret;
+        String encodedToken = Base64.encodeToString( clientCredentials.getBytes() );
+
+        Map<String, String> payload = hashMap( "grant_type", "client_credentials" );
+
+        // use admin user access token to get app user access token
+        Token apiResponse = this.app().token().getTarget( false ).request()
             //add the auth header
-            .request()
-            .header( "Authorization", "Bearer " + token.getAccessToken() )
+            .header( "Authorization", "Basic " + encodedToken )
             .accept( MediaType.APPLICATION_JSON )
-            .post(javax.ws.rs.client.Entity.entity(
-                hashMap( "grant_type", "client_credentials" ), MediaType.APPLICATION_JSON_TYPE ), Token.class );
+            .post(javax.ws.rs.client.Entity.entity(payload, MediaType.APPLICATION_JSON_TYPE ), Token.class );
 
         //Assert that a valid token with a valid TTL is returned
         assertNotNull("A valid response was returned.", apiResponse);
         assertNull("There is no error.", apiResponse.getError());
         assertNotNull("It has access_token.", apiResponse.getAccessToken());
         assertNotNull("It has expires_in.", apiResponse.getExpirationDate());
+
+
+
+
     }
 
     /**
