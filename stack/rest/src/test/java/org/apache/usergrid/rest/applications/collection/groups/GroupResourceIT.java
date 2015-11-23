@@ -25,6 +25,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.NotAuthorizedException;
 import java.io.IOException;
 
 import static org.junit.Assert.*;
@@ -388,20 +389,18 @@ public class GroupResourceIT extends AbstractRestIT {
     }
 
 
-    /***
-     *
-     * Post a group activity and make sure it can be read back only by group members
-     *
+    /**
+     * Post a group activities and test that the appear in the groups activities feed, and that
+     * they appear only in the personal activity feeds of the group's members.
      */
-    @Ignore("Fails. See todo in the test itself.")
     @Test
-    public void postGroupActivity() throws IOException {
-
+    public void postPrivateGroupActivity() throws IOException {
 
         //1. create a group
         String groupName = "testgroup";
         String groupPath = "testgroup";
         Entity group = this.createGroup(groupName, groupPath);
+
 
         //2. create user 1
         String user1Username = "fred";
@@ -421,20 +420,50 @@ public class GroupResourceIT extends AbstractRestIT {
         password = "password";
         Entity user3 = this.createUser(user3Username, user3Email, password);
 
+
         //5. add user1 to the group
-        Entity addUser1Response = this.app().collection("users").entity(user1).connection().collection("groups").entity(group).post();
+        Entity addUser1Response = this.app().collection("users")
+            .entity(user1).connection().collection("groups").entity(group).post();
         assertEquals(addUser1Response.get("name"), groupName);
 
         //6. add user2 to the group
-        Entity addUser2Response = this.app().collection("users").entity(user2).connection().collection("groups").entity(group).post();
+        Entity addUser2Response = this.app().collection("users")
+            .entity(user2).connection().collection("groups").entity(group).post();
         assertEquals(addUser2Response.get("name"), groupName);
 
+
         // user 3 does not get added to the group
+
 
         //7. get all the users in the groups
         this.refreshIndex();
         Collection usersInGroup = this.app().collection("groups").uniqueID(groupName).connection("users").get();
         assertEquals(usersInGroup.getResponse().getEntityCount(), 2);
+
+        //7a. delete default role and make group private, only accessible to those with "group1role"
+        this.app().collection("role").uniqueID("Default").delete();
+        Entity data = new Entity().chainPut("name", "group1role");
+        this.app().collection("roles").post(data);
+        this.refreshIndex();
+
+        Entity perms = new Entity();
+        String permission = "get,post,put,delete:/groups/" + group.getUuid() + "/**";
+        perms.put("permission",permission);
+        this.app().collection("roles").uniqueID("group1role").connection("permissions").post(perms);
+        this.app().collection("roles").uniqueID("group1role").connection("users").uniqueID( user1Username ).post();
+        this.app().collection("roles").uniqueID("group1role").connection("users").uniqueID( user2Username ).post();
+        this.refreshIndex();
+
+        //7b. everybody gets access to /activities
+        perms = new Entity();
+        permission = "get:/activities/**";
+        perms.put("permission",permission);
+        this.app().collection("roles").uniqueID("Guest").connection("permissions").post(perms);
+        this.refreshIndex();
+        this.app().collection("roles").uniqueID("Guest").connection("users").uniqueID( user1Username ).post();
+        this.app().collection("roles").uniqueID("Guest").connection("users").uniqueID( user2Username ).post();
+        this.app().collection("roles").uniqueID("Guest").connection("users").uniqueID( user3Username ).post();
+        this.refreshIndex();
 
 
         //8. post an activity to the group
@@ -448,30 +477,19 @@ public class GroupResourceIT extends AbstractRestIT {
         Entity activity = new Entity();
         activity.put("actor", payload);
         activity.put("verb", "post");
-        String content = "content";
+        final String content = "Wilma cannot see this!";
         activity.put("content", content);
-        Entity activityResponse = this.app().collection("groups").uniqueID(groupName).connection("activities").post(activity);
+        Entity activityResponse = this.app().collection("groups")
+            .uniqueID(groupName).connection("activities").post(activity);
         assertEquals(activityResponse.get("content"), content);
         this.refreshIndex();
 
-        //9. delete the default role
-        this.app().collection("role").uniqueID("Default").delete();
-/*
-        //10. add permissions to group: {"permission":"get,post,put,delete:/groups/${group}/**"}'
-        payload = new Entity();
-        String permission = "get,post,put,delete:/groups/${group}/**";
-        payload.put("permission",permission);
-        Entity permissionResponse = this.app().collection("groups").entity(group).connection("permissions").post(payload);
-        assertEquals(permissionResponse.get("data"), permission);
-*/
         //11. log user1 in, should then be using the app user's token not the admin token
         this.getAppUserToken(user1Username, password);
 
-
-        //TODO: next failing currently because permissions seem to be borked in the stack
-
-        //12. make sure the activity appears in the feed of user 1
-        Collection user1ActivityResponse = this.app().collection("groups").entity(group).connection("activities").get();
+        //10. make sure the activity appears in the feed of user 1
+        Collection user1ActivityResponse = this.app().collection("groups")
+            .entity(group).connection("activities").get();
         boolean found = false;
         while (user1ActivityResponse.hasNext()) {
             Entity tempActivity = user1ActivityResponse.next();
@@ -481,11 +499,12 @@ public class GroupResourceIT extends AbstractRestIT {
         }
         assertTrue(found);
 
-        //13. log user2 in, should then be using the app user's token not the admin token
+        //11. log user2 in, should then be using the app user's token not the admin token
         this.getAppUserToken(user2Username, password);
 
-        //14. make sure the activity appears in the feed of user 2
-        Collection user2ActivityResponse = this.app().collection("groups").entity(group).connection("activities").get();
+        //12. make sure the activity appears in the feed of user 2
+        Collection user2ActivityResponse = this.app().collection("groups")
+            .entity(group).connection("activities").get();
         found = false;
         while (user2ActivityResponse.hasNext()) {
             Entity tempActivity = user2ActivityResponse.next();
@@ -495,11 +514,35 @@ public class GroupResourceIT extends AbstractRestIT {
         }
         assertTrue(found);
 
-        //15. log user3 in, should then be using the app user's token not the admin token
+        //13. log user3 in, should then be using the app user's token not the admin token
         this.getAppUserToken(user3Username, password);
 
-        //16. make sure the activity does not appear in the feed of user 3, since they are not part of the group
-        Collection user3ActivityResponse = this.app().collection("groups").entity(group).connection("activities").get();
+        //14. user3 should be denied access to the group's activities
+        try {
+
+            Collection user3ActivityResponse = this.app().collection( "groups" )
+                .entity( group ).connection( "activities" ).get();
+            fail("user3 should have been denied access to the group's activities");
+
+        } catch (NotAuthorizedException expected) {}
+
+
+        //15. check that activity appears in user 1's personal feed
+        this.getAppUserToken(user1Username, password);
+        user1ActivityResponse = this.app().collection("activities").get();
+        found = false;
+        while (user1ActivityResponse.hasNext()) {
+            Entity tempActivity = user1ActivityResponse.next();
+            if (tempActivity.get("type").equals("activity") && tempActivity.get("content").equals(content)) {
+                found = true;
+            }
+        }
+        assertTrue(found);
+
+
+        //16. check that activity does not appear user 3's personal feed
+        this.getAppUserToken(user3Username, password);
+        Collection user3ActivityResponse = this.app().collection("activities").get();
         found = false;
         while (user3ActivityResponse.hasNext()) {
             Entity tempActivity = user3ActivityResponse.next();
@@ -508,12 +551,9 @@ public class GroupResourceIT extends AbstractRestIT {
             }
         }
         assertFalse(found);
-
-
     }
 
     public void updateGroupWithSameNameAsApp() throws IOException {
-
 
         // create groupMap with same name as app
         String groupPath = this.clientSetup.getAppName();
@@ -534,10 +574,5 @@ public class GroupResourceIT extends AbstractRestIT {
         groupResponse = this.app().collection("groups").uniqueID(uuid).put(group);
         assertEquals(groupResponse.get("title"), evenNewerTitle);
         this.refreshIndex();
-
-
-
     }
-
-
 }

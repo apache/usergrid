@@ -39,10 +39,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
+import org.apache.usergrid.StressTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +82,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 
-//@Ignore( "Kills cassandra, needs to be part of functional testing" )
 public class GraphManagerShardConsistencyIT {
     private static final Logger log = LoggerFactory.getLogger( GraphManagerShardConsistencyIT.class );
 
@@ -266,31 +267,35 @@ public class GraphManagerShardConsistencyIT {
         final Meter readMeter = registry.meter( "readThroughput" );
 
 
-        /**
-         * Start reading continuously while we migrate data to ensure our view is always correct
-         */
-        final ListenableFuture<Long> future =
-            executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
-
         final List<Throwable> failures = new ArrayList<>();
 
+        for(int i = 0; i < 2; i ++) {
 
-        //add the future
-        Futures.addCallback( future, new FutureCallback<Long>() {
 
-            @Override
-            public void onSuccess( @Nullable final Long result ) {
-                log.info( "Successfully ran the read, re-running" );
+            /**
+             * Start reading continuously while we migrate data to ensure our view is always correct
+             */
+            final ListenableFuture<Long> future =
                 executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
-            }
 
 
-            @Override
-            public void onFailure( final Throwable t ) {
-                failures.add( t );
-                log.error( "Failed test!", t );
-            }
-        } );
+            //add the future
+            Futures.addCallback( future, new FutureCallback<Long>() {
+
+                @Override
+                public void onSuccess( @Nullable final Long result ) {
+                    log.info( "Successfully ran the read, re-running" );
+                    executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
+                }
+
+
+                @Override
+                public void onFailure( final Throwable t ) {
+                    failures.add( t );
+                    log.error( "Failed test!", t );
+                }
+            } );
+        }
 
 
         int compactedCount;
@@ -394,7 +399,7 @@ public class GraphManagerShardConsistencyIT {
 
 
     @Test(timeout=120000)
-    @Ignore("This works, but is occasionally causing cassandra to fall over.  Unignore when merged with new shard strategy")
+    @Category(StressTest.class)
     public void writeThousandsDelete()
         throws InterruptedException, ExecutionException, MigrationException, UnsupportedEncodingException {
 

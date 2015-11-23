@@ -32,7 +32,8 @@ import static org.junit.Assert.assertTrue;
  */
 
 //@org.junit.Ignore( "Todd you need to take a look at this since it's not clear to me what was intended in this test." )
-@Ignore("These tests no longer work with shared spring context. Need to re-evaluate")
+@Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1105. Spring problems." )
+// These tests no longer work with shared Spring context, need to be fixed
 public class SchedulerRuntime7IT extends AbstractSchedulerRuntimeIT {
 
     /** Test that we're only running once, even when a job exceeds the heartbeat time */
@@ -46,8 +47,8 @@ public class SchedulerRuntime7IT extends AbstractSchedulerRuntimeIT {
         long customRetry = sleepTime * 2;
         int numberOfRuns = 2;
 
-        OnlyOnceUnlockOnFailExceution job =
-                springResource.getBean( "onlyOnceUnlockOnFailExceution", OnlyOnceUnlockOnFailExceution.class );
+        OnlyOnceUnlockOnFailExecution job =
+                springResource.getBean( "onlyOnceUnlockOnFailExceution", OnlyOnceUnlockOnFailExecution.class );
 
         job.setTimeout( customRetry );
         job.setLatch( numberOfRuns );

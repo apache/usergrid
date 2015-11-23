@@ -148,7 +148,7 @@ public class OrderedMergeTest {
 
 
     @Test
-    @Ignore( "Doesn't work until backpressure is implemented" )
+    @Ignore( "Pending implementation of backpressure" )
     public void multipleOperatorSingleThreadSizeException() throws InterruptedException {
 
         List<Integer> expected1List = Arrays.asList( 5, 3, 2, 0 );
@@ -269,8 +269,7 @@ public class OrderedMergeTest {
 
 
     @Test
-    @Ignore("Shouldn't throw an exception, should work with current impl.  "
-            + "Needs to be changed when backpressure is introduced" )
+    @Ignore("Pending implementation of backpressure")
     public void multipleOperatorMultipleThreadSizeException() throws InterruptedException {
 
         List<Integer> expected1List = Arrays.asList( 10, 4, 3, 2, 1 );

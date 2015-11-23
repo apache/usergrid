@@ -20,6 +20,7 @@ package org.apache.usergrid.rest.management.organizations;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.commons.lang.NullArgumentException;
+import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.OrganizationConfig;
 import org.apache.usergrid.management.OrganizationInfo;
@@ -456,6 +457,14 @@ public class OrganizationResource extends AbstractContextResource {
         }
 
         return response;
+    }
+
+
+    /** Delete organization is not yet supported */
+    //@RequireSystemAccess
+    @DELETE
+    public ApiResponse deleteOrganization() throws Exception {
+        throw new NotImplementedException();
     }
 
 }

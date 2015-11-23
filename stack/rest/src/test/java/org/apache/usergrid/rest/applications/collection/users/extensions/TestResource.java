@@ -29,7 +29,6 @@ import org.springframework.stereotype.Component;
 import org.apache.usergrid.rest.applications.users.AbstractUserExtensionResource;
 
 
-@Ignore("Not a test")
 @Component("TestResource")
 @Scope("prototype")
 @Produces(MediaType.APPLICATION_JSON)

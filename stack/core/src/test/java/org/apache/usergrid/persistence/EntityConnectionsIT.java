@@ -341,7 +341,6 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
 
     @Test
-    @Ignore("This is broken, and needs fixed after the refactor")
     public void testConnectionsIterable() throws Exception {
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -356,7 +355,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
 
         final int connectionCount = 100;
-        final List<Entity> things = new ArrayList<>( connectionCount );
+        final Map<UUID, Entity> things = new HashMap<>();
 
         for(int i = 0; i < connectionCount; i ++){
             Map<String, Object> data = new HashMap<String, Object>();
@@ -366,7 +365,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
             em.createConnection( firstUserEntity, "likes", entity );
 
-            things.add( entity );
+            things.put( entity.getUuid(), entity );
         }
 
 
@@ -380,15 +379,14 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         int checkedIndex = 0;
         for(; checkedIndex < connectionCount && itr.hasNext(); checkedIndex ++){
             final Entity returned = ( Entity ) itr.next();
-            final Entity expected = things.get( checkedIndex );
+            final Entity expected = things.get( returned.getUuid() );
 
             assertEquals("Entity expected", expected, returned);
         }
 
         assertEquals("Checked all entities", connectionCount, checkedIndex  );
-
-
     }
+
 //
 //
 //    @Test

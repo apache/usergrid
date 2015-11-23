@@ -64,7 +64,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-//@Concurrent
 public class ImportServiceIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportServiceIT.class);
@@ -139,7 +138,7 @@ public class ImportServiceIT {
 
     // test case to check if application is imported correctly
     @Test
-    @Ignore("Import organization not supported")
+    @Ignore("Pending merge of export-feature branch. Import organization not supported")
     public void testImportApplication() throws Exception {
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -261,7 +260,7 @@ public class ImportServiceIT {
 
     // test case to check if all applications file for an organization are imported correctly
     @Test
-    @Ignore("Import organization not supported")
+    @Ignore("Pending merge of export-feature branch. Import organization not supported")
     public void testImportOrganization() throws Exception {
 
         // creates 5 entities in usertests collection
@@ -456,7 +455,7 @@ public class ImportServiceIT {
      * Test to the doImport method with null organziation ID
      */
     @Test
-    @Ignore("Import organization not supported")
+    @Ignore("Pending merge of export-feature branch. Import organization not supported")
     public void testDoImportWithNullOrganizationID() throws Exception {
         // import
         S3Import s3Import = new S3ImportImpl();
@@ -482,7 +481,7 @@ public class ImportServiceIT {
      * Test to the doImport method with fake organization ID
      */
     @Test
-    @Ignore("Import organization not supported")
+    @Ignore("Pending merge of export-feature branch. Import organization not supported")
     public void testDoImportWithFakeOrganizationID() throws Exception {
 
         UUID fakeOrgId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
@@ -512,7 +511,7 @@ public class ImportServiceIT {
      * Test to the doImport method with fake application ID
      */
     @Test
-    @Ignore("Import application not supported")
+    @Ignore("Pending merge of export-feature branch. Import application not supported")
     public void testDoImportWithFakeApplicationID() throws Exception {
 
         UUID fakeappId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
@@ -544,7 +543,7 @@ public class ImportServiceIT {
      * Test to the doImport Collection method with fake application ID
      */
     @Test
-    @Ignore("Import application not supported")
+    @Ignore("Pending merge of export-feature branch. Import application not supported")
     public void testDoImportCollectionWithFakeApplicationID() throws Exception {
 
         UUID fakeappId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
