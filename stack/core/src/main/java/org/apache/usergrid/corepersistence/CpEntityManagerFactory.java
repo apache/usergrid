@@ -166,7 +166,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             if ( em.getApplication() == null ) {
                 logger.info("Creating management application");
                 Map mgmtAppProps = new HashMap<String, Object>();
-                mgmtAppProps.put(PROPERTY_NAME, "systemapp");
+                mgmtAppProps.put(PROPERTY_NAME, CassandraService.MANAGEMENT_APPLICATION);
                 em.create( getManagementAppId(), TYPE_APPLICATION, mgmtAppProps);
                 em.getApplication();
             }

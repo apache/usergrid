@@ -79,6 +79,7 @@ public class CassandraService {
     public static final String DEFAULT_APPLICATION = "default-app";
     public static final String DEFAULT_ORGANIZATION = "usergrid";
     public static final String MANAGEMENT_APPLICATION = "management";
+    public static final String MANAGEMENT_ORGPLUSAPP = "usergrid/management";
 
     private static final Logger logger = LoggerFactory.getLogger( CassandraService.class );
 

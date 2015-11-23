@@ -102,7 +102,7 @@ public class ImportServiceIT {
         }
 
         //creates sample test application
-        adminUser = setup.getMgmtSvc().createAdminUser(
+        adminUser = setup.getMgmtSvc().createAdminUser( null,
             username, username, username+"@test.com", username, false, false );
         organization = setup.getMgmtSvc().createOrganization( username, adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), username+"app" ).getId();

@@ -63,7 +63,7 @@ public class FacebookProviderIT {
     public static void setup() throws Exception {
         providerFactory =  SpringResource.getInstance().getBean( SignInProviderFactory.class );
         UserInfo adminUser = setup.getMgmtSvc()
-                                  .createAdminUser( uniqueUsername(), "Facebook User", "user"+newUUIDString()+"@facebook.com", "test", false,
+                                  .createAdminUser( null, uniqueUsername(), "Facebook User", "user"+newUUIDString()+"@facebook.com", "test", false,
                                           false );
         OrganizationInfo organization = setup.getMgmtSvc().createOrganization( uniqueOrg(), adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "fb-application" ).getId();

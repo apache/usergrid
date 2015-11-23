@@ -487,7 +487,7 @@ public class ManagementServiceIT {
         String password = "test";
 
         UserInfo adminUser = setup.getMgmtSvc()
-                                  .createAdminUser( username, "Todd Nine",uniqueEmail(), password,
+                                  .createAdminUser( null, username, "Todd Nine",uniqueEmail(), password,
                                           false, false );
 
         EntityManager em = setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() );
