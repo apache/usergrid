@@ -32,6 +32,7 @@ import org.jvnet.mock_javamail.Mailbox;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.core.Form;
@@ -439,31 +440,52 @@ public class AdminUsersIT extends AbstractRestIT {
     }
 
 
-//    @Test
-//    public void passwordResetIncorrectUserName() throws Exception {
-//
-//        String email = "test2@usergrid.com";
-//        setup.getMgmtSvc().createAdminUser( "test2", "test2", "test2@usergrid.com", "sesa2me", false, false );
-//        UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( email );
-//        String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser( userInfo.getUuid(), 15000 );
-//
-//        assertTrue( setup.getMgmtSvc().checkPasswordResetTokenForAdminUser( userInfo.getUuid(), resetToken ) );
-//
-//        Form formData = new Form();
-//        formData.add( "token", resetToken );
-//        formData.add( "password1", "sesa2me" );
-//        formData.add( "password2", "sesa2me" );
-//
-//        String html = resource().path( "/management/users/" + "noodle" + userInfo.getUsername() + "/resetpw" )
-//                                .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
-//
-//        assertTrue( html.contains( "Incorrect username entered" ) );
-//
-//        html = resource().path( "/management/users/" + userInfo.getUsername() + "/resetpw" )
-//                         .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
-//
-//        assertTrue( html.contains( "password set" ) );
-//    }
+    @Test
+    public void passwordResetIncorrectUserName() throws Exception {
+
+        // initiate password reset
+        management().users().user( clientSetup.getUsername() ).resetpw().post(new Form());
+        refreshIndex();
+
+        // create mocked inbox, get password reset email and extract token
+        List<Message> inbox = Mailbox.get( clientSetup.getEmail() );
+        assertFalse( inbox.isEmpty() );
+
+        MockImapClient client = new MockImapClient( "mockserver.com", "test-user-47", "somepassword" );
+        client.processMail();
+
+        // Get email with confirmation token and extract token
+        String token = null;
+        Iterator<Message> msgIterator = inbox.iterator();
+        while ( token == null && msgIterator.hasNext() ) {
+            Message msg = msgIterator.next();
+            if ( msg.getSubject().equals("Password Reset") ) {
+                token = getTokenFromMessage( msg );
+            }
+        }
+        assertNotNull( token );
+
+        Form formData = new Form();
+        formData.param( "token", token );
+        formData.param( "password1", "sesame" );
+        formData.param( "password2", "sesame" );
+
+        try {
+
+            String html = management().users().user( "mr_fatfinger" ).resetpw().getTarget().request()
+                .post( javax.ws.rs.client.Entity.form( formData ), String.class );
+
+            fail("Password reset request should have failed");
+
+        } catch ( BadRequestException expected ) {
+            assertTrue( expected.getResponse().getEntity().toString().contains( "Could not find" ) );
+        }
+
+        String html = management().users().user( clientSetup.getUsername() ).resetpw().getTarget().request()
+            .post( javax.ws.rs.client.Entity.form(formData), String.class );
+
+        assertTrue( html.contains( "password set" ) );
+    }
 
 
     /**
@@ -519,7 +541,6 @@ public class AdminUsersIT extends AbstractRestIT {
         }
     }
 
-      //TODO: won't work until resetpw viewables are fixed in the embedded environment.
     @Test
     public void checkPasswordChangeTime() throws Exception {
 
@@ -553,72 +574,53 @@ public class AdminUsersIT extends AbstractRestIT {
         String html = management().users().user( clientSetup.getUsername() ).resetpw().getTarget().request()
             .post( javax.ws.rs.client.Entity.form(formData), String.class );
         assertTrue( html.contains( "password set" ) );
-
-
-
+        refreshIndex();
 
         // login with new password and get token
 
+        Map<String, Object> payload = new HashMap<String, Object>() {{
+            put("grant_type", "password");
+            put("username", clientSetup.getUsername() );
+            put("password", "sesame");
+        }};
+        ApiResponse response = management().token().post( false, payload, null );
+
         // check password changed time
+
+        Long changeTime = Long.parseLong( response.getProperties().get( "passwordChanged" ).toString() );
+        assertTrue( System.currentTimeMillis() - changeTime < 2000 );
 
         // change password again by posting JSON
 
+        payload = new HashMap<String, Object>() {{
+            put("oldpassword", "sesame");
+            put("newpassword", "test");
+        }};
+        management().users().user( clientSetup.getUsername() ).password().post( false, payload, null );
+        refreshIndex();
+
         // get password and check password change time again
+
+        payload = new HashMap<String, Object>() {{
+            put("grant_type", "password");
+            put("username", clientSetup.getUsername() );
+            put("password", "test");
+        }};
+        response = management().token().post( false, payload, null );
+
+        Long changeTime2 = Long.parseLong( response.getProperties().get( "passwordChanged" ).toString() );
+        assertTrue( changeTime < changeTime2 );
+        assertTrue( System.currentTimeMillis() - changeTime2 < 2000 );
 
         // login via /me end-point and check password change time again
 
+        response = management().me().get( ApiResponse.class, new QueryParameters()
+            .addParam( "grant_type", "password" )
+            .addParam( "username", clientSetup.getUsername() )
+            .addParam( "password", "test" ) );
 
-//        final TestUser user = context.getActiveUser();
-//        String email = user.getEmail();
-//        UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( email );
-//        String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser( userInfo.getUuid(), 15000 );
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        Form formData = new Form();
-//        formData.add( "token", resetToken );
-//        formData.add( "password1", "sesame" );
-//        formData.add( "password2", "sesame" );
-//
-//        String html = resource().path( "/management/users/" + userInfo.getUsername() + "/resetpw" )
-//                                .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
-//        assertTrue( html.contains( "password set" ) );
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        JsonNode node = mapper.readTree( resource().path( "/management/token" )
-//                                                   .queryParam( "grant_type", "password" )
-//                                                   .queryParam( "username", email ).queryParam( "password", "sesame" )
-//                                                   .accept( MediaType.APPLICATION_JSON )
-//                                                   .get( String.class ));
-//
-//        Long changeTime = node.get( "passwordChanged" ).longValue();
-//        assertTrue( System.currentTimeMillis() - changeTime < 2000 );
-//
-//        Map<String, String> payload = hashMap( "oldpassword", "sesame" ).map( "newpassword", "test" );
-//        node = mapper.readTree( resource().path( "/management/users/" + userInfo.getUsername() + "/password" )
-//                                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-//                                          .post( String.class, payload ));
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        node = mapper.readTree( resource().path( "/management/token" )
-//                                          .queryParam( "grant_type", "password" )
-//                                          .queryParam( "username", email )
-//                                          .queryParam( "password", "test" )
-//                                          .accept( MediaType.APPLICATION_JSON )
-//                                          .get( String.class ));
-//
-//        Long changeTime2 = node.get( "passwordChanged" ).longValue();
-//        assertTrue( changeTime < changeTime2 );
-//        assertTrue( System.currentTimeMillis() - changeTime2 < 2000 );
-//
-//        node = mapper.readTree( resource().path( "/management/me" ).queryParam( "grant_type", "password" )
-//                                          .queryParam( "username", email ).queryParam( "password", "test" ).accept( MediaType.APPLICATION_JSON )
-//                                          .get( String.class ));
-//
-//        Long changeTime3 = node.get( "passwordChanged" ).longValue();
-//        assertEquals( changeTime2, changeTime3 );
+        Long changeTime3 = Long.parseLong( response.getProperties().get( "passwordChanged" ).toString() );
+        assertEquals( changeTime2, changeTime3 );
     }
 
 
