@@ -478,7 +478,8 @@ public class AdminUsersIT extends AbstractRestIT {
             fail("Password reset request should have failed");
 
         } catch ( BadRequestException expected ) {
-            assertTrue( expected.getResponse().getEntity().toString().contains( "Could not find" ) );
+            String body = expected.getResponse().readEntity( String.class );
+            assertTrue( body.contains( "Could not find" ) );
         }
 
         String html = management().users().user( clientSetup.getUsername() ).resetpw().getTarget().request()
