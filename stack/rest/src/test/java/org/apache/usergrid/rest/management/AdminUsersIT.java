@@ -17,6 +17,7 @@
 
 package org.apache.usergrid.rest.management;
 
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.management.MockImapClient;
 import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
@@ -36,10 +37,7 @@ import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.apache.usergrid.management.AccountCreationProps.*;
 import static org.junit.Assert.*;
@@ -48,6 +46,7 @@ import static org.junit.Assert.*;
 /**
  * Contains all tests relating to Admin Users
  */
+@NotThreadSafe
 public class AdminUsersIT extends AbstractRestIT {
 
     ManagementResource management;
@@ -187,7 +186,6 @@ public class AdminUsersIT extends AbstractRestIT {
      * TODO:test for parallel test that changing the properties here won't affect other tests
      * @throws Exception
      */
-    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1115. breaks other tests")
     @Test
     public void testUnconfirmedAdminLogin()  throws Exception{
 
@@ -273,7 +271,6 @@ public class AdminUsersIT extends AbstractRestIT {
      * Test that the system admin doesn't need a confirmation email
      * @throws Exception
      */
-    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1115. breaks other tests")
     @Test
     public void testSystemAdminNeedsNoConfirmation() throws Exception{
         //Save original properties to return them to normal at the end of the test
@@ -311,8 +308,6 @@ public class AdminUsersIT extends AbstractRestIT {
      * Test that the test account doesn't need confirmation and is created automatically.
      * @throws Exception
      */
-    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1115. Test account problem")
-    // Test doesn't pass because the test account isn't getting correct instantiated
     @Test
     public void testTestUserNeedsNoConfirmation() throws Exception{
         //Save original properties to return them to normal at the end of the test
@@ -348,9 +343,7 @@ public class AdminUsersIT extends AbstractRestIT {
      * Update the current management user and make sure the change persists
      * @throws Exception
      */
-    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1115.")
-    // Fails because we cannot GET a management user with a super user token - only with an Admin level token.
-    // But, we can PUT with a superuser token. This test will work once that issue has been resolved.
+    @Ignore("Pending new feature https://issues.apache.org/jira/browse/USERGRID-1127")
     @Test
     public void updateManagementUser() throws Exception {
 
@@ -400,25 +393,32 @@ public class AdminUsersIT extends AbstractRestIT {
         assertFalse( inbox.isEmpty() );
     }
 
-    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1115. Viewables issue.")
-    // Test is broken due to viewables not being properly returned in the embedded tomcat
+
     @Test
     public void checkFormPasswordReset() throws Exception {
 
-
+        // initiate password reset
         management().users().user( clientSetup.getUsername() ).resetpw().post(new Form());
+        refreshIndex();
 
-        //Create mocked inbox
+        // create mocked inbox, get password reset email and extract token
         List<Message> inbox = Mailbox.get( clientSetup.getEmail() );
         assertFalse( inbox.isEmpty() );
 
         MockImapClient client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
         client.processMail();
 
-        //Get email with confirmation token and extract token
-        Message confirmation = inbox.get( 0 );
-        assertEquals( "User Account Confirmation: " + clientSetup.getEmail(), confirmation.getSubject() );
-        String token = getTokenFromMessage( confirmation );
+        // Get email with confirmation token and extract token
+
+        String token = null;
+        Iterator<Message> msgIterator = inbox.iterator();
+        while ( token == null && msgIterator.hasNext() ) {
+            Message msg = msgIterator.next();
+            if ( msg.getSubject().equals("Password Reset") ) {
+                token = getTokenFromMessage( msg );
+            }
+        }
+        assertNotNull( token );
 
         Form formData = new Form();
         formData.param( "token", token );
@@ -437,6 +437,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         assertTrue( html.contains( "invalid token" ) );
     }
+
 
 //    @Test
 //    public void passwordResetIncorrectUserName() throws Exception {
@@ -519,9 +520,54 @@ public class AdminUsersIT extends AbstractRestIT {
     }
 
       //TODO: won't work until resetpw viewables are fixed in the embedded environment.
-//    @Test
-//    public void checkPasswordChangeTime() throws Exception {
-//
+    @Test
+    public void checkPasswordChangeTime() throws Exception {
+
+        // request password reset
+
+        management().users().user( clientSetup.getUsername() ).resetpw().post(new Form());
+        refreshIndex();
+
+        // get resetpw token from email
+
+        List<Message> inbox = Mailbox.get( clientSetup.getEmail() );
+        assertFalse( inbox.isEmpty() );
+        MockImapClient client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
+        client.processMail();
+        String token = null;
+        Iterator<Message> msgIterator = inbox.iterator();
+        while ( token == null && msgIterator.hasNext() ) {
+            Message msg = msgIterator.next();
+            if ( msg.getSubject().equals("Password Reset") ) {
+                token = getTokenFromMessage( msg );
+            }
+        }
+        assertNotNull( token );
+
+        // reset the password to sesame
+
+        Form formData = new Form();
+        formData.param( "token", token );
+        formData.param( "password1", "sesame" );
+        formData.param( "password2", "sesame" );
+        String html = management().users().user( clientSetup.getUsername() ).resetpw().getTarget().request()
+            .post( javax.ws.rs.client.Entity.form(formData), String.class );
+        assertTrue( html.contains( "password set" ) );
+
+
+
+
+        // login with new password and get token
+
+        // check password changed time
+
+        // change password again by posting JSON
+
+        // get password and check password change time again
+
+        // login via /me end-point and check password change time again
+
+
 //        final TestUser user = context.getActiveUser();
 //        String email = user.getEmail();
 //        UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( email );
@@ -573,9 +619,9 @@ public class AdminUsersIT extends AbstractRestIT {
 //
 //        Long changeTime3 = node.get( "passwordChanged" ).longValue();
 //        assertEquals( changeTime2, changeTime3 );
-//    }
-//
-//
+    }
+
+
 
 
     /**
@@ -638,7 +684,6 @@ public class AdminUsersIT extends AbstractRestIT {
         }
     }
 
-    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1115. breaks other tests")
     @Test
     public void testProperties(){
         ApiResponse originalTestPropertiesResponse = clientSetup.getRestClient().testPropertiesResource().get();
