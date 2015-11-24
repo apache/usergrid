@@ -276,7 +276,7 @@ public class CpNamingUtils {
      * @param entityId the entity's UUID
      */
     protected static Id generateEntityId( UUID entityId, String entityType ) {
-        return new SimpleId( entityId, Application.ENTITY_TYPE );
+        return new SimpleId( entityId, entityType );
     }
 
 
