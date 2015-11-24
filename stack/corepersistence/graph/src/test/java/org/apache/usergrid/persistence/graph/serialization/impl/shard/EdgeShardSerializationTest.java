@@ -40,6 +40,8 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
@@ -51,6 +53,8 @@ import static org.mockito.Mockito.when;
 @RunWith(ITRunner.class)
 @UseModules({ TestGraphModule.class })
 public class EdgeShardSerializationTest {
+
+    private static final Logger log = LoggerFactory.getLogger( EdgeShardSerializationTest.class );
 
 
     @Inject
@@ -203,4 +207,44 @@ public class EdgeShardSerializationTest {
 
         assertFalse( results.hasNext() );
     }
+
+    @Test
+    public void sameShardIndexRemoval() throws ConnectionException {
+
+        final Id now = IdGenerator.createId( "test" );
+
+        final long timestamp = 2000L;
+
+        final Shard shard1 = new Shard( 1000L, timestamp, false );
+        final Shard shard2 = new Shard( shard1.getShardIndex(), timestamp * 2, true );
+
+
+        final DirectedEdgeMeta sourceEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType( now, "edgeType", "subType" );
+        MutationBatch batch = edgeShardSerialization.writeShardMeta( scope, shard1, sourceEdgeMeta );
+        batch.mergeShallow( edgeShardSerialization.writeShardMeta( scope, shard2, sourceEdgeMeta ) );
+        batch.execute();
+
+
+        Iterator<Shard> results =
+            edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), sourceEdgeMeta );
+
+        // Latest timestamp  comes first
+        assertEquals( shard2, results.next() );
+
+        // This should now not remove anything
+        edgeShardSerialization.removeShardMeta( scope, shard1, sourceEdgeMeta ).execute();
+
+
+        // Get iterator again
+        results = edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), sourceEdgeMeta );
+
+        // We should still have shard3 stored
+        assertEquals( shard2, results.next() );
+
+
+
+    }
+
+
+
 }
