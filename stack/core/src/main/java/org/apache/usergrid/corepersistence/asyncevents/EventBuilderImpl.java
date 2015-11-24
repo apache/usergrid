@@ -22,6 +22,7 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 import java.util.List;
 
+import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,42 +126,34 @@ public class EventBuilderImpl implements EventBuilder {
         log.debug( "Deleting entity id from index in app scope {} with entityId {} }", applicationScope, entityId );
 
         final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
-
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
 
+        //TODO USERGRID-1123: Implement so we don't iterate logs twice (latest DELETED version, then to get all DELETED)
 
-        //TODO: change this to be an observable
-        //so we get these versions and loop through them until we find the MvccLogEntry that is marked as delete.
-        //TODO: evauluate this to possibly be an observable to pass to the nextmethod.
         MvccLogEntry mostRecentlyMarked = ecm.getVersions( entityId ).toBlocking()
-                                             .firstOrDefault( null,
-                                                 mvccLogEntry -> mvccLogEntry.getState() == MvccLogEntry.State.DELETED );
+            .firstOrDefault( null, mvccLogEntry -> mvccLogEntry.getState() == MvccLogEntry.State.DELETED );
 
-        //If there is nothing marked then we shouldn't return any results.
-        //TODO: evaluate if we want to return null or return empty observable when we don't have any results marked as deleted.
-        if(mostRecentlyMarked == null)
-            return null;
+        // De-indexing and entity deletes don't check log entiries.  We must do that first. If no DELETED logs, then
+        // return an empty observable as our no-op.
+        Observable<IndexOperationMessage> deIndexObservable = Observable.empty();
+        Observable<List<MvccLogEntry>> ecmDeleteObservable = Observable.empty();
 
-        //observable of index operation messages
-        //this method will need the most recent version.
-        //When we go to compact the graph make sure you turn on the debugging mode for the deleted nodes so
-        //we can verify that we mark them. That said that part seems kinda done. as we also delete the mvcc buffers.
-        final Observable<IndexOperationMessage> edgeObservable =
-            indexService.deleteEntityIndexes( applicationScope, entityId, mostRecentlyMarked.getVersion() );
+        if(mostRecentlyMarked != null){
+            deIndexObservable =
+                indexService.deleteEntityIndexes( applicationScope, entityId, mostRecentlyMarked.getVersion() );
 
+            ecmDeleteObservable =
+                ecm.getVersions( entityId )
+                    .filter( mvccLogEntry->
+                        UUIDUtils.compare(mvccLogEntry.getVersion(), mostRecentlyMarked.getVersion()) <= 0)
+                    .buffer( serializationFig.getBufferSize() )
+                    .doOnNext( buffer -> ecm.delete( buffer ) );
+        }
 
-        //TODO: not sure what we need the list of versions here when we search for the mark above
-        //observable of entries as the batches are deleted
-        final Observable<List<MvccLogEntry>> entries =
-            ecm.getVersions( entityId ).buffer( serializationFig.getBufferSize() )
-               .doOnNext( buffer -> ecm.delete( buffer ) );
+        // Graph compaction checks the versions inside compactNode, just build this up for the caller to subscribe to
+        final Observable<Id> graphCompactObservable = gm.compactNode(entityId);
 
-
-        // observable of the edge delete from graph
-        final Observable<Id> compactedNode = gm.compactNode(entityId);
-
-
-        return new EntityDeleteResults( edgeObservable, entries, compactedNode );
+        return new EntityDeleteResults( deIndexObservable, ecmDeleteObservable, graphCompactObservable );
     }
 
 
