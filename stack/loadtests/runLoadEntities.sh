@@ -40,6 +40,7 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #ENTITY_PROGRESS_COUNT=
 #CONSTANT_USERS_PER_SEC=
 #CONSTANT_USERS_DURATION=
+#FLUSH_CSV=
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
