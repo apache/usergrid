@@ -35,22 +35,18 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import com.google.common.base.Optional;
-import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
+
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.IndexLocationStrategy;
-import org.apache.usergrid.persistence.index.utils.*;
 import org.apache.usergrid.utils.*;
 import org.apache.usergrid.utils.ClassUtils;
-import org.apache.usergrid.utils.ConversionUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.pipeline.builder.PipelineBuilderFactory;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AggregateCounter;
@@ -93,10 +89,7 @@ import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundExcept
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
-import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
-import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.map.MapManager;
@@ -371,14 +364,12 @@ public class CpEntityManager implements EntityManager {
     public Entity create( UUID importId, String entityType, Map<String, Object> properties ) throws Exception {
 
         UUID timestampUuid = importId != null ? importId : UUIDUtils.newTimeUUID();
-        Keyspace ko = cass.getApplicationKeyspace( applicationId );
-        Mutator<ByteBuffer> m = createMutator( ko, be );
-
-        Entity entity = batchCreate( m,entityType, null, properties, importId, timestampUuid );
 
         //Adding graphite metrics
         Timer.Context timeCassCreation = entCreateTimer.time();
-        m.execute();
+
+        Entity entity = batchCreate( entityType, null, properties, importId, timestampUuid );
+
         timeCassCreation.stop();
         return entity;
     }
@@ -386,14 +377,11 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Entity create( Id id, Map<String, Object> properties ) throws Exception {
 
-        Keyspace ko = cass.getApplicationKeyspace( applicationId );
-        Mutator<ByteBuffer> m = createMutator( ko, be );
-
-        Entity entity = batchCreate( m, id.getType(), null, properties, id.getUuid(), UUIDUtils.newTimeUUID() );
-
         //Adding graphite metrics
         Timer.Context timeCassCreation = entCreateTimer.time();
-        m.execute();
+
+        Entity entity = batchCreate( id.getType(), null, properties, id.getUuid(), UUIDUtils.newTimeUUID() );
+
         timeCassCreation.stop();
 
         return entity;
@@ -418,15 +406,12 @@ public class CpEntityManager implements EntityManager {
 
         UUID timestampUuid = importId != null ? importId : UUIDUtils.newTimeUUID();
 
-        Keyspace ko = cass.getApplicationKeyspace( applicationId );
-        Mutator<ByteBuffer> m = createMutator( ko, be );
+        Timer.Context timeEntityCassCreation = entCreateBatchTimer.time();
 
 
-        A entity = batchCreate( m, entityType, entityClass, properties, importId, timestampUuid );
+        A entity = batchCreate( entityType, entityClass, properties, importId, timestampUuid );
 
         //Adding graphite metrics
-        Timer.Context timeEntityCassCreation = entCreateBatchTimer.time();
-        m.execute();
         timeEntityCassCreation.stop();
 
         return entity;
@@ -1676,7 +1661,7 @@ public class CpEntityManager implements EntityManager {
         }
 
         UUID id = UUIDGenerator.newTimeUUID();
-        batchCreate( null, Role.ENTITY_TYPE, null, properties, id, timestampUuid );
+        batchCreate( Role.ENTITY_TYPE, null, properties, id, timestampUuid );
 
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
         CassandraPersistenceUtils.addInsertToMutator( batch, ENTITY_DICTIONARIES,
@@ -2469,8 +2454,8 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public <A extends Entity> A batchCreate( Mutator<ByteBuffer> ignored, String entityType,
-            Class<A> entityClass, Map<String, Object> properties, UUID importId, UUID timestampUuid )
+    public <A extends Entity> A batchCreate( String entityType, Class<A> entityClass, Map<String, Object> properties,
+                                             UUID importId, UUID timestampUuid )
             throws Exception {
 
         String eType = Schema.normalizeEntityType( entityType );
@@ -2586,7 +2571,7 @@ public class CpEntityManager implements EntityManager {
             }
 
             //doesn't allow the mutator to be ignored.
-            counterUtils.addEventCounterMutations( ignored, applicationId, event, timestamp );
+            counterUtils.addEventCounterMutations( null, applicationId, event, timestamp );
 
             incrementEntityCollection( "events", timestamp );
 

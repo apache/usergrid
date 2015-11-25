@@ -626,9 +626,8 @@ public interface EntityManager {
     public void revokeGroupPermission( UUID groupId, String permission ) throws Exception;
 
 
-    <A extends Entity> A batchCreate(Mutator<ByteBuffer> m, String entityType,
-            Class<A> entityClass, Map<String, Object> properties,
-            UUID importId, UUID timestampUuid) throws Exception;
+    <A extends Entity> A batchCreate( String entityType, Class<A> entityClass, Map<String, Object> properties, UUID
+        importId, UUID timestampUuid ) throws Exception;
     /**
      * Batch dictionary property.
      *
