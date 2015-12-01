@@ -29,6 +29,7 @@ import java.io.FileFilter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.usergrid.StressTest;
 
 /**
  * TODO: better test, this is really just a smoke test.
@@ -55,9 +56,11 @@ public class ExportAppTest {
 
         ExportDataCreator creator = new ExportDataCreator();
         creator.startTool( new String[] {
-                "-organization", orgName,
-                "-application", appName,
-                "-host", "localhost:9120"
+            "-organization", orgName,
+            "-application", appName,
+            "-host", "localhost:9120",
+            "-eshost", "localhost:9200",
+            "-escluster", "usergrid"
         }, false);
 
         long start = System.currentTimeMillis();
