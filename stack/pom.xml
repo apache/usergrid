@@ -192,8 +192,8 @@
     <module>core</module>
     <module>services</module>
     <module>rest</module>
-    <!--
     <module>tools</module>
+    <!--
     <module>websocket</module>
     -->
     <!--
