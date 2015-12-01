@@ -216,8 +216,10 @@ public class ExportImportAdminsTest {
 
         ImportAdmins importAdmins = new ImportAdmins();
         importAdmins.startTool( new String[]{
-                "-host", "localhost:9120",
-                "-inputDir", tempDir.getAbsolutePath()
+            "-host", "localhost:9120",
+            "-eshost", "localhost:9200",
+            "-escuster", "usergrid",
+            "-inputDir", tempDir.getAbsolutePath()
         }, false );
 
         // verify that users and orgs were created correctly
