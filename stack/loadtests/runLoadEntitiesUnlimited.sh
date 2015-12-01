@@ -40,7 +40,8 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 #ENTITY_PROGRESS_COUNT=
 #CONSTANT_USERS_PER_SEC=
 #CONSTANT_USERS_DURATION=
-#FLUSH_CSV
+#NEW_CSV_ON_FLUSH=
+#FLUSH_CSV=
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
@@ -57,8 +58,6 @@ RAMP_TIME="$2"
 shift $#
 
 SCENARIO_TYPE=loadEntities
-NEW_CSV_ON_FLUSH=true
-FLUSH_CSV=10000
 
 # don't load entities as part of setup (loading entities is the point of the test)
 LOAD_ENTITIES=false
