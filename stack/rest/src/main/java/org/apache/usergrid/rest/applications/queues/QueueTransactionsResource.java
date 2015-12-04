@@ -30,6 +30,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -70,6 +71,7 @@ public class QueueTransactionsResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("{id}")
     @PUT
     public JSONWithPadding updateTransaction( @Context UriInfo ui, @PathParam("id") UUID transactionId,
@@ -84,6 +86,7 @@ public class QueueTransactionsResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("{id}")
     @DELETE
     public JSONWithPadding removeTransaction( @Context UriInfo ui, @PathParam("id") UUID transactionId,
