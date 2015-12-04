@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -107,6 +108,7 @@ public class ServiceRequestIT {
     }
 
     //Verify that entity read repair is functioning as intended.
+    @Ignore("Temporarily disabled as read repair is disabled temporarily in EntityManagerImpl.")
     @Test
     public void testRepairOfSingleEntity() throws Exception{
         String rand = RandomStringUtils.randomAlphanumeric( 10 );
@@ -165,7 +167,7 @@ public class ServiceRequestIT {
 
     }
 
-
+    @Ignore("Temporarily disabled as read repair is disabled temporarily in EntityManagerImpl.")
     @Test
     public void testRepairOfOnlyOneOfTwoColumns() throws Exception{
         String rand = RandomStringUtils.randomAlphanumeric( 10 );
@@ -235,6 +237,7 @@ public class ServiceRequestIT {
     //For this test you need to insert a dummy key with a dummy column that leads to nowhere
     //then run the unique index cleanup.
     //checks for bug when only column doesn't exist make sure to delete the row as well.
+    @Ignore("Temporarily disabled as read repair is disabled temporarily in EntityManagerImpl.")
     @Test
     public void testRepairOfMultipleEntitiesAndRemainingEntities() throws Exception{
         String rand = RandomStringUtils.randomAlphanumeric( 10 );
