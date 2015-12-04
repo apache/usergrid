@@ -146,12 +146,10 @@ public class ExportAdmins extends ExportingToolBase {
         // start read queue workers
 
         BlockingQueue<UUID> readQueue = new LinkedBlockingQueue<UUID>();
-        List<AdminUserReader> readers = new ArrayList<AdminUserReader>();
         for (int i = 0; i < readThreadCount; i++) {
             AdminUserReader worker = new AdminUserReader( readQueue, writeQueue );
             Thread readerThread = new Thread( worker, "AdminUserReader-" + i );
             readerThread.start();
-            readers.add( worker );
         }
         logger.debug( readThreadCount + " read worker threads started" );
 
@@ -207,7 +205,7 @@ public class ExportAdmins extends ExportingToolBase {
 
         logger.info( "Building org map" );
 
-        ExecutorService execService = Executors.newFixedThreadPool( this.readThreadCount );
+        ExecutorService execService = Executors.newFixedThreadPool( readThreadCount );
 
         EntityManager em = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
         String queryString = "select *";
@@ -387,7 +385,7 @@ public class ExportAdmins extends ExportingToolBase {
 
             task.orgNamesByUuid = managementService.getOrganizationsForAdminUser( task.adminUser.getUuid() );
 
-            List<Org> orgs = userToOrgsMap.get( task.adminUser.getProperty( "username" ).toString().toLowerCase() );
+            List<Org> orgs = userToOrgsMap.get( task.adminUser.getUuid() );
 
             if ( orgs != null && task.orgNamesByUuid.size() < orgs.size() ) {
 

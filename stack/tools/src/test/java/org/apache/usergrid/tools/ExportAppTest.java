@@ -56,11 +56,11 @@ public class ExportAppTest {
 
         ExportDataCreator creator = new ExportDataCreator();
         creator.startTool( new String[] {
-            "-organization", orgName,
-            "-application", appName,
-            "-host", "localhost:9120",
-            "-eshost", "localhost:9200",
-            "-escluster", "usergrid"
+                "-organization", orgName,
+                "-application", appName,
+                "-host", "localhost:9120",
+                "-eshost", "localhost:9200",
+                "-escluster", "elasticsearch"
         }, false);
 
         long start = System.currentTimeMillis();
@@ -68,10 +68,12 @@ public class ExportAppTest {
         String directoryName = "target/export" + rand;
 
         ExportApp exportApp = new ExportApp();
-        exportApp.startTool( new String[]{
+        exportApp.startTool( new String[] {
                 "-application", orgName + "/" + appName,
                 "-writeThreads", "100",
                 "-host", "localhost:9120",
+                "-eshost", "localhost:9200",
+                "-escluster", "elasticsearch",
                 "-outputDir", directoryName
         }, false );
 
@@ -84,10 +86,12 @@ public class ExportAppTest {
         assertTrue( getFileCount( exportDir, "connections" ) <= 100 );
 
         File exportDir1 = new File(directoryName + "1");
-        exportApp.startTool( new String[]{
+        exportApp.startTool( new String[] {
                 "-application", orgName + "/" + appName,
                 "-writeThreads", "1",
                 "-host", "localhost:9120",
+                "-eshost", "localhost:9200",
+                "-escluster", "elasticsearch",
                 "-outputDir", directoryName + "1"
         }, false );
 

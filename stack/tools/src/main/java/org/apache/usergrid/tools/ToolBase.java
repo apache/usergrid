@@ -101,6 +101,7 @@ public abstract class ToolBase {
             System.setProperty( "cassandra.url", line.getOptionValue( "host" ) );
             System.setProperty( "elasticsearch.hosts", line.getOptionValue( "eshost" ) );
             System.setProperty( "elasticsearch.cluster_name", line.getOptionValue( "escluster" ) );
+            System.setProperty( "usergrid.cluster_name", "usergrid" );
         }
 
         try {
