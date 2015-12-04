@@ -546,19 +546,20 @@ public class EntityManagerImpl implements EntityManager {
                 cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, null, null, 2,
                         false );
 
+// TEMPORARY REMOVAL OF READ REPAIR
 
         //check to see if the single value is valid. If it is not valid then it will be zero and go through
         //the code below.
-        if(cols.size() == 1){
-            logger.debug("Verifying that column is still valid, if not will be removed");
-            UUID indexCorruptionUuid = ue.fromByteBuffer( cols.get( 0 ).getName());
-
-            if (get(indexCorruptionUuid) == null ) {
-                logger.debug( "Deleting the following uuid: {} from the application: {}",indexCorruptionUuid,applicationId );
-                deleteUniqueColumn( ownerEntityId, key, indexCorruptionUuid );
-                cols.remove( 0 );
-            }
-        }
+//        if(cols.size() == 1){
+//            logger.debug("Verifying that column is still valid, if not will be removed");
+//            UUID indexCorruptionUuid = ue.fromByteBuffer( cols.get( 0 ).getName());
+//
+//            if (get(indexCorruptionUuid) == null ) {
+//                logger.debug( "Deleting the following uuid: {} from the application: {}",indexCorruptionUuid,applicationId );
+//                deleteUniqueColumn( ownerEntityId, key, indexCorruptionUuid );
+//                cols.remove( 0 );
+//            }
+//        }
 
         //No columns at all, it's unique
         if ( cols.size() == 0 ) {
@@ -572,48 +573,50 @@ public class EntityManagerImpl implements EntityManager {
                     + "property {} with value {}",
                     new Object[] { ownerEntityId, collectionNameInternal, propertyName, propertyValue } );
 
-            //retrieve ALL DA columns.
-            List<HColumn<ByteBuffer, ByteBuffer>> indexingColumns = cass.getAllColumns( cass.getApplicationKeyspace( applicationId ),ENTITY_UNIQUE,key,be,be );
+// TEMPORARY REMOVAL OF READ REPAIR
 
-
-            //Contains entities that weren't deleted but are still in index.
-            //maybe use a set or list so you don't have to keep track of an index.
-            Entity[] entities = new Entity[indexingColumns.size()];
-            int index = 0;
-
-            for ( HColumn<ByteBuffer, ByteBuffer> col : indexingColumns ) {
-                UUID indexCorruptionUuid = ue.fromByteBuffer( col.getName());
-
-                entities[index] = get(indexCorruptionUuid);
-
-                if (entities[index] == null ) {
-                    logger.debug("deleting uuid: {} from {} because it no longer exists.",indexCorruptionUuid,ownerEntityId);
-                    deleteUniqueColumn( ownerEntityId, key, indexCorruptionUuid );
-                }
-                else{
-                    index++;
-                }
-            }
-            //this means that the same unique rowkey has two values associated with it
-            if(index>1){
-                Entity mostRecentEntity = entities[0];
-                for(Entity entity: entities){
-                    if(mostRecentEntity.getModified() > entity.getModified()){
-                        deleteEntity( entity.getUuid() );
-                        logger.info( "Deleting " + entity.getUuid().toString()
-                                + " because it shares older unique value with: " + propertyValue );
-                    }
-                    else if (mostRecentEntity.getModified() < entity.getModified()){
-                        logger.info("Deleting "+mostRecentEntity.getUuid().toString()+" because it shares older unique value with: "+propertyValue);
-                        deleteEntity( mostRecentEntity.getUuid() );
-                        mostRecentEntity = entity;
-                    }
-                    else if (mostRecentEntity.getModified() == entity.getModified() && !mostRecentEntity.getUuid().equals( entity.getUuid() )){
-                        logger.error("Entities with unique value: "+propertyValue+" has two or more entities with the same modified time."
-                                + "Please manually resolve by query or changing names. ");
-                    }
-                }
-            }
+//            //retrieve ALL DA columns.
+//            List<HColumn<ByteBuffer, ByteBuffer>> indexingColumns = cass.getAllColumns( cass.getApplicationKeyspace( applicationId ),ENTITY_UNIQUE,key,be,be );
+//
+//
+//            //Contains entities that weren't deleted but are still in index.
+//            //maybe use a set or list so you don't have to keep track of an index.
+//            Entity[] entities = new Entity[indexingColumns.size()];
+//            int index = 0;
+//
+//            for ( HColumn<ByteBuffer, ByteBuffer> col : indexingColumns ) {
+//                UUID indexCorruptionUuid = ue.fromByteBuffer( col.getName());
+//
+//                entities[index] = get(indexCorruptionUuid);
+//
+//                if (entities[index] == null ) {
+//                    logger.debug("deleting uuid: {} from {} because it no longer exists.",indexCorruptionUuid,ownerEntityId);
+//                    deleteUniqueColumn( ownerEntityId, key, indexCorruptionUuid );
+//                }
+//                else{
+//                    index++;
+//                }
+//            }
+//            //this means that the same unique rowkey has two values associated with it
+//            if(index>1){
+//                Entity mostRecentEntity = entities[0];
+//                for(Entity entity: entities){
+//                    if(mostRecentEntity.getModified() > entity.getModified()){
+//                        deleteEntity( entity.getUuid() );
+//                        logger.info( "Deleting " + entity.getUuid().toString()
+//                                + " because it shares older unique value with: " + propertyValue );
+//                    }
+//                    else if (mostRecentEntity.getModified() < entity.getModified()){
+//                        logger.info("Deleting "+mostRecentEntity.getUuid().toString()+" because it shares older unique value with: "+propertyValue);
+//                        deleteEntity( mostRecentEntity.getUuid() );
+//                        mostRecentEntity = entity;
+//                    }
+//                    else if (mostRecentEntity.getModified() == entity.getModified() && !mostRecentEntity.getUuid().equals( entity.getUuid() )){
+//                        logger.error("Entities with unique value: "+propertyValue+" has two or more entities with the same modified time."
+//                                + "Please manually resolve by query or changing names. ");
+//                    }
+//                }
+//            }
         }
 
         cols = cass.getColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, null, null, 2,
