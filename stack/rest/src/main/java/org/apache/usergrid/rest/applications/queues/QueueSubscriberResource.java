@@ -34,6 +34,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -92,6 +93,7 @@ public class QueueSubscriberResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @GET
     public JSONWithPadding executeGet( @Context UriInfo ui, @QueryParam("start") String firstSubscriberQueuePath,
                                        @QueryParam("limit") @DefaultValue("10") int limit,
@@ -106,6 +108,7 @@ public class QueueSubscriberResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public JSONWithPadding executePost( @Context UriInfo ui, EntityHolder<Map<String, Object>> body,
@@ -118,6 +121,7 @@ public class QueueSubscriberResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     public JSONWithPadding executePut( @Context UriInfo ui, EntityHolder<Map<String, Object>> body,
@@ -143,6 +147,7 @@ public class QueueSubscriberResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @DELETE
     public JSONWithPadding executeDelete( @Context UriInfo ui,
                                           @QueryParam("callback") @DefaultValue("callback") String callback )

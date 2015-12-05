@@ -30,6 +30,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +88,7 @@ public class AuthResource extends AbstractContextResource {
     // TODO add auth for Ping Identity
 
 
+    @CheckPermissionsForPath
     @POST
     @Path("facebook")
     @Consumes(APPLICATION_FORM_URLENCODED)
@@ -100,6 +102,7 @@ public class AuthResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @GET
     @Path("pingident")
     public Response authPingIdent( @Context UriInfo ui, @QueryParam("ping_access_token") String pingToken,
@@ -132,6 +135,7 @@ public class AuthResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @POST
     @Path("pingident")
     public Response authPingIdentPost( @Context UriInfo ui, @QueryParam("ping_access_token") String pingToken,
@@ -170,6 +174,7 @@ public class AuthResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @GET
     @Path("facebook")
     public Response authFB( @Context UriInfo ui, @QueryParam("fb_access_token") String fb_access_token,
@@ -204,6 +209,7 @@ public class AuthResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @POST
     @Path("foursquare")
     @Consumes(APPLICATION_FORM_URLENCODED)
@@ -217,6 +223,7 @@ public class AuthResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @GET
     @Path("foursquare")
     public Response authFQ( @Context UriInfo ui, @QueryParam("fq_access_token") String fq_access_token,
