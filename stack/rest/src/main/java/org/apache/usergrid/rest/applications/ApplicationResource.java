@@ -113,6 +113,7 @@ public class ApplicationResource extends ServiceResource {
     }
 
 
+    @RequireApplicationAccess
     @Path("auth")
     public AuthResource getAuthResource() throws Exception {
         return getSubResource( AuthResource.class );
