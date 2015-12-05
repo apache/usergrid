@@ -39,6 +39,7 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,8 +108,8 @@ public class AssetsResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @POST
-    @RequireApplicationAccess
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Path("{entityId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}/data")
     public Response uploadData( @FormDataParam("file") InputStream uploadedInputStream,
@@ -129,8 +130,8 @@ public class AssetsResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @PUT
-    @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Path("{entityId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}/data")
     public Response uploadDataStreamPut( @PathParam("entityId") PathSegment entityId, InputStream uploadedInputStream )
@@ -139,8 +140,8 @@ public class AssetsResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @POST
-    @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Path("{entityId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}/data")
     public Response uploadDataStream( @PathParam("entityId") PathSegment entityId, InputStream uploadedInputStream )
@@ -158,6 +159,7 @@ public class AssetsResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @GET
     @Path("{entityId: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}/data")
     public Response findAsset( @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback,

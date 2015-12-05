@@ -35,6 +35,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -86,6 +87,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("subscribers")
     public QueueSubscriberResource getSubscribers( @Context UriInfo ui ) throws Exception {
 
@@ -95,6 +97,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("subscriptions")
     public QueueSubscriptionResource getSubscriptions( @Context UriInfo ui ) throws Exception {
 
@@ -104,6 +107,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("properties")
     @GET
     public JSONWithPadding getProperties( @Context UriInfo ui,
@@ -116,6 +120,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("properties")
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
@@ -129,6 +134,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @GET
     public JSONWithPadding executeGet( @Context UriInfo ui, @QueryParam("start") String firstQueuePath,
                                        @QueryParam("limit") @DefaultValue("10") int limit,
@@ -149,6 +155,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @SuppressWarnings("unchecked")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -173,6 +180,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     public JSONWithPadding executePut( @Context UriInfo ui, Map<String, Object> json,
@@ -187,6 +195,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @DELETE
     public JSONWithPadding executeDelete( @Context UriInfo ui,
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
@@ -195,6 +204,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("transactions")
     public QueueTransactionsResource getTransactions( @Context UriInfo ui ) throws Exception {
 
