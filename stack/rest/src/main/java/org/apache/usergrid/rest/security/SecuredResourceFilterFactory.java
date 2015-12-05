@@ -17,16 +17,14 @@
 package org.apache.usergrid.rest.security;
 
 
+import org.apache.shiro.subject.Subject;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.exceptions.SecurityException;
-import org.apache.usergrid.rest.security.annotations.RequireAdminUserAccess;
-import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
-import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
-import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
+import org.apache.usergrid.rest.security.annotations.*;
 import org.apache.usergrid.rest.utils.PathingUtils;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.ServiceManagerFactory;
@@ -131,6 +129,9 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
         }
         else if ( am.isAnnotationPresent( RequireAdminUserAccess.class ) ) {
             featureContext.register( SystemFilter.AdminUserFilter.class );
+        }
+        else if ( am.isAnnotationPresent( CheckPermissionsForPath.class ) ) {
+            featureContext.register( PathPermissionsFilter.class );
         }
 
     }
@@ -347,4 +348,88 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
         }
 
     }
+
+    // This filter is created in REST from logic in org.apache.usergrid.services.AbstractService.checkPermissionsForPath
+    @Resource
+    public static class PathPermissionsFilter extends AbstractFilter {
+
+        EntityManagerFactory emf;
+        ManagementService management;
+
+        @Autowired
+        public void setEntityManagerFactory( EntityManagerFactory emf ) {
+            this.emf = emf;
+        }
+
+
+        public EntityManagerFactory getEntityManagerFactory() {
+            return emf;
+        }
+
+        @Autowired
+        public void setManagementService( ManagementService management ) {
+            this.management = management;
+        }
+
+        @Inject
+        public PathPermissionsFilter(UriInfo uriInfo) {
+            super( uriInfo );
+        }
+
+
+        @Override
+        public void authorize( ContainerRequestContext request ) {
+            if(logger.isDebugEnabled()){
+                logger.debug( "PathPermissionsFilter.authorize" );
+            }
+
+            final String PATH_MSG =
+                "---- Checked permissions for path --------------------------------------------\n" + "Requested path: {} \n"
+                    + "Requested action: {} \n" + "Requested permission: {} \n" + "Permitted: {} \n";
+
+            ApplicationInfo application;
+
+            try {
+
+                application = management.getApplicationInfo( getApplicationIdentifier() );
+                EntityManager em = emf.getEntityManager( application.getId() );
+                Subject currentUser = SubjectUtils.getSubject();
+
+                if ( currentUser == null ) {
+                    return;
+                }
+                String applicationName = application.getName().toLowerCase();
+                String operation = request.getMethod().toLowerCase();
+                String path = request.getUriInfo().getPath().toLowerCase().replace(applicationName, "");
+                String perm =  getPermissionFromPath( em.getApplicationRef().getUuid(), operation, path );
+
+                boolean permitted = currentUser.isPermitted( perm );
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug( PATH_MSG, new Object[] { path, operation, perm, permitted } );
+                }
+
+                if(!permitted){
+                    // throwing this so we can raise a proper mapped REST exception
+                    throw new Exception("Subject not permitted");
+                }
+
+
+                SubjectUtils.checkPermission( perm );
+                Subject subject = SubjectUtils.getSubject();
+
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug("Checked subject {} for perm {}", subject != null ? subject.toString() : "", perm);
+                    logger.debug("------------------------------------------------------------------------------");
+                }
+
+
+            } catch (Exception e){
+                throw mappableSecurityException( "unauthorized",
+                    "Subject does not have permission to access this resource" );
+            }
+
+        }
+    }
+
+
 }

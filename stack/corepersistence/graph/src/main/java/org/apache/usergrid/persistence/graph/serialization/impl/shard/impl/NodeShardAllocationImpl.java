@@ -199,7 +199,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
         if ( !edges.hasNext() ) {
-            LOG.warn(
+            LOG.trace(
                 "Tried to allocate a new shard for edge meta data {}, " + "but no max value could be found in that row",
                 directedEdgeMeta );
             return false;
