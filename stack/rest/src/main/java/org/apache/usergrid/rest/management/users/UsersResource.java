@@ -17,19 +17,12 @@
 package org.apache.usergrid.rest.management.users;
 
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -37,8 +30,14 @@ import javax.ws.rs.core.UriInfo;
 import net.tanesha.recaptcha.ReCaptchaException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.exceptions.ManagementException;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Identifier;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.management.ManagementResource;
+import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +57,7 @@ import net.tanesha.recaptcha.ReCaptchaResponse;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
+import static org.apache.usergrid.utils.ConversionUtils.string;
 
 
 @Component( "org.apache.usergrid.rest.management.users.UsersResource" )
@@ -112,6 +112,61 @@ public class UsersResource extends AbstractContextResource {
     public UserResource getUserByEmail( @Context UriInfo ui, @PathParam( "email" ) String email ) throws Exception {
 
         return getUserResource(management.getAdminUserByEmail( email ), "email", email);
+    }
+
+    @PUT
+    @RequireSystemAccess
+    @Path(RootResource.EMAIL_PATH+"/override")
+    public JSONWithPadding setUserInfo( @Context UriInfo ui, Map<String, Object> json,
+                                        @PathParam ("email") String emailFromPath,
+                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+            throws Exception {
+
+        if ( json == null ) {
+            return null;
+        }
+
+        String emailFromBody = string( json.remove( "email" ) );
+
+        if(emailFromBody == null){
+            throw new IllegalArgumentException( "Email json body parameter required." );
+        }
+
+        if(!emailFromBody.equalsIgnoreCase(emailFromPath)){
+            throw new IllegalArgumentException( "Email provided in path must match email provided in body" );
+        }
+
+        String username = string( json.remove( "username" ) );
+        String name = string( json.remove( "name" ) );
+
+        EntityManager em = emf.getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
+        EntityRef entity = em.getUserByIdentifier(Identifier.fromEmail(emailFromPath));
+        if(entity == null){
+            entity = em.getUserByIdentifier(Identifier.fromName(emailFromPath));
+        }
+        if(entity == null){
+            logger.error("Entity id parameter {} with {} value does not exist", "email", emailFromPath);
+            throw new IllegalArgumentException("Entity not found.");
+        }
+
+        Map<String, Object> properties = new HashMap<String, Object>();
+        properties.put("email", emailFromPath);
+        properties.put("username", username);
+        properties.put("name", name);
+        properties.put("uuid", entity.getUuid());
+        properties.put("confirmed", true);
+        properties.put("activated", true);
+
+
+
+        // Re-create the user entity with the existing UUID found in the index
+        em.create(entity.getUuid(), User.ENTITY_TYPE, properties);
+
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "update user info" );
+
+        return new JSONWithPadding( response, callback );
     }
 
 
