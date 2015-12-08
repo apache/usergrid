@@ -54,8 +54,14 @@ public class ExportImportAdminsTest {
     @ClassRule
     public static ServiceITSetup setup = new ServiceITSetupImpl();
 
+    public ExportImportAdminsTest() {
+        //logger.info("\n\n\nCREATING TEST -------------------------------------------\n\n\n");
+    }
+
     @org.junit.Test
     public void testExportUserAndOrg() throws Exception {
+
+        //logger.info("\n\n\nSTARTING TEST testExportUserAndOrg -----------------------\n\n\n");
 
         // create two orgs each with owning user
 
@@ -84,6 +90,8 @@ public class ExportImportAdminsTest {
         ExportAdmins exportAdmins = new ExportAdmins();
         exportAdmins.startTool( new String[] {
             "-host", "localhost:9160",
+            "-eshost", "localhost:9200",
+            "-escluster", "elasticsearch",
             "-outputDir", directoryName
         }, false );
 
@@ -148,6 +156,8 @@ public class ExportImportAdminsTest {
 
     @org.junit.Test
     public void testImportAdminUsersAndOrgs() throws Exception {
+
+        //logger.info("\n\n\nSTARTING TEST testImportAdminUsersAndOrgs ------------------------------\n\n\n");
 
         // first: generate the data file with unique user and org IDs and names
 
@@ -218,7 +228,7 @@ public class ExportImportAdminsTest {
         importAdmins.startTool( new String[]{
             "-host", "localhost:9160",
             "-eshost", "localhost:9200",
-            "-escuster", "usergrid",
+            "-escuster", "elasticsearch",
             "-inputDir", tempDir.getAbsolutePath()
         }, false );
 

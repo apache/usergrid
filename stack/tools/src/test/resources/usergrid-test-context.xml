@@ -39,7 +39,7 @@
         </property>
     </bean>
 
-    <import resource="classpath:/toolsApplicationContext.xml"/>
+    <import resource="classpath:toolsApplicationContext.xml"/>
 
     <bean id="traceTagManager" class="org.apache.usergrid.persistence.cassandra.util.TraceTagManager">
         <property name="reportUnattached" value="false"/>
