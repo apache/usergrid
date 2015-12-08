@@ -192,6 +192,8 @@ public class ExportDataCreator extends ToolBase {
                 continue;
             }
 
+            em.refreshIndex();
+
             final Company company = person.getCompany();
             try {
                 EntityRef ref = em.getAlias( "company", company.name() );
@@ -222,6 +224,8 @@ public class ExportDataCreator extends ToolBase {
                 continue;
             }
 
+            em.refreshIndex();
+
             try {
                 for (int j = 0; j < 5; j++) {
                     Activity activity = new Activity();
@@ -249,6 +253,14 @@ public class ExportDataCreator extends ToolBase {
                         }
                     }
                 }
+
+                em.refreshIndex();
+
+
+                Set<String> connectionTypes = em.getConnectionTypes( userEntity );
+
+                logger.debug("User {} now has {} connection types: {}",
+                    new Object[] { userEntity.getName(), connectionTypes.size(), connectionTypes});
 
             } catch (Exception e) {
                 logger.error("Error creating activities", e);
