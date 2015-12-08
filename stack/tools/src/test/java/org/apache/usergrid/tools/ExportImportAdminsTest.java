@@ -83,7 +83,7 @@ public class ExportImportAdminsTest {
 
         ExportAdmins exportAdmins = new ExportAdmins();
         exportAdmins.startTool( new String[] {
-            "-host", "localhost:9120",
+            "-host", "localhost:9160",
             "-outputDir", directoryName
         }, false );
 
@@ -216,7 +216,7 @@ public class ExportImportAdminsTest {
 
         ImportAdmins importAdmins = new ImportAdmins();
         importAdmins.startTool( new String[]{
-            "-host", "localhost:9120",
+            "-host", "localhost:9160",
             "-eshost", "localhost:9200",
             "-escuster", "usergrid",
             "-inputDir", tempDir.getAbsolutePath()

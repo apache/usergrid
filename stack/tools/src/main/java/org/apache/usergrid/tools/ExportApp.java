@@ -135,25 +135,20 @@ public class ExportApp extends ExportingToolBase {
 
         Observable<String> collectionsObservable = Observable.create( new CollectionsObservable( em ) );
 
-        collectionsObservable.flatMap( new Func1<String, Observable<ExportEntity>>() {
+        logger.debug( "Starting export" );
 
-            public Observable<ExportEntity> call(String collection) {
+        collectionsObservable.flatMap( collection -> {
 
-                return Observable.create( new EntityObservable( em, collection ) )
-                        .doOnNext( new EntityWriteAction() ).subscribeOn( writeScheduler );
-            }
+            return Observable.create( new EntityObservable( em, collection ) )
+                    .doOnNext( new EntityWriteAction() ).subscribeOn( writeScheduler );
 
-        }, writeThreadCount ).flatMap( new Func1<ExportEntity, Observable<ExportConnection>>() {
+        }, writeThreadCount ).flatMap( exportEntity -> {
 
-            public Observable<ExportConnection> call(ExportEntity exportEntity) {
-
-                return Observable.create( new ConnectionsObservable( em, exportEntity ) )
-                        .doOnNext( new ConnectionWriteAction() ).subscribeOn( writeScheduler );
-            }
+            return Observable.create( new ConnectionsObservable( em, exportEntity ) )
+                    .doOnNext( new ConnectionWriteAction() ).subscribeOn( writeScheduler );
 
         }, writeThreadCount )
-            .doOnCompleted( new FileWrapUpAction() )
-            .toBlocking().last();
+            .doOnCompleted( new FileWrapUpAction() ).toBlocking().lastOrDefault(null);
     }
 
 
@@ -176,6 +171,10 @@ public class ExportApp extends ExportingToolBase {
             int count = 0;
             try {
                 Map<String, Object> collectionMetadata = em.getApplicationCollectionMetadata();
+
+                logger.debug( "Emitting {} collection names for application {}",
+                    collectionMetadata.size(), em.getApplication().getName() );
+
                 for ( String collection : collectionMetadata.keySet() ) {
                     subscriber.onNext( collection );
                     count++;
@@ -274,8 +273,8 @@ public class ExportApp extends ExportingToolBase {
 
         public void call(Subscriber<? super ExportConnection> subscriber) {
 
-            logger.info( "Starting to read connections for entity {} type {}",
-                    exportEntity.getEntity().getName(), exportEntity.getEntity().getType() );
+//            logger.debug( "Starting to read connections for entity {} type {}",
+//                    exportEntity.getEntity().getName(), exportEntity.getEntity().getType() );
 
             int count = 0;
 
@@ -311,8 +310,13 @@ public class ExportApp extends ExportingToolBase {
             }
 
             subscriber.onCompleted();
-            logger.info("Completed entity {} type {} connections count {}",
-                new Object[] { exportEntity.getEntity().getName(), exportEntity.getEntity().getType(), count });
+
+            if ( count == 0 ) {
+                logger.debug("Completed entity {} type {} no connections",
+                    new Object[] { exportEntity.getEntity().getUuid(), exportEntity.getEntity().getType() });
+            }
+//            logger.debug("Completed entity {} type {} connections count {}",
+//                new Object[] { exportEntity.getEntity().getUuid(), exportEntity.getEntity().getType(), count });
         }
     }
 
