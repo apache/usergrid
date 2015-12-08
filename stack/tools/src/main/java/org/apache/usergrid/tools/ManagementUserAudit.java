@@ -88,12 +88,6 @@ public class ManagementUserAudit extends ToolBase {
 
     private static final Logger logger = LoggerFactory.getLogger( ManagementUserAudit.class );
 
-    private static final String APPLICATION_ARG = "app";
-
-    private static final String COLLECTION_ARG = "col";
-
-    private static final String ENTITY_UNIQUE_PROPERTY_NAME = "property";
-
     private static final String ENTITY_UNIQUE_PROPERTY_VALUE = "value";
 
 
@@ -109,23 +103,6 @@ public class ManagementUserAudit extends ToolBase {
                              .create( "host" );
 
         options.addOption( hostOption );
-
-
-        //        Option appOption = OptionBuilder.withArgName( APPLICATION_ARG ).hasArg().isRequired( false )
-        //                                        .withDescription( "application id" ).create( APPLICATION_ARG );
-        //
-        //
-        //        options.addOption( appOption );
-        //
-        //        Option collectionOption = OptionBuilder.withArgName( COLLECTION_ARG ).hasArg().isRequired( false )
-        //                                               .withDescription( "collection name" ).create( COLLECTION_ARG );
-        //
-        //        options.addOption( collectionOption );
-
-        //        Option entityUniquePropertyName =
-        //                OptionBuilder.withArgName( ENTITY_UNIQUE_PROPERTY_NAME ).hasArg().isRequired( false )
-        //                             .withDescription( "Entity Unique Property Name" ).create( ENTITY_UNIQUE_PROPERTY_NAME );
-        //        options.addOption( entityUniquePropertyName );
 
         Option entityUniquePropertyValue =
                 OptionBuilder.withArgName( ENTITY_UNIQUE_PROPERTY_VALUE ).hasArg().isRequired( false )
@@ -220,8 +197,7 @@ public class ManagementUserAudit extends ToolBase {
                         //if ( columnSlice.getColumns().size() != 0 ) {
                         List<HColumn<ByteBuffer, ByteBuffer>> cols=columnSlice.getColumns();
 
-                        entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols,
-                                returnedRowKey );
+                        entityUUIDDelete( uniqueValue, cols);
                     }
                 }
             }
@@ -266,36 +242,7 @@ public class ManagementUserAudit extends ToolBase {
     }
 
 
-    //    private void deleteRow( final Mutator<ByteBuffer> m, final UUID applicationId, final String collectionName,
-    //                            final String uniqueValueKey, final String uniqueValue ) throws Exception {
-    //        logger.debug( "Found 0 uuid's associated with {} Deleting row.", uniqueValue );
-    //        UUID timestampUuid = newTimeUUID();
-    //        long timestamp = getTimestampInMicros( timestampUuid );
-    //
-    //        Keyspace ko = cass.getApplicationKeyspace( applicationId );
-    //        Mutator<ByteBuffer> mutator = createMutator( ko, be );
-    //
-    //        Object key = key( applicationId, collectionName, uniqueValueKey, uniqueValue );
-    //        addDeleteToMutator( mutator, ENTITY_UNIQUE, key, timestamp );
-    //        mutator.execute();
-    //        return;
-    //    }
-
-
-    private void entityUUIDDelete( final Mutator<ByteBuffer> m, final UUID applicationId, final String collectionName,
-                                   final String uniqueValueKey, final String uniqueValue,
-                                   final List<HColumn<ByteBuffer, ByteBuffer>> cols, String rowKey ) throws Exception {
-        Boolean cleanup = false;
-        EntityManagerImpl em = ( EntityManagerImpl ) emf.getEntityManager( applicationId );
-        int numberOfColumnsDeleted = 0;
-        //these columns all come from the same row key, which means they each belong to the same row key identifier
-        //thus mixing and matching them in the below if cases won't matter.
-        // Entity[] entities = new Entity[cols.size()];
-        int numberOfRetrys = 8;
-        int numberOfTimesRetrying = 0;
-
-        int index = 0;
-
+    private void entityUUIDDelete( final String uniqueValue, final List<HColumn<ByteBuffer, ByteBuffer>> cols ) throws Exception {
 
 
         UserInfo userInfo = managementService.getAdminUserByEmail( uniqueValue );
@@ -319,48 +266,6 @@ public class ManagementUserAudit extends ToolBase {
             logger.info( "The following email works: {}",uniqueValue );
         }
 
-
-        //        for ( int i = 0; i < numberOfRetrys; i++ ) {
-        //            try {
-        //                Map<String, EntityRef> results =
-        //                        em.getAlias( applicationId, collectionName, Collections.singletonList( uniqueValue ) );
-        //                if ( results.size() > 1 ) {
-        //                    logger.error("failed to clean up {} from application {}. Please clean manually.",uniqueValue,applicationId);
-        //                    break;
-        //                }
-        //                else {
-        //                    continue;
-        //                }
-        //            }
-        //            catch ( Exception toe ) {
-        //                logger.error( "timeout doing em getAlias repair. This is the {} number of repairs attempted", i );
-        //                toe.printStackTrace();
-        //                Thread.sleep( 1000 * i );
-        //            }
-        //        }
-    }
-
-
-    private Entity verifyModifiedTimestamp( final Entity unverifiedEntity ) {
-        Entity entity = unverifiedEntity;
-        if ( entity != null && entity.getModified() == null ) {
-            if ( entity.getCreated() != null ) {
-                logger.debug(
-                        "{} has no modified. Subsituting created timestamp for their modified timestamp.Manually "
-                                + "adding one for comparison purposes",
-                        entity.getUuid() );
-                entity.setModified( entity.getCreated() );
-                return entity;
-            }
-            else {
-                logger.error( "Found no created or modified timestamp. Please remake the following entity: {}."
-                        + " Setting both created and modified to 1", entity.getUuid().toString() );
-                entity.setCreated( 1L );
-                entity.setModified( 1L );
-                return entity;
-            }
-        }
-        return entity;
     }
 
 
@@ -384,7 +289,7 @@ public class ManagementUserAudit extends ToolBase {
             logger.error( "This row key: {} has zero columns", key.toString() );
         }
 
-        entityUUIDDelete( m, applicationId, collectionName, uniqueValueKey, uniqueValue, cols, key.toString() );
+        entityUUIDDelete( uniqueValue, cols );
     }
 
 
