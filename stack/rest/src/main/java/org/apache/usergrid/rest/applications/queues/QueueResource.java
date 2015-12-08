@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.mq.*;
 import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -70,6 +71,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("subscribers")
     public QueueSubscriberResource getSubscribers( @Context UriInfo ui ) throws Exception {
 
@@ -79,6 +81,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("subscriptions")
     public QueueSubscriptionResource getSubscriptions( @Context UriInfo ui ) throws Exception {
 
@@ -88,6 +91,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("properties")
     @GET
     @JSONP
@@ -102,6 +106,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("properties")
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
@@ -117,6 +122,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @GET
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
@@ -139,6 +145,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @SuppressWarnings("unchecked")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -162,6 +169,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
@@ -178,6 +186,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @DELETE
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
@@ -187,6 +196,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("transactions")
     public QueueTransactionsResource getTransactions( @Context UriInfo ui ) throws Exception {
 

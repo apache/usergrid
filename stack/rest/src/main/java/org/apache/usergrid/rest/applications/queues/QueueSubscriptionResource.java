@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.mq.QueueManager;
 import org.apache.usergrid.mq.QueueSet;
 import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -81,6 +82,7 @@ public class QueueSubscriptionResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @GET
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
@@ -97,6 +99,7 @@ public class QueueSubscriptionResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
@@ -111,6 +114,7 @@ public class QueueSubscriptionResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
@@ -138,6 +142,7 @@ public class QueueSubscriptionResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @DELETE
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
