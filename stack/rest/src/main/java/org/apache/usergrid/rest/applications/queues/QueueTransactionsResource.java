@@ -22,10 +22,12 @@ import org.apache.usergrid.mq.QueueManager;
 import org.apache.usergrid.mq.QueueQuery;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -62,6 +64,7 @@ public class QueueTransactionsResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("{id}")
     @PUT
     @JSONP
@@ -78,6 +81,7 @@ public class QueueTransactionsResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("{id}")
     @DELETE
     @JSONP
