@@ -135,6 +135,12 @@ public abstract class ToolBase {
         Option hostOption = OptionBuilder.withArgName( "host" ).hasArg()
             .withDescription( "Cassandra host" ).create( "host" );
 
+        Option esHostOption = OptionBuilder.withArgName( "eshost" ).hasArg()
+            .withDescription( "ElasticSearch host" ).create( "eshost" );
+
+        Option esClusterOption = OptionBuilder.withArgName( "escluster" ).hasArg()
+            .withDescription( "ElasticSearch cluster name" ).create( "escluster" );
+
         Option remoteOption = OptionBuilder
             .withDescription( "Use remote Cassandra instance" ).create( "remote" );
 
@@ -144,6 +150,8 @@ public abstract class ToolBase {
 
         Options options = new Options();
         options.addOption( hostOption );
+        options.addOption( esHostOption );
+        options.addOption( esClusterOption );
         options.addOption( remoteOption );
         options.addOption( verbose );
 

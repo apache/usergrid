@@ -160,21 +160,29 @@ public class ExportDataCreator extends ToolBase {
             Entity userEntity = null;
             try {
                 final Map<String, Object> userMap = new HashMap<String, Object>() {{
+                    put( "name", person.username() );
                     put( "username", person.username() );
                     put( "password", person.password() );
                     put( "email", person.email() );
                     put( "companyEmail", person.companyEmail() );
-                    put( "dateOfBirth", person.dateOfBirth() );
+                    put( "dateOfBirth", person.dateOfBirth().toDate().toString());
                     put( "firstName", person.firstName() );
                     put( "lastName", person.lastName() );
                     put( "nationalIdentificationNumber", person.nationalIdentificationNumber() );
                     put( "telephoneNumber", person.telephoneNumber() );
                     put( "passportNumber", person.passportNumber() );
-                    put( "address", person.getAddress() );
+                    put( "address", new HashMap<String, Object>() {{
+                        put("streetNumber", person.getAddress().streetNumber());
+                        put("street", person.getAddress().street());
+                        put("city", person.getAddress().getCity());
+                        put("postalCode", person.getAddress().getPostalCode());
+                    }});
                 }};
 
                 userEntity = em.create( "user", userMap );
                 users.add( userEntity );
+
+                logger.debug("Created user {}", userEntity.getName());
 
             } catch (DuplicateUniquePropertyExistsException e) {
                 logger.error( "Dup user generated: " + person.username() );
@@ -204,6 +212,7 @@ public class ExportDataCreator extends ToolBase {
                 }
 
                 em.createConnection( userEntity, "employer", companyEntity );
+                logger.debug("User {} now employed by {}", userEntity.getName(), companyEntity.getName());
 
             } catch (DuplicateUniquePropertyExistsException e) {
                 logger.error( "Dup company generated {} property={}", company.name(), e.getPropertyName() );
@@ -224,12 +233,17 @@ public class ExportDataCreator extends ToolBase {
                     activity.setContent( "User " + person.username() + " generated a random string "
                             + RandomStringUtils.randomAlphanumeric( 5 ) );
                     em.createItemInCollection( userEntity, "activities", "activity", activity.getProperties() );
+
+                    logger.debug("Created activity {}", activity.getContent());
                 }
 
                 if (users.size() > 10) {
                     for (int j = 0; j < 5; j++) {
                         try {
-                            em.createConnection( userEntity, "associate", users.get( (int) (Math.random() * users.size()) ) );
+                            Entity otherUser = users.get( (int) (Math.random() * users.size()) );
+                            em.createConnection( userEntity, "associate", otherUser );
+                            logger.debug("User {} now associated with user {}",
+                                userEntity.getName(), otherUser.getName());
                         } catch (Exception e) {
                             logger.error( "Error connecting user to user: " + e.getMessage() );
                         }
@@ -242,6 +256,8 @@ public class ExportDataCreator extends ToolBase {
             }
 
         }
+
+        em.refreshIndex();
     }
 
 }
