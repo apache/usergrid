@@ -207,7 +207,7 @@ public class ManagementUserAudit extends ToolBase {
                 }
             }
         }
-        logger.info( "Completed logging successfully" );
+        logger.debug( "Completed logging successfully" );
     }
 
 
@@ -249,8 +249,13 @@ public class ManagementUserAudit extends ToolBase {
 
     private void entityUUIDDelete( final String uniqueValue, final List<HColumn<ByteBuffer, ByteBuffer>> cols ) throws Exception {
 
-
-        UserInfo userInfo = managementService.getAdminUserByEmail( uniqueValue );
+        UserInfo userInfo = null;
+        try {
+            userInfo = managementService.getAdminUserByEmail( uniqueValue );
+        }catch(Exception e){
+            logger.error("threw exception when looking up email: {}",uniqueValue);
+            e.printStackTrace();
+        }
         if(userInfo==null) {
             if(cols!=null){
                 if(cols.size()>1){
@@ -260,60 +265,60 @@ public class ManagementUserAudit extends ToolBase {
 
                 }
                 if(cols.size()==1){
-                    logger.error( "Management user with uuid: {} and email: {} is broken. Starting Repair.",ue.fromByteBuffer( cols.get( 0 ).getName()), uniqueValue );
-                    EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
-                    EntityRef entity = em.getUserByIdentifier( Identifier.fromEmail(uniqueValue) );
-                    if(entity == null){
-                        entity = em.getUserByIdentifier(Identifier.fromName(uniqueValue));
-                    }
-                    if(entity == null){
-                        logger.error("Entity id parameter {} with {} value does not exist", "email", uniqueValue);
-                        return;
-                        //throw new IllegalArgumentException("Entity not found.");
-                    }
-
-                    Map<String, Object> properties = new HashMap<String, Object>();
-                    properties.put("email", uniqueValue);
-                    properties.put("username", uniqueValue);
-                    properties.put("name", uniqueValue);
-                    properties.put("uuid", entity.getUuid());
-                    properties.put("confirmed", true);
-                    properties.put("activated", true);
-
-
-
-                    // Re-create the user entity with the existing UUID found in the index
-                    em.create(entity.getUuid(), User.ENTITY_TYPE, properties );
-                    logger.debug( "Repair Finished.Verifying Fix." );
-                    userInfo = managementService.getAdminUserByEmail( uniqueValue );
-                    if(userInfo==null){
-                        logger.error("Repair failed for uuid: {} and email {}", ue.fromByteBuffer( cols.get( 0 ).getName()),uniqueValue );
-                    }
-                    if(!userInfo.getUuid().equals(cols.get( 0 ).getName())){
-                        Object[] loggerObjects = new Object[3];
-                        loggerObjects[0] = uniqueValue;
-                        loggerObjects[1] = ue.fromByteBuffer( cols.get( 0 ).getName());
-                        loggerObjects[2] = userInfo.getUuid();
-                        logger.error("Repair associated a new uuid for email {}. It should have been uuid: {} but is instead uuid: {}", loggerObjects );
-                    }
-
-                    if(!userInfo.getUsername().equals( uniqueValue )){
-                        Object[] loggerObjects = new Object[3];
-                        loggerObjects[0] = uniqueValue;
-                        loggerObjects[1] = uniqueValue;
-                        loggerObjects[2] = uniqueValue;
-                        logger.error("Repair associated a new username for email {}. It should have been username: {} but is instead username: {}", loggerObjects );
-                    }
-
-                    if(!userInfo.getEmail().equals( uniqueValue )){
-                        Object[] loggerObjects = new Object[3];
-                        loggerObjects[0] = uniqueValue;
-                        loggerObjects[1] = uniqueValue;
-                        loggerObjects[2] = uniqueValue;
-                        logger.error("Repair associated a new email for email {}. It should have been email: {} but is instead email: {}", loggerObjects );
-                    }
-
-                    logger.debug("Repair succeeded for uuid: {} and email {}", ue.fromByteBuffer( cols.get( 0 ).getName()),uniqueValue );
+                    logger.error( "Management user with uuid: {} and email: {} is broken.",ue.fromByteBuffer( cols.get( 0 ).getName()), uniqueValue );
+//                    EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+//                    EntityRef entity = em.getUserByIdentifier( Identifier.fromEmail(uniqueValue) );
+//                    if(entity == null){
+//                        entity = em.getUserByIdentifier(Identifier.fromName(uniqueValue));
+//                    }
+//                    if(entity == null){
+//                        logger.error("Entity id parameter {} with {} value does not exist", "email", uniqueValue);
+//                        return;
+//                        //throw new IllegalArgumentException("Entity not found.");
+//                    }
+//
+//                    Map<String, Object> properties = new HashMap<String, Object>();
+//                    properties.put("email", uniqueValue);
+//                    properties.put("username", uniqueValue);
+//                    properties.put("name", uniqueValue);
+//                    properties.put("uuid", entity.getUuid());
+//                    properties.put("confirmed", true);
+//                    properties.put("activated", true);
+//
+//
+//
+//                    // Re-create the user entity with the existing UUID found in the index
+//                    em.create(entity.getUuid(), User.ENTITY_TYPE, properties );
+//                    logger.debug( "Repair Finished.Verifying Fix." );
+//                    userInfo = managementService.getAdminUserByEmail( uniqueValue );
+//                    if(userInfo==null){
+//                        logger.error("Repair failed for uuid: {} and email {}", ue.fromByteBuffer( cols.get( 0 ).getName()),uniqueValue );
+//                    }
+//                    if(!userInfo.getUuid().equals(cols.get( 0 ).getName())){
+//                        Object[] loggerObjects = new Object[3];
+//                        loggerObjects[0] = uniqueValue;
+//                        loggerObjects[1] = ue.fromByteBuffer( cols.get( 0 ).getName());
+//                        loggerObjects[2] = userInfo.getUuid();
+//                        logger.error("Repair associated a new uuid for email {}. It should have been uuid: {} but is instead uuid: {}", loggerObjects );
+//                    }
+//
+//                    if(!userInfo.getUsername().equals( uniqueValue )){
+//                        Object[] loggerObjects = new Object[3];
+//                        loggerObjects[0] = uniqueValue;
+//                        loggerObjects[1] = uniqueValue;
+//                        loggerObjects[2] = uniqueValue;
+//                        logger.error("Repair associated a new username for email {}. It should have been username: {} but is instead username: {}", loggerObjects );
+//                    }
+//
+//                    if(!userInfo.getEmail().equals( uniqueValue )){
+//                        Object[] loggerObjects = new Object[3];
+//                        loggerObjects[0] = uniqueValue;
+//                        loggerObjects[1] = uniqueValue;
+//                        loggerObjects[2] = uniqueValue;
+//                        logger.error("Repair associated a new email for email {}. It should have been email: {} but is instead email: {}", loggerObjects );
+//                    }
+//
+//                    logger.debug("Repair succeeded for uuid: {} and email {}", ue.fromByteBuffer( cols.get( 0 ).getName()),uniqueValue );
 
 
                 }
