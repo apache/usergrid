@@ -20,6 +20,7 @@ package org.apache.usergrid.tools;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -31,7 +32,14 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.thrift.TBaseHelper;
 
+import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import me.prettyprint.cassandra.service.RangeSlicesIterator;
@@ -195,7 +203,7 @@ public class ManagementUserAudit extends ToolBase {
                 }
             }
         }
-        logger.debug( "Completed logging successfully" );
+        logger.info( "Completed logging successfully" );
     }
 
 
@@ -238,6 +246,8 @@ public class ManagementUserAudit extends ToolBase {
     private void entityStateLogger( final String uniqueValue, final List<HColumn<ByteBuffer, ByteBuffer>> cols ) throws Exception {
 
         UserInfo userInfo = null;
+        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+
         try {
             userInfo = managementService.getAdminUserByEmail( uniqueValue );
         }catch(Exception e){
@@ -254,61 +264,6 @@ public class ManagementUserAudit extends ToolBase {
                 }
                 if(cols.size()==1){
                     logger.error( "Management user with uuid: {} and email: {} is broken.",ue.fromByteBuffer( cols.get( 0 ).getName()), uniqueValue );
-//                    EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
-//                    EntityRef entity = em.getUserByIdentifier( Identifier.fromEmail(uniqueValue) );
-//                    if(entity == null){
-//                        entity = em.getUserByIdentifier(Identifier.fromName(uniqueValue));
-//                    }
-//                    if(entity == null){
-//                        logger.error("Entity id parameter {} with {} value does not exist", "email", uniqueValue);
-//                        return;
-//                        //throw new IllegalArgumentException("Entity not found.");
-//                    }
-//
-//                    Map<String, Object> properties = new HashMap<String, Object>();
-//                    properties.put("email", uniqueValue);
-//                    properties.put("username", uniqueValue);
-//                    properties.put("name", uniqueValue);
-//                    properties.put("uuid", entity.getUuid());
-//                    properties.put("confirmed", true);
-//                    properties.put("activated", true);
-//
-//
-//
-//                    // Re-create the user entity with the existing UUID found in the index
-//                    em.create(entity.getUuid(), User.ENTITY_TYPE, properties );
-//                    logger.debug( "Repair Finished.Verifying Fix." );
-//                    userInfo = managementService.getAdminUserByEmail( uniqueValue );
-//                    if(userInfo==null){
-//                        logger.error("Repair failed for uuid: {} and email {}", ue.fromByteBuffer( cols.get( 0 ).getName()),uniqueValue );
-//                    }
-//                    if(!userInfo.getUuid().equals(cols.get( 0 ).getName())){
-//                        Object[] loggerObjects = new Object[3];
-//                        loggerObjects[0] = uniqueValue;
-//                        loggerObjects[1] = ue.fromByteBuffer( cols.get( 0 ).getName());
-//                        loggerObjects[2] = userInfo.getUuid();
-//                        logger.error("Repair associated a new uuid for email {}. It should have been uuid: {} but is instead uuid: {}", loggerObjects );
-//                    }
-//
-//                    if(!userInfo.getUsername().equals( uniqueValue )){
-//                        Object[] loggerObjects = new Object[3];
-//                        loggerObjects[0] = uniqueValue;
-//                        loggerObjects[1] = uniqueValue;
-//                        loggerObjects[2] = uniqueValue;
-//                        logger.error("Repair associated a new username for email {}. It should have been username: {} but is instead username: {}", loggerObjects );
-//                    }
-//
-//                    if(!userInfo.getEmail().equals( uniqueValue )){
-//                        Object[] loggerObjects = new Object[3];
-//                        loggerObjects[0] = uniqueValue;
-//                        loggerObjects[1] = uniqueValue;
-//                        loggerObjects[2] = uniqueValue;
-//                        logger.error("Repair associated a new email for email {}. It should have been email: {} but is instead email: {}", loggerObjects );
-//                    }
-//
-//                    logger.debug("Repair succeeded for uuid: {} and email {}", ue.fromByteBuffer( cols.get( 0 ).getName()),uniqueValue );
-
-
                 }
                 else{
                     logger.error( "Management user with email: {} is broken and has no uuid's associated with it",uniqueValue );
@@ -316,7 +271,20 @@ public class ManagementUserAudit extends ToolBase {
             }
         }
         else {
-            logger.info( "The following email works: {}",uniqueValue );
+            Results orgResults =
+                    em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userInfo.getUuid() ), "groups", null, 10000, Results.Level.REFS,
+                            false );
+
+            for ( EntityRef orgRef : orgResults.getRefs() ) {
+                try {
+                    em.getDictionaryAsMap( orgRef, "orgProperties" );
+                    logger.info( "The following email works: {}",uniqueValue );
+                }
+                catch(EntityNotFoundException enfe){
+                    logger.error("Management user with email: {} is present but cannot login due to not finding the following organization: {}",uniqueValue,orgRef.getUuid());
+                    break;
+                }
+            }
         }
 
     }
