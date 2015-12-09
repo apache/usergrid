@@ -299,14 +299,19 @@ public class ManagementUserAudit extends ToolBase {
             em.getDictionaryAsMap( orgRef, "orgProperties" );
             OrganizationInfo organizationInfo = managementService.getOrganizationByUuid( uuid );
 
-            Object[] loggingObject = new Object[3];
-            loggingObject[0] = uniqueValue;
-            loggingObject[1] = organizationInfo.getName();
-            loggingObject[2] = organizationInfo.getUuid();
-            //OrganizationInfo orgInfo = new OrganizationInfo(orgProperties.getProperties() );
+            if(organizationInfo == null) {
+                logger.error( "The following email works: {} but the orgUUID: {} returns null.",uniqueValue,uuid );
+            }
+            else {
 
-            logger.info( "The following email works: {} with the following orgname: {} and orgUUID: {}",
-                    loggingObject );
+                Object[] loggingObject = new Object[3];
+                loggingObject[0] = uniqueValue;
+                loggingObject[1] = organizationInfo.getName();
+                loggingObject[2] = organizationInfo.getUuid();
+
+                logger.info( "The following email works: {} with the following orgname: {} and orgUUID: {}",
+                        loggingObject );
+            }
         }
         catch ( EntityNotFoundException enfe ) {
             logger.error( s2, uniqueValue, uuid );
