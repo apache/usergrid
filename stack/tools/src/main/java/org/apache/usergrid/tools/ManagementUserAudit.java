@@ -19,16 +19,12 @@ package org.apache.usergrid.tools;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.cassandra.thrift.TimedOutException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -36,13 +32,6 @@ import org.apache.commons.cli.Options;
 import org.apache.thrift.TBaseHelper;
 
 import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Identifier;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.cassandra.EntityManagerImpl;
-import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import me.prettyprint.cassandra.service.RangeSlicesIterator;
@@ -61,7 +50,6 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
-import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 
 
@@ -202,7 +190,7 @@ public class ManagementUserAudit extends ToolBase {
                         //if ( columnSlice.getColumns().size() != 0 ) {
                         List<HColumn<ByteBuffer, ByteBuffer>> cols=columnSlice.getColumns();
 
-                        entityUUIDDelete( uniqueValue, cols);
+                        entityStateLogger( uniqueValue, cols );
                     }
                 }
             }
@@ -247,7 +235,7 @@ public class ManagementUserAudit extends ToolBase {
     }
 
 
-    private void entityUUIDDelete( final String uniqueValue, final List<HColumn<ByteBuffer, ByteBuffer>> cols ) throws Exception {
+    private void entityStateLogger( final String uniqueValue, final List<HColumn<ByteBuffer, ByteBuffer>> cols ) throws Exception {
 
         UserInfo userInfo = null;
         try {
@@ -354,7 +342,7 @@ public class ManagementUserAudit extends ToolBase {
             logger.error( "This row key: {} has zero columns", key.toString() );
         }
 
-        entityUUIDDelete( uniqueValue, cols );
+        entityStateLogger( uniqueValue, cols );
     }
 
 
