@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -275,18 +276,41 @@ public class ManagementUserAudit extends ToolBase {
                     em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userInfo.getUuid() ), "groups", null, 10000, Results.Level.REFS,
                             false );
 
-            for ( EntityRef orgRef : orgResults.getRefs() ) {
-                try {
-                    em.getDictionaryAsMap( orgRef, "orgProperties" );
-                    logger.info( "The following email works: {}",uniqueValue );
-                }
-                catch(EntityNotFoundException enfe){
-                    logger.error("Management user with email: {} is present but cannot login due to not finding the following organization: {}",uniqueValue,orgRef.getUuid());
-                    break;
+            if(orgResults.getRefs().size() == 1){
+                EntityRef orgRef = orgResults.getRef();
+                orgVerification( uniqueValue, em, orgRef, orgRef.getUuid(),
+                        "Management user with email: {} is present but cannot login due to missing their only organization: {}" );
+            }
+            else {
+                for ( EntityRef orgRef : orgResults.getRefs() ) {
+                    orgVerification( uniqueValue, em, orgRef, orgRef.getUuid(),
+                            "Management user with email: {} is present with multiple orgs but is missing the following orgUUID: {}" );
+
                 }
             }
         }
 
+    }
+
+
+    private void orgVerification( final String uniqueValue, final EntityManager em, final EntityRef orgRef,
+                                  final UUID uuid, final String s2 ) throws Exception {
+        try {
+            em.getDictionaryAsMap( orgRef, "orgProperties" );
+            OrganizationInfo organizationInfo = managementService.getOrganizationByUuid( uuid );
+
+            Object[] loggingObject = new Object[3];
+            loggingObject[0] = uniqueValue;
+            loggingObject[1] = organizationInfo.getName();
+            loggingObject[2] = organizationInfo.getUuid();
+            //OrganizationInfo orgInfo = new OrganizationInfo(orgProperties.getProperties() );
+
+            logger.info( "The following email works: {} with the following orgname: {} and orgUUID: {}",
+                    loggingObject );
+        }
+        catch ( EntityNotFoundException enfe ) {
+            logger.error( s2, uniqueValue, uuid );
+        }
     }
 
 
