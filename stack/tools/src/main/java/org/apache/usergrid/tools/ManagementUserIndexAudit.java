@@ -55,6 +55,7 @@ import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.RangeSlicesQuery;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
@@ -82,7 +83,7 @@ import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
  *
  * @author grey
  */
-public class ManagementUserAudit extends ToolBase {
+public class ManagementUserIndexAudit extends ToolBase {
 
     /**
      *
@@ -90,7 +91,7 @@ public class ManagementUserAudit extends ToolBase {
     private static final int PAGE_SIZE = 100;
 
 
-    private static final Logger logger = LoggerFactory.getLogger( ManagementUserAudit.class );
+    private static final Logger logger = LoggerFactory.getLogger( ManagementUserIndexAudit.class );
 
     private static final String ENTITY_UNIQUE_PROPERTY_VALUE = "value";
 
@@ -141,7 +142,7 @@ public class ManagementUserAudit extends ToolBase {
         else {
             //maybe put a byte buffer infront.
             RangeSlicesQuery<ByteBuffer, ByteBuffer, ByteBuffer> rangeSlicesQuery =
-                    HFactory.createRangeSlicesQuery( ko, be, be, be ).setColumnFamily( ENTITY_UNIQUE.getColumnFamily() )
+                    HFactory.createRangeSlicesQuery( ko, be, be, be ).setColumnFamily( ENTITY_INDEX.getColumnFamily() )
                             //not sure if I trust the lower two settings as it might iterfere with paging or set
                             // arbitrary limits and what I want to retrieve.
                             //That needs to be verified.
