@@ -78,12 +78,12 @@ public class UserUniqueIndexCleanupTest {
     @ClassRule
     public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
 
-    @Ignore("Temporarily disabled as read repair is disabled temporarily in EntityManagerImpl.")
+   // @Ignore("Temporarily disabled as read repair is disabled temporarily in EntityManagerImpl.")
     @Test
     public void testBasicOperation() throws Exception {
-        UserUniqueIndexCleanup userUniqueIndexCleanup = new UserUniqueIndexCleanup();
+        ManagementUserIndexAudit userUniqueIndexCleanup = new ManagementUserIndexAudit();
         userUniqueIndexCleanup.startTool( new String[] {
-                "-host", "localhost:"+ ServiceITSuite.cassandraResource.getRpcPort()
+                "-host", "localhost:9160"//+ ServiceITSuite.cassandraResource.getRpcPort()
         }, false );
 
         System.out.println( "completed" );

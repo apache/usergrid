@@ -21,7 +21,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -33,13 +32,11 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.thrift.TBaseHelper;
 
+import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -47,7 +44,6 @@ import com.google.common.collect.BiMap;
 
 import me.prettyprint.cassandra.service.RangeSlicesIterator;
 import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.factory.HFactory;
@@ -56,12 +52,9 @@ import me.prettyprint.hector.api.query.RangeSlicesQuery;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
-import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
-import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 
 
 /**
@@ -82,7 +75,7 @@ import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
  *
  * @author grey
  */
-public class ManagementUserAudit extends ToolBase {
+public class ApplicationAudit extends ToolBase {
 
     /**
      *
@@ -90,7 +83,10 @@ public class ManagementUserAudit extends ToolBase {
     private static final int PAGE_SIZE = 100;
 
 
-    private static final Logger logger = LoggerFactory.getLogger( ManagementUserAudit.class );
+    private static final Logger logger = LoggerFactory.getLogger( ApplicationAudit.class );
+
+    private static final String APP_VALUE = "app";
+
 
     private static final String ENTITY_UNIQUE_PROPERTY_VALUE = "value";
 
@@ -107,6 +103,12 @@ public class ManagementUserAudit extends ToolBase {
                              .create( "host" );
 
         options.addOption( hostOption );
+
+        Option appOption =
+                OptionBuilder.withArgName( "app" ).hasArg().isRequired( false ).withDescription( "Application uuid" )
+                             .create( "app" );
+
+        options.addOption( appOption );
 
         Option entityUniquePropertyValue =
                 OptionBuilder.withArgName( ENTITY_UNIQUE_PROPERTY_VALUE ).hasArg().isRequired( false )
@@ -163,7 +165,7 @@ public class ManagementUserAudit extends ToolBase {
 
 
                 //defensive programming, don't have to have to parse the string if it doesn't contain users.
-                if (returnedRowKey.contains("email") && returnedRowKey.contains( "users" ) && returnedRowKey.contains( MANAGEMENT_APPLICATION_ID.toString() )) {
+                if (returnedRowKey.contains("applications") && returnedRowKey.contains( "name" )) {
 
                     String[] parsedRowKey = returnedRowKey.split( ":" );
 
@@ -195,14 +197,14 @@ public class ManagementUserAudit extends ToolBase {
                     String uniqueValue = parsedRowKey[3];
 
 
-                    if ( collectionName.equals( "users" ) ) {
+                   // if ( collectionName.equals( "users" ) ) {
 
-                        ColumnSlice<ByteBuffer, ByteBuffer> columnSlice=rangeSliceValue.getColumnSlice();
-                        //if ( columnSlice.getColumns().size() != 0 ) {
-                        List<HColumn<ByteBuffer, ByteBuffer>> cols=columnSlice.getColumns();
+                    //ColumnSlice<ByteBuffer, ByteBuffer> columnSlice=rangeSliceValue.getColumnSlice();
+                    //if ( columnSlice.getColumns().size() != 0 ) {
+                   // List<HColumn<ByteBuffer, ByteBuffer>> cols=columnSlice.getColumns();
 
-                        entityStateLogger( uniqueValue, cols );
-                    }
+                    entityStateLogger( applicationId,uniqueValue);
+                    //}
                 }
             }
         }
@@ -246,76 +248,55 @@ public class ManagementUserAudit extends ToolBase {
     }
 
 
-    private void entityStateLogger( final String uniqueValue, final List<HColumn<ByteBuffer, ByteBuffer>> cols ) throws Exception {
+    private void entityStateLogger(final UUID applicationUUID ,final String uniqueValue ) throws Exception {
 
-        UserInfo userInfo = null;
         EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
 
-        try {
-            userInfo = managementService.getAdminUserByEmail( uniqueValue );
-        }catch(Exception e){
-            logger.error("threw exception when looking up email: {}",uniqueValue);
-            e.printStackTrace();
-        }
-        if(userInfo==null) {
-            if(cols!=null){
-                if(cols.size()>1){
-                    for(HColumn<ByteBuffer, ByteBuffer> col : cols) {
-                        logger.warn( "This uuid: {} is associated with this duplicated email {}", ue.fromByteBuffer( col.getName()),uniqueValue );
-                    }
+        ApplicationInfo applicationInfo = managementService.getApplicationInfo( applicationUUID );
 
-                }
-                if(cols.size()==1){
-                    logger.error( "Management user with uuid: {} and email: {} is broken.",ue.fromByteBuffer( cols.get( 0 ).getName()), uniqueValue );
-                }
-                else{
-                    logger.error( "Management user with email: {} is broken and has no uuid's associated with it",uniqueValue );
-                }
+        if(applicationInfo==null){
+            if( !applicationUUID.equals( UUID.fromString( "00000000-0000-0000-0000-000000000010" ) )) {
+
+                logger.error( "Application uuid: {} and name: {} has return null.", applicationUUID, uniqueValue );
             }
         }
-        else {
-            Results orgResults =
-                    em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userInfo.getUuid() ), "groups", null, 10000, Results.Level.REFS,
-                            false );
+        else{
+            OrganizationInfo organizationInfo = managementService.getOrganizationForApplication( applicationUUID );
+            if(organizationInfo==null) {
+                if(!applicationUUID.equals( UUID.fromString( "00000000-0000-0000-0000-000000000001"))) {
 
-            if(orgResults.getRefs().size() == 1){
-                EntityRef orgRef = orgResults.getRef();
-                orgVerification( uniqueValue, em, orgRef, orgRef.getUuid(),
-                        "Management user with email: {} is present but cannot login due to missing their only organization: {}" );
-            }
-            else {
-                for ( EntityRef orgRef : orgResults.getRefs() ) {
-                    orgVerification( uniqueValue, em, orgRef, orgRef.getUuid(),
-                            "Management user with email: {} is present with multiple orgs but is missing the following orgUUID: {}" );
-
+                    logger.error(
+                            "Application uuid: {} with name: {} is lost and has no organizations associated with it.",
+                            applicationUUID, applicationInfo.getName() );
                 }
             }
+            else{
+                EntityRef orgRef = new SimpleEntityRef("group",organizationInfo.getUuid() );
+                orgVerification(applicationUUID ,uniqueValue, em, orgRef, organizationInfo.getUuid(),
+                        "Application with uuid: {} with name: {} is missing their organization: {}" );
+            }
         }
-
     }
 
 
-    private void orgVerification( final String uniqueValue, final EntityManager em, final EntityRef orgRef,
+    private void orgVerification(final UUID applicationUUID ,final String uniqueValue, final EntityManager em, final EntityRef orgRef,
                                   final UUID uuid, final String s2 ) throws Exception {
         try {
             em.getDictionaryAsMap( orgRef, "orgProperties" );
-            OrganizationInfo organizationInfo = managementService.getOrganizationByUuid( uuid );
 
-            if(organizationInfo == null) {
-                logger.error( "The following email works: {} but the orgUUID: {} returns null.",uniqueValue,uuid );
-            }
-            else {
+            Object[] loggingObject = new Object[3];
+            loggingObject[0] = applicationUUID;
+            loggingObject[1] = uniqueValue;
+            loggingObject[2] = uuid;
+            logger.info( "Application with uuid: {} and name: {} was returned from orgUUID: {} ",loggingObject );
 
-                Object[] loggingObject = new Object[3];
-                loggingObject[0] = uniqueValue;
-                loggingObject[1] = organizationInfo.getName();
-                loggingObject[2] = organizationInfo.getUuid();
-
-                logger.info( "The following email works: {} with the following orgname: {} and orgUUID: {}",
-                        loggingObject );
-            }
         }
         catch ( EntityNotFoundException enfe ) {
+            Object[] notFoundLogger = new Object[3];
+            notFoundLogger[0] = applicationUUID;
+            notFoundLogger[1] = uniqueValue;
+            notFoundLogger[2] = uuid;
+
             logger.error( s2, uniqueValue, uuid );
 
             BiMap<UUID,String> applicationBiMap = managementService.getApplicationsForOrganization( uuid );
@@ -329,7 +310,6 @@ public class ManagementUserAudit extends ToolBase {
                     loggingObject[1] = app.getValue();
                     loggingObject[2] = uuid;
                     logger.info( "Application with uuid: {} and name: {} was returned from orgUUID: {} ",loggingObject );
-
                 }
             }
 
@@ -339,25 +319,25 @@ public class ManagementUserAudit extends ToolBase {
 
     //really only deletes ones that aren't existant for a specific value
     private void deleteInvalidValuesForUniqueProperty( Mutator<ByteBuffer> m, CommandLine line ) throws Exception {
-        UUID applicationId = MANAGEMENT_APPLICATION_ID;
-        String collectionName = "users"; //line.getOptionValue( COLLECTION_ARG );
-        String uniqueValueKey = "email"; //line.getOptionValue( ENTITY_UNIQUE_PROPERTY_NAME );
+        UUID applicationId = UUID.fromString(line.getOptionValue( APP_VALUE ));
+        String collectionName = "applications"; //line.getOptionValue( COLLECTION_ARG );
+        String uniqueValueKey = "name"; //line.getOptionValue( ENTITY_UNIQUE_PROPERTY_NAME );
         String uniqueValue = line.getOptionValue( ENTITY_UNIQUE_PROPERTY_VALUE );
 
         //PLEASE ADD VERIFICATION.
 
-        Object key = key( applicationId, collectionName,"email", uniqueValue );
+        Object key = key( applicationId, collectionName,uniqueValueKey, uniqueValue );
 
 
-        List<HColumn<ByteBuffer, ByteBuffer>> cols = cass.getColumns( cass.getApplicationKeyspace( applicationId), ENTITY_UNIQUE, key, null, null, 1000,
-                false );
+//        List<HColumn<ByteBuffer, ByteBuffer>> cols = cass.getColumns( cass.getApplicationKeyspace( applicationId), ENTITY_UNIQUE, key, null, null, 1000,
+//                false );
 
 
-        if ( cols.size() == 0 ) {
-            logger.error( "This row key: {} has zero columns", key.toString() );
-        }
+//        if ( cols.size() == 0 ) {
+//            logger.error( "This row key: {} has zero columns", key.toString() );
+//        }
 
-        entityStateLogger( uniqueValue, cols );
+        entityStateLogger( applicationId,uniqueValue );
     }
 
 
