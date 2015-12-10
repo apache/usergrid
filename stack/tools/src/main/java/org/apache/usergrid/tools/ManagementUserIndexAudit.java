@@ -19,6 +19,7 @@ package org.apache.usergrid.tools;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,15 +40,18 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.cassandra.index.IndexBucketScanner;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.utils.UUIDUtils;
 
+import com.fasterxml.uuid.impl.UUIDUtil;
 import com.google.common.collect.BiMap;
 
 import me.prettyprint.cassandra.service.RangeSlicesIterator;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.ColumnSlice;
+import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.Row;
 import me.prettyprint.hector.api.factory.HFactory;
@@ -60,6 +64,7 @@ import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNI
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.dce;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
@@ -164,7 +169,7 @@ public class ManagementUserIndexAudit extends ToolBase {
 
 
                 //defensive programming, don't have to have to parse the string if it doesn't contain users.
-                if (returnedRowKey.contains("email") && returnedRowKey.contains( "users" ) && returnedRowKey.contains( MANAGEMENT_APPLICATION_ID.toString() )) {
+                if (returnedRowKey.contains("users") && returnedRowKey.contains( "email" ) ) {
 
                     String[] parsedRowKey = returnedRowKey.split( ":" );
 
@@ -199,10 +204,11 @@ public class ManagementUserIndexAudit extends ToolBase {
                     if ( collectionName.equals( "users" ) ) {
 
                         ColumnSlice<ByteBuffer, ByteBuffer> columnSlice=rangeSliceValue.getColumnSlice();
+
                         //if ( columnSlice.getColumns().size() != 0 ) {
                         List<HColumn<ByteBuffer, ByteBuffer>> cols=columnSlice.getColumns();
 
-                        entityStateLogger( uniqueValue, cols );
+                        entityStateLogger(applicationId ,uniqueValue, cols );
                     }
                 }
             }
@@ -247,52 +253,23 @@ public class ManagementUserIndexAudit extends ToolBase {
     }
 
 
-    private void entityStateLogger( final String uniqueValue, final List<HColumn<ByteBuffer, ByteBuffer>> cols ) throws Exception {
+    private void entityStateLogger(final UUID entityUuid,final String uniqueValue, final List<HColumn<ByteBuffer, ByteBuffer>> cols ) throws Exception {
 
-        UserInfo userInfo = null;
-        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+//        UserInfo userInfo = null;
+//        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
 
-        try {
-            userInfo = managementService.getAdminUserByEmail( uniqueValue );
-        }catch(Exception e){
-            logger.error("threw exception when looking up email: {}",uniqueValue);
-            e.printStackTrace();
-        }
-        if(userInfo==null) {
-            if(cols!=null){
-                if(cols.size()>1){
-                    for(HColumn<ByteBuffer, ByteBuffer> col : cols) {
-                        logger.warn( "This uuid: {} is associated with this duplicated email {}", ue.fromByteBuffer( col.getName()),uniqueValue );
-                    }
+        //IndexBucketScanner scanner = new IndexBucketScanner(  )
 
-                }
-                if(cols.size()==1){
-                    logger.error( "Management user with uuid: {} and email: {} is broken.",ue.fromByteBuffer( cols.get( 0 ).getName()), uniqueValue );
-                }
-                else{
-                    logger.error( "Management user with email: {} is broken and has no uuid's associated with it",uniqueValue );
-                }
-            }
-        }
-        else {
-            Results orgResults =
-                    em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userInfo.getUuid() ), "groups", null, 10000, Results.Level.REFS,
-                            false );
+        //HColumn<ByteBuffer, ByteBuffer> col2 =  cols.get( 0 );
+        DynamicComposite dynamicComposite = dce.fromByteBuffer( cols.get( 0 ).getName());
 
-            if(orgResults.getRefs().size() == 1){
-                EntityRef orgRef = orgResults.getRef();
-                orgVerification( uniqueValue, em, orgRef, orgRef.getUuid(),
-                        "Management user with email: {} is present but cannot login due to missing their only organization: {}" );
-            }
-            else {
-                for ( EntityRef orgRef : orgResults.getRefs() ) {
-                    orgVerification( uniqueValue, em, orgRef, orgRef.getUuid(),
-                            "Management user with email: {} is present with multiple orgs but is missing the following orgUUID: {}" );
+        Object[] loggerObject = new Object[4];
+        loggerObject[0] = entityUuid;
+        loggerObject[1] = (String) dynamicComposite.get( 1 );
+        loggerObject[2] = (UUID) dynamicComposite.get( 2 );
+        loggerObject[3] =  new Date( UUIDUtils.getTimestampInMillis( (UUID) dynamicComposite.get( 3 ) ));
 
-                }
-            }
-        }
-
+        logger.info("Found the following orguuid: {} associated with the email: {} that has the following uuid: {} and it was created at time: {} ",loggerObject);
     }
 
 
@@ -357,8 +334,9 @@ public class ManagementUserIndexAudit extends ToolBase {
         if ( cols.size() == 0 ) {
             logger.error( "This row key: {} has zero columns", key.toString() );
         }
+        //TODO: fix to run on single entity once you can decode the column and row key.
 
-        entityStateLogger( uniqueValue, cols );
+       // entityStateLogger( uniqueValue, cols );
     }
 
 
