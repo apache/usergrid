@@ -18,7 +18,6 @@
 package org.apache.usergrid.tools;
 
 import com.google.common.collect.BiMap;
-import com.google.common.collect.Sets;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -51,7 +50,7 @@ import static org.apache.usergrid.tools.DuplicateOrgInterface.OrgUser;
  */
 public class DuplicateOrgRepair extends ToolBase {
 
-    DuplicateOrgInterface   manager = new Manager();
+    DuplicateOrgInterface   manager;
     
     Map<String, Set<Org>>   orgsByName = new HashMap<String, Set<Org>>();
     
@@ -68,6 +67,8 @@ public class DuplicateOrgRepair extends ToolBase {
     static final String     DRYRUN_ARG_NAME = "dryrun";
     
     static boolean          dryRun = false;
+    
+    static boolean          testing = false;
 
     
     @Override
@@ -94,12 +95,9 @@ public class DuplicateOrgRepair extends ToolBase {
     @Override
     public void runTool(CommandLine line) throws Exception {
 
-        logger.info( "DuplicateOrgRepair tool starting up..." );
 
         startSpring();
         setVerbose( line );
-
-        dryRun = Boolean.parseBoolean( line.getOptionValue( DRYRUN_ARG_NAME ));
 
         if (StringUtils.isNotEmpty( line.getOptionValue( THREADS_ARG_NAME ) )) {
             try {
@@ -110,15 +108,27 @@ public class DuplicateOrgRepair extends ToolBase {
             }
         }
 
-        buildOrgMaps();
+        dryRun = Boolean.parseBoolean( line.getOptionValue( DRYRUN_ARG_NAME ));
+        
+        if ( dryRun && !testing ) {
+            manager = new DryRunManager();
+        } else {
+            manager = new RepairManager();
+        }
 
+        logger.info( "DuplicateOrgRepair tool starting up... manager: " + manager.getClass().getSimpleName() );
+        
+        buildOrgMaps();
+        
         augmentUserOrgsMap();
         
+        manager.logDuplicates( duplicatesByName );
+        
         mergeDuplicateOrgs();
-
+        
         removeDuplicateOrgs();
 
-        logger.info( "DuplicateOrgRepair work is done." );
+        logger.info( "DuplicateOrgRepair work is done!");
     }
 
     
@@ -158,10 +168,14 @@ public class DuplicateOrgRepair extends ToolBase {
                     }
                 } catch (Exception e) {
                     logger.error("Error getting users for org {}:{}", org.getName(), org.getId());
+                    logger.error("Stack trace is: ", e);
                 }
 
             }
+            
         } ).toBlocking().lastOrDefault( null );
+        
+        logger.info( "DuplicateOrgRepair tool built org maps");
     }
 
     
@@ -179,6 +193,9 @@ public class DuplicateOrgRepair extends ToolBase {
                 try {
                     Set<Org> connectedToOrgs = manager.getUsersOrgs(user);
                     Set<Org> usersOrgs = orgsByUser.get(user);
+                    if ( usersOrgs == null ) {
+                        usersOrgs = new HashSet<Org>();
+                    }
                     for ( Org org : connectedToOrgs ) {
                         if (!usersOrgs.contains(org)) {
                             usersOrgs.add(org);
@@ -187,9 +204,12 @@ public class DuplicateOrgRepair extends ToolBase {
 
                 } catch (Exception e) {
                     logger.error("Error getting orgs for user {}:{}", user.getName(), user.getId());
+                    logger.error("Stack trace is: ", e);
                 }
             }
         } ).subscribeOn( scheduler ).toBlocking().lastOrDefault( null );
+
+        logger.info( "DuplicateOrgRepair augmented user orgs map"); 
     }
 
 
@@ -216,10 +236,10 @@ public class DuplicateOrgRepair extends ToolBase {
                             args = new Object[] { 
                                     user.getName(), user.getId(), org.getName(), org.getId()};
                             logger.info( "Would remove user {}:{}  org {}:{}", args);
-                            continue;
-                        } 
-                        manager.addUserToOrg( user, bestOrg );
-                        manager.removeUserFromOrg( user, org );
+                        } else {
+                            manager.addUserToOrg( user, bestOrg );
+                            manager.removeUserFromOrg( user, org );
+                        }
                     }
                     
                     Set<UUID> orgApps = new HashSet<UUID>( manager.getOrgApps( org ));
@@ -232,14 +252,16 @@ public class DuplicateOrgRepair extends ToolBase {
                             args = new Object[] { 
                                     appId, org.getName(), org.getId()};
                             logger.info( "Would remove app {} org {}:{}", args);
-                            continue;
-                        } 
-                        manager.addAppToOrg( appId, bestOrg );
-                        manager.removeAppFromOrg( appId, org );
+                        } else {
+                            manager.addAppToOrg( appId, bestOrg );
+                            manager.removeAppFromOrg( appId, org );
+                        }
                     }
                 }
             }
         }
+
+        logger.info( "DuplicateOrgRepair merged duplicate orgs"); 
     }
 
 
@@ -261,6 +283,7 @@ public class DuplicateOrgRepair extends ToolBase {
                 }
             }
         }
+        logger.info( "DuplicateOrgRepair renamed/removed duplicate orgs"); 
     }
 
 
@@ -276,9 +299,11 @@ public class DuplicateOrgRepair extends ToolBase {
         }
         return oldest;
     }
-    
 
-    class Manager implements DuplicateOrgInterface {
+
+
+    
+    class RepairManager implements DuplicateOrgInterface {
 
         private boolean dryRun = true;
 
@@ -291,6 +316,8 @@ public class DuplicateOrgRepair extends ToolBase {
                 public void call(Subscriber<? super Org> subscriber) {
                     subscriber.onStart();
                     try {
+                        int count = 0;
+                        
                         Query query = new Query();
                         query.setLimit( MAX_ENTITY_FETCH );
                         query.setResultsLevel( Results.Level.ALL_PROPERTIES );
@@ -307,6 +334,10 @@ public class DuplicateOrgRepair extends ToolBase {
                                 org.sourceValue = orgEntity;
                                 
                                 subscriber.onNext( org );
+
+                                if ( count++ % 1000 == 0 ) {
+                                    logger.info("Emitted {} orgs", count );
+                                }
 
                                 // logger.info( "org: {}, \"{}\", {}", new Object[]{
                                 //     orgEntity.getProperty( "path" ),
@@ -337,6 +368,8 @@ public class DuplicateOrgRepair extends ToolBase {
                 public void call(Subscriber<? super OrgUser> subscriber) {
                     subscriber.onStart();
                     try {
+                        int count = 0;
+                        
                         Query query = new Query();
                         query.setLimit( MAX_ENTITY_FETCH );
                         query.setResultsLevel( Results.Level.ALL_PROPERTIES );
@@ -352,7 +385,11 @@ public class DuplicateOrgRepair extends ToolBase {
                                 orgUser.sourceValue = entity;
 
                                 subscriber.onNext( orgUser );
-                                
+
+                                if ( count++ % 1000 == 0 ) {
+                                    logger.info("Emitted {} users", count );
+                                }
+
                                 // logger.info( "org: {}, \"{}\", {}", new Object[]{
                                 //     entity.getProperty( "path" ),
                                 //     entity.getUuid(),
@@ -401,9 +438,7 @@ public class DuplicateOrgRepair extends ToolBase {
         
         @Override
         public void removeOrg(Org keeper, Org duplicate) throws Exception {
-
             // we don't have a remove org API so rename org so that it is no longer a duplicate
-            
             OrganizationInfo orgInfo = managementService.getOrganizationByUuid( duplicate.getId() );
             orgInfo.setName( "dup_" + keeper.getId() + "_" + RandomStringUtils.randomAlphanumeric(10) );
             managementService.updateOrganization( orgInfo );
@@ -491,4 +526,29 @@ public class DuplicateOrgRepair extends ToolBase {
         }
         
     }
+
+    
+    class DryRunManager extends RepairManager {
+        
+        @Override
+        public void removeUserFromOrg(OrgUser user, Org org) throws Exception {
+        }
+
+        @Override
+        public void addUserToOrg(OrgUser user, Org org) throws Exception {
+        }
+
+        @Override
+        public void addAppToOrg(UUID appId, Org org) throws Exception {
+        }
+
+        @Override
+        public void removeAppFromOrg(UUID appId, Org org) throws Exception {
+        }
+
+        @Override
+        public void removeOrg(Org keeper, Org duplicate) throws Exception {
+        }
+    }
+    
 }
