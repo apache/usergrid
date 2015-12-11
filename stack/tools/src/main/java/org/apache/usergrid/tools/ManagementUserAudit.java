@@ -35,13 +35,34 @@ import org.apache.commons.cli.Options;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.RelationManager;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.cassandra.EntityManagerImpl;
+import org.apache.usergrid.persistence.cassandra.IndexUpdate;
+import org.apache.usergrid.persistence.cassandra.RelationManagerImpl;
+import org.apache.usergrid.persistence.schema.CollectionInfo;
 
+import me.prettyprint.cassandra.service.RangeSlicesIterator;
+import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.beans.Row;
+import me.prettyprint.hector.api.factory.HFactory;
+import me.prettyprint.hector.api.mutation.Mutator;
+import me.prettyprint.hector.api.query.QueryResult;
+import me.prettyprint.hector.api.query.RangeSlicesQuery;
+import me.prettyprint.hector.api.query.SliceQuery;
 
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.usergrid.persistence.Results.Level.REFS;
+import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.createTimestamp;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.dce;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 
@@ -78,6 +99,8 @@ public class ManagementUserAudit extends ToolBase {
 
     private static final String DUPLICATE_EMAIL = "dup";
 
+    private static final String ROW_KEY = "row";
+
 
     @Override
     @SuppressWarnings( "static-access" )
@@ -93,14 +116,18 @@ public class ManagementUserAudit extends ToolBase {
         options.addOption( hostOption );
 
         Option file_path =
-                OptionBuilder.withArgName( FILE_PATH ).hasArg().isRequired( false )
-                             .withDescription( "file path" ).create( FILE_PATH );
+                OptionBuilder.withArgName( FILE_PATH ).hasArg().isRequired( false ).withDescription( "file path" )
+                             .create( FILE_PATH );
         options.addOption( file_path );
 
-        Option duplicate_email =
-                OptionBuilder.withArgName( DUPLICATE_EMAIL ).hasArg().isRequired( false )
-                             .withDescription( "duplicate email to examine" ).create( DUPLICATE_EMAIL );
+        Option duplicate_email = OptionBuilder.withArgName( DUPLICATE_EMAIL ).hasArg().isRequired( false )
+                                              .withDescription( "duplicate email to examine" )
+                                              .create( DUPLICATE_EMAIL );
         options.addOption( duplicate_email );
+
+        Option row_key = OptionBuilder.withArgName( ROW_KEY ).hasArg().isRequired( false )
+                                      .withDescription( "row key to check against" ).create( ROW_KEY );
+        options.addOption( row_key );
 
         return options;
     }
@@ -120,13 +147,13 @@ public class ManagementUserAudit extends ToolBase {
 
         EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
 
-        if(line.getOptionValue( ("file") ) == null) {
-            if ( line.getOptionValue( "dup" )!=null){
+        if ( line.getOptionValue( ( "file" ) ) == null ) {
+            if ( line.getOptionValue( "dup" ) != null ) {
                 String extractedEmail = line.getOptionValue( "dup" );
-                column_verification( em, extractedEmail );
-             }
-            else{
-                logger.error("Need to have -file or -dup not both and certainly not neither.");
+                column_verification( em, extractedEmail, line );
+            }
+            else {
+                logger.error( "Need to have -file or -dup not both and certainly not neither." );
             }
         }
         else {
@@ -141,20 +168,24 @@ public class ManagementUserAudit extends ToolBase {
             for ( JsonNode email : users ) {
 
                 String extractedEmail = email.get( "name" ).getTextValue();
-                column_verification( em, extractedEmail );
+                column_verification( em, extractedEmail, line );
             }
             logger.info( "Completed logging successfully" );
         }
     }
 
-    private void column_verification( final EntityManager em, final String extractedEmail ) throws Exception {UUID
-            applicationId = MANAGEMENT_APPLICATION_ID;
+
+    private void column_verification( final EntityManager em, final String extractedEmail, CommandLine line )
+            throws Exception {
+        UUID applicationId = MANAGEMENT_APPLICATION_ID;
         String collectionName = "users";
         String uniqueValueKey = "email";
         String uniqueValue = extractedEmail;
 
 
         Object key = key( applicationId, collectionName, uniqueValueKey, uniqueValue );
+
+        //searchEntityIndex( em, extractedEmail, line );
 
 
         List<HColumn<ByteBuffer, ByteBuffer>> cols =
@@ -166,11 +197,12 @@ public class ManagementUserAudit extends ToolBase {
                 uuid = ue.fromByteBuffer( col.getName() );
             }
             if ( em.get( uuid ) == null ) {
-                logger.error( "Email: {} with uuid: {} doesn't exist in ENTITY_PROPERTIES.", extractedEmail,
-                        uuid );
+                logger.error( "Email: {} with uuid: {} doesn't exist in ENTITY_PROPERTIES.", extractedEmail, uuid );
             }
             else {
-                logger.info( "Email: {}  with uuid: {} exists in ENTITY_PROPERTIES", extractedEmail, uuid );
+                logger.info( "Email: {}  with uuid: {} exists in ENTITY_PROPERTIES for ENTITY_UNIQUE", extractedEmail,
+                        uuid );
+                searchEntityIndex( em, extractedEmail, line );
             }
         }
         else {
@@ -185,8 +217,7 @@ public class ManagementUserAudit extends ToolBase {
                     uuid = ue.fromByteBuffer( col.getName() );
                     Entity entity = em.get( uuid );
                     if ( entity == null ) {
-                        logger.error( "Email: {} with duplicate uuid: {} doesn't exist in ENTITY_PROPERTIES.", extractedEmail,
-                                uuid );
+                        logger.error( "Email: {} with duplicate uuid: {} doesn't exist in ENTITY_PROPERTIES.", extractedEmail, uuid );
                     }
                     else {
                         Object[] loggerObject = new Object[3];
@@ -197,6 +228,61 @@ public class ManagementUserAudit extends ToolBase {
                     }
                 }
             }
+        }
+    }
+
+
+    private void searchEntityIndex( final EntityManager em, final String extractedEmail, CommandLine line )
+            throws Exception {
+
+        Keyspace ko = cass.getUsergridApplicationKeyspace();
+        Mutator<ByteBuffer> m = createMutator( ko, be );
+
+        Query query = new Query();
+        query.setEntityType( "user" );
+        query.addEqualityFilter( "email", extractedEmail );
+        query.setLimit( 1 );
+        query.setResultsLevel( REFS );
+
+        //String bucketId = emf.getEntityManager( MANAGEMENT_APPLICATION_ID ).loca .getBucket( indexedEntity.getUuid
+        // () );
+        RelationManagerImpl relationManager =
+                ( RelationManagerImpl ) em.getRelationManager( ref( MANAGEMENT_APPLICATION_ID ) );
+
+        Results r = relationManager.searchCollection( "users", query );
+        if ( r != null && r.getRef() != null ) {
+            if ( em.get( r.getRef().getUuid() ) == null ) {
+
+                String bucketId = ( ( EntityManagerImpl ) em ).getIndexBucketLocator().getBucket( r.getId() );
+
+                Object rowKey = key( relationManager.returnHeadEntity().getUuid()+":users:email", bucketId );
+
+                final List<HColumn<ByteBuffer, ByteBuffer>> results =
+                        cass.getColumns( cass.getApplicationKeyspace( MANAGEMENT_APPLICATION_ID ),
+                                ENTITY_INDEX.getColumnFamily(), rowKey, null, null, 1, false );
+                if(results.size()==1) {
+                    logger.error("Deleting the following row key: {} that contains this column: {} ",rowKey,
+                            dce.fromByteBuffer(results.get( 0 ).getName()).get( 1 ) );
+                    //addDeleteToMutator( m, ENTITY_INDEX, rowKey, results.get( 0 ).getName(), createTimestamp() );
+
+                   // m.execute();
+                }
+                else{
+                    if(results.size() > 1) {
+                        logger.error( "Too many columns for row key: {}, Implement searching logic for proper email.",rowKey );
+                    }
+                    else{
+                        logger.error("Zero columns for row key: {}",rowKey);
+                    }
+                }
+            }
+            else {
+                logger.info( "Email: {}  with uuid: {} exists in ENTITY_PROPERTIES", extractedEmail,
+                        r.getRef().getUuid() );
+            }
+        }
+        else {
+            logger.error( "Email: {} doesn't exist in ENTITY_INDEX.", extractedEmail );
         }
     }
 }
