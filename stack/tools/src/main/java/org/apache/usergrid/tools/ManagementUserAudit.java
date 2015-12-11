@@ -32,6 +32,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
+import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
 
@@ -73,7 +74,9 @@ public class ManagementUserAudit extends ToolBase {
 
     private static final Logger logger = LoggerFactory.getLogger( ManagementUserAudit.class );
 
-    private static final String ENTITY_UNIQUE_PROPERTY_VALUE = "file";
+    private static final String FILE_PATH = "file";
+
+    private static final String DUPLICATE_EMAIL = "dup";
 
 
     @Override
@@ -89,11 +92,15 @@ public class ManagementUserAudit extends ToolBase {
 
         options.addOption( hostOption );
 
-        Option entityUniquePropertyValue =
-                OptionBuilder.withArgName( ENTITY_UNIQUE_PROPERTY_VALUE ).hasArg().isRequired( true )
-                             .withDescription( "file path" ).create( ENTITY_UNIQUE_PROPERTY_VALUE );
-        options.addOption( entityUniquePropertyValue );
+        Option file_path =
+                OptionBuilder.withArgName( FILE_PATH ).hasArg().isRequired( false )
+                             .withDescription( "file path" ).create( FILE_PATH );
+        options.addOption( file_path );
 
+        Option duplicate_email =
+                OptionBuilder.withArgName( DUPLICATE_EMAIL ).hasArg().isRequired( false )
+                             .withDescription( "duplicate email to examine" ).create( DUPLICATE_EMAIL );
+        options.addOption( duplicate_email );
 
         return options;
     }
@@ -113,59 +120,83 @@ public class ManagementUserAudit extends ToolBase {
 
         EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
 
-        ObjectMapper objectMapper = new ObjectMapper(  );
+        if(line.getOptionValue( ("file") ) == null) {
+            if ( line.getOptionValue( "dup" )!=null){
+                String extractedEmail = line.getOptionValue( "dup" );
+                column_verification( em, extractedEmail );
+             }
+            else{
+                logger.error("Need to have -file or -dup not both and certainly not neither.");
+            }
+        }
+        else {
+            ObjectMapper objectMapper = new ObjectMapper();
 
-        File jsonObjectFile = new File(line.getOptionValue( "file" ));
+            File jsonObjectFile = new File( line.getOptionValue( "file" ) );
 
-        JsonNode node =  objectMapper.readTree( jsonObjectFile );
+            JsonNode node = objectMapper.readTree( jsonObjectFile );
 
-        JsonNode users = node.get( "user" );
+            JsonNode users = node.get( "user" );
 
-        for(JsonNode email:users) {
+            for ( JsonNode email : users ) {
 
-            String extractedEmail = email.get( "name" ).getTextValue();
+                String extractedEmail = email.get( "name" ).getTextValue();
+                column_verification( em, extractedEmail );
+            }
+            logger.info( "Completed logging successfully" );
+        }
+    }
 
-            Query query = new Query();
-            query.setEntityType( "user" );
-            query.addEqualityFilter( "email", extractedEmail );
-            //maybe this could be changed to detect duplicates
-            query.setLimit( 1 );
-            query.setResultsLevel( REFS );
-
-
-
-            UUID applicationId = MANAGEMENT_APPLICATION_ID;
-            String collectionName = "users";
-            String uniqueValueKey = "email";
-            String uniqueValue = extractedEmail;
+    private void column_verification( final EntityManager em, final String extractedEmail ) throws Exception {UUID
+            applicationId = MANAGEMENT_APPLICATION_ID;
+        String collectionName = "users";
+        String uniqueValueKey = "email";
+        String uniqueValue = extractedEmail;
 
 
-            Object key = key( applicationId, collectionName, uniqueValueKey, uniqueValue );
+        Object key = key( applicationId, collectionName, uniqueValueKey, uniqueValue );
 
 
-            List<HColumn<ByteBuffer, ByteBuffer>> cols = cass.getAllColumns( cass.getApplicationKeyspace( applicationId ),ENTITY_UNIQUE,key,be,be );
+        List<HColumn<ByteBuffer, ByteBuffer>> cols =
+                cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, be, be );
 
-            if ( cols.size() == 1  ) {
+        if ( cols.size() == 1 ) {
+            UUID uuid = null;
+            for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
+                uuid = ue.fromByteBuffer( col.getName() );
+            }
+            if ( em.get( uuid ) == null ) {
+                logger.error( "Email: {} with uuid: {} doesn't exist in ENTITY_PROPERTIES.", extractedEmail,
+                        uuid );
+            }
+            else {
+                logger.info( "Email: {}  with uuid: {} exists in ENTITY_PROPERTIES", extractedEmail, uuid );
+            }
+        }
+        else {
+            if ( cols.size() == 0 ) {
+                logger.error( "Email: {} doesn't exist in ENTITY_UNIQUE.", extractedEmail );
+            }
+            else {
+                logger.error( "Email: {} has {} number of duplicate columns in ENTITY_UNIQUE", extractedEmail,
+                        cols.size() );
                 UUID uuid = null;
                 for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
-                    uuid = ue.fromByteBuffer( col.getName());
-                }
-                if ( em.get( uuid ) == null ) {
-                    logger.error( "Email: {} with uuid: {} doesn't exist in ENTITY_PROPERTIES.", extractedEmail,uuid);
-                }
-                else {
-                    logger.info( "Email: {}  with uuid: {} exists in ENTITY_PROPERTIES", extractedEmail,uuid);
-                }
-            }
-            else{
-                if(cols.size() == 0) {
-                    logger.error( "Email: {} doesn't exist in ENTITY_UNIQUE.", extractedEmail );
-                }
-                else{
-                    logger.error("Email: {} has {} number of duplicate columns in ENTITY_UNIQUE",extractedEmail,cols.size());
+                    uuid = ue.fromByteBuffer( col.getName() );
+                    Entity entity = em.get( uuid );
+                    if ( entity == null ) {
+                        logger.error( "Email: {} with duplicate uuid: {} doesn't exist in ENTITY_PROPERTIES.", extractedEmail,
+                                uuid );
+                    }
+                    else {
+                        Object[] loggerObject = new Object[3];
+                        loggerObject[0] = extractedEmail;
+                        loggerObject[1] = uuid;
+                        loggerObject[2] = entity;
+                        logger.info( "Email: {}  with duplicate uuid: {} with the following data: {} exists in ENTITY_PROPERTIES", extractedEmail, uuid );
+                    }
                 }
             }
         }
-        logger.info( "Completed logging successfully" );
     }
 }
