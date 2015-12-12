@@ -75,20 +75,26 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 
 
 /**
- * This utility audits all values in the ENTITY_UNIQUE column family. If it finds any duplicates of users then it
- * deletes the non existing columns from the row. If there are no more columns in the row then it deletes the row. If
- * there exists more than one existing column then the one with the most recent timestamp wins and the other is
- * deleted.
+ * This utility audits all values in the ENTITY_UNIQUE column family. The way it does this is by taking in a *.json file
+ * that has an array of users then checking them to see if they are in the unique column family. Logging as it goes along.
  *
- * If you want the run the tool on their cluster the following is what you need to do nohup java
- * -Dlog4j.configuration=file:log4j.properties -jar usergrid-tools-1.0.2.jar UserUniqueIndexCleanup -host
- * <cassandra_host_here>  > log.txt
+ * An additional use of this tool is to use the -dup flag like so
+ * java -Dlog4j.configuration=file:log4j.properties  -jar usergrid-tools-1.0.2.jar ManagementUserAudit -host localhost -dup grey@apache.org
  *
- * if there is a specific value you want to run the tool on then you need the following
+ * If we find a value that is present and also exists in ENTITY_PROPERTIES then it goes and queries the entity index.
+ * The reason this check has to be done is that it can be possible for an entity to have an invalid uuid in the entity index
+ * but has the correct data in ENTITY_UNIQUE. Causing a user to be unable to login.
+ * If they are in the index then we see if the uuid's that are stored in the index correspond to any entity in the ENTITY_PROPERTIES
+ * column family. If it does not then we retreive the column name from the RAW query then delete that column name from the bucket
+ * that contains the data. Thus freeing up the uuid to be queried by user name.
  *
- * nohup java -Dlog4j.configuration=file:log4j.properties -jar usergrid-tools-1.0.2.jar UserUniqueIndexCleanup -host
- * <cassandra_host_here> -app <applicationUUID> -col <collection_name> -property <unique_property_key> -value
- * <unique_property_value> > log.txt
+ * THIS FIX SHOULD ONLY BE APPLIED IF PROBLEMS MATCH THESE OTHER CONDITIONS:
+ *
+ * When running the audit tools if you see two different uuid's for the same entity AND you cannot log in with email.
+ * If the unique audit found that this email should be working but the entity_index audit found it to be broken.
+ * IF you can PUT on the entity_unique uuid to update properties but CANNOT put on entity_index uuid.
+ *
+ * The above three conditions should be satisfied before this is ran on ANY user.
  *
  * @author grey
  */
@@ -261,18 +267,26 @@ public class ManagementUserIndexMissingFix extends ToolBase {
                 logger.info( "Trying to remove uuid: {} from ENTITY_INDEX.", r.getRef().getUuid() );
 
 
+                //This method didn't exist before and requires exposing the buffer with the ScanColumn information
+                //in the query processor. Hacky, but better than other methods.
                 List<ScanColumn> entityIds = relationManager.searchRawCollection( "users", query );
 
                 for ( ScanColumn entityId : entityIds ) {
                     SecondaryIndexSliceParser.SecondaryIndexColumn secondaryIndexColumn =
                             ( SecondaryIndexSliceParser.SecondaryIndexColumn ) entityId;
 
+                    //byte buffer from the scan column is the column name needed to delete from ENTITY_INDEX
                     DynamicComposite columnName = dce.fromByteBuffer( secondaryIndexColumn.getByteBuffer() );
                     String bucketId =
                             ( ( EntityManagerImpl ) em ).getIndexBucketLocator().getBucket( r.getRef().getUuid() );
                     Object index_name = key( MANAGEMENT_APPLICATION_ID, "users", "email" );
 
 
+                    //only delete from entity_index. Other data might contain valid references which is why
+                    //preconditions should be satisfied before trying this method. Preconditions satisfy that
+                    //uuid doesn't have valid data anywhere else but in INDEX for specific email. May still have the
+                    //broken uuid else where but not of concern to users.
+                    
                     Object index_key = key( index_name, bucketId );
                     logger.info( "Deleting the following rowkey: {} from ENTITY_INDEX.", index_key );
                     addDeleteToMutator( m, ENTITY_INDEX, index_key, columnName, createTimestamp() );
