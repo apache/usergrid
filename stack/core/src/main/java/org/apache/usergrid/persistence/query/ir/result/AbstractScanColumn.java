@@ -51,11 +51,16 @@ public abstract class AbstractScanColumn implements ScanColumn {
         return uuid;
     }
 
+    public ByteBuffer getByteBuffer(){
+        return buffer;
+    }
+
 
 
     public ByteBuffer getCursorValue() {
         return buffer == null ? null : buffer.duplicate();
     }
+
 
 
     @Override

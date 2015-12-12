@@ -34,12 +34,42 @@ import org.apache.commons.cli.Options;
 
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.RelationManager;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.cassandra.EntityManagerImpl;
+import org.apache.usergrid.persistence.cassandra.IndexUpdate;
+import org.apache.usergrid.persistence.cassandra.RelationManagerImpl;
+import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.query.ir.result.ScanColumn;
+import org.apache.usergrid.persistence.query.ir.result.SecondaryIndexSliceParser;
+import org.apache.usergrid.persistence.schema.CollectionInfo;
+import org.apache.usergrid.utils.UUIDUtils;
 
+import me.prettyprint.cassandra.service.RangeSlicesIterator;
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.DynamicComposite;
 import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.beans.Row;
+import me.prettyprint.hector.api.factory.HFactory;
+import me.prettyprint.hector.api.mutation.MutationResult;
+import me.prettyprint.hector.api.mutation.Mutator;
+import me.prettyprint.hector.api.query.QueryResult;
+import me.prettyprint.hector.api.query.RangeSlicesQuery;
+import me.prettyprint.hector.api.query.SliceQuery;
 
+import static me.prettyprint.hector.api.factory.HFactory.createMutator;
+import static org.apache.usergrid.persistence.Results.Level.REFS;
+import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_INDEX;
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.createTimestamp;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.dce;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
 
@@ -62,7 +92,7 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
  *
  * @author grey
  */
-public class ManagementUserAudit extends ToolBase {
+public class ManagementUserIndexMissingFix extends ToolBase {
 
     /**
      *
@@ -70,7 +100,7 @@ public class ManagementUserAudit extends ToolBase {
     private static final int PAGE_SIZE = 100;
 
 
-    private static final Logger logger = LoggerFactory.getLogger( ManagementUserAudit.class );
+    private static final Logger logger = LoggerFactory.getLogger( ManagementUserIndexMissingFix.class );
 
     private static final String FILE_PATH = "file";
 
@@ -177,6 +207,7 @@ public class ManagementUserAudit extends ToolBase {
             else {
                 logger.info( "Email: {}  with uuid: {} exists in ENTITY_PROPERTIES for ENTITY_UNIQUE", extractedEmail,
                         uuid );
+                searchEntityIndex( em, extractedEmail, line );
             }
         }
         else {
@@ -204,6 +235,71 @@ public class ManagementUserAudit extends ToolBase {
                     }
                 }
             }
+        }
+    }
+
+
+    private void searchEntityIndex( final EntityManager em, final String extractedEmail, CommandLine line )
+            throws Exception {
+
+        Keyspace ko = cass.getApplicationKeyspace( MANAGEMENT_APPLICATION_ID );
+        Mutator<ByteBuffer> m = createMutator( ko, be );
+
+        Query query = new Query();
+        query.setEntityType( "user" );
+        query.addEqualityFilter( "email", extractedEmail );
+        query.setLimit( 1 );
+        query.setResultsLevel( REFS );
+
+        RelationManagerImpl relationManager =
+                ( RelationManagerImpl ) em.getRelationManager( ref( MANAGEMENT_APPLICATION_ID ) );
+
+        Results r = relationManager.searchCollection( "users", query );
+        if ( r != null && r.getRef() != null ) {
+            if ( em.get( r.getRef().getUuid() ) == null ) {
+
+                logger.info( "Trying to remove uuid: {} from ENTITY_INDEX.", r.getRef().getUuid() );
+
+
+                List<ScanColumn> entityIds = relationManager.searchRawCollection( "users", query );
+
+                for ( ScanColumn entityId : entityIds ) {
+                    SecondaryIndexSliceParser.SecondaryIndexColumn secondaryIndexColumn =
+                            ( SecondaryIndexSliceParser.SecondaryIndexColumn ) entityId;
+
+                    DynamicComposite columnName = dce.fromByteBuffer( secondaryIndexColumn.getByteBuffer() );
+                    String bucketId =
+                            ( ( EntityManagerImpl ) em ).getIndexBucketLocator().getBucket( r.getRef().getUuid() );
+                    Object index_name = key( MANAGEMENT_APPLICATION_ID, "users", "email" );
+
+
+                    Object index_key = key( index_name, bucketId );
+                    logger.info( "Deleting the following rowkey: {} from ENTITY_INDEX.", index_key );
+                    addDeleteToMutator( m, ENTITY_INDEX, index_key, columnName, createTimestamp() );
+
+                    m.execute();
+                }
+
+                Results secondResults = relationManager.searchCollection( "users", query );
+                if ( secondResults != null && secondResults.getRef() != null ) {
+                    if ( secondResults.getRef().getUuid().equals( r.getRef().getUuid() ) ) {
+                        logger.error( "Removing uuid: {} from ENTITY_INDEX did not work. Email: {} still broken.",
+                                r.getRef().getUuid(), extractedEmail );
+                    }
+                }
+                else {
+                    logger.info( "Delete of uuid: {} from ENTITY_INDEX worked. Email: {} should work.",
+                            r.getRef().getUuid(), extractedEmail );
+                }
+            }
+            else {
+                logger.error( "Uuid: {} returns a valid entity for email: {} in ENTITY_INDEX.", r.getRef().getUuid(),
+                        extractedEmail );
+            }
+        }
+
+        else {
+            logger.error( "Email: {} doesn't exist in ENTITY_INDEX.", extractedEmail );
         }
     }
 }

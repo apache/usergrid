@@ -314,6 +314,43 @@ public class QueryProcessor {
         return results;
     }
 
+    /**
+     * Return the iterator results, ordered if required
+     */
+    public List<ScanColumn> getRawColumnResults( final SearchVisitorFactory searchVisitorFactory ) throws Exception {
+        // if we have no order by just load the results
+
+        if ( rootNode == null ) {
+            return null;
+        }
+
+        //use the gather iterator to collect all the          '
+        final int resultSetSize = Math.min( size, Query.MAX_LIMIT );
+
+        ResultIterator itr = new GatherIterator(resultSetSize, rootNode, searchVisitorFactory.createVisitors(), executorService.getExecutor()  );
+
+        List<ScanColumn> entityIds = new ArrayList<ScanColumn>( );
+
+        CursorCache resultsCursor = new CursorCache();
+
+        while ( entityIds.size() < size && itr.hasNext() ) {
+            entityIds.addAll( itr.next() );
+        }
+
+        //set our cursor, we paged through more entities than we want to return
+        if ( entityIds.size() > 0 ) {
+            int resultSize = Math.min( entityIds.size(), size );
+            entityIds = entityIds.subList( 0, resultSize );
+
+            //set our cursor on the last results
+            if ( resultSize == size ) {
+                entityIds.get( resultSize -1 ).addToCursor( resultsCursor );
+            }
+        }
+
+        return entityIds;
+    }
+
 
     private class TreeEvaluator implements QueryVisitor {
 
