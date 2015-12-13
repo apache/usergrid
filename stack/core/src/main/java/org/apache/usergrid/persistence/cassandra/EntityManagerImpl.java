@@ -747,6 +747,32 @@ public class EntityManagerImpl implements EntityManager {
         return results;
     }
 
+    @Override
+    public EntityRef getAliasForAdminEmail( UUID ownerId, String collectionName, String aliasValue )
+            throws Exception {
+
+        Assert.notNull( ownerId, "ownerId is required" );
+        Assert.notNull( collectionName, "collectionName is required" );
+        Assert.notNull( aliasValue, "aliases are required" );
+
+
+        // force set this to email
+        String propertyName = "email";
+
+        Map<String, EntityRef> results = new HashMap<String, EntityRef>();
+
+
+            for ( UUID id : getUUIDsForUniqueProperty( ownerId, collectionName, propertyName, aliasValue ) ) {
+                results.put( aliasValue, new SimpleEntityRef( collectionName, id ) );
+            }
+
+        if ( results.size() == 0 ) {
+            return null;
+        }
+
+        return results.get(aliasValue);
+    }
+
 
     @SuppressWarnings( "unchecked" )
     @Override
@@ -1640,6 +1666,40 @@ public class EntityManagerImpl implements EntityManager {
             else {
                 // look-aside as it might be an email in the name field
                 return this.getAlias( applicationId, "user", identifier.getEmail() );
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public EntityRef getUserByIdentifierOverride( Identifier identifier ) throws Exception {
+        if ( identifier == null ) {
+            return null;
+        }
+        if ( identifier.isUUID() ) {
+            return new SimpleEntityRef( "user", identifier.getUUID() );
+        }
+        if ( identifier.isName() ) {
+            return this.getAlias( applicationId, "user", identifier.getName() );
+        }
+        if ( identifier.isEmail() ) {
+
+            // Check unique index first to see if email address exists, otherwise fall back to regular entity index
+            EntityRef user = this.getAliasForAdminEmail( applicationId, "user", identifier.getValue().toString());
+            if (user != null){
+                return user;
+            }else {
+
+                Query query = new Query();
+                query.setEntityType("user");
+                query.addEqualityFilter("email", identifier.getEmail());
+                query.setLimit(1);
+                query.setResultsLevel(REFS);
+
+                Results r = getRelationManager(ref(applicationId)).searchCollection("users", query);
+                if (r != null && r.getRef() != null) {
+                    return r.getRef();
+                }
             }
         }
         return null;

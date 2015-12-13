@@ -140,7 +140,8 @@ public class UsersResource extends AbstractContextResource {
         String name = string( json.remove( "name" ) );
 
         EntityManager em = emf.getEntityManager(CassandraService.MANAGEMENT_APPLICATION_ID);
-        EntityRef entity = em.getUserByIdentifier(Identifier.fromEmail(emailFromPath));
+        // Use the override method as it also checks for email in Unique Index instead of only Entity Index
+        EntityRef entity = em.getUserByIdentifierOverride(Identifier.fromEmail(emailFromPath));
         if(entity == null){
             entity = em.getUserByIdentifier(Identifier.fromName(emailFromPath));
         }
