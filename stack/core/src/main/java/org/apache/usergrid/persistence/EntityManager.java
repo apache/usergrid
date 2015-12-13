@@ -97,6 +97,8 @@ public interface EntityManager {
      */
     public EntityRef getAlias( UUID ownerId, String collectionName, String aliasValue ) throws Exception;
 
+    public EntityRef getAliasForAdminEmail( UUID ownerId, String collectionName, String aliasValue ) throws Exception;
+
     public Map<String, EntityRef> getAlias( String aliasType, List<String> aliases ) throws Exception;
 
     /**
@@ -572,6 +574,8 @@ public interface EntityManager {
     public Results getAggregateCounters( Query query ) throws Exception;
 
     public EntityRef getUserByIdentifier( Identifier identifier ) throws Exception;
+
+    public EntityRef getUserByIdentifierOverride( Identifier identifier ) throws Exception;
 
     public EntityRef getGroupByIdentifier( Identifier identifier ) throws Exception;
 
