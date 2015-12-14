@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.Entity;
@@ -31,7 +32,6 @@ import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Group;
-import org.apache.usergrid.utils.StringUtils;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
@@ -50,7 +50,7 @@ import static org.apache.usergrid.tools.DuplicateOrgInterface.OrgUser;
  */
 public class DuplicateOrgRepair extends ToolBase {
 
-    DuplicateOrgInterface   manager;
+    DuplicateOrgInterface   manager = null;
     
     Map<String, Set<Org>>   orgsByName = new HashMap<String, Set<Org>>();
     
@@ -62,14 +62,12 @@ public class DuplicateOrgRepair extends ToolBase {
     
     static final String     THREADS_ARG_NAME = "threads"; 
     
-    static int              threadCount = 5;
+    int                     threadCount = 5;
     
     static final String     DRYRUN_ARG_NAME = "dryrun";
     
-    static boolean          dryRun = false;
+    boolean                 dryRun = false;
     
-    static boolean          testing = false;
-
     
     @Override
     @SuppressWarnings("static-access")
@@ -95,7 +93,6 @@ public class DuplicateOrgRepair extends ToolBase {
     @Override
     public void runTool(CommandLine line) throws Exception {
 
-
         startSpring();
         setVerbose( line );
 
@@ -108,13 +105,17 @@ public class DuplicateOrgRepair extends ToolBase {
             }
         }
 
-        dryRun = Boolean.parseBoolean( line.getOptionValue( DRYRUN_ARG_NAME ));
-        
-        if ( dryRun && !testing ) {
-            manager = new DryRunManager();
-        } else {
-            manager = new RepairManager();
+        if ( StringUtils.isNotEmpty( line.getOptionValue( DRYRUN_ARG_NAME ) )) {
+            dryRun = Boolean.parseBoolean( line.getOptionValue( DRYRUN_ARG_NAME ));
         }
+       
+        if ( manager == null ) { // we use a special manager when mockTesting
+            if (dryRun) {
+                manager = new DryRunManager();
+            } else {
+                manager = new RepairManager();
+            }
+        } 
 
         logger.info( "DuplicateOrgRepair tool starting up... manager: " + manager.getClass().getSimpleName() );
         
@@ -129,6 +130,11 @@ public class DuplicateOrgRepair extends ToolBase {
         removeDuplicateOrgs();
 
         logger.info( "DuplicateOrgRepair work is done!");
+    }
+    
+    
+    public RepairManager createNewRepairManager() {
+        return new RepairManager();
     }
 
     
@@ -299,8 +305,6 @@ public class DuplicateOrgRepair extends ToolBase {
         }
         return oldest;
     }
-
-
 
     
     class RepairManager implements DuplicateOrgInterface {

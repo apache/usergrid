@@ -57,7 +57,6 @@ public class DuplicateOrgRepairTest {
         int numOrgs = 10; // create 10 orgs and a dup for each
 
         final DuplicateOrgRepair dor = new DuplicateOrgRepair();
-        dor.testing = true;
         
         dor.manager = new Manager( numOrgs );
 
@@ -94,7 +93,6 @@ public class DuplicateOrgRepairTest {
         int numOrgs = 10; // create 10 orgs and a dup for each
 
         DuplicateOrgRepair dor = new DuplicateOrgRepair();
-        dor.testing = true;
         dor.manager = new Manager( numOrgs );
 
         assertEquals( "must start with dups", 
@@ -134,7 +132,6 @@ public class DuplicateOrgRepairTest {
                 orgOwnerInfo1.getOwner(), orgOwnerInfo2.getOrganization(), false );
         
         DuplicateOrgRepair dor = new DuplicateOrgRepair();
-        dor.testing = true;
         
         dor.startTool( new String[] {}, false );  // false means do not call System.exit()
         
@@ -160,7 +157,7 @@ public class DuplicateOrgRepairTest {
                 "user_" + random2 + "@example.com", "password" );
 
         DuplicateOrgRepair dor = new DuplicateOrgRepair();
-        dor.testing = true;
+        dor.manager = dor.createNewRepairManager(); // test the real manager 
 
         // start the tool so thaht Spring, Cassandra, etc/ gets initialized
         dor.startTool( new String[] { "-dryrun", "true" }, false ); // false means do not call System.exit()
@@ -211,17 +208,21 @@ public class DuplicateOrgRepairTest {
             "org_" + random2, "user_" + random2, "user_" + random2,
             "user_" + random2 + "@example.com", "password" );
 
+        // give org1 two apps
+        
         ApplicationInfo app11 = setup.getMgmtSvc().createApplication(
                 orgOwnerInfo1.getOrganization().getUuid(), "app_" + RandomStringUtils.randomAlphanumeric( 10 ) );
 
         ApplicationInfo app12= setup.getMgmtSvc().createApplication(
             orgOwnerInfo1.getOrganization().getUuid(), "app_" + RandomStringUtils.randomAlphanumeric( 10 ));
 
+        // give org2 one app 
+        
         ApplicationInfo app21 = setup.getMgmtSvc().createApplication(
             orgOwnerInfo2.getOrganization().getUuid(), "app_" + RandomStringUtils.randomAlphanumeric( 10 ));
 
         DuplicateOrgRepair dor = new DuplicateOrgRepair();
-        dor.testing = true;
+        dor.manager = dor.createNewRepairManager(); // test the real manager 
 
         // start the tool so that Spring, Cassandra, etc/ gets initialized
         dor.startTool( new String[] { "-dryrun", "true" }, false ); // false means do not call System.exit()
@@ -248,7 +249,7 @@ public class DuplicateOrgRepairTest {
     
     
     /**
-     * Mock manager implementation for testing.
+     * Mock manager implementation for mockTesting.
      */
     class Manager implements DuplicateOrgInterface {
 
