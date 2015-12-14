@@ -49,7 +49,9 @@ interface DuplicateOrgInterface {
     void addAppToOrg( UUID appId, Org org ) throws Exception;
   
     void logDuplicates(Map<String, Set<Org>> duplicatesByName);
-    
+
+    Org getOrg(UUID keeperUuid) throws Exception;
+
     class Org implements Comparable<Org> {
         private UUID id;
         private String name;

@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.usergrid.tools;
 
 import com.google.common.collect.BiMap;
@@ -63,11 +62,17 @@ public class DuplicateOrgRepair extends ToolBase {
     static final String     THREADS_ARG_NAME = "threads"; 
     
     int                     threadCount = 5;
-    
+
     static final String     DRYRUN_ARG_NAME = "dryrun";
     
     boolean                 dryRun = false;
-    
+
+    static final String     ORG1_ID = "org2";
+
+    static final String     ORG2_ID = "org1";
+
+    boolean                 testing = false;
+
     
     @Override
     @SuppressWarnings("static-access")
@@ -77,7 +82,7 @@ public class DuplicateOrgRepair extends ToolBase {
 
         Option dryRunOption = OptionBuilder.hasArg()
             .withType(Boolean.TRUE)
-            .withDescription( "-" + DRYRUN_ARG_NAME + "true to print what tool would do and do not alter data.")
+            .withDescription( "-" + DRYRUN_ARG_NAME + " true to print what tool would do and do not alter data.")
             .create( DRYRUN_ARG_NAME );
         options.addOption( dryRunOption );
 
@@ -85,7 +90,19 @@ public class DuplicateOrgRepair extends ToolBase {
             .withType(0)
             .withDescription( "Write Threads -" + THREADS_ARG_NAME )
             .create(THREADS_ARG_NAME);
-        options.addOption( writeThreadsOption );
+        options.addOption( writeThreadsOption );        
+        
+        Option org1Option = OptionBuilder.hasArg()
+            .withType(0)
+            .withDescription( "Duplicate org #1 id -" + ORG1_ID)
+            .create(ORG1_ID);
+        options.addOption( org1Option );
+
+        Option org2Option = OptionBuilder.hasArg()
+            .withType(0)
+            .withDescription( "Duplicate org #2 id -" + ORG2_ID)
+            .create(ORG2_ID);
+        options.addOption( org2Option );
 
         return options;
     }
@@ -96,6 +113,26 @@ public class DuplicateOrgRepair extends ToolBase {
         startSpring();
         setVerbose( line );
 
+        UUID org1uuid = null;
+        UUID org2uuid = null;
+        
+        if ( StringUtils.isNotEmpty( line.getOptionValue( ORG1_ID) )) {
+            if ( StringUtils.isNotEmpty( line.getOptionValue( ORG2_ID) )) {
+
+                try {
+                    org1uuid = UUID.fromString( line.getOptionValue( ORG1_ID ) );
+                    org2uuid = UUID.fromString( line.getOptionValue( ORG2_ID ) );
+                } catch (Exception e) {
+                    logger.error("{} and {} must be specified as UUIDs", ORG1_ID, ORG2_ID); 
+                    return;
+                }
+                
+                
+            } else {
+                logger.error("- if {} is specified you must also specify {} and vice-versa", ORG1_ID, ORG2_ID);
+                return;
+            }
+        }
         if (StringUtils.isNotEmpty( line.getOptionValue( THREADS_ARG_NAME ) )) {
             try {
                 threadCount = Integer.parseInt( line.getOptionValue( THREADS_ARG_NAME ) );
@@ -118,9 +155,23 @@ public class DuplicateOrgRepair extends ToolBase {
         } 
 
         logger.info( "DuplicateOrgRepair tool starting up... manager: " + manager.getClass().getSimpleName() );
-        
-        buildOrgMaps();
-        
+       
+        if ( org1uuid != null && org2uuid != null ) {
+            
+            Org org1 = manager.getOrg( org1uuid );
+            Org org2 = manager.getOrg( org2uuid );
+            
+            if ( org1.getName().equals( org2.getName() )) {
+                buildOrgMaps( org1, org2 );
+            } else {
+                logger.error("org1 and org2 do not have same duplicate name");
+                return;
+            }
+            
+        } else {
+            buildOrgMaps();
+        }
+
         augmentUserOrgsMap();
         
         manager.logDuplicates( duplicatesByName );
@@ -137,7 +188,38 @@ public class DuplicateOrgRepair extends ToolBase {
         return new RepairManager();
     }
 
+
+    private void buildOrgMaps(Org org1, Org org2) {
+
+        Set<Org> orgs = new HashSet<Org>();
+        orgs.add( org1 );
+        orgs.add( org2 );
+        orgsByName.put( org1.getName(), orgs );
+        duplicatesByName.put( org1.getName(), orgs );
+
+        orgsById.put( org1.getId(), org1 );
+        orgsById.put( org2.getId(), org2 );
+
+        for ( Org org : orgs ) {
+            try {
+                Set<OrgUser> orgUsers = manager.getOrgUsers( org );
+                for (OrgUser user : orgUsers) {
+                    Set<Org> usersOrgs = orgsByUser.get( user );
+                    if (usersOrgs == null) {
+                        usersOrgs = new HashSet<Org>();
+                        orgsByUser.put( user, usersOrgs );
+                    }
+                    usersOrgs.add( org );
+                }
+            } catch (Exception e) {
+                logger.error( "Error getting users for org {}:{}", org.getName(), org.getId() );
+                logger.error( "Stack trace is: ", e );
+            }
+        }
     
+    }
+
+
     /** 
      * build map of orgs by name, orgs by id, orgs by user and duplicate orgs by name 
      */
@@ -528,7 +610,22 @@ public class DuplicateOrgRepair extends ToolBase {
                 }
             }
         }
+
         
+        @Override
+        public Org getOrg(UUID uuid) throws Exception {
+            
+            EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+            Entity entity = em.get( uuid );
+
+            Org org = new Org(
+                    entity.getUuid(),
+                    entity.getProperty( "path" )+"",
+                    entity.getCreated() );
+            org.sourceValue = entity;
+            
+            return org;
+        }
     }
 
     

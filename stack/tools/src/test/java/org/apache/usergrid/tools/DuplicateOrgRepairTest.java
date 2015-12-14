@@ -85,6 +85,46 @@ public class DuplicateOrgRepairTest {
             }
         }).toBlocking().lastOrDefault( null );
     }
+
+
+    @org.junit.Test
+    public void testMockWithOneDup() throws Exception {
+
+        int numOrgs = 1; // create 1 org and a dup
+
+        final DuplicateOrgRepair dor = new DuplicateOrgRepair();
+        dor.testing = true;
+
+        dor.manager = new Manager( numOrgs );
+
+        assertEquals( "must start with dups",
+                2 * numOrgs, (long)dor.manager.getOrgs().count().toBlocking().single());
+
+        dor.startTool( new String[] {
+           "org1", ((Manager)dor.manager).usersByOrg.keySet().iterator().next().getId()+"",
+           "org2", ((Manager)dor.manager).usersByOrg.keySet().iterator().next().getId()+""
+        }, false ); // false means do not call System.exit()
+
+        assertEquals( "must remove dups",
+                numOrgs, (long)dor.manager.getOrgs().count().toBlocking().single());
+
+        dor.manager.getOrgs().doOnNext( new Action1<Org>() {
+            @Override
+            public void call(Org org) {
+                try {
+                    assertEquals("remaining orgs should have right number of users",
+                            3, dor.manager.getOrgUsers(org).size());
+
+                    assertEquals("remaining orgs should have right number of apps",
+                            3, dor.manager.getOrgApps(org).size());
+
+                } catch (Exception e) {
+                    logger.error("Error counting apps or users: " + e.getMessage(), e);
+                    fail("Error counting apps or users");
+                }
+            }
+        }).toBlocking().lastOrDefault( null );
+    }
     
     
     @org.junit.Test
@@ -262,6 +302,8 @@ public class DuplicateOrgRepairTest {
         Map<OrgUser, Set<Org>> orgsByUser = new HashMap<OrgUser, Set<Org>>();
 
         Map<Org, Set<UUID>> appsByOrg = new HashMap<Org, Set<UUID>>();
+        
+        Map<UUID, Org> orgsById = new HashMap<UUID, Org>();
 
 
         /**
@@ -282,6 +324,9 @@ public class DuplicateOrgRepairTest {
                 } catch (InterruptedException intentionallyIgnored) {
                 }
                 Org org2 = new Org( UUID.randomUUID(), "org_" + i, System.currentTimeMillis() );
+
+                orgsById.put( org1.getId(), org1 );
+                orgsById.put( org2.getId(), org2 );
 
                 OrgUser usera = new OrgUser( UUID.randomUUID(), "user_" + i + "_a" );
                 OrgUser userb = new OrgUser( UUID.randomUUID(), "user_" + i + "_b" );
@@ -402,6 +447,11 @@ public class DuplicateOrgRepairTest {
                     logger.info( "Duplicate org {}:{}", orgName, org.getId() );
                 }
             }
+        }
+
+        @Override
+        public Org getOrg(UUID uuid) throws Exception {
+            return orgsById.get(uuid); 
         }
     }
 }
