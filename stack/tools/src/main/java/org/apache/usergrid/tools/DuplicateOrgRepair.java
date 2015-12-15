@@ -67,9 +67,9 @@ public class DuplicateOrgRepair extends ToolBase {
     
     boolean                 dryRun = false;
 
-    static final String     ORG1_ID = "org2";
+    static final String     ORG1_ID = "org1";
 
-    static final String     ORG2_ID = "org1";
+    static final String     ORG2_ID = "org2";
 
     boolean                 testing = false;
 
