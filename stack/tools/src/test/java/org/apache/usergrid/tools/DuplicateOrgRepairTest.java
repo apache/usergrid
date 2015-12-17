@@ -67,47 +67,62 @@ public class DuplicateOrgRepairTest {
 
         assertEquals( "must remove dups", 
                 numOrgs, (long)dor.manager.getOrgs().count().toBlocking().single());
-       
-        dor.manager.getOrgs().doOnNext( new Action1<Org>() {
-            @Override
-            public void call(Org org) {
-                try {
-                    assertEquals("remaining orgs should have right number of users",
-                            3, dor.manager.getOrgUsers(org).size());
 
-                    assertEquals("remaining orgs should have right number of apps", 
-                            3, dor.manager.getOrgApps(org).size());
-                    
-                } catch (Exception e) {
-                    logger.error("Error counting apps or users: " + e.getMessage(), e);
-                    fail("Error counting apps or users");
-                }
-            }
-        }).toBlocking().lastOrDefault( null );
+        checkOrgsDeduped( dor );
     }
 
 
+    @org.junit.Test
+    public void testMockWithOneDupoDryRun() throws Exception {
+
+        int numOrgs = 1; // create 1 org and a dup
+
+        DuplicateOrgRepair dor = new DuplicateOrgRepair();
+        dor.testing = true;
+        dor.manager = new Manager( numOrgs );
+
+        assertEquals( "must start with dups",
+                2 * numOrgs, (long) dor.manager.getOrgs().count().toBlocking().single() );
+
+        Iterator<Org> orgIter = ((Manager) dor.manager).usersByOrg.keySet().iterator();
+        Org org1 = orgIter.next();
+        Org org2 = orgIter.next();
+        dor.startTool( new String[]{
+                "-org1", org1.getId() + "",
+                "-org2", org2.getId() + "",
+                "-dryrun", "true"
+        }, false ); // false means do not call System.exit()
+
+        assertEquals( "dry-run should not remove dups",
+                2 * numOrgs, (long) dor.manager.getOrgs().count().toBlocking().single() );
+    }
+    
+    
     @org.junit.Test
     public void testMockWithOneDup() throws Exception {
 
         int numOrgs = 1; // create 1 org and a dup
 
-        final DuplicateOrgRepair dor = new DuplicateOrgRepair();
+        DuplicateOrgRepair dor = new DuplicateOrgRepair();
         dor.testing = true;
-
         dor.manager = new Manager( numOrgs );
 
-        assertEquals( "must start with dups",
-                2 * numOrgs, (long)dor.manager.getOrgs().count().toBlocking().single());
-
+        Iterator<Org> orgIter = ((Manager)dor.manager).usersByOrg.keySet().iterator();
+        Org org1 = orgIter.next();
+        Org org2 = orgIter.next();
         dor.startTool( new String[] {
-           "org1", ((Manager)dor.manager).usersByOrg.keySet().iterator().next().getId()+"",
-           "org2", ((Manager)dor.manager).usersByOrg.keySet().iterator().next().getId()+""
+             "-org1", org1.getId()+"",
+             "-org2", org2.getId()+"",
         }, false ); // false means do not call System.exit()
 
         assertEquals( "must remove dups",
                 numOrgs, (long)dor.manager.getOrgs().count().toBlocking().single());
 
+        checkOrgsDeduped( dor );
+    }
+
+    
+    private void checkOrgsDeduped(final DuplicateOrgRepair dor) throws Exception {
         dor.manager.getOrgs().doOnNext( new Action1<Org>() {
             @Override
             public void call(Org org) {
@@ -125,8 +140,8 @@ public class DuplicateOrgRepairTest {
             }
         }).toBlocking().lastOrDefault( null );
     }
-    
-    
+
+
     @org.junit.Test
     public void testMockWithDupsDryRun() throws Exception {
 
