@@ -115,24 +115,29 @@ public class DuplicateOrgRepair extends ToolBase {
 
         UUID org1uuid = null;
         UUID org2uuid = null;
-        
-        if ( StringUtils.isNotEmpty( line.getOptionValue( ORG1_ID) )) {
-            if ( StringUtils.isNotEmpty( line.getOptionValue( ORG2_ID) )) {
 
-                try {
-                    org1uuid = UUID.fromString( line.getOptionValue( ORG1_ID ) );
-                    org2uuid = UUID.fromString( line.getOptionValue( ORG2_ID ) );
-                } catch (Exception e) {
-                    logger.error("{} and {} must be specified as UUIDs", ORG1_ID, ORG2_ID); 
-                    return;
-                }
-                
-                
-            } else {
-                logger.error("- if {} is specified you must also specify {} and vice-versa", ORG1_ID, ORG2_ID);
+        String org1string = line.getOptionValue( ORG1_ID );
+        String org2string = line.getOptionValue( ORG2_ID );
+
+        if ( org1string != null && org2string == null ) { 
+            logger.error("- if {} is specified you must also specify {} and vice-versa", ORG1_ID, ORG2_ID);
+            return;
+
+        } else if ( org2string != null && org1string == null ) {
+            logger.error("- if {} is specified you must also specify {} and vice-versa", ORG2_ID, ORG1_ID);
+            return;
+            
+        } else if ( org1string != null && org2string != null ) {
+            
+            try {
+                org1uuid = UUID.fromString( org1string );
+                org2uuid = UUID.fromString( org2string );
+            } catch (Exception e) {
+                logger.error("{} and {} must be specified as UUIDs", ORG1_ID, ORG2_ID); 
                 return;
             }
         }
+        
         if (StringUtils.isNotEmpty( line.getOptionValue( THREADS_ARG_NAME ) )) {
             try {
                 threadCount = Integer.parseInt( line.getOptionValue( THREADS_ARG_NAME ) );
