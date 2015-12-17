@@ -20,6 +20,8 @@ package org.apache.usergrid.tools;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.codehaus.jackson.JsonNode;
@@ -32,8 +34,13 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
+import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.cassandra.EntityManagerImpl;
+
+import com.google.common.collect.BiMap;
 
 import me.prettyprint.hector.api.beans.HColumn;
 
@@ -162,6 +169,8 @@ public class ManagementUserAudit extends ToolBase {
 
         Object key = key( applicationId, collectionName, uniqueValueKey, uniqueValue );
 
+        EntityManagerImpl emi = ( EntityManagerImpl ) em;
+
 
         List<HColumn<ByteBuffer, ByteBuffer>> cols =
                 cass.getAllColumns( cass.getApplicationKeyspace( applicationId ), ENTITY_UNIQUE, key, be, be );
@@ -184,26 +193,105 @@ public class ManagementUserAudit extends ToolBase {
                 logger.error( "Email: {} doesn't exist in ENTITY_UNIQUE.", extractedEmail );
             }
             else {
-                logger.error( "Email: {} has {} number of duplicate columns in ENTITY_UNIQUE", extractedEmail,
-                        cols.size() );
+                logger.warn( "Email: {} has {} number of duplicate columns in ENTITY_UNIQUE.Attempting Repair.",
+                        extractedEmail, cols.size() );
                 UUID uuid = null;
-                for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
-                    uuid = ue.fromByteBuffer( col.getName() );
-                    Entity entity = em.get( uuid );
-                    if ( entity == null ) {
-                        logger.error( "Email: {} with duplicate uuid: {} doesn't exist in ENTITY_PROPERTIES.",
-                                extractedEmail, uuid );
+
+                //Only handles the case if there are two duplicates, if there are more then expand the tool. None
+                // have been found so far.
+
+                //if(cols.size()==2){
+                uuid = ue.fromByteBuffer( cols.get( 0 ).getName() );
+                Entity entity = em.get( uuid );
+                Long created = entity.getCreated();
+                UserInfo adminUserInfo = managementService.getAdminUserByUuid( uuid );
+
+
+                for ( int index = 1; index < cols.size(); index++ ) {
+                    UUID duplicateEmailUUID = ue.fromByteBuffer( cols.get( index ).getName() );
+                    Entity duplicateEntity = em.get( duplicateEmailUUID );
+
+                    //if the dup is newer than the first entry
+                    if ( created < duplicateEntity.getCreated() ) {
+                        BiMap<UUID, String> uuidStringOrgBiMap =
+                                managementService.getOrganizationsForAdminUser( duplicateEmailUUID );
+                        BiMap<String, UUID> stringUUIDBiMap = uuidStringOrgBiMap.inverse();
+                        for ( String orgName : stringUUIDBiMap.keySet() ) {
+                            logger.warn( "Adding admin user: {} to organization: {}", adminUserInfo, orgName );
+                                                            OrganizationInfo organizationInfo = managementService
+                             .getOrganizationByUuid( stringUUIDBiMap.get( orgName ) );
+                                                            managementService.addAdminUserToOrganization
+                             (adminUserInfo,organizationInfo , false );
+                        }
+                        logger.warn( "Deleting duplicated uuid: {}.", duplicateEmailUUID );
+                                                    emi.deleteEntity( duplicateEmailUUID );
                     }
-                    else {
-                        Object[] loggerObject = new Object[3];
-                        loggerObject[0] = extractedEmail;
-                        loggerObject[1] = uuid;
-                        loggerObject[2] = entity;
-                        logger.info( "Email: {}  with duplicate uuid: {} with the following data: {} exists in "
-                                + "ENTITY_PROPERTIES", extractedEmail, uuid );
+                    else if ( created > duplicateEntity.getCreated() ) {
+                        logger.info("older column was returned later from cassandra");
+                        BiMap<UUID, String> uuidStringOrgBiMap = managementService.getOrganizationsForAdminUser( uuid );
+                        BiMap<String, UUID> stringUUIDBiMap = uuidStringOrgBiMap.inverse();
+                        adminUserInfo = managementService.getAdminUserByUuid( duplicateEmailUUID );
+
+
+                        for ( String orgName : stringUUIDBiMap.keySet() ) {
+                            logger.warn( "Adding admin user: {} to organization: {}", adminUserInfo, orgName );
+                            OrganizationInfo organizationInfo = managementService.getOrganizationByUuid(
+                             stringUUIDBiMap.get( orgName ) );
+                            managementService.addAdminUserToOrganization(adminUserInfo,organizationInfo , false );
+                        }
+                        logger.warn( "Deleting duplicated uuid: {}.", uuid );
+                        emi.deleteEntity( uuid );
+                        created = duplicateEntity.getCreated();
+                        uuid = duplicateEmailUUID;
                     }
                 }
+
+                //                }
+
+                //                for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
+                //                    uuid = ue.fromByteBuffer( col.getName() );
+                //                    //managementService.get
+                //                    entity = em.get( uuid );
+                //                    adminUserInfo = managementService.getAdminUserByUuid( uuid );
+                //
+                //                    Map<String, Object>
+                //                            userOrganizationData = managementService.getAdminUserOrganizationData(
+                // adminUserInfo, true );
+                //
+                //
+                //                    if ( entity == null ) {
+                //                        logger.error( "Email: {} with duplicate uuid: {} doesn't exist in
+                // ENTITY_PROPERTIES.",
+                //                                extractedEmail, uuid );
+                //                    }
+                //                    else {
+                //
+                //
+                //
+                //
+                //                        Object[] loggerObject = new Object[4];
+                //                        loggerObject[0] = extractedEmail;
+                //                        loggerObject[1] = uuid;
+                //                        loggerObject[2] = adminUserInfo;
+                //                        loggerObject[3] = userOrganizationData;
+                //                        logger.warn( "Email: {}  with duplicate uuid: {} with the following data:
+                // {} and organizational data: {} exists in "
+                //                                + "ENTITY_PROPERTIES", loggerObject);
+                //
+
+                //                        Set<String> dictionaries = emi.getDictionaryNames( entity );
+                //                        if ( dictionaries != null ) {
+                //                            for ( String dictionary : dictionaries ) {
+                //                                Set<Object> values = emi.getDictionaryAsSet( entity, dictionary );
+                //                                logger.warn("The uuid: {} has the following dictionary: {} with the following values: {}.",new Object[] {uuid,dictionary,values});
+                //                                for ( Object value : values ) {
+                //                                    emi.batchUpdateDictionary( m, entity, dictionary, value, true, timestampUuid );
+                //                                }
+                //                            }
+                //                        }
+                //                    }
             }
         }
     }
 }
+//}

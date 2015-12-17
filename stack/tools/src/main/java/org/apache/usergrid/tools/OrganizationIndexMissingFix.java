@@ -98,7 +98,7 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
  *
  * @author grey
  */
-public class ManagementUserIndexMissingFix extends ToolBase {
+public class OrganizationIndexMissingFix extends ToolBase {
 
     /**
      *
@@ -106,7 +106,7 @@ public class ManagementUserIndexMissingFix extends ToolBase {
     private static final int PAGE_SIZE = 100;
 
 
-    private static final Logger logger = LoggerFactory.getLogger( ManagementUserIndexMissingFix.class );
+    private static final Logger logger = LoggerFactory.getLogger( OrganizationIndexMissingFix.class );
 
     private static final String FILE_PATH = "file";
 
