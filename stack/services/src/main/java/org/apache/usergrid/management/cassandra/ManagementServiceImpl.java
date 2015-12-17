@@ -28,6 +28,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1594,6 +1595,12 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public void removeAdminUserFromOrganization( UUID userId, UUID organizationId ) throws Exception {
+        removeAdminUserFromOrganization( userId, organizationId, false );     
+    }
+
+    
+    @Override
+    public void removeAdminUserFromOrganization( UUID userId, UUID organizationId, boolean force ) throws Exception {
 
         if ( ( userId == null ) || ( organizationId == null ) ) {
             return;
@@ -1602,8 +1609,10 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
 
         try {
-            if ( em.getCollection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), "users", null, 2,
-                    Level.IDS, false ).size() <= 1 ) {
+            int size = em.getCollection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), 
+                    "users", null, 2, Level.IDS, false ).size();
+            
+            if ( !force && size <= 1 ) { 
                 throw new Exception();
             }
         }
@@ -1751,10 +1760,23 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
+    /**
+     * Remove application from an organization. 
+     */
     @Override
     public void removeOrganizationApplication( UUID organizationId, UUID applicationId ) throws Exception {
-        // TODO Auto-generated method stub
+        if ( ( organizationId == null ) || ( applicationId == null ) ) {
+            return;
+        }
 
+        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        em.deleteConnection( new ConnectionRefImpl(  
+            "group",          // String connectingEntityType 
+            organizationId,   // UUID connectingEntityId 
+            "owns",           // String connectionType
+            APPLICATION_INFO, // String connectedEntityType
+            applicationId     // UUID connectedEntityId
+        ) );
     }
 
 
