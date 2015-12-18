@@ -35,6 +35,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -272,6 +273,37 @@ public class OrganizationResource extends AbstractContextResource {
         Map customProperties = ( Map ) json.get( OrganizationsResource.ORGANIZATION_PROPERTIES );
         organization.setProperties( customProperties );
         management.updateOrganization( organization );
+
+        return new JSONWithPadding( response, callback );
+    }
+
+    @RequireOrganizationAccess
+    @Consumes(MediaType.APPLICATION_JSON)
+    @PUT
+    @Path("index")
+    public JSONWithPadding executePutOverride( @Context UriInfo ui, Map<String, Object> json,
+                                       @QueryParam("callback") @DefaultValue("callback") String callback )
+            throws Exception {
+
+        logger.debug( "update organization unique index" );
+
+        String oldUuidString = json.get( "oldUUID" ).toString();
+        String newUuidString = json.get( "oldUUID" ).toString();
+        if( oldUuidString.isEmpty() || newUuidString.isEmpty() ){
+            throw new IllegalArgumentException("Property oldUUID and newUUID are both required.");
+        }
+
+        UUID oldUUID = UUID.fromString( oldUuidString );
+        UUID newUUID = UUID.fromString( newUuidString );
+
+        if( !newUUID.equals(organization.getUuid()) ){
+            throw new IllegalArgumentException("Property newUUID must match the org name or UUID in the uri path.");
+        }
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "update organization unique index" );
+        management.updateOrganizationUniqueIndex( organization, oldUUID );
+
 
         return new JSONWithPadding( response, callback );
     }

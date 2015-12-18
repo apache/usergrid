@@ -178,6 +178,8 @@ import static org.apache.usergrid.utils.ConversionUtils.uuid;
 import static org.apache.usergrid.utils.ListUtils.anyNull;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.apache.usergrid.utils.PasswordUtils.mongoPassword;
+import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
+import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 
 
 public class ManagementServiceImpl implements ManagementService {
@@ -606,6 +608,15 @@ public class ManagementServiceImpl implements ManagementService {
                 }
             }
         }
+    }
+
+    /** this will fetch the org internally and re-put its data  */
+    public void updateOrganizationUniqueIndex( OrganizationInfo organizationInfo, UUID oldUUID ) throws Exception {
+
+        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
+        long timestamp = getTimestampInMicros( newTimeUUID() );
+        em.repairUniqueValue("groups", "group", "path", organizationInfo.getName(), oldUUID,
+                organizationInfo.getUuid(), timestamp );
     }
 
 

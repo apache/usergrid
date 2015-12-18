@@ -158,6 +158,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.toStorableBinaryValue;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
+import static org.apache.usergrid.persistence.cassandra.CassandraService.RETRY_COUNT;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.persistence.cassandra.Serializers.le;
 import static org.apache.usergrid.persistence.cassandra.Serializers.se;
@@ -394,6 +395,37 @@ public class EntityManagerImpl implements EntityManager {
         }
 
         return batch;
+    }
+
+    public void repairUniqueValue (String collectionName, String entityType, String propertyName, Object propertyValue,
+                                   UUID oldUUID, UUID newUUID, long timestamp) throws Exception {
+
+
+        Keyspace ko = cass.getApplicationKeyspace( applicationId );
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
+
+
+            Lock lock = getUniqueUpdateLock(cass.getLockManager(), applicationId, propertyValue, entityType,
+                    propertyName);
+
+            try {
+                lock.lock();
+
+                //delete the entry for the old UUID
+                uniquePropertyDelete( m, collectionName, entityType, propertyName, propertyValue,
+                       oldUUID, timestamp - 1 );
+
+
+                uniquePropertyWrite( m, collectionName, propertyName, propertyValue, newUUID,
+                        timestamp );
+
+                batchExecute(m, RETRY_COUNT);
+
+            } finally {
+
+                lock.unlock();
+            }
+
     }
 
 
