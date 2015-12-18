@@ -19,6 +19,7 @@ package org.apache.usergrid.tools;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,10 +35,13 @@ import org.apache.thrift.TBaseHelper;
 
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.management.cassandra.ManagementServiceImpl;
+import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
+import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.google.common.collect.BiMap;
@@ -257,7 +261,47 @@ public class ApplicationAudit extends ToolBase {
         if(applicationInfo==null){
             if( !applicationUUID.equals( UUID.fromString( "00000000-0000-0000-0000-000000000010" ) )) {
 
-                logger.error( "Application uuid: {} and name: {} has return null.", applicationUUID, uniqueValue );
+                //logger.error( "Application uuid: {} and name: {} has return null.", applicationUUID, uniqueValue );
+
+                String orgName = uniqueValue.split( "/" )[0];
+                OrganizationInfo organizationInfo = managementService.getOrganizationByName( orgName );
+                if(organizationInfo == null) {
+
+                    logger.error( "Application uuid: {} with name: {} returned null and org name: {} cannot be found.",
+                            new Object[]{applicationUUID, uniqueValue,orgName });
+                }
+                else{
+                    logger.error("Org name: {} and uuid: {} is no longer associated with App uuid: {} and name: {} because APP NO LONGER EXISTS. RECREATING.",
+                            new Object[]{organizationInfo.getName(),organizationInfo.getUuid(),applicationUUID,uniqueValue});
+
+
+
+
+                    Map<String,Object> applicationProperties = new HashMap<String, Object>(  );
+                    applicationProperties.put( "name",uniqueValue );
+                    try {
+                        em.create( applicationUUID, ManagementServiceImpl.APPLICATION_INFO, applicationProperties);
+                    }catch(Exception e){
+                        logger.error("Found the following error: {} when trying to recreate.",e.getMessage());
+                    }
+                    applicationInfo = managementService.getApplicationInfo( applicationUUID );
+                    if(applicationInfo!=null){
+                        logger.info("Org name: {} and uuid: {}  with App uuid: {} and name: {} has been Repaired.",
+                                new Object[]{organizationInfo.getName(),organizationInfo.getUuid(),applicationInfo.getId(),applicationInfo.getName()});
+                    }
+                    else{
+                        logger.error("Org name: {} and uuid: {}  with App uuid: {} and name: {} repair has failed.",
+                                new Object[]{organizationInfo.getName(),organizationInfo.getUuid(),applicationUUID,uniqueValue});
+                    }
+
+//                    ManagementServiceImpl managementServiceImpl = ( ManagementServiceImpl ) managementService;
+//                    managementServiceImpl.writeUserToken( MANAGEMENT_APPLICATION_ID, applicationEntity, encryptionService
+//                            .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ), null,
+//                                    MANAGEMENT_APPLICATION_ID ) );
+//                    managementService.addApplicationToOrganization( organizationInfo.getUuid(), applicationUUID);
+                }
+
+
             }
         }
         else{
@@ -265,9 +309,20 @@ public class ApplicationAudit extends ToolBase {
             if(organizationInfo==null) {
                 if(!applicationUUID.equals( UUID.fromString( "00000000-0000-0000-0000-000000000001"))) {
 
-                    logger.error(
-                            "Application uuid: {} with name: {} is lost and has no organizations associated with it.",
-                            applicationUUID, applicationInfo.getName() );
+                    String orgName = applicationInfo.getName().split( "/" )[0];
+                    organizationInfo = managementService.getOrganizationByName( orgName );
+                    if(organizationInfo == null) {
+
+                        logger.error( "Application uuid: {} with name: {} is lost and org name: {} cannot be found.",
+                                new Object[]{applicationUUID, applicationInfo.getName(),orgName });
+                    }
+                    else{
+                        logger.error("Org name: {} and uuid: {} is no longer associated with App uuid: {} and name: {}. Restablishing connection...",
+                                new Object[]{organizationInfo.getName(),organizationInfo.getUuid(),applicationUUID,applicationInfo.getName()});
+
+                        managementService.addApplicationToOrganization( organizationInfo.getUuid(), applicationUUID);
+
+                    }
                 }
             }
             else{
@@ -309,7 +364,7 @@ public class ApplicationAudit extends ToolBase {
                     loggingObject[0] = app.getKey();
                     loggingObject[1] = app.getValue();
                     loggingObject[2] = uuid;
-                    logger.info( "Application with uuid: {} and name: {} was returned from orgUUID: {} ",loggingObject );
+                    logger.info( "Application with uuid: {} and name: {} was returned from orgUUID: {} but that orgUUID cannot be found.",loggingObject );
                 }
             }
 
