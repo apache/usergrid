@@ -39,6 +39,7 @@ import org.apache.usergrid.management.cassandra.ManagementServiceImpl;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.security.AuthPrincipalType;
@@ -293,12 +294,6 @@ public class ApplicationAudit extends ToolBase {
                         logger.error("Org name: {} and uuid: {}  with App uuid: {} and name: {} repair has failed.",
                                 new Object[]{organizationInfo.getName(),organizationInfo.getUuid(),applicationUUID,uniqueValue});
                     }
-
-//                    ManagementServiceImpl managementServiceImpl = ( ManagementServiceImpl ) managementService;
-//                    managementServiceImpl.writeUserToken( MANAGEMENT_APPLICATION_ID, applicationEntity, encryptionService
-//                            .plainTextCredentials( generateOAuthSecretKey( AuthPrincipalType.APPLICATION ), null,
-//                                    MANAGEMENT_APPLICATION_ID ) );
-//                    managementService.addApplicationToOrganization( organizationInfo.getUuid(), applicationUUID);
                 }
 
 
@@ -320,7 +315,21 @@ public class ApplicationAudit extends ToolBase {
                         logger.error("Org name: {} and uuid: {} is no longer associated with App uuid: {} and name: {}. Restablishing connection...",
                                 new Object[]{organizationInfo.getName(),organizationInfo.getUuid(),applicationUUID,applicationInfo.getName()});
 
+                        //add the application to organization, then add the organization to application.
                         managementService.addApplicationToOrganization( organizationInfo.getUuid(), applicationUUID);
+                        //need to turn this into entity_refs.
+                        em.createConnection(new SimpleEntityRef( "application_info", applicationUUID ) ,"owns",new SimpleEntityRef( "group",organizationInfo.getUuid() ) );
+
+                        organizationInfo = managementService.getOrganizationForApplication( applicationUUID );
+
+                        if(organizationInfo!=null){
+                            logger.info("Org name: {} and uuid: {} with App uuid: {} and name: {} connection has been re-established.",
+                                    new Object[]{organizationInfo.getName(),organizationInfo.getUuid(),applicationUUID,applicationInfo.getName()});
+                        }
+                        else{
+                            logger.error("Org name: {} and uuid: {} is no longer associated with App uuid: {} and name: {}. Could not be re-estabished",
+                                    new Object[]{organizationInfo.getName(),organizationInfo.getUuid(),applicationUUID,applicationInfo.getName()});
+                        }
 
                     }
                 }
