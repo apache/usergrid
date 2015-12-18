@@ -614,4 +614,7 @@ public interface EntityManager {
     public void grantGroupPermission( UUID groupId, String permission ) throws Exception;
 
     public void revokeGroupPermission( UUID groupId, String permission ) throws Exception;
+
+    public void repairUniqueValue (String collectionName, String entityType, String propertyName, Object propertyValue,
+                                   UUID oldUUID, UUID newUUID, long timestamp) throws Exception;
 }

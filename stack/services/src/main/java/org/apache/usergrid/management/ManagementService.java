@@ -95,6 +95,8 @@ public interface ManagementService {
 
     public void updateOrganization( OrganizationInfo organizationInfo ) throws Exception;
 
+    public void updateOrganizationUniqueIndex( OrganizationInfo organizationInfo, UUID oldUUID ) throws Exception;
+
     /** Deactivate the user and return it's current state */
     public User deactivateUser( UUID applicationId, UUID userId ) throws Exception;
 
