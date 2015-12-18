@@ -43,6 +43,7 @@ import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.cassandra.RelationManagerImpl;
 import org.apache.usergrid.persistence.cassandra.Serializers;
+import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.utils.UUIDUtils;
 
@@ -118,11 +119,11 @@ public class ApplicationAuditOrgFix extends ToolBase {
 
         options.addOption( hostOption );
 
-        Option appOption =
-                OptionBuilder.withArgName( "app" ).hasArg().isRequired( false ).withDescription( "Application uuid" )
-                             .create( "app" );
-
-        options.addOption( appOption );
+//        Option appOption =
+//                OptionBuilder.withArgName( "app" ).hasArg().isRequired( false ).withDescription( "Application uuid" )
+//                             .create( "app" );
+//
+//        options.addOption( appOption );
 
         Option entityUniquePropertyValue =
                 OptionBuilder.withArgName( ENTITY_UNIQUE_PROPERTY_VALUE ).hasArg().isRequired( false )
@@ -148,11 +149,17 @@ public class ApplicationAuditOrgFix extends ToolBase {
 
 
         // go through each collection and audit the values
-        Keyspace ko = cass.getUsergridApplicationKeyspace();
         Keyspace keyspaceforOrgAppFix = cass.getApplicationKeyspace( MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
         Mutator<ByteBuffer> repairMutator = createMutator( cass.getApplicationKeyspace( MANAGEMENT_APPLICATION_ID ), be );
         int index = 0;
-        HashSet<UUID> orgUUIDs = getOrgUUIDS();
+        HashSet<UUID> orgUUIDs = new HashSet<UUID>(  );
+        if(line.getOptionValue( ENTITY_UNIQUE_PROPERTY_VALUE )==null) {
+             orgUUIDs = getOrgUUIDS();
+        }
+        else{
+            orgUUIDs.add( UUID.fromString( line.getOptionValue( ENTITY_UNIQUE_PROPERTY_VALUE ) ) );
+        }
 
 
         for ( UUID orgUUID : orgUUIDs ) {
@@ -167,7 +174,6 @@ public class ApplicationAuditOrgFix extends ToolBase {
                     logger.error( "There are no applications associated with this org: {}", orgUUID );
                 }
                 else {
-                    Boolean orgFixed = false;
                     for ( HColumn<DynamicComposite, ByteBuffer> col : cols ) {
                         DynamicComposite dynamicComposite = col.getName();
                         UUID applicationId = ( UUID ) dynamicComposite.get( 0 );
@@ -177,7 +183,25 @@ public class ApplicationAuditOrgFix extends ToolBase {
                             logger.info("The following application uuid: {} returns null for org uuid: {}",applicationId,orgUUID);
                         }
                         else{
-                            logger.info("The following application with information: {},  will be used to repair org uuid: {}.",applicationInfo,orgUUID);
+
+                            String uniqueValue = applicationInfo.getName().split( "/" )[0];
+                            logger.info("The following application with information: {} ,with the derived name: {} ,will be used to repair org uuid: {}",new Object[]{applicationInfo.getName(),uniqueValue,orgUUID});
+
+                            Group organizationEntity = new Group();
+                            organizationEntity.setPath( uniqueValue );
+                            try {
+                                em.create( orgUUID, Group.ENTITY_TYPE, organizationEntity.getProperties() );
+                                organizationEntity = em.get( orgUUID, Group.class );
+                                if ( organizationEntity == null ) {
+                                    logger.error( "OrgName: {} with uuid: {} could not be created", uniqueValue, orgUUID );
+                                }
+                                else{
+                                    logger.info( "OrgName: {}  with uuid: {} was fixed.", uniqueValue, orgUUID );
+                                }
+                            }catch(Exception e){
+                                logger.error("Could not create: {} because of {}",uniqueValue,e.getMessage());
+                            }
+                            break;
                         }
 
                     }
@@ -209,7 +233,7 @@ public class ApplicationAuditOrgFix extends ToolBase {
                     if(verificationOrganizationInfo==null){
                         logger.error("Repair failed for rowkey: {} and org uuid: {}",key,orgUUID);
                     }
-                    else if(verificationOrganizationInfo.getUuid().equals( organizationInfo.getUuid())&& verificationOrganizationInfo.equals( organizationInfo.getName() )){
+                    else if(verificationOrganizationInfo.getUuid().equals( organizationInfo.getUuid())&& verificationOrganizationInfo.getName().equals( organizationInfo.getName() )){
                         logger.info( "Org name: {} with uuid is fixed: {}",organizationInfo.getUuid(),organizationInfo.getUuid() );
                     }
                 }
