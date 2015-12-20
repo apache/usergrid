@@ -17,61 +17,113 @@
 package org.apache.usergrid.management;
 
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
-import static org.apache.usergrid.persistence.Schema.PROPERTY_PATH;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 
 
 public class OrganizationConfig {
 
-    public static final String DEFAULT_CONNECTION_PARAM_PROPERTY = "defaultConnectionParam";
-    private static final String DEFAULT_CONNECTION_PARAM_DEFAULT_VALUE = "all";
+    private static final String DEFAULT_CONNECTION_PARAM_DEFAULTVALUE = "all";
 
+    private static final String ADMIN_SYSADMIN_EMAIL_DEFAULTVALUE = null; // null will fall back to system level admin
+
+    private static final String ADMIN_ACTIVATION_URL_DEFAULTVALUE = ""; // should be configured in properties file
+
+    private static final String ADMIN_CONFIRMATION_URL_DEFAULTVALUE = ""; // should be configured in properties file
+
+    private static final String ADMIN_RESETPW_URL_DEFAULTVALUE = ""; // should be configured in properties file
+
+    // properties in property file and
     private static final String [] propertyNames = {
-            DEFAULT_CONNECTION_PARAM_PROPERTY
+            OrganizationConfigProps.PROPERTIES_DEFAULT_CONNECTION_PARAM,
+            OrganizationConfigProps.PROPERTIES_ADMIN_SYSADMIN_EMAIL,
+            OrganizationConfigProps.PROPERTIES_ADMIN_ACTIVATION_URL,
+            OrganizationConfigProps.PROPERTIES_ADMIN_CONFIRMATION_URL,
+            OrganizationConfigProps.PROPERTIES_ADMIN_RESETPW_URL
     };
 
-    private static final String [] defaultValues = {
-            DEFAULT_CONNECTION_PARAM_DEFAULT_VALUE
+    // values to use if not found in config files
+    private static final String [] noConfigDefaults = {
+            DEFAULT_CONNECTION_PARAM_DEFAULTVALUE,
+            ADMIN_SYSADMIN_EMAIL_DEFAULTVALUE,
+            ADMIN_ACTIVATION_URL_DEFAULTVALUE,
+            ADMIN_CONFIRMATION_URL_DEFAULTVALUE,
+            ADMIN_RESETPW_URL_DEFAULTVALUE
     };
+
+    private Map<String, String> defaultProperties;
 
     private UUID id;
     private String name;
-    private Map<String, Object> properties;
+    private Map<String, Object> orgConfigProperties;
 
-
-    public OrganizationConfig() {
+    private void setDefaultProperties(OrganizationConfigProps configFileProperties) {
+        defaultProperties = new HashMap<>();
+        for (int i = 0; i < propertyNames.length; i++) {
+            String propertyValue = configFileProperties != null ? configFileProperties.getProperty(propertyNames[i]) : null;
+            defaultProperties.put(propertyNames[i], propertyValue != null ? propertyValue : noConfigDefaults[i]);
+        }
     }
 
+    private OrganizationConfig() {
+    }
 
-    public OrganizationConfig(UUID id, String name) {
+    public OrganizationConfig(OrganizationConfigProps configFileProperties) {
+        setDefaultProperties(configFileProperties);
+        // will add id and name once default org exists
+    }
+
+    public OrganizationConfig(OrganizationConfigProps configFileProperties, UUID id, String name) {
+        setDefaultProperties(configFileProperties);
         this.id = id;
         this.name = name;
     }
 
+    public OrganizationConfig(OrganizationConfigProps configFileProperties, UUID id, String name, Map<String, Object> entityProperties) {
 
-    public OrganizationConfig(Map<String, Object> properties) {
-        id = ( UUID ) properties.get( PROPERTY_UUID );
-        name = ( String ) properties.get( PROPERTY_PATH );
+        this( configFileProperties, id, name );
+        setOrgConfigProperties(entityProperties);
     }
 
-
-    public OrganizationConfig(UUID id, String name, Map<String, Object> properties) {
-        this( id, name );
-        this.properties = properties;
+    // replaces properties with supplied properties, and then adds defaults
+    private void setOrgConfigProperties(Map<String, Object> orgConfigProperties) {
+        this.orgConfigProperties = orgConfigProperties;
 
         // add default values to properties map
-        addDefaultsToProperties();
+        addDefaultstoConfigProperties();
     }
 
-    private void addDefaultsToProperties()  {
+    // adds supplied properties to existing properties, and then adds defaults
+    public void addProperties( Map<String, Object> orgConfigProperties ) {
+        this.orgConfigProperties.putAll(orgConfigProperties);
+
+        // add default values to properties map
+        addDefaultstoConfigProperties();
+    }
+
+    private void addDefaultstoConfigProperties()  {
         for (int i=0; i < propertyNames.length; i++) {
-            if (!properties.containsKey(propertyNames[i])) {
-                properties.put(propertyNames[i], defaultValues[i]);
+            if (!orgConfigProperties.containsKey(propertyNames[i])) {
+                orgConfigProperties.put(propertyNames[i], defaultProperties.get(propertyNames[i]));
             }
         }
+    }
+
+
+    public Map<String, Object> getOrgConfigProperties() {
+        return orgConfigProperties;
+    }
+
+    public String getProperty(String key) {
+        String retValue = null;
+        if (orgConfigProperties != null) {
+            Object value = orgConfigProperties.get(key);
+            if (value instanceof String) {
+                retValue = (String) value;
+            }
+        }
+        return retValue != null ? retValue : defaultProperties.get(key);
     }
 
 
@@ -96,9 +148,9 @@ public class OrganizationConfig {
 
 
     public String getDefaultConnectionParam() {
-        String defaultParam = DEFAULT_CONNECTION_PARAM_DEFAULT_VALUE;
-        if ( properties != null ) {
-            Object paramValue = properties.get( DEFAULT_CONNECTION_PARAM_PROPERTY );
+        String defaultParam = DEFAULT_CONNECTION_PARAM_DEFAULTVALUE;
+        if ( orgConfigProperties != null ) {
+            Object paramValue = orgConfigProperties.get( OrganizationConfigProps.PROPERTIES_DEFAULT_CONNECTION_PARAM );
             if ( paramValue instanceof String ) {
                 defaultParam = ( String ) paramValue;
             }
@@ -148,23 +200,4 @@ public class OrganizationConfig {
         return true;
     }
 
-
-    public Map<String, Object> getProperties() {
-        return properties;
-    }
-
-
-    public void setProperties( Map<String, Object> properties ) {
-        this.properties = properties;
-
-        // add default values to properties map
-        addDefaultsToProperties();
-    }
-
-    public void addProperties( Map<String, Object> properties ) {
-        this.properties.putAll(properties);
-
-        // add default values to properties map
-        addDefaultsToProperties();
-    }
 }
