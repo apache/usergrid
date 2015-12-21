@@ -536,7 +536,7 @@ public class DuplicateOrgRepair extends ToolBase {
             managementService.updateOrganization( orgInfo );
 
             // fix the org name index
-            OrganizationInfo orgInfoKeeper = managementService.getOrganizationByUuid( duplicate.getId() );
+            OrganizationInfo orgInfoKeeper = managementService.getOrganizationByUuid( keeper.getId() );
             try {
                 managementService.updateOrganizationUniqueIndex( orgInfoKeeper, duplicate.getId() );
                 
