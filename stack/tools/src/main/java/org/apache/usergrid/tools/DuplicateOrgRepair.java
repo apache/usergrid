@@ -538,7 +538,7 @@ public class DuplicateOrgRepair extends ToolBase {
             // fix the org name index
             OrganizationInfo orgInfoKeeper = managementService.getOrganizationByUuid( duplicate.getId() );
             try {
-                managementService.updateOrganizationUniqueIndex( orgInfo, duplicate.getId() );
+                managementService.updateOrganizationUniqueIndex( orgInfoKeeper, duplicate.getId() );
                 
             } catch ( Exception e ) {
                 // if there are multiple duplicates this will fail for all but one of them. That's OK
