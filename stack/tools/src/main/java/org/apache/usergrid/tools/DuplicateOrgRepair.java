@@ -529,10 +529,22 @@ public class DuplicateOrgRepair extends ToolBase {
         
         @Override
         public void removeOrg(Org keeper, Org duplicate) throws Exception {
-            // we don't have a remove org API so rename org so that it is no longer a duplicate
+            
+            // rename org so that it is no longer a duplicate
             OrganizationInfo orgInfo = managementService.getOrganizationByUuid( duplicate.getId() );
             orgInfo.setName( "dup_" + keeper.getId() + "_" + RandomStringUtils.randomAlphanumeric(10) );
             managementService.updateOrganization( orgInfo );
+
+            // fix the org name index
+            OrganizationInfo orgInfoKeeper = managementService.getOrganizationByUuid( duplicate.getId() );
+            try {
+                managementService.updateOrganizationUniqueIndex( orgInfo, duplicate.getId() );
+                
+            } catch ( Exception e ) {
+                // if there are multiple duplicates this will fail for all but one of them. That's OK
+                logger.warn("Error repairing unique value keeper {} duplicate {}", 
+                        keeper.getId(), duplicate.getId());
+            }
         }
         
 
