@@ -304,7 +304,15 @@ public class Notification extends TypedEntity {
                 String collection = pathToken.getCollection();
                 Query query = new Query();
                 if (pathToken.getIdentifier()!=null) {
-                    query.addIdentifier(pathToken.getIdentifier());
+
+                    // users collection is special case and uses "username" instaed of "name"
+                    // build a query using QL with "username" as Identifier.Type.USERNAME doesn't exist
+                    if (collection.equals("users") && pathToken.getIdentifier().getType() == Identifier.Type.NAME){
+                        query.setQl("select * where username ='"+pathToken.getIdentifier().getName()+"'");
+                    }else{
+                        query.addIdentifier(pathToken.getIdentifier());
+                    }
+
                 }
                 query.setLimit(100);
                 query.setCollection(collection);
