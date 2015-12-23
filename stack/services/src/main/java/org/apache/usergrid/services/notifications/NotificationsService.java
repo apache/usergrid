@@ -231,7 +231,9 @@ public class NotificationsService extends AbstractCollectionService {
     @Override
     protected boolean isDeleteAllowed(ServiceContext context, Entity entity) {
         Notification notification = (Notification) entity;
-        return (notification.getStarted() == null);
+        Notification.State state = notification.getState();
+        return !(state.equals(Notification.State.CREATED) || state.equals(Notification.State.STARTED) ||
+            state.equals(Notification.State.SCHEDULED));
     }
 
     // validate payloads
