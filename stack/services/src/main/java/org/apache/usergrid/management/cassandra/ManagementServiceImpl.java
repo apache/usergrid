@@ -269,7 +269,9 @@ public class ManagementServiceImpl implements ManagementService {
                 try {
                     createApplication( organization.getUuid(), test_app_name );
                 }catch(ApplicationAlreadyExistsException aaee){
-                    logger.debug("The database setup already found an existing application");
+                    if(logger.isDebugEnabled()){
+                        logger.debug("The database setup already found an existing application");
+                    }
                 }
             }
         }
@@ -410,7 +412,9 @@ public class ManagementServiceImpl implements ManagementService {
     public OrganizationOwnerInfo createOwnerAndOrganization( String organizationName, String username, String name,
                                                              String email, String password ) throws Exception {
 
-        logger.debug("createOwnerAndOrganization1");
+        if(logger.isDebugEnabled()){
+            logger.debug("createOwnerAndOrganization1");
+        }
         boolean activated = !newAdminUsersNeedSysAdminApproval() && !newOrganizationsNeedSysAdminApproval();
         boolean disabled = newAdminUsersRequireConfirmation();
         // if we are active and enabled, skip the send email step
@@ -424,7 +428,9 @@ public class ManagementServiceImpl implements ManagementService {
     public OrganizationOwnerInfo createOwnerAndOrganization( String organizationName, String username, String name,
                                                              String email, String password, boolean activated,
                                                              boolean disabled ) throws Exception {
-        logger.debug("createOwnerAndOrganization2");
+        if(logger.isDebugEnabled()){
+            logger.debug("createOwnerAndOrganization2");
+        }
         return createOwnerAndOrganization( organizationName, username, name, email, password,
                 activated, disabled, null, null );
     }
@@ -437,7 +443,9 @@ public class ManagementServiceImpl implements ManagementService {
                                                              Map<String, Object> organizationProperties )
             throws Exception {
 
-        logger.debug("createOwnerAndOrganization3");
+        if(logger.isDebugEnabled()){
+            logger.debug("createOwnerAndOrganization3");
+        }
 
         /**
          * Only lock on the target values. We don't want lock contention if another
@@ -472,7 +480,9 @@ public class ManagementServiceImpl implements ManagementService {
                 user = createAdminUserInternal( username, name, email, password, activated, disabled, userProperties );
             }
 
-            logger.debug("User created");
+            if(logger.isDebugEnabled()){
+                logger.debug("User created");
+            }
             organization = createOrganizationInternal( null, organizationName, user, true, organizationProperties );
         }
         finally {
@@ -487,7 +497,9 @@ public class ManagementServiceImpl implements ManagementService {
 
     private OrganizationInfo createOrganizationInternal(
         UUID orgUuid, String organizationName, UserInfo user, boolean activated ) throws Exception {
-        logger.debug("createOrganizationInternal1");
+        if(logger.isDebugEnabled()){
+            logger.debug("createOrganizationInternal1");
+        }
         return createOrganizationInternal( orgUuid, organizationName, user, activated, null );
     }
 
@@ -495,14 +507,20 @@ public class ManagementServiceImpl implements ManagementService {
     private OrganizationInfo createOrganizationInternal( UUID orgUuid, String organizationName, UserInfo user, boolean activated,
                                                          Map<String, Object> properties ) throws Exception {
 
-        logger.info( "createOrganizationInternal2: {}", organizationName );
+        if(logger.isDebugEnabled()){
+            logger.debug( "createOrganizationInternal2: {}", organizationName );
+        }
 
         if (  organizationName == null ) {
-            logger.debug("organizationName = null");
+            if(logger.isDebugEnabled()){
+                logger.debug("organizationName = null");
+            }
             return null;
         }
         if ( user == null ) {
-            logger.debug("user = null");
+            if(logger.isDebugEnabled()){
+                logger.debug("user = null");
+            }
             return null;
         }
 
@@ -995,7 +1013,8 @@ public class ManagementServiceImpl implements ManagementService {
                 json.remove( "newpassword" );
                 Map<String, Object> userProperties = user.getProperties();
                 userProperties.putAll( json );
-                em.updateProperties( entityRef, userProperties );
+                Entity entity = em.get( entityRef, User.class);
+                em.updateProperties( entity, userProperties );
             }
 
             user = getAdminUserByUuid( user.getUuid() );
@@ -1208,7 +1227,9 @@ public class ManagementServiceImpl implements ManagementService {
 
     public int calculatePasswordHistorySizeForUser( UUID userId ) throws Exception {
 
-        logger.debug( "calculatePasswordHistorySizeForUser " + userId.toString() );
+        if(logger.isDebugEnabled()){
+            logger.debug( "calculatePasswordHistorySizeForUser " + userId.toString() );
+        }
 
         int size = 0;
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
@@ -1216,13 +1237,17 @@ public class ManagementServiceImpl implements ManagementService {
         Results orgResults = em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ),
                 Schema.COLLECTION_GROUPS, null, 10000, Level.REFS, false );
 
-        logger.debug("    orgResults.size() = " + orgResults.size());
+        if(logger.isDebugEnabled()){
+            logger.debug("    orgResults.size() = " + orgResults.size());
+        }
 
         for ( EntityRef orgRef : orgResults.getRefs() ) {
             Map properties = em.getDictionaryAsMap( orgRef, ORGANIZATION_PROPERTIES_DICTIONARY );
             if ( properties != null ) {
                 OrganizationInfo orgInfo = new OrganizationInfo( null, null, properties );
-                logger.debug( "    orgInfo.getPasswordHistorySize() = " +  orgInfo.getPasswordHistorySize() );
+                if(logger.isDebugEnabled()){
+                    logger.debug( "    orgInfo.getPasswordHistorySize() = " +  orgInfo.getPasswordHistorySize() );
+                }
                 size = Math.max( orgInfo.getPasswordHistorySize(), size );
             }
         }
@@ -1246,7 +1271,9 @@ public class ManagementServiceImpl implements ManagementService {
     public UserInfo verifyAdminUserPasswordCredentials( String name, String password ) throws Exception {
         UserInfo userInfo = null;
 
-        logger.debug("verifyAdminUserPasswordCredentials for {}/{}", name, password);
+        if(logger.isDebugEnabled()){
+            logger.debug("verifyAdminUserPasswordCredentials for {}/{}", name, password);
+        }
 
         User user = findUserEntity( smf.getManagementAppId(), name );
         if ( user == null ) {
