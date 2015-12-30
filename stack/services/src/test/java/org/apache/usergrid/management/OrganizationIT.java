@@ -116,7 +116,7 @@ public class OrganizationIT {
         assertEquals( organization.getOwner().getUuid(), principal.getUuid() );
 
         UserInfo new_user = setup.getMgmtSvc()
-                                 .createAdminUser(uniqueUsername(), "Test User", uniqueEmail(),
+                                 .createAdminUser( organization2.getUuid(), uniqueUsername(), "Test User", uniqueEmail(),
                                          "testpassword", true, true );
         assertNotNull( new_user );
 
@@ -132,7 +132,7 @@ public class OrganizationIT {
 
 
         UserInfo user = setup.getMgmtSvc()
-                             .createAdminUser( uniqueUsername(), "Ed Anuff", uniqueEmail(), passwords[0], true, false );
+                             .createAdminUser(null, uniqueUsername(), "Ed Anuff", uniqueEmail(), passwords[0], true, false );
         assertNotNull( user );
 
         OrganizationInfo organization = setup.getMgmtSvc().createOrganization( uniqueOrg(), user, true );
