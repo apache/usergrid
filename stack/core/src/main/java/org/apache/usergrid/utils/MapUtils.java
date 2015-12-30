@@ -269,6 +269,12 @@ public class MapUtils extends org.apache.commons.collections.MapUtils {
     }
 
 
+    public static <S, T> Map<String, Object> toStringObjectMap(Map<S, T> map) {
+        Map<String, Object> newMap = new HashMap<>();
+        map.forEach((k,v) -> newMap.put(k.toString(), v));
+        return newMap;
+    }
+
     public static <S, T> HashMapBuilder<S, T> hashMap( S key, T value ) {
         return new HashMapBuilder<S, T>().map( key, value );
     }
