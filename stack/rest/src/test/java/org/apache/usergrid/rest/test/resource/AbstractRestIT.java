@@ -173,8 +173,14 @@ public class AbstractRestIT extends JerseyTest {
     }
 
     public void refreshIndex() {
-        //TODO: add error checking and logging
-        clientSetup.refreshIndex();
+        //TODO see how we can refresh index (not async) for tests so sleep may not be needed
+        try {
+            clientSetup.refreshIndex();
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            System.out.println("Error refreshing index");
+            e.printStackTrace();
+        }
     }
 
 
