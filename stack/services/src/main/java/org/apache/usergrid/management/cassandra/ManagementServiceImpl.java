@@ -1608,6 +1608,12 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+
+        if(em.getCollection(organization.getUuid() ,"users",Query.fromQL( "select * where uuid ="+user.getUuid() ),Level.IDS ).size() >0){
+            logger.trace( "Found value: {} already in collection",user.getName() );
+            return;
+        }
+
         em.addToCollection(new SimpleEntityRef(Group.ENTITY_TYPE, organization.getUuid()), "users",
             new SimpleEntityRef(User.ENTITY_TYPE, user.getUuid()));
 
