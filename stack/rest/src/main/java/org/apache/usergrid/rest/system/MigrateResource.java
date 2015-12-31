@@ -122,7 +122,7 @@ public class MigrateResource extends AbstractContextResource {
         throws Exception {
 
         if(!getDataMigrationManager().pluginExists(pluginName)){
-            throw new IllegalArgumentException("Plugin doesn't exits name:"+pluginName);
+            throw new IllegalArgumentException("Plugin doesn't exist: "+pluginName);
         }
 
         ApiResponse response = createApiResponse();
