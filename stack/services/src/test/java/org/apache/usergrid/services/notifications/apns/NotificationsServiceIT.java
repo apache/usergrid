@@ -22,6 +22,7 @@ import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.queue.LocalQueueManager;
+import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.apache.usergrid.services.notifications.*;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -814,6 +815,55 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         // check receipts //
         checkReceipts(notification, NUM_DEVICES);
 //        checkStatistics(notification, NUM_DEVICES, 0);
+    }
+
+    @Test
+    public void testDeleteNotification() throws Exception {
+
+        // create push notification //
+        setup.getEntityIndex().refresh(app.getId());
+        app.clear();
+
+        String payload = getPayload();
+
+        Map<String, String> payloads = new HashMap<String, String>(1);
+        payloads.put(notifier.getName().toString(), payload);
+        app.put("payloads", payloads);
+        app.put("queued", System.currentTimeMillis());
+        app.put("debug", true);
+        app.put("expire", System.currentTimeMillis() + 300000); // add 5 minutes to current time
+
+        Entity sentNotification = app.testRequest(ServiceAction.POST, 1, "notifications")
+            .getEntity();
+
+        Entity fetchedNotification = app.testRequest(ServiceAction.GET, 1, "notifications",
+            sentNotification.getUuid()).getEntity();
+
+
+        // can't delete before it's finished
+        try {
+            app.testRequest(ServiceAction.DELETE, 1, "notifications", fetchedNotification.getUuid());
+        } catch (Exception e) {
+            assertEquals(e.getClass(), ForbiddenServiceOperationException.class);
+        }
+
+
+        Notification notification = app.getEntityManager().get(fetchedNotification.getUuid(),
+            Notification.class);
+
+        // perform push //
+        notification = scheduleNotificationAndWait(notification);
+        setup.getEntityIndex().refresh(app.getId());
+
+        try {
+            notification = app.getEntityManager().get(notification.getUuid(), Notification.class);
+            assertEquals(Notification.State.FINISHED, notification.getState());
+
+            //try to delete again after it is in the FINISHED STATE
+            app.testRequest(ServiceAction.DELETE, 1, "notifications", notification.getUuid());
+        } catch (Exception e) {
+            fail("Delete should be successful after notification has finished.");
+        }
     }
 
     private String getPayload(){
