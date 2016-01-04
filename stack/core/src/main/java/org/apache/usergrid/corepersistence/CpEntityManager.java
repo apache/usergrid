@@ -733,7 +733,8 @@ public class CpEntityManager implements EntityManager {
 
     @Override
     public void updateApplication( Map<String, Object> properties ) throws Exception {
-        this.updateProperties(new SimpleEntityRef(Application.ENTITY_TYPE, applicationId), properties);
+        Entity entity = this.get(applicationId, Application.class);
+        this.updateProperties(entity, properties);
         this.application = get( applicationId, Application.class );
     }
 
@@ -1013,7 +1014,9 @@ public class CpEntityManager implements EntityManager {
             entityRef = cref.getItemRef();
         }
 
-        Entity entity = get( entityRef );
+        // removing the nested em.get and requiring the caller to pass in the full entity entity
+        //Entity entity = get( entityRef );
+        Entity entity = ( Entity )entityRef;
 
         properties.put(PROPERTY_MODIFIED, UUIDUtils.getTimestampInMillis(UUIDUtils.newTimeUUID()));
 
@@ -1060,16 +1063,20 @@ public class CpEntityManager implements EntityManager {
 
         cpEntity.removeField( propertyName );
 
-        logger.debug( "About to Write {}:{} version {}", new Object[] {
+        if(logger.isDebugEnabled()){
+            logger.debug( "About to Write {}:{} version {}", new Object[] {
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion()
-        } );
+            } );
+        }
 
         //TODO: does this call and others like it need a graphite reporter?
         cpEntity = ecm.write( cpEntity ).toBlocking().last();
 
-        logger.debug("Wrote {}:{} version {}", new Object[]{
-            cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion()
-        });
+        if(logger.isDebugEnabled()){
+            logger.debug("Wrote {}:{} version {}", new Object[]{
+                cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion()
+            });
+        }
 
         //Adding graphite metrics
 
@@ -2134,10 +2141,14 @@ public class CpEntityManager implements EntityManager {
     public EntityRef getUserByIdentifier( Identifier identifier ) throws Exception {
 
         if ( identifier == null ) {
-            logger.debug( "getUserByIdentifier: returning null for null identifier" );
+            if(logger.isDebugEnabled()){
+                logger.debug( "getUserByIdentifier: returning null for null identifier" );
+            }
             return null;
         }
-        logger.debug( "getUserByIdentifier {}:{}", identifier.getType(), identifier.toString() );
+        if(logger.isDebugEnabled()){
+            logger.debug( "getUserByIdentifier {}:{}", identifier.getType(), identifier.toString() );
+        }
 
         if ( identifier.isUUID() ) {
             return new SimpleEntityRef( "user", identifier.getUUID() );
@@ -2172,7 +2183,6 @@ public class CpEntityManager implements EntityManager {
             //            }
             //            else {
             // look-aside as it might be an email in the name field
-            logger.debug( "return alias" );
             return this.getAlias( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ), "user",
                     identifier.getEmail() );
             //            }
