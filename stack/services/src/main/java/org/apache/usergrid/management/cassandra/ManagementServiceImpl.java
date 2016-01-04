@@ -1609,8 +1609,11 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
+        
         if(em.getCollection(organization.getUuid() ,"users",Query.fromQL( "select * where uuid ="+user.getUuid() ),Level.IDS ).size() >0){
-            logger.trace( "Found value: {} already in collection",user.getName() );
+            if(logger.isDebugEnabled()) {
+                logger.debug( "Found value: {} already in collection", user.getName() );
+            }
             return;
         }
 
