@@ -333,37 +333,58 @@ public class DuplicateOrgRepair extends ToolBase {
                 
                 if ( !org.equals( bestOrg )) {
                     
-                    Set<OrgUser> orgUsers = new HashSet<OrgUser>( manager.getOrgUsers( org ));
-                    
-                    for ( OrgUser user : orgUsers ) {
+                    Set<OrgUser> orgUsers = new HashSet<OrgUser>( manager.getOrgUsers( org ) );
+
+                    for (OrgUser user : orgUsers) {
                         if (dryRun) {
-                            Object[] args = new Object[] { 
+                            Object[] args = new Object[]{
                                     user.getName(), user.getId(), bestOrg.getName(), bestOrg.getId()};
-                            logger.info( "Would add user {}:{} to org {}:{}", args);
-                            args = new Object[] { 
+                            logger.info( "Would add user {}:{} to org {}:{}", args );
+                            args = new Object[]{
                                     user.getName(), user.getId(), org.getName(), org.getId()};
-                            logger.info( "Would remove user {}:{}  org {}:{}", args);
+                            logger.info( "Would remove user {}:{}  org {}:{}", args );
                         } else {
-                            manager.addUserToOrg( user, bestOrg );
-                            manager.removeUserFromOrg( user, org );
+                            try {
+                                manager.addUserToOrg( user, bestOrg );
+                            } catch ( Exception e ) {
+                                Object[] args = new Object[]{ 
+                                        user.getName(), user.getId(), bestOrg.getName(), bestOrg.getId()};
+                                logger.error( "Error adding user {}:{} to org {}:{}", args );
+                            }
+                            try {
+                                manager.removeUserFromOrg( user, org );
+                            } catch ( Exception e ) {
+                                Object[] args = new Object[]{ 
+                                        user.getName(), user.getId(), org.getName(), org.getId()};
+                                logger.info( "Error removing user {}:{}  org {}:{}", args );
+                            }
+                        }
+                    }
+
+                    Set<UUID> orgApps = new HashSet<UUID>( manager.getOrgApps( org ) );
+
+                    for (UUID appId : orgApps) {
+                        if (dryRun) {
+                            Object[] args = new Object[]{ appId, bestOrg.getName(), bestOrg.getId()};
+                            logger.info( "Would add app {} to org {}:{}", args );
+                            args = new Object[]{ appId, org.getName(), org.getId()};
+                            logger.info( "Would remove app {} org {}:{}", args );
+                        } else {
+                            try {
+                                manager.addAppToOrg( appId, bestOrg );
+                            } catch ( Exception e ) {
+                                Object[] args = new Object[]{ appId, bestOrg.getName(), bestOrg.getId()};
+                                logger.error( "Error adding app {} to org {}:{}", args );
+                            }
+                            try {
+                                manager.removeAppFromOrg( appId, org );
+                            } catch (Exception e  ) {
+                                Object[] args = new Object[]{ appId, org.getName(), org.getId()};
+                                logger.info( "Error removing app {} org {}:{}", args );
+                            }
                         }
                     }
                     
-                    Set<UUID> orgApps = new HashSet<UUID>( manager.getOrgApps( org ));
-                            
-                    for ( UUID appId : orgApps ) {
-                        if (dryRun) {
-                            Object[] args = new Object[] { 
-                                    appId, bestOrg.getName(), bestOrg.getId()};
-                            logger.info( "Would add app {} to org {}:{}", args);
-                            args = new Object[] { 
-                                    appId, org.getName(), org.getId()};
-                            logger.info( "Would remove app {} org {}:{}", args);
-                        } else {
-                            manager.addAppToOrg( appId, bestOrg );
-                            manager.removeAppFromOrg( appId, org );
-                        }
-                    }
                 }
             }
         }
