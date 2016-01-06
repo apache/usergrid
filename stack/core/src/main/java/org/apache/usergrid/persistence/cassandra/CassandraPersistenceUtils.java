@@ -224,7 +224,11 @@ public class CassandraPersistenceUtils {
             return NULL_ID;
         }
         UUID uuid = UUID.nameUUIDFromBytes( keyStr.getBytes() ); //UUIDUtils.newTimeUUID(); //UUID.nameUUIDFromBytes( keyStr.getBytes() );
-        logger.debug( "Key {} equals UUID {}", keyStr, uuid );
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Key {} equals UUID {}", keyStr, uuid);
+        }
+
         return uuid;
     }
 

@@ -87,7 +87,9 @@ public class GeoPagingTest extends AbstractRestIT {
       //retrieve it again from the database
       activity = this.app().collection("groups").entity(activity).get();
       index[i] = (Long) activity.get("created");
-      log.debug("Activity {} created at {}", i, index[i]);
+        if (log.isDebugEnabled()) {
+            log.debug("Activity {} created at {}", i, index[i]);
+        }
 
     }
     this.refreshIndex();

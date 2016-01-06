@@ -149,7 +149,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
     public void advance() {
 
 
-        logger.trace( "Advancing multi row column iterator" );
+        if (logger.isTraceEnabled()) logger.trace( "Advancing multi row column iterator" );
 
         /**
          * If the edge is present, we need to being seeking from this
@@ -176,7 +176,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
         rangeBuilder.setLimit( selectSize );
 
-        logger.trace( "Executing cassandra query" );
+        if (logger.isTraceEnabled()) logger.trace( "Executing cassandra query" );
 
         /**
          * Get our list of slices
@@ -245,7 +245,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
         currentColumnIterator = mergedResults.iterator();
 
-        logger.trace( "Finished parsing {} rows for results", rowKeys.size() );
+        if (logger.isTraceEnabled()) logger.trace( "Finished parsing {} rows for results", rowKeys.size() );
     }
 
 
@@ -278,7 +278,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
      */
     private List<T> singleRowResult( final Rows<R, C> result ) {
 
-        logger.trace( "Only a single row has columns.  Parsing directly" );
+        if (logger.isTraceEnabled()) logger.trace( "Only a single row has columns.  Parsing directly" );
 
         for ( R key : result.getKeys() ) {
             final ColumnList<C> columnList = result.getRow( key ).getColumns();
@@ -311,7 +311,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
      */
     private List<T> mergeResults( final Rows<R, C> result, final int maxSize ) {
 
-        logger.trace( "Multiple rows have columns.  Merging" );
+        if (logger.isTraceEnabled()) logger.trace( "Multiple rows have columns.  Merging" );
 
 
         final List<T> mergedResults = new ArrayList<>(maxSize);
@@ -360,7 +360,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
                     continue;
                 }
 
-                logger.trace( "Adding value {} to merged set at index {}", returnedValue, insertIndex );
+                if (logger.isTraceEnabled()) logger.trace( "Adding value {} to merged set at index {}", returnedValue, insertIndex );
 
                 mergedResults.add( insertIndex, returnedValue );
 
@@ -368,14 +368,14 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
                 //prune the mergedResults
                 while ( mergedResults.size() > maxSize ) {
 
-                    logger.trace( "Trimming results to size {}", maxSize );
+                    if (logger.isTraceEnabled()) logger.trace( "Trimming results to size {}", maxSize );
 
                     //just remove from our tail until the size falls to the correct value
                     mergedResults.remove(mergedResults.size()-1);
                 }
             }
 
-            logger.trace( "Candidate result set size is {}", mergedResults.size() );
+            if (logger.isTraceEnabled()) logger.trace( "Candidate result set size is {}", mergedResults.size() );
 
         }
         return mergedResults;

@@ -152,9 +152,11 @@ public class AbstractCollectionService extends AbstractService {
         Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
 
         if ( entity == null ) {
+
             if (logger.isDebugEnabled()) {
                 logger.debug("miss on entityType: {} with name: {}", getEntityType(), name);
             }
+
             String msg = "Cannot find entity with name: "+name;
             throw new EntityNotFoundException( msg );
         }
@@ -247,6 +249,7 @@ public class AbstractCollectionService extends AbstractService {
         if (logger.isDebugEnabled()) {
             logger.debug("Limiting collection to " + Query.DEFAULT_LIMIT);
         }
+
         int count = Query.DEFAULT_LIMIT;
 
         Results r = em.getCollection( context.getOwner(), context.getCollectionName(),
@@ -352,11 +355,14 @@ public class AbstractCollectionService extends AbstractService {
         if ( context.getPayload().isBatch() ) {
             List<Entity> entities = new ArrayList<Entity>();
             List<Map<String, Object>> batch = context.getPayload().getBatchProperties();
+
             if (logger.isDebugEnabled()) {
                 logger.debug("Attempting to batch create " + batch.size() + " entities in collection " + context
                     .getCollectionName());
             }
+
             int i = 1;
+
             for ( Map<String, Object> p : batch ) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Creating entity " + i + " in collection " + context.getCollectionName());
@@ -369,6 +375,7 @@ public class AbstractCollectionService extends AbstractService {
                             p );
                 }
                 catch ( Exception e ) {
+                    // TODO should we not log this as error?
                     if (logger.isDebugEnabled()) {
                         logger.debug("Entity " + i + " unable to be created in collection " + context.getCollectionName(),
                             e);

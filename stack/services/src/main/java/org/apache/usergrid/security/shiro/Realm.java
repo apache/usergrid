@@ -94,7 +94,11 @@ public class Realm extends AuthorizingRealm {
     @Override
     public void setCredentialsMatcher( CredentialsMatcher credentialsMatcher ) {
         if ( !( credentialsMatcher instanceof AllowAllCredentialsMatcher ) ) {
-            logger.debug( "Replacing {} with AllowAllCredentialsMatcher", credentialsMatcher );
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Replacing {} with AllowAllCredentialsMatcher", credentialsMatcher);
+            }
+
             credentialsMatcher = new AllowAllCredentialsMatcher();
         }
         super.setCredentialsMatcher(credentialsMatcher);
@@ -104,7 +108,9 @@ public class Realm extends AuthorizingRealm {
     @Override
     public void setPermissionResolver( PermissionResolver permissionResolver ) {
         if ( !( permissionResolver instanceof CustomPermissionResolver ) ) {
-            logger.debug( "Replacing {} with AllowAllCredentialsMatcher", permissionResolver );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Replacing {} with AllowAllCredentialsMatcher", permissionResolver);
+            }
             permissionResolver = new CustomPermissionResolver();
         }
         super.setPermissionResolver(permissionResolver);
@@ -195,11 +201,11 @@ public class Realm extends AuthorizingRealm {
             throw new AuthenticationException( "Unable to authenticate" );
         }
 
-        logger.debug( "Authenticated: {}", principal );
+        if (logger.isDebugEnabled()) {
+            logger.debug("Authenticated: {}", principal);
+        }
 
-        SimpleAuthenticationInfo info =
-                new SimpleAuthenticationInfo( pcToken.getPrincipal(), pcToken.getCredentials(), getName() );
-        return info;
+        return new SimpleAuthenticationInfo( pcToken.getPrincipal(), pcToken.getCredentials(), getName() );
     }
 
 

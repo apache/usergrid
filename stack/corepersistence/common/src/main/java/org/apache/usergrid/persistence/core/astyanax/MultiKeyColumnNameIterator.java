@@ -222,7 +222,7 @@ public class MultiKeyColumnNameIterator<C, T> implements Iterable<T>, Iterator<T
             //may block if we get full, that's expected behavior
 
             try {
-                LOG.trace( "Received element {}" , t );
+                if (LOG.isTraceEnabled()) LOG.trace( "Received element {}" , t );
                 queue.put( t );
             }
             catch ( InterruptedException e ) {

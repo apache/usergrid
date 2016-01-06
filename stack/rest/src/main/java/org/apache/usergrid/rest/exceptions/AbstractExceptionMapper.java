@@ -107,6 +107,7 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
         } else if ( logger.isDebugEnabled() ) {
             logger.debug( "Server Error (" + status + "):\n" + jsonResponse );
         }
+
         String callback = httpServletRequest.getParameter( "callback" );
         if ( isJSONP() && isNotBlank( callback ) ) {
             jsonResponse = wrapJSONPResponse( callback, jsonResponse );

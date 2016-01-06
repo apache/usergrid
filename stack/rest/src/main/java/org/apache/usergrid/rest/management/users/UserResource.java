@@ -243,7 +243,9 @@ public class UserResource extends AbstractContextResource {
                                              @FormParam( "recaptcha_challenge_field" ) String challenge,
                                              @FormParam( "recaptcha_response_field" ) String uresponse ) {
 
-        logger.debug("handlePasswordResetForm");
+        if (logger.isDebugEnabled()) {
+            logger.debug("handlePasswordResetForm");
+        }
 
         final boolean externalTokensEnabled =
                 !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );

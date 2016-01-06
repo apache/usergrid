@@ -144,7 +144,9 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
          * as discarded
          */
         try {
-            LOG.debug( "deleteJob {}", jobId );
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("deleteJob {}", jobId);
+            }
             getEm().delete( new SimpleEntityRef(
                 Schema.getDefaultSchema().getEntityType(JobData.class), jobId ) );
         }
@@ -220,7 +222,9 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
     @Override
     public void heartbeat( JobRuntime execution, long delay ) {
-        LOG.debug( "renew transaction {}", execution.getTransactionId() );
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("renew transaction {}", execution.getTransactionId());
+        }
         try {
             // @TODO - what's the point to this sychronized block on an argument?
             synchronized ( execution ) {
@@ -228,7 +232,9 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
                         new QueueQuery().withTimeout( delay ) );
 
                 execution.setTransactionId( newId );
-                LOG.debug( "renewed transaction {}", newId );
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("renewed transaction {}", newId);
+                }
             }
         }
         catch ( TransactionNotFoundException e ) {
@@ -280,7 +286,9 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
             if ( jobStatus == Status.COMPLETED ) {
                 LOG.info( "Job {} is complete id: {}", data.getJobName(), bulkJobExecution.getTransactionId() );
                 getQm().deleteTransaction( jobQueueName, bulkJobExecution.getTransactionId(), null );
-                LOG.debug( "delete job data {}", data.getUuid() );
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("delete job data {}", data.getUuid());
+                }
                 getEm().delete( data );
             }
 

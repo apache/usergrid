@@ -453,7 +453,9 @@ public class ManagementResource extends AbstractContextResource {
                                          @FormParam( "username" ) String username,
                                          @FormParam( "password" ) String password ) {
 
-       logger.debug( "ManagementResource /authorize: {}/{}", username, password );
+        if (logger.isDebugEnabled()) {
+            logger.debug("ManagementResource /authorize: {}/{}", username, password);
+        }
 
        try {
             responseType = response_type;
@@ -491,7 +493,7 @@ public class ManagementResource extends AbstractContextResource {
             throw e;
         }
         catch ( Exception e ) {
-            logger.debug("handleAuthorizeForm failed", e);
+            logger.error("handleAuthorizeForm failed", e);
             return handleViewable( "error", e );
         }
     }
@@ -667,7 +669,7 @@ public class ManagementResource extends AbstractContextResource {
 
         } catch (Exception e) {
             timerContext.stop();
-            logger.debug("Error validating external token", e);
+            logger.error("Error validating external token", e);
             throw e;
         }
 

@@ -486,10 +486,14 @@ public class CassandraService {
 
         if ( db_logger.isDebugEnabled() ) {
             if ( results == null ) {
-                db_logger.debug( "getColumns returned null" );
+                if (logger.isDebugEnabled()) {
+                    db_logger.debug("getColumns returned null");
+                }
             }
             else {
-                db_logger.debug( "getColumns returned " + results.size() + " columns" );
+                if (logger.isDebugEnabled()) {
+                    db_logger.debug("getColumns returned " + results.size() + " columns");
+                }
             }
         }
 

@@ -76,13 +76,17 @@ public class OrganizationResource extends AbstractContextResource {
 
 
     public OrganizationResource() {
-        logger.debug("OrganizationResource created");
+        if (logger.isDebugEnabled()) {
+            logger.debug("OrganizationResource created");
+        }
     }
 
 
     public OrganizationResource init( OrganizationInfo organization ) {
         this.organization = organization;
-        logger.debug("OrganizationResource initialized for org {}", organization.getName());
+        if (logger.isDebugEnabled()) {
+            logger.debug("OrganizationResource initialized for org {}", organization.getName());
+        }
         return this;
     }
 
@@ -262,7 +266,9 @@ public class OrganizationResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.debug( "executePut" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("executePut");
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "put" );
@@ -284,7 +290,9 @@ public class OrganizationResource extends AbstractContextResource {
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
-        logger.debug( "executePostJson" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("executePostJson");
+        }
 
         UsergridAwsCredentials uac = new UsergridAwsCredentials();
 
@@ -400,7 +408,9 @@ public class OrganizationResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.debug("Put configuration for organization: " + organization.getUuid());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Put configuration for organization: " + organization.getUuid());
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction("put organization configuration");

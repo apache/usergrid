@@ -113,13 +113,17 @@ public class JobSchedulerService extends AbstractScheduledService {
 
                 int capacity = capacitySemaphore.availablePermits();
 
-                LOG.debug( "Capacity is {}", capacity );
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Capacity is {}", capacity);
+                }
 
                 activeJobs = jobAccessor.getJobs( capacity );
 
                 // nothing to do, we don't have any jobs to run
                 if ( activeJobs.size() == 0 ) {
-                    LOG.debug( "No jobs returned. Exiting run loop" );
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("No jobs returned. Exiting run loop");
+                    }
                     return;
                 }
 
@@ -131,7 +135,9 @@ public class JobSchedulerService extends AbstractScheduledService {
             }
         }
         catch ( Throwable t ) {
-            LOG.debug( "Scheduler run failed, error is", t );
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Scheduler run failed, error is", t);
+            }
         }
     }
 
@@ -192,7 +198,9 @@ public class JobSchedulerService extends AbstractScheduledService {
             @Override
             public Void call() throws Exception {
 
-                LOG.debug( "Starting the job with job id {}", execution.getJobId() );
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Starting the job with job id {}", execution.getJobId());
+                }
                 runCounter.inc();
 
                 execution.start( maxFailCount );
@@ -239,7 +247,9 @@ public class JobSchedulerService extends AbstractScheduledService {
                  * Release semaphore first in case there are other problems with communicating with Cassandra
                  */
 
-                LOG.debug( "Job succeeded with the job id {}", execution.getJobId() );
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Job succeeded with the job id {}", execution.getJobId());
+                }
                 capacitySemaphore.release();
                 timer.stop();
                 runCounter.dec();

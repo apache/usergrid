@@ -306,7 +306,9 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                              tracker.failed(0, "Notification is duplicate/expired/cancelled.");
                         }else {
                             if (payload == null) {
-                                LOG.debug("selected device {} for notification {} doesn't have a valid payload. skipping.", deviceUUID, notification.getUuid());
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("selected device {} for notification {} doesn't have a valid payload. skipping.", deviceUUID, notification.getUuid());
+                                }
                                 tracker.failed(0, "failed to match payload to " + message.getNotifierId() + " notifier");
                             } else {
                                 long now = System.currentTimeMillis();
@@ -448,10 +450,14 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         for (final ProviderAdapter providerAdapter : providerAdapters) {
             try {
                 if (providerAdapter != null) {
-                    LOG.debug("checking notifier {} for inactive devices", providerAdapter.getNotifier());
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("checking notifier {} for inactive devices", providerAdapter.getNotifier());
+                    }
                     providerAdapter.removeInactiveDevices();
 
-                    LOG.debug("finished checking notifier {} for inactive devices",providerAdapter.getNotifier());
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("finished checking notifier {} for inactive devices", providerAdapter.getNotifier());
+                    }
                 }
             } catch (Exception e) {
                 LOG.error("checkForInactiveDevices", e); // not

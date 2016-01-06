@@ -129,7 +129,9 @@ public class OrganizationResource extends AbstractContextResource {
     public ApplicationResource getApplicationByName( @PathParam("applicationName") String applicationName )
             throws Exception {
 
-        logger.debug("getApplicationByName: " + applicationName );
+        if (logger.isDebugEnabled()) {
+            logger.debug("getApplicationByName: " + applicationName);
+        }
 
         if ( "options".equalsIgnoreCase( request.getMethod() ) ) {
             throw new NoOpException();

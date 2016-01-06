@@ -210,7 +210,9 @@ public class ServiceManager {
             return null;
         }
 
-        logger.debug( "Looking up service pattern: {}", serviceType );
+        if (logger.isDebugEnabled()) {
+            logger.debug("Looking up service pattern: {}", serviceType);
+        }
 
         ServiceInfo info = ServiceInfo.getServiceInfo( serviceType );
 
@@ -221,7 +223,9 @@ public class ServiceManager {
         Service service = getServiceInstance( info );
 
         if ( service != null ) {
-            logger.debug( "Returning service instance: {}", service.getClass() );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Returning service instance: {}", service.getClass());
+            }
         }
 
 		/*
@@ -276,7 +280,9 @@ public class ServiceManager {
 
         Class<Service> cls;
         try {
-            logger.debug( "Attempting to instantiate service class {}", classname );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Attempting to instantiate service class {}", classname);
+            }
             cls = ( Class<Service> ) Class.forName( classname );
             if ( cls.isInterface() ) {
                 cls = ( Class<Service> ) Class.forName( classname.concat( IMPL ) );
@@ -286,7 +292,7 @@ public class ServiceManager {
             }
         }
         catch ( ClassNotFoundException e1 ) {
-            logger.debug( "Could not load class", e1 );
+            logger.error("Could not load class", e1);
         }
         return null;
     }

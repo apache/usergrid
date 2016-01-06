@@ -146,7 +146,9 @@ public class TraceTagManager {
     public void attach( TraceTag traceTag ) {
         Preconditions.checkState( !isActive(), "Attempt to attach on already active trace" );
         localTraceTag.set( traceTag );
-        logger.debug( "Attached TraceTag {} to thread", traceTag );
+        if (logger.isDebugEnabled()) {
+            logger.debug("Attached TraceTag {} to thread", traceTag);
+        }
     }
 
 
@@ -155,7 +157,9 @@ public class TraceTagManager {
         TraceTag traceTag = localTraceTag.get();
         Preconditions.checkState( isActive(), "Attempt to detach on no active trace" );
         localTraceTag.remove();
-        logger.debug( "Detached TraceTag {} from thread", traceTag );
+        if (logger.isDebugEnabled()) {
+            logger.debug("Detached TraceTag {} from thread", traceTag);
+        }
         return traceTag;
     }
 

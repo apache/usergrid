@@ -225,8 +225,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         applicationId = applicationId==null ?  UUIDGenerator.newTimeUUID() : applicationId;
 
-        logger.debug( "New application orgName {} orgAppName {} id {} ",
-            new Object[] { orgName, name, applicationId.toString() } );
+        if (logger.isDebugEnabled()) {
+            logger.debug("New application orgName {} orgAppName {} id {} ",
+                new Object[]{orgName, name, applicationId.toString()});
+        }
 
         return initializeApplicationV2( orgName, applicationId, appName, properties );
     }
@@ -473,9 +475,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         Id managementId = new SimpleId( managementApp.getUuid(), managementApp.getType() );
 
 
-
-        logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}",
-            new Object[]{edgeType, managementId.getType(), managementId.getUuid()});
+        if (logger.isDebugEnabled()) {
+            logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}",
+                new Object[]{edgeType, managementId.getType(), managementId.getUuid()});
+        }
 
         Observable<MarkedEdge> edges = gm.loadEdgesFromSource(
             new SimpleSearchByEdgeType( managementId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
