@@ -1583,8 +1583,13 @@ public class Schema implements SchemaManager {
         }
 
         String entityType = string( columns.get( PROPERTY_TYPE ) );
+
         if ( entityType == null ) {
-            logger.debug( "deserializeEntityProperties(): No type for entity found, entity probably doesn't exist" );
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("deserializeEntityProperties(): No type for entity found, entity probably doesn't exist");
+            }
+
             return null;
         }
         if ( checkId && !columns.containsKey( PROPERTY_UUID ) ) {
@@ -1594,8 +1599,11 @@ public class Schema implements SchemaManager {
 
         if ( checkRequired ) {
             Set<String> required_properties = Schema.getDefaultSchema().getRequiredProperties( entityType );
+
             if ( required_properties != null ) {
+
                 for ( String property_name : required_properties ) {
+
                     if ( !columns.containsKey( property_name ) ) {
                         logger.error( "Entity (" + entityType + ") missing required property: " + property_name,
                                 new Throwable() );

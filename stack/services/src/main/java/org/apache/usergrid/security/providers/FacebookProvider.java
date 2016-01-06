@@ -110,6 +110,7 @@ public class FacebookProvider extends AbstractProvider {
         String fb_user_name = ( String ) fb_user.get( "name" );
         String fb_user_username = ( String ) fb_user.get( "username" );
         String fb_user_email = ( String ) fb_user.get( "email" );
+
         if ( logger.isDebugEnabled() ) {
             logger.debug( JsonUtils.mapToFormattedJsonString( fb_user ) );
         }

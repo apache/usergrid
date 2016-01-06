@@ -70,7 +70,9 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter implements C
 
     @Override
     public void filter(ContainerRequestContext request) throws IOException {
-        logger.debug("Filtering: " + request.getUriInfo().getBaseUri());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Filtering: " + request.getUriInfo().getBaseUri());
+        }
 
         try {
             try {
@@ -105,6 +107,7 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter implements C
                     // token is just some rubbish string
                     throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );
                 } catch (Exception e) {
+
                     if (logger.isDebugEnabled()) {
                         logger.debug( "Unable to verify OAuth token: " + accessToken, e );
                     } else {

@@ -129,7 +129,9 @@ public class IntersectionUnionPagingIT {
 
             Entity saved =  io.writeEntity( entity );
 
-            LOG.debug("Writing entity with id '{}'", saved.getUuid());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Writing entity with id '{}'", saved.getUuid());
+            }
 
         }
 

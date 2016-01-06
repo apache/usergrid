@@ -127,7 +127,9 @@ public class ConsumerTransaction extends NoTransactionSearch
         // Generate a new expiration and insert it
         UUID expirationId = UUIDUtils.newTimeUUID( now + query.getTimeout() );
 
-        logger.debug( "Writing new timeout at '{}' for message '{}'", expirationId, messageId );
+        if (logger.isDebugEnabled()) {
+            logger.debug("Writing new timeout at '{}' for message '{}'", expirationId, messageId);
+        }
 
 
         Mutator<ByteBuffer> mutator = CountingMutator.createFlushingMutator( ko, be );
@@ -300,7 +302,9 @@ public class ConsumerTransaction extends NoTransactionSearch
         }
         catch ( UGLockException e )
         {
-            logger.debug( "Unable to acquire lock", e );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Unable to acquire lock", e);
+            }
             throw new QueueException( "Unable to acquire lock", e );
         }
         finally
@@ -311,7 +315,9 @@ public class ConsumerTransaction extends NoTransactionSearch
             }
             catch ( UGLockException e )
             {
-                logger.debug( "Unable to release lock", e );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Unable to release lock", e);
+                }
                 throw new QueueException( "Unable to release lock", e );
             }
         }
@@ -439,7 +445,9 @@ public class ConsumerTransaction extends NoTransactionSearch
             UUID expirationId = UUIDUtils.newTimeUUID( futureTimeout, counter );
             UUID messageId = message.getUuid();
 
-            logger.debug( "Writing new timeout at '{}' for message '{}'", expirationId, messageId );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Writing new timeout at '{}' for message '{}'", expirationId, messageId);
+            }
 
             mutator.addInsertion( key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(),
                     createColumn( expirationId, messageId, time, ue, ue ) );

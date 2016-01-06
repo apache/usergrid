@@ -65,7 +65,9 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
         if ( name.equals( sysadmin_login_name ) && password.equals( sysadmin_login_password )
                 && sysadmin_login_allowed ) {
             request.setSecurityContext( new SysAdminRoleAuthenticator() );
-            logger.debug( "System administrator access allowed" );
+            if (logger.isDebugEnabled()) {
+                logger.debug("System administrator access allowed");
+            }
         }
     }
 

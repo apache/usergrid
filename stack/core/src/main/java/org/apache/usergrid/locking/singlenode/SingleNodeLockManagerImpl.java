@@ -57,7 +57,9 @@ public class SingleNodeLockManagerImpl implements LockManager {
 
                 @Override
                 public void onRemoval( RemovalNotification<String, ReentrantLock> notification ) {
-                    logger.debug( "Evicting reentrant lock for {}", notification.getKey() );
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Evicting reentrant lock for {}", notification.getKey());
+                    }
                 }
             } ).build( new CacheLoader<String, ReentrantLock>() {
 
@@ -75,7 +77,7 @@ public class SingleNodeLockManagerImpl implements LockManager {
 
     /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.usergrid.locking.LockManager#createLock(java.util.UUID,
    * java.lang.String[])
    */

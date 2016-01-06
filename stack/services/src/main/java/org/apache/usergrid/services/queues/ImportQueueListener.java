@@ -73,7 +73,9 @@ public class ImportQueueListener extends QueueListener {
          * of the message and typecast it into a model called ApplicationQueueMessage.  Then it does
          * work on the message.
          */
-        logger.debug("Doing work in onMessage in ImportQueueListener");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Doing work in onMessage in ImportQueueListener");
+        }
         for (QueueMessage message : messages) {
             ImportQueueMessage queueMessage = ( ImportQueueMessage ) message.getBody();
 

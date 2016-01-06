@@ -281,9 +281,11 @@ public class AbstractConnectionsService extends AbstractService {
 
         int count = query.getLimit();
         Level level = Level.REFS;
+
         if ( !context.moreParameters() ) {
             count = Query.MAX_LIMIT;
             level = Level.ALL_PROPERTIES;
+
             if (logger.isDebugEnabled()) {
             	logger.debug("Query does not have more parameters, overwriting limit to: {} and level to {}" ,
                     count, level.name());
@@ -304,7 +306,9 @@ public class AbstractConnectionsService extends AbstractService {
 
         if ( connecting() ) {
             if ( query.hasQueryPredicates() ) {
-                logger.debug( "Attempted query of backwards connections" );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Attempted query of backwards connections");
+                }
                 return null;
             }
             else {

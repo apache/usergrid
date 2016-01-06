@@ -587,9 +587,11 @@ public class CpEntityManager implements EntityManager {
 //            // need to reload entity so bypass entity cache
 //            cpEntity = ecm.load( entityId ).toBlockingObservable().last();
 
-            logger.debug( "Wrote {}:{} version {}", new Object[] {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Wrote {}:{} version {}", new Object[]{
                     cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion()
-            } );
+                });
+            }
         }
         catch ( WriteUniqueVerifyException wuve ) {
             handleWriteUniqueVerifyException( entity, wuve );
@@ -813,12 +815,18 @@ public class CpEntityManager implements EntityManager {
             Inflector.getInstance().singularize( collectionType ), Arrays.<Field>asList( uniqueLookupRepairField ) );
 
         if(fieldSetObservable == null){
-            logger.debug( "Couldn't return the observable based on unique entities." );
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Couldn't return the observable based on unique entities.");
+            }
+
             return null;
         }
+
         FieldSet fieldSet = fieldSetObservable.toBlocking().last();
 
         repairedEntityGet.stop();
+
         if(fieldSet.isEmpty()) {
             return null;
         }
@@ -843,7 +851,9 @@ public class CpEntityManager implements EntityManager {
         Assert.notNull( collectionType, "collectionType is required" );
         Assert.notNull( aliasValue, "aliasValue is required" );
 
-        logger.debug( "getAlias() for collection type {} alias {}", collectionType, aliasValue );
+        if (logger.isDebugEnabled()) {
+            logger.debug("getAlias() for collection type {} alias {}", collectionType, aliasValue);
+        }
 
         String collName = Schema.defaultCollectionName( collectionType );
 
@@ -878,7 +888,9 @@ public class CpEntityManager implements EntityManager {
     public Map<String, EntityRef> getAlias( EntityRef ownerRef, String collName, List<String> aliases )
             throws Exception {
 
-        logger.debug( "getAliases() for collection {} aliases {}", collName, aliases );
+        if (logger.isDebugEnabled()) {
+            logger.debug("getAliases() for collection {} aliases {}", collName, aliases);
+        }
 
         Assert.notNull( ownerRef, "ownerRef is required" );
         Assert.notNull( collName, "collectionName is required" );
@@ -2141,11 +2153,13 @@ public class CpEntityManager implements EntityManager {
     public EntityRef getUserByIdentifier( Identifier identifier ) throws Exception {
 
         if ( identifier == null ) {
+
             if(logger.isDebugEnabled()){
                 logger.debug( "getUserByIdentifier: returning null for null identifier" );
             }
             return null;
         }
+
         if(logger.isDebugEnabled()){
             logger.debug( "getUserByIdentifier {}:{}", identifier.getType(), identifier.toString() );
         }
@@ -2153,10 +2167,12 @@ public class CpEntityManager implements EntityManager {
         if ( identifier.isUUID() ) {
             return new SimpleEntityRef( "user", identifier.getUUID() );
         }
+
         if ( identifier.isName() ) {
             return this.getAlias( new SimpleEntityRef(
                     Application.ENTITY_TYPE, applicationId ), "user", identifier.getName() );
         }
+
         if ( identifier.isEmail() ) {
 
 

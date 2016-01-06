@@ -178,7 +178,9 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
             })
                 //set the edge state for cursors
                 .doOnNext( edge -> {
-                    logger.trace( "Seeking over edge {}", edge );
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Seeking over edge {}", edge);
+                    }
                     edgeCursorState.update( edge );
                 } )
 

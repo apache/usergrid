@@ -103,7 +103,7 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
         Futures.addCallback( future, new FutureCallback<DeleteResult>() {
             @Override
             public void onSuccess( @Nullable final ShardGroupDeletion.DeleteResult result ) {
-                logger.trace( "Successfully completed delete of task {}", result );
+                if (logger.isTraceEnabled()) logger.trace( "Successfully completed delete of task {}", result );
             }
 
 
@@ -128,38 +128,44 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
         //Use ths to TEMPORARILY remove deletes from occurring
         //return DeleteResult.NO_OP;
 
-        logger.trace( "Beginning audit of shard group {}", shardEntryGroup );
+        if (logger.isTraceEnabled()) logger.trace( "Beginning audit of shard group {}", shardEntryGroup );
 
         /**
          * Compaction is pending, we cannot check it
          */
         if ( shardEntryGroup.isCompactionPending() ) {
-            logger.trace( "Shard group {} is compacting, not auditing group", shardEntryGroup );
+            if (logger.isTraceEnabled()) logger.trace( "Shard group {} is compacting, not auditing group", shardEntryGroup );
             return DeleteResult.COMPACTION_PENDING;
         }
 
-        logger.trace( "Shard group {} has no compaction pending", shardEntryGroup );
+        if (logger.isTraceEnabled()) logger.trace( "Shard group {} has no compaction pending", shardEntryGroup );
 
         final long currentTime = timeService.getCurrentTime();
 
         if ( shardEntryGroup.isNew( currentTime ) ) {
-            logger.trace( "Shard group {} contains a shard that is is too new, not auditing group", shardEntryGroup );
+            if (logger.isTraceEnabled()) logger.trace( "Shard group {} contains a shard that is is too new, not auditing group", shardEntryGroup );
             return DeleteResult.TOO_NEW;
         }
 
-        logger.trace( "Shard group {} has passed the delta timeout at {}", shardEntryGroup, currentTime );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Shard group {} has passed the delta timeout at {}", shardEntryGroup, currentTime);
+        }
 
         /**
          * We have edges, and therefore cannot delete them
          */
         if ( edgeIterator.hasNext() ) {
-            logger.trace( "Shard group {} has edges, not deleting", shardEntryGroup );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Shard group {} has edges, not deleting", shardEntryGroup);
+            }
 
             return DeleteResult.CONTAINS_EDGES;
         }
 
 
-        logger.trace( "Shard group {} has no edges continuing to delete", shardEntryGroup, currentTime );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Shard group {} has no edges continuing to delete", shardEntryGroup, currentTime);
+        }
 
 
         //now we can proceed based on the shard meta state and we don't have any edge
@@ -172,7 +178,9 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
 
             //skip the min shard
             if(shard.isMinShard()){
-                logger.trace( "Shard {} in group {} is the minimum, not deleting", shard, shardEntryGroup );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Shard {} in group {} is the minimum, not deleting", shard, shardEntryGroup);
+                }
                 continue;
             }
 
@@ -212,7 +220,9 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
            }
        }
 
-        logger.trace( "Completed auditing shard group {}", shardEntryGroup );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Completed auditing shard group {}", shardEntryGroup);
+        }
 
         return result;
     }

@@ -224,10 +224,16 @@ public class CounterUtils {
                                                  UUID queueId, String category, String name, long value,
                                                  long counterTimestamp, long cassandraTimestamp ) {
         for ( CounterResolution resolution : CounterResolution.values() ) {
-            logger.debug( "BIAC for resolution {}", resolution );
+            if (logger.isDebugEnabled()) {
+                logger.debug("BIAC for resolution {}", resolution);
+            }
+
             batchIncrementAggregateCounters( m, userId, groupId, queueId, category, resolution, name, value,
                     counterTimestamp, applicationId );
-            logger.debug( "DONE BIAC for resolution {}", resolution );
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("DONE BIAC for resolution {}", resolution);
+            }
         }
         batchIncrementEntityCounter( m, applicationId, name, value, cassandraTimestamp, applicationId );
         if ( userId != null ) {

@@ -167,7 +167,9 @@ public class MigrateResource extends AbstractContextResource {
         @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
         throws Exception {
 
-        logger.debug( "setMigrationVersion" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("setMigrationVersion");
+        }
 
         Preconditions.checkNotNull( json, "You must provide a json body" );
         Preconditions.checkArgument( json.keySet().size() > 0, "You must specify at least one module and version" );

@@ -86,7 +86,9 @@ public class OrgResource  extends NamedResource {
             .accept( MediaType.APPLICATION_JSON )
             .post( Entity.json( null ), String.class );
 
-        logger.debug("Response from post: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from post: " + responseString);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         ApiResponse response;
@@ -135,10 +137,13 @@ public class OrgResource  extends NamedResource {
             .accept( MediaType.APPLICATION_JSON )
             .post( Entity.json( organization ), String.class );
 
-        logger.debug("Response from put: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from put: " + responseString);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         ApiResponse response;
+
         try {
             response = mapper.readValue( new StringReader(responseString), ApiResponse.class);
         } catch (IOException e) {

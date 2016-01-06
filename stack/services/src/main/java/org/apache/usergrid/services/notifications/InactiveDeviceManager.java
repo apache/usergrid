@@ -48,7 +48,9 @@ public class InactiveDeviceManager {
     public void removeInactiveDevices( Map<String,Date> inactiveDeviceMap  ){
         final String notfierPostFix = ApplicationQueueManagerImpl.NOTIFIER_ID_POSTFIX;
         if (inactiveDeviceMap != null && inactiveDeviceMap.size() > 0) {
-            LOG.debug("processing {} inactive devices",  inactiveDeviceMap.size());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("processing {} inactive devices", inactiveDeviceMap.size());
+            }
             Map<String, Object> clearPushtokenMap = new HashMap<String, Object>( 2);
             clearPushtokenMap.put(notifier.getName() + notfierPostFix,  "");
             clearPushtokenMap.put(notifier.getUuid() + notfierPostFix,  "");

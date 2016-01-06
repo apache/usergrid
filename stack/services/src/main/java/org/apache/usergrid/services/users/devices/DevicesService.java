@@ -34,12 +34,16 @@ public class DevicesService extends org.apache.usergrid.services.devices.Devices
 
     public DevicesService() {
         super();
-        logger.debug( "/users/*/devices" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("/users/*/devices");
+        }
     }
 
     @Override
     public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception {
-        logger.debug("Registering device {}", id);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Registering device {}", id);
+        }
         unregisterDeviceToUsers(id,context.getOwner());
         ServiceResults results = super.putItemById( context, id );
         return results;

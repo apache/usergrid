@@ -1243,11 +1243,14 @@ public class ManagementServiceImpl implements ManagementService {
 
         for ( EntityRef orgRef : orgResults.getRefs() ) {
             Map properties = em.getDictionaryAsMap( orgRef, ORGANIZATION_PROPERTIES_DICTIONARY );
+
             if ( properties != null ) {
                 OrganizationInfo orgInfo = new OrganizationInfo( null, null, properties );
+
                 if(logger.isDebugEnabled()){
                     logger.debug( "    orgInfo.getPasswordHistorySize() = " +  orgInfo.getPasswordHistorySize() );
                 }
+
                 size = Math.max( orgInfo.getPasswordHistorySize(), size );
             }
         }

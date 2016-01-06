@@ -56,7 +56,7 @@ public class TestAdapter implements ProviderAdapter {
 
     @Override
     public void sendNotification(
-            String providerId, 
+            String providerId,
             final Object payload,
             Notification notification,
             TaskTracker tracker)
@@ -86,12 +86,16 @@ public class TestAdapter implements ProviderAdapter {
 
     @Override
     public void doneSendingNotifications() throws Exception {
-        log.debug("doneSendingNotifications()");
+        if (log.isDebugEnabled()) {
+            log.debug("doneSendingNotifications()");
+        }
     }
 
     @Override
     public void removeInactiveDevices() throws Exception {
-        log.debug("getInactiveDevices()");
+        if (log.isDebugEnabled()) {
+            log.debug("getInactiveDevices()");
+        }
     }
 
     @Override

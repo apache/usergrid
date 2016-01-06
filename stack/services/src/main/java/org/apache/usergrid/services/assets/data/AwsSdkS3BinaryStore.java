@@ -262,7 +262,9 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
                     Thread.sleep( 1000 );
                     timesIterated--;
                     listResult = getS3Client().listMultipartUploads( listRequest );
-                    logger.debug( "Files that haven't been aborted are: ",listResult.getMultipartUploads().listIterator().toString() );
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Files that haven't been aborted are: ", listResult.getMultipartUploads().listIterator().toString());
+                    }
 
                 }
                 if ( timesIterated == 0 ){

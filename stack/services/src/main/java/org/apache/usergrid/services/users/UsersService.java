@@ -60,7 +60,9 @@ public class UsersService extends AbstractCollectionService {
 
     public UsersService() {
         super();
-        LOG.debug( "/users" );
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("/users");
+        }
 
         makeConnectionPrivate( "following" );
 

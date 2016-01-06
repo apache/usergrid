@@ -218,7 +218,9 @@ public class S3BinaryStore implements BinaryStore {
         @Override
         public Void call() {
 
-            LOG.debug( "Writing temp file for S3 upload" );
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Writing temp file for S3 upload");
+            }
 
             // determine max size file allowed, default to 50mb
             long maxSizeBytes = 50 * FileUtils.ONE_MB;
@@ -243,7 +245,9 @@ public class S3BinaryStore implements BinaryStore {
                 written += data.length;
                 written += IOUtils.copyLarge( inputStream, os, 0, maxSizeBytes + 1 );
 
-                LOG.debug("Write temp file {} length {}", tempFile.getName(), written);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Write temp file {} length {}", tempFile.getName(), written);
+                }
 
             } catch ( IOException e ) {
                 throw new RuntimeException( "Error creating temp file", e );
@@ -264,8 +268,10 @@ public class S3BinaryStore implements BinaryStore {
             Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
 
             if ( tempFile.length() > maxSizeBytes ) {
-                LOG.debug("File too large. Temp file size (bytes) = {}, " +
-                          "Max file size (bytes) = {} ", tempFile.length(), maxSizeBytes);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("File too large. Temp file size (bytes) = {}, " +
+                        "Max file size (bytes) = {} ", tempFile.length(), maxSizeBytes);
+                }
                 try {
                     EntityManager em = emf.getEntityManager( appId );
                     fileMetadata.put( "error", "Asset size " + tempFile.length()
@@ -284,7 +290,9 @@ public class S3BinaryStore implements BinaryStore {
 
             try {  // start the upload
 
-                LOG.debug( "S3 upload thread started" );
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("S3 upload thread started");
+                }
 
                 BlobStore blobStore = getContext().getBlobStore();
 
@@ -306,11 +314,15 @@ public class S3BinaryStore implements BinaryStore {
                 String md5sum = Hex.encodeHexString( blob.getMetadata().getContentMetadata().getContentMD5() );
                 fileMetadata.put( AssetUtils.CHECKSUM, md5sum );
 
-                LOG.debug( "S3 upload starting" );
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("S3 upload starting");
+                }
 
                 String eTag = blobStore.putBlob( bucketName, blob );
 
-                LOG.debug( "S3 upload complete eTag=" + eTag);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("S3 upload complete eTag=" + eTag);
+                }
 
                 // update entity with eTag
                 EntityManager em = emf.getEntityManager( appId );
