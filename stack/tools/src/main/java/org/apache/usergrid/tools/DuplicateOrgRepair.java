@@ -431,8 +431,6 @@ public class DuplicateOrgRepair extends ToolBase {
     
     class RepairManager implements DuplicateOrgInterface {
 
-        private boolean dryRun = true;
-
         @Override
         public Observable<Org> getOrgs() throws Exception {
 
@@ -443,15 +441,16 @@ public class DuplicateOrgRepair extends ToolBase {
                     subscriber.onStart();
                     try {
                         int count = 0;
-                        
-                        Query query = new Query();
-                        query.setLimit( MAX_ENTITY_FETCH );
-                        query.setResultsLevel( Results.Level.ALL_PROPERTIES );
+
                         EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+                        String queryString = "select *";
+                        Query query = Query.fromQL( queryString );
+                        query.withLimit( MAX_ENTITY_FETCH );
+                        
                         Results results = em.searchCollection( em.getApplicationRef(), "groups", query );
 
                         while (results.size() > 0) {
-                            for (Entity orgEntity : results.getList()) {
+                            for (Entity orgEntity : results.getEntities()) {
                                 
                                 Org org = new Org(
                                     orgEntity.getUuid(), 

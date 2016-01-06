@@ -68,11 +68,12 @@ public class ExportAdmins extends ExportingToolBase {
     public static final String ADMIN_USER_METADATA_PREFIX = "admin-user-metadata";
 
     // map admin user UUID to list of organizations to which user belongs
-    private Map<UUID, List<Org>> userToOrgsMap = new HashMap<UUID, List<Org>>(50000);
+    private Map<UUID, List<Org>> userToOrgsMap = new HashMap<UUID, List<Org>>(100000);
 
-    private Map<String, UUID> orgNameToUUID = new HashMap<String, UUID>(50000);
+    private Map<String, UUID> orgNameToUUID = new HashMap<String, UUID>(100000);
 
-    private Set<UUID> orgsWritten = new HashSet<UUID>(50000);
+    private Set<UUID> orgsWritten = new HashSet<UUID>(100000);
+    private Set<String> orgsNamesWritten = new HashSet<String>(100000);
 
     private Set<UUID> duplicateOrgs = new HashSet<UUID>();
 
@@ -476,7 +477,8 @@ public class ExportAdmins extends ExportingToolBase {
             usersFile.writeEndArray();
             usersFile.close();
 
-            logger.info( "Exported TOTAL {} admin users and {} organizations", userCount.get(), orgsWritten.size() );
+            logger.info( "Exported TOTAL {} admin users and {} organizations, org names = {}",
+                new Object[] { userCount.get(), orgsWritten.size(), orgsNamesWritten.size() } );
         }
 
 
@@ -531,6 +533,7 @@ public class ExportAdmins extends ExportingToolBase {
                 synchronized (orgsWritten) {
                     logger.info("Exported org {}:{}", uuid, orgs.get(uuid));
                     orgsWritten.add( uuid );
+                    orgsNamesWritten.add( orgs.get(uuid) );
                 }
             }
 
