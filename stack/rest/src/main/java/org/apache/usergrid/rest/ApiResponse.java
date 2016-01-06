@@ -184,7 +184,7 @@ public class ApiResponse {
         error = code;
         if ( e instanceof UncaughtException ) {
             errorId = ((UncaughtException) e).getTimeUUID();
-            errorDescription = "Internal Server Error";
+            errorDescription = "Internal Server Error: "+e.getMessage();
             exception = UncaughtException.class.getName();
         } else {
             errorDescription = description;
