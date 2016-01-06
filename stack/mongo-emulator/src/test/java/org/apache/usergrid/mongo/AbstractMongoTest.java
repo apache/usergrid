@@ -33,7 +33,7 @@ import com.mongodb.WriteConcern;
 
 
 public abstract class AbstractMongoTest {
-    private static Logger LOG = LoggerFactory.getLogger( AbstractMongoTest.class );
+    private static final  Logger LOG = LoggerFactory.getLogger( AbstractMongoTest.class );
 
     static MongoServer server = null;
     static boolean usersSetup = false;

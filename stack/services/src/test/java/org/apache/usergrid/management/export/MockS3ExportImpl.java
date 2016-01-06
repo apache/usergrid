@@ -50,7 +50,7 @@ public class MockS3ExportImpl implements S3Export {
             logger.info( "Copied file {} to {}", ephemeral.getAbsolutePath(), verifiedData );
         }
         catch ( IOException e ) {
-            e.printStackTrace();
+            logger.error("Error copying to S3", e);
         }
     }
 }

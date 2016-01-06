@@ -50,7 +50,7 @@ import rx.subscriptions.CompositeSubscription;
  */
 public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
 
-    private static Logger log = LoggerFactory.getLogger( OrderedMerge.class );
+    private static final Logger log = LoggerFactory.getLogger( OrderedMerge.class );
 
     //the comparator to compare items
     private final Comparator<T> comparator;

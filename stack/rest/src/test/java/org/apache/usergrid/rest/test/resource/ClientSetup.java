@@ -36,7 +36,7 @@ import java.io.IOException;
  */
 public class ClientSetup implements TestRule {
 
-    private Logger logger = LoggerFactory.getLogger(ClientSetup.class);
+    private static final Logger logger = LoggerFactory.getLogger(ClientSetup.class);
 
     RestClient restClient;
 

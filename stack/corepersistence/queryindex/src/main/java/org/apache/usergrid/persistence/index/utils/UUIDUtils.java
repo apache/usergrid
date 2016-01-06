@@ -44,7 +44,7 @@ import static org.apache.usergrid.persistence.index.utils.ConversionUtils.uuid;
 
 
 public class UUIDUtils {
-    private static final Logger LOG = LoggerFactory.getLogger( UUIDUtils.class );
+    private static final Logger logger = LoggerFactory.getLogger( UUIDUtils.class );
     private static final int[] MICROS = new int[1000];
 
 
@@ -92,7 +92,7 @@ public class UUIDUtils {
             }
         }
         catch ( Exception ex ) {
-            ex.printStackTrace();
+            logger.error("Error getting new Time UUID", ex);
         }
         finally {
             tsLock.unlock();
@@ -343,7 +343,7 @@ public class UUIDUtils {
             uuid = UUID.fromString( s );
         }
         catch ( Exception e ) {
-            LOG.info( "Could not convert String {} into a UUID", s, e );
+            logger.info( "Could not convert String {} into a UUID", s, e );
         }
         return uuid;
     }

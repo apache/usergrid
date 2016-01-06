@@ -34,7 +34,7 @@ import org.apache.usergrid.rest.applications.users.AbstractUserExtensionResource
 @Produces(MediaType.APPLICATION_JSON)
 public class TestResource extends AbstractUserExtensionResource {
 
-    private static Logger log = LoggerFactory.getLogger( TestResource.class );
+    private static final Logger log = LoggerFactory.getLogger( TestResource.class );
 
 
     public TestResource() {

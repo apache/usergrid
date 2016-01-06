@@ -39,7 +39,7 @@ import static org.junit.Assert.*;
  * TODO: Document this
  */
 public class ConnectionResourceTest extends AbstractRestIT {
-    private static Logger log = LoggerFactory.getLogger( ConnectionResourceTest.class );
+    private static final Logger log = LoggerFactory.getLogger( ConnectionResourceTest.class );
 
 
     @Test

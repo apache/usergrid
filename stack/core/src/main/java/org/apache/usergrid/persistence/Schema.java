@@ -1155,12 +1155,14 @@ public class Schema implements SchemaManager {
 
 
     public static String defaultCollectionName( String entityType ) {
+
         try {
             return collectionNameCache.get( entityType );
         }
         catch ( ExecutionException ex ) {
-            ex.printStackTrace();
+            logger.error("Error getting defaultCollectionName name from cache", ex);
         }
+
         return _defaultCollectionName( entityType );
     }
 

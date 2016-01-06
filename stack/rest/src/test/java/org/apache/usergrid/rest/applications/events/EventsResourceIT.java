@@ -41,7 +41,7 @@ import org.junit.Ignore;
 
 public class EventsResourceIT extends AbstractRestIT {
 
-    private static Logger log = LoggerFactory.getLogger( EventsResourceIT.class );
+    private static final Logger log = LoggerFactory.getLogger( EventsResourceIT.class );
 
 
     @Test

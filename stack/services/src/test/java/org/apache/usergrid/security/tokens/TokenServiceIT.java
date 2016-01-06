@@ -52,7 +52,7 @@ import static org.junit.Assert.assertTrue;
 
 public class TokenServiceIT {
 
-    static Logger log = LoggerFactory.getLogger( TokenServiceIT.class );
+    private static final Logger log = LoggerFactory.getLogger( TokenServiceIT.class );
 
     // app-level data generated only once per test
     private UserInfo adminUser;

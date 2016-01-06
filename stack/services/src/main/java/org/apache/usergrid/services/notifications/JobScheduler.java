@@ -32,7 +32,7 @@ public class JobScheduler{
     private final EntityManager em;
 
     protected ServiceManager sm;
-    private final Logger LOG = LoggerFactory.getLogger(NotificationsService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NotificationsService.class);
 
     public JobScheduler(ServiceManager sm,EntityManager em){
         this.sm=sm; this.em = em;

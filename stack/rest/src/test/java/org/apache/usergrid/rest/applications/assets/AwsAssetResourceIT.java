@@ -48,7 +48,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
 
     private String access_token;
     private Map<String, Object> originalProperties;
-    private Logger LOG = LoggerFactory.getLogger( AwsAssetResourceIT.class );
+    private static final Logger LOG = LoggerFactory.getLogger( AwsAssetResourceIT.class );
 
     /**
      * Mark tests as ignored if no AWS creds are present

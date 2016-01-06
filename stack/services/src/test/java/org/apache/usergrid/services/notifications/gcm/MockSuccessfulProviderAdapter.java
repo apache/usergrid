@@ -81,6 +81,7 @@ public class MockSuccessfulProviderAdapter implements ProviderAdapter {
                 try {
                     tracker.completed();
                 } catch (Exception e) {
+
                     e.printStackTrace();
                 }
             }

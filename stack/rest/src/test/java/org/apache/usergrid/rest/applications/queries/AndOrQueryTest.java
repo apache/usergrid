@@ -36,7 +36,7 @@ import static org.junit.Assert.*;
  * @since 4.0
  */
 public class AndOrQueryTest extends QueryTestBase {
-    private static Logger log = LoggerFactory.getLogger(AndOrQueryTest.class);
+    private static final Logger log = LoggerFactory.getLogger(AndOrQueryTest.class);
 
 
     /**
