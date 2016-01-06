@@ -47,7 +47,7 @@ import static org.junit.Assert.fail;
  * @since 4.0
  */
 public class GeoPagingTest extends AbstractRestIT {
-  private static Logger log = LoggerFactory.getLogger(GeoPagingTest.class);
+  private static final Logger log = LoggerFactory.getLogger(GeoPagingTest.class);
 
   /**
    * Tests the ability to query groups by location

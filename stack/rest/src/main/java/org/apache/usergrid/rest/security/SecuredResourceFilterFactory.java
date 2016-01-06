@@ -294,7 +294,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                     application = management.getApplicationInfo( getApplicationIdentifier() );
                 }
                 catch ( Exception e ) {
-                    e.printStackTrace();
+                    logger.error("Error getting applicationInfo in authorize()", e);
                 }
                 EntityManager em = getEntityManagerFactory().getEntityManager( application.getId() );
                 Map<String, String> roles = null;

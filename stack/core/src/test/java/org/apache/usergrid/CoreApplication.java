@@ -49,7 +49,7 @@ import static junit.framework.Assert.assertNotNull;
 
 public class CoreApplication implements Application, TestRule {
 
-    private final static Logger LOG = LoggerFactory.getLogger( CoreApplication.class );
+    private static final  Logger LOG = LoggerFactory.getLogger( CoreApplication.class );
     protected UUID id;
     protected String appName;
     protected String orgName;

@@ -32,7 +32,7 @@ import com.google.common.base.Preconditions;
  * @author zznate
  */
 public class TraceTagManager {
-    private Logger logger = LoggerFactory.getLogger( TraceTagManager.class );
+    private static final Logger logger = LoggerFactory.getLogger( TraceTagManager.class );
 
     private static ThreadLocal<TraceTag> localTraceTag = new ThreadLocal<TraceTag>();
 

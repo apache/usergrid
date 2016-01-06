@@ -34,7 +34,7 @@ import com.google.common.base.Preconditions;
 
 
 public class AssetUtils {
-    private static Logger LOG = LoggerFactory.getLogger( AssetUtils.class );
+    private static final Logger LOG = LoggerFactory.getLogger( AssetUtils.class );
 
     public static final String FILE_METADATA = "file-metadata";
     public static final String CONTENT_TYPE = "content-type";

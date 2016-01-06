@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * A base class containing common methods used by query tests
  */
 public class QueryTestBase  extends AbstractRestIT {
-    private static Logger log = LoggerFactory.getLogger(QueryTestBase.class);
+    private static final Logger log = LoggerFactory.getLogger(QueryTestBase.class);
     /**
      * Create a number of entities in the specified collection
      * with properties to make them independently searchable

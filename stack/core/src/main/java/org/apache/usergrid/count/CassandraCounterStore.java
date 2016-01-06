@@ -41,7 +41,7 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.*;
  * @author zznate
  */
 public class CassandraCounterStore implements CounterStore {
-    private Logger log = LoggerFactory.getLogger( CassandraCounterStore.class );
+    private static final Logger log = LoggerFactory.getLogger( CassandraCounterStore.class );
 
     // keep track of exceptions thrown in scheduler so we can reduce noise in logs
     private Map<String, Integer> counterInsertFailures = new HashMap<String, Integer>();

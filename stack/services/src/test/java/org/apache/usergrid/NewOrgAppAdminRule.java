@@ -41,7 +41,7 @@ import static org.apache.usergrid.TestHelper.newUUIDString;
  */
 public class NewOrgAppAdminRule implements TestRule {
 
-    private final static Logger LOG = LoggerFactory.getLogger( CoreApplication.class );
+    private static final Logger LOG = LoggerFactory.getLogger( CoreApplication.class );
 
     public static final String ADMIN_NAME = "Test Admin";
     public static final String ADMIN_PASSWORD = "password";

@@ -32,6 +32,8 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.removeEnd;
@@ -46,6 +48,7 @@ import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeLast;
 public class ServiceInfo {
 
     public static final Charset UTF_8 = Charset.forName( "UTF-8" );
+    private static final Logger logger = LoggerFactory.getLogger(ServiceInfo.class);
 
     private final String name;
     private final boolean rootService;
@@ -248,12 +251,14 @@ public class ServiceInfo {
 
     /** Delegates to _getClassName via a CacheLoader due to the expense of path name calculation */
     public static String getClassName( String servicePattern ) {
+
         try {
             return servicePatternCache.get( servicePattern );
         }
         catch ( ExecutionException ee ) {
-            ee.printStackTrace();
+            logger.error("Error in getClassName for service pattern: "+servicePattern, ee);
         }
+
         return _getClassName( servicePattern );
     }
 

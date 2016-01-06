@@ -65,7 +65,7 @@ import static org.junit.Assert.fail;
 
 public class UserResourceIT extends AbstractRestIT {
 
-    private static Logger log = LoggerFactory.getLogger(UserResourceIT.class);
+    private static final Logger log = LoggerFactory.getLogger(UserResourceIT.class);
     UserRepo userRepo;
     CollectionEndpoint usersResource;
     CollectionEndpoint userResource;

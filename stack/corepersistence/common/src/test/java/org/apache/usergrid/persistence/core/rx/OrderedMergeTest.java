@@ -122,7 +122,7 @@ public class OrderedMergeTest {
 
             @Override
             public void onError( final Throwable e ) {
-                e.printStackTrace();
+                log.error("Test failed due to exception", e);
                 fail( "An error was thrown " );
             }
 
@@ -373,7 +373,7 @@ public class OrderedMergeTest {
 
             @Override
             public void onError( final Throwable e ) {
-                e.printStackTrace();
+                log.error("Test failed due to exception", e);
                 fail("An error was thrown ");
             }
 

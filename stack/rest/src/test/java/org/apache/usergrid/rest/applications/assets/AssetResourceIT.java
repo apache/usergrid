@@ -50,7 +50,7 @@ import static org.junit.Assert.*;
 public class AssetResourceIT extends AbstractRestIT {
 
     private String access_token;
-    private Logger LOG = LoggerFactory.getLogger( AssetResourceIT.class );
+    private static final Logger LOG = LoggerFactory.getLogger( AssetResourceIT.class );
     private Map<String, Object> originalProperties;
 
 

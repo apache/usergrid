@@ -46,7 +46,7 @@ import static org.junit.Assert.*;
 public class IndexResourceIT extends AbstractRestIT {
 
     //Used for all MUUserResourceITTests
-    private Logger LOG = LoggerFactory.getLogger(IndexResourceIT.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IndexResourceIT.class);
 
     public IndexResourceIT(){
 
