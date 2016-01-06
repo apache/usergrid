@@ -1,7 +1,14 @@
 Apache Usergrid
 ===============
 
-__WARNING__: The Usergrid master branch represents and un-released Usergrid 2.x version with a completely new persistence and query engine. This new engine requires some new components. In addition to a Cassandra cluster, Usergrid 2.x also requires an ElasticSearch cluster and a distributed Queue system (currently only AWS SQS is supported). 
+__NOTICE__: This master branch represents active and ongoing development of the Usergrid team.  This branch represents Usergrid 2.x which requires some new components. In addition to a Cassandra cluster, Usergrid 2.x also requires an ElasticSearch cluster and a distributed Queue system (currently only AWS SQS is supported). 
+
+Prerequisites
+-------------
+
+* Java 8 - Java7 will not work
+* ElasticSearch 1.4+
+* Cassandra 2.0+
 
 Overview
 --------
