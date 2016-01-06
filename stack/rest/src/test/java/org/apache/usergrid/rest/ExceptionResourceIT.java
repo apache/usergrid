@@ -39,18 +39,6 @@ public class ExceptionResourceIT extends AbstractRestIT{
     @Test
     public void testNotImplementedException(){
         try {
-//            Organization organization = createOrgPayload( "testCreateDuplicateOrgName", null );
-//            Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( organization );
-//            this.refreshIndex();
-//
-//            assertNotNull( orgCreatedResponse );
-//
-//            // Ensure that the token from the newly created organization works.
-//            Token tokenPayload = new Token( "password", organization.getUsername(), organization.getPassword() );
-//            Token tokenReturned = clientSetup.getRestClient().management().token()
-//                                             .post( false, Token.class, tokenPayload, null );
-//            this.management().token().setToken(tokenReturned);
-
 
             clientSetup.getRestClient().management().orgs().delete( true );
 
