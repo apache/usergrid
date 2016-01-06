@@ -453,8 +453,14 @@ public class ImportAdmins extends ToolBase {
                             managementService.createOrganization( orgUuid, orgName, userInfo, false );
                             orgInfo = managementService.getOrganizationByUuid( orgUuid );
 
-                            logger.debug( "Created new org {} for user {}",
-                                    new Object[]{orgInfo.getName(), user.getEmail()} );
+                            if ( orgInfo == null ) {
+                                logger.error( "Error creating new org {} for user {}",
+                                    new Object[] { orgName, userInfo.getUsername() } );
+
+                            } else {
+                                logger.debug( "Created new org {} for user {}",
+                                    new Object[] { orgInfo.getName(), user.getEmail()} );
+                            }
 
                         } catch (DuplicateUniquePropertyExistsException dpee) {
                             logger.debug( "Org {} already exists", orgName );
