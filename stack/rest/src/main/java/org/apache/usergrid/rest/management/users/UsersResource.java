@@ -91,7 +91,7 @@ public class UsersResource extends AbstractContextResource {
 
     private UserResource getUserResource(UserInfo user, String type, String value) throws ManagementException {
         if (user == null) {
-            throw new ManagementException("Could not find organization for " + type + " : " + value);
+            throw new ManagementException("Could not find user for " + type + ": " + value);
         }
         return getSubResource(UserResource.class).init( user );
     }
