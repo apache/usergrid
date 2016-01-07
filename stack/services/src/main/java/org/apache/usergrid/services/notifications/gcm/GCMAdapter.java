@@ -256,8 +256,9 @@ public class GCMAdapter implements ProviderAdapter {
                         }
                         this.ids.clear();
                         this.trackers.clear();
+
                         return;
-                        //throw new InvalidRequestException(401, Constants.ERROR_INVALID_REGISTRATION);
+                        
                     }else {
                         throw new ConnectionException(e.getMessage(), e);
                     }
