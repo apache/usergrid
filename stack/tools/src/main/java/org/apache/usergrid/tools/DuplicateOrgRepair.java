@@ -25,10 +25,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Group;
 import rx.Observable;
@@ -64,8 +61,12 @@ public class DuplicateOrgRepair extends ToolBase {
     int                     threadCount = 5;
 
     static final String     DRYRUN_ARG_NAME = "dryrun";
-    
+
     boolean                 dryRun = false;
+
+    static final String     NO_AUGMENT_ARG_NAME = "noaugment";
+    
+    boolean                 noAugment = false;
 
     static final String     ORG1_ID = "org1";
 
@@ -85,6 +86,13 @@ public class DuplicateOrgRepair extends ToolBase {
             .withDescription( "-" + DRYRUN_ARG_NAME + " true to print what tool would do and do not alter data.")
             .create( DRYRUN_ARG_NAME );
         options.addOption( dryRunOption );
+        
+        Option noAugmentRunOption = OptionBuilder.hasArg()
+            .withType(Boolean.TRUE)
+            .withDescription( "-" + NO_AUGMENT_ARG_NAME + " true to skip the augment step.")
+            .create( NO_AUGMENT_ARG_NAME );
+        options.addOption( noAugmentRunOption );
+
 
         Option writeThreadsOption = OptionBuilder.hasArg()
             .withType(0)
@@ -150,7 +158,11 @@ public class DuplicateOrgRepair extends ToolBase {
         if ( StringUtils.isNotEmpty( line.getOptionValue( DRYRUN_ARG_NAME ) )) {
             dryRun = Boolean.parseBoolean( line.getOptionValue( DRYRUN_ARG_NAME ));
         }
-       
+
+        if ( StringUtils.isNotEmpty( line.getOptionValue( NO_AUGMENT_ARG_NAME ) )) {
+            noAugment = Boolean.parseBoolean( line.getOptionValue( NO_AUGMENT_ARG_NAME ));
+        }
+
         if ( manager == null ) { // we use a special manager when mockTesting
             if (dryRun) {
                 manager = new DryRunManager();
@@ -177,7 +189,9 @@ public class DuplicateOrgRepair extends ToolBase {
             buildOrgMaps();
         }
 
-        augmentUserOrgsMap();
+        if ( noAugment == false ) {
+            augmentUserOrgsMap();
+        }
         
         manager.logDuplicates( duplicatesByName );
         
@@ -319,37 +333,58 @@ public class DuplicateOrgRepair extends ToolBase {
                 
                 if ( !org.equals( bestOrg )) {
                     
-                    Set<OrgUser> orgUsers = new HashSet<OrgUser>( manager.getOrgUsers( org ));
-                    
-                    for ( OrgUser user : orgUsers ) {
+                    Set<OrgUser> orgUsers = new HashSet<OrgUser>( manager.getOrgUsers( org ) );
+
+                    for (OrgUser user : orgUsers) {
                         if (dryRun) {
-                            Object[] args = new Object[] { 
+                            Object[] args = new Object[]{
                                     user.getName(), user.getId(), bestOrg.getName(), bestOrg.getId()};
-                            logger.info( "Would add user {}:{} to org {}:{}", args);
-                            args = new Object[] { 
+                            logger.info( "Would add user {}:{} to org {}:{}", args );
+                            args = new Object[]{
                                     user.getName(), user.getId(), org.getName(), org.getId()};
-                            logger.info( "Would remove user {}:{}  org {}:{}", args);
+                            logger.info( "Would remove user {}:{}  org {}:{}", args );
                         } else {
-                            manager.addUserToOrg( user, bestOrg );
-                            manager.removeUserFromOrg( user, org );
+                            try {
+                                manager.addUserToOrg( user, bestOrg );
+                            } catch ( Exception e ) {
+                                Object[] args = new Object[]{ 
+                                        user.getName(), user.getId(), bestOrg.getName(), bestOrg.getId()};
+                                logger.error( "Error adding user {}:{} to org {}:{}", args );
+                            }
+                            try {
+                                manager.removeUserFromOrg( user, org );
+                            } catch ( Exception e ) {
+                                Object[] args = new Object[]{ 
+                                        user.getName(), user.getId(), org.getName(), org.getId()};
+                                logger.info( "Error removing user {}:{}  org {}:{}", args );
+                            }
+                        }
+                    }
+
+                    Set<UUID> orgApps = new HashSet<UUID>( manager.getOrgApps( org ) );
+
+                    for (UUID appId : orgApps) {
+                        if (dryRun) {
+                            Object[] args = new Object[]{ appId, bestOrg.getName(), bestOrg.getId()};
+                            logger.info( "Would add app {} to org {}:{}", args );
+                            args = new Object[]{ appId, org.getName(), org.getId()};
+                            logger.info( "Would remove app {} org {}:{}", args );
+                        } else {
+                            try {
+                                manager.addAppToOrg( appId, bestOrg );
+                            } catch ( Exception e ) {
+                                Object[] args = new Object[]{ appId, bestOrg.getName(), bestOrg.getId()};
+                                logger.error( "Error adding app {} to org {}:{}", args );
+                            }
+                            try {
+                                manager.removeAppFromOrg( appId, org );
+                            } catch (Exception e  ) {
+                                Object[] args = new Object[]{ appId, org.getName(), org.getId()};
+                                logger.info( "Error removing app {} org {}:{}", args );
+                            }
                         }
                     }
                     
-                    Set<UUID> orgApps = new HashSet<UUID>( manager.getOrgApps( org ));
-                            
-                    for ( UUID appId : orgApps ) {
-                        if (dryRun) {
-                            Object[] args = new Object[] { 
-                                    appId, bestOrg.getName(), bestOrg.getId()};
-                            logger.info( "Would add app {} to org {}:{}", args);
-                            args = new Object[] { 
-                                    appId, org.getName(), org.getId()};
-                            logger.info( "Would remove app {} org {}:{}", args);
-                        } else {
-                            manager.addAppToOrg( appId, bestOrg );
-                            manager.removeAppFromOrg( appId, org );
-                        }
-                    }
                 }
             }
         }
@@ -531,14 +566,16 @@ public class DuplicateOrgRepair extends ToolBase {
         public void removeOrg(Org keeper, Org duplicate) throws Exception {
             
             // rename org so that it is no longer a duplicate
-            OrganizationInfo orgInfo = managementService.getOrganizationByUuid( duplicate.getId() );
-            orgInfo.setName( "dup_" + keeper.getId() + "_" + RandomStringUtils.randomAlphanumeric(10) );
-            managementService.updateOrganization( orgInfo );
+            EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+            em.delete( new SimpleEntityRef( "group", duplicate.getId() ));
+            logger.info("Deleted org {}:{}", new Object[] { duplicate.getName(), duplicate.getId() });
 
             // fix the org name index
             OrganizationInfo orgInfoKeeper = managementService.getOrganizationByUuid( keeper.getId() );
             try {
                 managementService.updateOrganizationUniqueIndex( orgInfoKeeper, duplicate.getId() );
+                logger.info("Updated index for keeper {}:{} not dup {}", new Object[] {
+                        orgInfoKeeper.getName(), orgInfoKeeper.getUuid(), duplicate.getId() });
                 
             } catch ( Exception e ) {
                 // if there are multiple duplicates this will fail for all but one of them. That's OK
@@ -568,6 +605,8 @@ public class DuplicateOrgRepair extends ToolBase {
         public void removeUserFromOrg(OrgUser user, Org org) throws Exception {
             // forcefully remove admin user from org
             managementService.removeAdminUserFromOrganization( user.getId(), org.getId(), true );
+            logger.info("Removed user {}:{} from org {}:{}", new Object[] {
+                    user.getName(), user.getId(), org.getName(), org.getId() });
         }
 
         
@@ -576,6 +615,8 @@ public class DuplicateOrgRepair extends ToolBase {
             UserInfo userInfo = managementService.getAdminUserByUsername( user.getName() );
             OrganizationInfo orgInfo = managementService.getOrganizationByUuid( org.getId() );
             managementService.addAdminUserToOrganization( userInfo, orgInfo, false );
+            logger.info("Added user {}:{} to org {}:{}", new Object[] {
+                    user.getName(), user.getId(), org.getName(), org.getId() });
         }
 
         
@@ -588,13 +629,17 @@ public class DuplicateOrgRepair extends ToolBase {
         
         @Override
         public void removeAppFromOrg(UUID appId, Org org) throws Exception {
-            managementService.removeOrganizationApplication( org.getId(), appId ); 
+            managementService.removeOrganizationApplication( org.getId(), appId );
+            logger.info("Removed app {} from org {}:{}", new Object[] {
+                    appId, org.getName(), org.getId() });
         }
 
         
         @Override
         public void addAppToOrg(UUID appId, Org org) throws Exception {
             managementService.addApplicationToOrganization( org.getId(), appId );
+            logger.info("Added app {} to org {}:{}", new Object[] {
+                    appId, org.getName(), org.getId() });
         }
 
         
@@ -631,7 +676,7 @@ public class DuplicateOrgRepair extends ToolBase {
         
         @Override
         public Org getOrg(UUID uuid) throws Exception {
-            
+
             EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
             Entity entity = em.get( uuid );
 
