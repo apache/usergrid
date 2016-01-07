@@ -114,29 +114,34 @@ public class QueueListener  {
 
                 while (threadCount++ < maxThreads) {
                     LOG.info("QueueListener: Starting thread {}.", threadCount);
+                    final int threadNumber = threadCount;
                     Runnable task = new Runnable() {
                         @Override
                         public void run() {
                             try {
-                                execute();
+                                execute(threadNumber);
                             } catch (Exception e) {
-                                LOG.error("failed to start push", e);
+                                if(pool.isShutdown()){
+                                    LOG.warn("QueueListener: push listener pool already shut down.");
+                                }else{
+                                    LOG.error("QueueListener: threads interrupted", e);
+                                }
                             }
                         }
                     };
                     futures.add( pool.submit(task));
                 }
             } catch (Exception e) {
-                LOG.error("QueueListener: failed to start:", e);
+                LOG.error("QueueListener: failed to start", e);
             }
             LOG.info("QueueListener: done starting.");
     }
 
-    private void execute(){
+    private void execute(int threadNumber){
         if(Thread.currentThread().isDaemon()) {
             Thread.currentThread().setDaemon(true);
         }
-        Thread.currentThread().setName("Notifications_Processor"+UUID.randomUUID());
+        Thread.currentThread().setName(getClass().getSimpleName()+"_PushNotifications-"+threadNumber);
 
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
         LOG.info("QueueListener: Starting execute process.");
