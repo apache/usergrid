@@ -34,9 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -94,7 +92,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
         LOG.info("notification {} start queuing", notification.getUuid());
 
-        final PathQuery<Device> pathQuery = notification.getPathTokens().getPathQuery() ; //devices query
+        final PathQuery<Device> pathQuery = notification.getPathQuery().buildPathQuery() ; //devices query
         final AtomicInteger deviceCount = new AtomicInteger(); //count devices so you can make a judgement on batching
         final ConcurrentLinkedQueue<String> errorMessages = new ConcurrentLinkedQueue<String>(); //build up list of issues
 

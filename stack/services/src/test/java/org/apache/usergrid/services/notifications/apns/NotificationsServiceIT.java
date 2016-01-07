@@ -178,7 +178,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // perform push //
 
-        notification = scheduleNotificationAndWait(notification);
+        notification = notificationWaitForComplete(notification);
 
                 setup.getEntityIndex().refresh(app.getId());
 
@@ -249,7 +249,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         Entity entity = results.getEntitiesMap().get(notification.getUuid());
         assertNotNull(entity);
 
-        scheduleNotificationAndWait(notification);
+        notificationWaitForComplete(notification);
 
         // perform push //
 
@@ -413,7 +413,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         ns.addDevice(notification, device1);
 
         // perform push //
-        notification = scheduleNotificationAndWait(notification);
+        notification = notificationWaitForComplete(notification);
         checkStatistics(notification, 0, 1);
 
         notification = (Notification) app.getEntityManager().get(notification)
@@ -444,7 +444,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
 
         // perform push //
-        notification = scheduleNotificationAndWait(notification);
+        notification = notificationWaitForComplete(notification);
 
         checkReceipts(notification, 2);
     }
@@ -503,7 +503,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         assertEquals(notification.getPayloads().get(notifierName), payload);
 
         // perform push //
-        notification = scheduleNotificationAndWait(notification);
+        notification = notificationWaitForComplete(notification);
 
                 setup.getEntityIndex().refresh(app.getId());
 
@@ -570,7 +570,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 setup.getEntityIndex().refresh(app.getId());
 
         // perform push //
-        notification = scheduleNotificationAndWait(notification);
+        notification = notificationWaitForComplete(notification);
 
                 setup.getEntityIndex().refresh(app.getId());
 
@@ -636,7 +636,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         // perform push //
 
         try {
-            scheduleNotificationAndWait(notification);
+            notificationWaitForComplete(notification);
             fail("testConnection() should have failed");
         } catch (Exception ex) {
             // good, there should be an error
@@ -685,7 +685,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 + NOTIFIER_ID_POSTFIX));
 
         // perform push //
-        scheduleNotificationAndWait(notification);
+        notificationWaitForComplete(notification);
 
         // check provider IDs //
 
@@ -747,7 +747,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // perform push //
 
-        notification = scheduleNotificationAndWait(notification);
+        notification = notificationWaitForComplete(notification);
 
                 setup.getEntityIndex().refresh(app.getId());
 
@@ -807,7 +807,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         final Notification notification = (Notification) entity.toTypedEntity();
 
         try {
-            scheduleNotificationAndWait(notification);
+            notificationWaitForComplete(notification);
         } finally {
             listener.setBatchSize( oldBatchSize);
         }
@@ -852,7 +852,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
             Notification.class);
 
         // perform push //
-        notification = scheduleNotificationAndWait(notification);
+        notification = notificationWaitForComplete(notification);
         setup.getEntityIndex().refresh(app.getId());
 
         try {

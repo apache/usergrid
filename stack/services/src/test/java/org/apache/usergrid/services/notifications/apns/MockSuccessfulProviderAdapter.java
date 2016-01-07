@@ -18,8 +18,6 @@ package org.apache.usergrid.services.notifications.apns;
 
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
-import org.apache.usergrid.services.notifications.ConnectionException;
-import org.apache.usergrid.services.notifications.NotificationsService;
 import org.apache.usergrid.services.notifications.ProviderAdapter;
 import org.apache.usergrid.services.notifications.TaskTracker;
 
@@ -46,7 +44,7 @@ public class MockSuccessfulProviderAdapter implements ProviderAdapter {
     }
 
     @Override
-    public void testConnection() throws ConnectionException {
+    public void testConnection() throws Exception {
     }
 
     @Override
