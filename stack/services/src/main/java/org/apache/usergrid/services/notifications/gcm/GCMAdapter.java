@@ -47,20 +47,35 @@ public class GCMAdapter implements ProviderAdapter {
 
     private ConcurrentHashMap<Long,Batch> batches;
 
+    private static final String ttlKey = "time_to_live";
+    private static final String priorityKey = "priority";
+    private static final String dataKey = "data";
+
+
     public GCMAdapter(EntityManager entityManager,Notifier notifier){
         this.notifier = notifier;
         this.entityManager = entityManager;
         batches = new ConcurrentHashMap<>();
     }
     @Override
-    public void testConnection() throws ConnectionException {
+    public void testConnection() throws Exception {
         Sender sender = new Sender(notifier.getApiKey());
-        Message message = new Message.Builder().build();
+        Message message = new Message.Builder().addData("registration_id", "").build();
+        List<String> ids = new ArrayList<String>();
+        ids.add("device_token");
         try {
-            Result result = sender.send(message, "device_token", 1);
+            MulticastResult result = sender.send(message, ids, 1);
             LOG.debug("testConnection result: {}", result);
-        } catch (IOException e) {
-            throw new ConnectionException(e.getMessage(), e);
+        } catch (InvalidRequestException e){
+            // do nothing, we don't have a valid device token to test with
+            LOG.debug("here for testing only");
+        }
+        catch (IOException e) {
+            if(isInvalidRequestException(e)){
+                throw new InvalidRequestException(401, Constants.ERROR_INVALID_REGISTRATION);
+            }else {
+                throw new ConnectionException(e.getMessage(), e);
+            }
         }
     }
 
@@ -68,13 +83,15 @@ public class GCMAdapter implements ProviderAdapter {
     public void sendNotification(String providerId, Object payload, Notification notification, TaskTracker tracker)
             throws Exception {
         Map<String,Object> map = (Map<String, Object>) payload;
-        final String expiresKey = "time_to_live";
-        if(!map.containsKey(expiresKey) && notification.getExpire() != null){
+        if(!map.containsKey(ttlKey) && notification.getExpire() != null){
             // ttl provided to GCM is in seconds.  calculate the difference from now
             long ttlSeconds = notification.getExpireTTLSeconds();
             // max ttl for gcm is 4 weeks - https://developers.google.com/cloud-messaging/http-server-ref
             ttlSeconds = ttlSeconds <= 2419200 ? ttlSeconds : 2419200;
-            map.put(expiresKey, (int)ttlSeconds);//needs to be int
+            map.put(ttlKey, (int)ttlSeconds);//needs to be int
+        }
+        if(!map.containsKey(priorityKey) && notification.getPriority() != null){
+            map.put(priorityKey, notification.getPriority());
         }
         Batch batch = getBatch( map);
         batch.add(providerId, tracker);
@@ -119,7 +136,7 @@ public class GCMAdapter implements ProviderAdapter {
         if (payload instanceof Map) {
             mapPayload = (Map<String, Object>) payload;
         } else if (payload instanceof String) {
-            mapPayload.put("data", payload);
+            mapPayload.put(dataKey, payload);
         } else {
             throw new IllegalArgumentException(
                     "GCM Payload must be either a Map or a String");
@@ -154,6 +171,12 @@ public class GCMAdapter implements ProviderAdapter {
     @Override
     public Notifier getNotifier() {
         return notifier;
+    }
+
+    // this is a hack because Google library can't parse exceptions properly when you have a bad API key
+    private boolean isInvalidRequestException(IOException ie){
+        String message = ie.getMessage();
+        return message.contains("Could not post JSON requests to GCM");
     }
 
     private class Batch {
@@ -191,27 +214,57 @@ public class GCMAdapter implements ProviderAdapter {
             }
         }
 
-        // Message.Builder requires the payload to be Map<String,String> for no
-        // good reason, so I just blind cast it.
-        // What actually happens is: "JSONValue.toJSONString(payload);" so
-        // anything that JSONValue can handle is fine.
-        // (What is necessary here is that the Map needs to have a nested
-        // structure.)
+
         void send() throws Exception {
             synchronized (this) {
                 if (ids.size() == 0)
                     return;
                 Sender sender = new Sender(notifier.getApiKey());
                 Message.Builder builder = new Message.Builder();
-                builder.setData(payload);
-                if(payload.containsKey("time_to_live")){
-                    int ttl = (int)payload.get("time_to_live");
-                    builder.timeToLive(ttl);
+                if(payload.containsKey(ttlKey)){
+                    builder.timeToLive((int)payload.get(ttlKey));
+                    payload.remove(ttlKey);
                 }
+                if(payload.containsKey(priorityKey)){
+
+                    try{
+                        builder.priority(Message.Priority.valueOf(payload.get(priorityKey).toString().toUpperCase()));
+                    }catch(Exception e){
+                        // couldn't determine the priority from the notification, default to "normal"
+                        builder.priority(Message.Priority.NORMAL);
+                    }
+                    payload.remove(priorityKey);
+
+                }
+
+                // add our source notification payload data into the Message Builder
+                // Message.Builder requires the payload to be Map<String,String> so blindly cast
+                Map<String,String> dataMap = (Map<String,String>) payload;
+                dataMap.forEach( (key, value) -> builder.addData(key, value));
+
                 Message message = builder.build();
+                MulticastResult multicastResult;
+                try{
+
+                    multicastResult = sender.send(message, ids, SEND_RETRIES);
+
+                }catch (IOException e) {
+                    if(isInvalidRequestException(e)){
+                        String error = Constants.ERROR_INVALID_REGISTRATION;
+                        for(int i=0; i < ids.size(); i++){
+                            trackers.get(i).failed(error, error);
+                        }
+                        this.ids.clear();
+                        this.trackers.clear();
+
+                        return;
+                        
+                    }else {
+                        throw new ConnectionException(e.getMessage(), e);
+                    }
+                }
 
 
-                MulticastResult multicastResult = sender.send(message, ids, SEND_RETRIES);
                 LOG.debug("sendNotification result: {}", multicastResult);
 
                 for (int i = 0; i < multicastResult.getResults().size(); i++) {
