@@ -39,10 +39,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     private static final Logger logger = LoggerFactory
             .getLogger(NotificationsServiceIT.class);
 
-    /**
-     * set to true to run tests against actual GCM servers - but they may not
-     * all run correctly
-     */
+    /** set to true to use actual connections to GCM servers */
     private static final boolean USE_REAL_CONNECTIONS = true;
     private static final String PROVIDER = USE_REAL_CONNECTIONS ? "google" : "noop";
 
@@ -220,6 +217,31 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         // perform push //
         notification = notificationWaitForComplete(notification);
         assertEquals("high", notification.getPriority());
+        checkReceipts(notification, 1);
+    }
+
+    @Test
+    public void singlePushNotificationWithMapPayload() throws Exception {
+
+        app.clear();
+        String payload = "{\"message\":\"Hello, World!\", \"campaign\":\"Hello Campaign\"}";
+        Map<String, String> payloads = new HashMap<String, String>(1);
+        payloads.put(notifier.getUuid().toString(), payload);
+        app.put("payloads", payloads);
+        app.put("queued", System.currentTimeMillis());
+        app.put("debug",true);
+        app.put("expire", System.currentTimeMillis() + 300000); // add 5 minutes to current time
+
+        Entity e = app.testRequest(ServiceAction.POST, 1, "devices",device1.getUuid(),"notifications").getEntity();
+        app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
+
+        Notification notification = app.getEntityManager().get(e.getUuid(), Notification.class);
+        assertEquals(
+            notification.getPayloads().get(notifier.getUuid().toString()),
+            payload);
+
+        // perform push //
+        notification = notificationWaitForComplete(notification);
         checkReceipts(notification, 1);
     }
 

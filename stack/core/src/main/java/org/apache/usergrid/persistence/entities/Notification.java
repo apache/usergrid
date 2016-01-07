@@ -180,7 +180,8 @@ public class Notification extends TypedEntity {
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getPriority() {
-        return priority;
+        // default the priority to normal if not provided
+        return priority != null ? priority : "normal";
     }
 
     public void setPriority(String priority) {
