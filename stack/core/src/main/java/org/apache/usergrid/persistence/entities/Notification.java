@@ -37,6 +37,11 @@ public class Notification extends TypedEntity {
 
     public static final String RECEIPTS_COLLECTION = "receipts";
 
+    public enum Priority {
+        NORMAL, HIGH
+    }
+
+
     /** Total count of notifications sent based on the API path/query */
     @EntityProperty
     protected int expectedCount;
@@ -180,8 +185,24 @@ public class Notification extends TypedEntity {
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getPriority() {
-        // default the priority to normal if not provided
-        return priority != null ? priority : "normal";
+
+        // simply default the priority to normal so it's never null
+        if (priority == null || priority.isEmpty()){
+            priority = "normal";
+        }
+
+        // validate that the priority available is a valid Usergrid notification priority
+        String notificationPriority;
+        try{
+            notificationPriority = Priority.valueOf(priority.toUpperCase()).toString();
+        }catch(IllegalArgumentException e){
+            // it's not a valid Usergrid notification priority, default to normal
+            notificationPriority = Priority.NORMAL.toString();
+        }
+
+        setPriority(notificationPriority.toLowerCase());
+
+        return priority;
     }
 
     public void setPriority(String priority) {
