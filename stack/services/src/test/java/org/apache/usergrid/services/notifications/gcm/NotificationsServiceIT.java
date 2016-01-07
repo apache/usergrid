@@ -216,7 +216,8 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // perform push //
         notification = notificationWaitForComplete(notification);
-        assertEquals("high", notification.getPriority());
+        // if priority is invalid, it should default to normal
+        assertEquals("normal", notification.getPriority());
         checkReceipts(notification, 1);
     }
 
