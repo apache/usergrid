@@ -24,6 +24,7 @@ import org.apache.usergrid.persistence.annotations.EntityProperty;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -66,33 +67,14 @@ public class Notifier extends TypedEntity {
     @EntityProperty(indexed = false, includedInExport = false, encrypted = true)
     protected String sid;
 
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-    public String getSid() {
-        return sid;
-    }
-
-    public void setSid(String sid) {  this.sid = sid; }
-
     //Windows WNS logging
     @EntityProperty(indexed = false, includedInExport = false, encrypted = true)
     protected boolean logging = true;
 
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-    public boolean getLogging() {  return logging;  }
+    /** This contains info like {"certInfo" : {"name": "test.p12", "attributes":{"cn":"api.usergrid.com"}} */
+    @EntityProperty
+    protected Map<String, Object> certInfo;
 
-    public void setLogging(boolean logging) {
-        this.logging = logging;
-    }
-
-    @Override
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getProvider() {
@@ -110,6 +92,37 @@ public class Notifier extends TypedEntity {
 
     public void setEnvironment(String environment) {
         this.environment = environment;
+    }
+
+    @Override
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public String getSid() {
+        return sid;
+    }
+
+    public void setSid(String sid) {  this.sid = sid; }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public boolean getLogging() {  return logging;  }
+
+    public void setLogging(boolean logging) {
+        this.logging = logging;
+    }
+
+     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public Map getCertInfo() {  return certInfo;  }
+
+    public void setCertInfo(Map<String, Object> certInfo) {
+        this.certInfo = certInfo;
     }
 
     @JsonIgnore

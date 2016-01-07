@@ -120,6 +120,7 @@
         <antlr.version>3.4</antlr.version>
         <tika.version>1.4</tika.version>
         <mockito.version>1.10.8</mockito.version>
+        <io.apigee.gcm.version>1.0.0</io.apigee.gcm.version>
 
         <!-- only use half the cores on the machine for testing -->
         <usergrid.it.parallel>methods</usergrid.it.parallel>
@@ -1280,9 +1281,9 @@
             </dependency>
 
             <dependency>
-                <groupId>com.ganyo</groupId>
+                <groupId>io.apigee.gcm</groupId>
                 <artifactId>gcm-server</artifactId>
-                <version>1.0.2</version>
+                <version>${io.apigee.gcm.version}</version>
             </dependency>
 
         </dependencies>
