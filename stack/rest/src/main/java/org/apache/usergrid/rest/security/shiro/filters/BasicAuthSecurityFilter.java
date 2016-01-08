@@ -45,7 +45,10 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
 
     @Override
     public void filter( ContainerRequestContext request ) {
-        logger.info("Filtering: " + request.getUriInfo().getBaseUri());
+        if(logger.isDebugEnabled()){
+            logger.debug("Filtering: " + request.getUriInfo().getBaseUri());
+        }
+
 
         Map<String, String> auth_types = getAuthTypes( request );
         if ( ( auth_types == null ) || !auth_types.containsKey( AUTH_BASIC_TYPE ) ) {
