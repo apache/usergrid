@@ -18,6 +18,7 @@ package org.apache.usergrid.services.notifications.gcm;
 
 import com.google.android.gcm.server.Constants;
 import com.google.android.gcm.server.InvalidRequestException;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.services.notifications.*;
@@ -33,6 +34,7 @@ import org.apache.usergrid.services.ServiceAction;
 import static org.junit.Assert.*;
 import static org.apache.usergrid.services.notifications.ApplicationQueueManager.NOTIFIER_ID_POSTFIX;
 
+@NotThreadSafe
 public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
 
@@ -491,7 +493,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
 
         // validate notification  was created successfully
-        app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
         Notification notification = app.getEntityManager().get(e.getUuid(), Notification.class);
         assertEquals(
             notification.getPayloads().get(notifier.getUuid().toString()),
