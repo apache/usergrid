@@ -60,9 +60,6 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
 
     @Override
     public Response toResponse( E e ) {
-        if(e instanceof UnsupportedServiceOperationException || e instanceof  NotAllowedException || e instanceof UnsupportedOperationException){
-            return toResponse( METHOD_NOT_ALLOWED,e );
-        }
         // if we don't know what type of error it is then it's a 500
         return toResponse( INTERNAL_SERVER_ERROR, e );
     }
