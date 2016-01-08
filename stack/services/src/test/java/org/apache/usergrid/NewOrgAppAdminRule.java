@@ -41,7 +41,7 @@ import static org.apache.usergrid.TestHelper.newUUIDString;
  */
 public class NewOrgAppAdminRule implements TestRule {
 
-    private static final Logger LOG = LoggerFactory.getLogger( CoreApplication.class );
+    private static final Logger logger = LoggerFactory.getLogger( CoreApplication.class );
 
     public static final String ADMIN_NAME = "Test Admin";
     public static final String ADMIN_PASSWORD = "password";
@@ -76,7 +76,7 @@ public class NewOrgAppAdminRule implements TestRule {
 
 
     protected void after( Description description ) {
-        LOG.info( "Test {}: finish with application", description.getDisplayName() );
+        logger.info( "Test {}: finish with application", description.getDisplayName() );
     }
 
 

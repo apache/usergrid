@@ -81,7 +81,7 @@ import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger( WebSocketChannelHandler.class );
+    private static final Logger logger = LoggerFactory.getLogger( WebSocketChannelHandler.class );
 
     private final EntityManagerFactory emf;
     private final ServiceManagerFactory smf;
@@ -144,7 +144,7 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
         }
         String location =
                 ( ssl ? "wss://" : "ws://" ) + req.getHeader( HttpHeaders.Names.HOST ) + ( path != null ? path : "" );
-        LOG.info( location );
+        logger.info( location );
         return location;
     }
 
@@ -171,7 +171,7 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 
     @Override
     public void exceptionCaught( ChannelHandlerContext ctx, ExceptionEvent e ) {
-        LOG.warn( "Unexpected exception from downstream.", e.getCause() );
+        logger.warn( "Unexpected exception from downstream.", e.getCause() );
         e.getChannel().close();
     }
 
@@ -180,7 +180,7 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
     public void channelDisconnected( ChannelHandlerContext ctx, ChannelStateEvent e ) throws Exception {
         super.channelDisconnected( ctx, e );
         if ( websocket ) {
-            LOG.info( "Websocket disconnected" );
+            logger.info( "Websocket disconnected" );
         }
     }
 
@@ -224,7 +224,7 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
         else if ( is_ws_request ) {
             // Serve the WebSocket handshake request.
 
-            LOG.info( "Starting new websocket connection..." );
+            logger.info( "Starting new websocket connection..." );
             websocket = true;
 
             // Create the WebSocket handshake response.
@@ -235,7 +235,7 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
 
             QueryStringDecoder qs = new QueryStringDecoder( req.getUri() );
             String path = qs.getPath();
-            LOG.info( path );
+            logger.info( path );
 
             // Fill in the headers and contents depending on handshake method.
             if ( req.containsHeader( SEC_WEBSOCKET_KEY1 ) && req.containsHeader( SEC_WEBSOCKET_KEY2 ) ) {
@@ -243,7 +243,7 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
                 String[] segments = split( path, '/' );
 
                 if ( segments.length != 3 ) {
-                    LOG.info( "Wrong number of path segments, expected 3, found " + segments.length );
+                    logger.info( "Wrong number of path segments, expected 3, found " + segments.length );
                     sendHttpResponse( ctx, req, FORBIDDEN );
                     return;
                 }
@@ -252,7 +252,7 @@ public class WebSocketChannelHandler extends SimpleChannelUpstreamHandler {
                 String collStr = segments[1];
                 String idStr = segments[2];
 
-                LOG.info( nsStr + "/" + collStr + "/" + idStr );
+                logger.info( nsStr + "/" + collStr + "/" + idStr );
 
                 if ( isEmpty( nsStr ) || isEmpty( collStr ) || isEmpty( idStr ) ) {
                     sendHttpResponse( ctx, req, FORBIDDEN );

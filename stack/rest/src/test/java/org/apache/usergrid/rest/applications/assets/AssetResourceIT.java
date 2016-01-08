@@ -25,8 +25,6 @@ import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.services.assets.data.AssetUtils;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.glassfish.jersey.media.multipart.file.StreamDataBodyPart;
 import org.junit.After;
 import org.junit.Assert;
@@ -50,7 +48,7 @@ import static org.junit.Assert.*;
 public class AssetResourceIT extends AbstractRestIT {
 
     private String access_token;
-    private static final Logger LOG = LoggerFactory.getLogger( AssetResourceIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( AssetResourceIT.class );
     private Map<String, Object> originalProperties;
 
 
@@ -213,13 +211,13 @@ public class AssetResourceIT extends AbstractRestIT {
         FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
         ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( form );
         UUID assetId = postResponse.getEntities().get(0).getUuid();
-        LOG.info( "Waiting for upload to finish..." );
+        logger.info( "Waiting for upload to finish..." );
         Thread.sleep( 2000 );
 
         // check that entire file was uploaded
 
         ApiResponse getResponse = pathResource( getOrgAppPath( "foos/" +assetId ) ).get( ApiResponse.class );
-        LOG.info( "Upload complete!" );
+        logger.info( "Upload complete!" );
         InputStream is = pathResource( getOrgAppPath( "foos/" + assetId ) ).getAssetAsStream();
         byte[] foundData = IOUtils.toByteArray( is );
         assertEquals( data.length, foundData.length );
@@ -252,7 +250,7 @@ public class AssetResourceIT extends AbstractRestIT {
             UUID assetId = postResponse.getEntities().get(0).getUuid();
 
             String errorMessage = null;
-            LOG.info( "Waiting for upload to finish..." );
+            logger.info( "Waiting for upload to finish..." );
             Thread.sleep( 2000 );
 
             // attempt to get asset entity, it should contain error

@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.usergrid.StressTest;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -54,7 +53,7 @@ import static org.junit.Assert.assertNotNull;
 @UseModules(TestCollectionModule.class)
 @Category(StressTest.class)
 public class EntityCollectionManagerStressTest {
-    private static final Logger log = LoggerFactory.getLogger(
+    private static final Logger logger = LoggerFactory.getLogger(
             EntityCollectionManagerStressTest.class );
 
     @Inject
@@ -90,11 +89,11 @@ public class EntityCollectionManagerStressTest {
             ids.add(returned.getId());
 
             if ( i % 1000 == 0 ) {
-                log.info("   Wrote: " + i);
+                logger.info("   Wrote: " + i);
             }
         }
         timer.stop();
-        log.info( "Total time to write {} entries {}ms", limit, timer.getTime());
+        logger.info( "Total time to write {} entries {}ms", limit, timer.getTime());
         timer.reset();
 
         timer.start();
@@ -104,6 +103,6 @@ public class EntityCollectionManagerStressTest {
             assertNotNull("Returned has a version", entity.getVersion());
         }
         timer.stop();
-        log.info( "Total time to read {} entries {}ms", limit, timer.getTime());
+        logger.info( "Total time to read {} entries {}ms", limit, timer.getTime());
     }
 }

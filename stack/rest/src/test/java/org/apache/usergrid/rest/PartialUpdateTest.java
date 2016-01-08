@@ -36,7 +36,7 @@ import static org.junit.Assert.*;
  * Partial update test.
  */
 public class PartialUpdateTest extends AbstractRestIT {
-    private static final Logger log = LoggerFactory.getLogger(PartialUpdateTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(PartialUpdateTest.class);
 
     double latitude = 37.772837;
     double longitude = -122.409895;
@@ -85,7 +85,7 @@ public class PartialUpdateTest extends AbstractRestIT {
             // retrieve the user from the backend
             userNode = this.app().collection("users").entity(userNode).get();
 
-            log.info(userNode.toString());
+            logger.info(userNode.toString());
 
             // verify that the user was returned
             assertNotNull(userNode);
@@ -98,9 +98,9 @@ public class PartialUpdateTest extends AbstractRestIT {
 
             // Verify that the location was updated correctly AND that
             // it is not the same object reference from the original POST
-            log.info(geolocation.get("latitude") + " != "
+            logger.info(geolocation.get("latitude") + " != "
                 + Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("latitude").toString()));
-            log.info(geolocation.get("longitude") + " != "
+            logger.info(geolocation.get("longitude") + " != "
                 + Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("longitude").toString()));
             assertNotSame(geolocation.get("latitude"),
                 Double.parseDouble(((Map<String, Object>) userNode.get("location")).get("latitude").toString()));

@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.usergrid.ExperimentalTest;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
@@ -45,7 +44,7 @@ import static org.junit.Assert.assertEquals;
 @net.jcip.annotations.NotThreadSafe
 public class BatchCountParallelismTest {
 
-	private static final Logger LOG = LoggerFactory.getLogger( BatchCountParallelismTest.class );
+	private static final Logger logger = LoggerFactory.getLogger( BatchCountParallelismTest.class );
     private ExecutorService exec = Executors.newFixedThreadPool( 24 );
     private SimpleBatcher batcher;
     private StubSubmitter submitter = new StubSubmitter();
@@ -89,21 +88,21 @@ public class BatchCountParallelismTest {
                         Count count = new Count( "Counter", "k1", "counter1", 1 );
                         batcher.add( count );
                     }
-                    LOG.info( "Task iteration # {} : ", c );
+                    logger.info( "Task iteration # {} : ", c );
                     cdl.countDown();
                     return true;
                 }
             } ) );
         }
         batcher.add( new Count( "Counter", "k1", "counter1", 1 ) );
-        LOG.info( "size: " + calls.size() );
+        logger.info( "size: " + calls.size() );
 
         cdl.await();
         //    exec.awaitTermination(2,TimeUnit.SECONDS);
 
         exec.shutdown();
         while  (! exec.awaitTermination( 3, TimeUnit.SECONDS ) ) {
-        	LOG.warn("jobs not yet finished, wait again");
+        	logger.warn("jobs not yet finished, wait again");
         }
         // we should have 100 total invocations of AbstractBatcher#add
 
@@ -138,7 +137,7 @@ public class BatchCountParallelismTest {
 
         @Override
         public Future<?> submit( Collection<Count> counts ) {
-            LOG.info( "submitted: " + counts.size() );
+            logger.info( "submitted: " + counts.size() );
             counted.addAndGet( counts.size() );
             submit.incrementAndGet();
             return null;
