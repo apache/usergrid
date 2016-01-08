@@ -71,7 +71,9 @@ public class UsersResource extends ServiceResource {
     public AbstractContextResource addIdParameter( @Context UriInfo ui, @PathParam("entityId") PathSegment entityId )
             throws Exception {
 
-        logger.info( "ServiceResource.addIdParameter" );
+        if(logger.isDebugEnabled()){
+            logger.debug( "ServiceResource.addIdParameter" );
+        }
 
         UUID itemId = UUID.fromString( entityId.getPath() );
 
@@ -88,9 +90,10 @@ public class UsersResource extends ServiceResource {
     public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )
             throws Exception {
 
-        logger.info( "ServiceResource.addNameParameter" );
-
-        logger.info( "Current segment is " + itemName.getPath() );
+        if(logger.isDebugEnabled()){
+            logger.debug( "ServiceResource.addNameParameter" );
+            logger.debug( "Current segment is " + itemName.getPath() );
+        }
 
         if ( itemName.getPath().startsWith( "{" ) ) {
             Query query = Query.fromJsonString( itemName.getPath() );
@@ -209,7 +212,9 @@ public class UsersResource extends ServiceResource {
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.debug( "UsersResource.executePost: body = " + body);
+        if(logger.isDebugEnabled()){
+            logger.debug( "UsersResource.executePost: body = " + body);
+        }
 
         Object json = readJsonToObject( body );
 
@@ -221,7 +226,9 @@ public class UsersResource extends ServiceResource {
 
         boolean activated = !( ( confRequred != null ) && confRequred );
 
-        logger.debug("Confirmation required: {} Activated: {}", confRequred, activated );
+        if(logger.isDebugEnabled()){
+            logger.debug("Confirmation required: {} Activated: {}", confRequred, activated );
+        }
 
         if ( json instanceof Map ) {
             @SuppressWarnings("unchecked") Map<String, Object> map = ( Map<String, Object> ) json;

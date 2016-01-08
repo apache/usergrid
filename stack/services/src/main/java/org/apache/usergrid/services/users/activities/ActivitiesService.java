@@ -39,7 +39,9 @@ public class ActivitiesService extends GenericCollectionService {
 
     public ActivitiesService() {
         super();
-        logger.debug( "/users/*/activities" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("/users/*/activities");
+        }
     }
 
 

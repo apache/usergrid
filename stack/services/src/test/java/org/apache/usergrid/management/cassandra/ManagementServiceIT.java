@@ -58,7 +58,7 @@ import static org.junit.Assert.*;
  */
 
 public class ManagementServiceIT {
-    private static final Logger LOG = LoggerFactory.getLogger( ManagementServiceIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( ManagementServiceIT.class );
 
 
      @ClassRule
@@ -79,7 +79,7 @@ public class ManagementServiceIT {
 
     @Before
     public void setup() throws Exception {
-        LOG.info( "in setup" );
+        logger.info( "in setup" );
 
 
         adminUser = orgAppAdminRule.getAdminInfo();
@@ -140,8 +140,8 @@ public class ManagementServiceIT {
         EntityManager em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
 
         Map<String, Long> counts = em.getApplicationCounters();
-        LOG.info( JsonUtils.mapToJsonString( counts ) );
-        LOG.info( JsonUtils.mapToJsonString( em.getCounterNames() ) );
+        logger.info( JsonUtils.mapToJsonString( counts ) );
+        logger.info( JsonUtils.mapToJsonString( em.getCounterNames() ) );
 
         final Long existingCounts = counts.get( "admin_logins" );
 
@@ -152,8 +152,8 @@ public class ManagementServiceIT {
 
 
         counts = em.getApplicationCounters();
-        LOG.info( JsonUtils.mapToJsonString( counts ) );
-        LOG.info( JsonUtils.mapToJsonString( em.getCounterNames() ) );
+        logger.info( JsonUtils.mapToJsonString( counts ) );
+        logger.info( JsonUtils.mapToJsonString( em.getCounterNames() ) );
         assertNotNull( counts.get( "admin_logins" ) );
 
         final long newCount = counts.get( "admin_logins" );

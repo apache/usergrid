@@ -75,7 +75,9 @@ public class ApplicationResource extends NamedResource {
             .accept(MediaType.APPLICATION_JSON)
             .post( javax.ws.rs.client.Entity.json(payload), String.class);
 
-        logger.debug("Response from post: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from post: " + responseString);
+        }
 
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
         try {
@@ -97,7 +99,9 @@ public class ApplicationResource extends NamedResource {
             .accept(MediaType.APPLICATION_JSON)
             .get(String.class);
 
-        logger.debug("Response from post: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from post: " + responseString);
+        }
 
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
         try {

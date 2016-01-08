@@ -142,7 +142,11 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         final int version = migrationInfoSerialization.getVersion( getName() );
 
         if ( version == getMaxVersion() ) {
-            logger.debug( "Skipping Migration Plugin: " + getName() );
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Skipping Migration Plugin: " + getName());
+            }
+
             return;
         }
 

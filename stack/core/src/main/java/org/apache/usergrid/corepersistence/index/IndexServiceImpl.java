@@ -110,7 +110,9 @@ public class IndexServiceImpl implements IndexService {
             .flatMap( buffer -> Observable.from( buffer )
                 //collect results into a single batch
                 .collect( () -> ei.createBatch(), ( batch, indexEdge ) -> {
-                    logger.debug( "adding edge {} to batch for entity {}", indexEdge, entity );
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("adding edge {} to batch for entity {}", indexEdge, entity);
+                    }
                     batch.index( indexEdge, entity );
                 } )
                     //return the future from the batch execution
@@ -138,7 +140,9 @@ public class IndexServiceImpl implements IndexService {
 
             final EntityIndexBatch batch = ei.createBatch();
 
-            logger.debug( "adding edge {} to batch for entity {}", indexEdge, entity );
+            if (logger.isDebugEnabled()) {
+                logger.debug("adding edge {} to batch for entity {}", indexEdge, entity);
+            }
 
             batch.index( indexEdge, entity );
 
@@ -218,7 +222,9 @@ public class IndexServiceImpl implements IndexService {
         final Observable<IndexOperationMessage>  batches = Observable.from( crs )
                 //collect results into a single batch
                 .collect( () -> ei.createBatch(), ( batch, candidateResult ) -> {
-                    logger.debug( "Deindexing on edge {} for entity {} added to batch",searchEdge , entityId );
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Deindexing on edge {} for entity {} added to batch", searchEdge, entityId);
+                    }
                     batch.deindex( candidateResult );
                 } )
                     //return the future from the batch execution

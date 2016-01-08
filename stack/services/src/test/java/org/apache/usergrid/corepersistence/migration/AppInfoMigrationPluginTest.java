@@ -194,7 +194,9 @@ public class AppInfoMigrationPluginTest {
 
     private void checkApplicationsBroken( List<Entity> deletedApps ) throws Exception {
 
-        logger.debug("\n\nChecking applications broken\n");
+        if (logger.isDebugEnabled()) {
+            logger.debug("\n\nChecking applications broken\n");
+        }
 
 
         for ( Entity applicationInfo : deletedApps ) {
@@ -209,7 +211,9 @@ public class AppInfoMigrationPluginTest {
 
     private void checkApplicationsOk( String orgName) throws Exception {
 
-        logger.debug("\n\nChecking applications OK\n");
+        if (logger.isDebugEnabled()) {
+            logger.debug("\n\nChecking applications OK\n");
+        }
 
         for (int i=0; i<10; i++) {
 

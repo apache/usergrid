@@ -19,7 +19,7 @@ package org.apache.usergrid.launcher;
 
 /** @author Ran Tavory (rantav@gmail.com) */
 public class EmbeddedServerHelper {
-    private static org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger( EmbeddedServerHelper.class );
+    private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger( EmbeddedServerHelper.class );
 
     private static final String TMP = "tmp";
 
@@ -66,10 +66,10 @@ public class EmbeddedServerHelper {
             System.setProperty( "log4j.configuration", "file:" + TMP + "/log4j.properties" );
             System.setProperty( "cassandra-foreground", "true" );
 
-            log.info( "Starting executor" );
+            logger.info( "Starting executor" );
 
             executor.execute( new ITRunner() );
-            log.info( "Started executor" );
+            logger.info( "Started executor" );
         }
         else {
             cassandraDaemon.start();
@@ -78,7 +78,7 @@ public class EmbeddedServerHelper {
 
         try {
             java.util.concurrent.TimeUnit.SECONDS.sleep( 3 );
-            log.info( "Done sleeping" );
+            logger.info( "Done sleeping" );
         }
         catch ( InterruptedException e ) {
             throw new AssertionError( e );
@@ -93,7 +93,7 @@ public class EmbeddedServerHelper {
         }
         executor.shutdown();
         executor.shutdownNow();
-        log.info( "Teardown complete" );
+        logger.info( "Teardown complete" );
     }
 
 

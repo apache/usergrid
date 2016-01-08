@@ -16,20 +16,15 @@
  */
 package org.apache.usergrid.services.notifications.apns;
 
-import com.google.common.cache.*;
-
 import com.relayrides.pushy.apns.*;
 import com.relayrides.pushy.apns.util.*;
 
-import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.mortbay.util.ajax.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-import java.security.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -39,8 +34,6 @@ import org.apache.usergrid.services.ServicePayload;
 import org.apache.usergrid.services.notifications.ConnectionException;
 import org.apache.usergrid.services.notifications.ProviderAdapter;
 import org.apache.usergrid.services.notifications.TaskTracker;
-
-import javax.net.ssl.SSLContext;
 
 /**
  * Adapter for Apple push notifications
@@ -72,7 +65,7 @@ public class APNsAdapter implements ProviderAdapter {
     }
 
     @Override
-    public void testConnection() throws ConnectionException {
+    public void testConnection() throws Exception {
         TestAPNsNotification notification =  TestAPNsNotification.create(TEST_TOKEN, TEST_PAYLOAD);
         try {
             CountDownLatch latch = new CountDownLatch(1);
@@ -146,7 +139,9 @@ public class APNsAdapter implements ProviderAdapter {
                     pushManager.start();
                 }
             } catch (IllegalStateException ise) {
-                logger.debug("failed to start", ise);//could have failed because its started
+                if (logger.isDebugEnabled()) {
+                    logger.debug("failed to start", ise);//could have failed because its started
+                }
             }
         }
         return pushManager;

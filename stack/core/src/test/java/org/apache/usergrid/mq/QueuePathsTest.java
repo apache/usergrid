@@ -28,7 +28,7 @@ import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 
 public class QueuePathsTest {
-    private static final Logger LOG = LoggerFactory.getLogger( QueuePathsTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( QueuePathsTest.class );
 
 
     @Test
@@ -36,13 +36,13 @@ public class QueuePathsTest {
     // tests should not be written like this: what's the point? If it's
     // code coverage this is still bad.
     public void testPaths() throws Exception {
-        LOG.info( normalizeQueuePath( "a/b/c" ) );
-        LOG.info( normalizeQueuePath( "a/b/c/" ) );
-        LOG.info( normalizeQueuePath( "/a/b/c" ) );
-        LOG.info( normalizeQueuePath( "/////a/b/c" ) );
-        LOG.info( normalizeQueuePath( "/" ) );
+        logger.info( normalizeQueuePath( "a/b/c" ) );
+        logger.info( normalizeQueuePath( "a/b/c/" ) );
+        logger.info( normalizeQueuePath( "/a/b/c" ) );
+        logger.info( normalizeQueuePath( "/////a/b/c" ) );
+        logger.info( normalizeQueuePath( "/" ) );
 
-        LOG.info( mapToFormattedJsonString( getQueueParentPaths( "/a/b/c" ) ) );
-        LOG.info( mapToFormattedJsonString( getQueueParentPaths( "/" ) ) );
+        logger.info( mapToFormattedJsonString( getQueueParentPaths( "/a/b/c" ) ) );
+        logger.info( mapToFormattedJsonString( getQueueParentPaths( "/" ) ) );
     }
 }

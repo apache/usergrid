@@ -93,7 +93,9 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
      */
     private void startIterator() {
 
-        logger.trace( "Starting shards column iterator" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Starting shards column iterator");
+        }
 
 
         /**
@@ -113,7 +115,9 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
          */
         final List<ScopedRowKey<R>> rowKeys = searcher.getRowKeys();
 
-        logger.trace( "Searching with row keys {}", rowKeys );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Searching with row keys {}", rowKeys);
+        }
 
         currentColumnIterator = new MultiRowColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher, searcher.getComparator(), rowKeys, pageSize);
 

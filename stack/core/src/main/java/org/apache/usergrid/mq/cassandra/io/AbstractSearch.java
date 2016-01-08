@@ -230,7 +230,9 @@ public abstract class AbstractSearch implements QueueSearch {
 
                 results.add( columnName );
 
-                logger.debug( "Added id '{}' to result set for queue id '{}'", start, queueId );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Added id '{}' to result set for queue id '{}'", start, queueId);
+                }
 
                 if ( results.size() >= params.limit ) {
                     return results;

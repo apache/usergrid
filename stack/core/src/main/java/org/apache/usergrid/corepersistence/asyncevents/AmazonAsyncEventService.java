@@ -286,6 +286,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
      * @return
      */
     private List<IndexEventResult> callEventHandlers(final List<QueueMessage> messages) {
+
         if (logger.isDebugEnabled()) {
             logger.debug("callEventHandlers with {} message", messages.size());
         }
@@ -305,6 +306,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
             }
 
             final AsyncEvent thisEvent = event;
+
             if (logger.isDebugEnabled()) {
                 logger.debug("Processing {} event", event);
             }
@@ -464,10 +466,11 @@ public class AmazonAsyncEventService implements AsyncEventService {
         final ApplicationScope applicationScope = edgeDeleteEvent.getApplicationScope();
         final Edge edge = edgeDeleteEvent.getEdge();
 
-        if (logger.isDebugEnabled()) logger.debug("Deleting in app scope {} with edge {}", applicationScope, edge);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Deleting in app scope {} with edge {}", applicationScope, edge);
+        }
 
-        final Observable<IndexOperationMessage> observable = eventBuilder.buildDeleteEdge(applicationScope, edge);
-        return observable;
+        return eventBuilder.buildDeleteEdge(applicationScope, edge);
     }
 
 

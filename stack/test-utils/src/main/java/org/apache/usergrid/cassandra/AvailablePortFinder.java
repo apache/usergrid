@@ -37,8 +37,8 @@ import org.slf4j.LoggerFactory;
  * @see <a href="http://www.iana.org/assignments/port-numbers">IANA.org</a>
  */
 public class AvailablePortFinder {
-	
-	private static final Logger LOG = LoggerFactory.getLogger( AvailablePortFinder.class );
+
+	private static final Logger logger = LoggerFactory.getLogger( AvailablePortFinder.class );
     /** The minimum number of server port number. */
     public static final int MIN_PORT_NUMBER = 1;
 
@@ -126,24 +126,24 @@ public class AvailablePortFinder {
 			// Jackson: It seems like the code below intends to
 			// setReuseAddress(true), but that needs to be set before the bind.
 			// The constructor for the ServerSocket(int) will bind, so not sure
-			// how it would have been working as intended previously. 
-        	
+			// how it would have been working as intended previously.
+
 			// Changing ServerSocket constructor to use default constructor,
 			// this would be unbound, then set the socket reuse, and
 			// call the bind separately
-        	
+
             //ss = new ServerSocket( port );
         	ss = new ServerSocket();
             ss.setReuseAddress( true );
             ss.bind(new InetSocketAddress((InetAddress) null, port), 0);
-            
+
 			// Unlike ServerSocket, the default constructor of DatagramSocket
-			// will bound. To create an unbound DatagramSocket, use null address 
+			// will bound. To create an unbound DatagramSocket, use null address
             //ds = new DatagramSocket( port );
             ds = new DatagramSocket(null);
             ds.setReuseAddress( true );
             ds.bind(new InetSocketAddress((InetAddress) null, port));
-            LOG.info("port {} available", port);
+            logger.info("port {} available", port);
             return true;
         }
         catch ( IOException e ) {
@@ -163,7 +163,7 @@ public class AvailablePortFinder {
                 }
             }
         }
-        LOG.info("port {} unavailable", port);
+        logger.info("port {} unavailable", port);
         return false;
     }
 

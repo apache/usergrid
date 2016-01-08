@@ -64,7 +64,9 @@ public class RebuildIndexTest extends AbstractCoreIT {
     @Before
     public void startReporting() {
 
-        logger.debug( "Starting metrics reporting" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("Starting metrics reporting");
+        }
     }
 
 
@@ -457,11 +459,11 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
         // ----------------- test that we can read them, should fail
 
-        logger.debug( "Reading data, should fail this time " );
+        if (logger.isDebugEnabled()) {
+            logger.debug("Reading data, should fail this time ");
+        }
 
         countEntities( em, collectionName, 0);
-
-
 
         // ----------------- rebuild index
 
@@ -472,12 +474,11 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
 
         try {
-
-
             final long updatedTimestamp = secondEntity.getModified();
 
-
-            logger.debug( "Preparing to rebuild all indexes with timestamp {}", updatedTimestamp );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Preparing to rebuild all indexes with timestamp {}", updatedTimestamp);
+            }
 
             //set our update timestamp
             final ReIndexRequestBuilder builder =

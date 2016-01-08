@@ -57,7 +57,7 @@ import static org.junit.Assert.*;
  */
 @NotThreadSafe
 public class EmailFlowIT {
-    private static final Logger LOG = LoggerFactory.getLogger( EmailFlowIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( EmailFlowIT.class );
 
     @Rule
     public org.apache.usergrid.Application app = new CoreApplication( setup );
@@ -101,7 +101,7 @@ public class EmailFlowIT {
         assertEquals( "User Account Confirmation: " + email, confirmation.getSubject() );
 
         String token = getTokenFromMessage( confirmation );
-        LOG.info( token );
+        logger.info( token );
 
         assertEquals( ActivationState.ACTIVATED,
                 setup.getMgmtSvc().handleConfirmationTokenForAdminUser( org_owner.owner.getUuid(), token ) );
@@ -141,7 +141,7 @@ public class EmailFlowIT {
         assertEquals( "User Account Confirmation: "+email, confirmation.getSubject() );
 
         String token = getTokenFromMessage( confirmation );
-        LOG.info( token );
+        logger.info( token );
 
         ActivationState state =
                 setup.getMgmtSvc().handleConfirmationTokenForAdminUser( org_owner.owner.getUuid(), token );
@@ -162,7 +162,7 @@ public class EmailFlowIT {
         assertEquals( "Request For Admin User Account Activation "+email, activation.getSubject() );
 
         token = getTokenFromMessage( activation );
-        LOG.info( token );
+        logger.info( token );
 
         state = setup.getMgmtSvc().handleActivationTokenForAdminUser( org_owner.owner.getUuid(), token );
         assertEquals( ActivationState.ACTIVATED, state );
@@ -266,12 +266,12 @@ public class EmailFlowIT {
 
         // activation url ok
         String mailContent = ( String ) ( ( MimeMultipart ) activation.getContent() ).getBodyPart( 1 ).getContent();
-        LOG.info( mailContent );
+        logger.info( mailContent );
         assertTrue( StringUtils.contains( mailContent.toLowerCase(), activation_url.toLowerCase() ) );
 
         // token ok
         String token = getTokenFromMessage( activation );
-        LOG.info( token );
+        logger.info( token );
         ActivationState activeState =
                 setup.getMgmtSvc().handleActivationTokenForAppUser( app.getId(), appUser.getUuid(), token );
         assertEquals( ActivationState.ACTIVATED, activeState );
@@ -294,12 +294,12 @@ public class EmailFlowIT {
 
         // resetpwd url ok
         mailContent = ( String ) ( ( MimeMultipart ) reset.getContent() ).getBodyPart( 1 ).getContent();
-        LOG.info( mailContent );
+        logger.info( mailContent );
         assertTrue( StringUtils.contains( mailContent.toLowerCase(), reset_url.toLowerCase() ) );
 
         // token ok
         token = getTokenFromMessage( reset );
-        LOG.info( token );
+        logger.info( token );
         assertTrue( setup.getMgmtSvc().checkPasswordResetTokenForAppUser( app.getId(), appUser.getUuid(), token ) );
 
         // ensure revoke works
@@ -356,12 +356,12 @@ public class EmailFlowIT {
 
         // confirmation url ok
         String mailContent = ( String ) ( ( MimeMultipart ) confirmation.getContent() ).getBodyPart( 1 ).getContent();
-        LOG.info( mailContent );
+        logger.info( mailContent );
         assertTrue( StringUtils.contains( mailContent.toLowerCase(), confirmation_url.toLowerCase() ) );
 
         // token ok
         String token = getTokenFromMessage( confirmation );
-        LOG.info( token );
+        logger.info( token );
         ActivationState activeState =
                 setup.getMgmtSvc().handleConfirmationTokenForAppUser( app.getId(), user.getUuid(), token );
         assertEquals( ActivationState.CONFIRMED_AWAITING_ACTIVATION, activeState );
@@ -393,7 +393,7 @@ public class EmailFlowIT {
     private void testProperty( String propertyName, boolean containsSubstitution ) {
         String propertyValue = setup.get( propertyName );
         assertTrue( propertyName + " was not found", isNotBlank( propertyValue ) );
-        LOG.info( propertyName + "=" + propertyValue );
+        logger.info( propertyName + "=" + propertyValue );
 
         if ( containsSubstitution ) {
             Map<String, String> valuesMap = new HashMap<String, String>();

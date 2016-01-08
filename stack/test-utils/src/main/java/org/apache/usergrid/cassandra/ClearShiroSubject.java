@@ -22,15 +22,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.mgt.*;
-import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.support.SubjectThreadState;
 
 
 /** A {@link org.junit.rules.TestRule} that cleans up the Shiro Subject's ThreadState. */
 public class ClearShiroSubject extends ExternalResource {
-    private static final Logger LOG = LoggerFactory.getLogger( ClearShiroSubject.class );
+    private static final Logger logger = LoggerFactory.getLogger( ClearShiroSubject.class );
 
 
 
@@ -51,12 +49,12 @@ public class ClearShiroSubject extends ExternalResource {
 
         if ( subject == null ) {
 
-            LOG.info( "Shiro Subject was null. No need to clear manually." );
+            logger.info( "Shiro Subject was null. No need to clear manually." );
             return;
         }
 
         new SubjectThreadState( subject ).clear();
 
-        LOG.info( "Shiro Subject was NOT null. Subject has been cleared manually." );
+        logger.info( "Shiro Subject was NOT null. Subject has been cleared manually." );
     }
 }

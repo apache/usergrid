@@ -213,7 +213,7 @@ public class UsersResource extends AbstractContextResource {
 
         UserInfo user = management.getAdminUserByEmail( email );
         if ( user == null ) {
-            throw new ManagementException( "Username not found: " + email );
+            throw new ManagementException( "User with specified email not found: " + email );
         }
         management.addAdminUserToOrganization( user, organization, true );
 

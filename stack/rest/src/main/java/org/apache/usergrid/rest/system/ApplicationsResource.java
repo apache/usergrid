@@ -73,7 +73,7 @@ public class ApplicationsResource extends AbstractContextResource {
         throws Exception {
 
         if(confirmApplicationName == null){
-            throw new IllegalArgumentException("please make add a QueryString for confirmApplicationName");
+            throw new IllegalArgumentException("confirmApplicationName query parameter is required");
         }
 
         final UUID jobId = UUIDGenerator.newTimeUUID();
@@ -82,7 +82,7 @@ public class ApplicationsResource extends AbstractContextResource {
         final String name =  em.getApplication().getApplicationName();
         if(!name.toLowerCase().equals(confirmApplicationName.toLowerCase())){
             throw new IllegalArgumentException(
-                "confirmApplicationName: " + confirmApplicationName + " does not equal " + name);
+                "confirmApplicationName mismatch: " + confirmApplicationName + " does not equal " + name);
         }
         final StatusService statusService = injector.getInstance(StatusService.class);
 

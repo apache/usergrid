@@ -54,7 +54,7 @@ import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USE
 @Produces(MediaType.APPLICATION_JSON)
 public class AssetsResource extends ServiceResource {
 
-    private Logger logger = LoggerFactory.getLogger( AssetsResource.class );
+    private static final Logger logger = LoggerFactory.getLogger( AssetsResource.class );
 
     //@Autowired
     private BinaryStore binaryStore;

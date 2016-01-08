@@ -56,7 +56,7 @@ import static org.mockito.Mockito.when;
 @UseModules(TestGraphModule.class)
 @Category(StressTest.class)
 public class GraphManagerStressTest {
-    private static final Logger log = LoggerFactory.getLogger( GraphManagerStressTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( GraphManagerStressTest.class );
 
     @Inject
     private GraphManagerFactory factory;
@@ -120,7 +120,7 @@ public class GraphManagerStressTest {
                                                                     .toBlocking().toIterable();
 
                                 for ( MarkedEdge edge : edges ) {
-                                    log.debug( "Firing on next for edge {}", edge );
+                                    logger.debug( "Firing on next for edge {}", edge );
 
                                     subscriber.onNext( edge );
                                 }
@@ -250,12 +250,12 @@ public class GraphManagerStressTest {
             ids.add( returned );
 
             if ( i % 1000 == 0 ) {
-                log.info( "   Wrote: " + i );
+                logger.info( "   Wrote: " + i );
             }
         }
 
         timer.stop();
-        log.info( "Total time to write {} entries {}ms", limit, timer.getTime() );
+        logger.info( "Total time to write {} entries {}ms", limit, timer.getTime() );
         timer.reset();
 
         timer.start();
@@ -290,7 +290,7 @@ public class GraphManagerStressTest {
         assertEquals( 0, ids.size() );
 
 
-        log.info( "Total time to read {} entries {}ms", limit, timer.getTime() );
+        logger.info( "Total time to read {} entries {}ms", limit, timer.getTime() );
     }
 
 

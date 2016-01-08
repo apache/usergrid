@@ -1363,13 +1363,18 @@ public abstract class AbstractService implements Service {
                 getPermissionFromPath( em.getApplicationRef().getUuid(), context.getAction().toString().toLowerCase(),
                         path );
         boolean permitted = currentUser.isPermitted( perm );
+
         if ( logger.isDebugEnabled() ) {
             logger.debug( PATH_MSG, new Object[] { path, context.getAction(), perm, permitted } );
         }
+
         SubjectUtils.checkPermission( perm );
         Subject subject = SubjectUtils.getSubject();
-        logger.debug( "Checked subject {} for perm {}", subject != null ? subject.toString() : "", perm );
-        logger.debug( "------------------------------------------------------------------------------" );
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Checked subject {} for perm {}", subject != null ? subject.toString() : "", perm);
+            logger.debug("------------------------------------------------------------------------------");
+        }
     }
 
 

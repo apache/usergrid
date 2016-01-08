@@ -158,7 +158,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 
             final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
 
-            logger.debug( "Checking connections of id {} in application {}", entityId, applicationScope );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Checking connections of id {} in application {}", entityId, applicationScope);
+            }
 
             return gm.getEdgeTypesFromSource(
                 new SimpleSearchEdgeType( entityId, CpNamingUtils.EDGE_CONN_PREFIX, Optional.absent() ) )
@@ -166,7 +168,9 @@ public class ConnectionServiceImpl implements ConnectionService {
                 //now load all edges from this node of this type
                 .flatMap( edgeType -> {
 
-                    logger.debug( "Found edge of types of {}, searching for edges", edgeType );
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Found edge of types of {}, searching for edges", edgeType);
+                    }
 
                     final SearchByEdgeType searchByEdge =
                         new SimpleSearchByEdgeType( entityId, edgeType, Long.MAX_VALUE,
@@ -179,7 +183,9 @@ public class ConnectionServiceImpl implements ConnectionService {
                     //now that we have a stream of edges, stream all versions
                 .flatMap( edge -> {
 
-                    logger.debug( "Found edge {}, searching for multiple versions of edge", edge );
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Found edge {}, searching for multiple versions of edge", edge);
+                    }
 
                     //keep only the most recent
                     final SearchByEdge searchByEdge =
@@ -191,7 +197,9 @@ public class ConnectionServiceImpl implements ConnectionService {
                             //mark for deletion
                         .flatMap( edgeToDelete -> {
 
-                            logger.debug( "Deleting edge {}", edgeToDelete );
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Deleting edge {}", edgeToDelete);
+                            }
 
                             //mark the edge and ignore the cleanup result
                             return gm.markEdge( edgeToDelete );

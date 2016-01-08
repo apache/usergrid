@@ -133,7 +133,9 @@ public class CollectionEndpoint extends NamedResource {
             .accept( acceptHeader )
             .get(String.class);
 
-        logger.debug("Response from get: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from get: " + responseString);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
@@ -246,7 +248,9 @@ public class CollectionEndpoint extends NamedResource {
             .accept(acceptHeader)
             .post( javax.ws.rs.client.Entity.json( payload ), String.class);
 
-        logger.debug("Response from post: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from post: " + responseString);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
@@ -274,7 +278,9 @@ public class CollectionEndpoint extends NamedResource {
             .accept( acceptHeader )
             .post( javax.ws.rs.client.Entity.json( null ), String.class);
 
-        logger.debug("Response from post: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from post: " + responseString);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
@@ -303,7 +309,9 @@ public class CollectionEndpoint extends NamedResource {
             .accept( acceptHeader )
             .post( javax.ws.rs.client.Entity.json( entityList ), String.class);
 
-        logger.debug("Response from post: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from post: " + responseString);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
@@ -352,7 +360,9 @@ public class CollectionEndpoint extends NamedResource {
             .accept(acceptHeader)
             .post( javax.ws.rs.client.Entity.json( entity ), String.class);
 
-        logger.debug("Response from put: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from put: " + responseString);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;

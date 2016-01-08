@@ -44,13 +44,17 @@ public class DevicesService extends AbstractCollectionService {
 
     public DevicesService() {
         super();
-        logger.debug( "/devices" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("/devices");
+        }
     }
 
 
     @Override
     public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception {
-        logger.debug("Registering device {}", id);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Registering device {}", id);
+        }
         return super.putItemById( context, id );
     }
 

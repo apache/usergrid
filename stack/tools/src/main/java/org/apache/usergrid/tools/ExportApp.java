@@ -49,13 +49,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Export all entities and connections of a Usergrid app.
- * 
+ *
  * Exports data files to specified directory.
- * 
+ *
  * Will create as many output files as there are writeThreads (by default: 10).
- * 
+ *
  * Will create two types of files: *.entities for Usegrird entities and *.collections for entity to entity connections.
- * 
+ *
  * Every line of the data files is a complete JSON object.
  */
 public class ExportApp extends ExportingToolBase {
@@ -63,7 +63,7 @@ public class ExportApp extends ExportingToolBase {
 
     static final String APPLICATION_NAME = "application";
     private static final String WRITE_THREAD_COUNT = "writeThreads";
-   
+
     String applicationName;
     String organizationName;
 
@@ -76,7 +76,7 @@ public class ExportApp extends ExportingToolBase {
     Map<Thread, JsonGenerator> entityGeneratorsByThread  = new HashMap<Thread, JsonGenerator>();
     Map<Thread, JsonGenerator> connectionGeneratorsByThread = new HashMap<Thread, JsonGenerator>();
 
-    int writeThreadCount = 10; // set via CLI option; limiting write will limit output files 
+    int writeThreadCount = 10; // set via CLI option; limiting write will limit output files
 
 
     @Override
@@ -96,9 +96,9 @@ public class ExportApp extends ExportingToolBase {
         return options;
     }
 
-    
+
     /**
-     * Tool entry point. 
+     * Tool entry point.
      */
     @Override
     public void runTool(CommandLine line) throws Exception {
@@ -123,7 +123,7 @@ public class ExportApp extends ExportingToolBase {
 
         startSpring();
 
-        UUID applicationId = emf.lookupApplication( applicationName );
+        UUID applicationId = emf.lookupApplication( applicationName ).get();
         if (applicationId == null) {
             throw new RuntimeException( "Cannot find application " + applicationName );
         }
@@ -134,63 +134,62 @@ public class ExportApp extends ExportingToolBase {
         writeScheduler = Schedulers.from( writeThreadPoolExecutor );
 
         Observable<String> collectionsObservable = Observable.create( new CollectionsObservable( em ) );
-        
-        collectionsObservable.flatMap( new Func1<String, Observable<ExportEntity>>() {
 
-            public Observable<ExportEntity> call(String collection) {
+        logger.debug( "Starting export" );
 
-                return Observable.create( new EntityObservable( em, collection ) )
-                        .doOnNext( new EntityWriteAction() ).subscribeOn( writeScheduler );
-            }
+        collectionsObservable.flatMap( collection -> {
 
-        }, writeThreadCount ).flatMap( new Func1<ExportEntity, Observable<ExportConnection>>() {
+            return Observable.create( new EntityObservable( em, collection ) )
+                    .doOnNext( new EntityWriteAction() ).subscribeOn( writeScheduler );
 
-            public Observable<ExportConnection> call(ExportEntity exportEntity) {
+        }, writeThreadCount ).flatMap( exportEntity -> {
 
-                return Observable.create( new ConnectionsObservable( em, exportEntity ) )
-                        .doOnNext( new ConnectionWriteAction() ).subscribeOn( writeScheduler );
-            }
+            return Observable.create( new ConnectionsObservable( em, exportEntity ) )
+                    .doOnNext( new ConnectionWriteAction() ).subscribeOn( writeScheduler );
 
         }, writeThreadCount )
-            .doOnCompleted( new FileWrapUpAction() )
-            .toBlocking().last();
+            .doOnCompleted( new FileWrapUpAction() ).toBlocking().lastOrDefault(null);
     }
-   
-    
+
+
     // ----------------------------------------------------------------------------------------
     // reading data
 
-    
+
     /**
      * Emits collection names found in application.
      */
     class CollectionsObservable implements rx.Observable.OnSubscribe<String> {
         EntityManager em;
-                
+
         public CollectionsObservable(EntityManager em) {
             this.em = em;
         }
 
         public void call(Subscriber<? super String> subscriber) {
-            
+
             int count = 0;
             try {
                 Map<String, Object> collectionMetadata = em.getApplicationCollectionMetadata();
+
+                logger.debug( "Emitting {} collection names for application {}",
+                    collectionMetadata.size(), em.getApplication().getName() );
+
                 for ( String collection : collectionMetadata.keySet() ) {
                     subscriber.onNext( collection );
                     count++;
                 }
-                
+
             } catch (Exception e) {
                 subscriber.onError( e );
             }
-            
+
             subscriber.onCompleted();
             logger.info( "Completed. Read {} collection names", count );
         }
     }
 
-    
+
     /**
      * Emits entities of collection.
      */
@@ -206,9 +205,9 @@ public class ExportApp extends ExportingToolBase {
         public void call(Subscriber<? super ExportEntity> subscriber) {
 
             logger.info("Starting to read entities of collection {}", collection);
-            
+
             subscriber.onStart();
-            
+
             try {
                 int count = 0;
 
@@ -229,16 +228,16 @@ public class ExportApp extends ExportingToolBase {
                                 }
                                 dictionariesByName.put( dictionary, dict );
                             }
-                            
-                            ExportEntity exportEntity = new ExportEntity( 
-                                    organizationName, 
-                                    applicationName, 
-                                    entity, 
+
+                            ExportEntity exportEntity = new ExportEntity(
+                                    organizationName,
+                                    applicationName,
+                                    entity,
                                     dictionariesByName );
-                            
+
                             subscriber.onNext( exportEntity );
                             count++;
-                            
+
                         } catch (Exception e) {
                             logger.error("Error reading entity " + entity.getUuid() +" from collection " + collection);
                         }
@@ -252,14 +251,14 @@ public class ExportApp extends ExportingToolBase {
 
                 subscriber.onCompleted();
                 logger.info("Completed collection {}. Read {} entities", collection, count);
-                
+
             } catch ( Exception e ) {
                 subscriber.onError(e);
             }
         }
     }
 
-    
+
     /**
      * Emits connections of an entity.
      */
@@ -274,53 +273,58 @@ public class ExportApp extends ExportingToolBase {
 
         public void call(Subscriber<? super ExportConnection> subscriber) {
 
-            logger.info( "Starting to read connections for entity {} type {}",
-                    exportEntity.getEntity().getName(), exportEntity.getEntity().getType() );
-            
+//            logger.debug( "Starting to read connections for entity {} type {}",
+//                    exportEntity.getEntity().getName(), exportEntity.getEntity().getType() );
+
             int count = 0;
-            
+
             try {
                 Set<String> connectionTypes = em.getConnectionTypes( exportEntity.getEntity() );
                 for (String connectionType : connectionTypes) {
 
-                    Results results = em.getConnectedEntities( 
-                            exportEntity.getEntity().getUuid(), connectionType, null, Results.Level.CORE_PROPERTIES );
+                    Results results = em.getTargetEntities(
+                        exportEntity.getEntity(), connectionType, null, Query.Level.CORE_PROPERTIES );
 
                     for (Entity connectedEntity : results.getEntities()) {
                         try {
-                            
-                            ExportConnection connection = new ExportConnection( 
+
+                            ExportConnection connection = new ExportConnection(
                                     applicationName,
                                     organizationName,
-                                    connectionType, 
-                                    exportEntity.getEntity().getUuid(), 
+                                    connectionType,
+                                    exportEntity.getEntity().getUuid(),
                                     connectedEntity.getUuid());
-                            
+
                             subscriber.onNext( connection );
                             count++;
 
                         } catch (Exception e) {
-                            logger.error( "Error reading connection entity " 
+                            logger.error( "Error reading connection entity "
                                 + exportEntity.getEntity().getUuid() + " -> " + connectedEntity.getType());
                         }
                     }
                 }
-                
+
             } catch (Exception e) {
                 subscriber.onError( e );
             }
-            
+
             subscriber.onCompleted();
-            logger.info("Completed entity {} type {} connections count {}",
-                new Object[] { exportEntity.getEntity().getName(), exportEntity.getEntity().getType(), count });
+
+            if ( count == 0 ) {
+                logger.debug("Completed entity {} type {} no connections",
+                    new Object[] { exportEntity.getEntity().getUuid(), exportEntity.getEntity().getType() });
+            }
+//            logger.debug("Completed entity {} type {} connections count {}",
+//                new Object[] { exportEntity.getEntity().getUuid(), exportEntity.getEntity().getType(), count });
         }
     }
 
-    
+
     // ----------------------------------------------------------------------------------------
     // writing data
-    
-    
+
+
     /**
      * Writes entities to JSON file.
      */
@@ -358,7 +362,7 @@ public class ExportApp extends ExportingToolBase {
         }
     }
 
-    
+
     /**
      * Writes connection to JSON file.
      */
@@ -396,7 +400,7 @@ public class ExportApp extends ExportingToolBase {
         }
     }
 
-    
+
     private class FileWrapUpAction implements Action0 {
         @Override
         public void call() {

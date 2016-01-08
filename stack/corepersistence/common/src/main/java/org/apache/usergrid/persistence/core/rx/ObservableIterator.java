@@ -66,7 +66,7 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T>
             while ( itr.hasNext() && !subscriber.isUnsubscribed() ) {
                 final T next = itr.next();
 
-                log.trace( "Iterator '{}' emitting item '{}'", name, next );
+                if (log.isTraceEnabled()) log.trace( "Iterator '{}' emitting item '{}'", name, next );
 
                 subscriber.onNext( next );
             }
