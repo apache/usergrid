@@ -337,7 +337,7 @@ public class UserResource extends AbstractContextResource {
         }
 
         try {
-            management.handleActivationTokenForAdminUser( null, user.getUuid(), token );
+            management.handleActivationTokenForAdminUser( user.getUuid(), token );
             return handleViewable( "activate", this );
         }
         catch ( TokenException e ) {
@@ -366,7 +366,7 @@ public class UserResource extends AbstractContextResource {
         }
 
         try {
-            ActivationState state = management.handleConfirmationTokenForAdminUser( null, user.getUuid(), token );
+            ActivationState state = management.handleConfirmationTokenForAdminUser( user.getUuid(), token );
             if ( state == ActivationState.CONFIRMED_AWAITING_ACTIVATION ) {
                 return handleViewable( "confirm", this );
             }

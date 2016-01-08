@@ -64,6 +64,7 @@ import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.security.tokens.TokenCategory;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
+import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
 import org.apache.usergrid.services.*;
 import org.apache.usergrid.utils.*;
@@ -1347,10 +1348,16 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    // TokenType tokenType, String type, AuthPrincipalInfo principal,
-    // Map<String, Object> state
     public String getTokenForPrincipal( TokenCategory token_category, String token_type, UUID applicationId,
                                         AuthPrincipalType principal_type, UUID id, long duration ) throws Exception {
+
+        return getTokenForPrincipal(token_category, token_type, applicationId, principal_type, id, duration, null);
+    }
+
+    // include workflowOrgId
+    public String getTokenForPrincipal( TokenCategory token_category, String token_type, UUID applicationId,
+                                        AuthPrincipalType principal_type, UUID id, long duration,
+                                        UUID workflowOrgId) throws Exception {
 
         if ( anyNull(token_category, applicationId, principal_type, id) ) {
             return null;
@@ -1358,7 +1365,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         return tokens
                 .createToken( token_category, token_type, new AuthPrincipalInfo( principal_type, id, applicationId ),
-                        null, duration );
+                        null, duration, workflowOrgId );
     }
 
 
@@ -1375,29 +1382,40 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    public AuthPrincipalInfo getPrincipalFromAccessToken( String token, String expected_token_type,
-                                                          AuthPrincipalType expected_principal_type ) throws Exception {
+    public boolean validateTokenAndPrincipalTypes(TokenInfo tokenInfo, String expected_token_type,
+                                                  AuthPrincipalType expected_principal_type) throws Exception {
+        boolean success = true;
+        if (tokenInfo == null || (expected_token_type != null && !expected_token_type.equals(tokenInfo.getType()))) {
+            success = false;
+        } else {
+            AuthPrincipalInfo principal = tokenInfo.getPrincipal();
+            if (principal == null ||
+                    (expected_principal_type != null && !expected_principal_type.equals(principal.getType()))) {
+                success = false;
+            }
+        }
+
+        return success;
+    }
+
+
+    public TokenInfo getTokenInfoFromAccessToken(String token, String expected_token_type,
+                                                 AuthPrincipalType expected_principal_type) throws Exception {
 
         TokenInfo tokenInfo = tokens.getTokenInfo( token );
 
-        if ( tokenInfo == null ) {
-            return null;
-        }
+        return validateTokenAndPrincipalTypes(tokenInfo, expected_token_type, expected_principal_type) ?
+                tokenInfo : null;
+    }
 
-        if ( ( expected_token_type != null ) && !expected_token_type.equals( tokenInfo.getType() ) ) {
-            return null;
-        }
 
-        AuthPrincipalInfo principal = tokenInfo.getPrincipal();
-        if ( principal == null ) {
-            return null;
-        }
+    public AuthPrincipalInfo getPrincipalFromAccessToken(String token, String expected_token_type,
+                                                         AuthPrincipalType expected_principal_type) throws Exception {
 
-        if ( ( expected_principal_type != null ) && !expected_principal_type.equals( principal.getType() ) ) {
-            return null;
-        }
+        // validates expected types
+        TokenInfo tokenInfo = getTokenInfoFromAccessToken(token, expected_token_type, expected_principal_type);
 
-        return principal;
+        return tokenInfo != null ? tokenInfo.getPrincipal() : null;
     }
 
 
@@ -1420,10 +1438,7 @@ public class ManagementServiceImpl implements ManagementService {
             principal.getApplicationId() != null
                 ? principal.getApplicationId() : smf.getManagementAppId() );
 
-        Entity entity = em.get(new SimpleEntityRef(
-            principal.getType().getEntityType(), principal.getUuid()));
-
-        return entity;
+        return em.get(new SimpleEntityRef( principal.getType().getEntityType(), principal.getUuid()));
     }
 
 
@@ -1472,8 +1487,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public Entity getAdminUserEntityFromAccessToken( String token ) throws Exception {
 
-        Entity user = getEntityFromAccessToken(token, null, ADMIN_USER);
-        return user;
+        return getEntityFromAccessToken(token, null, ADMIN_USER);
     }
 
 
@@ -1794,10 +1808,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-
-    @Override
-    public OrganizationInfo getOrganizationForApplication( UUID applicationInfoId ) throws Exception {
-
+    protected Entity getOrganizationEntityForApplication( UUID applicationInfoId ) throws Exception {
         if ( applicationInfoId == null ) {
             return null;
         }
@@ -1805,15 +1816,28 @@ public class ManagementServiceImpl implements ManagementService {
         final EntityManager em = emf.getEntityManager(smf.getManagementAppId());
 
         Results r = em.getSourceEntities(
-            new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
-            ORG_APP_RELATIONSHIP, Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
+                new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
+                ORG_APP_RELATIONSHIP, Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
 
-        Entity entity = r.getEntity();
-        if ( entity != null ) {
-            return new OrganizationInfo( entity.getUuid(), ( String ) entity.getProperty( "path" ) );
-        }
+        return r.getEntity();
+    }
 
-        return null;
+    @Override
+    public UUID getOrganizationIdForApplication( UUID applicationInfoId ) throws Exception {
+
+        Entity entity = getOrganizationEntityForApplication(applicationInfoId);
+
+        return entity != null ? entity.getUuid() : null;
+    }
+
+    @Override
+    public OrganizationInfo getOrganizationForApplication( UUID applicationInfoId ) throws Exception {
+
+        Entity entity = getOrganizationEntityForApplication(applicationInfoId);
+
+        return entity != null ?
+                new OrganizationInfo( entity.getUuid(), ( String ) entity.getProperty( "path" ) ) :
+                null;
     }
 
 
@@ -2133,9 +2157,9 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public String getPasswordResetTokenForAdminUser( UUID userId, long ttl ) throws Exception {
+    public String getPasswordResetTokenForAdminUser( UUID userId, long ttl, UUID organizationId ) throws Exception {
         return getTokenForPrincipal( EMAIL, TOKEN_TYPE_PASSWORD_RESET, smf.getManagementAppId(), ADMIN_USER, userId,
-                ttl );
+                ttl, organizationId );
     }
 
 
@@ -2153,14 +2177,16 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public String getActivationTokenForAdminUser( UUID userId, long ttl ) throws Exception {
-        return getTokenForPrincipal( EMAIL, TOKEN_TYPE_ACTIVATION, smf.getManagementAppId(), ADMIN_USER, userId, ttl );
+    public String getActivationTokenForAdminUser( UUID userId, long ttl, UUID organizationId ) throws Exception {
+        return getTokenForPrincipal( EMAIL, TOKEN_TYPE_ACTIVATION, smf.getManagementAppId(), ADMIN_USER, userId,
+                ttl, organizationId );
     }
 
 
     @Override
-    public String getConfirmationTokenForAdminUser( UUID userId, long ttl ) throws Exception {
-        return getTokenForPrincipal( EMAIL, TOKEN_TYPE_CONFIRM, smf.getManagementAppId(), ADMIN_USER, userId, ttl );
+    public String getConfirmationTokenForAdminUser( UUID userId, long ttl, UUID organizationId ) throws Exception {
+        return getTokenForPrincipal( EMAIL, TOKEN_TYPE_CONFIRM, smf.getManagementAppId(), ADMIN_USER, userId,
+                ttl, organizationId );
     }
 
 
@@ -2257,7 +2283,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public void startAdminUserPasswordResetFlow( UUID organizationId, UserInfo user ) throws Exception {
-        String token = getPasswordResetTokenForAdminUser( user.getUuid(), 0 );
+        String token = getPasswordResetTokenForAdminUser( user.getUuid(), 0, organizationId );
 
         String resetPropertyUrl = organizationId != null ?
                 getOrganizationConfigPropertyByUuid(organizationId, PROPERTIES_ADMIN_RESETPW_URL) :
@@ -2410,21 +2436,25 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public ActivationState handleConfirmationTokenForAdminUser( UUID organizationId, UUID userId, String token ) throws Exception {
-        AuthPrincipalInfo principal = getPrincipalFromAccessToken( token, TOKEN_TYPE_CONFIRM, ADMIN_USER );
-        if ( ( principal != null ) && userId.equals( principal.getUuid() ) ) {
-            UserInfo user = getAdminUserByUuid( principal.getUuid() );
-            confirmAdminUser( user.getUuid() );
-            if ( newAdminUsersNeedSysAdminApproval() ) {
-                sendAdminUserConfirmedAwaitingActivationEmail( user );
-                sendSysAdminRequestAdminActivationEmail(organizationId, user);
-                return ActivationState.CONFIRMED_AWAITING_ACTIVATION;
-            }
-            else {
-                activateAdminUser( principal.getUuid() );
-                sendAdminUserActivatedEmail( user );
-                sendSysAdminNewAdminActivatedNotificationEmail( organizationId, user );
-                return ActivationState.ACTIVATED;
+    // token may contain the workflow organization id
+    public ActivationState handleConfirmationTokenForAdminUser( UUID userId, String token ) throws Exception {
+        TokenInfo tokenInfo = getTokenInfoFromAccessToken(token, TOKEN_TYPE_CONFIRM, ADMIN_USER);
+        if (tokenInfo != null) {
+            AuthPrincipalInfo principal = tokenInfo.getPrincipal();
+            if ((principal != null) && userId.equals(principal.getUuid())) {
+                UUID workflowOrgId = tokenInfo.getWorkflowOrgId();
+                UserInfo user = getAdminUserByUuid(principal.getUuid());
+                confirmAdminUser(user.getUuid());
+                if (newAdminUsersNeedSysAdminApproval()) {
+                    sendAdminUserConfirmedAwaitingActivationEmail(user);
+                    sendSysAdminRequestAdminActivationEmail(workflowOrgId, user);
+                    return ActivationState.CONFIRMED_AWAITING_ACTIVATION;
+                } else {
+                    activateAdminUser(principal.getUuid());
+                    sendAdminUserActivatedEmail(user);
+                    sendSysAdminNewAdminActivatedNotificationEmail(workflowOrgId, user);
+                    return ActivationState.ACTIVATED;
+                }
             }
         }
         return ActivationState.UNKNOWN;
@@ -2432,21 +2462,26 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public ActivationState handleActivationTokenForAdminUser( UUID organizationId, UUID userId, String token ) throws Exception {
-        AuthPrincipalInfo principal = getPrincipalFromAccessToken( token, TOKEN_TYPE_ACTIVATION, ADMIN_USER );
-        if ( ( principal != null ) && userId.equals( principal.getUuid() ) ) {
-            activateAdminUser( principal.getUuid() );
-            UserInfo user = getAdminUserByUuid( principal.getUuid() );
-            sendAdminUserActivatedEmail( user );
-            sendSysAdminNewAdminActivatedNotificationEmail(organizationId, user);
-            return ActivationState.ACTIVATED;
+    // token may contain the workflow organization id
+    public ActivationState handleActivationTokenForAdminUser( UUID userId, String token ) throws Exception {
+        TokenInfo tokenInfo = getTokenInfoFromAccessToken(token, TOKEN_TYPE_ACTIVATION, ADMIN_USER);
+        if (tokenInfo == null) {
+            AuthPrincipalInfo principal = tokenInfo.getPrincipal();
+            if ((principal != null) && userId.equals(principal.getUuid())) {
+                UUID workflowOrgId = tokenInfo.getWorkflowOrgId();
+                activateAdminUser(principal.getUuid());
+                UserInfo user = getAdminUserByUuid(principal.getUuid());
+                sendAdminUserActivatedEmail(user);
+                sendSysAdminNewAdminActivatedNotificationEmail(workflowOrgId, user);
+                return ActivationState.ACTIVATED;
+            }
         }
         return ActivationState.UNKNOWN;
     }
 
 
     public void sendAdminUserConfirmationEmail( UUID organizationId, UserInfo user ) throws Exception {
-        String token = getConfirmationTokenForAdminUser(user.getUuid(), 0);
+        String token = getConfirmationTokenForAdminUser(user.getUuid(), 0, organizationId);
         String adminActivationUrlTemplate = organizationId != null ?
                 getOrganizationConfigPropertyByUuid(organizationId, PROPERTIES_ADMIN_CONFIRMATION_URL) :
                 getOrganizationConfigPropertyForUserInfo(user, PROPERTIES_ADMIN_CONFIRMATION_URL);
@@ -2460,7 +2495,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     public void sendSysAdminRequestAdminActivationEmail( UUID organizationId, UserInfo user ) throws Exception {
-        String token = getActivationTokenForAdminUser(user.getUuid(), 0);
+        String token = getActivationTokenForAdminUser(user.getUuid(), 0, organizationId);
         //TODO: admin specific email
         String activationUrlTemplate = organizationId != null ?
                 getOrganizationConfigPropertyByUuid(organizationId, PROPERTIES_ADMIN_ACTIVATION_URL) :
