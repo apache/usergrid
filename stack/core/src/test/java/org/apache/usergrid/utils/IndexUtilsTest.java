@@ -32,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 
 public class IndexUtilsTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger( IndexUtilsTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( IndexUtilsTest.class );
 
 
     @Test
@@ -45,7 +45,7 @@ public class IndexUtilsTest {
         assertEquals( 11, keywords.size() );
 
         for ( String keyword : keywords ) {
-            LOG.info( keyword );
+            logger.info( keyword );
         }
     }
 
@@ -63,7 +63,7 @@ public class IndexUtilsTest {
 
         List<Entry<String, Object>> l = IndexUtils.getKeyValueList( activity, false );
         for ( Entry<String, Object> e : l ) {
-            LOG.info( e.getKey() + " = " + e.getValue() );
+            logger.info( e.getKey() + " = " + e.getValue() );
         }
 
         assertEquals( 7, l.size() );

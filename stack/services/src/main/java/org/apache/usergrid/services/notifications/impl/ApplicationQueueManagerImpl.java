@@ -34,9 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -45,7 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ApplicationQueueManagerImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationQueueManagerImpl.class);
 
     //this is for tests, will not mark initial post complete, set to false for tests
 
@@ -85,14 +83,14 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         long startTime = System.currentTimeMillis();
 
         if (notification.getCanceled() == Boolean.TRUE) {
-            LOG.info("notification " + notification.getUuid() + " canceled");
+            logger.info("notification " + notification.getUuid() + " canceled");
             if (jobExecution != null) {
                 jobExecution.killed();
             }
             return;
         }
 
-        LOG.info("notification {} start queuing", notification.getUuid());
+        logger.info("notification {} start queuing", notification.getUuid());
 
         final PathQuery<Device> pathQuery = notification.getPathTokens().getPathQuery() ; //devices query
         final AtomicInteger deviceCount = new AtomicInteger(); //count devices so you can make a judgement on batching
@@ -102,7 +100,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         //get devices in querystring, and make sure you have access
         if (pathQuery != null) {
             final HashMap<Object,ProviderAdapter> notifierMap =  getAdapterMap();
-            LOG.info("notification {} start query", notification.getUuid());
+            logger.info("notification {} start query", notification.getUuid());
             final Iterator<Device> iterator = pathQuery.iterator(em);
             //if there are more pages (defined by PAGE_SIZE) you probably want this to be async, also if this is already a job then don't reschedule
             if (iterator instanceof ResultsIterator && ((ResultsIterator) iterator).hasPages() && jobExecution == null) {
@@ -121,13 +119,13 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                     long now = System.currentTimeMillis();
                     List<EntityRef> devicesRef = getDevices(entity); // resolve group
 
-                    LOG.info("notification {} queue  {} devices, duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), devicesRef.size());
+                    logger.info("notification {} queue  {} devices, duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), devicesRef.size());
 
                     for (EntityRef deviceRef : devicesRef) {
-                        LOG.info("notification {} starting to queue device {} ", notification.getUuid(), deviceRef.getUuid());
+                        logger.info("notification {} starting to queue device {} ", notification.getUuid(), deviceRef.getUuid());
                         long hash = MurmurHash.hash(deviceRef.getUuid());
                         if (sketch.estimateCount(hash) > 0) { //look for duplicates
-                            LOG.warn("Maybe Found duplicate device: {}", deviceRef.getUuid());
+                            logger.warn("Maybe Found duplicate device: {}", deviceRef.getUuid());
                             continue;
                         } else {
                             sketch.add(hash, 1);
@@ -145,11 +143,11 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                                 notifierKey = entry.getKey().toLowerCase();
                                 break;
                             }
-                            LOG.info("Provider query for notification {} device {} took "+(System.currentTimeMillis()-now)+" ms",notification.getUuid(),deviceRef.getUuid());
+                            logger.info("Provider query for notification {} device {} took "+(System.currentTimeMillis()-now)+" ms",notification.getUuid(),deviceRef.getUuid());
                         }
 
                         if (notifierId == null) {
-                            LOG.info("Notifier did not match for device {} ", deviceRef);
+                            logger.info("Notifier did not match for device {} ", deviceRef);
                             continue;
                         }
 
@@ -158,16 +156,16 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                             // update queued time
                             now = System.currentTimeMillis();
                             notification.setQueued(System.currentTimeMillis());
-                            LOG.info("notification {} device {} queue time set. duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), deviceRef.getUuid());
+                            logger.info("notification {} device {} queue time set. duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), deviceRef.getUuid());
                         }
                         now = System.currentTimeMillis();
                         qm.sendMessage(message);
-                        LOG.info("notification {} post-queue to device {} duration " + (System.currentTimeMillis() - now) + " ms "+queueName+" queue", notification.getUuid(), deviceRef.getUuid());
+                        logger.info("notification {} post-queue to device {} duration " + (System.currentTimeMillis() - now) + " ms "+queueName+" queue", notification.getUuid(), deviceRef.getUuid());
                         deviceCount.incrementAndGet();
                         queueMeter.mark();
                     }
                 } catch (Exception deviceLoopException) {
-                    LOG.error("Failed to add devices", deviceLoopException);
+                    logger.error("Failed to add devices", deviceLoopException);
                     errorMessages.add("Failed to add devices for entity: " + entity.getUuid() + " error:" + deviceLoopException);
                 }
                 return entity;
@@ -181,13 +179,13 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                                         .flatMap(entity -> Observable.just(entity).map(entityListFunct)
                                             .doOnError(throwable -> {
-                                                LOG.error("Failed while writing",
+                                                logger.error("Failed while writing",
                                                     throwable);
                                             })
                                             , 10);
 
             o.toBlocking().lastOrDefault( null );
-            LOG.info( "notification {} done queueing duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
+            logger.info( "notification {} done queueing duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
         }
 
         // update queued time
@@ -205,7 +203,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         long now = System.currentTimeMillis();
 
 
-        LOG.info("notification {} updated notification duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
+        logger.info("notification {} updated notification duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
 
         //do i have devices, and have i already started batching.
         if (deviceCount.get() <= 0 || !notification.getDebug()) {
@@ -217,7 +215,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         }
 
         long elapsed = notification.getQueued() != null ? notification.getQueued() - startTime : 0;
-        LOG.info("notification {} done queuing to {} devices in " + elapsed + " ms", notification.getUuid().toString(), deviceCount.get());
+        logger.info("notification {} done queuing to {} devices in " + elapsed + " ms", notification.getUuid().toString(), deviceCount.get());
     }
 
     /**
@@ -246,11 +244,11 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 notifierHashMap.put(uuid, providerAdapter);
                 notifierHashMap.put(uuid.toString(), providerAdapter);
                 if(count++ >= 100){
-                    LOG.error("ApplicationQueueManager: too many notifiers...breaking out ", notifierHashMap.size());
+                    logger.error("ApplicationQueueManager: too many notifiers...breaking out ", notifierHashMap.size());
                     break;
                 }
             }
-            LOG.info("ApplicationQueueManager: fetching notifiers finished size={}, duration {} ms", notifierHashMap.size(),System.currentTimeMillis() - now);
+            logger.info("ApplicationQueueManager: fetching notifiers finished size={}, duration {} ms", notifierHashMap.size(),System.currentTimeMillis() - now);
         }
         return notifierHashMap;
     }
@@ -262,7 +260,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
      */
     @Override
     public Observable sendBatchToProviders(final List<QueueMessage> messages, final String queuePath) {
-        LOG.info("sending batch of {} notifications.", messages.size());
+        logger.info("sending batch of {} notifications.", messages.size());
 
         final Map<Object, ProviderAdapter> notifierMap = getAdapterMap();
         final ApplicationQueueManagerImpl proxy = this;
@@ -276,7 +274,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 ApplicationQueueMessage message = null;
                 try {
                     message = (ApplicationQueueMessage) queueMessage.getBody();
-                    LOG.info("start sending notification for device {} for Notification: {} on thread "+Thread.currentThread().getId(), message.getDeviceId(), message.getNotificationId());
+                    logger.info("start sending notification for device {} for Notification: {} on thread "+Thread.currentThread().getId(), message.getDeviceId(), message.getNotificationId());
 
                     UUID deviceUUID = message.getDeviceId();
 
@@ -294,7 +292,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                     final Map<String, Object> payloads = notification.getPayloads();
                     final Map<String, Object> translatedPayloads = translatePayloads(payloads, notifierMap);
-                    LOG.info("sending notification for device {} for Notification: {}", deviceUUID, notification.getUuid());
+                    logger.info("sending notification for device {} for Notification: {}", deviceUUID, notification.getUuid());
 
                     try {
                         String notifierName = message.getNotifierKey().toLowerCase();
@@ -306,8 +304,8 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                              tracker.failed(0, "Notification is duplicate/expired/cancelled.");
                         }else {
                             if (payload == null) {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("selected device {} for notification {} doesn't have a valid payload. skipping.", deviceUUID, notification.getUuid());
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("selected device {} for notification {} doesn't have a valid payload. skipping.", deviceUUID, notification.getUuid());
                                 }
                                 tracker.failed(0, "failed to match payload to " + message.getNotifierId() + " notifier");
                             } else {
@@ -317,7 +315,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                                 } catch (Exception e) {
                                     tracker.failed(0, e.getMessage());
                                 } finally {
-                                    LOG.info("sending to device {} for Notification: {} duration " + (System.currentTimeMillis() - now) + " ms", deviceUUID, notification.getUuid());
+                                    logger.info("sending to device {} for Notification: {} duration " + (System.currentTimeMillis() - now) + " ms", deviceUUID, notification.getUuid());
                                 }
                             }
                         }
@@ -327,13 +325,13 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                     }
 
                 } catch (Exception e) {
-                    LOG.error("Failure while sending",e);
+                    logger.error("Failure while sending",e);
                     try {
                         if(!messageCommitted && queuePath != null) {
                             qm.commitMessage(queueMessage);
                         }
                     }catch (Exception queueException){
-                        LOG.error("Failed to commit message.",queueException);
+                        logger.error("Failed to commit message.",queueException);
                     }
                 }
                 return message;
@@ -351,7 +349,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                         providerAdapter.doneSendingNotifications();
                     }
                     catch ( Exception e ) {
-                        LOG.error( "providerAdapter.doneSendingNotifications: ", e );
+                        logger.error( "providerAdapter.doneSendingNotifications: ", e );
                     }
                 }
                 //TODO: check if a notification is done and mark it
@@ -364,12 +362,12 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                             taskManager.finishedBatch();
                         }
                         catch ( Exception e ) {
-                            LOG.error( "Failed to finish batch", e );
+                            logger.error( "Failed to finish batch", e );
                         }
                     }
                 }
                 return notifications;
-            } ).doOnError( throwable -> LOG.error( "Failed while sending", throwable ) );
+            } ).doOnError( throwable -> logger.error( "Failed while sending", throwable ) );
         }, 10 );
 
         return o;
@@ -381,7 +379,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             try {
                 adapter.stop();
             }catch (Exception e){
-                LOG.error("failed to stop adapter",e);
+                logger.error("failed to stop adapter",e);
             }
         }
     }
@@ -438,7 +436,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 subscriber.onCompleted();
             }
             catch ( Throwable t ) {
-                LOG.error("failed on subscriber",t);
+                logger.error("failed on subscriber",t);
                 subscriber.onError( t );
             }
         }
@@ -450,17 +448,17 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         for (final ProviderAdapter providerAdapter : providerAdapters) {
             try {
                 if (providerAdapter != null) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("checking notifier {} for inactive devices", providerAdapter.getNotifier());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("checking notifier {} for inactive devices", providerAdapter.getNotifier());
                     }
                     providerAdapter.removeInactiveDevices();
 
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("finished checking notifier {} for inactive devices", providerAdapter.getNotifier());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("finished checking notifier {} for inactive devices", providerAdapter.getNotifier());
                     }
                 }
             } catch (Exception e) {
-                LOG.error("checkForInactiveDevices", e); // not
+                logger.error("checkForInactiveDevices", e); // not
                 // essential so
                 // don't fail,
                 // but log
@@ -472,17 +470,17 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
     private boolean isOkToSend(Notification notification) {
         Map<String,Long> stats = notification.getStatistics();
         if (stats != null && notification.getExpectedCount() == (stats.get("sent")+ stats.get("errors"))) {
-            LOG.info("notification {} already processed. not sending.",
+            logger.info("notification {} already processed. not sending.",
                     notification.getUuid());
             return false;
         }
         if (notification.getCanceled() == Boolean.TRUE) {
-            LOG.info("notification {} canceled. not sending.",
+            logger.info("notification {} canceled. not sending.",
                     notification.getUuid());
             return false;
         }
         if (notification.isExpired()) {
-            LOG.info("notification {} expired. not sending.",
+            logger.info("notification {} expired. not sending.",
                     notification.getUuid());
             return false;
         }
@@ -515,7 +513,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             }
             return value != null ? value.toString() : null;
         } catch (Exception e) {
-            LOG.error("Errer getting provider ID, proceding with rest of batch", e);
+            logger.error("Errer getting provider ID, proceding with rest of batch", e);
             return null;
         }
     }

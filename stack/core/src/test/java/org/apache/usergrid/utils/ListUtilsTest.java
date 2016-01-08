@@ -29,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ListUtilsTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger( ListUtilsTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( ListUtilsTest.class );
 
 
     @Test
@@ -42,12 +42,12 @@ public class ListUtilsTest {
 
         l = ListUtils.flatten( l );
         assertEquals( 9, l.size() );
-        LOG.info( JsonUtils.mapToFormattedJsonString( l ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( l ) );
 
         l = Arrays.asList( Arrays.asList( 1, 2, 3 ), 4, 5, 6, Arrays.asList( 7, 8, 9 ) );
 
         l = ListUtils.flatten( l );
         assertEquals( 9, l.size() );
-        LOG.info( JsonUtils.mapToFormattedJsonString( l ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( l ) );
     }
 }

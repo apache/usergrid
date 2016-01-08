@@ -45,7 +45,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class IntersectionUnionPagingIT {
 
-    private static final Logger LOG = LoggerFactory.getLogger( IntersectionUnionPagingIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( IntersectionUnionPagingIT.class );
 
     private static final String unionScan =
             "select * where (field1Or > '00000000' OR field2Or > '00000000') AND fieldDate = '0000-00-00'";
@@ -97,7 +97,7 @@ public class IntersectionUnionPagingIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         final String zeros = String.format( "%08d", 0 );
 
@@ -129,8 +129,8 @@ public class IntersectionUnionPagingIT {
 
             Entity saved =  io.writeEntity( entity );
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Writing entity with id '{}'", saved.getUuid());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Writing entity with id '{}'", saved.getUuid());
             }
 
         }
@@ -138,7 +138,7 @@ public class IntersectionUnionPagingIT {
         app.refreshIndex();
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         return Collections.unmodifiableSet( names );
     }
@@ -178,7 +178,7 @@ public class IntersectionUnionPagingIT {
 
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Query took {} ms to return {} entities", stop - start, expectedResults.size() );
+        logger.info( "Query took {} ms to return {} entities", stop - start, expectedResults.size() );
 
         assertEquals( "All names returned", 0, newSets.size() );
     }

@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * A base class containing common methods used by query tests
  */
 public class QueryTestBase  extends AbstractRestIT {
-    private static final Logger log = LoggerFactory.getLogger(QueryTestBase.class);
+    private static final Logger logger = LoggerFactory.getLogger(QueryTestBase.class);
     /**
      * Create a number of entities in the specified collection
      * with properties to make them independently searchable
@@ -62,7 +62,7 @@ public class QueryTestBase  extends AbstractRestIT {
             }
             //create the entity in the desired collection and add it to the return array
             entities[i] = this.app().collection(collectionName).post(props);
-            log.info(entities[i].entrySet().toString());
+            logger.info(entities[i].entrySet().toString());
         }
         //refresh the index so that they are immediately searchable
         this.refreshIndex();

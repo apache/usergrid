@@ -21,7 +21,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -34,11 +33,11 @@ import org.apache.usergrid.rest.applications.users.AbstractUserExtensionResource
 @Produces(MediaType.APPLICATION_JSON)
 public class TestResource extends AbstractUserExtensionResource {
 
-    private static final Logger log = LoggerFactory.getLogger( TestResource.class );
+    private static final Logger logger = LoggerFactory.getLogger( TestResource.class );
 
 
     public TestResource() {
-        log.info( "TestResource" );
+        logger.info( "TestResource" );
     }
 
 

@@ -69,7 +69,7 @@ import static org.junit.Assert.fail;
 @UseModules( { TestIndexModule.class } )
 public class EntityIndexTest extends BaseIT {
 
-    private static final Logger log = LoggerFactory.getLogger(EntityIndexTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(EntityIndexTest.class);
 
     @Inject
     public EntityIndexFactory eif;
@@ -164,7 +164,7 @@ public class EntityIndexTest extends BaseIT {
         timer.stop();
 
         assertEquals(2, candidateResults.size());
-        log.debug("Query time {}ms", timer.getTime());
+        logger.debug("Query time {}ms", timer.getTime());
 
         final CandidateResult candidate1 = candidateResults.get(0);
 
@@ -266,7 +266,7 @@ public class EntityIndexTest extends BaseIT {
 
         testQuery( searchEdge, searchTypes,  "name = 'Lowe Kelley'", 1 );
 
-        log.info("hi");
+        logger.info("hi");
     }
 
 
@@ -309,7 +309,7 @@ public class EntityIndexTest extends BaseIT {
         indexProducer.put(batch.build()).subscribe();;
         EntityIndex.IndexRefreshCommandInfo info =  entityIndex.refreshAsync().toBlocking().first();
         long time = info.getExecutionTime();
-        log.info("refresh took ms:" + time);
+        logger.info("refresh took ms:" + time);
     }
 
 
@@ -342,7 +342,7 @@ public class EntityIndexTest extends BaseIT {
         }
 
         timer.stop();
-        log.info( "Total time to index {} entries {}ms, average {}ms/entry",
+        logger.info( "Total time to index {} entries {}ms, average {}ms/entry",
             new Object[] { count, timer.getTime(), timer.getTime() / count } );
     }
 
@@ -435,7 +435,7 @@ public class EntityIndexTest extends BaseIT {
         timer.stop();
 
         assertEquals(num, candidateResults.size());
-        log.debug("Query time {}ms", timer.getTime());
+        logger.debug("Query time {}ms", timer.getTime());
         return candidateResults;
     }
 

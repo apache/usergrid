@@ -31,12 +31,10 @@ import org.apache.shiro.subject.Subject;
 
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.cassandra.ClearShiroSubject;
 
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 
@@ -45,7 +43,7 @@ import static org.junit.Assert.assertFalse;
 
 
 public class RoleIT {
-    private static final Logger LOG = LoggerFactory.getLogger( RoleIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( RoleIT.class );
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
@@ -89,7 +87,7 @@ public class RoleIT {
 
         subject.checkRole( "application-role:" + applicationId + ":logged-in" );
 
-        LOG.info( "Has role \"logged-in\"" );
+        logger.info( "Has role \"logged-in\"" );
 
         Thread.sleep( 2100 );
 
@@ -97,6 +95,6 @@ public class RoleIT {
 
         assertFalse( subject.hasRole( "application-role:" + applicationId + ":logged-in" ) );
 
-        LOG.info( "Doesn't have role \"logged-in\"" );
+        logger.info( "Doesn't have role \"logged-in\"" );
     }
 }

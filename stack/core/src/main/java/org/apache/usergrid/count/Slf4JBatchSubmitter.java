@@ -42,7 +42,7 @@ public class Slf4JBatchSubmitter implements BatchSubmitter {
 
     // TODO custom logger for printing counts
     // - should be configed programatically
-    private static final Logger log = LoggerFactory.getLogger( Slf4JBatchSubmitter.class );
+    private static final Logger logger = LoggerFactory.getLogger( Slf4JBatchSubmitter.class );
 
     private int threadCount = 3;
 
@@ -62,7 +62,7 @@ public class Slf4JBatchSubmitter implements BatchSubmitter {
                 // TODO perhaps this could be pushed down further into CountProducer Impl?
                 // - this would leave generic submitter class
                 for ( Count c : counts ) {
-                    log.info( "found count {}", c );
+                    logger.info( "found count {}", c );
                 }
                 timer.stop();
                 return true;
@@ -72,7 +72,7 @@ public class Slf4JBatchSubmitter implements BatchSubmitter {
 
 
     public void shutdown() {
-        log.warn( "Shutdown Slf4jBatchSubmitter" );
+        logger.warn( "Shutdown Slf4jBatchSubmitter" );
         executor.shutdown();
     }
 }
