@@ -50,9 +50,9 @@ public interface ManagementService {
 
     public AccessInfo authorizeClient( String clientId, String clientSecret, long ttl ) throws Exception;
 
-    public ActivationState handleConfirmationTokenForAdminUser( UUID organizationId, UUID userId, String token ) throws Exception;
+    public ActivationState handleConfirmationTokenForAdminUser( UUID userId, String token ) throws Exception;
 
-    public ActivationState handleActivationTokenForAdminUser( UUID organizationId, UUID userId, String token ) throws Exception;
+    public ActivationState handleActivationTokenForAdminUser( UUID userId, String token ) throws Exception;
 
     public ActivationState handleActivationTokenForOrganization( UUID organizationId, String token ) throws Exception;
 
@@ -120,9 +120,9 @@ public interface ManagementService {
 
     public void revokeAccessTokenForAdminUser( UUID userId, String token ) throws Exception;
 
-    public String getActivationTokenForAdminUser( UUID userId, long ttl ) throws Exception;
+    public String getActivationTokenForAdminUser( UUID userId, long ttl, UUID organizationId ) throws Exception;
 
-    public String getConfirmationTokenForAdminUser( UUID userId, long ttl ) throws Exception;
+    public String getConfirmationTokenForAdminUser( UUID userId, long ttl, UUID organizationId ) throws Exception;
 
     public String getActivationTokenForOrganization( UUID organizationId, long ttl ) throws Exception;
 
@@ -190,6 +190,8 @@ public interface ManagementService {
 
     public Map<String, Object> getOrganizationData( OrganizationInfo organization ) throws Exception;
 
+    public UUID getOrganizationIdForApplication( UUID applicationId ) throws Exception;
+
     public OrganizationInfo getOrganizationForApplication( UUID applicationId ) throws Exception;
 
     public OrganizationInfo getOrganizationInfoFromAccessToken( String token ) throws Exception;
@@ -198,7 +200,7 @@ public interface ManagementService {
 
     public BiMap<UUID, String> getOrganizationsForAdminUser( UUID userId ) throws Exception;
 
-    public String getPasswordResetTokenForAdminUser( UUID userId, long ttl ) throws Exception;
+    public String getPasswordResetTokenForAdminUser( UUID userId, long ttl, UUID organizationId ) throws Exception;
 
     public UserInfo getAdminUserByUuid( UUID id ) throws Exception;
 

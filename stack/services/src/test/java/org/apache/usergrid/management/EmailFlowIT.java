@@ -104,8 +104,7 @@ public class EmailFlowIT {
         LOG.info( token );
 
         assertEquals( ActivationState.ACTIVATED,
-                setup.getMgmtSvc().handleConfirmationTokenForAdminUser( org_owner.getOrganization().getUuid(),
-                        org_owner.owner.getUuid(), token ) );
+                setup.getMgmtSvc().handleConfirmationTokenForAdminUser( org_owner.owner.getUuid(), token ) );
 
         Message activation = inbox.get( 1 );
         assertEquals( "User Account Activated", activation.getSubject() );
@@ -145,8 +144,7 @@ public class EmailFlowIT {
         LOG.info( token );
 
         ActivationState state =
-                setup.getMgmtSvc().handleConfirmationTokenForAdminUser( org_owner.getOrganization().getUuid(),
-                        org_owner.owner.getUuid(), token );
+                setup.getMgmtSvc().handleConfirmationTokenForAdminUser( org_owner.owner.getUuid(), token );
         assertEquals( ActivationState.CONFIRMED_AWAITING_ACTIVATION, state );
 
         confirmation = user_inbox.get( 1 );
@@ -166,8 +164,7 @@ public class EmailFlowIT {
         token = getTokenFromMessage( activation );
         LOG.info( token );
 
-        state = setup.getMgmtSvc().handleActivationTokenForAdminUser( org_owner.getOrganization().getUuid(),
-                org_owner.owner.getUuid(), token );
+        state = setup.getMgmtSvc().handleActivationTokenForAdminUser( org_owner.owner.getUuid(), token );
         assertEquals( ActivationState.ACTIVATED, state );
 
         Message activated = user_inbox.get( 2 );
