@@ -44,7 +44,7 @@ import java.util.Map;
  */
 public class WNSAdapter implements ProviderAdapter {
 
-    private static final Logger LOG = LoggerFactory.getLogger(WNSAdapter.class);
+    private static final Logger logger = LoggerFactory.getLogger(WNSAdapter.class);
 
     private final EntityManager entityManager;
     private final Notifier notifier;
@@ -63,7 +63,7 @@ public class WNSAdapter implements ProviderAdapter {
             //this fails every time due to jax error which is ok
             service.pushToast("s-1-15-2-2411381248-444863693-3819932088-4077691928-1194867744-112853457-373132695", toast);
         }catch (ClientHandlerException e){
-            LOG.info("Windows Phone notifier added: " + e.toString());
+            logger.info("Windows Phone notifier added: " + e.toString());
         }
     }
 
@@ -116,7 +116,7 @@ public class WNSAdapter implements ProviderAdapter {
             tracker.completed();
         } catch (Exception e) {
             tracker.failed(0,e.toString());
-            LOG.error("Failed to send notification",e);
+            logger.error("Failed to send notification",e);
         }
     }
 

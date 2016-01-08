@@ -31,7 +31,7 @@ import org.apache.commons.io.IOUtils;
 /** Upserts data from files found in an S3 bucket. */
 public class WarehouseUpsert extends ExportingToolBase {
 
-    private static final Logger LOG = LoggerFactory.getLogger( WarehouseUpsert.class );
+    private static final Logger logger = LoggerFactory.getLogger( WarehouseUpsert.class );
 
     public static final String DBHOST_PROPNAME = "usergrid.warehouse-export-dbhost";
     public static final String DBPORT_PROPNAME = "usergrid.warehouse-export-dbport";
@@ -84,14 +84,14 @@ public class WarehouseUpsert extends ExportingToolBase {
         String mainTableName = ( String ) properties.get( MAIN_TABLE_PROPNAME );
         try {
             con.createStatement().execute( createWarehouseTable( mainTableName ) );
-            LOG.info( "Created main table " + mainTableName );
+            logger.info( "Created main table " + mainTableName );
         }
         catch ( SQLException ex ) {
             if ( !ex.getMessage().contains( "already exists" ) ) {
-                LOG.error( "Error creating main table: " + ex.getMessage(), ex );
+                logger.error( "Error creating main table: " + ex.getMessage(), ex );
             }
             else {
-                LOG.info( "Using existing main table " + mainTableName );
+                logger.info( "Using existing main table " + mainTableName );
             }
         }
 
@@ -100,47 +100,47 @@ public class WarehouseUpsert extends ExportingToolBase {
         String dropStagingTable = String.format( "drop table %s", stagingTableName );
         try {
             con.createStatement().execute( dropStagingTable );
-            LOG.info( "Dropped existing staging table " + stagingTableName );
+            logger.info( "Dropped existing staging table " + stagingTableName );
         }
         catch ( SQLException ex ) {
             if ( !ex.getMessage().contains( "does not exist" ) ) {
-                LOG.error( "Error dropping staging table: " + ex.getMessage(), ex );
+                logger.error( "Error dropping staging table: " + ex.getMessage(), ex );
             }
             else {
-                LOG.info( "Using existing staging table " + stagingTableName );
+                logger.info( "Using existing staging table " + stagingTableName );
             }
         }
 
         // create staging table
-        LOG.info( "Creating new staging table" );
+        logger.info( "Creating new staging table" );
         con.createStatement().execute( createWarehouseTable( stagingTableName ) );
 
         // copy data from S3 into staging table
-        LOG.info( "Copying data from S3" );
+        logger.info( "Copying data from S3" );
         String copyFromS3 = String.format( "COPY %s FROM 's3://%s' "
                 + "CREDENTIALS 'aws_access_key_id=%s;aws_secret_access_key=%s' IGNOREHEADER 2 EMPTYASNULL",
                 stagingTableName, bucketName, accessId, secretKey );
-        LOG.debug( copyFromS3 );
+        logger.debug( copyFromS3 );
         con.createStatement().execute( copyFromS3 );
 
         // run update portion of upsert process
-        LOG.info( "Upsert: updating" );
+        logger.info( "Upsert: updating" );
         String upsertUpdate =
                 String.format( "UPDATE %s SET id = s.id FROM %s s WHERE %s.created = s.created ", mainTableName,
                         stagingTableName, mainTableName );
-        LOG.debug( upsertUpdate );
+        logger.debug( upsertUpdate );
         con.createStatement().execute( upsertUpdate );
 
         // insert new values in staging table into main table
-        LOG.info( "Upsert: inserting" );
+        logger.info( "Upsert: inserting" );
         String upsertInsert =
                 String.format( "INSERT INTO %s SELECT s.* FROM %s s LEFT JOIN %s n ON s.id = n.id WHERE n.id IS NULL",
                         mainTableName, stagingTableName, mainTableName );
-        LOG.debug( upsertInsert );
+        logger.debug( upsertInsert );
         con.createStatement().execute( upsertInsert );
 
         // drop staging table
-        LOG.info( "Dropping existing staging table" );
+        logger.info( "Dropping existing staging table" );
         con.createStatement().execute( dropStagingTable );
 
         // done!

@@ -70,7 +70,7 @@ import static org.mockito.Mockito.when;
 @UseModules( { TestGraphModule.class } )
 public class NodeDeleteListenerTest {
 
-    private static final Logger log = LoggerFactory.getLogger( NodeDeleteListenerTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( NodeDeleteListenerTest.class );
 
 
     @Inject
@@ -359,8 +359,8 @@ public class NodeDeleteListenerTest {
 
         assertEquals( edgeCount, countSaved );
 
-        log.info( "Saved {} source edges", sourceCount );
-        log.info( "Saved {} target edges", targetCount );
+        logger.info( "Saved {} source edges", sourceCount );
+        logger.info( "Saved {} target edges", targetCount );
 
         long deleteVersion = Long.MAX_VALUE;
 

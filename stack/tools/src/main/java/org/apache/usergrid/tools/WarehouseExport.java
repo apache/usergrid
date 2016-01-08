@@ -63,7 +63,7 @@ import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
  */
 public class WarehouseExport extends ExportingToolBase {
 
-    private static final Logger LOG = LoggerFactory.getLogger( WarehouseExport.class );
+    private static final Logger logger = LoggerFactory.getLogger( WarehouseExport.class );
     private static final char SEPARATOR = '|';
 
     public static final String BUCKET_PROPNAME = "usergrid.warehouse-export-bucket";
@@ -115,14 +115,14 @@ public class WarehouseExport extends ExportingToolBase {
         applyOrgId( line );
         prepareBaseOutputFileName( line );
         outputDir = createOutputParentDir();
-        LOG.info( "Export directory: {}", outputDir.getAbsolutePath() );
+        logger.info( "Export directory: {}", outputDir.getAbsolutePath() );
 
         // create writer
         applyStartTime( line );
         applyEndTime( line );
-        LOG.error( "startTime: {}, endTime: {}", startTime, endTime );
+        logger.error( "startTime: {}, endTime: {}", startTime, endTime );
         if ( startTime.getTime() >= endTime.getTime() ) {
-            LOG.error( "startTime must be before endTime. exiting." );
+            logger.error( "startTime must be before endTime. exiting." );
             System.exit( 1 );
         }
 
@@ -154,7 +154,7 @@ public class WarehouseExport extends ExportingToolBase {
 
         // now that file is written, copy it to S3
         if ( line.hasOption( "upload" ) ) {
-            LOG.info( "Copy to S3" );
+            logger.info( "Copy to S3" );
             copyToS3( fileName );
         }
     }
@@ -183,7 +183,7 @@ public class WarehouseExport extends ExportingToolBase {
         s3Client.createBucket( bucketName );
         File uploadFile = new File( fileName );
         PutObjectResult putObjectResult = s3Client.putObject( bucketName, uploadFile.getName(), uploadFile );
-        LOG.info("Uploaded file etag={}", putObjectResult.getETag());
+        logger.info("Uploaded file etag={}", putObjectResult.getETag());
     }
 
 
@@ -341,7 +341,7 @@ public class WarehouseExport extends ExportingToolBase {
             OrganizationInfo info = managementService.getOrganizationByUuid( orgId );
 
             if ( info == null ) {
-                LOG.error( "Organization info is null!" );
+                logger.error( "Organization info is null!" );
                 System.exit( 1 );
             }
 
@@ -377,7 +377,7 @@ public class WarehouseExport extends ExportingToolBase {
 
     private void exportApplicationsForOrg( Entry<UUID, String> orgIdAndName, String queryString ) throws Exception {
 
-        LOG.info( "organization: {} / {}", orgIdAndName.getValue(), orgIdAndName.getKey() );
+        logger.info( "organization: {} / {}", orgIdAndName.getValue(), orgIdAndName.getKey() );
 
         String orgName = orgIdAndName.getValue();
 
@@ -387,7 +387,7 @@ public class WarehouseExport extends ExportingToolBase {
             String appName = appIdAndName.getValue();
             appName = appName.substring( appName.indexOf( '/' ) + 1 );
 
-            LOG.info( "application {} / {}", appName, appIdAndName.getKey() );
+            logger.info( "application {} / {}", appName, appIdAndName.getKey() );
 
             EntityManager em = emf.getEntityManager( appIdAndName.getKey() );
             Map<String, String[]> cfm = getCollectionFieldMap();
