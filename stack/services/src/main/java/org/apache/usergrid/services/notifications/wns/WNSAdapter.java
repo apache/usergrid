@@ -30,7 +30,6 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.services.ServicePayload;
-import org.apache.usergrid.services.notifications.ConnectionException;
 import org.apache.usergrid.services.notifications.ProviderAdapter;
 import org.apache.usergrid.services.notifications.TaskTracker;
 import org.slf4j.Logger;
@@ -58,7 +57,7 @@ public class WNSAdapter implements ProviderAdapter {
     }
 
     @Override
-    public void testConnection() throws ConnectionException {
+    public void testConnection() throws Exception {
         WnsToast toast = new WnsToastBuilder().bindingTemplateToastText01("test").build();
         try{
             //this fails every time due to jax error which is ok

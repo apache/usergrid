@@ -22,11 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-import java.util.Date;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.apache.usergrid.persistence.EntityManager;
+
 import org.apache.usergrid.services.ServicePayload;
 import org.apache.usergrid.services.notifications.apns.APNsAdapter;
 import org.apache.usergrid.services.notifications.apns.APNsNotification;
@@ -51,7 +49,7 @@ public class TestAdapter implements ProviderAdapter {
     }
 
     @Override
-    public void testConnection() throws ConnectionException {
+    public void testConnection() throws Exception {
     }
 
     @Override

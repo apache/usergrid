@@ -285,7 +285,7 @@ public class IndexResource extends AbstractContextResource {
         final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
 
         if(appId == null){
-            throw new IllegalArgumentException("app id was not parsed");
+            throw new IllegalArgumentException("Application ID in URL not a valid UUID");
         }
 
         EntityManager em = emf.getEntityManager(appId);

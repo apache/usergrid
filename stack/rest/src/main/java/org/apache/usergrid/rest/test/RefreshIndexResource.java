@@ -68,7 +68,7 @@ public class RefreshIndexResource extends AbstractContextResource {
 
             UUID appid = UUIDUtils.tryExtractUUID(appIdString);
             if(appid == null){
-                throw new IllegalArgumentException("app id is null");
+                throw new IllegalArgumentException("app_id query parameter not a valid UUID");
             }
             // refresh the system apps or app lookup below may fail
             EntityManager em = this.getEmf().getEntityManager(appid);

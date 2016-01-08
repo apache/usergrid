@@ -92,7 +92,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
         logger.info("notification {} start queuing", notification.getUuid());
 
-        final PathQuery<Device> pathQuery = notification.getPathTokens().getPathQuery() ; //devices query
+        final PathQuery<Device> pathQuery = notification.getPathQuery().buildPathQuery() ; //devices query
         final AtomicInteger deviceCount = new AtomicInteger(); //count devices so you can make a judgement on batching
         final ConcurrentLinkedQueue<String> errorMessages = new ConcurrentLinkedQueue<String>(); //build up list of issues
 

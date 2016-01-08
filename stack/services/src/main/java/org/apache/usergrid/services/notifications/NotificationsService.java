@@ -136,7 +136,7 @@ public class NotificationsService extends AbstractCollectionService {
             validate(null, context.getPayload());
             Notification.PathTokens pathTokens = getPathTokens(context.getRequest().getOriginalParameters());
             context.getProperties().put("state", Notification.State.CREATED);
-            context.getProperties().put("pathTokens", pathTokens);
+            context.getProperties().put("pathQuery", pathTokens);
             context.setOwner(sm.getApplication());
             ServiceResults results = super.postCollection(context);
             Notification notification = (Notification) results.getEntity();
@@ -166,18 +166,30 @@ public class NotificationsService extends AbstractCollectionService {
     }
 
     private Notification.PathTokens getPathTokens(List<ServiceParameter> parameters){
+
         Notification.PathTokens pathTokens = new Notification.PathTokens();
         pathTokens.setApplicationRef((SimpleEntityRef)em.getApplicationRef());
-        for (int i = 0; i < parameters.size() - 1; i += 2) {
+
+        // first parameter is always collection name, start parsing after that
+        for (int i = 0; i < parameters.size() - 1; i += 2 ) {
             String collection = pluralize(parameters.get(i).getName());
             Identifier identifier = null;
+            String ql = null;
             ServiceParameter sp = parameters.get(i + 1);
-                if(collection.equals("devices") && sp.isName() && sp.getName().equals("notifications")) {
-                    //look for queries to /devices;ql=/notifications
-                }else{
+
+            // if the next param is a query, add a token with the query
+            if(sp.isQuery()){
+                ql = sp.getQuery().getQl().get();
+                pathTokens.getPathTokens().add(new Notification.PathToken( collection, ql));
+            }else{
+                // if the next param is "notifications", it's the end let identifier be null
+                if(sp.isName() && !sp.getName().equalsIgnoreCase("notifications") || sp.isId()){
                     identifier = sp.getIdentifier();
                 }
-            pathTokens.getPathTokens().add(new Notification.PathToken( collection, identifier));
+                pathTokens.getPathTokens().add(new Notification.PathToken( collection, identifier));
+            }
+
+
         }
         return pathTokens;
     }
