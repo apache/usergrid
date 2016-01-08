@@ -18,12 +18,13 @@ package org.apache.usergrid.rest.exceptions;
 
 
 import com.google.android.gcm.server.InvalidRequestException;
+import org.apache.usergrid.rest.ApiResponse;
 
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
 import static javax.ws.rs.core.Response.Status.*;
+import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
 
 
 @Provider
@@ -50,6 +51,12 @@ public class GCMInvalidRequestExceptionMapper extends AbstractExceptionMapper<In
             message = "GCM Status Code: "+ e.getHttpStatusCode()+", Detail: "+e.getMessage();
         }
 
-        return toResponse( status, message );
+        // build a proper ApiResponse object
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setError(status.toString());
+        apiResponse.setErrorDescription(message);
+
+        // give toResponse() the json string value of the ApiResponse
+        return toResponse( status, mapToJsonString(apiResponse) );
     }
 }
