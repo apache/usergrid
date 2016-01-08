@@ -288,7 +288,6 @@ public class TokenServiceImpl implements TokenService {
             Assert.notNull( principal.getType() );
             Assert.notNull( principal.getApplicationId() );
             Assert.notNull( principal.getUuid() );
-            // workflowOrgId would be taken from state
         }
 
         // except that we generate the UUID based on the token

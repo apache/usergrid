@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.cache.CacheFactory;
 import org.apache.usergrid.persistence.cache.CacheScope;
 import org.apache.usergrid.persistence.cache.ScopedCache;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.Group;
@@ -3269,7 +3270,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public OrganizationConfig getOrganizationConfigByName( String organizationName ) throws Exception {
 
-        if ( organizationName == null || organizationName.equals("management")) {
+        if ( organizationName == null || organizationName.equals(CassandraService.MANAGEMENT_APPLICATION)) {
             return getOrganizationConfigDefaultsOnly();
         }
 
