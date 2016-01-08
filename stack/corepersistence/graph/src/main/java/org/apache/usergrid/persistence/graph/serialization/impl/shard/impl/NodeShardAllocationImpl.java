@@ -57,7 +57,7 @@ import com.netflix.astyanax.util.TimeUUIDUtils;
 public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
-    private static final Logger LOG = LoggerFactory.getLogger( NodeShardAllocationImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( NodeShardAllocationImpl.class );
 
     private final EdgeShardSerialization edgeShardSerialization;
     private final EdgeColumnFamilies edgeColumnFamilies;
@@ -138,13 +138,13 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * Nothing to do, it's been created very recently, we don't create a new one
          */
         if ( shardEntryGroup.isCompactionPending() ) {
-            if (LOG.isTraceEnabled()) LOG.trace( "Shard entry group {} is compacting, not auditing", shardEntryGroup );
+            if (logger.isTraceEnabled()) logger.trace( "Shard entry group {} is compacting, not auditing", shardEntryGroup );
             return false;
         }
 
         //we can't allocate, we have more than 1 write shard currently.  We need to compact first
         if ( shardEntryGroup.entrySize() != 1 ) {
-            if (LOG.isTraceEnabled()) LOG.trace( "Shard entry group {} does not have 1 entry, not allocating", shardEntryGroup );
+            if (logger.isTraceEnabled()) logger.trace( "Shard entry group {} does not have 1 entry, not allocating", shardEntryGroup );
             return false;
         }
 
@@ -158,7 +158,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
         if ( shard.getCreatedTime() >= minTime ) {
-            if (LOG.isTraceEnabled()) LOG.trace( "Shard entry group {}  and shard {} is before the minimum created time of {}.  Not allocating.does not have 1 entry, not allocating", shardEntryGroup, shard, minTime );
+            if (logger.isTraceEnabled()) logger.trace( "Shard entry group {}  and shard {} is before the minimum created time of {}.  Not allocating.does not have 1 entry, not allocating", shardEntryGroup, shard, minTime );
             return false;
         }
 
@@ -199,7 +199,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
         if ( !edges.hasNext() ) {
-            if (LOG.isTraceEnabled()) LOG.trace(
+            if (logger.isTraceEnabled()) logger.trace(
                 "Tried to allocate a new shard for edge meta data {}, " + "but no max value could be found in that row",
                 directedEdgeMeta );
             return false;
@@ -231,7 +231,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * Sanity check in case we audit before we have a full shard
          */
         if ( marked == null ) {
-            if (LOG.isTraceEnabled()) LOG.trace( "Shard {} in shard group {} not full, not splitting",  shard, shardEntryGroup );
+            if (logger.isTraceEnabled()) logger.trace( "Shard {} in shard group {} not full, not splitting",  shard, shardEntryGroup );
             return false;
         }
 
@@ -239,7 +239,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         final Shard newShard = new Shard( marked.getTimestamp(), createTimestamp, false );
 
-        LOG.info( "Allocating new shard {} for edge meta {}", newShard, directedEdgeMeta );
+        logger.info( "Allocating new shard {} for edge meta {}", newShard, directedEdgeMeta );
 
         final MutationBatch batch = this.edgeShardSerialization.writeShardMeta( scope, newShard, directedEdgeMeta );
 

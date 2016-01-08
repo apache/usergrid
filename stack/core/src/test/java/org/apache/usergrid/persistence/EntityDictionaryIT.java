@@ -21,17 +21,13 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.commons.lang3.RandomStringUtils;
-
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.JsonUtils;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -43,7 +39,7 @@ import static org.junit.Assert.assertTrue;
 
 
 public class EntityDictionaryIT extends AbstractCoreIT {
-    private static final Logger LOG = LoggerFactory.getLogger( EntityDictionaryIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( EntityDictionaryIT.class );
 
 
     public EntityDictionaryIT() {
@@ -62,7 +58,7 @@ public class EntityDictionaryIT extends AbstractCoreIT {
         provider.setAccessTokenEndpointUrl( "https://accounts.google.com/o/oauth2/token" );
         provider.setVersion( "2.0" );
 
-        LOG.info( "EntityDictionaryIT.testApplicationDictionaries" );
+        logger.info( "EntityDictionaryIT.testApplicationDictionaries" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -70,13 +66,13 @@ public class EntityDictionaryIT extends AbstractCoreIT {
         em.addToDictionary( em.getApplicationRef(), "oauthproviders", "google", provider );
 
         Object o = em.getDictionaryElementValue( em.getApplicationRef(), "oauthproviders", "google" );
-        LOG.info( JsonUtils.mapToFormattedJsonString( o ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( o ) );
     }
 
 
     @Test
     public void testUserDictionaries() throws Exception {
-        LOG.info( "EntityDictionaryIT.testUserDictionaries" );
+        logger.info( "EntityDictionaryIT.testUserDictionaries" );
 
 
 
@@ -101,7 +97,7 @@ public class EntityDictionaryIT extends AbstractCoreIT {
         em.addToDictionary( user, "credentials", "plaintext", credentials );
 
         Object o = em.getDictionaryElementValue( user, "credentials", "plaintext" );
-        LOG.info( JsonUtils.mapToFormattedJsonString( o ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( o ) );
 
         assertEquals( CredentialsInfo.class, o.getClass() );
 
@@ -123,7 +119,7 @@ public class EntityDictionaryIT extends AbstractCoreIT {
         em.addToDictionary( user, "credentials", "encrypted", credentials );
 
         o = em.getDictionaryElementValue( user, "credentials", "encrypted" );
-        LOG.info( JsonUtils.mapToFormattedJsonString( o ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( o ) );
 
         assertEquals( CredentialsInfo.class, o.getClass() );
         returned = ( CredentialsInfo ) o;
@@ -137,7 +133,7 @@ public class EntityDictionaryIT extends AbstractCoreIT {
 
     @Test
     public void testRemoveFromDictionary() throws Exception {
-        LOG.info( "EntityDictionaryIT.testRemoveFromDictionary" );
+        logger.info( "EntityDictionaryIT.testRemoveFromDictionary" );
 
         Application.OAuthProvider provider = new Application.OAuthProvider();
         provider.setClientId( "123456789012.apps.googleusercontent.com" );
@@ -148,7 +144,7 @@ public class EntityDictionaryIT extends AbstractCoreIT {
         provider.setAccessTokenEndpointUrl( "https://accounts.google.com/o/oauth2/token" );
         provider.setVersion( "2.0" );
 
-        LOG.info( "EntityDictionaryIT.testApplicationDictionaries" );
+        logger.info( "EntityDictionaryIT.testApplicationDictionaries" );
 
 
         EntityManager em = app.getEntityManager();
@@ -170,7 +166,7 @@ public class EntityDictionaryIT extends AbstractCoreIT {
 
     @Test
     public void testGetDictionaries() throws Exception {
-        LOG.info( "EntityDictionaryIT.testGetDictionaries" );
+        logger.info( "EntityDictionaryIT.testGetDictionaries" );
 
 
         Application.OAuthProvider provider = new Application.OAuthProvider();
@@ -197,7 +193,7 @@ public class EntityDictionaryIT extends AbstractCoreIT {
     }
     @Test
     public void testAddMapToDictionaries() throws Exception {
-        LOG.info( "EntityDictionaryIT.testAddMapToDictionaries" );
+        logger.info( "EntityDictionaryIT.testAddMapToDictionaries" );
 
         Map<String,Object> testMap = new HashMap<String,Object>();
 

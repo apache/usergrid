@@ -136,7 +136,7 @@ public class MapUtils extends org.apache.commons.collections.MapUtils {
             v = ( V ) map.get( k );
         }
         catch ( ClassCastException e ) {
-            //LOG.war( "Map value {} was not the expected class", map.get( k ), e );
+            //logger.war( "Map value {} was not the expected class", map.get( k ), e );
         }
 
         return v;

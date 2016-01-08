@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 
 public class JsonUtilsTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger( JsonUtilsTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( JsonUtilsTest.class );
 
 
     @SuppressWarnings("unchecked")
@@ -70,7 +70,7 @@ public class JsonUtilsTest {
         List<Map.Entry<String, Object>> list = IndexUtils.getKeyValueList( path, json, true );
 
         for ( Map.Entry<String, Object> e : list ) {
-            LOG.info( e.getKey() + " = " + e.getValue() );
+            logger.info( e.getKey() + " = " + e.getValue() );
         }
     }
 

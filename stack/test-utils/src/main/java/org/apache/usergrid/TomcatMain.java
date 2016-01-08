@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
  * Simple wrapper for starting "embedded" Tomcat as it's own process, for testing.
  */
 public class TomcatMain {
-    
-    private static final Logger log = LoggerFactory.getLogger( TomcatMain.class );
+
+    private static final Logger logger = LoggerFactory.getLogger( TomcatMain.class );
 
     public static void main(String[] args) throws Exception {
 
@@ -43,9 +43,9 @@ public class TomcatMain {
         tomcat.getConnector().setAttribute("maxThreads", "1000");
         tomcat.addWebapp("/", new File(webappsPath).getAbsolutePath());
 
-        log.info("-----------------------------------------------------------------");
-        log.info("Starting Tomcat port {} dir {}", port, webappsPath);
-        log.info("-----------------------------------------------------------------");
+        logger.info("-----------------------------------------------------------------");
+        logger.info("Starting Tomcat port {} dir {}", port, webappsPath);
+        logger.info("-----------------------------------------------------------------");
         tomcat.start();
 
         while ( true ) {

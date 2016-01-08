@@ -27,7 +27,6 @@ import java.util.UUID;
 
 import org.apache.usergrid.StressTest;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -76,7 +75,7 @@ import static org.mockito.Mockito.when;
 
 public abstract class EdgeSerializationTest {
 
-    private static final Logger log = LoggerFactory.getLogger( EdgeSerializationTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( EdgeSerializationTest.class );
 
     @Inject
     @Rule
@@ -719,7 +718,7 @@ public abstract class EdgeSerializationTest {
             timestamp++;
         }
 
-        log.info( "Flushing edges" );
+        logger.info( "Flushing edges" );
         batch.execute();
 
 

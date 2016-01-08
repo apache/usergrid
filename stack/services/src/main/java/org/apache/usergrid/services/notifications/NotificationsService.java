@@ -68,7 +68,7 @@ public class NotificationsService extends AbstractCollectionService {
     private Timer postTimer;
 
     private static final int PAGE = 100;
-    private static final Logger LOG = LoggerFactory.getLogger(NotificationsService.class);
+    private static final Logger logger = LoggerFactory.getLogger(NotificationsService.class);
     //need a mocking framework, this is to substitute for no mocking
 
     static final String MESSAGE_PROPERTY_DEVICE_UUID = "deviceUUID";
@@ -86,7 +86,7 @@ public class NotificationsService extends AbstractCollectionService {
     private QueueManagerFactory queueManagerFactory;
 
     public NotificationsService() {
-        LOG.info("/notifications");
+        logger.info("/notifications");
     }
 
     @Override
@@ -129,7 +129,7 @@ public class NotificationsService extends AbstractCollectionService {
 
     @Override
     public ServiceResults postCollection(ServiceContext context) throws Exception {
-        LOG.info("NotificationService: start request.");
+        logger.info("NotificationService: start request.");
         Timer.Context timer = postTimer.time();
         postMeter.mark();
         try {
@@ -149,16 +149,16 @@ public class NotificationsService extends AbstractCollectionService {
                 properties.put("started", notification.getStarted());
                 properties.put("state", notification.getState());
                 notification.addProperties(properties);
-                LOG.info("ApplicationQueueMessage: notification {} properties updated in duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
+                logger.info("ApplicationQueueMessage: notification {} properties updated in duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
             }
 
             long now = System.currentTimeMillis();
             notificationQueueManager.queueNotification(notification, null);
-            LOG.info("NotificationService: notification {} post queue duration {} ms ", notification.getUuid(), System.currentTimeMillis() - now);
+            logger.info("NotificationService: notification {} post queue duration {} ms ", notification.getUuid(), System.currentTimeMillis() - now);
             // future: somehow return 202?
             return results;
         }catch (Exception e){
-            LOG.error("serialization failed",e);
+            logger.error("serialization failed",e);
             throw e;
         }finally {
             timer.stop();

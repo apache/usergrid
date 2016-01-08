@@ -46,7 +46,7 @@ import static org.junit.Assert.assertTrue;
 
 
 public class HectorLockManagerIT extends AbstractCoreIT {
-    private static final Logger LOG = LoggerFactory.getLogger( HectorLockManagerIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( HectorLockManagerIT.class );
 
     private static LockManager manager;
     private static ExecutorService pool;
@@ -89,7 +89,7 @@ public class HectorLockManagerIT extends AbstractCoreIT {
         final UUID application = UUID.randomUUID();
         final UUID entity = UUID.randomUUID();
 
-        LOG.info( "Locking:" + application.toString() + "/" + entity.toString() );
+        logger.info( "Locking:" + application.toString() + "/" + entity.toString() );
 
         // Lock a node twice to test re-entrancy and validate.
         Lock lock = manager.createLock( application, entity.toString() );
@@ -107,7 +107,7 @@ public class HectorLockManagerIT extends AbstractCoreIT {
         assertFalse( wasLocked );
 
         // Unlock completely
-        LOG.info( "Releasing lock:" + application.toString() + "/" + entity.toString() );
+        logger.info( "Releasing lock:" + application.toString() + "/" + entity.toString() );
         lock.unlock();
 
         // Try to effectively get the lock from the thread since the current one has
@@ -124,7 +124,7 @@ public class HectorLockManagerIT extends AbstractCoreIT {
         final UUID entity = UUID.randomUUID();
         final UUID entity2 = UUID.randomUUID();
 
-        LOG.info( "Locking:" + application.toString() + "/" + entity.toString() );
+        logger.info( "Locking:" + application.toString() + "/" + entity.toString() );
 
         // Acquire to locks. One of them twice.
         Lock lock = manager.createLock( application, entity.toString() );
@@ -135,7 +135,7 @@ public class HectorLockManagerIT extends AbstractCoreIT {
         second.lock();
 
         // Cleanup the locks for main thread
-        LOG.info( "Cleaning up locks for current thread..." );
+        logger.info( "Cleaning up locks for current thread..." );
         lock.unlock();
         lock.unlock();
 

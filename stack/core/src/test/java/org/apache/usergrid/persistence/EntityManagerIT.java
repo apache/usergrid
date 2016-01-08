@@ -46,7 +46,7 @@ import static org.junit.Assert.assertTrue;
 
 
 public class EntityManagerIT extends AbstractCoreIT {
-    private static final Logger LOG = LoggerFactory.getLogger( EntityManagerIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( EntityManagerIT.class );
 
 
     public EntityManagerIT() {
@@ -56,7 +56,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
     @Test
     public void testEntityManager() throws Exception {
-        LOG.info( "EntityManagerIT.testEntityManagerTest" );
+        logger.info( "EntityManagerIT.testEntityManagerTest" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -83,8 +83,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         assertEquals( "userRef.id not expected value", user.getUuid(), userRef.getUuid() );
         assertEquals( "userRef.type not expected value", "user", userRef.getType() );
 
-        LOG.info( "user.username: " + user.getProperty( "username" ) );
-        LOG.info( "user.email: " + user.getProperty( "email" ) );
+        logger.info( "user.username: " + user.getProperty( "username" ) );
+        logger.info( "user.email: " + user.getProperty( "email" ) );
 
         final Query query = Query.fromQL( "username = 'edanuff'" );
 
@@ -96,8 +96,8 @@ public class EntityManagerIT extends AbstractCoreIT {
         assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username" ) );
         assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ) );
 
-        LOG.info( "user.username: " + user.getProperty( "username" ) );
-        LOG.info( "user.email: " + user.getProperty( "email" ) );
+        logger.info( "user.username: " + user.getProperty( "username" ) );
+        logger.info( "user.email: " + user.getProperty( "email" ) );
 
         final Query emailQuery = Query.fromQL( "email = 'ed@anuff.com'" );
 
@@ -109,14 +109,14 @@ public class EntityManagerIT extends AbstractCoreIT {
         assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username" ) );
         assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ) );
 
-        LOG.info( "user.username: " + user.getProperty( "username" ) );
-        LOG.info( "user.email: " + user.getProperty( "email" ) );
+        logger.info( "user.username: " + user.getProperty( "username" ) );
+        logger.info( "user.email: " + user.getProperty( "email" ) );
     }
 
 
     @Test
     public void testCreateAndGet() throws Exception {
-        LOG.info( "EntityDaoTest.testCreateAndGet" );
+        logger.info( "EntityDaoTest.testCreateAndGet" );
 
         EntityManager em = app.getEntityManager();
 
@@ -184,7 +184,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
     @Test
     public void testDictionaries() throws Exception {
-        LOG.info( "EntityDaoTest.testDictionaries" );
+        logger.info( "EntityDaoTest.testDictionaries" );
 
         EntityManager em = app.getEntityManager();
 
@@ -201,9 +201,9 @@ public class EntityManagerIT extends AbstractCoreIT {
         assertEquals( "Wrong number of items in list", 3, set.size() );
 
         Iterator<Object> i = set.iterator();
-        LOG.info( "first item is " + i.next() );
-        LOG.info( "second item is " + i.next() );
-        LOG.info( "third item is " + i.next() );
+        logger.info( "first item is " + i.next() );
+        logger.info( "second item is " + i.next() );
+        logger.info( "third item is " + i.next() );
 
         i = set.iterator();
         assertEquals( "first item should be alpha", "alpha", i.next() );
@@ -225,7 +225,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
     @Test
     public void testProperties() throws Exception {
-        LOG.info( "EntityDaoTest.testProperties" );
+        logger.info( "EntityDaoTest.testProperties" );
 
         EntityManager em = app.getEntityManager();
 
@@ -248,7 +248,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         assertEquals( "wrong value for property gamma", ( long ) 3, props.get( "gamma" ) );
 
         for ( Entry<String, Object> entry : props.entrySet() ) {
-            LOG.info( entry.getKey() + " : " + entry.getValue() );
+            logger.info( entry.getKey() + " : " + entry.getValue() );
         }
 
         em.deleteProperty( entity, "alpha" );
@@ -261,7 +261,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
     @Test
     public void testCreateAndDelete() throws Exception {
-        LOG.info( "EntityDaoTest.testCreateAndDelete" );
+        logger.info( "EntityDaoTest.testCreateAndDelete" );
         EntityManager em = app.getEntityManager();
 
         String name = "test.thing" + UUIDUtils.newTimeUUID();
@@ -270,15 +270,15 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "name", name );
         properties.put( "foo", "bar" );
 
-        LOG.info( "Starting entity create" );
+        logger.info( "Starting entity create" );
         Entity thing = em.create( "thing", properties );
-        LOG.info( "Entity created" );
+        logger.info( "Entity created" );
 
         app.refreshIndex();
 
-        LOG.info( "Starting entity delete" );
+        logger.info( "Starting entity delete" );
         em.delete( thing );
-        LOG.info( "Entity deleted" );
+        logger.info( "Entity deleted" );
 
         app.refreshIndex();
 
@@ -296,7 +296,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
     @Test
     public void testCreateAndDeleteUser() throws Exception {
-        LOG.info( "EntityDaoTest.testCreateAndDeleteUser" );
+        logger.info( "EntityDaoTest.testCreateAndDeleteUser" );
 
         EntityManager em = app.getEntityManager();
 
@@ -306,15 +306,15 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "username", name );
         properties.put( "foo", "bar" );
 
-        LOG.info( "Starting entity create" );
+        logger.info( "Starting entity create" );
         Entity user = em.create( "user", properties );
-        LOG.info( "Entity created" );
+        logger.info( "Entity created" );
 
         app.refreshIndex();
 
-        LOG.info( "Starting entity delete" );
+        logger.info( "Starting entity delete" );
         em.delete( user );
-        LOG.info( "Entity deleted" );
+        logger.info( "Entity deleted" );
 
         app.refreshIndex();
 
@@ -331,9 +331,9 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "username", name );
         properties.put( "foo", "bar" );
 
-        LOG.info( "Starting entity create" );
+        logger.info( "Starting entity create" );
         user = em.create( "user", properties );
-        LOG.info( "Entity created" );
+        logger.info( "Entity created" );
 
         app.refreshIndex();
 
@@ -350,7 +350,7 @@ public class EntityManagerIT extends AbstractCoreIT {
     @SuppressWarnings( "unchecked" )
     @Test
     public void testJson() throws Exception {
-        LOG.info( "EntityDaoTest.testProperties" );
+        logger.info( "EntityDaoTest.testProperties" );
 
         EntityManager em = app.getEntityManager();
 
@@ -384,7 +384,7 @@ public class EntityManagerIT extends AbstractCoreIT {
     @Ignore( "Pending https://issues.apache.org/jira/browse/USERGRID-1753. Concurrency issue.")
     // There is a concurrency issue due to counters not being thread safe
     public void testEntityCounters() throws Exception {
-        LOG.info( "EntityManagerIT#testEntityCounters" );
+        logger.info( "EntityManagerIT#testEntityCounters" );
         EntityManager em = app.getEntityManager();
 
         Group organizationEntity = new Group();
@@ -411,7 +411,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         em = setup.getEmf().getEntityManager( setup.getEmf().getManagementAppId() );
         Map<String, Long> counts = em.getEntityCounters( setup.getEmf().getManagementAppId() );
-        LOG.info( "Entity counters: {}", counts );
+        logger.info( "Entity counters: {}", counts );
         assertNotNull( counts );
         assertEquals( 4, counts.size() );
 
@@ -420,7 +420,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         em = setup.getEmf().getEntityManager( applicationId );
         counts = em.getEntityCounters( applicationId );
-        LOG.info( "Entity counters: {}", counts );
+        logger.info( "Entity counters: {}", counts );
         assertNotNull( counts );
         assertEquals( 3, counts.size() );
     }
@@ -428,7 +428,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
     @Test
     public void testCreateAndList() throws Exception {
-        LOG.info( "EntityDaoTest.testCreateAndDelete" );
+        logger.info( "EntityDaoTest.testCreateAndDelete" );
 
         EntityManager em = app.getEntityManager();
 
@@ -438,9 +438,9 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "name", name );
         properties.put( "foo", "bar" );
 
-        LOG.info( "Starting entity create" );
+        logger.info( "Starting entity create" );
         Entity thing1 = em.create( "thing", properties );
-        LOG.info( "Entity created" );
+        logger.info( "Entity created" );
 
         String name2 = "test.thing" + UUIDUtils.newTimeUUID() + 2;
 
@@ -448,9 +448,9 @@ public class EntityManagerIT extends AbstractCoreIT {
         properties.put( "name", name2 );
         properties.put( "foo", "bar" );
 
-        LOG.info( "Starting entity create" );
+        logger.info( "Starting entity create" );
         Entity thing2 = em.create( "thing", properties );
-        LOG.info( "Entity created" );
+        logger.info( "Entity created" );
 
         // now search by username, no results should be returned
 
@@ -492,7 +492,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
     @Test
     public void testImmutableForcedPropChange() throws Exception {
-        LOG.info( "EntityDaoTest.testProperties" );
+        logger.info( "EntityDaoTest.testProperties" );
 
         EntityManager em = app.getEntityManager();
 
@@ -569,7 +569,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
     @Test
     public void testDeprecatedGet() throws Exception {
-        LOG.info( "EntityManagerIT.testDeprecatedGet" );
+        logger.info( "EntityManagerIT.testDeprecatedGet" );
 
         EntityManager em = app.getEntityManager();
 
