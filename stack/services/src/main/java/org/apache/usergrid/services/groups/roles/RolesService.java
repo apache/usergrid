@@ -28,6 +28,8 @@ public class RolesService extends org.apache.usergrid.services.roles.RolesServic
 
     public RolesService() {
         super();
-        logger.debug( "/groups/*/roles" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("/groups/*/roles");
+        }
     }
 }

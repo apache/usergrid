@@ -119,7 +119,10 @@ public class S3ImportImpl implements S3Import {
 
         PageSet<? extends StorageMetadata> pageSets =
             blobStore.list(bucketName, new ListContainerOptions().recursive());
-        logger.debug("   Found {} files in bucket {}", pageSets.size(), bucketName);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("   Found {} files in bucket {}", pageSets.size(), bucketName);
+        }
 
         List<String> blobFileNames = new ArrayList<>();
         for ( Object pageSet : pageSets ) {

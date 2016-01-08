@@ -502,14 +502,18 @@ public class ApplicationResource extends AbstractContextResource {
 
         management.deleteApplication( applicationId );
 
-        logger.debug( "ApplicationResource.delete() deleted appId = {}", applicationId);
+        if (logger.isDebugEnabled()) {
+            logger.debug("ApplicationResource.delete() deleted appId = {}", applicationId);
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "delete" );
         response.setApplication(emf.getEntityManager( applicationId ).getApplication());
         response.setParams(ui.getQueryParameters());
 
-        logger.debug( "ApplicationResource.delete() sending response ");
+        if (logger.isDebugEnabled()) {
+            logger.debug("ApplicationResource.delete() sending response ");
+        }
 
         return response;
     }

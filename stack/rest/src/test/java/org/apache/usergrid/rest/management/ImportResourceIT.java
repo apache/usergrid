@@ -665,7 +665,9 @@ public class ImportResourceIT extends AbstractRestIT {
                 break;
             }
 
-            logger.debug("Waiting for import...");
+            if (logger.isDebugEnabled()) {
+                logger.debug("Waiting for import...");
+            }
             Thread.sleep(1000);
         }
 

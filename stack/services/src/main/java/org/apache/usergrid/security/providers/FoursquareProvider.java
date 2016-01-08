@@ -45,7 +45,7 @@ import static org.apache.usergrid.utils.ListUtils.anyNull;
  */
 public class FoursquareProvider extends AbstractProvider {
 
-    private Logger logger = LoggerFactory.getLogger( FoursquareProvider.class );
+    private static final  Logger logger = LoggerFactory.getLogger( FoursquareProvider.class );
 
 
     FoursquareProvider( EntityManager entityManager, ManagementService managementService ) {

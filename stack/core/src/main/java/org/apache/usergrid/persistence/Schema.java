@@ -1155,12 +1155,14 @@ public class Schema implements SchemaManager {
 
 
     public static String defaultCollectionName( String entityType ) {
+
         try {
             return collectionNameCache.get( entityType );
         }
         catch ( ExecutionException ex ) {
-            ex.printStackTrace();
+            logger.error("Error getting defaultCollectionName name from cache", ex);
         }
+
         return _defaultCollectionName( entityType );
     }
 
@@ -1583,8 +1585,13 @@ public class Schema implements SchemaManager {
         }
 
         String entityType = string( columns.get( PROPERTY_TYPE ) );
+
         if ( entityType == null ) {
-            logger.debug( "deserializeEntityProperties(): No type for entity found, entity probably doesn't exist" );
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("deserializeEntityProperties(): No type for entity found, entity probably doesn't exist");
+            }
+
             return null;
         }
         if ( checkId && !columns.containsKey( PROPERTY_UUID ) ) {
@@ -1594,8 +1601,11 @@ public class Schema implements SchemaManager {
 
         if ( checkRequired ) {
             Set<String> required_properties = Schema.getDefaultSchema().getRequiredProperties( entityType );
+
             if ( required_properties != null ) {
+
                 for ( String property_name : required_properties ) {
+
                     if ( !columns.containsKey( property_name ) ) {
                         logger.error( "Entity (" + entityType + ") missing required property: " + property_name,
                                 new Throwable() );

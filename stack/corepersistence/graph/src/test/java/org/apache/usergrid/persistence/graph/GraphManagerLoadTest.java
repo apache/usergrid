@@ -31,7 +31,6 @@ import java.util.concurrent.Future;
 
 import org.apache.usergrid.StressTest;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -67,7 +66,7 @@ import static org.junit.Assert.fail;
 @UseModules( TestGraphModule.class )
 @Category(StressTest.class)
 public class GraphManagerLoadTest {
-    private static final Logger log = LoggerFactory.getLogger( GraphManagerLoadTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( GraphManagerLoadTest.class );
 
     @Inject
     private GraphManagerFactory factory;
@@ -208,12 +207,12 @@ public class GraphManagerLoadTest {
 
 
                 if ( i % 1000 == 0 ) {
-                    log.info( "   Wrote: " + i );
+                    logger.info( "   Wrote: " + i );
                 }
             }
 
             timer.stop();
-            log.info( "Total time to write {} entries {} ms", writeLimit, timer.getTime() );
+            logger.info( "Total time to write {} entries {} ms", writeLimit, timer.getTime() );
             timer.reset();
 
             timer.start();
@@ -237,7 +236,7 @@ public class GraphManagerLoadTest {
 
                 @Override
                 public void onNext( final List<MarkedEdge> edges ) {
-                    log.info("Read {} edges", edges.size());
+                    logger.info("Read {} edges", edges.size());
                 }
             } );
 
@@ -245,7 +244,7 @@ public class GraphManagerLoadTest {
             latch.await();
 
 
-            log.info( "Total time to read {} entries {} ms", readCount, timer.getTime() );
+            logger.info( "Total time to read {} entries {} ms", readCount, timer.getTime() );
 
             return true;
         }

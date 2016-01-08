@@ -114,8 +114,10 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
     public void configure(ResourceInfo resourceInfo, FeatureContext featureContext) {
         Method am = resourceInfo.getResourceMethod();
 
-        logger.debug( "configure {} method {}",
-            resourceInfo.getResourceClass().getSimpleName(), resourceInfo.getResourceMethod().getName() );
+        if (logger.isDebugEnabled()) {
+            logger.debug("configure {} method {}",
+                resourceInfo.getResourceClass().getSimpleName(), resourceInfo.getResourceMethod().getName());
+        }
 
         if ( am.isAnnotationPresent( RequireApplicationAccess.class ) ) {
             featureContext.register( ApplicationFilter.class );
@@ -147,14 +149,21 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
         @Override
         public void filter(ContainerRequestContext request) throws IOException {
 
-            logger.debug( "Filtering {}", request.getUriInfo().getRequestUri().toString() );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Filtering {}", request.getUriInfo().getRequestUri().toString());
+            }
 
             if ( request.getMethod().equalsIgnoreCase( "OPTIONS" ) ) {
-                logger.debug( "Skipping option request" );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Skipping option request");
+                }
             }
 
             MultivaluedMap<java.lang.String, java.lang.String> params = uriInfo.getPathParameters();
-            logger.debug( "Params: {}", params.keySet() );
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Params: {}", params.keySet());
+            }
 
             authorize( request );
         }
@@ -229,14 +238,20 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
         @Override
         public void authorize( ContainerRequestContext request ) {
-            logger.debug( "OrganizationFilter.authorize" );
+            if (logger.isDebugEnabled()) {
+                logger.debug("OrganizationFilter.authorize");
+            }
 
             if ( !isPermittedAccessToOrganization( getOrganizationIdentifier() ) ) {
-                logger.debug("No organization access authorized");
+                if (logger.isDebugEnabled()) {
+                    logger.debug("No organization access authorized");
+                }
                 throw mappableSecurityException( "unauthorized", "No organization access authorized" );
             }
 
-            logger.debug( "OrganizationFilter.authorize - leaving" );
+            if (logger.isDebugEnabled()) {
+                logger.debug("OrganizationFilter.authorize - leaving");
+            }
         }
     }
 
@@ -269,7 +284,9 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
         @Override
         public void authorize( ContainerRequestContext request ) {
-            logger.debug( "ApplicationFilter.authorize" );
+            if (logger.isDebugEnabled()) {
+                logger.debug("ApplicationFilter.authorize");
+            }
             if ( SubjectUtils.isAnonymous() ) {
                 ApplicationInfo application = null;
                 try {
@@ -277,13 +294,15 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                     application = management.getApplicationInfo( getApplicationIdentifier() );
                 }
                 catch ( Exception e ) {
-                    e.printStackTrace();
+                    logger.error("Error getting applicationInfo in authorize()", e);
                 }
                 EntityManager em = getEntityManagerFactory().getEntityManager( application.getId() );
                 Map<String, String> roles = null;
                 try {
                     roles = em.getRoles();
-                    logger.debug( "found roles {}", roles );
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("found roles {}", roles);
+                    }
                 }
                 catch ( Exception e ) {
                     logger.error( "Unable retrieve roles", e );
@@ -313,15 +332,21 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
         @Override
         public void authorize(ContainerRequestContext request) {
-            logger.debug( "SystemFilter.authorize" );
+            if (logger.isDebugEnabled()) {
+                logger.debug("SystemFilter.authorize");
+            }
             try {
                 if (!request.getSecurityContext().isUserInRole( ROLE_SERVICE_ADMIN )) {
-                    logger.debug( "You are not the system admin." );
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("You are not the system admin.");
+                    }
                     throw mappableSecurityException( "unauthorized", "No system access authorized",
                         SecurityException.REALM );
                 }
             } catch (IllegalStateException e) {
-                logger.debug( "This is an invalid state", e );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("This is an invalid state", e);
+                }
                 if ((request.getSecurityContext().getUserPrincipal() == null) ||
                     !ROLE_SERVICE_ADMIN.equals( request.getSecurityContext().getUserPrincipal().getName() )) {
                     throw mappableSecurityException( "unauthorized", "No system access authorized",
@@ -340,7 +365,9 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
             @Override
             public void authorize(ContainerRequestContext request) {
-                logger.debug( "AdminUserFilter.authorize" );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("AdminUserFilter.authorize");
+                }
                 if (!isUser( getUserIdentifier() )) {
                     throw mappableSecurityException( "unauthorized", "No admin user access authorized" );
                 }

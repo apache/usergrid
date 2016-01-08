@@ -238,7 +238,7 @@ public class DupOrgRepair extends ExportingToolBase {
                     app.getKey(), app.getValue(), targetOrgId
             } );
 
-            managementService.addApplicationToOrganization( targetOrgId, app.getValue(), appEntity);
+            managementService.addApplicationToOrganization( targetOrgId, appEntity);
         }
 
         // now delete the original org

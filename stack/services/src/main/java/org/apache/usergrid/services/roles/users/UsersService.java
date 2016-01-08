@@ -36,7 +36,9 @@ public class UsersService extends org.apache.usergrid.services.users.UsersServic
 
     public UsersService() {
         super();
-        logger.debug( "/roles/*/users" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("/roles/*/users");
+        }
     }
 
 

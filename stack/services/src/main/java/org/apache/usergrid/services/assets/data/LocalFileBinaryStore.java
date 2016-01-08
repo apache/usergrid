@@ -39,7 +39,7 @@ import java.util.UUID;
 /** A binary store implementation using the local file system */
 public class LocalFileBinaryStore implements BinaryStore {
 
-    private Logger LOG = LoggerFactory.getLogger( LocalFileBinaryStore.class );
+    private static final Logger LOG = LoggerFactory.getLogger( LocalFileBinaryStore.class );
 
     private String reposLocation = FileUtils.getTempDirectoryPath();
 

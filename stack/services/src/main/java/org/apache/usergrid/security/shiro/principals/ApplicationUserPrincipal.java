@@ -84,7 +84,9 @@ public class ApplicationUserPrincipal extends UserPrincipal {
             catch ( Exception e ) {
                 logger.error( "Unable to retrieve token info", e );
             }
-            logger.debug( "Token: {}", token );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Token: {}", token);
+            }
         }
 
         grant( info, getPermissionFromPath( applicationId, "access" ) );

@@ -16,9 +16,6 @@
  */
 package org.apache.usergrid.services.notifications;
 
-import java.util.Date;
-import java.util.Map;
-import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.services.ServicePayload;
@@ -38,7 +35,7 @@ public interface ProviderAdapter {
      * test the connection
      * @throws ConnectionException
      */
-    public void testConnection() throws ConnectionException;
+    public void testConnection() throws Exception;
 
     /**
      * send a notification

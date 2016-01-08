@@ -37,7 +37,7 @@ import me.prettyprint.hector.api.exceptions.HectorException;
 public class UsergridSystemMonitor {
     private static final String TIMER_THRESHOLD_TRIGGERED_MSG =
             "TimerThreshold triggered on duration: %d \n%s\n----------------";
-    private static Logger logger = LoggerFactory.getLogger( UsergridSystemMonitor.class );
+    private static final  Logger logger = LoggerFactory.getLogger( UsergridSystemMonitor.class );
 
     private final String buildNumber;
     private final Cluster cluster;

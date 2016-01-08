@@ -639,7 +639,9 @@ public class UserResource extends ServiceResource {
     public Response getAccessToken( @Context UriInfo ui, @QueryParam("ttl") long ttl,
                                     @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
-        logger.debug( "UserResource.getAccessToken" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("UserResource.getAccessToken");
+        }
 
         try {
 

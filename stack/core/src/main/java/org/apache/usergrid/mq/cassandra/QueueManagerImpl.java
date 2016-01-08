@@ -195,7 +195,9 @@ public class QueueManagerImpl implements QueueManager {
         final UUID messageUuid = message.getUuid();
 
 
-        logger.debug( "Adding message with id '{}' to queue '{}'", messageUuid, queueId );
+        if (logger.isDebugEnabled()) {
+            logger.debug("Adding message with id '{}' to queue '{}'", messageUuid, queueId);
+        }
 
 
         batch.addInsertion( getQueueShardRowKey( queueId, shard_ts ), QUEUE_INBOX.getColumnFamily(),
@@ -209,7 +211,9 @@ public class QueueManagerImpl implements QueueManager {
         batch.addInsertion( bytebuffer( queueId ), QUEUE_PROPERTIES.getColumnFamily(),
                 createColumn( QUEUE_NEWEST, messageUuid, newest_ts, se, ue ) );
 
-        logger.debug( "Writing UUID {} with oldest timestamp {} and newest with timestamp {}", new Object[]{messageUuid, oldest_ts, newest_ts});
+        if (logger.isDebugEnabled()) {
+            logger.debug("Writing UUID {} with oldest timestamp {} and newest with timestamp {}", new Object[]{messageUuid, oldest_ts, newest_ts});
+        }
 
         batch.addInsertion( bytebuffer( getQueueId( "/" ) ), QUEUE_SUBSCRIBERS.getColumnFamily(),
                 createColumn( queuePath, queueId, timestamp, se, ue ) );

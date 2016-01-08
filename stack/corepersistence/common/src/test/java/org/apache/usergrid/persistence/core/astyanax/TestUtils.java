@@ -39,7 +39,7 @@ import com.netflix.astyanax.model.ColumnFamily;
  */
 public class TestUtils {
 
-    private static final Logger log = LoggerFactory.getLogger( TestUtils.class );
+    private static final Logger logger = LoggerFactory.getLogger( TestUtils.class );
 
     /**
      * Create the kespace, ignore exceptions if it already exists
@@ -58,7 +58,7 @@ public class TestUtils {
             keyspace.createKeyspace( options );
         }
         catch ( Throwable t ) {
-          log.info( "Error on creating keyspace, ignoring", t );
+          logger.info( "Error on creating keyspace, ignoring", t );
         }
 
 
@@ -70,7 +70,7 @@ public class TestUtils {
         try{
             keyspace.createColumnFamily( columnFamily, new HashMap<String, Object>() );
         }catch(Exception e){
-           log.error( "Error on creating column family, ignoring" , e);
+           logger.error( "Error on creating column family, ignoring" , e);
         }
     }
 }

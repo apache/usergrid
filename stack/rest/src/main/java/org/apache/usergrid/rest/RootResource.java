@@ -340,7 +340,10 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @Path("orgs/{organizationName}")
     public OrganizationResource getOrganizationByName3( @PathParam("organizationName") String organizationName )
             throws Exception {
-        logger.debug("getOrganizationByName3");
+        if (logger.isDebugEnabled()) {
+            logger.debug("getOrganizationByName3");
+        }
+
         return getOrganizationByName( organizationName );
     }
 

@@ -48,7 +48,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
 
     private String access_token;
     private Map<String, Object> originalProperties;
-    private Logger LOG = LoggerFactory.getLogger( AwsAssetResourceIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( AwsAssetResourceIT.class );
 
     /**
      * Mark tests as ignored if no AWS creds are present
@@ -152,13 +152,13 @@ public class AwsAssetResourceIT extends AbstractRestIT {
             FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
             ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( form );
             UUID assetId = postResponse.getEntities().get(0).getUuid();
-            LOG.info( "Waiting for upload to finish..." );
+            logger.info( "Waiting for upload to finish..." );
             Thread.sleep( 5000 );
 
             // check that entire file was uploaded
 
             ApiResponse getResponse = pathResource( getOrgAppPath( "foos/" +assetId ) ).get( ApiResponse.class );
-            LOG.info( "Upload complete!" );
+            logger.info( "Upload complete!" );
             InputStream is = pathResource( getOrgAppPath( "foos/" + assetId ) ).getAssetAsStream();
             byte[] foundData = IOUtils.toByteArray( is );
             assertEquals( data.length, foundData.length );
@@ -321,13 +321,13 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
         ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( form );
         UUID assetId = postResponse.getEntities().get(0).getUuid();
-        LOG.info( "Waiting for upload to finish..." );
+        logger.info( "Waiting for upload to finish..." );
         Thread.sleep( 5000 );
 
         // check that entire file was uploaded
 
         ApiResponse getResponse = pathResource( getOrgAppPath( "foos/" +assetId ) ).get( ApiResponse.class );
-        LOG.info( "Upload complete!" );
+        logger.info( "Upload complete!" );
         InputStream is = pathResource( getOrgAppPath( "foos/" + assetId ) ).getAssetAsStream();
         byte[] foundData = IOUtils.toByteArray( is );
         assertEquals( data.length, foundData.length );
@@ -355,7 +355,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
             UUID assetId = postResponse.getEntities().get(0).getUuid();
 
             String errorMessage = null;
-            LOG.info( "Waiting for upload to finish..." );
+            logger.info( "Waiting for upload to finish..." );
             Thread.sleep( 1000 );
 
             // attempt to get asset entity, it should contain error

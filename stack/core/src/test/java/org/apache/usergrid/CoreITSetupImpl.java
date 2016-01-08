@@ -23,11 +23,9 @@ import org.apache.usergrid.corepersistence.service.ApplicationService;
 import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.IndexBucketLocator;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 import org.apache.usergrid.utils.JsonUtils;
-import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
@@ -37,7 +35,7 @@ import java.util.UUID;
 
 
 public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
-    private static final Logger LOG = LoggerFactory.getLogger( CoreITSetupImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( CoreITSetupImpl.class );
     private final Injector injector;
 
     protected EntityManagerFactory emf;
@@ -88,7 +86,7 @@ public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
      * @throws Throwable if setup fails (which will disable {@code after}
      */
     protected void before( Description description ) throws Throwable {
-        LOG.info( "Setting up for {}", description.getDisplayName() );
+        logger.info( "Setting up for {}", description.getDisplayName() );
 
 
 
@@ -99,7 +97,7 @@ public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
 
     /** Override to tear down your specific external resource. */
     protected void after( Description description ) {
-        LOG.info( "Tearing down for {}", description.getDisplayName() );
+        logger.info( "Tearing down for {}", description.getDisplayName() );
     }
 
 
@@ -136,8 +134,8 @@ public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
 
     @Override
     public void dump( String name, Object obj ) {
-        if ( obj != null && LOG.isInfoEnabled() ) {
-            LOG.info( name + ":\n" + JsonUtils.mapToFormattedJsonString( obj ) );
+        if ( obj != null && logger.isInfoEnabled() ) {
+            logger.info( name + ":\n" + JsonUtils.mapToFormattedJsonString( obj ) );
         }
     }
 

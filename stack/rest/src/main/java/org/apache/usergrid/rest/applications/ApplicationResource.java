@@ -152,7 +152,9 @@ public class ApplicationResource extends ServiceResource {
     @RequireApplicationAccess
     @Path("assets")
     public AssetsResource getAssetsResource( @Context UriInfo ui ) throws Exception {
-        logger.debug( "in assets n applicationResource" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("in assets n applicationResource");
+        }
         addParameter( getServiceParameters(), "assets" );
 
         PathSegment ps = getFirstPathSegment( "assets" );
@@ -168,14 +170,18 @@ public class ApplicationResource extends ServiceResource {
     @Path("asset")
     public AssetsResource getAssetResource( @Context UriInfo ui ) throws Exception {
         // TODO change to singular
-        logger.debug( "in asset in applicationResource" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("in asset in applicationResource");
+        }
         return getAssetsResource( ui );
     }
 
 
     @Path("users")
     public UsersResource getUsers( @Context UriInfo ui ) throws Exception {
-        logger.debug( "ApplicationResource.getUsers" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("ApplicationResource.getUsers");
+        }
         addParameter( getServiceParameters(), "users" );
 
         PathSegment ps = getFirstPathSegment( "users" );
@@ -203,7 +209,9 @@ public class ApplicationResource extends ServiceResource {
                                     @QueryParam("ttl") long ttl, @QueryParam("redirect_uri") String redirect_uri,
                                     @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
-        logger.debug( "ApplicationResource.getAccessToken" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("ApplicationResource.getAccessToken");
+        }
 
         User user = null;
 
@@ -262,7 +270,11 @@ public class ApplicationResource extends ServiceResource {
             }
 
             if ( user == null ) {
-                logger.debug("Returning 400 bad request due to: " + errorDescription );
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Returning 400 bad request due to: " + errorDescription);
+                }
+
                 OAuthResponse response =
                         OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
                                      .setErrorDescription( errorDescription ).buildJSONMessage();
@@ -300,7 +312,9 @@ public class ApplicationResource extends ServiceResource {
                                         @FormParam("redirect_uri") String redirect_uri,
                                         @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
-        logger.debug( "ApplicationResource.getAccessTokenPost" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("ApplicationResource.getAccessTokenPost");
+        }
 
         return getAccessToken( ui, authorization, grant_type, username, password, pin, client_id, client_secret, code,
                 ttl, redirect_uri, callback );
@@ -348,7 +362,9 @@ public class ApplicationResource extends ServiceResource {
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.debug( "AuthResource.keys" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("AuthResource.keys");
+        }
 
         if ( !isApplicationAdmin( Identifier.fromUUID( applicationId ) ) ) {
             throw new UnauthorizedException();
@@ -370,7 +386,9 @@ public class ApplicationResource extends ServiceResource {
     public ApiResponse generateKeys( @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
-        logger.debug( "AuthResource.keys" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("AuthResource.keys");
+        }
 
         if ( !isApplicationAdmin( Identifier.fromUUID( applicationId ) ) ) {
             throw new UnauthorizedException();
@@ -432,7 +450,9 @@ public class ApplicationResource extends ServiceResource {
             @FormParam("username") String username,
             @FormParam("password") String password ) {
 
-        logger.debug( "ApplicationResource /authorize: {}/{}", username, password );
+        if (logger.isDebugEnabled()) {
+            logger.debug("ApplicationResource /authorize: {}/{}", username, password);
+        }
 
         try {
             responseType = response_type;
@@ -476,7 +496,7 @@ public class ApplicationResource extends ServiceResource {
             throw e;
         }
         catch ( Exception e ) {
-            logger.debug("handleAuthorizeForm failed", e);
+            logger.error("handleAuthorizeForm failed", e);
             return Response.ok( handleViewable( "error", this ) ).build() ;
         }
     }
@@ -543,7 +563,9 @@ public class ApplicationResource extends ServiceResource {
 
         Class cls = Class.forName( "org.apache.usergrid.rest.applications.notifiers.NotifiersResource" );
 
-        logger.debug( "NotifiersResource.getNotifiersResource" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("NotifiersResource.getNotifiersResource");
+        }
         addParameter( getServiceParameters(), "notifiers" );
 
         PathSegment ps = getFirstPathSegment( "notifiers" );
@@ -636,12 +658,13 @@ public class ApplicationResource extends ServiceResource {
         }
 
         final String apmConfig = new ObjectMapper().writeValueAsString(json);
+
         if(logger.isDebugEnabled()){
             logger.debug("Received request to set apigeeMobileConfig properties with: {}", apmConfig);
         }
 
-
         EntityManager em = emf.getEntityManager( applicationId );
+
         em.setProperty(new SimpleEntityRef(Application.ENTITY_TYPE, applicationId),
             APIGEE_MOBILE_APM_CONFIG_JSON_KEY,
             apmConfig

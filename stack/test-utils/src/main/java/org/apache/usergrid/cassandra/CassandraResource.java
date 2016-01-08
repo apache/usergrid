@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 public class CassandraResource extends EnvironResource {
 
 
-    public static final Logger LOG = LoggerFactory.getLogger( SpringResource.class );
+    public static final Logger logger = LoggerFactory.getLogger( SpringResource.class );
     public static final String DEFAULT_HOST = "127.0.0.1";
 
 
@@ -88,7 +88,7 @@ public class CassandraResource extends EnvironResource {
                 props.load( ClassLoader.getSystemResourceAsStream( "project.properties" ) );
             }
             catch ( IOException e ) {
-                LOG.error( "Unable to load project properties: {}", e.getLocalizedMessage() );
+                logger.error( "Unable to load project properties: {}", e.getLocalizedMessage() );
             }
             port = Integer.parseInt(
                     props.getProperty( "cassandra.rpcPort", Integer.toString( DEFAULT_RPC_PORT ) ) );
@@ -108,7 +108,7 @@ public class CassandraResource extends EnvironResource {
 
             System.setProperty( "cassandra." + RPC_PORT_KEY, Integer.toString( port ) );
 
-            LOG.info( "project.properties loaded properties for ports : " + "[rpc] = [{}]", new Object[] { port } );
+            logger.info( "project.properties loaded properties for ports : " + "[rpc] = [{}]", new Object[] { port } );
 
 
             initialized = true;

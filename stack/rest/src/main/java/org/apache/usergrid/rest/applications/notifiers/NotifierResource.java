@@ -63,7 +63,9 @@ public class NotifierResource extends ServiceResource {
         @QueryParam("callback") @DefaultValue("callback") String callback,
         FormDataMultiPart multiPart) throws Exception {
 
-        logger.debug("NotifierResource.executePut");
+        if (logger.isDebugEnabled()) {
+            logger.debug("NotifierResource.executePut");
+        }
 
         String name =         getValueOrNull(multiPart, "name");
         String provider =     getValueOrNull(multiPart, "provider");

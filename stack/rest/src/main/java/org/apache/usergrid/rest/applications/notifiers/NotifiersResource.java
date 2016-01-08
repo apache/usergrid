@@ -111,7 +111,9 @@ public class NotifiersResource extends ServiceResource {
             FormDataMultiPart multiPart)
             throws Exception {
 
-        logger.debug("ServiceResource.uploadData");
+        if (logger.isDebugEnabled()) {
+            logger.debug("ServiceResource.uploadData");
+        }
 
         String name =         getValueOrNull(multiPart, "name");
         String provider =     getValueOrNull(multiPart, "provider");

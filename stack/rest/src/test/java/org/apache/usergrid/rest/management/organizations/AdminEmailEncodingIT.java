@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
  * @author tnine
  */
 public class AdminEmailEncodingIT extends AbstractRestIT {
-    private static Logger log = LoggerFactory.getLogger(AdminEmailEncodingIT.class);
+    private static final Logger log = LoggerFactory.getLogger(AdminEmailEncodingIT.class);
 
     /**
      * Ensure that '+' characters in email addresses are handled properly

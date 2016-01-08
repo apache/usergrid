@@ -750,7 +750,9 @@ public class ExportServiceIT {
     @Ignore("Pending merge of export-feature branch")
     public void testIntegration100EntitiesOn() throws Exception {
 
-        logger.debug("testIntegration100EntitiesOn(): starting...");
+        if (logger.isDebugEnabled()) {
+            logger.debug("testIntegration100EntitiesOn(): starting...");
+        }
 
         ExportService exportService = setup.getExportService();
 

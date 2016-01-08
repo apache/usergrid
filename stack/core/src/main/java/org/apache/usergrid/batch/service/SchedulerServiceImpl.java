@@ -62,7 +62,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
     private static final String JOB_NAME = "jobName";
 
-    private static final Logger LOG = LoggerFactory.getLogger( SchedulerServiceImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( SchedulerServiceImpl.class );
 
     private static final String DEFAULT_QUEUE_NAME = "/jobs";
 
@@ -144,7 +144,9 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
          * as discarded
          */
         try {
-            LOG.debug( "deleteJob {}", jobId );
+            if (logger.isDebugEnabled()) {
+                logger.debug("deleteJob {}", jobId);
+            }
             getEm().delete( new SimpleEntityRef(
                 Schema.getDefaultSchema().getEntityType(JobData.class), jobId ) );
         }
@@ -187,7 +189,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
                  * still fire. Ignore this job
                  */
                 if ( data == null || stats == null ) {
-                    LOG.info( "Received job with data id '{}' from the queue, but no data was found.  Dropping job",
+                    logger.info( "Received job with data id '{}' from the queue, but no data was found.  Dropping job",
                             jobUuid );
                     getQm().deleteTransaction( jobQueueName, job.getTransaction(), null );
 
@@ -208,7 +210,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
                 // log and skip. This is a catastrophic runtime error if we see an
                 // exception here. We don't want to cause job loss, so leave the job in
                 // the Q.
-                LOG.error(
+                logger.error(
                         "Unable to retrieve job data for jobname {}, job id {}, stats id {}.  Skipping to avoid job "
                                 + "loss", new Object[] { jobName, jobUuid, statsUuid, e } );
             }
@@ -220,7 +222,9 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
     @Override
     public void heartbeat( JobRuntime execution, long delay ) {
-        LOG.debug( "renew transaction {}", execution.getTransactionId() );
+        if (logger.isDebugEnabled()) {
+            logger.debug("renew transaction {}", execution.getTransactionId());
+        }
         try {
             // @TODO - what's the point to this sychronized block on an argument?
             synchronized ( execution ) {
@@ -228,11 +232,13 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
                         new QueueQuery().withTimeout( delay ) );
 
                 execution.setTransactionId( newId );
-                LOG.debug( "renewed transaction {}", newId );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("renewed transaction {}", newId);
+                }
             }
         }
         catch ( TransactionNotFoundException e ) {
-            LOG.error( "Could not renew transaction", e );
+            logger.error( "Could not renew transaction", e );
             throw new JobRuntimeException( "Could not renew transaction during heartbeat", e );
         }
     }
@@ -278,16 +284,18 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
 
             // we're done. Mark the transaction as complete and delete the job info
             if ( jobStatus == Status.COMPLETED ) {
-                LOG.info( "Job {} is complete id: {}", data.getJobName(), bulkJobExecution.getTransactionId() );
+                logger.info( "Job {} is complete id: {}", data.getJobName(), bulkJobExecution.getTransactionId() );
                 getQm().deleteTransaction( jobQueueName, bulkJobExecution.getTransactionId(), null );
-                LOG.debug( "delete job data {}", data.getUuid() );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("delete job data {}", data.getUuid());
+                }
                 getEm().delete( data );
             }
 
             // the job failed too many times. Delete the transaction to prevent it
             // running again and save it for querying later
             else if ( jobStatus == Status.DEAD ) {
-                LOG.warn( "Job {} is dead.  Removing", data.getJobName() );
+                logger.warn( "Job {} is dead.  Removing", data.getJobName() );
                 getQm().deleteTransaction( jobQueueName, bulkJobExecution.getTransactionId(), null );
                 getEm().update( data );
             }
@@ -297,7 +305,7 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
                 getEm().update( data );
             }
 
-            LOG.info( "Updating stats for job {}", data.getJobName() );
+            logger.info( "Updating stats for job {}", data.getJobName() );
 
             getEm().update( stat );
         }

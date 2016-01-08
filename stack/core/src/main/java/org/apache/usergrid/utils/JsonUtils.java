@@ -72,7 +72,9 @@ public class JsonUtils {
             return mapper.writeValueAsString( obj );
         }
         catch ( Throwable t ) {
-            LOG.debug( "Error generating JSON", t );
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Error generating JSON", t);
+            }
             throw new JsonWriteException( "Error generating JSON", t );
         }
     }
@@ -84,7 +86,9 @@ public class JsonUtils {
             return indentObjectMapper.writeValueAsString( obj );
         }
         catch ( Throwable t ) {
-            LOG.debug( "Error generating JSON", t );
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Error generating JSON", t);
+            }
             throw new JsonWriteException( "Error generating JSON", t );
         }
     }
@@ -96,7 +100,9 @@ public class JsonUtils {
             return mapper.readValue( json, Object.class );
         }
         catch ( Throwable t ) {
-            LOG.debug( "Error parsing JSON", t );
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Error parsing JSON", t);
+            }
             throw new JsonReadException( "Error parsing JSON", t );
         }
     }

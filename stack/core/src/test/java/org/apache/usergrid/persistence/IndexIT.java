@@ -17,32 +17,23 @@
 package org.apache.usergrid.persistence;
 
 
-import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.utils.JsonUtils;
-import org.apache.usergrid.utils.UUIDUtils;
-
-import me.prettyprint.cassandra.serializers.ByteBufferSerializer;
-import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.mutation.Mutator;
 
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.junit.Assert.*;
 
 
 public class IndexIT extends AbstractCoreIT {
-    private static final Logger LOG = LoggerFactory.getLogger( IndexIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( IndexIT.class );
 
     public static final String[] alphabet = {
         "Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India",
@@ -53,7 +44,7 @@ public class IndexIT extends AbstractCoreIT {
 
     @Test
     public void testCollectionOrdering() throws Exception {
-        LOG.info( "testCollectionOrdering" );
+        logger.info( "testCollectionOrdering" );
 
         UUID applicationId = app.getId();
 
@@ -106,7 +97,7 @@ public class IndexIT extends AbstractCoreIT {
 
         query = Query.fromQL( "order by name desc" ).withCursor(r.getCursor());
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        // LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        // logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
         for ( Entity entity : r.getEntities() ) {
             i--;
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
@@ -125,7 +116,7 @@ public class IndexIT extends AbstractCoreIT {
 
     @Test
     public void testCollectionFilters() throws Exception {
-        LOG.info( "testCollectionFilters" );
+        logger.info( "testCollectionFilters" );
 
         UUID applicationId = app.getId();
         assertNotNull( applicationId );
@@ -145,7 +136,7 @@ public class IndexIT extends AbstractCoreIT {
 
         Query query = Query.fromQL( "name < 'delta' order by name asc" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         int i = 0;
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
@@ -155,7 +146,7 @@ public class IndexIT extends AbstractCoreIT {
 
         query = Query.fromQL( "name <= 'delta' order by name asc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 0;
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
@@ -165,7 +156,7 @@ public class IndexIT extends AbstractCoreIT {
 
         query = Query.fromQL( "name <= 'foxtrot' and name > 'bravo' order by name asc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 2;
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
@@ -175,7 +166,7 @@ public class IndexIT extends AbstractCoreIT {
 
         query = Query.fromQL( "name < 'foxtrot' and name > 'bravo' order by name asc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 2;
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
@@ -185,7 +176,7 @@ public class IndexIT extends AbstractCoreIT {
 
         query = Query.fromQL( "name < 'foxtrot' and name >= 'bravo' order by name asc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 1;
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
@@ -195,7 +186,7 @@ public class IndexIT extends AbstractCoreIT {
 
         query = Query.fromQL( "name <= 'foxtrot' and name >= 'bravo' order by name asc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 1;
         for ( Entity entity : r.getEntities() ) {
             assertEquals( alphabet[i], entity.getProperty( "name" ) );
@@ -205,7 +196,7 @@ public class IndexIT extends AbstractCoreIT {
 
         query = Query.fromQL( "name <= 'foxtrot' and name >= 'bravo' order by name desc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 6;
         for ( Entity entity : r.getEntities() ) {
             i--;
@@ -215,7 +206,7 @@ public class IndexIT extends AbstractCoreIT {
 
         query = Query.fromQL( "name < 'foxtrot' and name > 'bravo' order by name desc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 5;
         for ( Entity entity : r.getEntities() ) {
             i--;
@@ -225,7 +216,7 @@ public class IndexIT extends AbstractCoreIT {
 
         query = Query.fromQL( "name < 'foxtrot' and name >= 'bravo' order by name desc" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         i = 5;
         for ( Entity entity : r.getEntities() ) {
             i--;
@@ -235,7 +226,7 @@ public class IndexIT extends AbstractCoreIT {
 
         query = Query.fromQL( "name = 'foxtrot'" );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals( 1, r.size() );
 
         long created = r.getEntity().getCreated();
@@ -243,7 +234,7 @@ public class IndexIT extends AbstractCoreIT {
 
         query = Query.fromQL( "created = " + created );
         r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals( 1, r.size() );
         assertEquals( entityId, r.getEntity().getUuid() );
     }
@@ -251,7 +242,7 @@ public class IndexIT extends AbstractCoreIT {
 
     @Test
     public void testSecondarySorts() throws Exception {
-        LOG.info( "testSecondarySorts" );
+        logger.info( "testSecondarySorts" );
 
         UUID applicationId = app.getId();
         assertNotNull( applicationId );
@@ -273,7 +264,7 @@ public class IndexIT extends AbstractCoreIT {
 
         Query query = Query.fromQL( "group = 1 order by name desc" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         int i = 6;
         for ( Entity entity : r.getEntities() ) {
             i--;
