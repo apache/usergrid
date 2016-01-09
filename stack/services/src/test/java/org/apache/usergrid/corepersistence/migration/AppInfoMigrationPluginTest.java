@@ -120,7 +120,7 @@ public class AppInfoMigrationPluginTest {
         List<Entity> deletedApps = new ArrayList<>();
 
         setup.getEmf().initializeApplicationV2(
-            CassandraService.DEFAULT_ORGANIZATION, AppInfoMigrationPlugin.SYSTEM_APP_ID, "systemapp", null);
+            CassandraService.DEFAULT_ORGANIZATION, AppInfoMigrationPlugin.SYSTEM_APP_ID, CassandraService.MANAGEMENT_APPLICATION, null);
 
         EntityManager systemAppEm = setup.getEmf().getEntityManager( AppInfoMigrationPlugin.SYSTEM_APP_ID );
 

@@ -58,15 +58,15 @@ public interface ManagementService {
 
     public boolean checkPasswordResetTokenForAdminUser( UUID userId, String token ) throws Exception;
 
-    public UserInfo createAdminUser( String username, String name, String email, String password, boolean activated,
-                                     boolean disabled ) throws Exception;
+    public UserInfo createAdminUser( UUID organizationId, String username, String name, String email, String password,
+                                     boolean activated, boolean disabled ) throws Exception;
 
-    public UserInfo createAdminUser( String username, String name, String email, String password, boolean activated,
-                                     boolean disabled, Map<String, Object> userProperties ) throws Exception;
+    public UserInfo createAdminUser( UUID organizationId, String username, String name, String email, String password,
+                                     boolean activated, boolean disabled, Map<String, Object> userProperties ) throws Exception;
 
-    public UserInfo createAdminFrom( User user, String password ) throws Exception;
+    public UserInfo createAdminFrom( UUID organizationId, User user, String password ) throws Exception;
 
-    public UserInfo createAdminFromPrexistingPassword( User user, CredentialsInfo ci ) throws Exception;
+    public UserInfo createAdminFromPrexistingPassword( UUID organizationId, User user, CredentialsInfo ci ) throws Exception;
 
     public ApplicationInfo createApplication( UUID organizationId, String applicationName ) throws Exception;
     public ApplicationInfo createApplication( UUID organizationId, String applicationName,
@@ -120,9 +120,9 @@ public interface ManagementService {
 
     public void revokeAccessTokenForAdminUser( UUID userId, String token ) throws Exception;
 
-    public String getActivationTokenForAdminUser( UUID userId, long ttl ) throws Exception;
+    public String getActivationTokenForAdminUser( UUID userId, long ttl, UUID organizationId ) throws Exception;
 
-    public String getConfirmationTokenForAdminUser( UUID userId, long ttl ) throws Exception;
+    public String getConfirmationTokenForAdminUser( UUID userId, long ttl, UUID organizationId ) throws Exception;
 
     public String getActivationTokenForOrganization( UUID organizationId, long ttl ) throws Exception;
 
@@ -190,6 +190,8 @@ public interface ManagementService {
 
     public Map<String, Object> getOrganizationData( OrganizationInfo organization ) throws Exception;
 
+    public UUID getOrganizationIdForApplication( UUID applicationId ) throws Exception;
+
     public OrganizationInfo getOrganizationForApplication( UUID applicationId ) throws Exception;
 
     public OrganizationInfo getOrganizationInfoFromAccessToken( String token ) throws Exception;
@@ -198,7 +200,7 @@ public interface ManagementService {
 
     public BiMap<UUID, String> getOrganizationsForAdminUser( UUID userId ) throws Exception;
 
-    public String getPasswordResetTokenForAdminUser( UUID userId, long ttl ) throws Exception;
+    public String getPasswordResetTokenForAdminUser( UUID userId, long ttl, UUID organizationId ) throws Exception;
 
     public UserInfo getAdminUserByUuid( UUID id ) throws Exception;
 
@@ -233,11 +235,11 @@ public interface ManagementService {
 
     public void removeOrganizationApplication( UUID organizationId, UUID applicationId ) throws Exception;
 
-    public void startAdminUserActivationFlow( UserInfo user ) throws Exception;
+    public void startAdminUserActivationFlow( UUID organizationId, UserInfo user ) throws Exception;
 
     public void sendAdminUserEmail( UserInfo user, String subject, String html ) throws Exception;
 
-    public void startAdminUserPasswordResetFlow( UserInfo user ) throws Exception;
+    public void startAdminUserPasswordResetFlow( UUID organizationId, UserInfo user ) throws Exception;
 
     public void startOrganizationActivationFlow( OrganizationInfo organization ) throws Exception;
 
@@ -356,8 +358,6 @@ public interface ManagementService {
     public OrganizationConfig getOrganizationConfigByName( String organizationName ) throws Exception;
 
     public OrganizationConfig getOrganizationConfigByUuid( UUID id ) throws Exception;
-
-    public Map<String, Object> getOrganizationConfigData( OrganizationConfig organizationConfig ) throws Exception;
 
     public OrganizationConfig getOrganizationConfigForApplication( UUID applicationId ) throws Exception;
 
