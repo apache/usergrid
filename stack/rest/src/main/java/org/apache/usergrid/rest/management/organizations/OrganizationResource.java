@@ -51,9 +51,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -372,28 +370,51 @@ public class OrganizationResource extends AbstractContextResource {
     }
 
 
+    protected Set<String> getSetFromCommaSeparatedString(String input) {
+        Set<String> ret = new HashSet<>();
+        StringTokenizer tokenizer = new StringTokenizer(input, ",");
+
+        while (tokenizer.hasMoreTokens()) {
+            ret.add(tokenizer.nextToken());
+        }
+
+        return ret;
+    }
+
+
+    protected Map<String, Object> getConfigData(OrganizationConfig orgConfig, String itemsParam,
+                                                boolean includeDefaults, boolean includeOverrides) {
+        boolean itemsParamEmpty = itemsParam == null || itemsParam.isEmpty() || itemsParam.equals("*");
+        return orgConfig.getOrgConfigCustomMap(itemsParamEmpty ? null : getSetFromCommaSeparatedString(itemsParam),
+                includeDefaults, includeOverrides);
+    }
+
+
     @JSONP
     @RequireSystemAccess
     @GET
     @Path("config")
     public ApiResponse getConfig( @Context UriInfo ui,
-                                      @QueryParam("callback") @DefaultValue("callback") String callback )
+                                  @QueryParam("items") @DefaultValue("") String itemsParam,
+                                  @QueryParam("separate_defaults") @DefaultValue("false") boolean separateDefaults,
+                                  @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
         logger.info( "Get configuration for organization: " + organization.getUuid() );
 
-        // TODO: check for super user, @RequireSystemAccess didn't work
-
         ApiResponse response = createApiResponse();
         response.setAction( "get organization configuration" );
-
-        // TODO: check for super user
+        //response.setParams(ui.getQueryParameters());
 
         OrganizationConfig orgConfig =
                 management.getOrganizationConfigByUuid( organization.getUuid() );
 
-        response.setProperty( "configuration", management.getOrganizationConfigData( orgConfig ) );
-        // response.setOrganizationConfig( orgConfig );
+        if (separateDefaults) {
+            response.setProperty("orgConfiguration", getConfigData(orgConfig, itemsParam, false, true));
+            response.setProperty("defaults", getConfigData(orgConfig, itemsParam, true, false));
+        } else {
+            response.setProperty("configuration", getConfigData(orgConfig, itemsParam, true, true));
+        }
 
         return response;
     }
@@ -404,8 +425,11 @@ public class OrganizationResource extends AbstractContextResource {
     @JSONP
     @PUT
     @Path("config")
-    public ApiResponse putConfig( @Context UriInfo ui, Map<String, Object> json,
-                                       @QueryParam("callback") @DefaultValue("callback") String callback )
+    public ApiResponse putConfig( @Context UriInfo ui,
+                                  Map<String, Object> json,
+                                  @QueryParam("separate_defaults") @DefaultValue("false") boolean separateDefaults,
+                                  @QueryParam("only_changed") @DefaultValue("false") boolean onlyChanged,
+                                  @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
         if (logger.isDebugEnabled()) {
@@ -414,19 +438,31 @@ public class OrganizationResource extends AbstractContextResource {
 
         ApiResponse response = createApiResponse();
         response.setAction("put organization configuration");
-
-        // TODO: check for super user
-
-        // response.setParams(ui.getQueryParameters());
+        //response.setParams(ui.getQueryParameters());
 
         OrganizationConfig orgConfig =
                 management.getOrganizationConfigByUuid( organization.getUuid() );
-        orgConfig.addProperties(json);
+
+        // validates JSON and throws IllegalArgumentException if invalid
+        // exception will be handled up the chain
+        orgConfig.addProperties(json, true);
+
         management.updateOrganizationConfig(orgConfig);
 
         // refresh orgConfig -- to pick up removed entries and defaults
         orgConfig = management.getOrganizationConfigByUuid( organization.getUuid() );
-        response.setProperty( "configuration", management.getOrganizationConfigData( orgConfig ) );
+
+        String itemsToReturn = "";
+        if (onlyChanged) {
+            itemsToReturn = String.join(",", json.keySet());
+        }
+
+        if (separateDefaults) {
+            response.setProperty("orgConfiguration", getConfigData(orgConfig, itemsToReturn, false, true));
+            response.setProperty("defaults", getConfigData(orgConfig, itemsToReturn, true, false));
+        } else {
+            response.setProperty( "configuration", getConfigData(orgConfig, itemsToReturn, true, true));
+        }
 
         return response;
     }
