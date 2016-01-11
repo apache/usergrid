@@ -282,32 +282,34 @@ class UserOrgManager implements UserOrgInterface {
 
     @Override
     public Org getOrg(UUID uuid) throws Exception {
-
         EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
-        Entity entity = em.get( uuid );
-
-        Org org = new Org(
-                entity.getUuid(),
-                entity.getProperty( "path" ) + "",
-                entity.getCreated() );
-        org.sourceValue = entity;
-
-        return org;
+        Group entity = em.get( uuid , Group.class );
+        if ( entity != null ) {
+            Org org = new Org(
+                    entity.getUuid(),
+                    entity.getPath(),
+                    entity.getCreated() );
+            org.sourceValue = entity;
+            return org;
+        }
+        return null;
     }
 
+    
     @Override
     public OrgUser getOrgUser(UUID uuid) throws Exception {
         EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
-        Entity entity = em.get( uuid );
-        
-        OrgUser user = new OrgUser( 
-            entity.getUuid(),
-            entity.getType(),
-            entity.getProperty("email")+"",
-            entity.getCreated()
-        );
-       
-        return user;
+        User entity = em.get( uuid, User.class );
+        if ( entity != null ) {
+            OrgUser user = new OrgUser(
+                    entity.getUuid(),
+                    entity.getUsername(),
+                    entity.getEmail(),
+                    entity.getCreated()
+            );
+            return user;
+        }
+        return null;
     }
 
 

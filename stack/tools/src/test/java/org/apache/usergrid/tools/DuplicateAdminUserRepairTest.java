@@ -22,6 +22,7 @@ import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.apache.usergrid.ServiceITSuite;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
+import org.apache.usergrid.management.UserInfo;
 import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,11 +32,12 @@ import java.util.UUID;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertNotNull;
+import static org.apache.usergrid.tools.UserOrgInterface.OrgUser;
 import static org.junit.Assert.assertEquals;
 
 
 /**
- * Test duplicate org repair.
+ * Test duplicate admin repair.
  */
 public class DuplicateAdminUserRepairTest {
     
@@ -63,12 +65,12 @@ public class DuplicateAdminUserRepairTest {
         assertNotNull( "user2_b", mockManager.getOrgUser( mockManager.user2_b.getId() ));
 
         // verify that correct users indexed
-        usersIndexed( mockManager );
+        assertUsersIndexed( mockManager );
         
         dor.startTool( new String[] {}, false ); // false means do not call System.exit()
 
         // verify that correct users indexed
-        usersIndexed( mockManager );
+        assertUsersIndexed( mockManager );
 
         // verify that duplicate users are gone (the "a" users were the first ones created)
         assertNull( "must remove user1_a", mockManager.getOrgUser( mockManager.user1_a.getId() ));
@@ -80,7 +82,7 @@ public class DuplicateAdminUserRepairTest {
     }
 
     
-    private void usersIndexed( MockManager mockManager ) {
+    private void assertUsersIndexed(MockManager mockManager ) {
         assertEquals("user1_b is in the index",
                 mockManager.lookupOrgUserByUsername(mockManager.user1_b.getUsername()).getId(),
                 mockManager.user1_b.getId() );
@@ -114,12 +116,12 @@ public class DuplicateAdminUserRepairTest {
         assertNotNull( "user2_b", mockManager.getOrgUser( mockManager.user2_b.getId() ));
 
         // verify that correct users indexed
-        usersIndexed( mockManager );
+        assertUsersIndexed( mockManager );
 
         dor.startTool( new String[] { "-dryrun", "true" }, false ); // false means do not call System.exit()
 
         // verify that correct users indexed
-        usersIndexed( mockManager );
+        assertUsersIndexed( mockManager );
         
         // insure nothng was deleted by dry-run
         assertNotNull( "dryrun should not delete user1_a", mockManager.getOrgUser( mockManager.user1_a.getId() ));
@@ -156,14 +158,12 @@ public class DuplicateAdminUserRepairTest {
 
         dor.startTool( new String[]{}, false );  // false means do not call System.exit()
 
-        dor.startTool( new String[]{"dryrun", "true"}, false ); // false means do not call System.exit()
-
         assertTrue( true ); // we're happy if we get to this point
     }
 
     
     @org.junit.Test
-    public void testManagerMethods() throws Exception {
+    public void testManagerLookupMethods() throws Exception {
         
         // create two orgs each with owning user
 
@@ -183,17 +183,82 @@ public class DuplicateAdminUserRepairTest {
         // start the tool so that Spring, Cassandra, etc/ gets initialized
         dor.startTool( new String[]{"-dryrun", "true"}, false ); // false means do not call System.exit()
 
-        assertNotNull( dor.manager.getOrgUser( orgOwnerInfo1.getOwner().getUuid() ));
-        assertNotNull( dor.manager.getOrgUser( orgOwnerInfo2.getOwner().getUuid() ));
-
+        testManagerLookupMethods( dor, orgOwnerInfo1, orgOwnerInfo2, true );
+        
         dor.manager.removeOrgUser( dor.manager.getOrgUser( orgOwnerInfo1.getOwner().getUuid() )); 
         dor.manager.removeOrgUser( dor.manager.getOrgUser( orgOwnerInfo2.getOwner().getUuid() ));
-        
-        assertNotNull( dor.manager.getOrgUser( orgOwnerInfo1.getOwner().getUuid() ));
-        assertNotNull( dor.manager.getOrgUser( orgOwnerInfo2.getOwner().getUuid() ));
+
+        testManagerLookupMethods( dor, orgOwnerInfo1, orgOwnerInfo2, false );
     }
     
     
+    private void testManagerLookupMethods( DuplicateAdminUserRepair dor, 
+                                    OrganizationOwnerInfo info1, 
+                                    OrganizationOwnerInfo info2,
+                                    boolean usersExist ) throws Exception {
+        if ( usersExist ) {
+            
+            assertNotNull( dor.manager.getOrgUser( info1.getOwner().getUuid() ));
+            assertNotNull( dor.manager.getOrgUser( info2.getOwner().getUuid() ));
+
+            assertNotNull( dor.manager.lookupOrgUserByEmail( info1.getOwner().getEmail() ));
+            assertNotNull( dor.manager.lookupOrgUserByEmail( info2.getOwner().getEmail() ));
+
+            assertNotNull( dor.manager.lookupOrgUserByUsername( info1.getOwner().getUsername() ));
+            assertNotNull( dor.manager.lookupOrgUserByUsername( info2.getOwner().getUsername() )); 
+            
+        } else {
+
+            assertNull( dor.manager.getOrgUser( info1.getOwner().getUuid() ) );
+            assertNull( dor.manager.getOrgUser( info2.getOwner().getUuid() ) );
+
+            assertNull( dor.manager.lookupOrgUserByEmail( info1.getOwner().getEmail() ) );
+            assertNull( dor.manager.lookupOrgUserByEmail( info2.getOwner().getEmail() ) );
+
+            assertNull( dor.manager.lookupOrgUserByUsername( info1.getOwner().getUsername() ) );
+            assertNull( dor.manager.lookupOrgUserByUsername( info2.getOwner().getUsername() ) );
+        }
+    }
+
+
+    @org.junit.Test
+    public void testManagerOrgUserUpdateMethod() throws Exception {
+
+        // create an org with an admin user
+        final String random1 = org.apache.commons.lang.RandomStringUtils.randomAlphanumeric( 10 );
+        final OrganizationOwnerInfo orgOwnerInfo1 = setup.getMgmtSvc().createOwnerAndOrganization(
+                "org_" + random1, "user_" + random1, "user_" + random1,
+                "user_" + random1 + "@example.com", "password" );
+
+        DuplicateAdminUserRepair dor = new DuplicateAdminUserRepair(setup.getEmf(), setup.getMgmtSvc());
+        dor.manager = dor.createNewRepairManager(); // test the real manager 
+
+        // start the tool so that Spring, Cassandra, etc/ gets initialized
+        dor.startTool( new String[]{"-dryrun", "true"}, false ); // false means do not call System.exit()
+
+        UserInfo userInfo = setup.getMgmtSvc().getAdminUserByUuid( orgOwnerInfo1.getOwner().getUuid() );
+        OrgUser user = dor.manager.getOrgUser( orgOwnerInfo1.getOwner().getUuid() );
+        assertEquals( userInfo.getUsername(), user.getUsername());
+        assertEquals( userInfo.getEmail(), user.getEmail());
+
+        // change user's username using updateOrgUser()
+        String newUsername = "boom_" + random1;
+        user.setUsername(newUsername);
+        dor.manager.updateOrgUser( user );
+        user = dor.manager.getOrgUser( orgOwnerInfo1.getOwner().getUuid() );
+        assertEquals( newUsername, user.getUsername());
+        
+        // change user's username using setOrgUserName()
+        newUsername = "blammo_" + random1;
+        dor.manager.setOrgUserName( user, newUsername );
+        user = dor.manager.getOrgUser( orgOwnerInfo1.getOwner().getUuid() );
+        assertEquals( newUsername, user.getUsername());
+    }
+    
+
+    /**
+     * Extend mock manager to add a pair of duplicate users.
+     */
     static class MockManager extends MockUserOrgManager {
 
         OrgUser user1_a;
