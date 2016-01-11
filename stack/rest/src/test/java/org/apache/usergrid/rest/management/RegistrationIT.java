@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.management;
 
 
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
@@ -42,6 +43,7 @@ import static org.apache.usergrid.management.AccountCreationProps.*;
 import static org.junit.Assert.*;
 
 
+@NotThreadSafe  // each test resets the test properties at the end of the test
 public class RegistrationIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger(RegistrationIT.class);
