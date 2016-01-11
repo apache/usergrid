@@ -168,7 +168,7 @@ public class DuplicateOrgRepair extends ToolBase {
 
         if ( manager == null ) { // we use a special manager when mockTesting
             if (dryRun) {
-                manager = new DryRunManager( emf, managementService );
+                manager = new DryRunUserOrgManager( emf, managementService );
             } else {
                 manager = new UserOrgManager( emf, managementService );
             }
@@ -431,32 +431,4 @@ public class DuplicateOrgRepair extends ToolBase {
         return oldest;
     }
 
-
-    static class DryRunManager extends UserOrgManager {
-
-        public DryRunManager(EntityManagerFactory emf, ManagementService managementService ) {
-            super(emf, managementService);
-        }
-        
-        @Override
-        public void removeUserFromOrg(OrgUser user, Org org) throws Exception {
-        }
-
-        @Override
-        public void addUserToOrg(OrgUser user, Org org) throws Exception {
-        }
-
-        @Override
-        public void addAppToOrg(UUID appId, Org org) throws Exception {
-        }
-
-        @Override
-        public void removeAppFromOrg(UUID appId, Org org) throws Exception {
-        }
-
-        @Override
-        public void removeOrg(Org keeper, Org duplicate) throws Exception {
-        }
-    }
-    
 }
