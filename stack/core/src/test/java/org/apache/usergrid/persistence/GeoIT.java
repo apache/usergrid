@@ -70,16 +70,9 @@ public class GeoIT extends AbstractCoreIT {
         super();
     }
 
-    /**
-     * Validate the ability to remove an entity's location and remove them from searches
-     * 1. Create an entity with location
-     * 2. Query with a globally large distance to verify location
-     * 3. Remove the entity's location
-     * 4. Repeat the query, expecting no results
-     */
+
     @Test
     public void testRoundingGeolocationIssue() throws Exception {
-        //Get the EntityManager instance
         EntityManager em = app.getEntityManager();
         assertNotNull(em);
 
@@ -107,9 +100,14 @@ public class GeoIT extends AbstractCoreIT {
 
         //2. Query with a globally large distance to verify location
 
-        Query query = Query.fromQL("select * where location within 609.8 of 37.334110260009766, -121.89434051513672");
+        Query query = Query.fromQL("select * where location within 609.7 of 37.334110260009766, -121.89434051513672");
         Results listResults = em.searchCollection(em.getApplicationRef(), "collars", query);
-        assertEquals("Nothing should get returned", 0, listResults.size());
+        assertEquals( 5, listResults.size());
+
+        query = Query.fromQL("select * where location within 609.8 of 37.334110260009766, -121.89434051513672");
+        listResults = em.searchCollection(em.getApplicationRef(), "collars", query);
+        assertEquals( 6, listResults.size());
+
 
     }
 
