@@ -24,9 +24,9 @@ import java.util.UUID;
 
 
 /**
- * Abstraction to make duplicate org repair testable.
+ * Mockable abstraction of user-org management.
  */
-interface DuplicateOrgInterface {
+interface UserOrgInterface {
     
     Observable<Org> getOrgs() throws Exception;
     
@@ -50,18 +50,35 @@ interface DuplicateOrgInterface {
   
     void logDuplicates(Map<String, Set<Org>> duplicatesByName);
 
-    Org getOrg(UUID keeperUuid) throws Exception;
+    Org getOrg(UUID id ) throws Exception;
+    
+    OrgUser getOrgUser(UUID id ) throws Exception;
+
+    OrgUser lookupOrgUserByUsername( String username ) throws Exception;
+    
+    OrgUser lookupOrgUserByEmail( String email ) throws Exception;
+    
+    void removeOrgUser( OrgUser orgUser ) throws Exception;
+
+    void updateOrgUser(OrgUser targetUserEntity) throws Exception;
+
+    void setOrgUserName(OrgUser other, String newUserName) throws Exception;
 
     class Org implements Comparable<Org> {
         private UUID id;
         private String name;
         private long created;
         public Object sourceValue;
-        
-        public Org( UUID id, String name, long created ) {
+
+        public Org( UUID id, String name, long created) {
             this.id = id;
             this.name = name;
             this.created = created;
+            this.created = System.currentTimeMillis();
+        }
+
+        public Org( UUID id, String name) {
+            this( id, name, System.currentTimeMillis()); 
         }
         
         @Override
@@ -91,22 +108,47 @@ interface DuplicateOrgInterface {
         }
     }
     
-    class OrgUser {
+    class OrgUser implements Comparable<OrgUser> {
         private UUID id;
-        private String name;
+        private String username;
+        private String email;
+        private long created;
         public Object sourceValue;
-        
-        public OrgUser( UUID id, String name ) {
+
+        public OrgUser( UUID id, String name, String email, long created ) {
             this.id = id;
-            this.name = name;
+            this.username = name;
+            this.email = email;
+            this.created = created;
+        }
+        
+        public OrgUser( UUID id, String name, String email ) {
+            this( id, name, email, System.currentTimeMillis());
         }
 
         public UUID getId() {
             return id;
         }
 
-        public String getName() {
-            return name;
+        public String getEmail() {
+            return email;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+        
+        public void setUsername( String username ) {
+            this.username = username;
+        }
+
+        public long getCreated() {
+            return created;
+        }
+        
+        @Override
+        public int compareTo(OrgUser o) {
+            return Long.compare( this.created, o.created );
         }
     }
 }
