@@ -36,7 +36,7 @@ import static org.apache.usergrid.tools.UserOrgInterface.OrgUser;
 /**
  * Find duplicate admin users, delete the one that is not indexed.
  */
-public class DuplicateAdminUserRepair extends ToolBase {
+public class DuplicateAdminRepair extends ToolBase {
 
     UserOrgInterface           manager = null;
     
@@ -55,11 +55,11 @@ public class DuplicateAdminUserRepair extends ToolBase {
     boolean                    testing = false;
 
 
-    DuplicateAdminUserRepair() {
+    DuplicateAdminRepair() {
         super();
     }
 
-    DuplicateAdminUserRepair(EntityManagerFactory emf, ManagementService managementService ) {
+    DuplicateAdminRepair(EntityManagerFactory emf, ManagementService managementService ) {
         this();
         this.emf = emf;
         this.managementService = managementService;
@@ -247,7 +247,7 @@ public class DuplicateAdminUserRepair extends ToolBase {
             logger.info("Would rename user {}:{} to {}", new Object[] { 
                     other.getUsername(), other.getId(), newUserName });
         } else {
-            logger.info( "Setting username to {} for user with username {} and id {}", new Object[] {
+            logger.info( "Setting username to {} for user {}:{}", new Object[] {
                     newUserName, other.getUsername(), other.getId() } );
             
             manager.setOrgUserName( other, newUserName );

@@ -169,7 +169,7 @@ class MockUserOrgManager implements UserOrgInterface {
         for (String orgName : duplicatesByName.keySet()) {
             Set<Org> orgs = duplicatesByName.get( orgName );
             for (Org org : orgs) {
-                DuplicateAdminUserRepairTest.logger.info( "Duplicate org {}:{}", orgName, org.getId() );
+                DuplicateAdminRepairTest.logger.info( "Duplicate org {}:{}", orgName, org.getId() );
             }
         }
     }
