@@ -78,6 +78,79 @@ public class GeoIT extends AbstractCoreIT {
      * 4. Repeat the query, expecting no results
      */
     @Test
+    public void testRoundingGeolocationIssue() throws Exception {
+        //Get the EntityManager instance
+        EntityManager em = app.getEntityManager();
+        assertNotNull(em);
+
+        //1. Create an entity with location
+        Map<String, Object> properties = new LinkedHashMap<String, Object>() {{
+            put("name", "Office");
+            put("location", new LinkedHashMap<String, Object>() {{
+                put("latitude", 37.334115);
+                put("longitude", -121.894340);
+            }});
+        }};
+
+        Entity office = em.create("testCollection", properties);
+        assertNotNull(office);
+
+        properties = new LinkedHashMap<String, Object>() {{
+            put("name", "Amicis");
+            put("location", new LinkedHashMap<String, Object>() {{
+                put("latitude", 37.335616);
+                put("longitude", -121.894168);
+            }});
+        }};
+
+        Entity amicis = em.create("testCollection", properties);
+        assertNotNull(amicis);
+
+        properties = new LinkedHashMap<String, Object>() {{
+            put("name", "Market");
+            put("location", new LinkedHashMap<String, Object>() {{
+                put("latitude", 37.336499);
+                put("longitude", -121.894356);
+            }});
+        }};
+
+        Entity market = em.create("testCollection", properties);
+        assertNotNull(market);
+
+        properties = new LinkedHashMap<String, Object>() {{
+            put("name", "park");
+            put("location", new LinkedHashMap<String, Object>() {{
+                put("latitude", 37.339079);
+                put("longitude", -121.891422);
+            }});
+        }};
+
+        Entity park = em.create("testCollection", properties);
+        assertNotNull(park);
+
+        properties = new LinkedHashMap<String, Object>() {{
+            put("name", "news");
+            put("location", new LinkedHashMap<String, Object>() {{
+                put("latitude", 37.337812);
+                put("longitude", -121.890784);
+            }});
+        }};
+
+        Entity news = em.create("testCollection", properties);
+        assertNotNull(news);
+
+
+        app.refreshIndex();
+
+        //2. Query with a globally large distance to verify location
+        Query query = Query.fromQL("select * where location within 610.0 of 37.334110260009766, -121.89434051513672");
+        Results listResults = em.searchCollection(em.getApplicationRef(), "users", query);
+        assertEquals("1 result returned", 1, listResults.size());
+
+    }
+
+
+    @Test
     public void testRemovedLocationQuery() throws Exception {
         //Get the EntityManager instance
         EntityManager em = app.getEntityManager();
