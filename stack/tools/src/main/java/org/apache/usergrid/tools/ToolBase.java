@@ -55,7 +55,7 @@ import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
  */
 public abstract class ToolBase {
 
-    public static final int MAX_ENTITY_FETCH = 100;
+    public static final int MAX_ENTITY_FETCH = 1000;
 
     /** Verbose option: -v */
     static final String VERBOSE = "v";
