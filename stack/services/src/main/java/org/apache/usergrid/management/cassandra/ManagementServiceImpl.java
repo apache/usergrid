@@ -193,14 +193,19 @@ public class ManagementServiceImpl implements ManagementService {
             return orgSysAdminEmail;
         }
         orgSysAdminEmail =  properties.getProperty( PROPERTIES_ORG_SYSADMIN_EMAIL );
-        orgSysAdminEmail = orgSysAdminEmail!=null ? orgSysAdminEmail : getDefaultSysAdminEmail();
+        if (orgSysAdminEmail == null || orgSysAdminEmail.isEmpty()) {
+            orgSysAdminEmail = getDefaultSysAdminEmail();
+        }
         return orgSysAdminEmail;
     }
 
     String defaultAdminSysAdminEmail = null;
     private String getDefaultAdminSystemEmail(){
         if( defaultAdminSysAdminEmail == null ){
-            defaultAdminSysAdminEmail = properties.getProperty(PROPERTIES_ADMIN_SYSADMIN_EMAIL, getDefaultSysAdminEmail());
+            defaultAdminSysAdminEmail = properties.getProperty(PROPERTIES_ADMIN_SYSADMIN_EMAIL);
+            if (defaultAdminSysAdminEmail == null || defaultAdminSysAdminEmail.isEmpty()) {
+                defaultAdminSysAdminEmail = getDefaultSysAdminEmail();
+            }
         }
 
         return defaultAdminSysAdminEmail;
@@ -218,7 +223,8 @@ public class ManagementServiceImpl implements ManagementService {
             // swallow
         }
 
-        return adminSystemEmail != null ? adminSystemEmail : getDefaultAdminSystemEmail();
+        return (adminSystemEmail != null && !adminSystemEmail.isEmpty()) ?
+                adminSystemEmail : getDefaultAdminSystemEmail();
     }
 
     private String getAdminSystemEmailForOrganization(UUID organizationId) {
@@ -2505,7 +2511,7 @@ public class ManagementServiceImpl implements ManagementService {
     // token may contain the workflow organization id
     public ActivationState handleActivationTokenForAdminUser( UUID userId, String token ) throws Exception {
         TokenInfo tokenInfo = getTokenInfoFromAccessToken(token, TOKEN_TYPE_ACTIVATION, ADMIN_USER);
-        if (tokenInfo == null) {
+        if (tokenInfo != null) {
             AuthPrincipalInfo principal = tokenInfo.getPrincipal();
             if ((principal != null) && userId.equals(principal.getUuid())) {
                 UUID workflowOrgId = tokenInfo.getWorkflowOrgId();
@@ -2725,8 +2731,9 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public void startAppUserPasswordResetFlow( UUID applicationId, User user ) throws Exception {
         String token = getPasswordResetTokenForAppUser(applicationId, user.getUuid());
-        String resetPropertyUrl = getOrganizationConfigPropertyForApplication(applicationId, PROPERTIES_USER_RESETPW_URL);
-        String reset_url = buildUserAppUrl( applicationId, resetPropertyUrl, user, token );
+        String resetPropertyUrl = properties.getProperty( PROPERTIES_USER_RESETPW_URL );
+        String reset_url =
+                buildUserAppUrl( applicationId, resetPropertyUrl, user, token);
         Map<String, String> pageContext = hashMap( "reset_url", reset_url )
                 .map( "reset_url_base", resetPropertyUrl )
                 .map( "user_uuid", user.getUuid().toString() ).map( "raw_token", token )
@@ -3343,11 +3350,11 @@ public class ManagementServiceImpl implements ManagementService {
                     new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
                     ORG_APP_RELATIONSHIP, Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
 
-            Entity entity = r.getEntity();
+            Group org = (Group)r.getEntity();
 
-            if ( entity != null ) {
-                Map<Object, Object> entityProperties = em.getDictionaryAsMap(entity, ORGANIZATION_CONFIG_DICTIONARY);
-                return new OrganizationConfig(orgConfigProperties, entity.getUuid(), entity.getName(), entityProperties, false);
+            if ( org != null ) {
+                Map<Object, Object> entityProperties = em.getDictionaryAsMap(org, ORGANIZATION_CONFIG_DICTIONARY);
+                return new OrganizationConfig(orgConfigProperties, org.getUuid(), org.getPath(), entityProperties, false);
             }
 
         }
