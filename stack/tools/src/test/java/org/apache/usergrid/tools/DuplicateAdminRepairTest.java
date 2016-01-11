@@ -39,9 +39,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * Test duplicate admin repair.
  */
-public class DuplicateAdminUserRepairTest {
+public class DuplicateAdminRepairTest {
     
-    static final Logger logger = LoggerFactory.getLogger( DuplicateAdminUserRepairTest.class );
+    static final Logger logger = LoggerFactory.getLogger( DuplicateAdminRepairTest.class );
     
     @ClassRule
     public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
@@ -53,7 +53,7 @@ public class DuplicateAdminUserRepairTest {
     @org.junit.Test
     public void testMockWithDups() throws Exception {
 
-        DuplicateAdminUserRepair dor = new DuplicateAdminUserRepair();
+        DuplicateAdminRepair dor = new DuplicateAdminRepair();
         MockManager mockManager = new MockManager();
         dor.manager = mockManager;
         dor.testing = true;
@@ -104,7 +104,7 @@ public class DuplicateAdminUserRepairTest {
     @org.junit.Test
     public void testDryRun() throws Exception {
 
-        DuplicateAdminUserRepair dor = new DuplicateAdminUserRepair();
+        DuplicateAdminRepair dor = new DuplicateAdminRepair();
         MockManager mockManager = new MockManager();
         dor.manager = mockManager;
         dor.testing = true;
@@ -154,7 +154,7 @@ public class DuplicateAdminUserRepairTest {
         setup.getMgmtSvc().addAdminUserToOrganization(
                 orgOwnerInfo1.getOwner(), orgOwnerInfo2.getOrganization(), false );
 
-        DuplicateAdminUserRepair dor = new DuplicateAdminUserRepair();
+        DuplicateAdminRepair dor = new DuplicateAdminRepair();
 
         dor.startTool( new String[]{}, false );  // false means do not call System.exit()
 
@@ -177,7 +177,7 @@ public class DuplicateAdminUserRepairTest {
                 "org_" + random2, "user_" + random2, "user_" + random2,
                 "user_" + random2 + "@example.com", "password" );
 
-        DuplicateAdminUserRepair dor = new DuplicateAdminUserRepair(setup.getEmf(), setup.getMgmtSvc());
+        DuplicateAdminRepair dor = new DuplicateAdminRepair(setup.getEmf(), setup.getMgmtSvc());
         dor.manager = dor.createNewRepairManager(); // test the real manager 
 
         // start the tool so that Spring, Cassandra, etc/ gets initialized
@@ -192,7 +192,7 @@ public class DuplicateAdminUserRepairTest {
     }
     
     
-    private void testManagerLookupMethods( DuplicateAdminUserRepair dor, 
+    private void testManagerLookupMethods( DuplicateAdminRepair dor, 
                                     OrganizationOwnerInfo info1, 
                                     OrganizationOwnerInfo info2,
                                     boolean usersExist ) throws Exception {
@@ -230,7 +230,7 @@ public class DuplicateAdminUserRepairTest {
                 "org_" + random1, "user_" + random1, "user_" + random1,
                 "user_" + random1 + "@example.com", "password" );
 
-        DuplicateAdminUserRepair dor = new DuplicateAdminUserRepair(setup.getEmf(), setup.getMgmtSvc());
+        DuplicateAdminRepair dor = new DuplicateAdminRepair(setup.getEmf(), setup.getMgmtSvc());
         dor.manager = dor.createNewRepairManager(); // test the real manager 
 
         // start the tool so that Spring, Cassandra, etc/ gets initialized
