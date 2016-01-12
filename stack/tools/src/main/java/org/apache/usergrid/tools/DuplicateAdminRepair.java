@@ -275,13 +275,12 @@ public class DuplicateAdminRepair extends ToolBase {
             }
         }
 
-        logger.info( "Deleting admin with email {} and id {}", sourceUser.getEmail(), sourceUser.getId() );
-
         if ( dryRun ) {
             logger.info( "Would remove user {}:{}", new Object[]{
                     sourceUser.getUsername(), sourceUser.getId() } );
             
         } else {
+            logger.info( "Deleting admin with email {} and id {}", sourceUser.getEmail(), sourceUser.getId() );
             manager.removeOrgUser( sourceUser );
         }
     }

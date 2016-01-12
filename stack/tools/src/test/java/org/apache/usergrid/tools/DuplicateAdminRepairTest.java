@@ -132,10 +132,10 @@ public class DuplicateAdminRepairTest {
 
     
     /**
-     * Smoke test: does "real" manager run without throwing exceptions?
+     * Verify that dry-run manager will be used when dry-run specified.
      */
     @org.junit.Test
-    public void testManagerNoDups() throws Exception {
+    public void testManagerDryRunNoDups() throws Exception {
 
         // create two orgs each with owning user
 
@@ -156,7 +156,9 @@ public class DuplicateAdminRepairTest {
 
         DuplicateAdminRepair dor = new DuplicateAdminRepair();
 
-        dor.startTool( new String[]{}, false );  // false means do not call System.exit()
+        dor.startTool( new String[] { "-dryrun", "true" }, false );  // false means do not call System.exit()
+        
+        assertTrue( DryRunUserOrgManager.class.isAssignableFrom( dor.manager.getClass() ) );
 
         assertTrue( true ); // we're happy if we get to this point
     }
