@@ -81,12 +81,16 @@ public class NotifierResource extends ServiceResource {
         InputStream is = null;
         Map<String, Object> certAttributes = null;
         String filename = null;
+        byte[] certBytes = null;
         if (multiPart.getField("p12Certificate") != null) {
             filename = multiPart.getField("p12Certificate").getContentDisposition().getFileName();
             is = multiPart.getField("p12Certificate").getEntityAs(InputStream.class);
-            certAttributes = CertificateUtils.getCertAtrributes(is, certPassword);
+            if (is != null) {
+                certBytes = IOUtils.toByteArray(is);
+                certAttributes = CertificateUtils.getCertAtrributes(certBytes, certPassword);
+            }
         }else{
-            throw new IllegalArgumentException("p12Certificate data cannot be empty");
+            throw new IllegalArgumentException("Certificate is invalid .p12 file or incorrect certificatePassword");
         }
 
         // check to see if the certificate is valid
@@ -99,10 +103,9 @@ public class NotifierResource extends ServiceResource {
         certProps.put("provider", provider);
         certProps.put("environment", "production");
         certProps.put("certificatePassword", certPassword);
-        if (is != null) {
-            byte[] certBytes = IOUtils.toByteArray(is);
+
+        if(certBytes != null && certBytes.length > 0 ){
             certProps.put("p12Certificate", certBytes);
-            is.close();
         }
         HashMap<String, Object> certInfo = new LinkedHashMap<String, Object>();
         if (certAttributes != null){

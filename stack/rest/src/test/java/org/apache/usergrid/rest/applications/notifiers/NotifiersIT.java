@@ -39,45 +39,62 @@ public class NotifiersIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger( NotifiersIT.class );
 
-    //private static final String VALID_CERT_FILE = "apple_push_valid_nocommit.p12";
+    private static final String VALID_CERT_NON_APPLE = "valid_non_apple_2036_01_07.p12";
+    private static final String VALID_CERT_APPLE = "valid_apple_2017_01_12.p12";
     private static final String INVALID_CERT_FILE = "pushtest_dev_recent.p12";
 
-    private static byte[] validCertBytes;
+    private static byte[] validCertBytesApple;
+    private static byte[] validCertBytesNonApple;
     private static byte[] invalidCertBytes;
 
     @BeforeClass
     public static void setup() throws IOException {
-        //InputStream validCertStream = NotifiersIT.class.getClassLoader().getResourceAsStream(VALID_CERT_FILE);
+        //InputStream validCertStreamApple = NotifiersIT.class.getClassLoader().getResourceAsStream(VALID_CERT_APPLE);
+        InputStream validCertStreamNonApple = NotifiersIT.class.getClassLoader().getResourceAsStream(VALID_CERT_NON_APPLE);
         InputStream invalidCertStream = NotifiersIT.class.getClassLoader().getResourceAsStream(INVALID_CERT_FILE);
 
-        //validCertBytes = IOUtils.toByteArray(validCertStream);
+        //validCertBytesApple = IOUtils.toByteArray(validCertStreamApple);
+        validCertBytesNonApple = IOUtils.toByteArray(validCertStreamNonApple);
         invalidCertBytes = IOUtils.toByteArray(invalidCertStream);
 
-        //validCertStream.close();
+        //validCertStreamApple.close();
+        validCertStreamNonApple.close();
         invalidCertStream.close();
     }
 
-    @Ignore("Pending valid certificate being committed to the source code.")
+    @Test
+    public void createNotifierValidCertificateNonApple() {
+
+        FormDataMultiPart form = new FormDataMultiPart()
+            .field("name", "validNotifierNonAppleCert")
+            .field("environment", "development")
+            .field("provider", "apple")
+            .field( "p12Certificate", validCertBytesNonApple, MediaType.MULTIPART_FORM_DATA_TYPE );
+
+
+        ApiResponse postResponse = pathResource( getOrgAppPath( "notifiers" )).post( form );
+        assertNotNull("certInfo should not be null", postResponse.getEntities().get(0).get("certInfo"));
+
+    }
+
+    @Ignore("Pending valid certificate from Apple committed to the source code or alternate way of specifying.")
     @Test
     public void createAppleNotifierValidCertificate() {
-
 
         FormDataMultiPart form = new FormDataMultiPart()
             .field("name", "validAppleNotifier")
             .field("environment", "development")
             .field("provider", "apple")
-            .field( "p12Certificate", validCertBytes, MediaType.MULTIPART_FORM_DATA_TYPE );
+            .field( "p12Certificate", validCertBytesApple, MediaType.MULTIPART_FORM_DATA_TYPE );
 
 
         ApiResponse postResponse = pathResource( getOrgAppPath( "notifiers" )).post( form );
-
         assertNotNull("certInfo should not be null", postResponse.getEntities().get(0).get("certInfo"));
 
     }
 
     @Test
     public void createAppleNotifierInvalidCertificate() {
-
 
         FormDataMultiPart form = new FormDataMultiPart()
             .field("name", "validAppleNotifier")
