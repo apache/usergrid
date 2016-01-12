@@ -71,7 +71,6 @@ public abstract class QueueListener  {
     public  final int MAX_THREADS = 2;
     private Integer batchSize = 10;
     private String queueName;
-    public QueueManager TEST_QUEUE_MANAGER;
     private int consecutiveCallsToRemoveDevices;
     private Meter meter;
     private Timer timer;
@@ -161,7 +160,7 @@ public abstract class QueueListener  {
         svcMgr = smf.getServiceManager(smf.getManagementAppId());
         logger.info("getting from queue {} ", queueName);
         QueueScope queueScope = new QueueScopeImpl( queueName, QueueScope.RegionImplementation.LOCAL);
-        QueueManager queueManager = TEST_QUEUE_MANAGER != null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
+        QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
         // run until there are no more active jobs
         long runCount = 0;
 
