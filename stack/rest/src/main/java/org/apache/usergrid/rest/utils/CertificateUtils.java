@@ -22,13 +22,13 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
+import java.text.SimpleDateFormat;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.SimpleTimeZone;
 
-/**
- * Created by michaelarusso on 1/11/16.
- */
+
 public class CertificateUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(CertificateUtils.class);
@@ -41,6 +41,10 @@ public class CertificateUtils {
             certPassword = ""; // if there is no password, pass in empty string
         }
 
+        SimpleDateFormat dateFormat = new SimpleDateFormat();
+        dateFormat.setTimeZone(new SimpleTimeZone(0, "GMT"));
+        dateFormat.applyPattern("EEE dd MMM yyyy HH:mm:ss z"); // GMT String format
+
         Map<String,Object> attributes = new HashMap<>(1);
         try{
             KeyStore p12 = KeyStore.getInstance("pkcs12");
@@ -50,9 +54,9 @@ public class CertificateUtils {
                 String alias = (String) aliases.nextElement();
                 X509Certificate cert = (X509Certificate) p12.getCertificate(alias);
                 attributes.put("subject", cert.getSubjectDN().toString());
-                attributes.put("validFrom", cert.getNotBefore());
+                attributes.put("validFrom", dateFormat.format(cert.getNotBefore()));
                 attributes.put("validFromTimestamp", cert.getNotBefore().getTime());
-                attributes.put("validTo", cert.getNotAfter());
+                attributes.put("validTo", dateFormat.format(cert.getNotAfter()));
                 attributes.put("validToTimestamp", cert.getNotAfter().getTime());
                 attributes.put("issuer", cert.getIssuerDN().toString());
                 attributes.put("subjectAlternativeNames", cert.getSubjectAlternativeNames());
