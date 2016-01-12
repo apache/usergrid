@@ -19,6 +19,7 @@ package org.apache.usergrid.rest.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
@@ -35,7 +36,7 @@ public class CertificateUtils {
 
     private static final String APPLE_TOPIC_OID = "1.2.840.113635.100.6.3.6";
 
-    public static Map<String, Object> getCertAtrributes(InputStream stream, String certPassword){
+    public static Map<String, Object> getCertAtrributes(byte[] certBytes, String certPassword){
 
         if(certPassword == null){
             certPassword = ""; // if there is no password, pass in empty string
@@ -48,6 +49,7 @@ public class CertificateUtils {
         Map<String,Object> attributes = new HashMap<>(1);
         try{
             KeyStore p12 = KeyStore.getInstance("pkcs12");
+            InputStream stream = new ByteArrayInputStream(certBytes);
             p12.load(stream, certPassword.toCharArray());
             Enumeration aliases = p12.aliases();
             while(aliases.hasMoreElements()){
