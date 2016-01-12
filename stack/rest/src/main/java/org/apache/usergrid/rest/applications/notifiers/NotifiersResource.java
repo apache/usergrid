@@ -24,6 +24,7 @@ import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
+import org.apache.usergrid.rest.utils.CertificateUtils;
 import org.apache.usergrid.services.ServiceAction;
 import org.apache.usergrid.services.ServicePayload;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -38,9 +39,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.UUID;
+import java.util.*;
 
 import static org.apache.usergrid.services.ServiceParameter.addParameter;
 
@@ -112,7 +111,7 @@ public class NotifiersResource extends ServiceResource {
             throws Exception {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("ServiceResource.uploadData");
+            logger.debug("Notifiers.executeMultiPartPost");
         }
 
         String name =         getValueOrNull(multiPart, "name");
@@ -121,10 +120,18 @@ public class NotifiersResource extends ServiceResource {
         String certPassword = getValueOrNull(multiPart, "certificatePassword");
 
         InputStream is = null;
+        Map<String, Object> certAttributes = null;
         if (multiPart.getField("p12Certificate") != null) {
             is = multiPart.getField("p12Certificate").getEntityAs(InputStream.class);
+            certAttributes = CertificateUtils.getCertAtrributes(is, certPassword);
+        }else{
+            throw new IllegalArgumentException("p12Certificate password cannot be empty or null.");
         }
 
+        // check to see if the certificate is valid
+        if(!CertificateUtils.isValid(certAttributes)){
+            throw new IllegalArgumentException("p12Certificate is expired.");
+        }
 
         HashMap<String, Object> certProps = new LinkedHashMap<String, Object>();
         certProps.put("name", name);
@@ -134,6 +141,9 @@ public class NotifiersResource extends ServiceResource {
         if (is != null) {
             byte[] certBytes = IOUtils.toByteArray(is);
             certProps.put("p12Certificate", certBytes);
+        }
+        if (certAttributes != null){
+            certProps.put("certInfo", certAttributes);
         }
 
         ApiResponse response = createApiResponse();

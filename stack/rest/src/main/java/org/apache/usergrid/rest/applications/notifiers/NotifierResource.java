@@ -22,6 +22,7 @@ import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
+import org.apache.usergrid.rest.utils.CertificateUtils;
 import org.apache.usergrid.services.ServiceAction;
 import org.apache.usergrid.services.ServicePayload;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -37,6 +38,7 @@ import javax.ws.rs.core.UriInfo;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Component("org.apache.usergrid.rest.applications.notifiers.NotifierResource")
 @Scope("prototype")
@@ -64,7 +66,12 @@ public class NotifierResource extends ServiceResource {
         FormDataMultiPart multiPart) throws Exception {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("NotifierResource.executePut");
+            logger.debug("NotifierResource.executeMultiPartPut");
+        }
+
+        String certInfo = getValueOrNull(multiPart, "certInfo");
+        if (certInfo != null){
+            throw new IllegalArgumentException("Cannot create or update with certInfo parameter.  It is derived.");
         }
 
         String name =         getValueOrNull(multiPart, "name");
@@ -72,8 +79,17 @@ public class NotifierResource extends ServiceResource {
         String certPassword = getValueOrNull(multiPart, "certificatePassword");
 
         InputStream is = null;
+        Map<String, Object> certAttributes = null;
         if (multiPart.getField("p12Certificate") != null) {
             is = multiPart.getField("p12Certificate").getEntityAs(InputStream.class);
+            certAttributes = CertificateUtils.getCertAtrributes(is, certPassword);
+        }else{
+            throw new IllegalArgumentException("p12Certificate data cannot be empty");
+        }
+
+        // check to see if the certificate is valid
+        if(!CertificateUtils.isValid(certAttributes)){
+            throw new IllegalArgumentException("p12Certificate is expired");
         }
 
         HashMap<String, Object> properties = new LinkedHashMap<String, Object>();
@@ -84,7 +100,12 @@ public class NotifierResource extends ServiceResource {
         if (is != null) {
             byte[] certBytes = IOUtils.toByteArray(is);
             properties.put("p12Certificate", certBytes);
+            is.close();
         }
+        if (certAttributes != null){
+            properties.put("certInfo", certAttributes);
+        }
+
 
         ApiResponse response = createApiResponse();
         response.setAction("put");
