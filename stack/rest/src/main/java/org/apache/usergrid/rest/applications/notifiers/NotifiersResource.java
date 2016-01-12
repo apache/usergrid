@@ -114,6 +114,11 @@ public class NotifiersResource extends ServiceResource {
             logger.debug("Notifiers.executeMultiPartPost");
         }
 
+        String certInfoParam = getValueOrNull(multiPart, "certInfo");
+        if (certInfoParam != null){
+            throw new IllegalArgumentException("Cannot create or update with certInfo parameter.  It is derived.");
+        }
+
         String name =         getValueOrNull(multiPart, "name");
         String provider =     getValueOrNull(multiPart, "provider");
         String environment =  getValueOrNull(multiPart, "environment");
@@ -121,7 +126,9 @@ public class NotifiersResource extends ServiceResource {
 
         InputStream is = null;
         Map<String, Object> certAttributes = null;
+        String filename = null;
         if (multiPart.getField("p12Certificate") != null) {
+            filename = multiPart.getField("p12Certificate").getContentDisposition().getFileName();
             is = multiPart.getField("p12Certificate").getEntityAs(InputStream.class);
             certAttributes = CertificateUtils.getCertAtrributes(is, certPassword);
         }else{
@@ -133,7 +140,9 @@ public class NotifiersResource extends ServiceResource {
             throw new IllegalArgumentException("p12Certificate is expired.");
         }
 
+
         HashMap<String, Object> certProps = new LinkedHashMap<String, Object>();
+
         certProps.put("name", name);
         certProps.put("provider", provider);
         certProps.put("environment", environment);
@@ -142,9 +151,12 @@ public class NotifiersResource extends ServiceResource {
             byte[] certBytes = IOUtils.toByteArray(is);
             certProps.put("p12Certificate", certBytes);
         }
+        HashMap<String, Object> certInfo = new LinkedHashMap<String, Object>();
         if (certAttributes != null){
-            certProps.put("certInfo", certAttributes);
+            certInfo.put("filename", filename);
+            certInfo.put("details", certAttributes);
         }
+        certProps.put("certInfo", certInfo);
 
         ApiResponse response = createApiResponse();
         response.setAction("post");
