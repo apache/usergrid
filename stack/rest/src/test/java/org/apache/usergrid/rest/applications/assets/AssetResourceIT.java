@@ -111,6 +111,86 @@ public class AssetResourceIT extends AbstractRestIT {
 
 
     @Test
+    public void verifyMetadataChanged() throws Exception {
+
+        //resource.request().accept(MediaType.APPLICATION_OCTET_STREAM_TYPE).get(InputStream.class);
+
+        this.refreshIndex();
+
+        // post an entity
+
+        Map<String, String> payload = hashMap( "foo", "bar" );
+        ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( payload );
+        UUID assetId = postResponse.getEntities().get(0).getUuid();
+        assertNotNull( assetId );
+
+        // post asset to that entity
+
+        byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
+        FormDataMultiPart form = new FormDataMultiPart()
+            .field( "foo", "bar2" )
+            .field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+        ApiResponse putResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
+        this.refreshIndex();
+
+        // get entity and check asset metadata
+
+        ApiResponse getResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).get( ApiResponse.class );
+        Entity entity = getResponse.getEntities().get( 0 );
+        Map<String, Object> fileMetadata = (Map<String, Object>)entity.get("file-metadata");
+        long lastModified = Long.parseLong( fileMetadata.get( AssetUtils.LAST_MODIFIED ).toString() );
+
+        assertEquals( assetId,      entity.getUuid() );
+        assertEquals( "bar2",       entity.get("foo") );
+        assertEquals( "image/jpeg", fileMetadata.get( AssetUtils.CONTENT_TYPE ) );
+        assertEquals( 7979,         fileMetadata.get( AssetUtils.CONTENT_LENGTH ));
+
+        // get asset and check size
+
+        InputStream is = pathResource( getOrgAppPath( "foos/" + assetId ) ).getAssetAsStream();
+        byte[] foundData = IOUtils.toByteArray( is );
+        assertEquals( 7979, foundData.length );
+
+        // upload new asset to entity, then check that it was updated
+
+
+        data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/test.txt" ) );
+        form = new FormDataMultiPart()
+            .field( "foo", "bar2" )
+            .field( "file", data,MediaType.MULTIPART_FORM_DATA_TYPE);
+
+        ApiResponse putResponse2 = pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
+        entity = putResponse2.getEntities().get( 0 );
+        fileMetadata = (Map<String, Object>)entity.get("file-metadata");
+        long justModified = Long.parseLong( fileMetadata.get( AssetUtils.LAST_MODIFIED ).toString() );
+        assertNotEquals( lastModified, justModified );
+
+        assertEquals( assetId,      entity.getUuid() );
+        assertEquals( "text/plain", fileMetadata.get( AssetUtils.CONTENT_TYPE ) );
+        assertEquals( 76,         fileMetadata.get( AssetUtils.CONTENT_LENGTH ));
+
+        //now change it back to the picture asset
+        data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
+        form = new FormDataMultiPart()
+            .field( "foo", "bar2" )
+            .field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+        putResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
+        this.refreshIndex();
+
+
+        getResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).get( ApiResponse.class );
+        entity = getResponse.getEntities().get( 0 );
+        fileMetadata = (Map<String, Object>)entity.get("file-metadata");
+        Long.parseLong( fileMetadata.get( AssetUtils.LAST_MODIFIED ).toString() );
+
+        assertEquals( assetId,      entity.getUuid() );
+        assertEquals( "bar2",       entity.get("foo") );
+        assertEquals( "image/jpeg", fileMetadata.get( AssetUtils.CONTENT_TYPE ) );
+        assertEquals( 7979,         fileMetadata.get( AssetUtils.CONTENT_LENGTH ));
+    }
+
+
+    @Test
     public void multipartPostFormOnDynamicEntity() throws Exception {
 
         this.refreshIndex();
