@@ -70,13 +70,61 @@ public class GeoIT extends AbstractCoreIT {
         super();
     }
 
-    /**
-     * Validate the ability to remove an entity's location and remove them from searches
-     * 1. Create an entity with location
-     * 2. Query with a globally large distance to verify location
-     * 3. Remove the entity's location
-     * 4. Repeat the query, expecting no results
-     */
+
+    @Test
+    public void testRoundingGeolocationIssue() throws Exception {
+        EntityManager em = app.getEntityManager();
+        assertNotNull(em);
+
+        //1. Create an entity with location
+        Entity office = createEntitywithLocation( em,"office",37.334115,-121.894340);
+        assertNotNull(office);
+
+        Entity pizza = createEntitywithLocation( em,"pizza",37.335616,-121.894168);
+        assertNotNull(pizza);
+
+        Entity market = createEntitywithLocation( em,"market",37.336499,-121.894356);
+        assertNotNull(market);
+
+        Entity park = createEntitywithLocation( em,"park",37.339079,-121.891422);
+        assertNotNull(park);
+
+        Entity news = createEntitywithLocation( em,"news",37.337812,-121.890784);
+        assertNotNull(news);
+
+        Entity hotel = createEntitywithLocation( em,"hotel",37.334370,-121.895081);
+        assertNotNull(hotel);
+
+
+        app.refreshIndex();
+
+        //2. Query with a globally large distance to verify location
+
+        Query query = Query.fromQL("select * where location within 609.7 of 37.334110260009766, -121.89434051513672");
+        Results listResults = em.searchCollection(em.getApplicationRef(), "collars", query);
+        assertEquals( 5, listResults.size());
+
+        query = Query.fromQL("select * where location within 609.8 of 37.334110260009766, -121.89434051513672");
+        listResults = em.searchCollection(em.getApplicationRef(), "collars", query);
+        assertEquals( 6, listResults.size());
+
+
+    }
+
+
+    private Entity createEntitywithLocation( final EntityManager em,String name ,Double lat,Double lon) throws Exception {
+        Map<String, Object> properties = new LinkedHashMap<String, Object>() {{
+        put("name", name);
+        put("location", new LinkedHashMap<String, Object>() {{
+            put("latitude", lat);
+            put("longitude", lon);
+        }});
+    }};
+
+        return em.create("collars", properties);
+    }
+
+
     @Test
     public void testRemovedLocationQuery() throws Exception {
         //Get the EntityManager instance
