@@ -113,13 +113,11 @@ public class AssetResourceIT extends AbstractRestIT {
     @Test
     public void verifyMetadataChanged() throws Exception {
 
-        //resource.request().accept(MediaType.APPLICATION_OCTET_STREAM_TYPE).get(InputStream.class);
-
         this.refreshIndex();
 
         // post an entity
 
-        Map<String, String> payload = hashMap( "foo", "bar" );
+        Map<String, String> payload = hashMap( "name", "verifed" );
         ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( payload );
         UUID assetId = postResponse.getEntities().get(0).getUuid();
         assertNotNull( assetId );
@@ -128,7 +126,8 @@ public class AssetResourceIT extends AbstractRestIT {
 
         byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
         FormDataMultiPart form = new FormDataMultiPart()
-            .field( "foo", "bar2" )
+            //TODO:Fix name field in assets, i mean what are they supposed to do?
+            .field( "name", "verifyMetadataChangedTest" )
             .field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
         ApiResponse putResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
         this.refreshIndex();
@@ -141,7 +140,6 @@ public class AssetResourceIT extends AbstractRestIT {
         long lastModified = Long.parseLong( fileMetadata.get( AssetUtils.LAST_MODIFIED ).toString() );
 
         assertEquals( assetId,      entity.getUuid() );
-        assertEquals( "bar2",       entity.get("foo") );
         assertEquals( "image/jpeg", fileMetadata.get( AssetUtils.CONTENT_TYPE ) );
         assertEquals( 7979,         fileMetadata.get( AssetUtils.CONTENT_LENGTH ));
 
@@ -154,25 +152,28 @@ public class AssetResourceIT extends AbstractRestIT {
         // upload new asset to entity, then check that it was updated
 
 
-        data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/test.txt" ) );
         form = new FormDataMultiPart()
-            .field( "foo", "bar2" )
-            .field( "file", data,MediaType.MULTIPART_FORM_DATA_TYPE);
+            .field( "name", "verifyMetadataChangedTest" )
+            .field( "file", this.getClass().getResourceAsStream( "/test.txt" ) ,MediaType.TEXT_PLAIN_TYPE);
 
-        ApiResponse putResponse2 = pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
-        entity = putResponse2.getEntities().get( 0 );
+
+        pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
+        //re-get to verify data was saved to backend
+        getResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).get( ApiResponse.class );
+        entity = getResponse.getEntities().get( 0 );
         fileMetadata = (Map<String, Object>)entity.get("file-metadata");
         long justModified = Long.parseLong( fileMetadata.get( AssetUtils.LAST_MODIFIED ).toString() );
         assertNotEquals( lastModified, justModified );
 
         assertEquals( assetId,      entity.getUuid() );
+        assertNotNull(entity.get( "file" ));
         assertEquals( "text/plain", fileMetadata.get( AssetUtils.CONTENT_TYPE ) );
         assertEquals( 76,         fileMetadata.get( AssetUtils.CONTENT_LENGTH ));
 
         //now change it back to the picture asset
         data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
         form = new FormDataMultiPart()
-            .field( "foo", "bar2" )
+            .field( "name", "verifyMetadataChangedTest" )
             .field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
         putResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
         this.refreshIndex();
@@ -183,8 +184,8 @@ public class AssetResourceIT extends AbstractRestIT {
         fileMetadata = (Map<String, Object>)entity.get("file-metadata");
         Long.parseLong( fileMetadata.get( AssetUtils.LAST_MODIFIED ).toString() );
 
+        assertNull(entity.get( "file" ));
         assertEquals( assetId,      entity.getUuid() );
-        assertEquals( "bar2",       entity.get("foo") );
         assertEquals( "image/jpeg", fileMetadata.get( AssetUtils.CONTENT_TYPE ) );
         assertEquals( 7979,         fileMetadata.get( AssetUtils.CONTENT_LENGTH ));
     }
