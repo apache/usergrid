@@ -88,14 +88,6 @@
         <property name="defaultWriteConsistencyLevel" value="${cassandra.lock.writecl}"/>
     </bean>
 
-	<!--  zookeeper locks -->
-	<!--
-	<bean orgAppName="lockManager" class="org.apache.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl" >
-		<property orgAppName="hostPort" value="${zookeeper.url}"/>
-		<property orgAppName="sessionTimeout" value="2000"/>
-		<property orgAppName="maxAttempts" value="10"/>
-	</bean>  -->
-
     <bean id="injector"
    		class="org.apache.usergrid.corepersistence.GuiceFactory">
     </bean>
