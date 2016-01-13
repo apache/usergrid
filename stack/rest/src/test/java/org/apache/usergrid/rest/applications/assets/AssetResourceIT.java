@@ -155,9 +155,8 @@ public class AssetResourceIT extends AbstractRestIT {
         form = new FormDataMultiPart()
             .field( "name", "verifyMetadataChangedTest" )
             .field( "file", this.getClass().getResourceAsStream( "/test.txt" ) ,MediaType.TEXT_PLAIN_TYPE);
-
-
         pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
+
         //re-get to verify data was saved to backend
         getResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).get( ApiResponse.class );
         entity = getResponse.getEntities().get( 0 );
@@ -178,7 +177,7 @@ public class AssetResourceIT extends AbstractRestIT {
         putResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
         this.refreshIndex();
 
-
+        //verify that data was correctly written to backend
         getResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).get( ApiResponse.class );
         entity = getResponse.getEntities().get( 0 );
         fileMetadata = (Map<String, Object>)entity.get("file-metadata");
