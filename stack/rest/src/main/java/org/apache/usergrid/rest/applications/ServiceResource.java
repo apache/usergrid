@@ -657,15 +657,18 @@ public class ServiceResource extends AbstractContextResource {
 
         FormDataBodyPart fileBodyPart = multiPart.getField( FILE_FIELD_NAME );
 
-        if ( data.isEmpty() && fileBodyPart != null ) { // ensure entity is created even if there are no properties
-            data.put( AssetUtils.FILE_METADATA, new HashMap() );
-        }
+        data.put( AssetUtils.FILE_METADATA, new HashMap() );
 
         // process entity
         ApiResponse response = createApiResponse();
         response.setAction( serviceAction.name().toLowerCase() );
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
+
+        //Updates entity with fields that are in text/plain as per loop above
+        if(data.get( FILE_FIELD_NAME )==null){
+            data.put( FILE_FIELD_NAME,null );
+        }
         ServicePayload payload = getPayload( data );
         ServiceResults serviceResults = executeServiceRequest( ui, response, serviceAction, payload );
 
@@ -686,7 +689,8 @@ public class ServiceResource extends AbstractContextResource {
                     logger.error(re.getMessage());
                     response.setError( "500", re );
                 }
-                em.update( entity );
+                //em.update( entity );
+                entity = serviceResults.getEntity();
                 serviceResults.setEntity( entity );
             }
         }
