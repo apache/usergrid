@@ -22,16 +22,12 @@ package org.apache.usergrid.persistence.core.migration.data;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.UTF8Type;
 
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.StringRowCompositeSerializer;
@@ -63,8 +59,8 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
     private static final StringSerializer STRING_SERIALIZER = StringSerializer.get();
 
 
-    public static final MultiTennantColumnFamily<ScopedRowKey<String>, String> CF_MIGRATION_INFO =
-            new MultiTennantColumnFamily<>( "Data_Migration_Info", ROW_KEY_SER, STRING_SERIALIZER );
+    public static final MultiTenantColumnFamily<ScopedRowKey<String>, String> CF_MIGRATION_INFO =
+            new MultiTenantColumnFamily<>( "Data_Migration_Info", ROW_KEY_SER, STRING_SERIALIZER );
 
 
     /**
@@ -207,10 +203,10 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
 
 
     @Override
-    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
+    public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
         return Collections.singletonList(
-                new MultiTennantColumnFamilyDefinition( CF_MIGRATION_INFO, BytesType.class.getSimpleName(),
+                new MultiTenantColumnFamilyDefinition( CF_MIGRATION_INFO, BytesType.class.getSimpleName(),
                         UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName(),
-                        MultiTennantColumnFamilyDefinition.CacheOption.KEYS ) );
+                        MultiTenantColumnFamilyDefinition.CacheOption.KEYS ) );
     }
 }

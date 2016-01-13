@@ -28,8 +28,8 @@ import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.DynamicCompositeType;
 
 import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdge;
@@ -75,80 +75,80 @@ public class SizebasedEdgeColumnFamilies implements EdgeColumnFamilies {
 
 
     //initialize the CF's from our implementation
-    private static final MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> SOURCE_NODE_EDGES =
-            new MultiTennantColumnFamily<>( "Graph_Source_Node_Edges",
+    private static final MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> SOURCE_NODE_EDGES =
+            new MultiTenantColumnFamily<>( "Graph_Source_Node_Edges",
                     new ScopedRowKeySerializer<>( ROW_SERIALIZER ), EDGE_SERIALIZER );
 
 
-    private static final MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> TARGET_NODE_EDGES =
-            new MultiTennantColumnFamily<>( "Graph_Target_Node_Edges",
+    private static final MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> TARGET_NODE_EDGES =
+            new MultiTenantColumnFamily<>( "Graph_Target_Node_Edges",
                     new ScopedRowKeySerializer<>( ROW_SERIALIZER ), EDGE_SERIALIZER );
 
 
-    private static final MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> SOURCE_NODE_TARGET_TYPE =
-            new MultiTennantColumnFamily<>( "Graph_Source_Node_Target_Type",
+    private static final MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> SOURCE_NODE_TARGET_TYPE =
+            new MultiTenantColumnFamily<>( "Graph_Source_Node_Target_Type",
                     new ScopedRowKeySerializer<>( ROW_TYPE_SERIALIZER ), EDGE_SERIALIZER );
 
 
     /**
      * The edges that are to the target node with the source type.  The target node is the row key
      */
-    private static final MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> TARGET_NODE_SOURCE_TYPE =
-            new MultiTennantColumnFamily<>( "Graph_Target_Node_Source_Type",
+    private static final MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> TARGET_NODE_SOURCE_TYPE =
+            new MultiTenantColumnFamily<>( "Graph_Target_Node_Source_Type",
                     new ScopedRowKeySerializer<>( ROW_TYPE_SERIALIZER ), EDGE_SERIALIZER );
 
 
-    private static final MultiTennantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> EDGE_VERSIONS =
-            new MultiTennantColumnFamily<>( "Graph_Edge_Versions",
+    private static final MultiTenantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> EDGE_VERSIONS =
+            new MultiTenantColumnFamily<>( "Graph_Edge_Versions",
                     new ScopedRowKeySerializer<>( EDGE_ROW_KEY_SERIALIZER ), LONG_SERIALIZER );
 
 
     @Override
-    public MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getSourceNodeCfName() {
+    public MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getSourceNodeCfName() {
         return SOURCE_NODE_EDGES;
     }
 
 
     @Override
-    public MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getTargetNodeCfName() {
+    public MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getTargetNodeCfName() {
         return TARGET_NODE_EDGES;
     }
 
 
     @Override
-    public MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getSourceNodeTargetTypeCfName() {
+    public MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getSourceNodeTargetTypeCfName() {
         return SOURCE_NODE_TARGET_TYPE;
     }
 
 
     @Override
-    public MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getTargetNodeSourceTypeCfName() {
+    public MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getTargetNodeSourceTypeCfName() {
         return TARGET_NODE_SOURCE_TYPE;
     }
 
 
     @Override
-    public MultiTennantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> getGraphEdgeVersions() {
+    public MultiTenantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> getGraphEdgeVersions() {
         return EDGE_VERSIONS;
     }
 
 
     @Override
-    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
+    public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
         return Arrays
                 .asList( graphCf( SOURCE_NODE_EDGES ), graphCf( TARGET_NODE_EDGES ), graphCf( SOURCE_NODE_TARGET_TYPE ),
                         graphCf( TARGET_NODE_SOURCE_TYPE ),
-                        new MultiTennantColumnFamilyDefinition( EDGE_VERSIONS, BytesType.class.getSimpleName(),
+                        new MultiTenantColumnFamilyDefinition( EDGE_VERSIONS, BytesType.class.getSimpleName(),
                                 ColumnTypes.LONG_TYPE_REVERSED, BytesType.class.getSimpleName(),
-                                MultiTennantColumnFamilyDefinition.CacheOption.ALL ) );
+                                MultiTenantColumnFamilyDefinition.CacheOption.ALL ) );
     }
 
 
     /**
      * Helper to generate an edge definition by the type
      */
-    private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
-        return new MultiTennantColumnFamilyDefinition( cf, BytesType.class.getSimpleName(), EDGE_DYNAMIC_COMPOSITE_TYPE,
-                BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.ALL );
+    private MultiTenantColumnFamilyDefinition graphCf(MultiTenantColumnFamily cf ) {
+        return new MultiTenantColumnFamilyDefinition( cf, BytesType.class.getSimpleName(), EDGE_DYNAMIC_COMPOSITE_TYPE,
+                BytesType.class.getSimpleName(), MultiTenantColumnFamilyDefinition.CacheOption.ALL );
     }
 }
