@@ -17,6 +17,8 @@
 package org.apache.usergrid.rest.applications;
 
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.commons.lang.StringUtils;
@@ -822,6 +824,13 @@ public class ServiceResource extends AbstractContextResource {
             }catch(AwsPropertiesNotFoundException apnfe){
                 logger.error( "Amazon Property needed for this operation not found",apnfe );
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }
+            catch(AmazonServiceException ase){
+                logger.error(ase.getMessage());
+                return Response.status(ase.getStatusCode()).build();
+            }
+            catch(AmazonClientException ace){
+                logger.error(ace.getMessage());
             }
             catch(RuntimeException re){
                 logger.error(re.getMessage());
