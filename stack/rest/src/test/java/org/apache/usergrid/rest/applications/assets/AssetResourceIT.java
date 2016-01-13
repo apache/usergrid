@@ -167,7 +167,7 @@ public class AssetResourceIT extends AbstractRestIT {
         assertEquals( assetId,      entity.getUuid() );
         assertNotNull(entity.get( "file" ));
         assertEquals( "text/plain", fileMetadata.get( AssetUtils.CONTENT_TYPE ) );
-        assertEquals( 76,         fileMetadata.get( AssetUtils.CONTENT_LENGTH ));
+        assertEquals( 879,         fileMetadata.get( AssetUtils.CONTENT_LENGTH ));
 
         //now change it back to the picture asset
         data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
