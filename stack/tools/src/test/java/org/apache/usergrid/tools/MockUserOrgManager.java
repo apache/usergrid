@@ -221,6 +221,21 @@ class MockUserOrgManager implements UserOrgInterface {
         updateOrgUser( user ); // re-index user
     }
 
+    /**
+     * select best org from a set of duplicates by picking the oldest org
+     */
+    @Override
+    public Org selectBest(Set<Org> orgs) throws Exception {
+        Org oldest = null;
+        for ( Org org :orgs ) {
+            if ( oldest == null || org.compareTo( oldest ) < 0 ) {
+                oldest = org;
+            }
+        }
+        return oldest;
+    }
+    
+
     // implemented for testing only
     OrgUser createOrgUser(UUID id, String name, String email) {
         OrgUser user = new OrgUser( id, name, email );

@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.tools;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import rx.Observable;
 
 import java.util.Map;
@@ -63,6 +64,8 @@ interface UserOrgInterface {
     void updateOrgUser(OrgUser targetUserEntity) throws Exception;
 
     void setOrgUserName(OrgUser other, String newUserName) throws Exception;
+    
+    Org selectBest( Set<Org> candidates ) throws Exception;
 
     class Org implements Comparable<Org> {
         private UUID id;
@@ -145,7 +148,23 @@ interface UserOrgInterface {
         public long getCreated() {
             return created;
         }
-        
+
+        @Override
+        public boolean equals( Object obj ) {
+            if (obj == null) { return false; }
+            if (obj == this) { return true; }
+            if (obj.getClass() != getClass()) {
+                return false;
+            }
+            OrgUser rhs = (OrgUser) obj;
+            return new EqualsBuilder().appendSuper(super.equals(obj))
+                    .append(id,       rhs.id)
+                    .append(username, rhs.username)
+                    .append(email,    rhs.email)
+                    .append(created,  rhs.created)
+                    .isEquals();
+        }
+
         @Override
         public int compareTo(OrgUser o) {
             return Long.compare( this.created, o.created );

@@ -330,7 +330,7 @@ public class DuplicateOrgRepair extends ToolBase {
         
         for ( String dupName : duplicatesByName.keySet() ) {
             Set<Org> duplicateOrgs = duplicatesByName.get(dupName);
-            Org bestOrg = selectBest( duplicateOrgs );
+            Org bestOrg = manager.selectBest( duplicateOrgs );
             
             for ( Org org : duplicateOrgs ) {
                 
@@ -402,7 +402,7 @@ public class DuplicateOrgRepair extends ToolBase {
     private void removeDuplicateOrgs() throws Exception {
         for ( String dupName : duplicatesByName.keySet() ) {
             Set<Org> orgs = duplicatesByName.get( dupName );
-            Org best = selectBest( orgs );
+            Org best = manager.selectBest( orgs );
             for ( Org candidate : orgs ) {
                 if ( !candidate.equals(best) ) {
                     if ( dryRun ) {
@@ -414,21 +414,8 @@ public class DuplicateOrgRepair extends ToolBase {
                 }
             }
         }
+        
         logger.info( "DuplicateOrgRepair renamed/removed duplicate orgs"); 
-    }
-
-
-    /**
-     * select best org from a set of duplicates by picking the oldest org
-     */
-    public Org selectBest(Set<Org> orgs) throws Exception {
-        Org oldest = null;
-        for ( Org org :orgs ) {
-            if ( oldest == null || org.compareTo( oldest ) < 0 ) {
-                oldest = org;
-            }
-        }
-        return oldest;
     }
 
 }
