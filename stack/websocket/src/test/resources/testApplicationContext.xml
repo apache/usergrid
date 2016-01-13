@@ -102,8 +102,7 @@
 		<constructor-arg ref="cassandraCredentials" />
 	</bean>
 
-	<!-- bean name="lockManager" class="org.apache.usergrid.locking.zookeeper.ZooKeeperLockManagerImpl" /> -->
-	<bean name="lockManager" class="org.apache.usergrid.locking.zookeeper.NoOpLockManagerImpl" />
+	<bean name="lockManager" class="org.apache.usergrid.locking.cassandra.HectorLockManagerImpl" />
 
 	<bean id="cassandraService"
 		class="org.apache.usergrid.persistence.cassandra.CassandraService" init-method="init">

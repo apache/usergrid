@@ -177,11 +177,6 @@
       <artifactId>commons-beanutils</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.zookeeper</groupId>
-      <artifactId>zookeeper</artifactId>
-    </dependency>
-
     <!-- SUN, Javax Package, and Other Commercial Dependencies -->
 
     <dependency>
