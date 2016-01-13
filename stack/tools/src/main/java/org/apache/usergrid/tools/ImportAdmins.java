@@ -17,20 +17,20 @@
 package org.apache.usergrid.tools;
 
 
-import com.sun.org.apache.bcel.internal.generic.DUP;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.filefilter.PrefixFileFilter;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Identifier;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
@@ -39,7 +39,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -47,18 +50,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION_ID;
-
 
 /**
  * Import Admin Users and metadata including organizations and passwords.
- * 
- * Usage Example: 
- * 
+ *
+ * Usage Example:
+ *
  * java -Xmx8000m -Dlog4j.configuration=file:/home/me/log4j.properties -classpath . \
  *      -jar usergrid-tools-1.0.2.jar ImportAdmins -writeThreads 100 -auditThreads 100 \
- *      -host casshost -inputDir=/home/me/import-data 
- *      
+ *      -host casshost -inputDir=/home/me/import-data
+ *
  * If you want to provide any property overrides, put properties file named usergrid-custom-tools.properties
  * in the same directory where you run the above command. For example, you might want to set the Cassandra
  * client threads and import to a specific set of keyspaces:
@@ -97,8 +98,8 @@ public class ImportAdmins extends ToolBase {
     AtomicInteger writeEmptyCount = new AtomicInteger( 0 );
     AtomicInteger auditEmptyCount = new AtomicInteger( 0 );
     AtomicInteger metadataEmptyCount = new AtomicInteger( 0 );
-    
-    
+
+
     static class DuplicateUser {
         String email;
         String username;
@@ -110,7 +111,7 @@ public class ImportAdmins extends ToolBase {
             }
         }
     }
-    
+
 
 
     @Override
@@ -269,7 +270,7 @@ public class ImportAdmins extends ToolBase {
             long timeRemaining = (long) ( sizeLast / (rateAverageSum / iterations) );
 
             logger.info("++PROGRESS ({}): sizeLast={} nowSize={} processed={} rateLast={}/s rateAvg={}/s timeRemaining={}s",
-                new Object[] { 
+                new Object[] {
                     identifier, sizeLast, sizeNow, processed, rateLast, (rateAverageSum / iterations), timeRemaining } );
         }
 
@@ -355,7 +356,7 @@ public class ImportAdmins extends ToolBase {
             workerThread.start();
             metadataWorkerThreadMap.put(worker, workerThread);
         }
-        
+
         logger.info( "Started {} metadata workers", writeThreadCount );
     }
 
@@ -363,7 +364,7 @@ public class ImportAdmins extends ToolBase {
     @SuppressWarnings("unchecked")
     private void importMetadata(String fileName, int writeThreads) throws Exception {
 
-        EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+        EntityManager em = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
         File metadataFile = new File(importDir, fileName);
 
@@ -401,10 +402,10 @@ public class ImportAdmins extends ToolBase {
                 try {
                     EntityRef entityRef = new SimpleEntityRef( "user", UUID.fromString( entityOwnerId ) );
                     Map<String, Object> metadata = (Map<String, Object>) jp.readValueAs( Map.class );
-                    
+
                     workQueue.put( new ImportMetadataTask( entityRef, metadata ) );
                     logger.debug( "Put user {} in metadata queue", entityRef.getUuid() );
-                    
+
                 } catch ( Exception e ) {
                     logger.debug( "Error with user {}, not putting in metadata queue", entityOwnerId );
                 }
@@ -426,7 +427,7 @@ public class ImportAdmins extends ToolBase {
             EntityManager em, EntityRef entityRef, Map<String, Object> metadata) throws Exception {
 
         DuplicateUser dup = dupsByDupUuid.get( entityRef.getUuid() );
-        
+
         if ( dup == null ) { // not a duplicate
 
             User user = em.get( entityRef, User.class );
@@ -476,7 +477,7 @@ public class ImportAdmins extends ToolBase {
                     }
                 }
             }
-            
+
             Map<String, Object> dictionariesMap = (Map<String, Object>) metadata.get("dictionaries");
             if (dictionariesMap != null && !dictionariesMap.isEmpty()) {
                 for (String name : dictionariesMap.keySet()) {
@@ -501,17 +502,17 @@ public class ImportAdmins extends ToolBase {
             } else {
                 logger.warn("User {} has no dictionaries", entityRef.getUuid() );
             }
-            
+
         } else { // this is a duplicate user, so merge orgs
 
             logger.info("Processing duplicate username={} email={}", dup.email, dup.username );
-           
-            Identifier identifier = dup.email != null ? 
+
+            Identifier identifier = dup.email != null ?
                 Identifier.fromEmail( dup.email ) : Identifier.from( dup.username );
             User originalUser = em.get( em.getUserByIdentifier(identifier), User.class );
 
             // get map of original user's orgs
-            
+
             UserInfo originalUserInfo = managementService.getAdminUserByEmail( originalUser.getEmail() );
             Map<String, Object> originalUserOrgData =
                     managementService.getAdminUserOrganizationData( originalUser.getUuid() );
@@ -530,7 +531,7 @@ public class ImportAdmins extends ToolBase {
                 if (originalUserOrgs.get( orgName ) == null) { // original user does not have this org
 
                     OrganizationInfo orgInfo = managementService.getOrganizationByUuid( orgUuid );
-                    
+
                     if (orgInfo == null) { // org does not exist yet, create it and add original user to it
                         try {
                             managementService.createOrganization( orgUuid, orgName, originalUserInfo, false );
@@ -539,9 +540,9 @@ public class ImportAdmins extends ToolBase {
                             logger.debug( "Created new org {} for user {}:{}:{} from duplicate user {}:{}",
                                 new Object[]{
                                         orgInfo.getName(),
-                                        originalUser.getUsername(), 
+                                        originalUser.getUsername(),
                                         originalUser.getEmail(),
-                                        originalUser.getUuid(), 
+                                        originalUser.getUuid(),
                                         dup.username, dup.email
                                 });
 
@@ -554,20 +555,20 @@ public class ImportAdmins extends ToolBase {
                             logger.debug( "Added to org user {}:{}:{} from duplicate user {}:{}",
                                     new Object[]{
                                             orgInfo.getName(),
-                                            originalUser.getUsername(), 
+                                            originalUser.getUsername(),
                                             originalUser.getEmail(),
-                                            originalUser.getUuid(), 
+                                            originalUser.getUuid(),
                                             dup.username, dup.email
                                     });
 
                         } catch (Exception e) {
-                            logger.error( "Error Adding user {} to org {}", 
+                            logger.error( "Error Adding user {} to org {}",
                                     new Object[]{originalUserInfo.getEmail(), orgName} );
                         }
                     }
-                    
+
                 } // else original user already has this org
-                
+
             }
         }
     }
@@ -612,7 +613,7 @@ public class ImportAdmins extends ToolBase {
         public void run() {
             int count = 0;
 
-            EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+            EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
             long durationSum = 0;
 
@@ -647,7 +648,7 @@ public class ImportAdmins extends ToolBase {
                     durationSum += duration;
 
                     //logger.debug( "Audited {}th admin", userCount );
-                    
+
                     if ( count % 100 == 0 ) {
                         logger.info( "Audited {}. Average Audit Rate: {}(ms)", count, durationSum / count );
                     }
@@ -690,7 +691,7 @@ public class ImportAdmins extends ToolBase {
         public void run() {
             int count = 0;
 
-            EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+            EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
             long durationSum = 0;
 
@@ -705,20 +706,20 @@ public class ImportAdmins extends ToolBase {
                         continue;
                     }
                     metadataEmptyCount.set( 0 );
-                    
+
                     long startTime = System.currentTimeMillis();
-                    
+
                     importEntityMetadata( em, task.entityRef, task.metadata );
-                    
+
                     long stopTime = System.currentTimeMillis();
                     long duration = stopTime - startTime;
                     durationSum += duration;
                     metadataCount.getAndIncrement();
                     count++;
-                    
+
                     if ( count % 30 == 0 ) {
                         logger.info( "Imported {} metadata of total {} expected. " +
-                                        "Average metadata Imported Rate: {}(ms)", 
+                                        "Average metadata Imported Rate: {}(ms)",
                            new Object[] { metadataCount.get(), userCount.get(), durationSum / count });
                     }
 
@@ -752,7 +753,7 @@ public class ImportAdmins extends ToolBase {
         public void run() {
             int count = 0;
 
-            EntityManager em = emf.getEntityManager(MANAGEMENT_APPLICATION_ID);
+            EntityManager em = emf.getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
             long durationSum = 0;
 
@@ -776,7 +777,7 @@ public class ImportAdmins extends ToolBase {
 
                     try {
                         long startTime = System.currentTimeMillis();
-                        
+
                         em.create(uuid, type, entityProps);
 
                         logger.debug( "Imported admin user {}:{}:{}",
@@ -787,20 +788,20 @@ public class ImportAdmins extends ToolBase {
                         long stopTime = System.currentTimeMillis();
                         long duration = stopTime - startTime;
                         durationSum += duration;
-                        
+
                         count++;
                         if (count % 30 == 0) {
                             logger.info( "This worked has imported {} users of total {} imported so far. " +
-                                            "Average Creation Rate: {}ms", 
+                                            "Average Creation Rate: {}ms",
                                 new Object[] { count, userCount.get(), durationSum / count });
                         }
-                        
+
                     } catch (DuplicateUniquePropertyExistsException de) {
                         String dupProperty = de.getPropertyName();
                         handleDuplicateAccount( em, dupProperty, entityProps );
                         continue;
 
-                        
+
                     } catch (Exception e) {
                         logger.error("Error", e);
                     }
@@ -811,19 +812,19 @@ public class ImportAdmins extends ToolBase {
             }
         }
 
-        
+
         private void handleDuplicateAccount(EntityManager em, String dupProperty, Map<String, Object> entityProps ) {
 
             logger.info( "Processing duplicate user {}:{}:{} with duplicate {}", new Object[]{
-                    entityProps.get( "username" ), 
-                    entityProps.get( "email" ), 
-                    entityProps.get( "uuid" ), 
+                    entityProps.get( "username" ),
+                    entityProps.get( "email" ),
+                    entityProps.get( "uuid" ),
                     dupProperty} );
-           
+
             UUID dupUuid = UUID.fromString( entityProps.get("uuid").toString() );
             try {
                 dupsByDupUuid.put( dupUuid, new DuplicateUser( dupProperty, entityProps ) );
-                
+
             } catch (Exception e) {
                 logger.error("Error processing dup user {}:{}:{}",
                         new Object[] {entityProps.get( "username" ), entityProps.get("email"), dupUuid});
