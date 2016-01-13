@@ -113,7 +113,7 @@ public class AppAudit extends ToolBase {
             r = em.searchCollection( rootAppRef, "groups", query );
 
             for ( Entity entity : r.getEntities() ) {
-                collectionOrgs.remove( entity.getProperty( "path" ) );
+                collectionOrgs.remove( entity.getProperty( "path" ).toString() );
             }
 
             query.setCursor( r.getCursor() );
