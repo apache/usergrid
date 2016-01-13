@@ -343,7 +343,7 @@ class UserOrgManager implements UserOrgInterface {
         em.update( user );
     }
 
-    
+
     @Override
     public void setOrgUserName(OrgUser other, String newUserName ) throws Exception {
         
@@ -362,5 +362,24 @@ class UserOrgManager implements UserOrgInterface {
 
             setOrgUserName( other, String.format( "%s-%s", other.getUsername(), other.getId() ) );
         }
+    }
+
+
+    /**
+     * Select best org from a set of duplicates by picking the one that is indexed, or the oldest.
+     */
+    @Override
+    public Org selectBest(Set<Org> orgs) throws Exception {
+        Org oldest = null;
+        for ( Org org :orgs ) {
+            OrganizationInfo info = managementService.getOrganizationByName( org.getName() );
+            if ( info != null ) {
+                return org; 
+            }
+            if ( oldest == null || org.compareTo( oldest ) < 0 ) {
+                oldest = org;
+            }
+        }
+        return oldest;
     }
 }

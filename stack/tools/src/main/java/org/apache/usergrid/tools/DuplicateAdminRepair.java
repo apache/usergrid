@@ -154,42 +154,41 @@ public class DuplicateAdminRepair extends ToolBase {
         }
 
         for ( String email : emails.keySet() ) {
+          
+            // go through a set of users with duplicate emails
+            Collection<OrgUser> usersWithDupEmails = emails.get( email );
             
-            Collection<OrgUser> users = emails.get( email );
+            if ( usersWithDupEmails.size() > 1 ) {
+                
+                // get the user that is in the users-by-email index, it's the keeper
+                OrgUser indexedUser = manager.lookupOrgUserByEmail( email );
 
-            if ( users.size() > 1 ) {
-                // get the admin the same way as the rest tier, this way the OTHER
-                // admins will be removed
-                OrgUser targetUser = manager.lookupOrgUserByEmail( email );
+                if ( indexedUser == null ) {
 
-                if ( targetUser == null ) {
-
-                    List<OrgUser> tempUsers = new ArrayList<OrgUser>( users );
+                    // no user is indexed with that email, pick oldest as keeper
+                    List<OrgUser> tempUsers = new ArrayList<OrgUser>( usersWithDupEmails );
                     Collections.sort( tempUsers );
+                    OrgUser oldestOfLot = tempUsers.get( 0 );
 
-                    OrgUser toLoad = tempUsers.get( 0 );
-
-                    logger.warn( "Could not load target user by email {}, loading by UUID {} instead", email, toLoad );
-                    targetUser = toLoad;
-
-                    users.remove( toLoad );
+                    logger.warn( "Could not load target user by email {}, loading by UUID {} instead", email, oldestOfLot );
+                    indexedUser = oldestOfLot;
                 }
 
-                users.remove( targetUser );
+                logger.warn( "Found multiple admins with the email {}.  Retaining uuid {}", email, indexedUser.getId() );
 
-                logger.warn( "Found multiple admins with the email {}.  Retaining uuid {}", email, targetUser.getId() );
-
-                for ( OrgUser orgUser : users ) {
-                    mergeAdmins( orgUser, targetUser );
+                for ( OrgUser orgUser : usersWithDupEmails ) {
+                    if ( !orgUser.getId().equals( indexedUser.getId() )) {
+                        mergeAdmins( orgUser, indexedUser );
+                    }
                 }
 
                 // force the index update after all other admins have been merged
                 if ( dryRun ) {
                     logger.info("Would force re-index of 'keeper' user {}:{}", 
-                            targetUser.getUsername(), targetUser.getId());
+                            indexedUser.getUsername(), indexedUser.getId());
                 } else {
-                    logger.info( "Forcing re-index of admin with email {} and id {}", email, targetUser.getId());
-                    manager.updateOrgUser( targetUser );
+                    logger.info( "Forcing re-index of admin with email {} and id {}", email, indexedUser.getId());
+                    manager.updateOrgUser( indexedUser );
                 }
             }
         }
@@ -257,30 +256,36 @@ public class DuplicateAdminRepair extends ToolBase {
 
     /** Merge the source admin to the target admin by copying oranizations. Then deletes the source admin */
     private void mergeAdmins( OrgUser sourceUser, OrgUser targetUser ) throws Exception {
+        
+        logger.info("---> Merging user {}:{} into {}:{}", new Object[] { 
+               sourceUser.getEmail(), sourceUser.getId(), targetUser.getEmail(), targetUser.getId() 
+        } );
 
         Set<Org> sourceOrgs = manager.getUsersOrgs( sourceUser ); 
 
         for ( Org org : sourceOrgs ) {
 
             if ( dryRun ) {
-                logger.info("Would add org {}:{} to user {}:{}", new Object[] {
-                        org.getName(), org.getId(), targetUser.getUsername(), targetUser.getId(), });
+                logger.info( "Would add organization {}:{} to admin with email {} and id {}",
+                        new Object[] { org.getName(), org.getId(), targetUser.getEmail(), targetUser.getId() } );
 
             } else {
                 logger.info( "Adding organization {}:{} to admin with email {} and id {}",
-                    new Object[] { org.getName(), org.getId(), targetUser.getEmail(), targetUser.getId() } );
+                        new Object[] { org.getName(), org.getId(), targetUser.getEmail(), targetUser.getId() } );
 
-                // copy it over to the target admin
+                // add targetUser to sourceUser's org
                 manager.addUserToOrg( targetUser, org );
             }
         }
 
         if ( dryRun ) {
-            logger.info( "Would remove user {}:{}", new Object[]{
-                    sourceUser.getUsername(), sourceUser.getId() } );
+            logger.info( "Would remove admin with email {} and id {} from system",
+                    sourceUser.getEmail(), sourceUser.getId() );
             
         } else {
-            logger.info( "Deleting admin with email {} and id {}", sourceUser.getEmail(), sourceUser.getId() );
+            logger.info( "Removing admin with email {} and id {} from system",
+                    sourceUser.getEmail(), sourceUser.getId() );
+            
             manager.removeOrgUser( sourceUser );
         }
     }
