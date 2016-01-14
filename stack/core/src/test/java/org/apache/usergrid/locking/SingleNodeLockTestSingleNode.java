@@ -14,71 +14,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.locking.cassandra;
+package org.apache.usergrid.locking;
 
 
-import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-import org.junit.AfterClass;
+import org.apache.usergrid.locking.exception.UGLockException;
+import org.apache.usergrid.locking.singlenode.SingleNodeLockManagerImpl;
+import org.junit.After;
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.locking.Lock;
-import org.apache.usergrid.locking.LockManager;
-import org.apache.usergrid.locking.exception.UGLockException;
+import java.util.UUID;
+import java.util.concurrent.*;
 
-import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
-import me.prettyprint.hector.api.ConsistencyLevelPolicy;
-import me.prettyprint.hector.api.HConsistencyLevel;
-
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
-public class HectorLockManagerIT extends AbstractCoreIT {
-    private static final Logger logger = LoggerFactory.getLogger( HectorLockManagerIT.class );
+public class SingleNodeLockTestSingleNode {
 
-    private static LockManager manager;
-    private static ExecutorService pool;
+    private static final Logger logger = LoggerFactory.getLogger( SingleNodeLockTestSingleNode.class );
 
+    private LockManager manager;
 
-    @BeforeClass
-    public static void setup() throws Exception {
-        HectorLockManagerImpl hlockManager = new HectorLockManagerImpl();
-        hlockManager.setCluster( setup.getCassSvc().getCluster() );
-        hlockManager.setKeyspaceName( "Locks_Test" );
-        hlockManager.setLockTtl( 2000 );
-        hlockManager.setNumberOfLockObserverThreads( 1 );
-        hlockManager.setReplicationFactor( 1 );
-        ConsistencyLevelPolicy consistencyLevel = new ConfigurableConsistencyLevel();
-        ((ConfigurableConsistencyLevel) consistencyLevel).setDefaultReadConsistencyLevel(HConsistencyLevel.ONE);
-        ((ConfigurableConsistencyLevel) consistencyLevel).setDefaultWriteConsistencyLevel(HConsistencyLevel.ONE);
-        hlockManager.setConsistencyLevelPolicy(consistencyLevel);
-        hlockManager.init();
-
-        manager = hlockManager;
-    }
+    private ExecutorService pool;
 
 
-    @BeforeClass
-    public static void start() {
-        // Create a different thread to lock the same node, that is held by the main thread.
+    @Before
+    public void setUp() throws Exception {
+
+        manager = new SingleNodeLockManagerImpl();
+
+        // Create a different thread to lock the same node, that is held by the main
+        // thread.
         pool = Executors.newFixedThreadPool( 1 );
     }
 
 
-    @AfterClass
-    public static void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         pool.shutdownNow();
     }
 
@@ -86,12 +61,13 @@ public class HectorLockManagerIT extends AbstractCoreIT {
     /** Locks a path and launches a thread which also locks the same path. */
     @Test
     public void testLock() throws InterruptedException, ExecutionException, UGLockException {
+
         final UUID application = UUID.randomUUID();
         final UUID entity = UUID.randomUUID();
 
         logger.info( "Locking:" + application.toString() + "/" + entity.toString() );
 
-        // Lock a node twice to test re-entrancy and validate.
+        // Lock a node twice to test reentrancy and validate.
         Lock lock = manager.createLock( application, entity.toString() );
         lock.lock();
         lock.lock();
@@ -102,9 +78,10 @@ public class HectorLockManagerIT extends AbstractCoreIT {
         // Unlock once
         lock.unlock();
 
-        // Try from the thread expecting to fail since we still hold one re-entrant lock.
+        // Try from the thread expecting to fail since we still hold one reentrant
+        // lock.
         wasLocked = lockInDifferentThread( application, entity );
-        assertFalse( wasLocked );
+        Assert.assertEquals( false, wasLocked );
 
         // Unlock completely
         logger.info( "Releasing lock:" + application.toString() + "/" + entity.toString() );
@@ -120,6 +97,7 @@ public class HectorLockManagerIT extends AbstractCoreIT {
     /** Locks a couple of times and try to clean up. Later oin another thread successfully acquire the lock */
     @Test
     public void testLock2() throws InterruptedException, ExecutionException, UGLockException {
+
         final UUID application = UUID.randomUUID();
         final UUID entity = UUID.randomUUID();
         final UUID entity2 = UUID.randomUUID();
@@ -151,13 +129,16 @@ public class HectorLockManagerIT extends AbstractCoreIT {
 
     /** Acquires a lock in a different thread. */
     private boolean lockInDifferentThread( final UUID application, final UUID entity ) {
-        Callable<Boolean> callable = new Callable<Boolean>() {
+        Future<Boolean> status = pool.submit( new Callable<Boolean>() {
+
             @Override
             public Boolean call() throws Exception {
+
                 Lock lock = manager.createLock( application, entity.toString() );
 
                 // False here means that the lock WAS NOT ACQUIRED. And that is
                 // what we expect.
+
                 boolean locked = lock.tryLock( 0, TimeUnit.MILLISECONDS );
 
                 // shouldn't lock, so unlock to avoid polluting future tests
@@ -167,12 +148,9 @@ public class HectorLockManagerIT extends AbstractCoreIT {
 
                 return locked;
             }
-        };
-
-        Future<Boolean> status = pool.submit( callable );
+        } );
 
         boolean wasLocked = true;
-
         try {
             wasLocked = status.get( 2, TimeUnit.SECONDS );
         }

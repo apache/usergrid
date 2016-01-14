@@ -102,10 +102,6 @@
 		<constructor-arg ref="cassandraCredentials" />
 	</bean>
 
-	<!--
-    <bean name="lockManager" class="org.apache.usergrid.locking.cassandra.HectorLockManagerImpl" />
-    -->
-
     <bean id="injector"
           class="org.apache.usergrid.corepersistence.GuiceFactory">
     </bean>

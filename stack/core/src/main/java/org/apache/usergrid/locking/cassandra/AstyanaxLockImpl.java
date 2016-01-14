@@ -19,24 +19,24 @@ package org.apache.usergrid.locking.cassandra;
 
 import com.netflix.astyanax.recipes.locks.ColumnPrefixDistributedRowLock;
 
+import com.netflix.astyanax.retry.RetryPolicy;
+import com.netflix.astyanax.retry.RunOnce;
 import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.exception.UGLockException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class AstyanaxLockImpl implements Lock {
 
-    private static final Logger logger = LoggerFactory.getLogger( AstyanaxLockImpl.class );
+    private AtomicInteger count = new AtomicInteger();
+    private ColumnPrefixDistributedRowLock lock;
 
 
-
-    ColumnPrefixDistributedRowLock lock;
-
-    public AstyanaxLockImpl(//AstyanaxLockManagerImpl lockManager,
-                            ColumnPrefixDistributedRowLock lock) {
+    public AstyanaxLockImpl( ColumnPrefixDistributedRowLock lock ) {
 
         this.lock = lock;
 
@@ -45,21 +45,27 @@ public class AstyanaxLockImpl implements Lock {
 
     @Override
     public boolean tryLock( long timeout, TimeUnit time ) throws UGLockException {
-        lock.withTtl( (int) timeout, time);
 
         try {
+
             lock.acquire();
-            return true;
+            count.incrementAndGet();
+
         } catch (Exception e) {
             return false;
         }
+
+        return true;
     }
 
     @Override
     public void lock() throws UGLockException {
 
         try {
+
             lock.acquire();
+            count.incrementAndGet();
+
         } catch (Exception e) {
             throw new UGLockException("Unable to acquire lock with id: " + lock.getLockId());
         }
@@ -68,8 +74,15 @@ public class AstyanaxLockImpl implements Lock {
     @Override
     public void unlock() throws UGLockException {
 
+        // all re-entrant locks to be used and only release them all when the count is 0
+        int current = count.decrementAndGet();
+
         try {
-            lock.release();
+
+            if ( current == 0 ) {
+                lock.release();
+            }
+
         } catch (Exception e) {
             throw new UGLockException("Unable to release lock with id: " + lock.getLockId());
         }

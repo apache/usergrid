@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class AstyanaxLockManagerImpl implements LockManager {
 
@@ -72,7 +73,8 @@ public class AstyanaxLockManagerImpl implements LockManager {
         String lockPath = LockPathBuilder.buildPath( applicationId, path );
 
         ColumnPrefixDistributedRowLock<String> lock =
-            new ColumnPrefixDistributedRowLock<>(keyspace, columnFamily, lockPath);
+            new ColumnPrefixDistributedRowLock<>(keyspace, columnFamily, lockPath)
+                .expireLockAfter( Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
 
 
         return new AstyanaxLockImpl( lock );
