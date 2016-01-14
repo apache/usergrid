@@ -69,11 +69,15 @@
 
 	<bean id="saltProvider" class="org.apache.usergrid.security.salt.NoOpSaltProvider" />
 
+    <bean id="injector"
+          class="org.apache.usergrid.corepersistence.GuiceFactory">
+    </bean>
+
 	<bean id="serviceManagerFactory" class="org.apache.usergrid.services.ServiceManagerFactory">
 		<constructor-arg ref="entityManagerFactory" />
 		<constructor-arg ref="properties" />
 		<constructor-arg ref="schedulerService"/>
-        <constructor-arg ref="lockManager"/>
+        <constructor-arg ref="injector"/>
         <constructor-arg ref="queueManagerFactory"/>
 	</bean>
 

@@ -26,11 +26,7 @@ import java.util.UUID;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.UTF8Type;
 
-import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
-import org.apache.usergrid.persistence.core.astyanax.StringRowCompositeSerializer;
+import org.apache.usergrid.persistence.core.astyanax.*;
 import org.apache.usergrid.persistence.core.migration.util.AstayanxUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -78,8 +74,8 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
 
 
     @Inject
-    public MigrationInfoSerializationImpl( final Keyspace keyspace ) {
-        this.keyspace = keyspace;
+    public MigrationInfoSerializationImpl( final CassandraCluster cassandraCluster ) {
+        this.keyspace = cassandraCluster.getApplicationKeyspace();
     }
 
 
