@@ -136,8 +136,8 @@ public class DuplicateAdminRepair extends ToolBase {
                     logger.warn( "User {} has no email", user.getId() );
                     return;
                 }
-                emails.put( user.getEmail(), user );
-                usernames.put( user.getEmail(), user );
+                emails.put( user.getEmail().toLowerCase(), user );
+                usernames.put( user.getUsername().toLowerCase(), user );
                 
             }
         } ).toBlocking().lastOrDefault( null );
