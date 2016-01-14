@@ -140,6 +140,9 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
 
         Boolean overSizeLimit = false;
 
+        EntityManager em = emf.getEntityManager( appId );
+
+
         if ( written < FIVE_MB ) { // total smaller than 5mb
 
             ObjectMetadata om = new ObjectMetadata();
@@ -156,6 +159,9 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
             if(md5sum != null)
                 fileMetadata.put( AssetUtils.CHECKSUM, md5sum );
             fileMetadata.put( AssetUtils.E_TAG, eTag );
+
+            em.update( entity );
+
         }
         else { // bigger than 5mb... dump 5 mb tmp files and upload from them
             written = 0; //reset written to 0, we still haven't wrote anything in fact
@@ -236,7 +242,6 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
             //check for flag here then abort.
             if(overSizeLimit) {
 
-                EntityManager em = emf.getEntityManager( appId );
                 AbortMultipartUploadRequest abortRequest =
                     new AbortMultipartUploadRequest( bucketName, uploadFileName, initResponse.getUploadId() );
 
@@ -282,6 +287,7 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
                 CompleteMultipartUploadResult amazonResult = getS3Client().completeMultipartUpload( request );
                 fileMetadata.put( AssetUtils.CONTENT_LENGTH, written );
                 fileMetadata.put( AssetUtils.E_TAG, amazonResult.getETag() );
+                em.update( entity );
             }
         }
     }

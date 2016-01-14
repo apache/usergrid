@@ -34,6 +34,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -151,7 +153,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         }catch ( AwsPropertiesNotFoundException e ){
             fail("Shouldn't interrupt runtime if access key isnt found.");
         }
-        catch( ClientErrorException uie){
+        catch( InternalServerErrorException uie){
             assertEquals( 500, uie.getResponse().getStatus() );
         }
         finally{
@@ -193,7 +195,10 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         }catch ( AwsPropertiesNotFoundException e ){
             fail("Shouldn't interrupt runtime if access key isnt found.");
         }
-        catch( ClientErrorException uie){
+        catch(ForbiddenException fe){
+            assertEquals( 403, fe.getResponse().getStatus() );
+        }
+        catch( InternalServerErrorException uie){
             assertEquals( 500, uie.getResponse().getStatus() );
         }
         finally{
