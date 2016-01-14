@@ -72,33 +72,11 @@
 
     <!-- <bean name="lockManager" class="org.apache.usergrid.locking.singlenode.SingleNodeLockManagerImpl" /> -->
 
-	<!--  hector based locks -->
-	<!-- Note that if this is deployed in a production cluster, the RF on the keyspace MUST
-	     be updated to use an odd number for it's replication Factor. Even numbers can potentially
-	     case the locks to fail, via "split brain" when read at QUORUM on lock verification-->
-
-    <!-- not using hector anymore
-	<bean name="lockManager" class="org.apache.usergrid.locking.cassandra.HectorLockManagerImpl">
-		<property name="cluster" ref="cassandraCluster"/>
-		<property name="keyspaceName" value="${cassandra.lock.keyspace}"/>
-        <property name="consistencyLevelPolicy" ref="hlockConsistencyLevelPolicy" />
-	</bean>
-
-    <bean name="hlockConsistencyLevelPolicy" class="me.prettyprint.cassandra.model.ConfigurableConsistencyLevel">
-        <property name="defaultReadConsistencyLevel" value="${cassandra.lock.readcl}"/>
-        <property name="defaultWriteConsistencyLevel" value="${cassandra.lock.writecl}"/>
-    </bean>
-    -->
 
     <bean id="injector"
    		class="org.apache.usergrid.corepersistence.GuiceFactory">
     </bean>
 
-    <!--  <bean id="injector"
-       		class="org.apache.usergrid.corepersistence.GuiceFactory">
-       		<constructor-arg ref="cassandraHostConfigurator" />
-            <constructor-arg ref="properties" />
-        </bean>-->
 
 	<bean id="cassandraService"
 		class="org.apache.usergrid.persistence.cassandra.CassandraService" init-method="init" destroy-method="destroy">
