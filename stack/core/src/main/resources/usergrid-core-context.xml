@@ -77,6 +77,7 @@
 	     be updated to use an odd number for it's replication Factor. Even numbers can potentially
 	     case the locks to fail, via "split brain" when read at QUORUM on lock verification-->
 
+    <!-- not using hector anymore
 	<bean name="lockManager" class="org.apache.usergrid.locking.cassandra.HectorLockManagerImpl">
 		<property name="cluster" ref="cassandraCluster"/>
 		<property name="keyspaceName" value="${cassandra.lock.keyspace}"/>
@@ -87,6 +88,7 @@
         <property name="defaultReadConsistencyLevel" value="${cassandra.lock.readcl}"/>
         <property name="defaultWriteConsistencyLevel" value="${cassandra.lock.writecl}"/>
     </bean>
+    -->
 
     <bean id="injector"
    		class="org.apache.usergrid.corepersistence.GuiceFactory">
@@ -103,7 +105,6 @@
 		<constructor-arg ref="properties" />
 		<constructor-arg ref="cassandraCluster" />
 		<constructor-arg ref="cassandraHostConfigurator" />
-		<constructor-arg ref="lockManager" />
         <constructor-arg ref="injector"/>
 		<property name="consistencyLevelPolicy" ref="consistencyLevelPolicy"/>
 	</bean>
@@ -124,7 +125,7 @@
           class="org.apache.usergrid.mq.cassandra.QueueManagerFactoryImpl">
         <constructor-arg ref="cassandraService" />
         <constructor-arg ref="counterUtils"/>
-        <constructor-arg ref="lockManager"/>
+        <constructor-arg ref="injector"/>
         <constructor-arg value="${usergrid.queue.lock.timeout}"/>
     </bean>
 

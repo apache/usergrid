@@ -214,6 +214,11 @@
       <artifactId>curator-recipes</artifactId>
     </dependency>
 
+      <dependency>
+          <groupId>com.netflix.astyanax</groupId>
+          <artifactId>astyanax-recipes</artifactId>
+      </dependency>
+
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
