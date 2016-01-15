@@ -112,9 +112,9 @@ public class EntityToMapConverterTest {
         assertEquals( IndexingUtils.createContextName( scope, indexEdge ), edgeSearch );
 
 
-        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final Set<EntityField> fieldsSet = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
 
-        assertEquals( 0, fields.size() );
+        assertEquals( 0, fieldsSet.size() );
     }
 
 
@@ -210,8 +210,9 @@ public class EntityToMapConverterTest {
         final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, entity );
 
 
-        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
-
+        final Set<EntityField> fieldSet = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final List<EntityField> fields = new ArrayList<>();
+        fields.addAll(fieldSet);
         assertEquals( 1, fields.size() );
 
         final EntityField esField = fields.get( 0 );
@@ -235,7 +236,8 @@ public class EntityToMapConverterTest {
         array.add( "two" );
         array.add( "three" );
 
-        testPrimitiveArray( array, IndexingUtils.FIELD_STRING );
+        // all unique values, we expect 3 values
+        testPrimitiveArray( array, IndexingUtils.FIELD_STRING, 3 );
     }
 
 
@@ -250,7 +252,8 @@ public class EntityToMapConverterTest {
         array.add( false );
         array.add( true );
 
-        testPrimitiveArray( array, IndexingUtils.FIELD_BOOLEAN );
+        // 3 are duplicates, we expect only 2 values
+        testPrimitiveArray( array, IndexingUtils.FIELD_BOOLEAN, 2 );
     }
 
 
@@ -264,7 +267,8 @@ public class EntityToMapConverterTest {
         array.add( 2 );
         array.add( 3 );
 
-        testPrimitiveArray( array, IndexingUtils.FIELD_LONG );
+        // all unique values, we expect 3 values
+        testPrimitiveArray( array, IndexingUtils.FIELD_LONG, 3 );
     }
 
 
@@ -278,7 +282,8 @@ public class EntityToMapConverterTest {
         array.add( 2l );
         array.add( 3l );
 
-        testPrimitiveArray( array, IndexingUtils.FIELD_LONG );
+        // all unique values, we expect 3 values
+        testPrimitiveArray( array, IndexingUtils.FIELD_LONG, 3 );
     }
 
 
@@ -292,7 +297,8 @@ public class EntityToMapConverterTest {
         array.add( 2.0f );
         array.add( 3.0f );
 
-        testPrimitiveArray( array, IndexingUtils.FIELD_DOUBLE );
+        // all unique values, we expect 3 values
+        testPrimitiveArray( array, IndexingUtils.FIELD_DOUBLE, 3 );
     }
 
 
@@ -306,7 +312,8 @@ public class EntityToMapConverterTest {
         array.add( 2.0d );
         array.add( 3.0d );
 
-        testPrimitiveArray( array, IndexingUtils.FIELD_DOUBLE );
+        // all unique values, we expect 3 values
+        testPrimitiveArray( array, IndexingUtils.FIELD_DOUBLE, 3 );
     }
 
 
@@ -315,7 +322,7 @@ public class EntityToMapConverterTest {
      *
      * @param indexType the field name for the expected type in ES
      */
-    private <T> void testPrimitiveArray( final ArrayField<T> array, final String indexType ) {
+    private <T> void testPrimitiveArray( final ArrayField<T> array, final String indexType, int expectedCount ) {
 
         Entity entity = new Entity( "test" );
 
@@ -336,17 +343,29 @@ public class EntityToMapConverterTest {
         final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, entity );
 
 
-        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final Set<EntityField> fieldSet = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final List<EntityField> fields = new ArrayList<>();
+        fields.addAll(fieldSet);
 
-        assertEquals( array.size(), fields.size() );
+        assertEquals( expectedCount, fields.size() );
 
 
-        for ( int i = 0; i < array.size(); i++ ) {
+        // take the incoming test ArrayField value and unique it since the conversion uses a Set and won't allow dups
+        Set<T> uniqueInputSet = new HashSet<>();
+        array.getValue().forEach( item -> uniqueInputSet.add(item));
+        List<T> uniqueInputList = new ArrayList<>();
+        uniqueInputList.addAll(uniqueInputSet);
+        ArrayField<T> uniqueArrayField = new ArrayField<>( array.getName(), uniqueInputList);
+
+
+        for ( int i = 0; i < uniqueArrayField.size(); i++ ) {
             final EntityField field = fields.get( i );
 
-            assertEquals( array.getName(), field.get( IndexingUtils.FIELD_NAME ) );
+            assertEquals( uniqueArrayField.getName(), field.get( IndexingUtils.FIELD_NAME ) );
 
-            assertEquals( array.getValue().get( i ), field.get( indexType ) );
+            // we already verified our size and it is unique, just check contains so we don't have to sort a list
+            //noinspection SuspiciousMethodCalls
+            assertTrue( uniqueArrayField.getValue().contains( field.get( indexType ) ) );
         }
     }
 
@@ -445,8 +464,9 @@ public class EntityToMapConverterTest {
 
         final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, rootEntity );
 
-
-        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final Set<EntityField> fieldSet = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final List<EntityField> fields = new ArrayList<>();
+        fields.addAll(fieldSet);
 
         assertEquals( 1, fields.size() );
 
@@ -567,7 +587,9 @@ public class EntityToMapConverterTest {
         final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, rootEntity );
 
 
-        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final Set<EntityField> fieldSet = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final List<EntityField> fields = new ArrayList<>();
+        fields.addAll(fieldSet);
 
         assertEquals( 1, fields.size() );
 
@@ -631,7 +653,9 @@ public class EntityToMapConverterTest {
         final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, rootEntity );
 
 
-        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final Set<EntityField> fieldSet = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final List<EntityField> fields = new ArrayList<>();
+        fields.addAll(fieldSet);
 
         assertEquals( 1, fields.size() );
 
@@ -680,8 +704,10 @@ public class EntityToMapConverterTest {
             new IndexEdgeImpl( createId( "source" ), "testEdgeType", SearchEdge.NodeType.SOURCE, 1000 );
 
         final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, rootEntity );
-        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
 
+        final Set<EntityField> fieldSet = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final List<EntityField> fields = new ArrayList<>();
+        fields.addAll(fieldSet);
         // if size of fields is not == 1, then we either
         // 1) did not index anything or 2) indexed the nested array that shouldn't be indexed at all
         assertEquals( 1, fields.size() );
@@ -722,15 +748,16 @@ public class EntityToMapConverterTest {
 
         List<EntityField> fieldsArray = new ArrayList<>();
         fieldsArray.addAll(fields);
-        
-        // we added 3 values to our only array, but 2 were duplicaes. we should only have 2 now
+
+
         assertEquals( 2, fields.size() );
 
         final EntityField field = fieldsArray.get( 0 );
         final EntityField field1 = fieldsArray.get( 1 );
 
-        assertEquals( null, field.get( IndexingUtils.FIELD_NULL ) );
-        assertEquals( "test", field1.get( IndexingUtils.FIELD_STRING ) );
+        // the fields get re-sorted on array to list conversion
+        assertEquals( "test", field.get( IndexingUtils.FIELD_STRING ) );
+        assertEquals( null, field1.get( IndexingUtils.FIELD_NULL ) );
 
     }
 
