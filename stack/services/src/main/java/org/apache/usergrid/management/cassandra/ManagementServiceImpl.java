@@ -1622,7 +1622,7 @@ public class ManagementServiceImpl implements ManagementService {
         return createApplication(organizationId, applicationName, null, properties);
     }
 
-        @Override
+    @Override
     public ApplicationInfo createApplication( UUID organizationId, String applicationName, UUID applicationId,
                                               Map<String, Object> properties ) throws Exception {
 
@@ -1638,11 +1638,16 @@ public class ManagementServiceImpl implements ManagementService {
         Entity appInfo = emf.createApplicationV2(
             organizationInfo.getName(), applicationName, applicationId ,properties);
 
-        writeUserToken( smf.getManagementAppId(), appInfo,
-            encryptionService.plainTextCredentials(
-                generateOAuthSecretKey( AuthPrincipalType.APPLICATION ),
-                null,
-                smf.getManagementAppId() ) );
+        // only generate a client secret on app creation when you're creating an app that doesn't already exist
+        if( applicationId == null ){
+
+            writeUserToken( smf.getManagementAppId(), appInfo,
+                encryptionService.plainTextCredentials(
+                    generateOAuthSecretKey( AuthPrincipalType.APPLICATION ),
+                    null,
+                    smf.getManagementAppId() ) );
+        }
+
 
         applicationId = addApplicationToOrganization( organizationId, appInfo );
 
