@@ -46,11 +46,14 @@ public interface CassandraFig extends GuicyFig {
     String LOCKS_CL = "cassandra.lock.cl";
     String LOCKS_SHARED_POOL_FLAG = "cassandra.lock.use_shared_pool";
     String LOCKS_CONNECTIONS = "cassandra.lock.connections";
+    String LOCKS_EXPIRATION = "cassandra.lock.expiration.milliseconds";
+
 
 
 
     // re-usable default values
     String DEFAULT_CONNECTION_POOLSIZE = "15";
+    String DEFAULT_LOCKS_EXPIRATION = "3600000";  // 1 hour
 
 
     @Key( "cassandra.hosts" )
@@ -161,5 +164,12 @@ public interface CassandraFig extends GuicyFig {
     @Key( LOCKS_KEYSPACE_STRATEGY )
     @Default( "org.apache.cassandra.locator.SimpleStrategy" )
     String getLocksKeyspaceStrategy();
+
+    /**
+     * Return the expiration that should be used for expiring a lock if it's not released
+     */
+    @Key( LOCKS_EXPIRATION )
+    @Default(DEFAULT_LOCKS_EXPIRATION)
+    int getLocksExpiration();
 
 }
