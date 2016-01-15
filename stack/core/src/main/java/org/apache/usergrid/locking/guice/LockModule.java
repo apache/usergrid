@@ -32,7 +32,7 @@ public class LockModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        bind( LockManager.class ).to( AstyanaxLockManagerImpl.class );
+        bind( LockManager.class ).to( AstyanaxLockManagerImpl.class ).asEagerSingleton();
 
     }
 }
