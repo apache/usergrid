@@ -24,6 +24,7 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
 import com.netflix.astyanax.ddl.KeyspaceDefinition;
 import com.netflix.astyanax.model.ColumnFamily;
+import com.netflix.astyanax.model.ConsistencyLevel;
 import com.netflix.astyanax.recipes.locks.ColumnPrefixDistributedRowLock;
 import com.netflix.astyanax.serializers.StringSerializer;
 import org.apache.cassandra.db.marshal.BytesType;
@@ -72,9 +73,19 @@ public class AstyanaxLockManagerImpl implements LockManager {
 
         String lockPath = LockPathBuilder.buildPath( applicationId, path );
 
+        ConsistencyLevel consistencyLevel;
+        try{
+            consistencyLevel = ConsistencyLevel.valueOf(cassandraFig.getLocksCl());
+        }catch(IllegalArgumentException e){
+
+            // just default it to local quorum if we can't parse
+            consistencyLevel = ConsistencyLevel.CL_LOCAL_QUORUM;
+        }
+
         ColumnPrefixDistributedRowLock<String> lock =
             new ColumnPrefixDistributedRowLock<>(keyspace, columnFamily, lockPath)
-                .expireLockAfter( Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+                .expireLockAfter( Integer.MAX_VALUE, TimeUnit.MILLISECONDS)
+                .withConsistencyLevel(consistencyLevel);
 
 
         return new AstyanaxLockImpl( lock );

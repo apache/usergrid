@@ -43,8 +43,7 @@ public interface CassandraFig extends GuicyFig {
     String LOCKS_KEYSPACE_NAME = "cassandra.lock.keyspace";
     String LOCKS_KEYSPACE_REPLICATION = "cassandra.lock.keyspace.replication";
     String LOCKS_KEYSPACE_STRATEGY = "cassandra.lock.keyspace.strategy";
-    String LOCKS_READ_CL = "cassandra.lock.readcl";
-    String LOCKS_WRITE_CL = "cassandra.lock.writecl";
+    String LOCKS_CL = "cassandra.lock.cl";
     String LOCKS_SHARED_POOL_FLAG = "cassandra.lock.use_shared_pool";
     String LOCKS_CONNECTIONS = "cassandra.lock.connections";
 
@@ -129,18 +128,11 @@ public interface CassandraFig extends GuicyFig {
     String getLocksKeyspace();
 
     /**
-     * Returns the Astyanax consistency level for reading a Lock
-     */
-    @Key( LOCKS_READ_CL )
-    @Default("CL_QUORUM")
-    String getLocksReadCl();
-
-    /**
      * Returns the Astyanax consistency level for writing a Lock
      */
-    @Key( LOCKS_WRITE_CL )
-    @Default("CL_QUORUM")
-    String getLocksWriteCl();
+    @Key(LOCKS_CL)
+    @Default("CL_LOCAL_QUORUM")
+    String getLocksCl();
 
     /**
      * Returns a flag on whether or not to share the connection pool with other keyspaces
