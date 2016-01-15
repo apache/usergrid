@@ -19,6 +19,7 @@ package org.apache.usergrid.locking.cassandra;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
@@ -41,6 +42,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+@Singleton
 public class AstyanaxLockManagerImpl implements LockManager {
 
     private static final Logger logger = LoggerFactory.getLogger( AstyanaxLockManagerImpl.class );
