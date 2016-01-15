@@ -52,6 +52,7 @@ public class AstyanaxLockManagerImpl implements LockManager {
     private final CassandraFig cassandraFig;
     private final Keyspace keyspace;
     private final ColumnFamily columnFamily;
+    private static final int MINIMUM_LOCK_EXPIRATION = 60000; // 1 minute
 
     @Inject
     public AstyanaxLockManagerImpl(CassandraFig cassandraFig,
@@ -80,13 +81,35 @@ public class AstyanaxLockManagerImpl implements LockManager {
             consistencyLevel = ConsistencyLevel.valueOf(cassandraFig.getLocksCl());
         }catch(IllegalArgumentException e){
 
+            logger.warn( "Property {} value provided: {} is not valid", CassandraFig.LOCKS_CL,
+                cassandraFig.getLocksCl() );
+
             // just default it to local quorum if we can't parse
             consistencyLevel = ConsistencyLevel.CL_LOCAL_QUORUM;
         }
 
+
+        int lockExpiration;
+        int lockConfigExpiration = cassandraFig.getLocksExpiration();
+        if( lockConfigExpiration >= MINIMUM_LOCK_EXPIRATION ){
+
+            lockExpiration = Math.min(cassandraFig.getLocksExpiration(), Integer.MAX_VALUE);
+
+        }else{
+
+            logger.warn("Property {} is not valid.  Choose a value greater than or equal to {}",
+                CassandraFig.LOCKS_EXPIRATION,
+                MINIMUM_LOCK_EXPIRATION);
+
+            // use the default if seomthing below the minimum is provided
+            lockExpiration = Integer.valueOf(CassandraFig.DEFAULT_LOCKS_EXPIRATION);
+        }
+
+
+
         ColumnPrefixDistributedRowLock<String> lock =
             new ColumnPrefixDistributedRowLock<>(keyspace, columnFamily, lockPath)
-                .expireLockAfter( Integer.MAX_VALUE, TimeUnit.MILLISECONDS)
+                .expireLockAfter( lockExpiration, TimeUnit.MILLISECONDS)
                 .withConsistencyLevel(consistencyLevel);
 
 
