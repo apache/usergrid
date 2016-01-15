@@ -68,11 +68,6 @@
 
     <bean id="loadBalancingPolicy" class="me.prettyprint.cassandra.connection.DynamicLoadBalancingPolicy"/>
 
-	<!--  locking for a single node -->
-
-    <!-- <bean name="lockManager" class="org.apache.usergrid.locking.singlenode.SingleNodeLockManagerImpl" /> -->
-
-
     <bean id="injector"
    		class="org.apache.usergrid.corepersistence.GuiceFactory">
     </bean>
