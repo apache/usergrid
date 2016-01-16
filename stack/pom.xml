@@ -98,6 +98,7 @@
         <!-- =================================================================== -->
 
         <amber-version>0.22-incubating</amber-version>
+        <astyanax.version>1.56.49-SNAPSHOT-UG-1</astyanax.version>
         <aws.version>1.10.20</aws.version>
         <cassandra-version>1.2.18</cassandra-version>
         <guava.version>18.0</guava.version>
@@ -546,38 +547,6 @@
                     <exclusion>
                         <artifactId>commons-logging</artifactId>
                         <groupId>commons-logging</groupId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.zookeeper</groupId>
-                <artifactId>zookeeper</artifactId>
-                <version>3.4.5</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>jline</groupId>
-                        <artifactId>jline</artifactId>
-                    </exclusion>
-
-                    <exclusion>
-                        <groupId>org.jboss.netty</groupId>
-                        <artifactId>netty</artifactId>
-                    </exclusion>
-
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-log4j12</artifactId>
-                    </exclusion>
-
-                    <exclusion>
-                        <groupId>log4j</groupId>
-                        <artifactId>log4j</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1284,6 +1253,12 @@
                 <groupId>io.apigee.gcm</groupId>
                 <artifactId>gcm-server</artifactId>
                 <version>${io.apigee.gcm.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.netflix.astyanax</groupId>
+                <artifactId>astyanax-recipes</artifactId>
+                <version>${astyanax.version}</version>
             </dependency>
 
         </dependencies>

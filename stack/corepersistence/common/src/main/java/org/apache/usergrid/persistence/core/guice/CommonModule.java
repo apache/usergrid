@@ -19,12 +19,10 @@
 package org.apache.usergrid.persistence.core.guice;
 
 
+import com.netflix.astyanax.Keyspace;
+import org.apache.usergrid.persistence.core.astyanax.*;
 import org.safehaus.guicyfig.GuicyFigModule;
 
-import org.apache.usergrid.persistence.core.astyanax.AstyanaxKeyspaceProvider;
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfigImpl;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
 import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
@@ -46,7 +44,6 @@ import org.apache.usergrid.persistence.core.migration.schema.MigrationManagerImp
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.multibindings.Multibinder;
-import com.netflix.astyanax.Keyspace;
 
 
 /**
@@ -57,8 +54,12 @@ public class CommonModule extends AbstractModule {
 
     @Override
     protected void configure() {
+
         //noinspection unchecked
         install(new GuicyFigModule(MigrationManagerFig.class, CassandraFig.class));
+
+        // bind our Cassandra cluster to the Astyanax Implementation
+        bind(CassandraCluster.class).to(CassandraClusterImpl.class).asEagerSingleton();
 
         // bind our keyspace to the AstyanaxKeyspaceProvider
         bind(Keyspace.class).toProvider(AstyanaxKeyspaceProvider.class).asEagerSingleton();

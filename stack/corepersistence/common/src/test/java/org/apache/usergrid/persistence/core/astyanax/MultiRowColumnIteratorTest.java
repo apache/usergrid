@@ -67,6 +67,9 @@ public class MultiRowColumnIteratorTest {
     @Inject
     public CassandraFig cassandraFig;
 
+    @Inject
+    public CassandraCluster cassandraCluster;
+
     protected static Keyspace keyspace;
 
     protected ApplicationScope scope;
@@ -107,7 +110,7 @@ public class MultiRowColumnIteratorTest {
 
 
         AstyanaxKeyspaceProvider astyanaxKeyspaceProvider =
-                new AstyanaxKeyspaceProvider( cassandraFig, cassandraConfig );
+                new AstyanaxKeyspaceProvider( cassandraCluster );
 
         keyspace = astyanaxKeyspaceProvider.get();
 
