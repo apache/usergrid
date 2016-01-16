@@ -47,6 +47,7 @@ public class EntityTest
         LongField longField = new LongField( "int", 1l );
         StringField stringField = new StringField( "name", "test" );
         UUIDField uuidField = new UUIDField( "uuid", UUIDGenerator.newTimeUUID() );
+        NullField nullField = new NullField("null");
 
         entity.setField( boolField );
         entity.setField( doubleField );
@@ -54,6 +55,7 @@ public class EntityTest
         entity.setField( longField );
         entity.setField( stringField );
         entity.setField( uuidField );
+        entity.setField( nullField );
 
         Field<Boolean> boolFieldReturned = entity.getField( boolField.getName() );
 
@@ -79,6 +81,10 @@ public class EntityTest
 
         assertSame( uuidField, uuidFieldReturned );
 
+        Field<Object> nullFieldReturned = entity.getField( nullField.getName());
+
+        assertSame( nullField, nullFieldReturned);
+
 
         Set<Field> results = new HashSet<Field>();
         results.addAll( entity.getFields() );
@@ -90,8 +96,9 @@ public class EntityTest
         assertTrue( results.contains( longField ) );
         assertTrue( results.contains( stringField ) );
         assertTrue( results.contains( uuidField ) );
+        assertTrue( results.contains( nullField ) );
 
-        assertEquals( 6, results.size() );
+        assertEquals( 7, results.size() );
 
 
         assertEquals( simpleId, entity.getId() );

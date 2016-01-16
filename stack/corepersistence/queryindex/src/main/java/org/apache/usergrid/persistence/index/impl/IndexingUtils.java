@@ -114,6 +114,7 @@ public class IndexingUtils {
     public static final String FIELD_LOCATION = "location";
     public static final String FIELD_STRING = "string";
     public static final String FIELD_UUID = "uuid";
+    public static final String FIELD_NULL = "null";
 
 
     /**

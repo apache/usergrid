@@ -25,10 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.index.*;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,6 +117,7 @@ public class IndexLoadTestsIT extends BaseIT {
     private EntityIndex entityIndex;
 
 
+    @Before
     public void before(){
         appId = new SimpleId(UUID.randomUUID(), "application" );
 
