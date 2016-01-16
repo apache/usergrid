@@ -20,6 +20,8 @@ package org.apache.usergrid;
 import com.google.inject.Injector;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.corepersistence.service.ApplicationService;
+import org.apache.usergrid.locking.Lock;
+import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManagerFactory;
@@ -41,6 +43,7 @@ public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
     protected EntityManagerFactory emf;
     protected QueueManagerFactory qmf;
     protected CassandraService cassandraService;
+    protected LockManager lockManager;
 
     protected SpringResource springResource;
 
@@ -52,6 +55,7 @@ public class CoreITSetupImpl implements CoreITSetup, TestEntityIndex {
         emf = springResource.getBean( EntityManagerFactory.class );
         qmf = springResource.getBean( QueueManagerFactory.class );
         injector = springResource.getBean(Injector.class);
+        lockManager = injector.getInstance(LockManager.class);
 
 
     }

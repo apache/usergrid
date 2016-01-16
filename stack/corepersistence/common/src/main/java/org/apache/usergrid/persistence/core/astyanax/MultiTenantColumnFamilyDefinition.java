@@ -31,7 +31,7 @@ import com.netflix.astyanax.model.ColumnFamily;
  *
  * @author tnine
  */
-public class MultiTennantColumnFamilyDefinition {
+public class MultiTenantColumnFamilyDefinition {
 
 
     /**
@@ -91,8 +91,8 @@ public class MultiTennantColumnFamilyDefinition {
     private final CacheOption cacheOption;
 
 
-    public MultiTennantColumnFamilyDefinition( final ColumnFamily columnFamily, final String keyValidationType,
-                                               final String columnComparatorType, final String columnValidationType, final CacheOption cacheOption ) {
+    public MultiTenantColumnFamilyDefinition(final ColumnFamily columnFamily, final String keyValidationType,
+                                             final String columnComparatorType, final String columnValidationType, final CacheOption cacheOption ) {
 
         Preconditions.checkNotNull( columnFamily, "columnFamily is required" );
         Preconditions.checkNotNull( columnComparatorType, "columnComparatorType is required" );

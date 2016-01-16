@@ -19,6 +19,7 @@ package org.apache.usergrid.mq.cassandra;
 
 import java.util.UUID;
 
+import com.google.inject.Injector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.locking.LockManager;
@@ -47,10 +48,10 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
      * @param cass the cassandra client pool
      * @param counterUtils the CounterUtils
      */
-    public QueueManagerFactoryImpl( CassandraService cass, CounterUtils counterUtils, LockManager lockManager, int lockTimeout ) {
+    public QueueManagerFactoryImpl(CassandraService cass, CounterUtils counterUtils, final Injector injector, int lockTimeout ) {
         this.cass = cass;
         this.counterUtils = counterUtils;
-        this.lockManager = lockManager;
+        lockManager = injector.getInstance(LockManager.class);
         this.lockTimeout = lockTimeout;
     }
 

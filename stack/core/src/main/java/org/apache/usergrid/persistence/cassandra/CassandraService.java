@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence.cassandra;
 
 
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import me.prettyprint.cassandra.connection.HConnectionManager;
 import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
@@ -110,12 +111,12 @@ public class CassandraService {
 
 //Wire guice injector via spring here, just pass the injector in the spring
     public CassandraService( Properties properties, Cluster cluster,
-                             CassandraHostConfigurator cassandraHostConfigurator, LockManager lockManager,
+                             CassandraHostConfigurator cassandraHostConfigurator,
                            final Injector injector) {
         this.properties = properties;
         this.cluster = cluster;
         chc = cassandraHostConfigurator;
-        this.lockManager = lockManager;
+        lockManager = injector.getInstance( LockManager.class );
         db_logger.info( "" + cluster.getKnownPoolHosts( false ) );
         //getInjector
         applicationKeyspace  = injector.getInstance( CassandraFig.class ).getApplicationKeyspace();

@@ -16,6 +16,7 @@
 package org.apache.usergrid.corepersistence;
 
 
+import org.apache.usergrid.locking.guice.LockModule;
 import org.apache.usergrid.persistence.cache.guice.CacheModule;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -94,6 +95,7 @@ public class CoreModule extends AbstractModule {
     protected void configure() {
 
         install( new CommonModule());
+        install( new LockModule());
         install( new CacheModule());
         install( new CollectionModule() {
             /**
