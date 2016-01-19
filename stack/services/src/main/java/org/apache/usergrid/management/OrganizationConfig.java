@@ -17,41 +17,69 @@
 package org.apache.usergrid.management;
 
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
+import org.apache.usergrid.management.cassandra.OrganizationConfigPropsImpl;
+import org.apache.usergrid.management.OrganizationConfigProps.*;
 import org.apache.usergrid.utils.MapUtils;
 
 import java.util.*;
 
-import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
-import static org.apache.commons.lang.StringUtils.isBlank;
 
 
 public class OrganizationConfig {
 
-    private Map<String, String> defaultProperties;
+    private OrganizationConfigProps configProps;
+    //private Map<String, String> defaultProperties;
     private UUID id;
     private String name;
-    private Map<String, String> orgProperties;
+    //private Map<String, String> orgProperties;
 
 
     // shouldn't use the default constructor
     private OrganizationConfig() {
     }
 
+    public OrganizationConfig(OrganizationConfig orgConfig) {
+        this.id = orgConfig.getUuid();
+        this.name = orgConfig.getName();
+        this.configProps = orgConfig.getOrgConfigProps();
+    }
+
+    public OrganizationConfig(Properties properties) {
+        this.configProps = new OrganizationConfigPropsImpl(properties);
+        this.id = null;
+        this.name = null;
+    }
+
     public OrganizationConfig(OrganizationConfigProps configFileProperties, UUID id, String name) {
-        defaultProperties = configFileProperties.getPropertyMap();
+        this.configProps = new OrganizationConfigPropsImpl(configFileProperties);
+        //defaultProperties = configFileProperties.getOrgPropertyMap();
         this.id = id;
         this.name = name;
-        this.orgProperties = new HashMap<>();
+        //this.orgProperties = new HashMap<>();
     }
 
     public OrganizationConfig(OrganizationConfigProps configFileProperties) {
         this(configFileProperties, null, null);
     }
 
+    public OrganizationConfig(OrganizationConfigProps configFileProperties, UUID id, String name,
+                              Map<Object, Object> newOrgProperties, boolean validateOrgProperties)
+            throws IllegalArgumentException {
+        this(configFileProperties, id, name);
+
+        Map<String, Object> orgPropertiesMap = MapUtils.toStringObjectMap(newOrgProperties);
+
+        // orgPropertyValidate will throw IllegalArgumentException
+        if (validateOrgProperties) {
+            orgPropertyValidate(orgPropertiesMap);
+        }
+
+        addOrgProperties(orgPropertiesMap);
+    }
+
     private void orgPropertyValidate(Map<String, Object> entityProperties) throws IllegalArgumentException {
         Set<String> entityPropertyKeys = new HashSet<>(entityProperties.keySet());
-        entityPropertyKeys.removeAll(defaultProperties.keySet());
+        entityPropertyKeys.removeAll(configProps.getOrgPropertyNames());
         // if anything remains in the key set, it is not a valid property
         if (entityPropertyKeys.size() > 0) {
             throw new IllegalArgumentException("Invalid organization config keys: " + String.join(", ", entityPropertyKeys));
@@ -67,28 +95,13 @@ public class OrganizationConfig {
     private void addOrgProperties(Map<String, Object> newOrgProperties) {
         newOrgProperties.forEach((k,v) -> {
             // only take valid properties, validation (if required) happened earlier
-            if (defaultProperties.containsKey(k)) {
+            if (configProps.getOrgPropertyNames().contains(k)) {
                 // ignore non-strings, validation happened earlier
                 if (v.getClass().equals(String.class)) {
-                    this.orgProperties.put(k, v.toString());
+                    this.configProps.setProperty(k, v.toString());
                 }
             }
         });
-    }
-
-    public OrganizationConfig(OrganizationConfigProps configFileProperties, UUID id, String name,
-                              Map<Object, Object> newOrgProperties, boolean validateOrgProperties)
-        throws IllegalArgumentException {
-        this(configFileProperties, id, name);
-
-        Map<String, Object> orgPropertiesMap = MapUtils.toStringObjectMap(newOrgProperties);
-
-        // entityPropertyValidate will throw IllegalArgumentException
-        if (validateOrgProperties) {
-            orgPropertyValidate(orgPropertiesMap);
-        }
-
-        addOrgProperties(orgPropertiesMap);
     }
 
     // adds supplied properties to existing properties
@@ -108,11 +121,11 @@ public class OrganizationConfig {
         Map<String, Object> map = new HashMap<>();
 
         if (includeDefaults) {
-            map.putAll(defaultProperties);
+            map.putAll(configProps.getDefaultPropertiesMap());
         }
 
         if (includeOverrides) {
-            map.putAll(orgProperties);
+            map.putAll(configProps.getOrgPropertiesMap());
         }
 
         if (items != null) {
@@ -149,31 +162,23 @@ public class OrganizationConfig {
     }
 
     public String getProperty(String key) {
-        String retValue = null;
-        if (orgProperties != null) {
-            retValue = orgProperties.get(key);
-        }
-        return retValue != null ? retValue : defaultProperties.get(key);
+        return configProps.getProperty(key);
     }
 
     public String getProperty(String name, String defaultValue) {
-        String retValue = getProperty(name);
-        return retValue != null ? retValue : defaultValue;
+        return configProps.getProperty(name, defaultValue);
     }
 
-    public boolean isProperty(String name, boolean defaultValue) {
-        String val = getProperty(name);
-        return isBlank(val) ? defaultValue : Boolean.parseBoolean(val);
+    public boolean boolProperty(String name, boolean defaultValue) {
+        return configProps.boolProperty(name, defaultValue);
     }
 
     public int intProperty(String name, int defaultValue) {
-        String val = getProperty(name);
-        return isBlank(val) ? defaultValue : Integer.parseInt(val);
+        return configProps.intProperty(name, defaultValue);
     }
 
     public long longProperty(String name, long defaultValue) {
-        String val = getProperty(name);
-        return isBlank(val) ? defaultValue : Long.parseLong(val);
+        return configProps.longProperty(name, defaultValue);
     }
 
     public UUID getUuid() {
@@ -192,8 +197,16 @@ public class OrganizationConfig {
         this.name = name;
     }
 
-    public String getDefaultConnectionParam() {
-        return getProperty(OrganizationConfigProps.PROPERTIES_DEFAULT_CONNECTION_PARAM);
+    protected OrganizationConfigProps getOrgConfigProps() {
+        return new OrganizationConfigPropsImpl(configProps);
+    }
+
+    public String getFullUrlTemplate(WorkflowUrl urlType) {
+        return configProps.getFullUrlTemplate(urlType);
+    }
+
+    public String getFullUrl(WorkflowUrl urlType, Object ... arguments) {
+        return configProps.getFullUrl(urlType, arguments);
     }
 
     @Override

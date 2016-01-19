@@ -17,12 +17,8 @@
 package org.apache.usergrid.management;
 
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.UUID;
 
 import static org.apache.usergrid.persistence.Schema.PROPERTY_PATH;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
@@ -53,9 +49,9 @@ public class OrganizationInfo {
     }
 
 
-    public OrganizationInfo( UUID id, String name, Map<String, Object> properties ) {
+    public <KeyType,ValueType> OrganizationInfo( UUID id, String name, Map<KeyType, ValueType> properties ) {
         this( id, name );
-        this.properties = properties;
+        setProperties(properties);
     }
 
 
@@ -98,7 +94,7 @@ public class OrganizationInfo {
 
 
     public static List<OrganizationInfo> fromNameIdMap( Map<String, UUID> map ) {
-        List<OrganizationInfo> list = new ArrayList<OrganizationInfo>();
+        List<OrganizationInfo> list = new ArrayList<>();
         for ( Entry<String, UUID> s : map.entrySet() ) {
             list.add( new OrganizationInfo( s.getValue(), s.getKey() ) );
         }
@@ -107,7 +103,7 @@ public class OrganizationInfo {
 
 
     public static List<OrganizationInfo> fromIdNameMap( Map<UUID, String> map ) {
-        List<OrganizationInfo> list = new ArrayList<OrganizationInfo>();
+        List<OrganizationInfo> list = new ArrayList<>();
         for ( Entry<UUID, String> s : map.entrySet() ) {
             list.add( new OrganizationInfo( s.getKey(), s.getValue() ) );
         }
@@ -116,7 +112,7 @@ public class OrganizationInfo {
 
 
     public static Map<String, UUID> toNameIdMap( List<OrganizationInfo> list ) {
-        Map<String, UUID> map = new LinkedHashMap<String, UUID>();
+        Map<String, UUID> map = new LinkedHashMap<>();
         for ( OrganizationInfo i : list ) {
             map.put( i.getName(), i.getUuid() );
         }
@@ -125,7 +121,7 @@ public class OrganizationInfo {
 
 
     public static Map<UUID, String> toIdNameMap( List<OrganizationInfo> list ) {
-        Map<UUID, String> map = new LinkedHashMap<UUID, String>();
+        Map<UUID, String> map = new LinkedHashMap<>();
         for ( OrganizationInfo i : list ) {
             map.put( i.getUuid(), i.getName() );
         }
@@ -179,8 +175,11 @@ public class OrganizationInfo {
         return properties;
     }
 
-
-    public void setProperties( Map<String, Object> properties ) {
-        this.properties = properties;
+    // using generics to avoid getting a bunch of unchecked type conversions
+    public <KeyType, ValueType> void setProperties( Map<KeyType, ValueType> properties ) {
+        this.properties = new HashMap<>();
+        if (properties != null) {
+            properties.forEach((k, v) -> this.properties.put(k.toString(), v));
+        }
     }
 }

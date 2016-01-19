@@ -65,7 +65,6 @@ import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.security.tokens.TokenCategory;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
-import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
 import org.apache.usergrid.services.*;
 import org.apache.usergrid.utils.*;
@@ -103,6 +102,7 @@ import static org.apache.usergrid.utils.ConversionUtils.uuid;
 import static org.apache.usergrid.utils.ListUtils.anyNull;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.apache.usergrid.utils.PasswordUtils.mongoPassword;
+import static org.apache.usergrid.management.OrganizationConfigProps.*;
 
 
 public class ManagementServiceImpl implements ManagementService {
@@ -202,7 +202,7 @@ public class ManagementServiceImpl implements ManagementService {
     String defaultAdminSysAdminEmail = null;
     private String getDefaultAdminSystemEmail(){
         if( defaultAdminSysAdminEmail == null ){
-            defaultAdminSysAdminEmail = properties.getProperty(PROPERTIES_ADMIN_SYSADMIN_EMAIL);
+            defaultAdminSysAdminEmail = properties.getProperty(ORGPROPERTIES_ADMIN_SYSADMIN_EMAIL);
             if (defaultAdminSysAdminEmail == null || defaultAdminSysAdminEmail.isEmpty()) {
                 defaultAdminSysAdminEmail = getDefaultSysAdminEmail();
             }
@@ -216,7 +216,7 @@ public class ManagementServiceImpl implements ManagementService {
         try {
             OrganizationConfig orgConfig = getOrganizationConfigForApplication(applicationId);
             if (orgConfig != null) {
-                adminSystemEmail = orgConfig.getProperty(PROPERTIES_ADMIN_SYSADMIN_EMAIL);
+                adminSystemEmail = orgConfig.getProperty(ORGPROPERTIES_ADMIN_SYSADMIN_EMAIL);
             }
         }
         catch (Exception e) {
@@ -232,7 +232,7 @@ public class ManagementServiceImpl implements ManagementService {
         try {
             OrganizationConfig orgConfig = getOrganizationConfigByUuid(organizationId);
             if (orgConfig != null) {
-                adminSystemEmail = orgConfig.getProperty(PROPERTIES_ADMIN_SYSADMIN_EMAIL);
+                adminSystemEmail = orgConfig.getProperty(ORGPROPERTIES_ADMIN_SYSADMIN_EMAIL);
             }
         }
         catch (Exception e) {
@@ -367,7 +367,9 @@ public class ManagementServiceImpl implements ManagementService {
             try {
                 createAdminUser( null, username, "Super User", email, password, true, false );
             }catch(Exception e){
-
+                if (logger.isInfoEnabled()) {
+                    logger.info("resetSuperUser: auto creation of superuser failed: {}", e.getMessage());
+                }
             }
         }
         else {
@@ -380,8 +382,7 @@ public class ManagementServiceImpl implements ManagementService {
         long timestamp = System.currentTimeMillis();
         ByteBuffer bytes = ByteBuffer.allocate( 20 );
         bytes.put( sha( timestamp + OAUTH_SECRET_SALT + UUID.randomUUID() ) );
-        String secret = type.getBase64Prefix() + encodeBase64URLSafeString( bytes.array() );
-        return secret;
+        return type.getBase64Prefix() + encodeBase64URLSafeString( bytes.array() );
     }
 
 
@@ -392,7 +393,7 @@ public class ManagementServiceImpl implements ManagementService {
                                           String content ) throws Exception {
         ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
 
-        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<>();
         properties.put( PROPERTY_VERB, verb );
         properties.put( PROPERTY_CATEGORY, "admin" );
         if ( content != null ) {
@@ -663,14 +664,6 @@ public class ManagementServiceImpl implements ManagementService {
     public OrganizationInfo importOrganization( UUID organizationId, OrganizationInfo organizationInfo,
                                                 Map<String, Object> properties ) throws Exception {
 
-        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        if ( !em.isPropertyValueUniqueForEntity( Group.ENTITY_TYPE, PROPERTY_PATH, organizationInfo.getName() ) ) {
-            throw new DuplicateUniquePropertyExistsException( Group.ENTITY_TYPE, PROPERTY_PATH, organizationInfo.getName() );
-        }
-        if ( properties == null ) {
-            properties = new HashMap<String, Object>();
-        }
-
         String organizationName = null;
         if ( organizationInfo != null ) {
             organizationName = organizationInfo.getName();
@@ -685,16 +678,22 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        if ( organizationId == null ) {
-            if ( organizationInfo != null ) {
-                organizationId = organizationInfo.getUuid();
-            }
+        if (organizationId == null && organizationInfo != null) {
+            organizationId = organizationInfo.getUuid();
         }
         if ( organizationId == null ) {
             organizationId = uuid( properties.get( PROPERTY_UUID ) );
         }
         if ( organizationId == null ) {
             return null;
+        }
+
+        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
+        if ( !em.isPropertyValueUniqueForEntity( Group.ENTITY_TYPE, PROPERTY_PATH, organizationName ) ) {
+            throw new DuplicateUniquePropertyExistsException( Group.ENTITY_TYPE, PROPERTY_PATH, organizationName );
+        }
+        if ( properties == null ) {
+            properties = new HashMap<>();
         }
 
         properties.put( PROPERTY_PATH, organizationName );
@@ -729,7 +728,7 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager(smf.getManagementAppId());
         Results results = em.getCollection(em.getApplicationRef(),
             Schema.COLLECTION_GROUPS, startResult, count, Level.ALL_PROPERTIES, false);
-        List<OrganizationInfo> orgs = new ArrayList<OrganizationInfo>( results.size() );
+        List<OrganizationInfo> orgs = new ArrayList<>( results.size() );
         OrganizationInfo orgInfo;
         for ( Entity entity : results.getEntities() ) {
             // TODO T.N. temporary hack to deal with duplicate orgs. Revert this
@@ -797,7 +796,7 @@ public class ManagementServiceImpl implements ManagementService {
         if ( entity == null ) {
             return null;
         }
-        Map properties = em.getDictionaryAsMap( entity, ORGANIZATION_PROPERTIES_DICTIONARY );
+        Map<Object, Object> properties = em.getDictionaryAsMap( entity, ORGANIZATION_PROPERTIES_DICTIONARY );
         OrganizationInfo orgInfo = new OrganizationInfo( entity.getProperties() );
         orgInfo.setProperties( properties );
         return orgInfo;
@@ -820,7 +819,7 @@ public class ManagementServiceImpl implements ManagementService {
                                   String title, String content ) throws Exception {
         ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
 
-        Map<String, Object> properties = new HashMap<String, Object>();
+        Map<String, Object> properties = new HashMap<>();
         properties.put( PROPERTY_VERB, verb );
         properties.put( PROPERTY_CATEGORY, "admin" );
         if ( content != null ) {
@@ -845,8 +844,7 @@ public class ManagementServiceImpl implements ManagementService {
     public ServiceResults getAdminUserActivities( UserInfo user ) throws Exception {
         ServiceManager sm = smf.getServiceManager( smf.getManagementAppId() );
         ServiceRequest request = sm.newRequest( ServiceAction.GET, parameters( "users", user.getUuid(), "feed" ) );
-        ServiceResults results = request.execute();
-        return results;
+        return request.execute();
     }
 
 
@@ -920,9 +918,6 @@ public class ManagementServiceImpl implements ManagementService {
         }
         if ( username == null ) {
             username = email;
-        }
-        if ( name == null ) {
-            name = email;
         }
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
@@ -1002,7 +997,7 @@ public class ManagementServiceImpl implements ManagementService {
             return null;
         }
 
-        List<UserInfo> users = new ArrayList<UserInfo>();
+        List<UserInfo> users = new ArrayList<>();
 
         EntityManager em = emf.getEntityManager(smf.getManagementAppId());
         Results results =
@@ -1222,7 +1217,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         CredentialsInfo currentCredentials = null;
         if ( passwordHistorySize > 0 ) {
-            ArrayList<CredentialsInfo> oldCreds = new ArrayList<CredentialsInfo>( credsMap.values() );
+            ArrayList<CredentialsInfo> oldCreds = new ArrayList<>( credsMap.values() );
             Collections.sort( oldCreds );
 
             currentCredentials = readUserPasswordCredentials( smf.getManagementAppId(), user.getUuid(), user.getType() );
@@ -1241,10 +1236,8 @@ public class ManagementServiceImpl implements ManagementService {
 
         // remove excess history
         if ( credsMap.size() > passwordHistorySize ) {
-            ArrayList<UUID> oldUUIDs = new ArrayList<UUID>( credsMap.size() );
-            for ( String uuid : credsMap.keySet() ) {
-                oldUUIDs.add( UUID.fromString( uuid ) );
-            }
+            ArrayList<UUID> oldUUIDs = new ArrayList<>( credsMap.size() );
+            credsMap.keySet().forEach((uuid) -> oldUUIDs.add(UUID.fromString(uuid)));
             UUIDUtils.sort( oldUUIDs );
             for ( int i = 0; i < oldUUIDs.size() - passwordHistorySize; i++ ) {
                 em.removeFromDictionary( user, CREDENTIALS_HISTORY, oldUUIDs.get( i ).toString() );
@@ -1281,7 +1274,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         for ( EntityRef orgRef : orgResults.getRefs() ) {
-            Map properties = em.getDictionaryAsMap( orgRef, ORGANIZATION_PROPERTIES_DICTIONARY );
+            Map<Object, Object> properties = em.getDictionaryAsMap( orgRef, ORGANIZATION_PROPERTIES_DICTIONARY );
 
             if ( properties != null ) {
                 OrganizationInfo orgInfo = new OrganizationInfo( null, null, properties );
@@ -1311,7 +1304,6 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public UserInfo verifyAdminUserPasswordCredentials( String name, String password ) throws Exception {
-        UserInfo userInfo = null;
 
         if(logger.isDebugEnabled()){
             logger.debug("verifyAdminUserPasswordCredentials for {}/{}", name, password);
@@ -1323,7 +1315,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         if ( verify( smf.getManagementAppId(), user.getUuid(), password ) ) {
-            userInfo = getUserInfo( smf.getManagementAppId(), user );
+            UserInfo userInfo = getUserInfo( smf.getManagementAppId(), user );
 
             boolean userIsSuperAdmin = properties.getSuperUser().isEnabled()
                 && properties.getSuperUser().getEmail().equals(userInfo.getEmail());
@@ -1547,12 +1539,10 @@ public class ManagementServiceImpl implements ManagementService {
         Results results = em.getCollection(  new SimpleEntityRef( User.ENTITY_TYPE, userId ),
             Schema.COLLECTION_GROUPS, null, 1000, Level.ALL_PROPERTIES, false );
 
-        String path = null;
-
         do {
             for ( Entity entity : results.getEntities() ) {
 
-                path = ( String ) entity.getProperty( PROPERTY_PATH );
+                String path = ( String ) entity.getProperty( PROPERTY_PATH );
 
                 if ( path != null ) {
                     path = path.toLowerCase();
@@ -1590,11 +1580,11 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public Map<String, Object> getAdminUserOrganizationData( UserInfo user, boolean deep ) throws Exception {
 
-        Map<String, Object> json = new HashMap<String, Object>();
+        Map<String, Object> json = new HashMap<>();
 
         json.putAll( JsonUtils.toJsonMap( user ) );
 
-        Map<String, Map<String, Object>> jsonOrganizations = new HashMap<String, Map<String, Object>>();
+        Map<String, Map<String, Object>> jsonOrganizations = new HashMap<>();
         json.put( "organizations", jsonOrganizations );
 
         Map<UUID, String> organizations;
@@ -1609,7 +1599,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         for ( Entry<UUID, String> organization : organizations.entrySet() ) {
-            Map<String, Object> jsonOrganization = new HashMap<String, Object>();
+            Map<String, Object> jsonOrganization = new HashMap<>();
 
             jsonOrganizations.put( organization.getValue(), jsonOrganization );
 
@@ -1622,7 +1612,7 @@ public class ManagementServiceImpl implements ManagementService {
                 jsonOrganization.put( "applications", applications.inverse() );
 
                 List<UserInfo> users = getAdminUsersForOrganization( organization.getKey() );
-                Map<String, Object> jsonUsers = new HashMap<String, Object>();
+                Map<String, Object> jsonUsers = new HashMap<>();
                 for ( UserInfo u : users ) {
                     jsonUsers.put( u.getUsername(), u );
                 }
@@ -2331,18 +2321,15 @@ public class ManagementServiceImpl implements ManagementService {
     public void startAdminUserPasswordResetFlow( UUID organizationId, UserInfo user ) throws Exception {
         String token = getPasswordResetTokenForAdminUser( user.getUuid(), 0, organizationId );
 
-        String resetPropertyUrl = organizationId != null ?
-                getOrganizationConfigPropertyByUuid(organizationId, PROPERTIES_ADMIN_RESETPW_URL) :
-                getOrganizationConfigPropertyForUserInfo(user, PROPERTIES_ADMIN_RESETPW_URL);
-
-        String reset_url =
-                String.format( resetPropertyUrl, user.getUuid().toString() )
-                        + "?token=" + token;
+        OrganizationConfig orgConfig = organizationId != null ?
+                getOrganizationConfigByUuid(organizationId) : getOrganizationConfigForUserInfo(user);
+        String resetPropertyUrl = orgConfig.getFullUrlTemplate(WorkflowUrl.ADMIN_RESETPW_URL);
+        String reset_url = String.format(resetPropertyUrl, user.getUuid().toString())
+                + "?token=" + token;
 
         Map<String, String> pageContext = hashMap( "reset_url", reset_url )
                 .map( "reset_url_base", resetPropertyUrl )
                 .map( "user_uuid", user.getUuid().toString() ).map( "raw_token", token );
-
 
         sendHtmlMail( properties, user.getDisplayEmailAddress(), properties.getProperty( PROPERTIES_MAILER_EMAIL ),
                 "Password Reset", appendEmailFooter( emailMsg( pageContext, PROPERTIES_EMAIL_ADMIN_PASSWORD_RESET ) ) );
@@ -2361,10 +2348,14 @@ public class ManagementServiceImpl implements ManagementService {
         logger.info( "startOrganizationActivationFlow: {}", organization.getName() );
 
         try {
-            String token = getActivationTokenForOrganization( organization.getUuid(), 0 );
-            String activation_url = String.format( properties.getProperty( PROPERTIES_ORGANIZATION_ACTIVATION_URL ),
-                    organization.getUuid().toString() ) + "?token=" + token;
-            List<UserInfo> users = getAdminUsersForOrganization( organization.getUuid() );
+            UUID organizationId = organization.getUuid();
+            String token = getActivationTokenForOrganization( organizationId, 0 );
+            OrganizationConfig orgConfig = getOrganizationConfigByUuid(organizationId);
+            String activationPropertyUrl = orgConfig.getFullUrlTemplate(WorkflowUrl.ORGANIZATION_ACTIVATION_URL);
+            String activation_url = String.format(activationPropertyUrl, organizationId.toString())
+                    + "?token=" + token;
+
+            List<UserInfo> users = getAdminUsersForOrganization( organizationId );
             String organization_owners = null;
             for ( UserInfo user : users ) {
                 organization_owners = ( organization_owners == null ) ? user.getHTMLDisplayEmailAddress() :
@@ -2528,12 +2519,10 @@ public class ManagementServiceImpl implements ManagementService {
 
     public void sendAdminUserConfirmationEmail( UUID organizationId, UserInfo user ) throws Exception {
         String token = getConfirmationTokenForAdminUser(user.getUuid(), 0, organizationId);
-        String adminActivationUrlTemplate = organizationId != null ?
-                getOrganizationConfigPropertyByUuid(organizationId, PROPERTIES_ADMIN_CONFIRMATION_URL) :
-                getOrganizationConfigPropertyForUserInfo(user, PROPERTIES_ADMIN_CONFIRMATION_URL);
-        String confirmation_url =
-                String.format( adminActivationUrlTemplate, user.getUuid().toString() )
-                        + "?token=" + token;
+        OrganizationConfig orgConfig = organizationId != null ?
+                getOrganizationConfigByUuid(organizationId) : getOrganizationConfigForUserInfo(user);
+        String confirmation_url = orgConfig.getFullUrl(WorkflowUrl.ADMIN_CONFIRMATION_URL, user.getUuid().toString()) +
+                "?token=" + token;
         sendAdminUserEmail( user, "User Account Confirmation: " + user.getEmail(),
                 emailMsg( hashMap( "confirm_email", user.getEmail() ).map( "confirmation_url", confirmation_url ),
                         PROPERTIES_EMAIL_ADMIN_CONFIRMATION ) );
@@ -2543,11 +2532,10 @@ public class ManagementServiceImpl implements ManagementService {
     public void sendSysAdminRequestAdminActivationEmail( UUID organizationId, UserInfo user ) throws Exception {
         String token = getActivationTokenForAdminUser(user.getUuid(), 0, organizationId);
         //TODO: admin specific email
-        String activationUrlTemplate = organizationId != null ?
-                getOrganizationConfigPropertyByUuid(organizationId, PROPERTIES_ADMIN_ACTIVATION_URL) :
-                getOrganizationConfigPropertyForUserInfo(user, PROPERTIES_ADMIN_ACTIVATION_URL);
-        String activation_url =
-                String.format( activationUrlTemplate, user.getUuid().toString() ) + "?token=" + token;
+        OrganizationConfig orgConfig = organizationId != null ?
+                getOrganizationConfigByUuid(organizationId) : getOrganizationConfigForUserInfo(user);
+        String activation_url = orgConfig.getFullUrl(WorkflowUrl.ADMIN_ACTIVATION_URL, user.getUuid().toString()) +
+                "?token=" + token;
         String adminSystemEmail = organizationId != null ? getAdminSystemEmailForOrganization(organizationId) :
                 getAdminSystemEmailForApplication(user.getApplicationId());
         sendHtmlMail(properties, adminSystemEmail, properties.getProperty(PROPERTIES_MAILER_EMAIL),
@@ -2731,7 +2719,8 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public void startAppUserPasswordResetFlow( UUID applicationId, User user ) throws Exception {
         String token = getPasswordResetTokenForAppUser(applicationId, user.getUuid());
-        String resetPropertyUrl = properties.getProperty( PROPERTIES_USER_RESETPW_URL );
+        OrganizationConfig orgConfig = getOrganizationConfigForApplication(applicationId);
+        String resetPropertyUrl = orgConfig.getFullUrlTemplate(WorkflowUrl.USER_RESETPW_URL);
         String reset_url =
                 buildUserAppUrl( applicationId, resetPropertyUrl, user, token);
         Map<String, String> pageContext = hashMap( "reset_url", reset_url )
@@ -2754,7 +2743,7 @@ public class ManagementServiceImpl implements ManagementService {
         Boolean registration_requires_admin_approval = ( Boolean ) em
                 .getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                         REGISTRATION_REQUIRES_ADMIN_APPROVAL );
-        return registration_requires_admin_approval != null && registration_requires_admin_approval.booleanValue();
+        return registration_requires_admin_approval != null && registration_requires_admin_approval;
     }
 
 
@@ -2764,8 +2753,7 @@ public class ManagementServiceImpl implements ManagementService {
         Boolean registration_requires_email_confirmation = ( Boolean ) em
                 .getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                         REGISTRATION_REQUIRES_EMAIL_CONFIRMATION );
-        return registration_requires_email_confirmation != null
-            && registration_requires_email_confirmation.booleanValue();
+        return registration_requires_email_confirmation != null && registration_requires_email_confirmation;
     }
 
 
@@ -2774,7 +2762,7 @@ public class ManagementServiceImpl implements ManagementService {
         Boolean notify_admin_of_new_users = ( Boolean ) em
                 .getProperty( new SimpleEntityRef( Application.ENTITY_TYPE, applicationId ),
                         NOTIFY_ADMIN_OF_NEW_USERS );
-        return notify_admin_of_new_users != null && notify_admin_of_new_users.booleanValue();
+        return notify_admin_of_new_users != null && notify_admin_of_new_users;
     }
 
 
@@ -2838,9 +2826,10 @@ public class ManagementServiceImpl implements ManagementService {
 
     public void sendAppUserConfirmationEmail( UUID applicationId, User user ) throws Exception {
         String token = getConfirmationTokenForAppUser(applicationId, user.getUuid());
+        OrganizationConfig orgConfig = getOrganizationConfigForApplication(applicationId);
+        String confirmationPropertyUrl = orgConfig.getFullUrlTemplate(WorkflowUrl.USER_CONFIRMATION_URL);
         String confirmation_url =
-                buildUserAppUrl( applicationId, properties.getProperty( PROPERTIES_USER_CONFIRMATION_URL ), user,
-                        token );
+                buildUserAppUrl( applicationId, confirmationPropertyUrl, user, token);
 
     /*
      * String confirmation_url = String.format(
@@ -2862,14 +2851,16 @@ public class ManagementServiceImpl implements ManagementService {
 
     public void sendAdminRequestAppUserActivationEmail( UUID applicationId, User user ) throws Exception {
         String token = getActivationTokenForAppUser(applicationId, user.getUuid());
+        OrganizationInfo organization = this.getOrganizationForApplication( applicationId );
+        OrganizationConfig orgConfig = getOrganizationConfigByUuid(organization.getUuid());
+        String activationPropertyUrl = orgConfig.getFullUrlTemplate(WorkflowUrl.USER_ACTIVATION_URL);
         String activation_url =
-                buildUserAppUrl(applicationId, properties.getProperty(PROPERTIES_USER_ACTIVATION_URL), user, token);
+                buildUserAppUrl(applicationId, activationPropertyUrl, user, token);
     /*
      * String activation_url = String.format(
      * properties.getProperty(PROPERTIES_USER_ACTIVATION_URL),
      * applicationId.toString(), user.getUuid().toString()) + "?token=" + token;
      */
-        OrganizationInfo organization = this.getOrganizationForApplication( applicationId );
         this.sendOrganizationEmail( organization, "Request For User Account Activation " + user.getEmail(), emailMsg(
                 hashMap( "organization_name", organization.getName() ).map( "activation_url", activation_url ),
                 PROPERTIES_EMAIL_ADMIN_USER_ACTIVATION ) );
@@ -3087,7 +3078,7 @@ public class ManagementServiceImpl implements ManagementService {
         Group org = em.get( orgId, Group.class );
 
         if ( org == null ) {
-            throw new EntityNotFoundException( String.format( "Could not find organization with id {}", orgId ) );
+            throw new EntityNotFoundException( String.format( "Could not find organization with id %s", orgId.toString() ) );
         }
 
         org.setProperties( props );
@@ -3175,8 +3166,12 @@ public class ManagementServiceImpl implements ManagementService {
     private Set<CredentialsInfo> readUserPasswordHistory( UUID appId, UUID ownerId ) throws Exception {
         EntityManager em = emf.getEntityManager( appId );
         Entity owner = em.get( new SimpleEntityRef("user", ownerId ));
-        return ( Set<CredentialsInfo> ) em
-                .getDictionaryElementValue(owner, DICTIONARY_CREDENTIALS, USER_PASSWORD_HISTORY);
+
+        @SuppressWarnings("unchecked")
+        Set<CredentialsInfo> credInfo =
+                (Set<CredentialsInfo>)em.getDictionaryElementValue(owner, DICTIONARY_CREDENTIALS, USER_PASSWORD_HISTORY);
+
+        return credInfo;
     }
 
 
@@ -3217,11 +3212,7 @@ public class ManagementServiceImpl implements ManagementService {
     private boolean verify( UUID applicationId, UUID userId, String password ) throws Exception {
         CredentialsInfo ci = readUserPasswordCredentials( applicationId, userId, User.ENTITY_TYPE );
 
-        if ( ci == null ) {
-            return false;
-        }
-
-        return encryptionService.verify( password, ci, userId, applicationId );
+        return (ci != null) && encryptionService.verify( password, ci, userId, applicationId );
     }
 
 
@@ -3263,13 +3254,11 @@ public class ManagementServiceImpl implements ManagementService {
 
     private boolean getBooleanProperty(String key) {
         String obj = getProperty(key);
-        if(StringUtils.isEmpty(obj))
-            return false;
-        else
-            return Boolean.parseBoolean(obj);
+        return !StringUtils.isEmpty(obj) && Boolean.parseBoolean(obj);
     }
 
-    private OrganizationConfig getOrganizationConfigDefaultsOnly() throws Exception {
+    @Override
+    public OrganizationConfig getOrganizationConfigDefaultsOnly() {
         return new OrganizationConfig(orgConfigProperties);
     }
 

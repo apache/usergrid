@@ -75,8 +75,8 @@ public class OrganizationConfigIT {
 
         // insert a config value for the org
         Map<String, Object> propMap = new HashMap<>();
-        String testKey = OrganizationConfigProps.PROPERTIES_ADMIN_RESETPW_URL;
-        String testValue = "***TEST VALUE***";
+        String testKey = OrganizationConfigProps.ORGPROPERTIES_ADMIN_SYSADMIN_EMAIL;
+        String testValue = "orgconfigtest@usergrid.com";
         propMap.put(testKey, testValue);
         orgConfig.addProperties(propMap, false);
         setup.getMgmtSvc().updateOrganizationConfig(orgConfig);
