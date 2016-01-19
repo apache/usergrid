@@ -171,23 +171,9 @@ usergrid.management.notify_sysadmin_of_new_admin_users=true
 
 # Redirect path when request come in for TLD
 usergrid.redirect_root=${baseUrl}/status
+usergrid.api.url.base=${baseUrl}
 
-usergrid.view.management.organizations.organization.activate=${baseUrl}/accounts/welcome
-usergrid.view.management.organizations.organization.confirm=${baseUrl}/accounts/welcome
 \n\
-usergrid.view.management.users.user.activate=${baseUrl}/accounts/welcome
-usergrid.view.management.users.user.confirm=${baseUrl}/accounts/welcome
-
-usergrid.admin.confirmation.url=${baseUrl}/management/users/%s/confirm
-usergrid.user.confirmation.url=${baseUrl}/%s/%s/users/%s/confirm
-
-usergrid.organization.activation.url=${baseUrl}/management/organizations/%s/activate
-
-usergrid.admin.activation.url=${baseUrl}/management/users/%s/activate
-usergrid.user.activation.url=${baseUrl}%s/%s/users/%s/activate
-
-usergrid.admin.resetpw.url=${baseUrl}/management/users/%s/resetpw
-usergrid.user.resetpw.url=${baseUrl}/%s/%s/users/%s/resetpw
 
 
 usergrid.metrics.graphite.host=${graphite}
