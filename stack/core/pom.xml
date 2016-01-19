@@ -177,11 +177,6 @@
       <artifactId>commons-beanutils</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.zookeeper</groupId>
-      <artifactId>zookeeper</artifactId>
-    </dependency>
-
     <!-- SUN, Javax Package, and Other Commercial Dependencies -->
 
     <dependency>
@@ -218,6 +213,11 @@
       <groupId>com.netflix.curator</groupId>
       <artifactId>curator-recipes</artifactId>
     </dependency>
+
+      <dependency>
+          <groupId>com.netflix.astyanax</groupId>
+          <artifactId>astyanax-recipes</artifactId>
+      </dependency>
 
     <dependency>
       <groupId>com.google.guava</groupId>

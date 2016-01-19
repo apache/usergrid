@@ -74,7 +74,7 @@ public interface IndexProcessorFig extends GuicyFig {
     /**
      * The number of worker threads used when handing off messages from the SQS thread
      */
-    @Default( "20" )
+    @Default( "5" )
     @Key( EVENT_CONCURRENCY_FACTOR )
     int getEventConcurrencyFactor();
 

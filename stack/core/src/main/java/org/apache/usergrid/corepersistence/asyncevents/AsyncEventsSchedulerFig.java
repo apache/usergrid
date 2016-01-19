@@ -56,7 +56,7 @@ public interface AsyncEventsSchedulerFig extends GuicyFig {
 
 
 
-    @Default( "100" )
+    @Default( "40" )
     @Key( IO_SCHEDULER_THREADS )
     int getMaxIoThreads();
 
