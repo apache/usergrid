@@ -71,8 +71,8 @@ public interface ManagementService {
     public ApplicationInfo createApplication( UUID organizationId, String applicationName ) throws Exception;
     public ApplicationInfo createApplication( UUID organizationId, String applicationName,
                                               Map<String, Object> properties ) throws Exception;
-    public ApplicationInfo createApplication( UUID organizationId, String applicationName, UUID applicationId,
-                                              Map<String, Object> properties ) throws Exception;
+    public ApplicationInfo createApplication(UUID organizationId, String applicationName, UUID applicationId,
+                                             Map<String, Object> properties, boolean forMigration) throws Exception;
 
     public OrganizationInfo createOrganization(String organizationName, UserInfo user, boolean activated)
             throws Exception;
