@@ -111,6 +111,86 @@ public class AssetResourceIT extends AbstractRestIT {
 
 
     @Test
+    public void verifyMetadataChanged() throws Exception {
+
+        this.refreshIndex();
+
+        // post an entity
+
+        Map<String, String> payload = hashMap( "name", "verifed" );
+        ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( payload );
+        UUID assetId = postResponse.getEntities().get(0).getUuid();
+        assertNotNull( assetId );
+
+        // post asset to that entity
+
+        byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
+        FormDataMultiPart form = new FormDataMultiPart()
+            //TODO:Fix name field in assets, i mean what are they supposed to do?
+            .field( "name", "verifyMetadataChangedTest" )
+            .field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+        ApiResponse putResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
+        this.refreshIndex();
+
+        // get entity and check asset metadata
+
+        ApiResponse getResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).get( ApiResponse.class );
+        Entity entity = getResponse.getEntities().get( 0 );
+        Map<String, Object> fileMetadata = (Map<String, Object>)entity.get("file-metadata");
+        long lastModified = Long.parseLong( fileMetadata.get( AssetUtils.LAST_MODIFIED ).toString() );
+
+        assertEquals( assetId,      entity.getUuid() );
+        assertEquals( "image/jpeg", fileMetadata.get( AssetUtils.CONTENT_TYPE ) );
+        assertEquals( 7979,         fileMetadata.get( AssetUtils.CONTENT_LENGTH ));
+
+        // get asset and check size
+
+        InputStream is = pathResource( getOrgAppPath( "foos/" + assetId ) ).getAssetAsStream();
+        byte[] foundData = IOUtils.toByteArray( is );
+        assertEquals( 7979, foundData.length );
+
+        // upload new asset to entity, then check that it was updated
+
+
+        form = new FormDataMultiPart()
+            .field( "name", "verifyMetadataChangedTest" )
+            .field( "file", this.getClass().getResourceAsStream( "/test.txt" ) ,MediaType.TEXT_PLAIN_TYPE);
+        pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
+
+        //re-get to verify data was saved to backend
+        getResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).get( ApiResponse.class );
+        entity = getResponse.getEntities().get( 0 );
+        fileMetadata = (Map<String, Object>)entity.get("file-metadata");
+        long justModified = Long.parseLong( fileMetadata.get( AssetUtils.LAST_MODIFIED ).toString() );
+        assertNotEquals( lastModified, justModified );
+
+        assertEquals( assetId,      entity.getUuid() );
+        assertNotNull(entity.get( "file" ));
+        assertEquals( "text/plain", fileMetadata.get( AssetUtils.CONTENT_TYPE ) );
+        assertEquals( 879,         fileMetadata.get( AssetUtils.CONTENT_LENGTH ));
+
+        //now change it back to the picture asset
+        data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
+        form = new FormDataMultiPart()
+            .field( "name", "verifyMetadataChangedTest" )
+            .field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+        putResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
+        this.refreshIndex();
+
+        //verify that data was correctly written to backend
+        getResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).get( ApiResponse.class );
+        entity = getResponse.getEntities().get( 0 );
+        fileMetadata = (Map<String, Object>)entity.get("file-metadata");
+        Long.parseLong( fileMetadata.get( AssetUtils.LAST_MODIFIED ).toString() );
+
+        assertNull(entity.get( "file" ));
+        assertEquals( assetId,      entity.getUuid() );
+        assertEquals( "image/jpeg", fileMetadata.get( AssetUtils.CONTENT_TYPE ) );
+        assertEquals( 7979,         fileMetadata.get( AssetUtils.CONTENT_LENGTH ));
+    }
+
+
+    @Test
     public void multipartPostFormOnDynamicEntity() throws Exception {
 
         this.refreshIndex();

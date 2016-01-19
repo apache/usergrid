@@ -123,6 +123,7 @@ public class NotifiersServiceIT extends AbstractServiceIT {
         }
     }
 
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. Mock doesn't work")
     @Test
     public void goodAPNsCreation() throws Exception {
 
@@ -157,7 +158,7 @@ public class NotifiersServiceIT extends AbstractServiceIT {
         app.put("environment", "development");
 
         InputStream fis = getClass().getClassLoader().getResourceAsStream(
-                "pushtest_prod.p12");
+                "pushtest_dev_recent.p12");
         byte[] certBytes = IOUtils.toByteArray(fis);
         app.put("p12Certificate", certBytes);
         fis.close();

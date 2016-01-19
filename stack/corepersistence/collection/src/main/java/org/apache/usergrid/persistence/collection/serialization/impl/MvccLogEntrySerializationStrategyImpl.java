@@ -37,7 +37,7 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccLogEntryImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -64,7 +64,7 @@ public abstract class MvccLogEntrySerializationStrategyImpl<K> implements MvccLo
 
     private static final StageSerializer SER = new StageSerializer();
 
-    private final MultiTennantColumnFamily<ScopedRowKey<K>, UUID> CF_ENTITY_LOG;
+    private final MultiTenantColumnFamily<ScopedRowKey<K>, UUID> CF_ENTITY_LOG;
 
 
     protected final Keyspace keyspace;
@@ -289,7 +289,7 @@ public abstract class MvccLogEntrySerializationStrategyImpl<K> implements MvccLo
     }
 
 
-    protected abstract MultiTennantColumnFamily<ScopedRowKey<K>, UUID> getColumnFamily();
+    protected abstract MultiTenantColumnFamily<ScopedRowKey<K>, UUID> getColumnFamily();
 
 
     protected abstract ScopedRowKey<K> createKey( final Id applicationId, final Id entityId );

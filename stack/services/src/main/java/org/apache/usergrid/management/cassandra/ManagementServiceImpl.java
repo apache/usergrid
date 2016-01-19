@@ -155,17 +155,25 @@ public class ManagementServiceImpl implements ManagementService {
     @Autowired
     protected MailUtils mailUtils;
 
-    @Autowired
-    protected Injector injector;
-
     protected EncryptionService encryptionService;
 
     protected CacheFactory cacheFactory;
 
+    protected AggregationServiceFactory aggregationServiceFactory;
+
+    protected ApplicationService service;
+
 
 
     /** Must be constructed with a CassandraClientPool. */
-    public ManagementServiceImpl() {
+    public ManagementServiceImpl(Injector injector) {
+
+        // Use the injector to get our guice dependencies
+        this.lockManager = injector.getInstance(LockManager.class);
+        this.cacheFactory = injector.getInstance( CacheFactory.class );
+        this.aggregationServiceFactory = injector.getInstance(AggregationServiceFactory.class);
+        this.service = injector.getInstance(ApplicationService.class);
+
     }
 
     @Autowired
@@ -259,16 +267,6 @@ public class ManagementServiceImpl implements ManagementService {
         this.smf = smf;
     }
 
-
-    public LockManager getLockManager() {
-        return lockManager;
-    }
-
-
-    @Autowired
-    public void setLockManager( LockManager lockManager ) {
-        this.lockManager = lockManager;
-    }
 
 
     /** @param encryptionService the encryptionService to set */
@@ -1654,7 +1652,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
-        
+
         if(em.getCollection(organization.getUuid() ,"users",Query.fromQL( "select * where uuid ="+user.getUuid() ),Level.IDS ).size() >0){
             if(logger.isDebugEnabled()) {
                 logger.debug( "Found value: {} already in collection", user.getName() );
@@ -1747,9 +1745,6 @@ public class ManagementServiceImpl implements ManagementService {
                     + ")</a> created a new application named " + applicationName, null );
         }
 
-        if ( cacheFactory == null ) {
-            cacheFactory = injector.getInstance( CacheFactory.class );
-        }
         ScopedCache scopedCache = cacheFactory.getScopedCache(
             new CacheScope( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" )));
         scopedCache.invalidate();
@@ -1820,7 +1815,6 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public long getApplicationSize(final UUID applicationId) {
-        AggregationServiceFactory aggregationServiceFactory = injector.getInstance(AggregationServiceFactory.class);
         AggregationService aggregationService = aggregationServiceFactory.getAggregationService();
         ApplicationScope applicationScope =CpNamingUtils.getApplicationScope(applicationId);
         return aggregationService.getApplicationSize(applicationScope);
@@ -1828,7 +1822,6 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public Map<String,Long> getEachCollectionSize(final UUID applicationId) {
-        AggregationServiceFactory aggregationServiceFactory = injector.getInstance(AggregationServiceFactory.class);
         AggregationService aggregationService = aggregationServiceFactory.getAggregationService();
         ApplicationScope applicationScope =CpNamingUtils.getApplicationScope(applicationId);
         return aggregationService.getEachCollectionSize(applicationScope);
@@ -1836,7 +1829,6 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public long getCollectionSize(final UUID applicationId, final String collectionName) {
-        AggregationServiceFactory aggregationServiceFactory = injector.getInstance(AggregationServiceFactory.class);
         AggregationService aggregationService = aggregationServiceFactory.getAggregationService();
         ApplicationScope applicationScope =CpNamingUtils.getApplicationScope(applicationId);
         return aggregationService.getSize(applicationScope,
@@ -3240,7 +3232,6 @@ public class ManagementServiceImpl implements ManagementService {
             throw new IllegalArgumentException("Can't delete from management app");
         }
 
-        ApplicationService service = injector.getInstance(ApplicationService.class);
         return service.deleteAllEntities(CpNamingUtils.getApplicationScope(applicationId),limit);
     }
 

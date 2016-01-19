@@ -55,7 +55,7 @@ public class TestUtils {
 
 
         try {
-            keyspace.createKeyspace( options );
+            keyspace.createKeyspaceIfNotExists( options );
         }
         catch ( Throwable t ) {
           logger.info( "Error on creating keyspace, ignoring", t );
@@ -68,7 +68,11 @@ public class TestUtils {
 
     public static <K, C> void createColumnFamiliy(final Keyspace keyspace, final ColumnFamily<K, C> columnFamily, final Map<String, Object> options){
         try{
-            keyspace.createColumnFamily( columnFamily, new HashMap<String, Object>() );
+
+            if(keyspace.describeKeyspace().getColumnFamily(columnFamily.getName()) == null){
+                keyspace.createColumnFamily( columnFamily, new HashMap<String, Object>() );
+            }
+
         }catch(Exception e){
            logger.error( "Error on creating column family, ignoring" , e);
         }
