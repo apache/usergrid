@@ -1619,12 +1619,12 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public ApplicationInfo createApplication( UUID organizationId, String applicationName,
                                               Map<String, Object> properties ) throws Exception {
-        return createApplication(organizationId, applicationName, null, properties);
+        return createApplication(organizationId, applicationName, null, properties, false);
     }
 
     @Override
-    public ApplicationInfo createApplication( UUID organizationId, String applicationName, UUID applicationId,
-                                              Map<String, Object> properties ) throws Exception {
+    public ApplicationInfo createApplication(UUID organizationId, String applicationName, UUID applicationId,
+                                             Map<String, Object> properties, boolean forMigration) throws Exception {
 
         if ( ( organizationId == null ) || ( applicationName == null ) ) {
             return null;
@@ -1636,10 +1636,10 @@ public class ManagementServiceImpl implements ManagementService {
 
         OrganizationInfo organizationInfo = getOrganizationByUuid( organizationId );
         Entity appInfo = emf.createApplicationV2(
-            organizationInfo.getName(), applicationName, applicationId ,properties);
+            organizationInfo.getName(), applicationName, applicationId ,properties, forMigration);
 
-        // only generate a client secret on app creation when you're creating an app that doesn't already exist
-        if( applicationId == null ){
+        // only generate a client secret on app creation when the app is not being created during appinfo migration
+        if( !forMigration ){
 
             writeUserToken( smf.getManagementAppId(), appInfo,
                 encryptionService.plainTextCredentials(
