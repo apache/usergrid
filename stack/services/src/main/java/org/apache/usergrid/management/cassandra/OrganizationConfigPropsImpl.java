@@ -68,6 +68,7 @@ public class OrganizationConfigPropsImpl implements OrganizationConfigProps {
 
     public OrganizationConfigPropsImpl(Properties properties, Map<String, String> map) {
         this.properties = new Properties(properties);
+        this.properties.putAll(properties);
 
         this.defaultProperties = new HashMap<>(noConfigDefaults);
         // add any corresponding properties to default props map
@@ -101,7 +102,9 @@ public class OrganizationConfigPropsImpl implements OrganizationConfigProps {
 
     @Override
     public Properties getPropertiesMap() {
-        return new Properties(properties);
+        Properties ret = new Properties(properties);
+        ret.putAll(properties);
+        return ret;
     }
 
     @Override
@@ -125,9 +128,16 @@ public class OrganizationConfigPropsImpl implements OrganizationConfigProps {
         String propertyValue;
 
         if (orgPropertyNameValid(name)) {
-            // return from org-specific properties, if set
-            propertyValue = orgProperties.containsKey(name) ?
-                    orgProperties.get(name) : defaultProperties.get(name);
+            if (orgProperties.containsKey(name)) {
+                // return from org-specific properties
+                propertyValue = orgProperties.get(name);
+            } else if (properties.containsKey(name)) {
+                // return from properties file
+                propertyValue = (String)properties.get(name);
+            } else {
+                // return the default
+                propertyValue = defaultProperties.get(name);
+            }
         } else {
             // not an org config item, return from properties
             propertyValue = properties.getProperty(name);
