@@ -583,4 +583,37 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         assertNotNull( em.get( user.getUuid() ) );
     }
+
+
+    @Test
+    public void testFilteringOfDuplicateEdges() throws Exception {
+        LOG.info( "EntityManagerIT.testFilteringOfDuplicateEdges" );
+
+        EntityManager em = app.getEntityManager();
+
+        Map<String, Object> properties = new LinkedHashMap<String, Object>();
+        properties.put( "name", "fluffy1" );
+
+        Entity entity = em.create( "fluffy", properties );
+
+
+        EntityRef appRef =  new SimpleEntityRef("application", app.getId());
+        EntityRef entityRef = new SimpleEntityRef(entity.getType(), entity.getUuid());
+
+        assertNotNull( entity );
+
+
+        // create duplicate edges
+        em.addToCollection(appRef, "fluffies", entityRef);
+        em.addToCollection(appRef, "fluffies", entityRef);
+
+        //app.refreshIndex();
+
+        Results results = em.getCollection(appRef,
+            "fluffies", null, 10, Level.ALL_PROPERTIES, true);
+        
+        // we should be filtering duplicate edges so only assert 1 result back and not the # of edges
+        assertEquals(1, results.getEntities().size());
+    }
+
 }
