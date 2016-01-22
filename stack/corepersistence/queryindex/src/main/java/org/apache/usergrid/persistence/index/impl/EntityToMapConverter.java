@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.index.impl;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexEdge;
@@ -95,7 +96,7 @@ public class EntityToMapConverter {
         //now visit our entity
         final FieldParser parser = new EntityMappingParser();
 
-        final List<EntityField> fieldsToIndex =   parser.parse( entityMap );
+        final Set<EntityField> fieldsToIndex =   parser.parse( entityMap );
 
 
         //add our fields

@@ -409,7 +409,9 @@ public class CpRelationManager implements RelationManager {
             }
         } ).toBlocking().lastOrDefault( null );
 
-        //check if we need to reverse our edges
+
+        // remove any duplicate edges (keeps the duplicate edge with same timestamp)
+        removeDuplicateEdgesAsync(gm, edge);
 
 
         if ( logger.isDebugEnabled() ) {
@@ -696,28 +698,8 @@ public class CpRelationManager implements RelationManager {
         indexService.queueNewEdge( applicationScope, targetEntity, edge );
 
 
-        //now read all older versions of an edge, and remove them.  Finally calling delete
-        final SearchByEdge searchByEdge =
-            new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), Long.MAX_VALUE,
-                SearchByEdgeType.Order.DESCENDING, Optional.absent() );
-
-
-        //load our versions, only retain the most recent one
-        gm.loadEdgeVersions(searchByEdge).skip(1).flatMap(edgeToDelete -> {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Marking edge {} for deletion", edgeToDelete);
-            }
-            return gm.markEdge(edgeToDelete );
-        }).lastOrDefault(null).doOnNext(lastEdge -> {
-            //no op if we hit our default
-            if (lastEdge == null) {
-                return;
-            }
-
-            //don't queue delete b/c that de-indexes, we need to delete the edges only since we have a version still existing to index.
-
-            gm.deleteEdge(lastEdge).toBlocking().lastOrDefault(null); // this should throw an exception
-        }).toBlocking().lastOrDefault(null);//this should throw an exception
+        // remove any duplicate edges (keeps the duplicate edge with same timestamp)
+        removeDuplicateEdgesAsync(gm, edge);
 
 
         return connection;
@@ -1023,4 +1005,29 @@ public class CpRelationManager implements RelationManager {
         }
         return entity;
     }
+
+    private void removeDuplicateEdgesAsync(GraphManager gm, Edge edge){
+
+        //now read all older versions of an edge, and remove them.  Finally calling delete
+        final SearchByEdge searchByEdge =
+            new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), Long.MAX_VALUE,
+                SearchByEdgeType.Order.DESCENDING, Optional.absent() );
+
+        //load our versions, only retain the most recent one
+        gm.loadEdgeVersions(searchByEdge).skip(1).flatMap(edgeToDelete -> {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Duplicate edge. Marking edge {} for deletion", edgeToDelete);
+            }
+            return gm.markEdge(edgeToDelete );
+        }).lastOrDefault(null).doOnNext(lastEdge -> {
+            //no op if we hit our default
+            if (lastEdge == null) {
+                return;
+            }
+            //don't queue delete b/c that de-indexes, we need to delete the edges only since we have a version still existing to index.
+            gm.deleteEdge(lastEdge).toBlocking().lastOrDefault(null); // this should throw an exception
+        }).toBlocking().lastOrDefault(null);//this should throw an exception
+
+    }
+
 }

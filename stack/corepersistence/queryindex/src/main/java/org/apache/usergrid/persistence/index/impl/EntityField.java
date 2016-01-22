@@ -140,5 +140,16 @@ public class EntityField extends HashMap<String, Object> {
         return field;
     }
 
+    /**
+     * Set a null value into the field
+     */
+    public static EntityField create( final String fieldName ) {
+        EntityField field = new EntityField();
+        field.put( IndexingUtils.FIELD_NAME, fieldName.toLowerCase() );
+        field.put( IndexingUtils.FIELD_NULL, null );
+
+        return field;
+    }
+
 
 }
