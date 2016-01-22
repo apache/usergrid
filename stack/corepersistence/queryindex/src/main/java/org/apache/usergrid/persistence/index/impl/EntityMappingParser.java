@@ -52,7 +52,7 @@ public class EntityMappingParser implements FieldParser {
     /**
      * List of all field tuples to return
      */
-    private List<EntityField> fields = new ArrayList<>();
+    private Set<EntityField> fields = new HashSet<>();
 
 
     /**
@@ -91,6 +91,12 @@ public class EntityMappingParser implements FieldParser {
     private void visit( final double value ) {
         fields.add( EntityField.create( fieldStack.peek(), value ) );
     }
+
+    private void visitNull( ) {
+        fields.add( EntityField.create( fieldStack.peek()) );
+    }
+
+
 
 
     private void visit( final float value ) {
@@ -192,6 +198,12 @@ public class EntityMappingParser implements FieldParser {
             return;
         }
 
+        if ( object == null ) {
+
+            visitNull();
+            return;
+        }
+
 
     }
 
@@ -240,7 +252,7 @@ public class EntityMappingParser implements FieldParser {
     /**
      * Parse the map field
      */
-    public List<EntityField> parse( final Map<String, ?> map ) {
+    public Set<EntityField> parse(final Map<String, ?> map ) {
         iterate( map );
 
         return fields;

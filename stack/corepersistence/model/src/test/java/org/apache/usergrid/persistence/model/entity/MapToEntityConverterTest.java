@@ -70,6 +70,7 @@ public class MapToEntityConverterTest {
         data.put("floatField", floatField);
         data.put("location", coordinates);
         data.put("objectField", objectField);
+        data.put("nullField", null);
 
 
         // convert the map to an entity
@@ -86,6 +87,7 @@ public class MapToEntityConverterTest {
         assertTrue(entity.getField("floatField").getTypeName() == FieldTypeName.FLOAT);
         assertTrue(entity.getField("location").getTypeName() == FieldTypeName.LOCATION);
         assertTrue(entity.getField("objectField").getTypeName() == FieldTypeName.OBJECT);
+        assertTrue(entity.getField("nullField").getTypeName() == FieldTypeName.NULL);
 
     }
 
@@ -110,6 +112,32 @@ public class MapToEntityConverterTest {
 
         // make sure the nested array got converted into a ListField
         assertTrue(entity.getField("parentArray").getTypeName() == FieldTypeName.LIST);
+    }
+
+
+    @Test
+    public void testNullWithinArrays() {
+
+        // build top-level map
+        final Map<String,Object> data = new HashMap<>(1);
+
+        final List<Object> arrayNullValues = new ArrayList<>(1);
+        arrayNullValues.add(null);
+        arrayNullValues.add(null);
+
+        // add the nested list to the map
+        data.put("arrayNullValues", arrayNullValues);
+
+        // convert the map to an entity
+        MapToEntityConverter converter = new MapToEntityConverter();
+        Entity entity = converter.fromMap(data, true);
+
+        // make sure the nested array got converted into a ListField
+        assertTrue(entity.getField("arrayNullValues").getTypeName() == FieldTypeName.LIST);
+
+        List arrayReturned = (List) entity.getField("arrayNullValues").getValue();
+
+        assertTrue( arrayReturned.get(0) == null);
     }
 
 }
