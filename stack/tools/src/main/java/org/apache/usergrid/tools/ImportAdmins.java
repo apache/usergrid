@@ -52,6 +52,7 @@ import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
 
 import org.apache.usergrid.persistence.index.query.Identifier;
 
+
 /**
  * Import Admin Users and metadata including organizations and passwords.
  *
@@ -119,9 +120,8 @@ public class ImportAdmins extends ToolBase {
     @SuppressWarnings("static-access")
     public Options createOptions() {
 
-        Option hostOption = OptionBuilder.withArgName("host")
-                .hasArg()
-                .withDescription("Cassandra host").create("host");
+        // inherit parent options
+        Options options = super.createOptions();
 
         Option inputDir = OptionBuilder
                 .hasArg()
@@ -139,10 +139,8 @@ public class ImportAdmins extends ToolBase {
                 .withDescription("Print on the console an echo of the content written to the file")
                 .create(VERBOSE);
 
-        Options options = new Options();
-        options.addOption(hostOption);
-        options.addOption(writeThreads);
-        options.addOption(auditThreads);
+        options.addOption( writeThreads );
+        options.addOption( auditThreads );
         options.addOption( inputDir );
         options.addOption( verbose );
 
@@ -504,73 +502,8 @@ public class ImportAdmins extends ToolBase {
                 logger.warn("User {} has no dictionaries", entityRef.getUuid() );
             }
 
-        } else { // this is a duplicate user, so merge orgs
-
-            logger.info("Processing duplicate username={} email={}", dup.email, dup.username );
-
-            Identifier identifier = dup.email != null ?
-                Identifier.fromEmail( dup.email ) : Identifier.from( dup.username );
-            User originalUser = em.get( em.getUserByIdentifier(identifier), User.class );
-
-            // get map of original user's orgs
-
-            UserInfo originalUserInfo = managementService.getAdminUserByEmail( originalUser.getEmail() );
-            Map<String, Object> originalUserOrgData =
-                    managementService.getAdminUserOrganizationData( originalUser.getUuid() );
-            Map<String, Map<String, Object>> originalUserOrgs =
-                    (Map<String, Map<String, Object>>) originalUserOrgData.get( "organizations" );
-
-            // loop through duplicate user's orgs and give orgs to original user
-
-            List<Object> organizationsList = (List<Object>) metadata.get("organizations");
-            for (Object orgObject : organizationsList) {
-
-                Map<String, Object> orgMap = (Map<String, Object>) orgObject;
-                UUID orgUuid = UUID.fromString( (String) orgMap.get( "uuid" ) );
-                String orgName = (String) orgMap.get( "name" );
-
-                if (originalUserOrgs.get( orgName ) == null) { // original user does not have this org
-
-                    OrganizationInfo orgInfo = managementService.getOrganizationByUuid( orgUuid );
-
-                    if (orgInfo == null) { // org does not exist yet, create it and add original user to it
-                        try {
-                            managementService.createOrganization( orgUuid, orgName, originalUserInfo, false );
-                            orgInfo = managementService.getOrganizationByUuid( orgUuid );
-
-                            logger.debug( "Created new org {} for user {}:{}:{} from duplicate user {}:{}",
-                                new Object[]{
-                                        orgInfo.getName(),
-                                        originalUser.getUsername(),
-                                        originalUser.getEmail(),
-                                        originalUser.getUuid(),
-                                        dup.username, dup.email
-                                });
-
-                        } catch (DuplicateUniquePropertyExistsException dpee) {
-                            logger.debug( "Org {} already exists", orgName );
-                        }
-                    } else { // org exists so add original user to it
-                        try {
-                            managementService.addAdminUserToOrganization( originalUserInfo, orgInfo, false );
-                            logger.debug( "Added to org user {}:{}:{} from duplicate user {}:{}",
-                                    new Object[]{
-                                            orgInfo.getName(),
-                                            originalUser.getUsername(),
-                                            originalUser.getEmail(),
-                                            originalUser.getUuid(),
-                                            dup.username, dup.email
-                                    });
-
-                        } catch (Exception e) {
-                            logger.error( "Error Adding user {} to org {}",
-                                    new Object[]{originalUserInfo.getEmail(), orgName} );
-                        }
-                    }
-
-                } // else original user already has this org
-
-            }
+        } else { // let the DuplicateAdminRepair tool handle merging of admins
+            logger.info("Not processing duplicate username={} email={}", dup.email, dup.username );
         }
     }
 

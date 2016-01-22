@@ -77,7 +77,13 @@ public class MapToEntityConverter{
                 entity.setField( new LongField( fieldName, (Long)value, unique ));
 
             } else if ( value instanceof List) {
-                entity.setField( listToListField( fieldName, (List)value ));
+
+                Field field = listToListField( fieldName, (List)value );
+                if(field == null){
+                    entity.setField( new NullField( fieldName, unique));
+                }else{
+                    entity.setField( listToListField( fieldName, (List)value ));
+                }
 
             } else if ( value instanceof UUID) {
                 entity.setField( new UUIDField( fieldName, (UUID)value, unique ));
@@ -88,7 +94,10 @@ public class MapToEntityConverter{
             } else if ( value instanceof Enum ) {
                 entity.setField( new StringField( fieldName, value.toString(), unique ));
 
-            } else if ( value != null ) {
+            } else if ( value == null ){
+                entity.setField( new NullField( fieldName, unique ));
+
+            } else {
                 byte[] valueSerialized;
                 try {
                     valueSerialized = objectMapper.writeValueAsBytes( value );
@@ -137,7 +146,10 @@ public class MapToEntityConverter{
         } else if ( sample instanceof Long ) {
             return new ArrayField<Long>( fieldName, (List<Long>)list );
 
-        } else {
+        } else if ( sample == null ) {
+            return new ArrayField<Object>( fieldName, (List<Object>)list );
+
+        } else{
             throw new RuntimeException("Unknown type " + sample.getClass().getName());
         }
     }
