@@ -229,7 +229,9 @@ public interface ManagementService {
                                           String objectType, String objectName, String title, String content )
             throws Exception;
 
-    public void removeAdminUserFromOrganization( UUID userId, UUID organizationId ) throws Exception;
+    public void removeAdminUserFromOrganization(UUID userId, UUID organizationId ) throws Exception;
+
+    public void removeAdminUserFromOrganization(UUID userId, UUID organizationId, boolean force ) throws Exception;
 
     public void removeOrganizationApplication( UUID organizationId, UUID applicationId ) throws Exception;
 

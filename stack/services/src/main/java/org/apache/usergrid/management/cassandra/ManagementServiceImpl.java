@@ -1585,7 +1585,13 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public void removeAdminUserFromOrganization( UUID userId, UUID organizationId ) throws Exception {
+    public void removeAdminUserFromOrganization(UUID userId, UUID organizationId ) throws Exception {
+        removeAdminUserFromOrganization( userId, organizationId, false );
+    }
+
+
+    @Override
+    public void removeAdminUserFromOrganization(UUID userId, UUID organizationId, boolean force) throws Exception {
 
         if ( ( userId == null ) || ( organizationId == null ) ) {
             return;
@@ -1594,7 +1600,7 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         try {
-            if ( em.getCollection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), "users", null, 2,
+            if ( !force && em.getCollection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), "users", null, 2,
                     Level.IDS, false ).size() <= 1 ) {
                 throw new Exception();
             }
