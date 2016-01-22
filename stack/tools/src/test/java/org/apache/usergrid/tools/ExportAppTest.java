@@ -34,10 +34,6 @@ import static org.junit.Assert.assertTrue;
 public class ExportAppTest extends AbstractServiceIT {
     static final Logger logger = LoggerFactory.getLogger( ExportAppTest.class );
 
-    int NUM_COLLECTIONS = 10;
-    int NUM_ENTITIES = 50;
-    int NUM_CONNECTIONS = 3;
-
 
     @org.junit.Test
     public void testBasicOperation() throws Exception {
