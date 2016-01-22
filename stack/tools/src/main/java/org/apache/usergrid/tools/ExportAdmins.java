@@ -16,7 +16,6 @@
  */
 package org.apache.usergrid.tools;
 
-
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import org.apache.commons.cli.CommandLine;
@@ -29,7 +28,6 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.utils.StringUtils;
 import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
@@ -38,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-
 
 
 /**
@@ -67,12 +64,11 @@ public class ExportAdmins extends ExportingToolBase {
     public static final String ADMIN_USER_METADATA_PREFIX = "admin-user-metadata";
 
     // map admin user UUID to list of organizations to which user belongs
-    private Map<UUID, List<Org>> userToOrgsMap = new HashMap<UUID, List<Org>>(100000);
+    private Map<UUID, List<Org>> userToOrgsMap = new HashMap<UUID, List<Org>>(50000);
 
-    private Map<String, UUID> orgNameToUUID = new HashMap<String, UUID>(100000);
+    private Map<String, UUID> orgNameToUUID = new HashMap<String, UUID>(50000);
 
-    private Set<UUID> orgsWritten = new HashSet<UUID>(100000);
-    private Set<String> orgsNamesWritten = new HashSet<String>(100000);
+    private Set<UUID> orgsWritten = new HashSet<UUID>(50000);
 
     private Set<UUID> duplicateOrgs = new HashSet<UUID>();
 
@@ -150,12 +146,10 @@ public class ExportAdmins extends ExportingToolBase {
         // start read queue workers
 
         BlockingQueue<UUID> readQueue = new LinkedBlockingQueue<UUID>();
-        List<AdminUserReader> readers = new ArrayList<AdminUserReader>();
         for (int i = 0; i < readThreadCount; i++) {
             AdminUserReader worker = new AdminUserReader( readQueue, writeQueue );
             Thread readerThread = new Thread( worker, "AdminUserReader-" + i );
             readerThread.start();
-            readers.add( worker );
         }
         logger.debug( readThreadCount + " read worker threads started" );
 
@@ -197,7 +191,7 @@ public class ExportAdmins extends ExportingToolBase {
         Options options = super.createOptions();
 
         Option readThreads = OptionBuilder
-            .hasArg().withType(0).withDescription("Read Threads -" + READ_THREAD_COUNT).create(READ_THREAD_COUNT);
+                .hasArg().withType(0).withDescription("Read Threads -" + READ_THREAD_COUNT).create(READ_THREAD_COUNT);
 
         options.addOption( readThreads );
         return options;
@@ -211,7 +205,7 @@ public class ExportAdmins extends ExportingToolBase {
 
         logger.info( "Building org map" );
 
-        ExecutorService execService = Executors.newFixedThreadPool( this.readThreadCount );
+        ExecutorService execService = Executors.newFixedThreadPool( readThreadCount );
 
         EntityManager em = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
         String queryString = "select *";
@@ -338,8 +332,8 @@ public class ExportAdmins extends ExportingToolBase {
                     String actionTaken = "Processed";
 
                     if (ignoreInvalidUsers && (task.orgNamesByUuid.isEmpty()
-                        || task.dictionariesByName.isEmpty()
-                        || task.dictionariesByName.get( "credentials" ).isEmpty())) {
+                            || task.dictionariesByName.isEmpty()
+                            || task.dictionariesByName.get( "credentials" ).isEmpty())) {
 
                         actionTaken = "Ignored";
 
@@ -348,9 +342,9 @@ public class ExportAdmins extends ExportingToolBase {
                     }
 
                     Map<String, Object> creds = (Map<String, Object>) (task.dictionariesByName.isEmpty() ?
-                        0 : task.dictionariesByName.get( "credentials" ));
+                                                0 : task.dictionariesByName.get( "credentials" ));
 
-                    logger.warn( "{} admin user {}:{}:{} has organizations={} dictionaries={} credentials={}",
+                    logger.error( "{} admin user {}:{}:{} has organizations={} dictionaries={} credentials={}",
                         new Object[]{
                             actionTaken,
                             task.adminUser.getProperty( "username" ),
@@ -376,7 +370,7 @@ public class ExportAdmins extends ExportingToolBase {
             Set<String> dictionaries = em.getDictionaries( entity );
 
             if ( dictionaries.isEmpty() ) {
-                logger.warn("User {}:{} has no dictionaries", task.adminUser.getName(), task.adminUser.getUuid() );
+                logger.error("User {}:{} has no dictionaries", task.adminUser.getName(), task.adminUser.getUuid() );
                 return;
             }
 
@@ -391,7 +385,7 @@ public class ExportAdmins extends ExportingToolBase {
 
             task.orgNamesByUuid = managementService.getOrganizationsForAdminUser( task.adminUser.getUuid() );
 
-            List<Org> orgs = userToOrgsMap.get( task.adminUser.getProperty( "username" ).toString().toLowerCase() );
+            List<Org> orgs = userToOrgsMap.get( task.adminUser.getUuid() );
 
             if ( orgs != null && task.orgNamesByUuid.size() < orgs.size() ) {
 
@@ -429,12 +423,12 @@ public class ExportAdmins extends ExportingToolBase {
 
             // write one JSON file for management application users
             JsonGenerator usersFile =
-                getJsonGenerator( createOutputFile( ADMIN_USERS_PREFIX, em.getApplication().getName() ) );
+                    getJsonGenerator( createOutputFile( ADMIN_USERS_PREFIX, em.getApplication().getName() ) );
             usersFile.writeStartArray();
 
             // write one JSON file for metadata: collections, connections and dictionaries of those users
             JsonGenerator metadataFile =
-                getJsonGenerator( createOutputFile( ADMIN_USER_METADATA_PREFIX, em.getApplication().getName() ) );
+                    getJsonGenerator( createOutputFile( ADMIN_USER_METADATA_PREFIX, em.getApplication().getName() ) );
             metadataFile.writeStartObject();
 
             while ( true ) {
@@ -476,8 +470,7 @@ public class ExportAdmins extends ExportingToolBase {
             usersFile.writeEndArray();
             usersFile.close();
 
-            logger.info( "Exported TOTAL {} admin users and {} organizations, org names = {}",
-                new Object[] { userCount.get(), orgsWritten.size(), orgsNamesWritten.size() } );
+            logger.info( "Exported TOTAL {} admin users and {} organizations", userCount.get(), orgsWritten.size() );
         }
 
 
@@ -530,9 +523,7 @@ public class ExportAdmins extends ExportingToolBase {
                 jg.writeEndObject();
 
                 synchronized (orgsWritten) {
-                    logger.info("Exported org {}:{}", uuid, orgs.get(uuid));
                     orgsWritten.add( uuid );
-                    orgsNamesWritten.add( orgs.get(uuid) );
                 }
             }
 
@@ -540,3 +531,4 @@ public class ExportAdmins extends ExportingToolBase {
         }
     }
 }
+
