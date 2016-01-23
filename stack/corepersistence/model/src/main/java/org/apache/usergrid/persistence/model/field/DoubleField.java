@@ -20,7 +20,7 @@ package org.apache.usergrid.persistence.model.field;
 /**
  * @author: tnine
  */
-public final class DoubleField extends AbstractField<Double> {
+public class DoubleField extends AbstractField<Double> {
 
     public DoubleField(String name, Double value) {
         super(name, value);
@@ -35,7 +35,7 @@ public final class DoubleField extends AbstractField<Double> {
 
 
     @Override
-    public final FieldTypeName getTypeName() {
+    public FieldTypeName getTypeName() {
            return FieldTypeName.DOUBLE;
        }
 }
