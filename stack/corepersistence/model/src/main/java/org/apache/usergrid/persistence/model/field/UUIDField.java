@@ -22,7 +22,7 @@ import java.util.UUID;
 /**
  * A String field
  */
-public class UUIDField extends AbstractField<UUID> {
+public final class UUIDField extends AbstractField<UUID> {
 
     public UUIDField(String name, UUID value) {
         super(name, value);
@@ -37,7 +37,7 @@ public class UUIDField extends AbstractField<UUID> {
 
 
     @Override
-    public FieldTypeName getTypeName() {
+    public final FieldTypeName getTypeName() {
                 return FieldTypeName.UUID;
             }
 }

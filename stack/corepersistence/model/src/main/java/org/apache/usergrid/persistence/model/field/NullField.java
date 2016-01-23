@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.model.field;
 /**
  * Created by russo on 1/14/16.
  */
-public class NullField extends AbstractField<Object>{
+public final class NullField extends AbstractField<Object>{
 
 
     public NullField(String name) {
@@ -37,7 +37,7 @@ public class NullField extends AbstractField<Object>{
 
 
     @Override
-    public FieldTypeName getTypeName() {
+    public final FieldTypeName getTypeName() {
         return FieldTypeName.NULL;
     }
 

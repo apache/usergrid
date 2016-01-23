@@ -20,7 +20,7 @@ package org.apache.usergrid.persistence.model.field;
 /**
  * Represents Float.
  */
-public class FloatField extends AbstractField<Float> {
+public final class FloatField extends AbstractField<Float> {
 
     public FloatField(String name, Float value) {
         super(name, value);
@@ -35,7 +35,7 @@ public class FloatField extends AbstractField<Float> {
 
 
     @Override
-    public FieldTypeName getTypeName() {
+    public final FieldTypeName getTypeName() {
            return FieldTypeName.FLOAT;
        }
 }
