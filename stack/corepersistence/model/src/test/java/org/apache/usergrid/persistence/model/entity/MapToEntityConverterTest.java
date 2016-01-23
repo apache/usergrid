@@ -22,13 +22,16 @@
 package org.apache.usergrid.persistence.model.entity;
 
 
+import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.FieldTypeName;
+import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
@@ -136,7 +139,42 @@ public class MapToEntityConverterTest {
 
         List arrayReturned = (List) entity.getField("arrayNullValues").getValue();
 
-        assertTrue( arrayReturned.get(0) == null);
+        Field convertedMapValue = (Field) arrayReturned.get(0);
+
+        assertTrue( convertedMapValue.getTypeName() == FieldTypeName.NULL);
+    }
+
+    @Test
+    public void testMultipleValueTypesWithinList() {
+
+        // build top-level map
+        final Map<String,Object> data = new HashMap<>(1);
+
+        final List<Object> arrayDifferentValueTypes = new ArrayList<>(2);
+
+        final Map<String, String> mapValue = new HashMap<>(1);
+        mapValue.put("mapkey", "mapvalue");
+
+        arrayDifferentValueTypes.add(mapValue);
+        arrayDifferentValueTypes.add("stringvalue");
+
+        // add the nested list to the map
+        data.put("arrayDifferentValueTypes", arrayDifferentValueTypes);
+
+        // convert the map to an entity
+        MapToEntityConverter converter = new MapToEntityConverter();
+        Entity entity = converter.fromMap(data, true);
+
+        // make sure the nested array got converted into a ListField
+        assertTrue(entity.getField("arrayDifferentValueTypes").getTypeName() == FieldTypeName.LIST);
+
+
+        List arrayReturned = (List) entity.getField("arrayDifferentValueTypes").getValue();
+
+        EntityObject convertedMapValue = (EntityObject) arrayReturned.get(0);
+        assertEquals( convertedMapValue.getField("mapkey").getValue(), mapValue.get("mapkey"));
+        assertEquals( arrayReturned.get(1), arrayDifferentValueTypes.get(1));
+
     }
 
 }
