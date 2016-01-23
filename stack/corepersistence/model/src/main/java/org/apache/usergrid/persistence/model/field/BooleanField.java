@@ -20,7 +20,7 @@ package org.apache.usergrid.persistence.model.field;
 /**
  * @author: tnine
  */
-public class BooleanField extends AbstractField<Boolean> {
+public final class BooleanField extends AbstractField<Boolean> {
 
     public BooleanField( String name, Boolean value ) {
         super( name, value );
@@ -35,7 +35,7 @@ public class BooleanField extends AbstractField<Boolean> {
 
 
     @Override
-    public FieldTypeName getTypeName() {
+    public final FieldTypeName getTypeName() {
         return FieldTypeName.BOOLEAN;
     }
 }
