@@ -32,6 +32,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 public class MapToEntityConverter{
+
     public static final Logger logger = LoggerFactory.getLogger(MapToEntityConverter.class);
 
     private final JsonFactory jsonFactory = new JsonFactory();
@@ -60,7 +61,6 @@ public class MapToEntityConverter{
 
         }
 
-
         return entity;
     }
 
@@ -84,16 +84,11 @@ public class MapToEntityConverter{
 
                 returnList.add( processListForListField( fieldName, (List) sample ) );
 
-            } else if ( sample != null ) {
+            } else {
 
                 returnList.add( sample );
 
-            } else {
-
-                returnList.add( new NullField(fieldName) );
-
             }
-
 
         });
 
@@ -123,24 +118,17 @@ public class MapToEntityConverter{
 
                     newList.add(o);
 
-//                    if (o instanceof List) {
-//                        newList.add( processField( fieldName, (List) o, false));
-//                    } else {
-//                        newList.add(o);
-//                    }
-
                 }
 
             } else {
 
                 newList.add( sample );
-            }
 
+            }
 
         });
 
         return newList;
-
 
     }
 
@@ -148,13 +136,14 @@ public class MapToEntityConverter{
     private Field processMapValue( Object value, String fieldName) {
 
         // check to see if the map is truly a location object
-        if ("location" .equals(fieldName.toString().toLowerCase()) ) {
+        if ( locationKey.equalsIgnoreCase(fieldName) ) {
+
             return processLocationField((Map<String, Object>) value, fieldName);
+
         } else {
 
-
-            // not a location element, process it as map
-           return processMapField( value, fieldName);
+            // not a location element, process it as a normal map
+            return processMapField( value, fieldName);
         }
     }
 
@@ -163,6 +152,7 @@ public class MapToEntityConverter{
 
         return new EntityObjectField( fieldName, fromMap( (Map<String, Object>)value, false));
     }
+
 
     /**
      * for location we need to parse two formats potentially and convert to a typed field
@@ -269,22 +259,27 @@ public class MapToEntityConverter{
 
         } else if ( value == null ){
 
+            // not supported from outside API yet, but let's keep it in serialization it's a handled in this logic
             processedField = new NullField( fieldName, unique );
 
         } else {
+
             byte[] valueSerialized;
             try {
+
                 valueSerialized = objectMapper.writeValueAsBytes( value );
+
             }
             catch ( JsonProcessingException e ) {
+
                 throw new RuntimeException( "Can't serialize object ",e );
+
             }
 
             ByteBuffer byteBuffer = ByteBuffer.wrap(valueSerialized);
-            ByteArrayField bf = new ByteArrayField( fieldName, byteBuffer.array(), value.getClass() );
-            processedField = bf;
-        }
+            processedField = new ByteArrayField( fieldName, byteBuffer.array(), value.getClass() );
 
+        }
 
         return processedField;
 
