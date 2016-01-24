@@ -140,9 +140,7 @@ public class MapToEntityConverterTest {
 
         List arrayReturned = (List) entity.getField("arrayNullValues").getValue();
 
-        Field convertedMapValue = (Field) arrayReturned.get(0);
-
-        assertTrue( convertedMapValue.getTypeName() == FieldTypeName.NULL);
+        assertTrue( arrayReturned.get(0) == null);
     }
 
     @Test
