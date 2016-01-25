@@ -21,7 +21,7 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 
@@ -34,27 +34,27 @@ public interface EdgeColumnFamilies extends Migration{
     /**
      * Get the name of the column family for getting source nodes
      */
-    public MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getSourceNodeCfName();
+    public MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getSourceNodeCfName();
 
     /**
      * Get the name of the column family for getting target nodes
      */
-    public MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getTargetNodeCfName();
+    public MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getTargetNodeCfName();
 
 
     /**
      * Get the name of the column family for getting source nodes  with a target type
      */
-    public MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getSourceNodeTargetTypeCfName();
+    public MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getSourceNodeTargetTypeCfName();
 
     /**
      * Get the name of the column family for getting target nodes with a source type
      */
-    public MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getTargetNodeSourceTypeCfName();
+    public MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getTargetNodeSourceTypeCfName();
 
     /**
      * Get the Graph edge versions cf
      * @return
      */
-    public MultiTennantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> getGraphEdgeVersions();
+    public MultiTenantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> getGraphEdgeVersions();
 }

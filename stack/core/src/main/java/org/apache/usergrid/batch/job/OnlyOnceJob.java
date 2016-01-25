@@ -19,6 +19,7 @@ package org.apache.usergrid.batch.job;
 
 import java.util.concurrent.TimeUnit;
 
+import org.elasticsearch.common.inject.Inject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.apache.usergrid.batch.Job;
@@ -37,7 +38,7 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 @Component("OnlyOnceJob")
 public abstract class OnlyOnceJob implements Job {
 
-    @Autowired
+    @Inject
     private LockManager lockManager;
 
     @Autowired

@@ -32,16 +32,28 @@ import org.safehaus.guicyfig.Key;
 @FigSingleton
 public interface CassandraFig extends GuicyFig {
 
+    // main application cassandra properties
+    String READ_CONSISTENT_CL = "usergrid.consistent.read.cl";
+    String READ_CL = "usergrid.read.cl";
+    String WRITE_CL = "usergrid.write.cl";
+    String SHARD_VALUES = "cassandra.shardvalues";
+    String THRIFT_TRANSPORT_SIZE = "cassandra.thrift.transport.frame";
 
-    public static final String READ_CONSISTENT_CL = "usergrid.consistent.read.cl";
+    // locks cassandra properties
+    String LOCKS_KEYSPACE_NAME = "cassandra.lock.keyspace";
+    String LOCKS_KEYSPACE_REPLICATION = "cassandra.lock.keyspace.replication";
+    String LOCKS_KEYSPACE_STRATEGY = "cassandra.lock.keyspace.strategy";
+    String LOCKS_CL = "cassandra.lock.cl";
+    String LOCKS_SHARED_POOL_FLAG = "cassandra.lock.use_shared_pool";
+    String LOCKS_CONNECTIONS = "cassandra.lock.connections";
+    String LOCKS_EXPIRATION = "cassandra.lock.expiration.milliseconds";
 
-    public static final String READ_CL = "usergrid.read.cl";
 
-    public static final String WRITE_CL = "usergrid.write.cl";
 
-    public static final String SHARD_VALUES = "cassandra.shardvalues";
 
-    public static final String THRIFT_TRANSPORT_SIZE = "cassandra.thrift.transport.frame";
+    // re-usable default values
+    String DEFAULT_CONNECTION_POOLSIZE = "15";
+    String DEFAULT_LOCKS_EXPIRATION = "3600000";  // 1 hour
 
 
     @Key( "cassandra.hosts" )
@@ -67,7 +79,7 @@ public interface CassandraFig extends GuicyFig {
     String getLocalDataCenter();
 
     @Key( "cassandra.connections" )
-    @Default( "15" )
+    @Default( DEFAULT_CONNECTION_POOLSIZE )
     int getConnections();
 
     @Key( "cassandra.timeout" )
@@ -111,5 +123,53 @@ public interface CassandraFig extends GuicyFig {
     int getThriftBufferSize();
 
 
+    /**
+     * Returns the name of the keyspace that should be used for Locking
+     */
+    @Key( LOCKS_KEYSPACE_NAME )
+    @Default("Locks")
+    String getLocksKeyspace();
+
+    /**
+     * Returns the Astyanax consistency level for writing a Lock
+     */
+    @Key(LOCKS_CL)
+    @Default("CL_LOCAL_QUORUM")
+    String getLocksCl();
+
+    /**
+     * Returns a flag on whether or not to share the connection pool with other keyspaces
+     */
+    @Key( LOCKS_SHARED_POOL_FLAG )
+    @Default("true")
+    boolean useSharedPoolForLocks();
+
+    /**
+     * Returns a flag on whether or not to share the connection pool with other keyspaces
+     */
+    @Key( LOCKS_CONNECTIONS )
+    @Default( DEFAULT_CONNECTION_POOLSIZE )
+    int getConnectionsLocks();
+
+    /**
+     * Returns a flag on whether or not to share the connection pool with other keyspaces
+     */
+    @Key( LOCKS_KEYSPACE_REPLICATION )
+    @Default("replication_factor:1")
+    String getLocksKeyspaceReplication();
+
+    /**
+     * Returns a flag on whether or not to share the connection pool with other keyspaces
+     */
+    @Key( LOCKS_KEYSPACE_STRATEGY )
+    @Default( "org.apache.cassandra.locator.SimpleStrategy" )
+    String getLocksKeyspaceStrategy();
+
+    /**
+     * Return the expiration that should be used for expiring a lock if it's not released
+     */
+    @Key( LOCKS_EXPIRATION )
+    @Default(DEFAULT_LOCKS_EXPIRATION)
+    int getLocksExpiration();
 
 }

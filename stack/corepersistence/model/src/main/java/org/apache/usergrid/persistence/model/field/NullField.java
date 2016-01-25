@@ -17,25 +17,28 @@
  */
 package org.apache.usergrid.persistence.model.field;
 
+
 /**
- * @author: tnine
+ * Created by russo on 1/14/16.
  */
-public final class BooleanField extends AbstractField<Boolean> {
+public final class NullField extends AbstractField<Object>{
 
-    public BooleanField( String name, Boolean value ) {
-        super( name, value );
+
+    public NullField(String name) {
+        super(name, null);
     }
 
-    public BooleanField( String name, Boolean value, boolean unique ) {
-        super( name, value, unique );
+    public NullField(String name, boolean unique) {
+        super(name, null, unique);
     }
 
-    public BooleanField() {
+    public NullField() {
     }
 
 
     @Override
     public final FieldTypeName getTypeName() {
-        return FieldTypeName.BOOLEAN;
+        return FieldTypeName.NULL;
     }
+
 }

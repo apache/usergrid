@@ -28,7 +28,7 @@ import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.CollectionMigrationPlugin;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoCache;
 import org.apache.usergrid.persistence.core.migration.data.MigrationRelationship;
 import org.apache.usergrid.persistence.core.migration.data.VersionedMigrationSet;
@@ -167,7 +167,7 @@ public class UniqueValueSerializationStrategyProxyImpl implements UniqueValueSer
 
 
     @Override
-    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
+    public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
         return Collections.emptyList();
     }
 

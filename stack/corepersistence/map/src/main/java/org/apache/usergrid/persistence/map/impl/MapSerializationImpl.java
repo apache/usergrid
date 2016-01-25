@@ -34,10 +34,9 @@ import org.apache.cassandra.db.marshal.UTF8Type;
 import org.apache.usergrid.persistence.core.astyanax.BucketScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.BucketScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.shard.ExpandingShardLocator;
@@ -46,7 +45,6 @@ import org.apache.usergrid.persistence.map.MapScope;
 
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
-import com.google.common.hash.PrimitiveSink;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.ColumnListMutation;
@@ -89,15 +87,15 @@ public class MapSerializationImpl implements MapSerialization {
     /**
      * CFs where the row key contains the source node id
      */
-    public static final MultiTennantColumnFamily<ScopedRowKey<MapEntryKey>, Boolean> MAP_ENTRIES =
-        new MultiTennantColumnFamily<>( "Map_Entries", MAP_ENTRY_SERIALIZER, BOOLEAN_SERIALIZER );
+    public static final MultiTenantColumnFamily<ScopedRowKey<MapEntryKey>, Boolean> MAP_ENTRIES =
+        new MultiTenantColumnFamily<>( "Map_Entries", MAP_ENTRY_SERIALIZER, BOOLEAN_SERIALIZER );
 
 
     /**
      * CFs where the row key contains the source node id
      */
-    public static final MultiTennantColumnFamily<BucketScopedRowKey<String>, String> MAP_KEYS =
-        new MultiTennantColumnFamily<>( "Map_Keys", MAP_KEY_SERIALIZER, STRING_SERIALIZER );
+    public static final MultiTenantColumnFamily<BucketScopedRowKey<String>, String> MAP_KEYS =
+        new MultiTenantColumnFamily<>( "Map_Keys", MAP_KEY_SERIALIZER, STRING_SERIALIZER );
 
     /**
      * Number of buckets to hash across.
@@ -339,17 +337,17 @@ public class MapSerializationImpl implements MapSerialization {
 
 
     @Override
-    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
+    public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
 
-        final MultiTennantColumnFamilyDefinition mapEntries =
-            new MultiTennantColumnFamilyDefinition( MAP_ENTRIES, BytesType.class.getSimpleName(),
+        final MultiTenantColumnFamilyDefinition mapEntries =
+            new MultiTenantColumnFamilyDefinition( MAP_ENTRIES, BytesType.class.getSimpleName(),
                 BytesType.class.getSimpleName(), BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
 
-        final MultiTennantColumnFamilyDefinition mapKeys =
-            new MultiTennantColumnFamilyDefinition( MAP_KEYS, BytesType.class.getSimpleName(),
+        final MultiTenantColumnFamilyDefinition mapKeys =
+            new MultiTenantColumnFamilyDefinition( MAP_KEYS, BytesType.class.getSimpleName(),
                 UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
 
         return Arrays.asList( mapEntries, mapKeys );
     }

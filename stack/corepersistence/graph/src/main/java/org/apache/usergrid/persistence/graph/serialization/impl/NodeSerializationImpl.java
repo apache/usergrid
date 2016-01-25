@@ -34,8 +34,8 @@ import org.apache.cassandra.db.marshal.BytesType;
 
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
@@ -86,8 +86,8 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
      * BloomFilter on read.  This means our performance will be no worse than checking a distributed cache in RAM for
      * the existence of a marked node.
      */
-    private static final MultiTennantColumnFamily<ScopedRowKey<Id>, Boolean> GRAPH_DELETE =
-            new MultiTennantColumnFamily<>( "Graph_Marked_Nodes",
+    private static final MultiTenantColumnFamily<ScopedRowKey<Id>, Boolean> GRAPH_DELETE =
+            new MultiTenantColumnFamily<>( "Graph_Marked_Nodes",
                     new ScopedRowKeySerializer<Id>( ROW_SERIALIZER ), BOOLEAN_SERIALIZER );
 
 
@@ -103,11 +103,11 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
 
 
     @Override
-    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
+    public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
         return Collections.singleton(
-                new MultiTennantColumnFamilyDefinition( GRAPH_DELETE, BytesType.class.getSimpleName(),
+                new MultiTenantColumnFamilyDefinition( GRAPH_DELETE, BytesType.class.getSimpleName(),
                         BooleanType.class.getSimpleName(), BytesType.class.getSimpleName(),
-                        MultiTennantColumnFamilyDefinition.CacheOption.ALL ) );
+                        MultiTenantColumnFamilyDefinition.CacheOption.ALL ) );
     }
 
 

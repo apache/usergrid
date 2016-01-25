@@ -27,14 +27,13 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.migration.util.AstayanxUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.connectionpool.exceptions.BadRequestException;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
@@ -77,7 +76,7 @@ public class MigrationManagerImpl implements MigrationManager {
 
             for ( Migration migration : migrations ) {
 
-                final Collection<MultiTennantColumnFamilyDefinition> columnFamilies = migration.getColumnFamilies();
+                final Collection<MultiTenantColumnFamilyDefinition> columnFamilies = migration.getColumnFamilies();
 
 
                 if ( columnFamilies == null || columnFamilies.size() == 0 ) {
@@ -88,7 +87,7 @@ public class MigrationManagerImpl implements MigrationManager {
                     continue;
                 }
 
-                for ( MultiTennantColumnFamilyDefinition cf : columnFamilies ) {
+                for ( MultiTenantColumnFamilyDefinition cf : columnFamilies ) {
                     testAndCreateColumnFamilyDef( cf );
                 }
             }
@@ -103,7 +102,7 @@ public class MigrationManagerImpl implements MigrationManager {
     /**
      * Check if the column family exists.  If it dosn't create it
      */
-    private void testAndCreateColumnFamilyDef( MultiTennantColumnFamilyDefinition columnFamily )
+    private void testAndCreateColumnFamilyDef( MultiTenantColumnFamilyDefinition columnFamily )
             throws ConnectionException {
         final KeyspaceDefinition keyspaceDefinition = keyspace.describeKeyspace();
 

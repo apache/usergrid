@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.model.field;
 /**
  * A field for storing and array of bytes.
  */
-public class ByteArrayField extends AbstractField<byte[]> {
+public final class ByteArrayField extends AbstractField<byte[]> {
 
     Class classinfo;
 
@@ -36,17 +36,17 @@ public class ByteArrayField extends AbstractField<byte[]> {
     }
 
     @Override
-    public byte[] getValue() {
+    public final byte[] getValue() {
         return value;
     }
 
-    public Class getClassinfo() {
+    public final Class getClassinfo() {
         return classinfo;
     }
 
 
     @Override
-    public FieldTypeName getTypeName() {
+    public final FieldTypeName getTypeName() {
         return FieldTypeName.BYTE_ARRAY;
     }
 }

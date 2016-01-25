@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import junit.framework.Assert;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -38,7 +37,6 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 
@@ -243,6 +241,32 @@ public class CpEntityMapUtilsTest {
 
         EntityObject entityObject = (EntityObject)blockList.get(0);
         assertEquals("fred", entityObject.getField("name").getValue());
+    }
+
+    @Test
+    public void testNullSerialization() throws IOException {
+
+        Map<String, Object> properties = new HashMap<>();
+
+        List<Object> array = new ArrayList<>();
+        array.add(null);
+        array.add("test");
+
+        properties.put("array", array);
+
+        org.apache.usergrid.persistence.model.entity.Entity entity =
+            new org.apache.usergrid.persistence.model.entity.Entity(
+                new SimpleId( "user" ) );
+        entity = CpEntityMapUtils.fromMap( entity, properties, null, true );
+
+        assertTrue( entity.getField("array") instanceof ListField );
+        assertTrue( entity.getField("array").getValue() instanceof List );
+        List arrayReturned = (List) entity.getField("array").getValue();
+
+        assertEquals( null, arrayReturned.get(0) );
+        assertEquals( "test", arrayReturned.get(1) );
+
+
     }
 
 }

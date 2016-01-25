@@ -123,6 +123,7 @@ public class IndexLoadTestsIT extends BaseIT {
     private EntityIndex entityIndex;
 
 
+    @Before
     public void before(){
         appId = new SimpleId(UUID.randomUUID(), "application" );
 
