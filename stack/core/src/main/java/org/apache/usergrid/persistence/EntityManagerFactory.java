@@ -17,16 +17,13 @@
 package org.apache.usergrid.persistence;
 
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import com.google.common.base.Optional;
 
-import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import rx.Observable;
 
 
 /**
@@ -72,12 +69,13 @@ public interface EntityManagerFactory {
      * @param name the name of the application to create.
      * @param properties property values to create in the new entity or null.
      *
+     * @param forMigration
      * @return Entity of type application_info that represents the newly created Application
      *
      * @throws Exception the exception
      */
     Entity createApplicationV2(
-        String organizationName, String name, UUID applicationId, Map<String, Object> properties ) throws Exception;
+        String organizationName, String name, UUID applicationId, Map<String, Object> properties, boolean forMigration) throws Exception;
 
 
     /**
@@ -160,7 +158,7 @@ public interface EntityManagerFactory {
      * @return Entity of type application_info that represents the newly created application.
      */
     public Entity initializeApplicationV2(
-        String orgName, UUID appId, String appName, Map<String, Object> props) throws Exception;
+        String orgName, UUID appId, String appName, Map<String, Object> props, boolean forMigration) throws Exception;
 
 
 

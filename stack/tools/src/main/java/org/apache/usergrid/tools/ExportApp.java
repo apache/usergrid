@@ -35,13 +35,15 @@ import rx.Scheduler;
 import rx.Subscriber;
 import rx.functions.Action0;
 import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -142,13 +144,13 @@ public class ExportApp extends ExportingToolBase {
             return Observable.create( new EntityObservable( em, collection ) )
                     .doOnNext( new EntityWriteAction() ).subscribeOn( writeScheduler );
 
-        }, writeThreadCount ).flatMap( exportEntity -> {
+
+        } ).flatMap( exportEntity -> {
 
             return Observable.create( new ConnectionsObservable( em, exportEntity ) )
                     .doOnNext( new ConnectionWriteAction() ).subscribeOn( writeScheduler );
 
-        }, writeThreadCount )
-            .doOnCompleted( new FileWrapUpAction() ).toBlocking().lastOrDefault(null);
+        } ).doOnCompleted( new FileWrapUpAction() ).toBlocking().lastOrDefault(null);
     }
 
 
@@ -206,7 +208,7 @@ public class ExportApp extends ExportingToolBase {
 
             logger.info("Starting to read entities of collection {}", collection);
 
-            subscriber.onStart();
+            //subscriber.onStart();
 
             try {
                 int count = 0;
@@ -283,7 +285,7 @@ public class ExportApp extends ExportingToolBase {
                 for (String connectionType : connectionTypes) {
 
                     Results results = em.getTargetEntities(
-                        exportEntity.getEntity(), connectionType, null, Query.Level.CORE_PROPERTIES );
+                            exportEntity.getEntity(), connectionType, null, Query.Level.CORE_PROPERTIES );
 
                     for (Entity connectedEntity : results.getEntities()) {
                         try {

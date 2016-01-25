@@ -206,16 +206,15 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public Entity createApplicationV2(String organizationName, String name) throws Exception {
-        return createApplicationV2( organizationName, name, null, null );
+        return createApplicationV2( organizationName, name, null, null, false);
     }
 
 
     @Override
     public Entity createApplicationV2(
-        String orgName, String name, UUID applicationId, Map<String, Object> properties) throws Exception {
+        String orgName, String name, UUID applicationId, Map<String, Object> properties, boolean forMigration) throws Exception {
 
         String appName = buildAppName( orgName, name );
-
 
         final Optional<UUID> appId = applicationIdCache.getApplicationId( appName );
 
@@ -230,7 +229,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 new Object[]{orgName, name, applicationId.toString()});
         }
 
-        return initializeApplicationV2( orgName, applicationId, appName, properties );
+        return initializeApplicationV2( orgName, applicationId, appName, properties, forMigration);
     }
 
 
@@ -244,8 +243,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
      * @return UUID of newly created Entity of type application_info
      */
     @Override
-    public Entity initializeApplicationV2( String organizationName, final UUID applicationId, String name,
-                                       Map<String, Object> properties ) throws Exception {
+    public Entity initializeApplicationV2(String organizationName, final UUID applicationId, String name,
+                                          Map<String, Object> properties, boolean forMigration) throws Exception {
 
         // Ensure our management system exists before creating our application
         init();
@@ -269,7 +268,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
         properties.put( PROPERTY_NAME, appName );
         appEm.create(applicationId, TYPE_APPLICATION, properties);
-        appEm.resetRoles();
+
+        // only reset roles if this application isn't being migrated (meaning dictionary and role data already exists)
+        if(!forMigration){
+            appEm.resetRoles();
+        }
+
 
 
         // create application info entity in the management app

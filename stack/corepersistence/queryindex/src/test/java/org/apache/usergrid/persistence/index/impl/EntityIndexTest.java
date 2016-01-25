@@ -134,6 +134,7 @@ public class EntityIndexTest extends BaseIT {
         entity1.setField( new StringField( "testfield", "test" ) );
         entity1.setField(new IntegerField("ordinal", 0));
         entity1.setField(new UUIDField("testuuid", uuid));
+        entity1.setField( new NullField("nullfield"));
 
 
         batch.index( indexEdge, entity1 );
@@ -163,8 +164,8 @@ public class EntityIndexTest extends BaseIT {
 
         timer.stop();
 
-        assertEquals(2, candidateResults.size());
-        logger.debug("Query time {}ms", timer.getTime());
+        assertEquals( 2, candidateResults.size() );
+        logger.debug( "Query time {}ms", timer.getTime() );
 
         final CandidateResult candidate1 = candidateResults.get(0);
 
@@ -1270,6 +1271,70 @@ public class EntityIndexTest extends BaseIT {
         assertTrue( size == 100 );
 
     }
+
+    /**
+     * Tests that we're supporting null fields when indexing at Elasticsearch
+     */
+    @Test
+    public void testNullFields() throws IOException {
+
+        Id appId = new SimpleId( "application" );
+        final String entityType = "thing";
+        IndexEdge indexEdge = new IndexEdgeImpl( appId, "things", SearchEdge.NodeType.SOURCE, 1 );
+        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
+        EntityIndexBatch batch = entityIndex.createBatch();
+
+
+        UUID uuid = UUID.randomUUID();
+        Entity entity1 = new Entity( entityType );
+        EntityUtils.setVersion(entity1, UUIDGenerator.newTimeUUID());
+        entity1.setField(new UUIDField(IndexingUtils.ENTITY_ID_FIELDNAME, uuid));
+
+        // create a list and add 3 null values to it
+        List<Object> listOfNulls = new ArrayList<>(3);
+        listOfNulls.add(null);
+        listOfNulls.add(null);
+        listOfNulls.add(null);
+
+
+        List<Object> listOfMixedNulls = new ArrayList<>(3);
+        listOfMixedNulls.add(null);
+        listOfMixedNulls.add("stringvalue");
+        listOfMixedNulls.add(null);
+        listOfMixedNulls.add(10);
+
+        entity1.setField( new UUIDField("uuid", uuid, true));
+        entity1.setField( new ArrayField<>( "arrayofnulls", listOfNulls) );
+        entity1.setField( new ArrayField<>( "arrayofmixednulls", listOfMixedNulls) );
+        entity1.setField( new NullField("nullfield"));
+
+
+
+        batch.index( indexEdge, entity1 );
+        indexProducer.put(batch.build()).subscribe();
+
+
+        entityIndex.refreshAsync().toBlocking().first();
+
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        CandidateResults candidateResults =
+            entityIndex.search( indexEdge, searchTypes, "select * where uuid = '"+uuid+"'", 100, 0 );
+
+        timer.stop();
+
+        assertEquals(1, candidateResults.size());
+        logger.debug("Query time {}ms", timer.getTime());
+
+        final CandidateResult candidate1 = candidateResults.get(0);
+
+        //check the id and version
+        assertEquals( entity1.getId(), candidate1.getId() );
+        assertEquals(entity1.getVersion(), candidate1.getVersion());
+
+    }
+
 
 
 }
