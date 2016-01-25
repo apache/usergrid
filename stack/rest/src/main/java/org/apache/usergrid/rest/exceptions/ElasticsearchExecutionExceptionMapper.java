@@ -9,9 +9,7 @@ import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import static javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
 
 
-/**
- * Created by ApigeeCorporation on 1/19/16.
- */
+
 @Provider
 public class ElasticsearchExecutionExceptionMapper
     extends AbstractExceptionMapper<SearchPhaseExecutionException>  {
