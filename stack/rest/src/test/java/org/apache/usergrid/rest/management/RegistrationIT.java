@@ -170,13 +170,11 @@ public class RegistrationIT extends AbstractRestIT {
 
             String subject = "Password Reset";
 
-            /*
             SpringResource springResource = ConcurrentProcessSingleton.getInstance().getSpringResource();
             ManagementService mgmt = springResource.getBean( ManagementService.class );
             OrganizationConfig orgConfig = mgmt.getOrganizationConfigByName(this.clientSetup.getOrganizationName());
 
-            String reset_url = orgConfig.getFullUrl(OrganizationConfigProps.WorkflowUrl.ADMIN_RESETPW_URL);
-            */
+            String reset_url = orgConfig.getFullUrl(OrganizationConfigProps.WorkflowUrl.ADMIN_RESETPW_URL, userId);
             String invited = "User Invited To Organization";
 
             Message[] msgs = getMessages("servertest.com", this.clientSetup.getUsername(), "password");
@@ -191,7 +189,7 @@ public class RegistrationIT extends AbstractRestIT {
             // reseturl
             String mailContent = (String) ((MimeMultipart) msgs[0].getContent()).getBodyPart(1).getContent();
             logger.info(mailContent);
-            //assertTrue(StringUtils.contains(mailContent, reset_url));
+            assertTrue(StringUtils.contains(mailContent, reset_url));
 
             //reset token
             String token = getTokenFromMessage(msgs[0]);
