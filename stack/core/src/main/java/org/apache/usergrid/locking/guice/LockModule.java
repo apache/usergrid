@@ -15,27 +15,26 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.model.field;
+
+package org.apache.usergrid.locking.guice;
+
+
+import com.google.inject.AbstractModule;
+import org.apache.usergrid.locking.LockManager;
+import org.apache.usergrid.locking.cassandra.AstyanaxLockManagerImpl;
+
 
 /**
- * @author: tnine
+ * Wire up LockManager implementation.
  */
-public final class BooleanField extends AbstractField<Boolean> {
-
-    public BooleanField( String name, Boolean value ) {
-        super( name, value );
-    }
-
-    public BooleanField( String name, Boolean value, boolean unique ) {
-        super( name, value, unique );
-    }
-
-    public BooleanField() {
-    }
-
+public class LockModule extends AbstractModule {
 
     @Override
-    public final FieldTypeName getTypeName() {
-        return FieldTypeName.BOOLEAN;
+    protected void configure() {
+
+        bind( LockManager.class ).to( AstyanaxLockManagerImpl.class ).asEagerSingleton();
+
     }
 }
+
+

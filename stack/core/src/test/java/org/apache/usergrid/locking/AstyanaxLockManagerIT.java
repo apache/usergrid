@@ -14,17 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.locking.cassandra;
+package org.apache.usergrid.locking;
 
 
-import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
+import org.apache.usergrid.AbstractCoreIT;
+import org.apache.usergrid.locking.exception.UGLockException;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -32,42 +26,27 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.locking.Lock;
-import org.apache.usergrid.locking.LockManager;
-import org.apache.usergrid.locking.exception.UGLockException;
-
-import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
-import me.prettyprint.hector.api.ConsistencyLevelPolicy;
-import me.prettyprint.hector.api.HConsistencyLevel;
+import java.util.UUID;
+import java.util.concurrent.*;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
-public class HectorLockManagerIT extends AbstractCoreIT {
-    private static final Logger logger = LoggerFactory.getLogger( HectorLockManagerIT.class );
+public class AstyanaxLockManagerIT extends AbstractCoreIT {
+    private static final Logger logger = LoggerFactory.getLogger( AstyanaxLockManagerIT.class );
 
-    private static LockManager manager;
+
+    private static LockManager lockManager;
     private static ExecutorService pool;
 
 
     @BeforeClass
     public static void setup() throws Exception {
-        HectorLockManagerImpl hlockManager = new HectorLockManagerImpl();
-        hlockManager.setCluster( setup.getCassSvc().getCluster() );
-        hlockManager.setKeyspaceName( "Locks_Test" );
-        hlockManager.setLockTtl( 2000 );
-        hlockManager.setNumberOfLockObserverThreads( 1 );
-        hlockManager.setReplicationFactor( 1 );
-        ConsistencyLevelPolicy consistencyLevel = new ConfigurableConsistencyLevel();
-        ((ConfigurableConsistencyLevel) consistencyLevel).setDefaultReadConsistencyLevel(HConsistencyLevel.ONE);
-        ((ConfigurableConsistencyLevel) consistencyLevel).setDefaultWriteConsistencyLevel(HConsistencyLevel.ONE);
-        hlockManager.setConsistencyLevelPolicy(consistencyLevel);
-        hlockManager.init();
 
-        manager = hlockManager;
+        lockManager = setup.getInjector().getInstance(LockManager.class);
     }
+
 
 
     @BeforeClass
@@ -92,7 +71,7 @@ public class HectorLockManagerIT extends AbstractCoreIT {
         logger.info( "Locking:" + application.toString() + "/" + entity.toString() );
 
         // Lock a node twice to test re-entrancy and validate.
-        Lock lock = manager.createLock( application, entity.toString() );
+        Lock lock = lockManager.createLock( application, entity.toString() );
         lock.lock();
         lock.lock();
 
@@ -127,11 +106,11 @@ public class HectorLockManagerIT extends AbstractCoreIT {
         logger.info( "Locking:" + application.toString() + "/" + entity.toString() );
 
         // Acquire to locks. One of them twice.
-        Lock lock = manager.createLock( application, entity.toString() );
+        Lock lock = lockManager.createLock( application, entity.toString() );
         lock.lock();
         lock.lock();
 
-        Lock second = manager.createLock( application, entity2.toString() );
+        Lock second = lockManager.createLock( application, entity2.toString() );
         second.lock();
 
         // Cleanup the locks for main thread
@@ -154,7 +133,7 @@ public class HectorLockManagerIT extends AbstractCoreIT {
         Callable<Boolean> callable = new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                Lock lock = manager.createLock( application, entity.toString() );
+                Lock lock = lockManager.createLock( application, entity.toString() );
 
                 // False here means that the lock WAS NOT ACQUIRED. And that is
                 // what we expect.

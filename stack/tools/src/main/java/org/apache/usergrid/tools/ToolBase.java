@@ -101,7 +101,7 @@ public abstract class ToolBase {
             System.setProperty( "cassandra.url", line.getOptionValue( "host" ) );
             System.setProperty( "elasticsearch.hosts", line.getOptionValue( "eshost" ) );
             System.setProperty( "elasticsearch.cluster_name", line.getOptionValue( "escluster" ) );
-            System.setProperty( "usergrid.cluster_name", "usergrid" );
+            System.setProperty( "usergrid.cluster_name", line.getOptionValue( "ugcluster" )  );
         }
 
         try {
@@ -141,6 +141,9 @@ public abstract class ToolBase {
         Option esClusterOption = OptionBuilder.withArgName( "escluster" ).hasArg()
             .withDescription( "ElasticSearch cluster name" ).create( "escluster" );
 
+        Option ugClusterOption = OptionBuilder.withArgName( "ugcluster" ).hasArg()
+            .withDescription( "Usergrid cluster name" ).create( "ugcluster" );
+
         Option remoteOption = OptionBuilder
             .withDescription( "Use remote Cassandra instance" ).create( "remote" );
 
@@ -152,6 +155,7 @@ public abstract class ToolBase {
         options.addOption( hostOption );
         options.addOption( esHostOption );
         options.addOption( esClusterOption );
+        options.addOption( ugClusterOption );
         options.addOption( remoteOption );
         options.addOption( verbose );
 
