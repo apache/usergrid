@@ -21,9 +21,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
-/**
- * Created by ApigeeCorporation on 1/5/16.
- */
 public class ExceptionResourceIT extends AbstractRestIT{
 
     @Test

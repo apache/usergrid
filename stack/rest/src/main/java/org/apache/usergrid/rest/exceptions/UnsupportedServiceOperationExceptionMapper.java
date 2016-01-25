@@ -8,9 +8,6 @@ import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationExcept
 import static javax.ws.rs.core.Response.Status.METHOD_NOT_ALLOWED;
 
 
-/**
- * Created by ApigeeCorporation on 1/8/16.
- */
 @Provider
 public class UnsupportedServiceOperationExceptionMapper extends AbstractExceptionMapper<UnsupportedServiceOperationException> {
 
