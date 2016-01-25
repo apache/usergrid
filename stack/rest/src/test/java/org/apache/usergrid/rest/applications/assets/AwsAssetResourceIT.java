@@ -198,9 +198,6 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         catch(ForbiddenException fe){
             assertEquals( 403, fe.getResponse().getStatus() );
         }
-        catch( InternalServerErrorException uie){
-            assertEquals( 500, uie.getResponse().getStatus() );
-        }
         finally{
             setTestProperties( errorTestProperties );
         }
