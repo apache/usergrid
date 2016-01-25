@@ -28,6 +28,7 @@ import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.services.AbstractServiceIT;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -48,7 +49,7 @@ import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.*;
 
 
-public class ExportImportAdminsTest {
+public class ExportImportAdminsTest extends AbstractServiceIT {
     static final Logger logger = LoggerFactory.getLogger( ExportImportAdminsTest.class );
 
     @ClassRule

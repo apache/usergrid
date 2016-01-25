@@ -24,7 +24,7 @@ import java.util.Set;
 /**
  * An object field that represents a set of objects
  */
-public class SetField<T> extends AbstractField<Set<T>> {
+public final class SetField<T> extends AbstractField<Set<T>> {
 
     /**
      * Constructor that initializes with an empty set for adding to later
@@ -44,13 +44,13 @@ public class SetField<T> extends AbstractField<Set<T>> {
     /**
      * Add an entry to the set
      */
-    public void addEntry( T setItem ) {
+    public final void addEntry( T setItem ) {
         value.add( setItem );
     }
 
 
     @Override
-    public FieldTypeName getTypeName() {
+    public final FieldTypeName getTypeName() {
                 return FieldTypeName.SET;
             }
 }
