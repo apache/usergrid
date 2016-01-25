@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
+import org.apache.usergrid.rest.exceptions.UnsupportedRestOperationException;
 import org.apache.usergrid.rest.management.organizations.applications.imports.ImportsResource;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.rest.utils.JSONPUtils;
@@ -493,7 +494,7 @@ public class ApplicationResource extends AbstractContextResource {
         // for now, only works in test mode
         String testProp = ( String ) props.get( "usergrid.test" );
         if ( testProp == null || !Boolean.parseBoolean( testProp ) ) {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedRestOperationException("Test props not not functioning correctly.");
         }
 
         if ( applicationId == null ) {
