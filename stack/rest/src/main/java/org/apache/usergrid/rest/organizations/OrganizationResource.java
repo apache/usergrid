@@ -146,7 +146,7 @@ public class OrganizationResource extends AbstractContextResource {
             UUID applicationId = UUIDUtils.tryExtractUUID( applicationName );
 
             if ( applicationId == null ) {
-                throw new OrganizationApplicationNotFoundException( orgAppName, uriInfo, properties );
+                throw new OrganizationApplicationNotFoundException( orgAppName, uriInfo, properties, management );
             }else{
                 optionalAppId = Optional.fromNullable(applicationId);
             }

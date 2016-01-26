@@ -56,7 +56,9 @@ public class NotifiersResource extends ServiceResource {
     public AbstractContextResource addIdParameter(@Context UriInfo ui,
             @PathParam("entityId") PathSegment entityId) throws Exception {
 
-        logger.info("NotifiersResource.addIdParameter");
+        if (logger.isDebugEnabled()) {
+            logger.debug("NotifiersResource.addIdParameter");
+        }
 
         UUID itemId = UUID.fromString(entityId.getPath());
 
@@ -72,9 +74,10 @@ public class NotifiersResource extends ServiceResource {
     public AbstractContextResource addNameParameter(@Context UriInfo ui,
             @PathParam("itemName") PathSegment itemName) throws Exception {
 
-        logger.info("NotifiersResource.addNameParameter");
-
-        logger.info("Current segment is " + itemName.getPath());
+        if (logger.isDebugEnabled()) {
+            logger.debug("NotifiersResource.addNameParameter");
+            logger.debug("Current segment is " + itemName.getPath());
+        }
 
         if (itemName.getPath().startsWith("{")) {
             Query query = Query.fromJsonString(itemName.getPath());

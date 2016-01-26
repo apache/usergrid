@@ -47,6 +47,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.TestHelper.*;
 import static org.apache.usergrid.management.AccountCreationProps.*;
 import static org.junit.Assert.*;
+import static org.apache.usergrid.management.OrganizationConfigProps.*;
 
 
 /**
@@ -244,11 +245,13 @@ public class EmailFlowIT {
         final String appUserUsername = uniqueUsername();
         final String appUserEmail = uniqueEmail();
 
+        OrganizationConfig orgConfig = setup.getMgmtSvc().getOrganizationConfigByUuid(orgOwner.getOrganization().getUuid());
+
         User appUser = setupAppUser( app.getId(), appUserUsername, appUserEmail, false );
 
         String subject = "Request For User Account Activation " + appUserEmail;
-        String activation_url = String.format( setup.get( PROPERTIES_USER_ACTIVATION_URL ), orgName, appName,
-            appUser.getUuid().toString() );
+        String activation_url = orgConfig.getFullUrl(WorkflowUrl.USER_ACTIVATION_URL, orgName, appName,
+                appUser.getUuid().toString());
 
         setup.refreshIndex(app.getId());
 
@@ -277,8 +280,8 @@ public class EmailFlowIT {
         assertEquals( ActivationState.ACTIVATED, activeState );
 
         subject = "Password Reset";
-        String reset_url =
-                String.format( setup.get( PROPERTIES_USER_RESETPW_URL ), orgName, appName, appUser.getUuid().toString() );
+        String reset_url = orgConfig.getFullUrl(WorkflowUrl.USER_RESETPW_URL, orgName, appName,
+                appUser.getUuid().toString());
 
         // reset_pwd
         setup.getMgmtSvc().startAppUserPasswordResetFlow( app.getId(), appUser );
@@ -338,9 +341,11 @@ public class EmailFlowIT {
 
         User user = setupAppUser( app.getId(), appUserUsername, appUserEmail, true );
 
+        OrganizationConfig orgConfig = setup.getMgmtSvc().getOrganizationConfigByUuid(orgOwner.getOrganization().getUuid());
+
         String subject = "User Account Confirmation: "+appUserEmail;
-        String urlProp = setup.get( PROPERTIES_USER_CONFIRMATION_URL );
-        String confirmation_url = String.format( urlProp, orgName, appName, user.getUuid().toString() );
+        String confirmation_url = orgConfig.getFullUrl(WorkflowUrl.USER_CONFIRMATION_URL, orgName, appName,
+                user.getUuid().toString());
 
         // request confirmation
         setup.getMgmtSvc().startAppUserActivationFlow( app.getId(), user );
