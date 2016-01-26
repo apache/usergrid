@@ -46,6 +46,7 @@ import org.apache.usergrid.rest.applications.users.UsersResource;
 import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
 import org.apache.usergrid.rest.exceptions.NotFoundExceptionMapper;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
+import org.apache.usergrid.rest.exceptions.UnsupportedRestOperationException;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
@@ -507,7 +508,7 @@ public class ApplicationResource extends ServiceResource {
     @RequireOrganizationAccess
     public ApiResponse executeDelete( @Context final UriInfo ui, @DefaultValue( "callback" ) final String callback,
                                           final String confirmAppDelete ) throws Exception {
-        throw new UnsupportedOperationException( "Delete must be done from the management endpoint" );
+        throw new UnsupportedRestOperationException( "Delete must be done from the management endpoint" );
     }
 
 

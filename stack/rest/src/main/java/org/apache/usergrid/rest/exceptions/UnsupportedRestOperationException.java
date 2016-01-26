@@ -16,23 +16,10 @@
  */
 package org.apache.usergrid.rest.exceptions;
 
+public class UnsupportedRestOperationException extends RuntimeException{
 
-import javax.ws.rs.core.Response;
-
-import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
-
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import javax.ws.rs.ext.Provider;
-
-
-/**
- * Maps the AwsPropertiesNotFoundExceptionMapper to a 500 error due to having a legit response
- * but there is an error in the properties file.
- */
-@Provider
-public class AwsPropertiesNotFoundExceptionMapper extends AbstractExceptionMapper<AwsPropertiesNotFoundException> {
-    @Override
-    public Response toResponse( AwsPropertiesNotFoundException e ) {
-        return toResponse( INTERNAL_SERVER_ERROR, e );
+    public UnsupportedRestOperationException(String message ) {
+        super(message);
     }
+
 }
