@@ -18,21 +18,17 @@ package org.apache.usergrid.rest.exceptions;
 
 
 import javax.ws.rs.core.Response;
-
-import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
-
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import javax.ws.rs.ext.Provider;
 
+import static javax.ws.rs.core.Response.Status.METHOD_NOT_ALLOWED;
 
-/**
- * Maps the AwsPropertiesNotFoundExceptionMapper to a 500 error due to having a legit response
- * but there is an error in the properties file.
- */
+
 @Provider
-public class AwsPropertiesNotFoundExceptionMapper extends AbstractExceptionMapper<AwsPropertiesNotFoundException> {
+public class UnsupportedRestOperationExceptionMapper extends AbstractExceptionMapper<UnsupportedRestOperationException> {
+
     @Override
-    public Response toResponse( AwsPropertiesNotFoundException e ) {
-        return toResponse( INTERNAL_SERVER_ERROR, e );
+    public Response toResponse( UnsupportedRestOperationException e ) {
+        return toResponse( METHOD_NOT_ALLOWED, e );
     }
 }
+

@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.usergrid.rest.exceptions.UnsupportedRestOperationException;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Organization;
 import org.apache.usergrid.rest.test.resource.model.Token;
@@ -44,6 +45,6 @@ public class OrganizationResource extends NamedResource {
     }
 
     public Organization get(){
-        throw new UnsupportedOperationException("service doesn't exist");
+        throw new UnsupportedRestOperationException("service doesn't exist");
     }
 }
