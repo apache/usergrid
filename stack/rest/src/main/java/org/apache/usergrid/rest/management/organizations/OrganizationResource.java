@@ -26,7 +26,6 @@ import org.apache.usergrid.management.OrganizationConfig;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.persistence.entities.Export;
-import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
@@ -292,26 +291,31 @@ public class OrganizationResource extends AbstractContextResource {
             logger.debug("executePostJson");
         }
 
-        UsergridAwsCredentials uac = new UsergridAwsCredentials();
-
-        UUID jobUUID = null;
-        Map<String, String> uuidRet = new HashMap<String, String>();
-
-        Map<String,Object> properties;
-        Map<String, Object> storage_info;
+        Map<String, String> uuidRet = new HashMap<>();
 
         try {
-            if((properties = ( Map<String, Object> )  json.get( "properties" )) == null){
+            Object propertiesObj = json.get("properties");
+            if (propertiesObj == null) {
                 throw new NullArgumentException("Could not find 'properties'");
             }
-            storage_info = ( Map<String, Object> ) properties.get( "storage_info" );
+            if (!(propertiesObj instanceof Map)) {
+                throw new IllegalArgumentException("'properties' not a map");
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String,Object> properties = (Map<String,Object>)propertiesObj;
+
             String storage_provider = ( String ) properties.get( "storage_provider" );
             if(storage_provider == null) {
                 throw new NullArgumentException( "Could not find field 'storage_provider'" );
             }
-            if(storage_info == null) {
+
+            Object storageInfoObj = properties.get("storage_info");
+            if(storageInfoObj == null) {
                 throw new NullArgumentException( "Could not find field 'storage_info'" );
             }
+            @SuppressWarnings("unchecked")
+            Map<String,Object> storage_info = (Map<String, Object>)storageInfoObj;
 
             String bucketName = ( String ) storage_info.get( "bucket_location" );
             String accessId = ( String ) storage_info.get( "s3_access_id" );
@@ -330,7 +334,7 @@ public class OrganizationResource extends AbstractContextResource {
 
             json.put( "organizationId",organization.getUuid());
 
-            jobUUID = exportService.schedule( json );
+            UUID jobUUID = exportService.schedule( json );
             uuidRet.put( "Export Entity", jobUUID.toString() );
         }
         catch ( NullArgumentException e ) {

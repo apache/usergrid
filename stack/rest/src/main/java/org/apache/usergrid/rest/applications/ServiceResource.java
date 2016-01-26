@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.OrganizationConfig;
+import org.apache.usergrid.management.OrganizationConfigProps;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
@@ -276,7 +277,8 @@ public class ServiceResource extends AbstractContextResource {
                 // use the default query parameter functionality
                 OrganizationConfig orgConfig =
                     management.getOrganizationConfigForApplication(services.getApplicationId());
-                String defaultConnectionQueryParm = orgConfig.getDefaultConnectionParam();
+                String defaultConnectionQueryParm =
+                        orgConfig.getProperty(OrganizationConfigProps.ORGPROPERTIES_DEFAULT_CONNECTION_PARAM);
                 returnInboundConnections =
                     (defaultConnectionQueryParm.equals("in")) || (defaultConnectionQueryParm.equals("all"));
                 returnOutboundConnections =

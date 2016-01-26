@@ -19,6 +19,7 @@ package org.apache.usergrid.rest.exceptions;
 
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.ServerEnvironmentProperties;
 
@@ -36,9 +37,10 @@ public class OrganizationApplicationNotFoundException extends RuntimeException {
 
 
     public OrganizationApplicationNotFoundException( String orgAppName, UriInfo uriInfo,
-                                                     ServerEnvironmentProperties properties ) {
+                                                     ServerEnvironmentProperties properties,
+                                                     ManagementService management) {
         super( "Could not find application for " + orgAppName + " from URI: " + uriInfo.getPath() );
-        apiResponse = new ApiResponse( properties );
+        apiResponse = new ApiResponse( properties, management );
 
         apiResponse.setError( this );
     }

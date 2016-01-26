@@ -190,7 +190,7 @@ public abstract class AbstractContextResource {
 
 
     protected ApiResponse createApiResponse() {
-        return new ApiResponse(properties);
+        return new ApiResponse(properties, management);
     }
 
     protected EntityManagerFactory getEmf(){

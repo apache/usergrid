@@ -18,8 +18,6 @@ package org.apache.usergrid.management.cassandra;
 
 
 import org.apache.usergrid.management.OrganizationConfigProps;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -27,83 +25,171 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 
 
 public class OrganizationConfigPropsImpl implements OrganizationConfigProps {
-    private static final Logger logger = LoggerFactory.getLogger( OrganizationConfigPropsImpl.class );
 
+    private static final String DEFAULTVALUE_API_URL_BASE = "http://localhost:8080";
     private static final String DEFAULTVALUE_DEFAULT_CONNECTION_PARAM = "all";
     private static final String DEFAULTVALUE_ADMIN_SYSADMIN_EMAIL = null; // null will fall back to system level admin
-    private static final String DEFAULTVALUE_ADMIN_ACTIVATION_URL = ""; // should be configured in properties file
-    private static final String DEFAULTVALUE_ADMIN_CONFIRMATION_URL = ""; // should be configured in properties file
-    private static final String DEFAULTVALUE_ADMIN_RESETPW_URL = ""; // should be configured in properties file
 
     private static final Map<String, String> noConfigDefaults = new HashMap<>();
     static {
-        noConfigDefaults.put(PROPERTIES_DEFAULT_CONNECTION_PARAM, DEFAULTVALUE_DEFAULT_CONNECTION_PARAM);
-        noConfigDefaults.put(PROPERTIES_ADMIN_SYSADMIN_EMAIL, DEFAULTVALUE_ADMIN_SYSADMIN_EMAIL);
-        noConfigDefaults.put(PROPERTIES_ADMIN_ACTIVATION_URL, DEFAULTVALUE_ADMIN_ACTIVATION_URL);
-        noConfigDefaults.put(PROPERTIES_ADMIN_CONFIRMATION_URL, DEFAULTVALUE_ADMIN_CONFIRMATION_URL);
-        noConfigDefaults.put(PROPERTIES_ADMIN_RESETPW_URL, DEFAULTVALUE_ADMIN_RESETPW_URL);
+        noConfigDefaults.put(ORGPROPERTIES_API_URL_BASE, DEFAULTVALUE_API_URL_BASE);
+        noConfigDefaults.put(ORGPROPERTIES_DEFAULT_CONNECTION_PARAM, DEFAULTVALUE_DEFAULT_CONNECTION_PARAM);
+        noConfigDefaults.put(ORGPROPERTIES_ADMIN_SYSADMIN_EMAIL, DEFAULTVALUE_ADMIN_SYSADMIN_EMAIL);
     }
 
-    //protected final Properties properties;
-    protected final Map<String, String> map;
+    private static final String URLPATH_ORGANIZATION_ACTIVATION = "/management/organizations/%s/activate";
+    private static final String URLPATH_ADMIN_ACTIVATION = "/management/users/%s/activate";
+    private static final String URLPATH_ADMIN_CONFIRMATION = "/management/users/%s/confirm";
+    private static final String URLPATH_ADMIN_RESETPW = "/management/users/%s/resetpw";
+    private static final String URLPATH_USER_ACTIVATION = "/%s/%s/users/%s/activate";
+    private static final String URLPATH_USER_CONFIRMATION = "/%s/%s/users/%s/confirm";
+    private static final String URLPATH_USER_RESETPW = "/%s/%s/users/%s/resetpw";
+
+    private static final Map<WorkflowUrl,String> urlPaths = new HashMap<>();
+    static {
+        urlPaths.put(WorkflowUrl.ORGANIZATION_ACTIVATION_URL, URLPATH_ORGANIZATION_ACTIVATION);
+        urlPaths.put(WorkflowUrl.ADMIN_ACTIVATION_URL, URLPATH_ADMIN_ACTIVATION);
+        urlPaths.put(WorkflowUrl.ADMIN_CONFIRMATION_URL, URLPATH_ADMIN_CONFIRMATION);
+        urlPaths.put(WorkflowUrl.ADMIN_RESETPW_URL, URLPATH_ADMIN_RESETPW);
+        urlPaths.put(WorkflowUrl.USER_ACTIVATION_URL, URLPATH_USER_ACTIVATION);
+        urlPaths.put(WorkflowUrl.USER_CONFIRMATION_URL, URLPATH_USER_CONFIRMATION);
+        urlPaths.put(WorkflowUrl.USER_RESETPW_URL, URLPATH_USER_RESETPW);
+    }
+
+    protected final Properties properties;
+
+    protected final Map<String, String> defaultProperties;
+    protected final Map<String, String> orgProperties;
+
 
     public OrganizationConfigPropsImpl(Properties properties) {
-        map = new HashMap<>();
-        noConfigDefaults.forEach((k,v) -> map.put(k, properties.getProperty(k, v)));
+        this(properties, null);
     }
 
-    public Set<String> getPropertyNames() {
+    public OrganizationConfigPropsImpl(Properties properties, Map<String, String> map) {
+        this.properties = new Properties(properties);
+        this.properties.putAll(properties);
+
+        this.defaultProperties = new HashMap<>(noConfigDefaults);
+        // add any corresponding properties to default props map
+        noConfigDefaults.keySet().forEach((k) -> {
+            String value = properties.getProperty(k);
+
+            // ok if value is empty string
+            if (value != null) {
+                this.defaultProperties.put(k, value);
+            }
+        });
+
+        this.orgProperties = map != null ? new HashMap<>(map) : new HashMap<>();
+        //noConfigDefaults.forEach((k,v) -> map.put(k, properties.getProperty(k, v)));
+    }
+
+    public OrganizationConfigPropsImpl(OrganizationConfigProps orgConfigProps) {
+        this.properties = orgConfigProps.getPropertiesMap();
+        this.defaultProperties = orgConfigProps.getDefaultPropertiesMap();
+        this.orgProperties = orgConfigProps.getOrgPropertiesMap();
+    }
+
+    public boolean orgPropertyNameValid(String name) {
+        return noConfigDefaults.containsKey(name);
+    }
+
+    @Override
+    public Set<String> getOrgPropertyNames() {
         return new HashSet<>(noConfigDefaults.keySet());
     }
 
-    public Map<String, String> getPropertyMap() {
-        return new HashMap<>(map);
+    @Override
+    public Properties getPropertiesMap() {
+        Properties ret = new Properties(properties);
+        ret.putAll(properties);
+        return ret;
     }
 
+    @Override
+    public Map<String, String> getDefaultPropertiesMap() {
+        return new HashMap<>(defaultProperties);
+    }
+
+    @Override
+    public Map<String, String> getOrgPropertiesMap() {
+        return new HashMap<>(orgProperties);
+    }
+
+    //
+    // 1. return from orgProperties (if it exists)
+    // 2. return from properties (if it exists)
+    // 3. return no config defaults (if it exists)
+    // 4. if none exists, return null
+    //
+    @Override
     public String getProperty(String name) {
-        String propertyValue = map.get(name);
-        if (isBlank(propertyValue)) {
-            logger.warn("Missing value for " + name);
-            propertyValue = null;
-        }
-        return propertyValue;
-    }
+        String propertyValue;
 
-
-    public String getProperty(String name, String defaultValue) {
-        return map.getOrDefault(name, defaultValue);
-    }
-
-
-    public boolean isProperty(String name, boolean defaultValue) {
-        String val = getProperty(name);
-        if (isBlank(val)) {
-            return defaultValue;
+        if (orgPropertyNameValid(name)) {
+            if (orgProperties.containsKey(name)) {
+                // return from org-specific properties
+                propertyValue = orgProperties.get(name);
+            } else if (properties.containsKey(name)) {
+                // return from properties file
+                propertyValue = (String)properties.get(name);
+            } else {
+                // return the default
+                propertyValue = defaultProperties.get(name);
+            }
         } else {
-            return Boolean.parseBoolean(val);
+            // not an org config item, return from properties
+            propertyValue = properties.getProperty(name);
         }
+
+        return !isBlank(propertyValue) ? propertyValue : null;
     }
 
+
+    @Override
+    public String getProperty(String name, String defaultValue) {
+        String propertyValue = getProperty(name);
+        return !isBlank(propertyValue) ? propertyValue : defaultValue;
+    }
+
+
+    @Override
+    public boolean boolProperty(String name, boolean defaultValue) {
+        String val = getProperty(name);
+        return !isBlank(val) ? Boolean.parseBoolean(val) : defaultValue;
+    }
+
+    @Override
     public int intProperty(String name, int defaultValue) {
         String val = getProperty(name);
-        if (isBlank(val)) {
-            return defaultValue;
-        } else {
-            return Integer.parseInt(val);
-        }
+        return !isBlank(val) ? Integer.parseInt(val) : defaultValue;
     }
 
+    @Override
     public long longProperty(String name, long defaultValue) {
         String val = getProperty(name);
-        if (isBlank(val)) {
-            return defaultValue;
-        } else {
-            return Long.parseLong(val);
-        }
+        return !isBlank(val) ? Long.parseLong(val) : defaultValue;
     }
 
+    @Override
     public void setProperty(String name, String value) {
-        map.put(name,value);
+        orgProperties.put(name,value);
+    }
+
+    @Override
+    public String getFullUrlTemplate(WorkflowUrl urlType) {
+        String urlTemplate = null;
+        if (urlPaths.containsKey(urlType)) {
+            urlTemplate = getProperty(ORGPROPERTIES_API_URL_BASE) + urlPaths.get(urlType);
+        }
+        return urlTemplate;
+    }
+
+    @Override
+    public String getFullUrl(WorkflowUrl urlType, Object ... arguments) {
+        String urlTemplate = getFullUrlTemplate(urlType);
+        return String.format(urlTemplate, arguments);
     }
 
 }
