@@ -78,7 +78,6 @@ public class EmailFlowIT {
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
         setup.set( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-        setup.set( PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
         setup.set( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
 
         final String orgName = uniqueOrg();
@@ -121,7 +120,6 @@ public class EmailFlowIT {
         setup.set( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
         setup.set( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-        setup.set( PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-2@mockserver.com" );
 
         final String orgName = uniqueOrg();
         final String userName = uniqueUsername();
@@ -156,7 +154,7 @@ public class EmailFlowIT {
 
         assertEquals( "User Account Confirmed", confirmation.getSubject() );
 
-        List<Message> sysadmin_inbox = Mailbox.get( "sysadmin-2@mockserver.com" );
+        List<Message> sysadmin_inbox = Mailbox.get( "testadmin@usergrid.com" );
         assertFalse( sysadmin_inbox.isEmpty() );
 
         Message activation = sysadmin_inbox.get( 0 );
