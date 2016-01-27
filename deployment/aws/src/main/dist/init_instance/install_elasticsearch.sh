@@ -26,7 +26,7 @@ cat >> elasticsearch.sources.list << EOF
 deb http://packages.elasticsearch.org/elasticsearch/1.4/debian stable main
 EOF
 apt-get update
-apt-get --force-yes -y install elasticsearch=1.4.2
+apt-get --force-yes -y install elasticsearch=1.4.4
 /etc/init.d/elasticsearch stop
 
 mkdir -p /mnt/data/elasticsearch
@@ -104,7 +104,7 @@ pushd /usr/share/elasticsearch/bin
 
 #Install kopf
 
-./plugin --install lmenezes/elasticsearch-kopf/1.2
+./plugin --install lmenezes/elasticsearch-kopf/1.0
 
 #Install bigdesk
 
@@ -112,7 +112,7 @@ pushd /usr/share/elasticsearch/bin
 
 ./plugin -install karmi/elasticsearch-paramedic
 
-./plugin -install elasticsearch/elasticsearch-cloud-aws/2.4.1
+./plugin -install elasticsearch/elasticsearch-cloud-aws/2.4.2
 
 popd
 
