@@ -69,14 +69,10 @@ key_cache_size_in_mb: 2048
 key_cache_save_period: 14400
 row_cache_size_in_mb: 2048
 row_cache_save_period: 14400
-row_cache_provider: SerializingCacheProvider
 saved_caches_directory: /mnt/data/cassandra/saved_caches
 commitlog_sync: periodic
 commitlog_sync_period_in_ms: 10000
 commitlog_segment_size_in_mb: 32
-flush_largest_memtables_at: 0.75
-reduce_cache_sizes_at: 0.85
-reduce_cache_capacity_to: 0.6
 concurrent_reads: 32
 concurrent_writes: 32
 memtable_flush_queue_size: 4
