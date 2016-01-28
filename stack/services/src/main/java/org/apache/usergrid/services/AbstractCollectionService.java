@@ -288,31 +288,8 @@ public class AbstractCollectionService extends AbstractService {
     @Override
     public ServiceResults putItemByName( ServiceContext context, String name ) throws Exception {
 
-        if ( context.moreParameters() ) {
-            return getItemByName( context, name );
-        }
-
         EntityRef ref = em.getAlias( getEntityType(), name );
-        Entity entity;
-        if ( ref == null ) {
-            // null entity ref means we tried to put a non-existing entity
-            // before we create a new entity for it, we should check for permission
-            checkPermissionsForCollection(context);
-            Map<String, Object> properties = context.getPayload().getProperties();
-            if ( !properties.containsKey( "name" ) || !( ( String ) properties.get( "name" ) ).trim().equalsIgnoreCase(
-                    name ) ) {
-                properties.put( "name", name );
-            }
-            entity = em.create( getEntityType(), properties );
-        }
-        else {
-            entity = em.get( ref );
-            entity = importEntity( context, entity );
-            checkPermissionsForEntity( context, entity );
-            updateEntity( context, entity );
-        }
-
-        return new ServiceResults( this, context, Type.COLLECTION, Results.fromEntity( entity ), null, null );
+        return putItemById(context ,ref.getUuid() );
     }
 
 
