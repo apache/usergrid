@@ -44,12 +44,10 @@ import org.apache.usergrid.rest.applications.events.EventsResource;
 import org.apache.usergrid.rest.applications.queues.QueueResource;
 import org.apache.usergrid.rest.applications.users.UsersResource;
 import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
-import org.apache.usergrid.rest.exceptions.NotFoundExceptionMapper;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.exceptions.UnsupportedRestOperationException;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
-import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -429,13 +427,13 @@ public class ApplicationResource extends ServiceResource {
             ApplicationInfo app = management.getApplicationInfo( applicationId );
             applicationName = app.getName();
 
-            return handleViewable( "authorize_form", this );
+            return handleViewable( "authorize_form", this, getOrganizationName() );
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, getOrganizationName() );
         }
     }
 
@@ -491,14 +489,14 @@ public class ApplicationResource extends ServiceResource {
             ApplicationInfo app = management.getApplicationInfo( applicationId );
             applicationName = app.getName();
 
-            return Response.ok( handleViewable( "authorize_form", this ) ).build() ;
+            return Response.ok( handleViewable( "authorize_form", this, getOrganizationName() ) ).build() ;
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
             logger.error("handleAuthorizeForm failed", e);
-            return Response.ok( handleViewable( "error", this ) ).build() ;
+            return Response.ok( handleViewable( "error", this, getOrganizationName() ) ).build() ;
         }
     }
 

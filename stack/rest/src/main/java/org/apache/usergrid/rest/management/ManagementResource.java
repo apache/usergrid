@@ -268,7 +268,7 @@ public class ManagementResource extends AbstractContextResource {
                     }
                     catch ( UnconfirmedAdminUserException uaue ) {
                         errorDescription = "User must be confirmed to authenticate";
-                        logger.warn( "Responding with HTTP 403 forbidden response for unconfirmed user {}" , user);
+                        logger.warn("Responding with HTTP 403 forbidden response for unconfirmed user");
 
                         OAuthResponse response = OAuthResponse.errorResponse( SC_FORBIDDEN )
                                                               .setError( OAuthError.TokenResponse.INVALID_GRANT )
@@ -469,6 +469,7 @@ public class ManagementResource extends AbstractContextResource {
                 user = management.verifyAdminUserPasswordCredentials( username, password );
             }
             catch ( Exception e1 ) {
+                // intentionally empty
             }
             if ( ( user != null ) && isNotBlank( redirect_uri ) ) {
                 if ( !redirect_uri.contains( "?" ) ) {
@@ -584,7 +585,7 @@ public class ManagementResource extends AbstractContextResource {
         if ( ttl == -1 ) {
             throw new IllegalArgumentException("ttl must be specified");
         }
-        AccessInfo accessInfo = null;
+        AccessInfo accessInfo;
 
         Timer processingTimer = getMetricsFactory().getTimer(
             ManagementResource.class, SSO_PROCESSING_TIME );
