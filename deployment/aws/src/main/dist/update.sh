@@ -21,7 +21,7 @@ sudo mkdir __tmpupdate__
 pushd __tmpupdate__
 
     sudo s3cmd --config=/etc/s3cfg get s3://${RELEASE_BUCKET}/ROOT.war
-    # sudo tar xzvf awscluster-1.0-SNAPSHOT-any.tar.gz
+    # sudo tar xzvf awscluster-1.0-SNAPSHOT.tar.gz
     sudo /etc/init.d/tomcat7 stop
     sudo cp -r ROOT.war /var/lib/tomcat7/webapps
 

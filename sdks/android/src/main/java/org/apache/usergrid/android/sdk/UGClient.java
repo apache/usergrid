@@ -156,7 +156,7 @@ public class UGClient {
     private String accessToken = null;
 
     private String currentOrganization = null;
-    private URLConnectionFactory urlConnectionFactory = null;
+    private URLConnectionFactory urlConnectionFactory = new DefaultURLConnectionFactory();
     
     private LocationManager locationManager;
     private UUID deviceID;
@@ -284,7 +284,11 @@ public class UGClient {
      * @y.exclude
      */
     public void setUrlConnectionFactory(URLConnectionFactory urlConnectionFactory) {
-    	this.urlConnectionFactory = urlConnectionFactory;
+        if (urlConnectionFactory == null) {
+            this.urlConnectionFactory = new DefaultURLConnectionFactory();
+        } else {
+            this.urlConnectionFactory = urlConnectionFactory;
+        }
     }
 
     /**
@@ -592,9 +596,7 @@ public class UGClient {
 	        }
 
 			//logTrace("Invoking " + httpMethod + " to '" + urlAsString + "'");
-
-			URL url = new URL(urlAsString);
-			conn = (HttpURLConnection) url.openConnection();
+			conn = (HttpURLConnection) urlConnectionFactory.openConnection(urlAsString);
             
 			conn.setRequestMethod(httpMethod);
 			conn.setRequestProperty("Content-Type", contentType);
