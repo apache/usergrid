@@ -1575,10 +1575,10 @@
     </repositories>
 
     <scm>
-        <url>https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</url>
-        <connection>scm:git:http://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</connection>
+        <url>https://git-wip-us.apache.org/repos/asf/usergrid.git</url>
+        <connection>scm:git:http://git-wip-us.apache.org/repos/asf/usergrid.git</connection>
         <tag>HEAD</tag>
-        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git
+        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/usergrid.git
         </developerConnection>
     </scm>
 
