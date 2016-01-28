@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.applications.users;
 
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -29,11 +30,22 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.mutation.MutationResult;
+import me.prettyprint.hector.api.mutation.Mutator;
+
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_PROPERTIES;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.apache.usergrid.persistence.cassandra.Serializers.be;
+import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
+import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -196,5 +208,53 @@ public class CollectionsResourceIT extends AbstractRestIT {
             int secondFred = s.indexOf( "fred", firstFred + 4 );
             Assert.assertEquals( "Should not be more than one name property", -1, secondFred );
         }
+    }
+
+    @Test
+    public void testUpdatingRandomEntity() throws Exception {
+
+        UUID entityId = null;
+
+            // create an "app_user" object with name fred
+            Map<String, String> payload = hashMap( "type", "app_user" ).map( "name", "fred" );
+
+            JsonNode node = resource().path( "/test-organization/test-app/app_users" )
+                                      .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                                      .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+
+            String uuidString = node.get( "entities" ).get( 0 ).get( "uuid" ).asText();
+            entityId = UUIDUtils.tryGetUUID( uuidString );
+        UUID applicationId = UUIDUtils.tryGetUUID( node.get( "application").asText());
+
+
+        UUID timestampUuid = newTimeUUID();
+        long timestamp = getTimestampInMicros( timestampUuid );
+
+        //Delete only the entity properties out of the filesystem.
+        Keyspace ko = setup.getCassSvc().getApplicationKeyspace( applicationId );
+
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
+        addDeleteToMutator( m, ENTITY_PROPERTIES, key( entityId ), timestamp);
+
+        m.execute();
+
+        payload = hashMap( "name", "ted" );
+
+
+        // check REST API response for duplicate name property
+            // have to look at raw response data, Jackson will remove dups
+            node = resource().path( "/test-organization/test-app/app_users/fred") //+entityId )
+                                 .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                                 .type( MediaType.APPLICATION_JSON_TYPE ).put(JsonNode.class, payload );
+
+            assertNotNull(node);
+
+
+        node = resource().path( "/test-organization/test-app/app_users/fred")//+entityId )
+                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                         .type( MediaType.APPLICATION_JSON_TYPE ).get(JsonNode.class );
+
+        assertNotNull(node);
+
     }
 }
