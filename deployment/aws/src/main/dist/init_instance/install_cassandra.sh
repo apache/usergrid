@@ -27,7 +27,7 @@ deb http://debian.datastax.com/community stable main
 EOF
 
 apt-get update
-apt-get -y --force-yes install libcap2 cassandra=1.2.19
+apt-get -y --force-yes install libcap2 cassandra=2.0.15
 /etc/init.d/cassandra stop
 
 mkdir -p /mnt/data/cassandra
