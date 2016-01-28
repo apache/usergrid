@@ -12,9 +12,13 @@ These are the important files:
   /release/release.sh     - create a release
   /release/changelog.rb   - generate CHANGELOG based on JIRA fixVerison 
 
+NOTE: if you are releasing from a branch other than 'release' then make sure
+the two bash scripts in this directory define RELEASE_BRANCH correctly.
+
 To create a release candidate:
 
-1) Change to the master branch. Set .usergridversion to release version number.
+1) Change to the release branch (usually this is master). 
+   Set .usergridversion to release version number.
 
 2) Make sure that all JIRA issues that you want in the CHANGELOG have fixVersion
    that matches the release version number in .usergridversion
