@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest.applications;
 
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
@@ -130,6 +129,11 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
+    public String getOrganizationName() {
+        return services.getApplication().getOrganizationName();
+    }
+
+
     public List<ServiceParameter> getServiceParameters() {
         if ( serviceParameters != null ) {
             return serviceParameters;
@@ -137,7 +141,7 @@ public class ServiceResource extends AbstractContextResource {
         if ( getServiceResourceParent() != null ) {
             return getServiceResourceParent().getServiceParameters();
         }
-        serviceParameters = new ArrayList<ServiceParameter>();
+        serviceParameters = new ArrayList<>();
         return serviceParameters;
     }
 
@@ -648,7 +652,7 @@ public class ServiceResource extends AbstractContextResource {
 
         // collect form data values
         List<BodyPart> bodyParts = multiPart.getBodyParts();
-        HashMap<String, Object> data = new HashMap<String, Object>();
+        HashMap<String, Object> data = new HashMap<>();
         for ( BodyPart bp : bodyParts ) {
             FormDataBodyPart bodyPart = ( FormDataBodyPart ) bp;
             if ( bodyPart.getMediaType().equals( MediaType.TEXT_PLAIN_TYPE ) ) {
@@ -791,7 +795,7 @@ public class ServiceResource extends AbstractContextResource {
 
         boolean range = StringUtils.isNotBlank( rangeHeader );
         long start = 0, end = 0, contentLength = 0;
-        InputStream inputStream = null;
+        InputStream inputStream;
 
         if ( range ) { // honor range request, calculate start & end
 
