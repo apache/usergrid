@@ -122,7 +122,13 @@ public class UsersResource extends AbstractContextResource {
                     properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
         }
 
-        logger.info( "Create user: " + username );
+        // email is only required parameter
+        if (StringUtils.isBlank(email)) {
+            throw new IllegalArgumentException( "email form parameter is required" );
+        }
+
+        // if username not provided, email will be used
+        logger.info( "Create user: {}", (StringUtils.isNotBlank(username) ? username : email) );
 
         ApiResponse response = createApiResponse();
         response.setAction( "create user" );
