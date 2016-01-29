@@ -67,7 +67,8 @@ public class CassandraClusterImpl implements CassandraCluster {
             .setDiscoveryType( NodeDiscoveryType.valueOf( cassandraFig.getDiscoveryType() ) )
             .setTargetCassandraVersion( cassandraFig.getVersion() )
             .setDefaultReadConsistencyLevel( cassandraConfig.getReadCL() )
-            .setDefaultWriteConsistencyLevel( cassandraConfig.getWriteCL() );
+            .setDefaultWriteConsistencyLevel( cassandraConfig.getWriteCL() )
+            .setMaxThriftSize( cassandraFig.getThriftBufferSize() );
 
 
         if(cassandraFig.useSharedPoolForLocks()){
