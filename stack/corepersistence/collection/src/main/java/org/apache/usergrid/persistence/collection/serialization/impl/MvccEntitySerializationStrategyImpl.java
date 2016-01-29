@@ -185,7 +185,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
                 return Observable.just( listObservable ).map( scopedRowKeys -> {
 
                     try {
-                        return keyspace.prepareQuery( columnFamily ).getKeySlice( rowKeys )
+                        return keyspace.prepareQuery( columnFamily ).getKeySlice( scopedRowKeys )
                                        .withColumnRange( maxVersion, null, false, 1 ).execute().getResult();
                     }
                     catch ( ConnectionException e ) {

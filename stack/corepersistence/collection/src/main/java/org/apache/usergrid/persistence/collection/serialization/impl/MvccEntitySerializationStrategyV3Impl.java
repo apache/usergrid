@@ -190,7 +190,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
                     try {
-                        return keyspace.prepareQuery( CF_ENTITY_DATA ).getKeySlice( rowKeys )
+                        return keyspace.prepareQuery( CF_ENTITY_DATA ).getKeySlice( scopedRowKeys )
                             .withColumnSlice( COL_VALUE ).execute().getResult();
                     }
                     catch ( ConnectionException e ) {
