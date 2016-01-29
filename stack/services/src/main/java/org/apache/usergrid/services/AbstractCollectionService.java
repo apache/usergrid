@@ -17,7 +17,9 @@
 package org.apache.usergrid.services;
 
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,7 +37,19 @@ import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
+import org.apache.usergrid.utils.MapUtils;
+import org.apache.usergrid.utils.UUIDUtils;
 
+import com.fasterxml.uuid.impl.UUIDUtil;
+
+import me.prettyprint.cassandra.service.RangeSlicesIterator;
+import me.prettyprint.hector.api.beans.ColumnSlice;
+import me.prettyprint.hector.api.factory.HFactory;
+import me.prettyprint.hector.api.query.ColumnQuery;
+import me.prettyprint.hector.api.query.RangeSlicesQuery;
+
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
+import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 
 
@@ -289,7 +303,7 @@ public class AbstractCollectionService extends AbstractService {
     public ServiceResults putItemByName( ServiceContext context, String name ) throws Exception {
 
         EntityRef ref = em.getAlias( getEntityType(), name );
-        return putItemById(context ,ref.getUuid() );
+        return putItemById( context, ref.getUuid() );
     }
 
 
@@ -447,14 +461,15 @@ public class AbstractCollectionService extends AbstractService {
 
         Entity item = em.get( id );
         if ( item == null ) {
+            logger.error(
+                    "Found entity reference but not entity properties when trying to delete uuid: {}.Please delete by"
+                            + " Name.", id );
             throw new ServiceResourceNotFoundException( context );
         }
 
         validateEntityType( item, id );
 
         item = importEntity( context, item );
-
-        prepareToDelete( context, item );
 
         em.removeFromCollection( context.getOwner(), context.getCollectionName(), item );
 
@@ -468,20 +483,29 @@ public class AbstractCollectionService extends AbstractService {
         if ( context.moreParameters() ) {
             return getItemByName( context, name );
         }
-
         EntityRef ref = em.getAlias( getEntityType(), name );
+
         if ( ref == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
+
+        checkPermissionsForEntity( context, ref );
+
         Entity entity = em.get( ref );
         if ( entity == null ) {
-            throw new ServiceResourceNotFoundException( context );
+            logger.error(
+                    "Found entity reference but not entity properties when trying to delete. Cleaning up uuid: {}",
+                    ref.getUuid() );
+            String entityType = getEntityType();
+            Map<String, Object> properties = new HashMap<String, Object>();
+            properties.put( "name", name );
+            em.create( ref.getUuid(), entityType, properties );
+
+            em.removeFromCollection( context.getOwner(), context.getCollectionName(), ref );
+            return new ServiceResults( this, context, Type.COLLECTION, Results.fromRef( ref ), null, null );
         }
+
         entity = importEntity( context, entity );
-
-        checkPermissionsForEntity( context, entity );
-
-        prepareToDelete( context, entity );
 
         em.removeFromCollection( context.getOwner(), context.getCollectionName(), entity );
 
