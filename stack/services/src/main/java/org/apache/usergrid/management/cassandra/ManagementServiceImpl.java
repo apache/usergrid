@@ -2198,7 +2198,14 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public TokenInfo getPasswordResetTokenInfoForAdminUser( String token ) throws Exception {
-        return getTokenInfoFromAccessToken(token, TOKEN_TYPE_PASSWORD_RESET, ADMIN_USER);
+        TokenInfo tokenInfo = null;
+        try {
+            tokenInfo = getTokenInfoFromAccessToken(token, TOKEN_TYPE_PASSWORD_RESET, ADMIN_USER);
+        }
+        catch (Exception e) {
+            // intentionally empty
+        }
+        return tokenInfo;
     }
 
 
@@ -2210,6 +2217,9 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public boolean checkPasswordResetTokenForAdminUser( UUID userId, TokenInfo tokenInfo ) throws Exception {
+        if (tokenInfo == null) {
+            return false;
+        }
         AuthPrincipalInfo principal = null;
         try {
             principal = tokenInfo.getPrincipal();

@@ -219,9 +219,11 @@ public class UserResource extends AbstractContextResource {
         try {
             this.token = token;
             TokenInfo tokenInfo = management.getPasswordResetTokenInfoForAdminUser(token);
-            organizationId = tokenInfo.getWorkflowOrgId();
+            if (tokenInfo != null) {
+                organizationId = tokenInfo.getWorkflowOrgId();
+            }
 
-            if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), tokenInfo ) ) {
+            if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), token ) ) {
                 return handleViewable( "resetpw_set_form", this, organizationId );
             }
             else {
@@ -264,7 +266,9 @@ public class UserResource extends AbstractContextResource {
         try {
             this.token = token;
             TokenInfo tokenInfo = management.getPasswordResetTokenInfoForAdminUser(token);
-            organizationId = tokenInfo.getWorkflowOrgId();
+            if (tokenInfo != null) {
+                organizationId = tokenInfo.getWorkflowOrgId();
+            }
 
             //      if(user == null) {
             //        errorMsg = "Incorrect username entered";
@@ -272,7 +276,7 @@ public class UserResource extends AbstractContextResource {
             //      }
 
             if ( ( password1 != null ) || ( password2 != null ) ) {
-                if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), tokenInfo ) ) {
+                if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), token ) ) {
                     if ( ( password1 != null ) && password1.equals( password2 ) ) {
                         management.setAdminUserPassword( user.getUuid(), password1 );
                         management.revokeAccessTokenForAdminUser( user.getUuid(), token );
