@@ -11,7 +11,7 @@ This document covers these two topics:
 
 ## Deploying the Usergrid Stack
 
-The Usergrid Stack is a Java 8 web application that runs on Tomcat, 
+The Usergrid Stack is a Java EE web application that runs on Tomcat, 
 uses the Cassandra database for storage and the ElasticSearch search-engine for queries.
 Below are the software requirements for the Stack. You can install them all on 
 one computer for development purposes, and for deployment you can deploy them
@@ -33,9 +33,9 @@ a three or more node cluster is recommended.
 Cassandra requires Java and we recommend that you use the same version of Java 
 for Cassandra as you use to run Tomcat and ElasticSearch.
 
-Refer to the [Apache Cassandra documentation](http://XXXXXXXX) 
-for instructions on how to install 
-Cassandra. Once you are up and running make a note of these things:
+Refer to the [Apache Cassandra documentation](http://wiki.apache.org/cassandra/GettingStarted) 
+for instructions on how to install Cassandra. The [Datastax documentation for Cassandra 1.2](http://docs.datastax.com/en/cassandra/1.2/cassandra/features/featuresTOC.html) is also helpful. 
+Once you are up and running make a note of these things:
 
    * The name of the Cassandra cluster
    * Hostname or IP address of each Cassandra node
@@ -51,7 +51,7 @@ a cluster in production.
 ElasticSearch requires Java and you MUST ensure that you use the same version of Java 
 for ElasticSearch as you do for running Tomcat.
 
-Refer to the [ElasticSearch documentation](http://XXXXXXXX) 
+Refer to the [ElasticSearch 1.4 documentation](https://www.elastic.co/guide/en/elasticsearch/reference/1.4/index.html) 
 for instructions on how to install. 
 Once you are up and running make a note of these things:
 
@@ -68,8 +68,8 @@ set the number of replicas to zero, otherwise it will appear to be unhealthy.
 
 The Usergrid Stack is contained in a file named ROOT.war, a standard Java EE WAR
 ready for deployment to Tomcat. On each machine that will run the Usergrid Stack 
-you must install the Java SE 8 JDK and Tomcat 7+. Refer to the Apache Tomcat 
-documentation for installation instructions.
+you must install the Java SE 8 JDK and Tomcat 7+. 
+Refer to the [Apache Tomcat 7](https://tomcat.apache.org/tomcat-7.0-doc/setup.html) documentation for installation instructions.
 
 Once Tomcat installed, you need to create and edit some configuration files.
 
@@ -105,7 +105,7 @@ __Table 1: Values to set in Example Properties file:__
 | __CASSANDRA_CLUSTER_NAME__ | Name of Cassandra cluster, must match what's in Cassandra configuration. |
 | __CASSANDRA_HOSTS__ | Comma-separated lists of Cassandra hosts, with port numbers if you are not using the default 9120. The default for this property is __localhost:9120__ |
 | __ELASTICSEARCH_CLUSTER_NAME__ | Name of ElasticSearch cluster, must match what's in ElasticSearch configuration. |
-| __ELASTICSEARCH_HOSTS__ | Comma-separated lists of ElasticSearch hosts, with port numbers if you are not using the default 9120. The default for this property is __localhost:9300__ |
+| __ELASTICSEARCH_HOSTS__ | Comma-separated lists of ElasticSearch hosts, with port numbers if you are not using the default 9300. The default for this property is __localhost:9300__ |
 | __SUPER_USER_EMAIL__ | Email address of person responsible for the superuser account. |
 | __SUPER_USER_PASSWORD__ | Password for the superuser account. |
 | __TEST_ADMIN_USER_EMAIL__ | If __usergrid.setup-test-account=true__, as shown below, Usergrid will create a test account and you should specify a valid email here. |
