@@ -98,18 +98,18 @@ shell variables, e.g. ${USERGRID_CLUSTER_NAME}. Here's a guide to the things you
 
 __Table 1: Values to set in Example Properties file:__
 
-   | Value       | Description |
-   |-------------|-------------|
-   | __BASEURL__ | This is the base URL for the Usergrid installation, e.g. __https://api.example.com__. |
-   | __USERGRID_CLUSTER_NAME__ | This is your name for your Usergrid installation. |
-   | __CASSANDRA_CLUSTER_NAME__ | Name of Cassandra cluster, must match what's in Cassandra configuration. |
-   | __CASSANDRA_HOSTS__ | Comma-separated lists of Cassandra hosts, with port numbers if you are not using the default 9120. The default for this property is __localhost:9120__ |
-   | __ELASTICSEARCH_CLUSTER_NAME__ | Name of ElasticSearch cluster, must match what's in ElasticSearch configuration. |
-   | __ELASTICSEARCH_HOSTS__ | Comma-separated lists of ElasticSearch hosts, with port numbers if you are not using the default 9120. The default for this property is __localhost:9300__ |
-   | __SUPER_USER_EMAIL__ | Email address of person responsible for the superuser account. |
-   | __SUPER_USER_PASSWORD__ | Password for the superuser account. |
-   | __TEST_ADMIN_USER_EMAIL__ | If __usergrid.setup-test-account=true__, as shown below, Usergrid will create a test account and you should specify a valid email here. |
-   | __TEST_ADMIN_USER_PASSWORD__ | Password for the username 'test' account. |
+| Value       | Description |
+|-------------|-------------|
+| __BASEURL__ | This is the base URL for the Usergrid installation, e.g. __https://api.example.com__. |
+| __USERGRID_CLUSTER_NAME__ | This is your name for your Usergrid installation. |
+| __CASSANDRA_CLUSTER_NAME__ | Name of Cassandra cluster, must match what's in Cassandra configuration. |
+| __CASSANDRA_HOSTS__ | Comma-separated lists of Cassandra hosts, with port numbers if you are not using the default 9120. The default for this property is __localhost:9120__ |
+| __ELASTICSEARCH_CLUSTER_NAME__ | Name of ElasticSearch cluster, must match what's in ElasticSearch configuration. |
+| __ELASTICSEARCH_HOSTS__ | Comma-separated lists of ElasticSearch hosts, with port numbers if you are not using the default 9120. The default for this property is __localhost:9300__ |
+| __SUPER_USER_EMAIL__ | Email address of person responsible for the superuser account. |
+| __SUPER_USER_PASSWORD__ | Password for the superuser account. |
+| __TEST_ADMIN_USER_EMAIL__ | If __usergrid.setup-test-account=true__, as shown below, Usergrid will create a test account and you should specify a valid email here. |
+| __TEST_ADMIN_USER_PASSWORD__ | Password for the username 'test' account. |
    
 Make sure you set all of the above properties when you edit this example for your installation.   
    
