@@ -17,7 +17,6 @@
 package org.apache.usergrid.services;
 
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +26,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
@@ -37,19 +37,7 @@ import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
-import org.apache.usergrid.utils.MapUtils;
-import org.apache.usergrid.utils.UUIDUtils;
 
-import com.fasterxml.uuid.impl.UUIDUtil;
-
-import me.prettyprint.cassandra.service.RangeSlicesIterator;
-import me.prettyprint.hector.api.beans.ColumnSlice;
-import me.prettyprint.hector.api.factory.HFactory;
-import me.prettyprint.hector.api.query.ColumnQuery;
-import me.prettyprint.hector.api.query.RangeSlicesQuery;
-
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_UNIQUE;
-import static org.apache.usergrid.persistence.cassandra.Serializers.be;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 
 
