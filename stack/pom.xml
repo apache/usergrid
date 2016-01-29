@@ -98,7 +98,7 @@
         <!-- =================================================================== -->
 
         <amber-version>0.22-incubating</amber-version>
-        <astyanax.version>1.56.49-SNAPSHOT-UG-1</astyanax.version>
+        <astyanax.version>3.9.0</astyanax.version>
         <aws.version>1.10.20</aws.version>
         <cassandra-version>1.2.18</cassandra-version>
         <guava.version>18.0</guava.version>
