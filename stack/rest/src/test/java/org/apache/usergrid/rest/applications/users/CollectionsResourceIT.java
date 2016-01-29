@@ -29,6 +29,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.rest.AbstractRestIT;
@@ -37,21 +38,20 @@ import org.apache.usergrid.utils.UUIDUtils;
 import com.sun.jersey.api.client.UniformInterfaceException;
 
 import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.mutation.MutationResult;
 import me.prettyprint.hector.api.mutation.Mutator;
-import static org.hamcrest.CoreMatchers.*;
-
 
 import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_PROPERTIES;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
 import static org.apache.usergrid.persistence.cassandra.Serializers.be;
+import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertThat;
 
 
