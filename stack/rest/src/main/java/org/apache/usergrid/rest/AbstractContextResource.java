@@ -116,8 +116,8 @@ public abstract class AbstractContextResource {
 
 
     public <T extends AbstractContextResource> T getSubResource(Class<T> t) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("getSubResource: " + t.getCanonicalName());
+        if (logger.isTraceEnabled()) {
+            logger.trace("getSubResource: {}", t.getCanonicalName());
         }
         T subResource = resourceContext.getResource(t);
         subResource.setParent(this);
@@ -175,13 +175,13 @@ public abstract class AbstractContextResource {
 
         if (StringUtils.isNotBlank(redirect_url)) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Redirecting to URL: ", redirect_url);
+                logger.debug("Redirecting to URL: {}", redirect_url);
             }
             sendRedirect(redirect_url);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Dispatching to viewable with template: {}", template, template_property);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Dispatching to viewable with template: {}  property: {}", template, template_property);
         }
 
         Viewable viewable = new Viewable(template, model);

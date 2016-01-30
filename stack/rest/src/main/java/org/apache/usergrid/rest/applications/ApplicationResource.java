@@ -153,8 +153,8 @@ public class ApplicationResource extends ServiceResource {
     @RequireApplicationAccess
     @Path("assets")
     public AssetsResource getAssetsResource( @Context UriInfo ui ) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("in assets n applicationResource");
+        if (logger.isTraceEnabled()) {
+            logger.trace("in assets n applicationResource");
         }
         addParameter( getServiceParameters(), "assets" );
 
@@ -171,8 +171,8 @@ public class ApplicationResource extends ServiceResource {
     @Path("asset")
     public AssetsResource getAssetResource( @Context UriInfo ui ) throws Exception {
         // TODO change to singular
-        if (logger.isDebugEnabled()) {
-            logger.debug("in asset in applicationResource");
+        if (logger.isTraceEnabled()) {
+            logger.trace("in asset in applicationResource");
         }
         return getAssetsResource( ui );
     }
@@ -180,8 +180,8 @@ public class ApplicationResource extends ServiceResource {
 
     @Path("users")
     public UsersResource getUsers( @Context UriInfo ui ) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("ApplicationResource.getUsers");
+        if (logger.isTraceEnabled()) {
+            logger.trace("ApplicationResource.getUsers");
         }
         addParameter( getServiceParameters(), "users" );
 
@@ -210,8 +210,8 @@ public class ApplicationResource extends ServiceResource {
                                     @QueryParam("ttl") long ttl, @QueryParam("redirect_uri") String redirect_uri,
                                     @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("ApplicationResource.getAccessToken");
+        if (logger.isTraceEnabled()) {
+            logger.trace("ApplicationResource.getAccessToken");
         }
 
         User user = null;
@@ -273,7 +273,7 @@ public class ApplicationResource extends ServiceResource {
             if ( user == null ) {
 
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Returning 400 bad request due to: " + errorDescription);
+                    logger.debug("Returning 400 bad request due to: {}", errorDescription);
                 }
 
                 OAuthResponse response =
@@ -313,8 +313,8 @@ public class ApplicationResource extends ServiceResource {
                                         @FormParam("redirect_uri") String redirect_uri,
                                         @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("ApplicationResource.getAccessTokenPost");
+        if (logger.isTraceEnabled()) {
+            logger.trace("ApplicationResource.getAccessTokenPost");
         }
 
         return getAccessToken( ui, authorization, grant_type, username, password, pin, client_id, client_secret, code,
@@ -363,8 +363,8 @@ public class ApplicationResource extends ServiceResource {
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("AuthResource.keys");
+        if (logger.isTraceEnabled()) {
+            logger.trace("AuthResource.keys");
         }
 
         if ( !isApplicationAdmin( Identifier.fromUUID( applicationId ) ) ) {
@@ -387,8 +387,8 @@ public class ApplicationResource extends ServiceResource {
     public ApiResponse generateKeys( @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("AuthResource.keys");
+        if (logger.isTraceEnabled()) {
+            logger.trace("AuthResource.keys");
         }
 
         if ( !isApplicationAdmin( Identifier.fromUUID( applicationId ) ) ) {
@@ -451,8 +451,8 @@ public class ApplicationResource extends ServiceResource {
             @FormParam("username") String username,
             @FormParam("password") String password ) {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("ApplicationResource /authorize: {}/{}", username, password);
+        if (logger.isTraceEnabled()) {
+            logger.trace("ApplicationResource /authorize: {}/{}", username, password);
         }
 
         try {
@@ -564,8 +564,8 @@ public class ApplicationResource extends ServiceResource {
 
         Class cls = Class.forName( "org.apache.usergrid.rest.applications.notifiers.NotifiersResource" );
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("NotifiersResource.getNotifiersResource");
+        if (logger.isTraceEnabled()) {
+            logger.trace("NotifiersResource.getNotifiersResource");
         }
         addParameter( getServiceParameters(), "notifiers" );
 

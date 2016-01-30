@@ -171,7 +171,7 @@ public class CpSetup implements Setup {
 
         // Need this legacy stuff for queues
 
-        logger.info( "Creating static application keyspace " + getApplicationKeyspace() );
+        logger.info( "Creating static application keyspace {}", getApplicationKeyspace() );
 
         cass.createColumnFamily( getApplicationKeyspace(),
             createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF,

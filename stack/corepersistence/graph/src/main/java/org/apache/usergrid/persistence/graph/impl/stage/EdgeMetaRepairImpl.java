@@ -51,7 +51,6 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
 import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.observables.MathObservable;
 
 
@@ -62,7 +61,7 @@ import rx.observables.MathObservable;
 public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
 
-    private static final Logger LOG = LoggerFactory.getLogger( EdgeMetaRepairImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( EdgeMetaRepairImpl.class );
     private static final Log RX_LOG = new Log();
 
     private final EdgeMetadataSerialization edgeMetadataSerialization;
@@ -128,8 +127,10 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                     //for each id type, check if the exist in parallel to increase processing speed
                     for ( final String subType : types ) {
 
-                        LOG.debug( "Checking for edges with nodeId {}, type {}, and subtype {}", node, edgeType,
-                                subType );
+                        if (logger.isTraceEnabled()) {
+                            logger.trace("Checking for edges with nodeId {}, type {}, and subtype {}", node, edgeType,
+                                    subType);
+                        }
 
                         Observable<Integer> search =
                                 //load each edge in it's own thread
@@ -147,16 +148,18 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                                                   * iteration
                                                   **/
                                                  if ( count != 0 ) {
-                                                     LOG.debug( "Found edge with nodeId {}, type {}, "
-                                                                     + "and subtype {}. Not removing subtype. ",
-                                                             node, edgeType, subType );
+                                                     if (logger.isTraceEnabled()) {
+                                                         logger.trace("Found edge with nodeId {}, type {}, and subtype {}. Not removing subtype. ",
+                                                                 node, edgeType, subType);
+                                                     }
                                                      return;
                                                  }
 
 
-                                                 LOG.debug( "No edges with nodeId {}, type {}, "
-                                                                 + "and subtype {}. Removing subtype.", node,
-                                                         edgeType, subType );
+                                                 if (logger.isTraceEnabled()) {
+                                                     logger.trace("No edges with nodeId {}, type {}, and subtype {}. Removing subtype.",
+                                                             node, edgeType, subType);
+                                                 }
                                                  batch.mergeShallow( serialization
                                                          .removeEdgeSubType( scope, node, edgeType, subType,
                                                              maxTimestamp ) );
@@ -176,9 +179,10 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
                                          .doOnNext( count -> {
 
 
-                                             LOG.debug( "Executing batch for subtype deletion with " +
-                                                     "type {}.  " + "Mutation has {} rows to mutate ",
-                                                 edgeType, batch.getRowCount() );
+                                             if (logger.isTraceEnabled()) {
+                                                 logger.trace("Executing batch for subtype deletion with type {}.  Mutation has {} rows to mutate ",
+                                                         edgeType, batch.getRowCount());
+                                             }
 
                                              try {
                                                  batch.execute();
@@ -204,14 +208,18 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
              * We can only execute deleting this type if no sub types were deleted
              */
             if ( subTypeUsedCount != 0 ) {
-                LOG.debug( "Type {} has {} subtypes in use as of maxTimestamp {}.  Not deleting type.", edgeType,
-                        subTypeUsedCount, maxTimestamp );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Type {} has {} subtypes in use as of maxTimestamp {}.  Not deleting type.", edgeType,
+                            subTypeUsedCount, maxTimestamp);
+                }
                 return;
             }
 
 
-            LOG.debug( "Type {} has no subtypes in use as of maxTimestamp {}.  Deleting type.", edgeType,
-                    maxTimestamp );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Type {} has no subtypes in use as of maxTimestamp {}.  Deleting type.", edgeType,
+                        maxTimestamp);
+            }
             try {
                 serialization.removeEdgeType( scope, node, edgeType, maxTimestamp ).execute();
             }
@@ -355,7 +363,9 @@ public class EdgeMetaRepairImpl implements EdgeMetaRepair {
 
         @Override
         public void call( final MarkedEdge markedEdge ) {
-            LOG.debug( "Emitting edge {}", markedEdge );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Emitting edge {}", markedEdge);
+            }
         }
     }
 }

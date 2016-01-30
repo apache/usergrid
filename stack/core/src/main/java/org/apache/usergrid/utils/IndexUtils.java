@@ -51,7 +51,7 @@ import static org.apache.usergrid.utils.JsonUtils.toJsonNode;
 
 public class IndexUtils {
 
-    private static final Logger LOG = LoggerFactory.getLogger( IndexUtils.class );
+    private static final Logger logger = LoggerFactory.getLogger( IndexUtils.class );
 
     static Analyzer analyzer = new StandardAnalyzer( Version.LUCENE_30 );
 
@@ -215,7 +215,7 @@ public class IndexUtils {
             ts.end();
         }
         catch ( IOException e ) {
-            LOG.error( "Error getting keywords ", e );
+            logger.error( "Error getting keywords ", e );
         }
         finally {
             try {

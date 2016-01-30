@@ -62,7 +62,7 @@ import rx.functions.Action1;
 @Singleton
 public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>> {
 
-    private static final Logger LOG = LoggerFactory.getLogger( WriteUniqueVerify.class );
+    private static final Logger logger = LoggerFactory.getLogger( WriteUniqueVerify.class );
 
     private final UniqueValueSerializationStrategy uniqueValueStrat;
 

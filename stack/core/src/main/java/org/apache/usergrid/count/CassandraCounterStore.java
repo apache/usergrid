@@ -41,7 +41,7 @@ import static org.apache.usergrid.persistence.cassandra.Serializers.*;
  * @author zznate
  */
 public class CassandraCounterStore implements CounterStore {
-    private static final Logger log = LoggerFactory.getLogger( CassandraCounterStore.class );
+    private static final Logger logger = LoggerFactory.getLogger( CassandraCounterStore.class );
 
     // keep track of exceptions thrown in scheduler so we can reduce noise in logs
     private Map<String, Integer> counterInsertFailures = new HashMap<String, Integer>();
@@ -84,14 +84,14 @@ public class CassandraCounterStore implements CounterStore {
             // errors here happen a lot on shutdown, don't fill the logs with them
             String error = e.getClass().getCanonicalName();
             if (counterInsertFailures.get( error ) == null) {
-                log.error( "CounterStore insert failed, first instance", e);
+                logger.error( "CounterStore insert failed, first instance", e);
                 counterInsertFailures.put( error, 1);
 
             } else {
                 int count = counterInsertFailures.get(error) + 1;
                 counterInsertFailures.put(error, count);
 
-                log.error(error + " caused CounterStore insert failure, count =  " + count, e);
+                logger.error("{} caused CounterStore insert failure, count = {}", error, count, e);
             }
         }
     }

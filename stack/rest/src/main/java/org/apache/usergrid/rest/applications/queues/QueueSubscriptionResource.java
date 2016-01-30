@@ -75,7 +75,9 @@ public class QueueSubscriptionResource extends AbstractContextResource {
     public QueueSubscriptionResource getSubPath( @Context UriInfo ui, @PathParam("subPath") String subPath )
             throws Exception {
 
-        logger.info( "QueueSubscriptionResource.getSubPath" );
+        if (logger.isTraceEnabled()) {
+            logger.info("QueueSubscriptionResource.getSubPath");
+        }
 
         return getSubResource( QueueSubscriptionResource.class )
                 .init( mq, queuePath, subscriptionPath + "/" + subPath );
@@ -91,7 +93,9 @@ public class QueueSubscriptionResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueSubscriptionResource.executeGet: " + queuePath );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueSubscriptionResource.executeGet: {}", queuePath);
+        }
 
         QueueSet results = mq.getSubscriptions( queuePath, firstSubscriptionQueuePath, limit );
 
@@ -108,7 +112,9 @@ public class QueueSubscriptionResource extends AbstractContextResource {
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueSubscriptionResource.executePost: " + queuePath );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueSubscriptionResource.executePost: {}", queuePath);
+        }
 
         return executePut( ui, body, callback );
     }
@@ -123,7 +129,9 @@ public class QueueSubscriptionResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueSubscriptionResource.executePut: " + queuePath );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueSubscriptionResource.executePut: {}", queuePath);
+        }
 
         Map<String, Object> json = body;
         if ( StringUtils.isNotBlank( subscriptionPath ) ) {
@@ -150,7 +158,9 @@ public class QueueSubscriptionResource extends AbstractContextResource {
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueSubscriptionResource.executeDelete: " + queuePath );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueSubscriptionResource.executeDelete: {}", queuePath);
+        }
 
         if ( StringUtils.isNotBlank( subscriptionPath ) ) {
             return  mq.unsubscribeFromQueue( subscriptionPath, queuePath );

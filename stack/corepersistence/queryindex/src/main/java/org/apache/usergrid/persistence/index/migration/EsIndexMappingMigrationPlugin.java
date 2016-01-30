@@ -70,7 +70,7 @@ public class EsIndexMappingMigrationPlugin implements MigrationPlugin {
         final int version = migrationInfoSerialization.getVersion(getName());
 
         if (version == getMaxVersion()) {
-            logger.debug("Skipping Migration Plugin: " + getName());
+            logger.debug("Skipping Migration Plugin: {}", getName());
             return;
         }
 

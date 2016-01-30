@@ -135,8 +135,8 @@ public class OrganizationsResource extends AbstractContextResource {
                                             @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("newOrganization");
+        if (logger.isTraceEnabled()) {
+            logger.trace("newOrganization");
         }
 
         ApiResponse response = createApiResponse();
@@ -174,8 +174,8 @@ public class OrganizationsResource extends AbstractContextResource {
                                                     @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("New organization: {}", organizationNameForm);
+        if (logger.isTraceEnabled()) {
+            logger.trace("New organization: {}", organizationNameForm);
         }
 
         String organizationName = organizationNameForm != null ? organizationNameForm : organizationNameQuery;

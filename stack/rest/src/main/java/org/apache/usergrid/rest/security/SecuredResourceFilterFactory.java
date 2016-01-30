@@ -114,8 +114,8 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
     public void configure(ResourceInfo resourceInfo, FeatureContext featureContext) {
         Method am = resourceInfo.getResourceMethod();
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("configure {} method {}",
+        if (logger.isTraceEnabled()) {
+            logger.trace("configure {} method {}",
                 resourceInfo.getResourceClass().getSimpleName(), resourceInfo.getResourceMethod().getName());
         }
 
@@ -149,20 +149,20 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
         @Override
         public void filter(ContainerRequestContext request) throws IOException {
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("Filtering {}", request.getUriInfo().getRequestUri().toString());
+            if (logger.isTraceEnabled()) {
+                logger.trace("Filtering {}", request.getUriInfo().getRequestUri().toString());
             }
 
             if ( request.getMethod().equalsIgnoreCase( "OPTIONS" ) ) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Skipping option request");
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Skipping option request");
                 }
             }
 
             MultivaluedMap<java.lang.String, java.lang.String> params = uriInfo.getPathParameters();
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("Params: {}", params.keySet());
+            if (logger.isTraceEnabled()) {
+                logger.trace("Params: {}", params.keySet());
             }
 
             authorize( request );
@@ -182,8 +182,8 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
             }
             else {
                 String applicationName = PathingUtils.assembleAppName( uriInfo.getPathParameters() );
-                if ( logger.isDebugEnabled() ) {
-                    logger.debug( "Pulled applicationName {}", applicationName );
+                if ( logger.isTraceEnabled() ) {
+                    logger.trace( "Pulled applicationName {}", applicationName );
                 }
                 application = Identifier.fromName( applicationName );
             }
@@ -238,19 +238,19 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
         @Override
         public void authorize( ContainerRequestContext request ) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("OrganizationFilter.authorize");
+            if (logger.isTraceEnabled()) {
+                logger.trace("OrganizationFilter.authorize");
             }
 
             if ( !isPermittedAccessToOrganization( getOrganizationIdentifier() ) ) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("No organization access authorized");
+                if (logger.isTraceEnabled()) {
+                    logger.trace("No organization access authorized");
                 }
                 throw mappableSecurityException( "unauthorized", "No organization access authorized" );
             }
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("OrganizationFilter.authorize - leaving");
+            if (logger.isTraceEnabled()) {
+                logger.trace("OrganizationFilter.authorize - leaving");
             }
         }
     }
@@ -284,8 +284,8 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
         @Override
         public void authorize( ContainerRequestContext request ) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("ApplicationFilter.authorize");
+            if (logger.isTraceEnabled()) {
+                logger.trace("ApplicationFilter.authorize");
             }
             if ( SubjectUtils.isAnonymous() ) {
                 ApplicationInfo application = null;
@@ -300,8 +300,8 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 Map<String, String> roles = null;
                 try {
                     roles = em.getRoles();
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("found roles {}", roles);
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("found roles {}", roles);
                     }
                 }
                 catch ( Exception e ) {
@@ -332,13 +332,13 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
         @Override
         public void authorize(ContainerRequestContext request) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("SystemFilter.authorize");
+            if (logger.isTraceEnabled()) {
+                logger.trace("SystemFilter.authorize");
             }
             try {
                 if (!request.getSecurityContext().isUserInRole( ROLE_SERVICE_ADMIN )) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("You are not the system admin.");
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("You are not the system admin.");
                     }
                     throw mappableSecurityException( "unauthorized", "No system access authorized",
                         SecurityException.REALM );
@@ -365,8 +365,8 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
             @Override
             public void authorize(ContainerRequestContext request) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("AdminUserFilter.authorize");
+                if (logger.isTraceEnabled()) {
+                    logger.trace("AdminUserFilter.authorize");
                 }
                 if (!isUser( getUserIdentifier() )) {
                     throw mappableSecurityException( "unauthorized", "No admin user access authorized" );
@@ -406,7 +406,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
         @Override
         public void authorize( ContainerRequestContext request ) {
-            if(logger.isDebugEnabled()){
+            if(logger.isTraceEnabled()){
                 logger.debug( "PathPermissionsFilter.authorize" );
             }
 
@@ -432,7 +432,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
                 boolean permitted = currentUser.isPermitted( perm );
                 if ( logger.isDebugEnabled() ) {
-                    logger.debug( PATH_MSG, new Object[] { path, operation, perm, permitted } );
+                    logger.debug( PATH_MSG, path, operation, perm, permitted );
                 }
 
                 if(!permitted){

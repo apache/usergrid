@@ -365,9 +365,7 @@ public class ManagementServiceImpl implements ManagementService {
             try {
                 createAdminUser( null, username, "Super User", email, password, true, false );
             }catch(Exception e){
-                if (logger.isInfoEnabled()) {
-                    logger.info("resetSuperUser: auto creation of superuser failed: {}", e.getMessage());
-                }
+                logger.info("resetSuperUser: auto creation of superuser failed: {}", e.getMessage());
             }
         }
         else {

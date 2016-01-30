@@ -45,7 +45,7 @@ import java.util.Collection;
  */
 public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id, Candidate, Integer> {
 
-    private static final Logger log = LoggerFactory.getLogger( AbstractElasticSearchFilter.class );
+    private static final Logger logger = LoggerFactory.getLogger( AbstractElasticSearchFilter.class );
 
     private final EntityIndexFactory entityIndexFactory;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
@@ -139,7 +139,7 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
                     }
                     catch ( Throwable t ) {
 
-                        log.error( "Unable to search candidates", t );
+                        logger.error( "Unable to search candidates", t );
                         subscriber.onError( t );
                     }
                 }

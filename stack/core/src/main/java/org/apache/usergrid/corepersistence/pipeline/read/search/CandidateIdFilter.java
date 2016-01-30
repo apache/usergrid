@@ -173,7 +173,7 @@ public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, F
             if ( UUIDComparator.staticCompare( entityVersion, candidateVersion ) > 0 ) {
 
                 logger.warn( "Deindexing stale entity on edge {} for entityId {} and version {}",
-                    new Object[] { searchEdge, entityId, entityVersion } );
+                        searchEdge, entityId, entityVersion );
                 batch.deindex( searchEdge, entityId, entityVersion );
                 return;
             }
@@ -183,8 +183,8 @@ public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, F
             if ( UUIDComparator.staticCompare( candidateVersion, entityVersion ) > 0 ) {
 
                 logger.warn(
-                    "Found a newer version in ES over cassandra for edge {} for entityId {} and version {}.  Repair "
-                        + "should be run", new Object[] { searchEdge, entityId, entityVersion } );
+                    "Found a newer version in ES over cassandra for edge {} for entityId {} and version {}.  Repair should be run",
+                        searchEdge, entityId, entityVersion );
             }
 
             //they're the same add it

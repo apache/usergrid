@@ -137,13 +137,13 @@ public class MigrateResource extends AbstractContextResource {
             @Override
             public void run() {
 
-                logger.info( "Migrating Data for plugin: " + pluginName );
+                logger.info( "Migrating Data for plugin: {}", pluginName );
 
                 try {
                     getDataMigrationManager().migrate(pluginName);
                 }
                 catch ( Exception e ) {
-                    logger.error( "Unable to migrate data for plugin: " + pluginName, e );
+                    logger.error( "Unable to migrate data for plugin: {}", pluginName, e );
                 }
             }
         };
