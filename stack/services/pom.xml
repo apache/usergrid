@@ -434,12 +434,12 @@
       <artifactId>stream</artifactId>
       <version>2.7.0</version>
     </dependency>
-      <!-- fork: https://github.com/apigee/java-wns/tree/1.2-USERGRID -->
+      <!-- fork: https://github.com/apigee/java-wns/tree/java-wns-1.2 -->
       <!-- forked to eliminate jackson dependency issues -->
       <dependency>
-          <groupId>com.github.fernandospr</groupId>
+          <groupId>io.apigee</groupId>
           <artifactId>java-wns</artifactId>
-          <version>1.2-USERGRID</version>
+          <version>1.2</version>
       </dependency>
   </dependencies>
 </project>
