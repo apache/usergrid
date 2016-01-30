@@ -243,8 +243,8 @@ public class UserResource extends AbstractContextResource {
                                              @FormParam( "recaptcha_challenge_field" ) String challenge,
                                              @FormParam( "recaptcha_response_field" ) String uresponse ) {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("handlePasswordResetForm");
+        if (logger.isTraceEnabled()) {
+            logger.trace("handlePasswordResetForm");
         }
 
         final boolean externalTokensEnabled =

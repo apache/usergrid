@@ -80,12 +80,11 @@ public class CpWalker {
 
         if (logger.isDebugEnabled()) {
             logger.debug("Loading edges types from {}:{}\n   scope {}:{}",
-                new Object[]{
                     applicationId.getType(),
                     applicationId.getUuid(),
                     applicationScope.getApplication().getType(),
                     applicationScope.getApplication().getUuid()
-                });
+                );
         }
 
         final SearchByEdgeType.Order order;

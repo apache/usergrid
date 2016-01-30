@@ -53,7 +53,7 @@ import rx.functions.Action1;
 @Singleton
 public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
 
-    private static final Logger LOG = LoggerFactory.getLogger( MarkCommit.class );
+    private static final Logger logger = LoggerFactory.getLogger( MarkCommit.class );
 
     private final MvccLogEntrySerializationStrategy logStrat;
     private final MvccEntitySerializationStrategy entityStrat;
@@ -94,7 +94,7 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
         final ApplicationScope applicationScope = idIoEvent.getEntityCollection();
 
 
-        LOG.debug("Inserting tombstone for entity {} at version {}", entityId, version );
+        logger.debug("Inserting tombstone for entity {} at version {}", entityId, version );
 
         final MvccLogEntry startEntry =
                 new MvccLogEntryImpl( entityId, version, Stage.COMMITTED, MvccLogEntry.State.DELETED );
@@ -177,4 +177,4 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
 //
 //        final int removedCount = deleteFieldsObservable.count().toBlocking().last();
 //
-//        LOG.debug("Removed unique values for {} entities of entity {}", removedCount, entityId );
+//        logger.debug("Removed unique values for {} entities of entity {}", removedCount, entityId );

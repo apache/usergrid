@@ -293,7 +293,9 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         // to receive documents. Occasionally we see errors.
         // See this post: http://s.apache.org/index-missing-exception
 
-        logger.debug("Testing new index name: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Testing new index name: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
+        }
 
         final RetryOperation retryOperation = () -> {
             final String tempId = UUIDGenerator.newTimeUUID().toString();
@@ -301,15 +303,18 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             esProvider.getClient().prepareIndex( alias.getWriteAlias(), VERIFY_TYPE, tempId )
                  .setSource(DEFAULT_PAYLOAD).get();
 
-            logger.info( "Successfully created new document with docId {} "
-                 + "in index read {} write {} and type {}",
-                    tempId, alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Successfully created new document with docId {} in index read {} write {} and type {}",
+                        tempId, alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE);
+            }
 
             // delete all types, this way if we miss one it will get cleaned up
             esProvider.getClient().prepareDelete( alias.getWriteAlias(), VERIFY_TYPE, tempId).get();
 
-            logger.info( "Successfully deleted  documents in read {} write {} and type {} with id {}",
-                    alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE, tempId );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Successfully deleted  documents in read {} write {} and type {} with id {}",
+                        alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE, tempId);
+            }
 
             return true;
         };
@@ -359,7 +364,9 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         String[] indexes = getIndexes();
         if (indexes.length == 0) {
-            logger.debug("Not refreshing indexes. none found");
+            if (logger.isTraceEnabled()) {
+                logger.trace("Not refreshing indexes. none found");
+            }
         }
         //Added For Graphite Metrics
         RefreshResponse response =
@@ -372,8 +379,10 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                 logger.error("Failed to refresh index:{} reason:{}", sfe.index(), sfe.reason());
             }
         }
-        logger.debug("Refreshed indexes: {},success:{} failed:{} ", StringUtils.join(indexes, ", "),
-            successfulShards, failedShards);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Refreshed indexes: {},success:{} failed:{} ", StringUtils.join(indexes, ", "),
+                    successfulShards, failedShards);
+        }
 
         IndexRefreshCommandInfo refreshResults = new IndexRefreshCommandInfo(failedShards == 0,
             System.currentTimeMillis() - start);
@@ -647,10 +656,10 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             final ShardOperationFailedException[] failures = indexDeleteByQueryResponse.getFailures();
 
             for ( ShardOperationFailedException failedException : failures ) {
-                logger.error( String.format( "Unable to delete by query %s. "
-                        + "Failed with code %d and reason %s on shard %s in index %s", query.toString(),
+                logger.error("Unable to delete by query {}. Failed with code {} and reason {} on shard {} in index {}",
+                    query.toString(),
                     failedException.status().getStatus(), failedException.reason(),
-                    failedException.shardId(), failedException.index() ) );
+                    failedException.shardId(), failedException.index() );
             }
         }
     }
@@ -665,7 +674,9 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
 
-        logger.debug( "   Hit count: {} Total hits: {}", hits.length, searchHits.getTotalHits() );
+        if (logger.isTraceEnabled()) {
+            logger.trace("   Hit count: {} Total hits: {}", hits.length, searchHits.getTotalHits());
+        }
 
         List<CandidateResult> candidates = new ArrayList<>( hits.length );
 
@@ -706,8 +717,8 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
                 if(candidateResult.getVersion().timestamp() <= markedVersion.timestamp()){
 
-                    if(logger.isDebugEnabled()){
-                        logger.debug("Candidate version {} is <= provided entity version {} for entityId {}",
+                    if(logger.isTraceEnabled()){
+                        logger.trace("Candidate version {} is <= provided entity version {} for entityId {}",
                             candidateResult.getVersion(),
                             markedVersion,
                             candidateResult.getId()
@@ -717,8 +728,8 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                     candidates.add(candidateResult);
 
                 }else{
-                    if(logger.isDebugEnabled()){
-                        logger.debug("Candidate version {} is > provided entity version {} for entityId {}. Not" +
+                    if(logger.isTraceEnabled()){
+                        logger.trace("Candidate version {} is > provided entity version {} for entityId {}. Not" +
                                 "adding to candidate results",
                             candidateResult.getVersion(),
                             markedVersion,
@@ -732,7 +743,9 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             }
         }
 
-        logger.debug( "Aggregated {} out of {} hits ",candidates.size(),searchHits.getTotalHits() );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Aggregated {} out of {} hits ", candidates.size(), searchHits.getTotalHits());
+        }
 
         return  candidates;
 

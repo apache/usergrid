@@ -62,11 +62,9 @@ public class CassandraMQUtils {
     public static void logBatchOperation( String operation, Object columnFamily, Object key, Object columnName,
                                           Object columnValue, long timestamp ) {
 
-        if ( batch_logger.isInfoEnabled() ) {
-            batch_logger.info( "{} cf={} key={} name={} value={}", new Object[] {
-                    operation, columnFamily, key, columnName, columnValue
-            } );
-        }
+        batch_logger.info( "{} cf={} key={} name={} value={}",
+                operation, columnFamily, key, columnName, columnValue
+        );
     }
 
 

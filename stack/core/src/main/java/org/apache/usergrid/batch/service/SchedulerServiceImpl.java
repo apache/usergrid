@@ -211,8 +211,8 @@ public class SchedulerServiceImpl implements SchedulerService, JobAccessor, JobR
                 // exception here. We don't want to cause job loss, so leave the job in
                 // the Q.
                 logger.error(
-                        "Unable to retrieve job data for jobname {}, job id {}, stats id {}.  Skipping to avoid job "
-                                + "loss", new Object[] { jobName, jobUuid, statsUuid, e } );
+                        "Unable to retrieve job data for jobname {}, job id {}, stats id {}.  Skipping to avoid job loss",
+                                jobName, jobUuid, statsUuid, e );
             }
         }
 

@@ -86,7 +86,7 @@ public class AccountCreationPropsImpl implements AccountCreationProps {
     public String getProperty( String name ) {
         String propertyValue = properties.getProperty( name );
         if ( isBlank( propertyValue ) ) {
-            logger.warn( "Missing value for " + name );
+            logger.warn( "Missing value for {}", name );
             propertyValue = null;
         }
         return propertyValue;

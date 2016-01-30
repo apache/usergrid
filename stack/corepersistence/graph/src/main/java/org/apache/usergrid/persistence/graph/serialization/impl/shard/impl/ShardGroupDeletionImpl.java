@@ -91,7 +91,7 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
         catch ( RejectedExecutionException ree ) {
 
             //ignore, if this happens we don't care, we're saturated, we can check later
-            logger.error( "Rejected shard delete check for group {}", edgeIterator );
+            logger.info( "Rejected shard delete check for group {}", edgeIterator );
 
             return Futures.immediateFuture( DeleteResult.NOT_CHECKED );
         }

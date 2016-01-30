@@ -75,7 +75,7 @@ import rx.schedulers.Schedulers;
  */
 public abstract class MvccEntitySerializationStrategyImpl implements MvccEntitySerializationStrategy {
 
-    private static final Logger log = LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
 
 
     protected final Keyspace keyspace;
@@ -419,9 +419,9 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
                 deSerialized = column.getValue( entityJsonSerializer );
             }
             catch ( DataCorruptionException e ) {
-                log.error(
-                        "DATA CORRUPTION DETECTED when de-serializing entity with Id {} and version {}.  This means the"
-                                + " write was truncated.", id, version, e );
+                logger.error(
+                        "DATA CORRUPTION DETECTED when de-serializing entity with Id {} and version {}.  This means the write was truncated.",
+                        id, version, e );
                 //return an empty entity, we can never load this one, and we don't want it to bring the system
                 //to a grinding halt
                 return new MvccEntityImpl( id, version, MvccEntity.Status.DELETED, Optional.<Entity>absent(),0 );

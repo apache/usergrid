@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 
 public class ListUtils extends org.apache.commons.collections.ListUtils {
-    private static final Logger LOG = LoggerFactory.getLogger( ListUtils.class );
+    private static final Logger logger = LoggerFactory.getLogger( ListUtils.class );
 
 
     public static <A> A first( List<A> list ) {
@@ -68,7 +68,7 @@ public class ListUtils extends org.apache.commons.collections.ListUtils {
             return NumberUtils.toInt( ( String ) a );
         }
         catch ( Exception e ) {
-            LOG.warn( "Could not convert list item {} to int", a, e );
+            logger.warn( "Could not convert list item {} to int", a, e );
         }
         return null;
     }
@@ -88,7 +88,7 @@ public class ListUtils extends org.apache.commons.collections.ListUtils {
             return NumberUtils.toLong( ( String ) a );
         }
         catch ( Exception e ) {
-            LOG.warn( "Could not convert list item {} to long", a, e );
+            logger.warn( "Could not convert list item {} to long", a, e );
         }
         return null;
     }
@@ -108,7 +108,7 @@ public class ListUtils extends org.apache.commons.collections.ListUtils {
             return Boolean.parseBoolean( ( String ) a );
         }
         catch ( Exception e ) {
-            LOG.warn( "Could not convert list item {} to boolean", a, e );
+            logger.warn( "Could not convert list item {} to boolean", a, e );
         }
         return null;
     }
@@ -128,7 +128,7 @@ public class ListUtils extends org.apache.commons.collections.ListUtils {
             return UUIDUtils.tryGetUUID( ( String ) i );
         }
         catch ( Exception e ) {
-            LOG.warn( "Could not convert list item {} to UUID", i, e );
+            logger.warn( "Could not convert list item {} to UUID", i, e );
         }
         return null;
     }

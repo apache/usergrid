@@ -94,7 +94,9 @@ public class AuthResource extends AbstractContextResource {
                                 @QueryParam("ttl") long ttl, @QueryParam("callback") @DefaultValue("") String callback )
             throws Exception {
 
-        logger.info( "AuthResource.authFBPost" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("AuthResource.authFBPost");
+        }
 
         return authFB( ui, fb_access_token, ttl, callback );
     }
@@ -105,7 +107,9 @@ public class AuthResource extends AbstractContextResource {
     @Path("pingident")
     public Response authPingIdent( @Context UriInfo ui, @QueryParam("ping_access_token") String pingToken,
                                    @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
-        logger.info( "AuthResource.pingIdent" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("AuthResource.pingIdent");
+        }
         try {
             if ( StringUtils.isEmpty( pingToken ) ) {
                 missingTokenFail( callback );
@@ -178,7 +182,9 @@ public class AuthResource extends AbstractContextResource {
                             @QueryParam("ttl") long ttl, @QueryParam("callback") @DefaultValue("") String callback )
             throws Exception {
 
-        logger.info( "AuthResource.authFB" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("AuthResource.authFB");
+        }
 
         try {
             if ( StringUtils.isEmpty( fb_access_token ) ) {
@@ -214,7 +220,9 @@ public class AuthResource extends AbstractContextResource {
                                 @QueryParam("ttl") long ttl, @QueryParam("callback") @DefaultValue("") String callback )
             throws Exception {
 
-        logger.info( "AuthResource.authFQPost" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("AuthResource.authFQPost");
+        }
 
         return authFQ( ui, fq_access_token, ttl, callback );
     }
@@ -227,7 +235,9 @@ public class AuthResource extends AbstractContextResource {
                             @QueryParam("ttl") long ttl, @QueryParam("callback") @DefaultValue("") String callback )
             throws Exception {
 
-        logger.info( "AuthResource.authFQ" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("AuthResource.authFQ");
+        }
 
         try {
             if ( StringUtils.isEmpty( fq_access_token ) ) {

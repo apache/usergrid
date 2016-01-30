@@ -55,25 +55,25 @@ public class HazelcastLifecycleMonitor implements InstanceListener, MembershipLi
     @Override
     public void instanceCreated( InstanceEvent event ) {
         Instance instance = event.getInstance();
-        logger.info( "Created instance ID: [" + instance.getId() + "] Type: [" + instance.getInstanceType() + "]" );
+        logger.info( "Created instance ID: [{}] Type: [{}]", instance.getId(), instance.getInstanceType() );
     }
 
 
     @Override
     public void instanceDestroyed( InstanceEvent event ) {
         Instance instance = event.getInstance();
-        logger.info( "Destroyed isntance ID: [" + instance.getId() + "] Type: [" + instance.getInstanceType() + "]" );
+        logger.info( "Destroyed instance ID: [{}] Type: [{}]", instance.getId(), instance.getInstanceType() );
     }
 
 
     @Override
     public void memberAdded( MembershipEvent membersipEvent ) {
-        logger.info( "MemberAdded " + membersipEvent );
+        logger.info( "MemberAdded {}", membersipEvent );
     }
 
 
     @Override
     public void memberRemoved( MembershipEvent membersipEvent ) {
-        logger.info( "MemberRemoved " + membersipEvent );
+        logger.info( "MemberRemoved {}", membersipEvent );
     }
 }

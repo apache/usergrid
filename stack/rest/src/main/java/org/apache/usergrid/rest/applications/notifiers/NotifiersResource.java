@@ -56,8 +56,8 @@ public class NotifiersResource extends ServiceResource {
     public AbstractContextResource addIdParameter(@Context UriInfo ui,
             @PathParam("entityId") PathSegment entityId) throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("NotifiersResource.addIdParameter");
+        if (logger.isTraceEnabled()) {
+            logger.trace("NotifiersResource.addIdParameter");
         }
 
         UUID itemId = UUID.fromString(entityId.getPath());
@@ -74,9 +74,9 @@ public class NotifiersResource extends ServiceResource {
     public AbstractContextResource addNameParameter(@Context UriInfo ui,
             @PathParam("itemName") PathSegment itemName) throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("NotifiersResource.addNameParameter");
-            logger.debug("Current segment is " + itemName.getPath());
+        if (logger.isTraceEnabled()) {
+            logger.trace("NotifiersResource.addNameParameter");
+            logger.trace("Current segment is {}", itemName.getPath());
         }
 
         if (itemName.getPath().startsWith("{")) {
@@ -113,8 +113,8 @@ public class NotifiersResource extends ServiceResource {
             FormDataMultiPart multiPart)
             throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Notifiers.executeMultiPartPost");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Notifiers.executeMultiPartPost");
         }
 
         String certInfoParam = getValueOrNull(multiPart, "certInfo");

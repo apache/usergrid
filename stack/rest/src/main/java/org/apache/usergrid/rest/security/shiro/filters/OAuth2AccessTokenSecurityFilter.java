@@ -70,8 +70,8 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter implements C
 
     @Override
     public void filter(ContainerRequestContext request) throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Filtering: " + request.getUriInfo().getBaseUri());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Filtering: {}", request.getUriInfo().getBaseUri());
         }
 
         try {

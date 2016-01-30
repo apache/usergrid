@@ -70,7 +70,7 @@ import com.google.inject.Inject;
  */
 public class NodeShardCacheImpl implements NodeShardCache {
 
-    private static final Logger LOG = LoggerFactory.getLogger( NodeShardCacheImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( NodeShardCacheImpl.class );
 
     /**
      * Only cache shards that have < 10k groups.  This is an arbitrary amount, and may change with profiling and

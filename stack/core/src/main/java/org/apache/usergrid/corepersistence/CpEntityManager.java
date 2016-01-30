@@ -443,9 +443,7 @@ public class CpEntityManager implements EntityManager {
         if ( cpEntity == null ) {
             if ( logger.isDebugEnabled() ) {
                 logger.debug( "FAILED to load entity {}:{} from app {}",
-                    new Object[] {
-                            id.getType(), id.getUuid(), applicationId
-                    } );
+                            id.getType(), id.getUuid(), applicationId );
             }
             return null;
         }
@@ -466,7 +464,7 @@ public class CpEntityManager implements EntityManager {
         }
         catch ( ClassCastException e1 ) {
             logger.error( "Unable to get typed entity: {} of class {}",
-                    new Object[] { entityId, entityClass.getCanonicalName(), e1 } );
+                    entityId, entityClass.getCanonicalName(), e1 );
         }
         return e;
     }
@@ -500,9 +498,8 @@ public class CpEntityManager implements EntityManager {
         if ( cpEntity == null ) {
             if ( logger.isDebugEnabled() ) {
                 logger.debug( "FAILED to load entity {}:{} from  app {}\n",
-                        new Object[] {
                                 id.getType(), id.getUuid(), applicationId
-                        } );
+                        );
             }
             return null;
         }
@@ -558,11 +555,9 @@ public class CpEntityManager implements EntityManager {
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Updating entity {}:{}  app {}\n",
-                new Object[] {
                     entityId.getType(),
                     entityId.getUuid(),
-                    appId
-                } );
+                    appId );
         }
 
         //        if ( !UUIDUtils.isTimeBased( entityId.getUuid() ) ) {
@@ -588,9 +583,9 @@ public class CpEntityManager implements EntityManager {
 //            cpEntity = ecm.load( entityId ).toBlockingObservable().last();
 
             if (logger.isDebugEnabled()) {
-                logger.debug("Wrote {}:{} version {}", new Object[]{
+                logger.debug("Wrote {}:{} version {}",
                     cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion()
-                });
+                );
             }
         }
         catch ( WriteUniqueVerifyException wuve ) {
@@ -686,14 +681,14 @@ public class CpEntityManager implements EntityManager {
         }
         catch ( Exception e ) {
             logger.error( "Unable to decrement counter application.collection: {}.",
-                    new Object[] { collection_name, e } );
+                    collection_name, e );
         }
         try {
             incrementAggregateCounters( null, null, null, APPLICATION_ENTITIES, -ONE_COUNT, cassandraTimestamp );
         }
         catch ( Exception e ) {
-            logger.error( "Unable to decrement counter application.entities for collection: {} " + "with timestamp: {}",
-                    new Object[] { collection_name, cassandraTimestamp, e } );
+            logger.error( "Unable to decrement counter application.entities for collection: {} with timestamp: {}",
+                    collection_name, cassandraTimestamp, e );
         }
     }
 
@@ -851,8 +846,8 @@ public class CpEntityManager implements EntityManager {
         Assert.notNull( collectionType, "collectionType is required" );
         Assert.notNull( aliasValue, "aliasValue is required" );
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("getAlias() for collection type {} alias {}", collectionType, aliasValue);
+        if (logger.isTraceEnabled()) {
+            logger.trace("getAlias() for collection type {} alias {}", collectionType, aliasValue);
         }
 
         String collName = Schema.defaultCollectionName( collectionType );
@@ -866,9 +861,8 @@ public class CpEntityManager implements EntityManager {
         // add a warn statement so we can see if we have data migration issues.
         // TODO When we get an event system, trigger a repair if this is detected
         if ( results.size() > 1 ) {
-            logger.warn( "More than 1 entity with Owner id '{}' of type '{}' "
-                            + "and alias '{}' exists. This is a duplicate alias, and needs audited",
-                    new Object[] { ownerRef, collectionType, aliasValue } );
+            logger.warn( "More than 1 entity with Owner id '{}' of type '{}' and alias '{}' exists. This is a duplicate alias, and needs audited",
+                    ownerRef, collectionType, aliasValue );
         }
 
         return results.get(aliasValue);
@@ -888,8 +882,8 @@ public class CpEntityManager implements EntityManager {
     public Map<String, EntityRef> getAlias( EntityRef ownerRef, String collName, List<String> aliases )
             throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("getAliases() for collection {} aliases {}", collName, aliases);
+        if (logger.isTraceEnabled()) {
+            logger.trace("getAliases() for collection {} aliases {}", collName, aliases);
         }
 
         Assert.notNull( ownerRef, "ownerRef is required" );
@@ -946,8 +940,8 @@ public class CpEntityManager implements EntityManager {
                 get( entityRef ).getType();
             }
             catch ( Exception e ) {
-                logger.error( "Unable to load entity " + entityRef.getType()
-                        + ":" + entityRef.getUuid(), e );
+                logger.error( "Unable to load entity {}:{}", entityRef.getType(),
+                        entityRef.getUuid(), e );
             }
             if ( entityRef == null ) {
                 throw new EntityNotFoundException(
@@ -1075,19 +1069,17 @@ public class CpEntityManager implements EntityManager {
 
         cpEntity.removeField( propertyName );
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "About to Write {}:{} version {}", new Object[] {
-                cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion()
-            } );
+        if(logger.isTraceEnabled()){
+            logger.trace( "About to Write {}:{} version {}",
+                cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() );
         }
 
         //TODO: does this call and others like it need a graphite reporter?
         cpEntity = ecm.write( cpEntity ).toBlocking().last();
 
-        if(logger.isDebugEnabled()){
-            logger.debug("Wrote {}:{} version {}", new Object[]{
-                cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion()
-            });
+        if(logger.isTraceEnabled()){
+            logger.trace("Wrote {}:{} version {}",
+                cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() );
         }
 
         //Adding graphite metrics
@@ -1820,7 +1812,7 @@ public class CpEntityManager implements EntityManager {
                 .addToCollection( COLLECTION_ROLES, entity );
 
         logger.info( "Created role {} with id {} in group {}",
-            new String[] { roleName, entity.getUuid().toString(), groupId.toString() } );
+            roleName, entity.getUuid().toString(), groupId.toString() );
 
         return entity;
     }
@@ -2160,8 +2152,8 @@ public class CpEntityManager implements EntityManager {
             return null;
         }
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "getUserByIdentifier {}:{}", identifier.getType(), identifier.toString() );
+        if(logger.isTraceEnabled()){
+            logger.trace( "getUserByIdentifier {}:{}", identifier.getType(), identifier.toString() );
         }
 
         if ( identifier.isUUID() ) {
@@ -2608,32 +2600,28 @@ public class CpEntityManager implements EntityManager {
 
         // prepare to write and index Core Persistence Entity into default scope
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Writing entity {}:{} into app {}\n",
-                new Object[] {
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Writing entity {}:{} into app {}\n",
                     entity.getType(),
                     entity.getUuid(),
                     applicationId,
-                    CpEntityMapUtils.toMap( cpEntity )
-                } );
+                    CpEntityMapUtils.toMap( cpEntity ));
 
         }
 
         try {
 
-            if(logger.isDebugEnabled()) {
-                logger.debug( "About to Write {}:{} version {}", new Object[] {
-                    cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion()
-                } );
+            if(logger.isTraceEnabled()) {
+                logger.trace( "About to Write {}:{} version {}",
+                    cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() );
             }
 
             cpEntity = ecm.write( cpEntity ).toBlocking().last();
             entity.setSize(cpEntity.getSize());
 
-            if(logger.isDebugEnabled()) {
-                logger.debug( "Wrote {}:{} version {}", new Object[] {
-                    cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion()
-                } );
+            if(logger.isTraceEnabled()) {
+                logger.trace( "Wrote {}:{} version {}",
+                    cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() );
             }
 
         }
@@ -2672,16 +2660,15 @@ public class CpEntityManager implements EntityManager {
         }
         catch ( Exception e ) {
             logger.error( "Unable to increment counter application.collection: {}.",
-                    new Object[] { collection_name, e } );
+                    collection_name, e );
         }
         try {
             incrementAggregateCounters( null, null, null,
                     APPLICATION_ENTITIES, ONE_COUNT, cassandraTimestamp );
         }
         catch ( Exception e ) {
-            logger.error( "Unable to increment counter application.entities for collection: "
-                    + "{} with timestamp: {}",
-                    new Object[] { collection_name, cassandraTimestamp, e } );
+            logger.error( "Unable to increment counter application.entities for collection: {} with timestamp: {}",
+                    collection_name, cassandraTimestamp, e );
         }
     }
 

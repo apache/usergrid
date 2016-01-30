@@ -62,7 +62,9 @@ public class SwaggerServlet extends HttpServlet implements Filter {
     @Override
     public void init( ServletConfig config ) throws ServletException {
         super.init( config );
-        logger.info( "init(ServletConfig config)" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("init(ServletConfig config)");
+        }
         if ( sc == null ) {
             sc = config.getServletContext();
         }
@@ -73,7 +75,9 @@ public class SwaggerServlet extends HttpServlet implements Filter {
 
     @Override
     public void init( FilterConfig config ) throws ServletException {
-        logger.info( "init(FilterConfig paramFilterConfig)" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("init(FilterConfig paramFilterConfig)");
+        }
         if ( sc == null ) {
             sc = config.getServletContext();
         }
@@ -107,7 +111,9 @@ public class SwaggerServlet extends HttpServlet implements Filter {
 
 
     public void loadSwagger() {
-        logger.info( "loadSwagger()" );
+        if (logger.isTraceEnabled()) {
+            logger.trace( "loadSwagger()" );
+        }
         pathToJson.put( "/resources.json", loadTempate( "/swagger/resources.json" ) );
         pathToJson.put( "/applications.json", loadTempate( "/swagger/applications.json" ) );
         pathToJson.put( "/management.json", loadTempate( "/swagger/management.json" ) );
@@ -120,7 +126,9 @@ public class SwaggerServlet extends HttpServlet implements Filter {
 
         String path = request.getServletPath();
 
-        logger.info( "Swagger request: " + path );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Swagger request: {}" + path);
+        }
 
         handleJsonOutput( request, response );
     }

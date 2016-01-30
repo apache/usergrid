@@ -358,7 +358,7 @@ public class AmazonAsyncEventService implements AsyncEventService {
                 return new IndexEventResult(Optional.fromNullable(message),
                     Optional.fromNullable(indexOperationMessage), thisEvent.getCreationTime());
             } catch (Exception e) {
-                logger.error("Failed to index message: " + message.getMessageId(), message.getStringBody(), e);
+                logger.error("Failed to index message: {} {}", message.getMessageId(), message.getStringBody(), e);
                 return new IndexEventResult(Optional.absent(), Optional.<IndexOperationMessage>absent(),
                     event.getCreationTime());
             }
@@ -729,9 +729,8 @@ public class AmazonAsyncEventService implements AsyncEventService {
                                                          submitToIndex( indexEventResults );
                                                      if ( messagesToAck == null || messagesToAck.size() == 0 ) {
                                                          logger.error(
-                                                             "No messages came back from the queue operation should "
-                                                                 + "have seen "
-                                                                 + messages.size(), messages );
+                                                             "No messages came back from the queue operation, should have seen {} messages",
+                                                                 messages.size() );
                                                          return messagesToAck;
                                                      }
                                                      if ( messagesToAck.size() < messages.size() ) {
