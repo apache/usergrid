@@ -291,6 +291,20 @@ public class AbstractCollectionService extends AbstractService {
     public ServiceResults putItemByName( ServiceContext context, String name ) throws Exception {
 
         EntityRef ref = em.getAlias( getEntityType(), name );
+        if(ref == null){
+            logger.error("The following name wasn't found in entity_unique column family. {}",name);
+
+            checkPermissionsForCollection(context);
+
+            Map<String, Object> properties = context.getPayload().getProperties();
+            if ( !properties.containsKey( "name" ) || !( ( String ) properties.get( "name" ) ).trim().equalsIgnoreCase(
+                    name ) ) {
+                properties.put( "name", name );
+            }
+            Entity entity = em.create( getEntityType(), properties );
+            return new ServiceResults( this, context, Type.COLLECTION, Results.fromEntity( entity ), null, null );
+        }
+
         return putItemById( context, ref.getUuid() );
     }
 
