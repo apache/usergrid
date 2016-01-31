@@ -1,27 +1,46 @@
-
 # Usergrid 2.1.0 Deployment Guide
-David M. Johnson, January 2016
 
 ## DRAFT 
 
 This document explains how to deploy the Usergrid Backend-as-a-Service (BaaS), 
 which comprises the Usergrid Stack, a Java web application, and the Usergrid Portal,
-which is an HTML5/JavaScript application.
+which is an HTML5/JavaScript application. 
 
-* Getting Started
 
-* Deploying the Usergrid Stack
-   * Setup Cassandra
-   * Setup ElasticSearch
-   * Setup Tomcat and deploy Usergrid 
-      * Configure Usergrid Stack
-      * Configure Logging
-      * Deploy ROOT.war to Tomcat
-      * Initialize Database
+## Intended audience
+
+You should be able to follow this guide if you are a developer, system admin or 
+operations person with some knowledge of Java application deployment and good 
+knowledge of Linux and the bash shell.
+
+This guide is a starting point and does NOT explain everything you need to know to 
+run Usergrid at-scale and in production. To do that you will need some additional 
+skills and knowledge around running, monitoring and trouble-shooting Tomcat 
+applications, multi-node Cassandra & ElasticSearch clusters and more.
+
+
+## Prerequsites
+
+Below are the software requirements for Usergrid 2.1.0 Stack and Portal. 
+You can install them all on one computer for development purposes, and for 
+deployment you can deploy them separately using clustering.
+
+   * Linux or a UNIX-like system (Usergrid may run on Windows, but we haven't tried it)
+   
+   * [Java SE 8 JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
+   
+   * [Apache Tomcat 7+](https://tomcat.apache.org/download-70.cgi)
+   
+   * [Apache Cassandra 1.2.1+](http://cassandra.apache.org/download/)
+   
+   * [ElasticSearch 1.4+](https://www.elastic.co/downloads/elasticsearch)  
+   
+Optional but helpful:
+
+   * An HTTP or REST client, such as [curl](http://curl.haxx.se)
+   * A web server such as [Apache HTTPD](https://httpd.apache.org) for running the Usergrid Portal
       
-* Deploying the Usergrid Portal
-
-
+   
 ## Getting Started
 
 Deploying Usergrid starts with downloaded the Apache Usergrid release. There are three ways to go:
@@ -30,8 +49,9 @@ Deploying Usergrid starts with downloaded the Apache Usergrid release. There are
 2. Download the official Apache Usergrid 2.1.0 source-code release (not available yet) and build Usergrid
 3. Download the Apache Usergrid 2.1.0 binary release (not available).
 
-The easist way to go is option #3: download the Apache Usergrid 2.1.0 binary release from
-the Usergrid releases page here:
+The easist way to go is option #3 and so that's what we will do in this document. 
+
+__Get started by downloading the Apache Usergrid 2.1.0__ binary release from the Usergrid releases page:
 
 * [Apache Usergrid Releases](https://usergrid.apache.org/releases)
 
@@ -68,19 +88,6 @@ The files that you need for deploying Usergrid Stack and Portal are `ROOT.war` a
 
 The Usergrid Stack is a Java EE web application that runs on Tomcat, 
 uses the Cassandra database for storage and the ElasticSearch search-engine for queries.
-Below are the software requirements for the Stack. You can install them all on 
-one computer for development purposes, and for deployment you can deploy them
-separately using clustering.
-
-   * Linux or a UNIX-like system (Usergrid may run on Windows, but we haven't tried it)
-   * [Java SE 8 JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
-   * [Apache Tomcat 7+](https://tomcat.apache.org/download-70.cgi)
-   * [Apache Cassandra 1.2.1+](http://cassandra.apache.org/download/)
-   * [ElasticSearch 1.4+](https://www.elastic.co/downloads/elasticsearch)  
-   
-And highly recommended:
-
-   * An HTTP or REST client, such as [curl](http://curl.haxx.se), is helpful when working with Usergrid
  
 Before installing the Usegrid Stack into Tomcat, you'll start by setting up the 
 required database and search engine nodes. 
@@ -416,6 +423,22 @@ this line:
     Usergrid.overrideUrl = 'http://localhost:8080/';
 
 To set the hostname that you will be using for your Usergrid installation. 
+
+Start your web server and Portal should be up and running!
+
+
+## Additional Resources
+
+Resources that might be useful to those deploying Usergrid:
+
+[Usergrid-Vagrant](https://github.com/snoopdave/usergrid-vagrant): A VagrantFile and set of bash scripts that will launch a Linux Virtual Machine running Cassandra, ElasticSearch, Tomcat and the Usergrid 2.1 Stack and Portal. 
+
+[Usergrid AWS Cluster](https://github.com/apache/usergrid/tree/master/deployment/aws): An AWS Cloud Formation template and supporting scripts that create a set of multiple EC2 instances running Usergrid Stack/Portal and a set of EC2 instances running Cassandra and ElasticSearch.
+
+
+## The End
+
+That's all folks.
 
 
 
