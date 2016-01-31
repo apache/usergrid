@@ -28,40 +28,43 @@ limitations under the License.
     <packaging>pom</packaging>
     <version>2.1.1-SNAPSHOT</version>
 
-  <profiles>
+    <profiles>
 
-    <!-- better to have keep this sonar profile in your maven settings.xml -->
-    <profile>
-      <id>sonar</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <properties>
-        <sonar.host.url>http://localhost:9000</sonar.host.url>
-        <sonar.jdbc.url>jdbc:h2:tcp://localhost:9092/sonar</sonar.jdbc.url>
-        <sonar.jdbc.username>sonar</sonar.jdbc.username>
-        <sonar.jdbc.password>sonar</sonar.jdbc.password>
-      </properties>
-    </profile>
+        <!-- better to have keep this sonar profile in your maven settings.xml -->
+        <profile>
+            <id>sonar</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <sonar.host.url>http://localhost:9000</sonar.host.url>
+                <sonar.jdbc.url>jdbc:h2:tcp://localhost:9092/sonar</sonar.jdbc.url>
+                <sonar.jdbc.username>sonar</sonar.jdbc.username>
+                <sonar.jdbc.password>sonar</sonar.jdbc.password>
+            </properties>
+        </profile>
 
-      <profile>
-          <id>jacoco</id>
-          <build>
-              <plugins>
-                  <plugin>
-                      <groupId>org.apache.maven.plugins</groupId>
-                      <artifactId>maven-surefire-plugin</artifactId>
-                      <version>${surefire.plugin.version}</version>
-                      <configuration>
-                          <argLine>-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec</argLine>
-                          <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest</excludedGroups>
-                      </configuration>
-                  </plugin>
-              </plugins>
-          </build>
-      </profile>
+        <profile>
+            <id>jacoco</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${surefire.plugin.version}</version>
+                        <configuration>
+                            <argLine>
+                                -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec
+                            </argLine>
+                            <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest
+                            </excludedGroups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
 
-  </profiles>
+    </profiles>
 
     <properties>
 
@@ -72,7 +75,7 @@ limitations under the License.
         <archaius.version>0.5.12</archaius.version>
         <astyanax.version>3.9.0</astyanax.version>
         <cassandra.version>1.2.18</cassandra.version>
-<!--        <chop.version>1.0</chop.version>-->
+        <!--        <chop.version>1.0</chop.version>-->
         <commons.codec.version>1.6</commons.codec.version>
         <commons.collections.version>3.2.1</commons.collections.version>
         <commons.io.version>2.4</commons.io.version>
@@ -91,10 +94,10 @@ limitations under the License.
         <rx.version>1.0.14</rx.version>
         <slf4j.version>1.7.2</slf4j.version>
         <surefire.version>2.16</surefire.version>
-        <aws.version>1.10.6</aws.version>
         <metrics.version>3.0.0</metrics.version>
         <surefire.plugin.version>2.18.1</surefire.plugin.version>
         <jacoco.version>0.7.5.201505241946</jacoco.version>
+        <aws.version>1.10.20</aws.version>
 
     </properties>
 
@@ -127,7 +130,8 @@ limitations under the License.
                             <archaius.deployment.environment>UNIT</archaius.deployment.environment>
                         </systemPropertyVariables>
                         <argLine>-Xms2G -Xmx4G</argLine>
-                        <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest</excludedGroups>
+                        <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest
+                        </excludedGroups>
                     </configuration>
                 </plugin>
 
@@ -216,23 +220,23 @@ limitations under the License.
 
         </plugins>
 
-      <resources>
-        <resource>
-          <directory>src/main/resources</directory>
-          <filtering>true</filtering>
-          <includes>
-            <include>**/*.properties</include>
-          </includes>
-        </resource>
-        <!-- include everything else without filtering -->
-        <resource>
-          <directory>src/main/resources</directory>
-          <filtering>false</filtering>
-          <includes>
-            <include>**</include>
-          </includes>
-        </resource>
-      </resources>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.properties</include>
+                </includes>
+            </resource>
+            <!-- include everything else without filtering -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>**</include>
+                </includes>
+            </resource>
+        </resources>
 
         <testResources>
             <testResource>

@@ -18,7 +18,6 @@ package org.apache.usergrid.rest.applications.assets;
 
 
 import com.amazonaws.SDKGlobalConfiguration;
-import com.amazonaws.services.cognitoidentity.model.InternalErrorException;
 
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.io.IOUtils;
