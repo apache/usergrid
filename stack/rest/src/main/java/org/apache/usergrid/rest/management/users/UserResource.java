@@ -29,7 +29,7 @@ import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.management.ManagementResource;
 import org.apache.usergrid.rest.management.users.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.security.annotations.RequireAdminUserAccess;
-import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
 import org.apache.usergrid.services.ServiceResults;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -191,7 +191,7 @@ public class UserResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "get admin user" );
 
-        String token = management.getAccessTokenForAdminUser( SubjectUtils.getUser().getUuid(), ttl );
+        String token = management.getAccessTokenForAdminUser( user.getUuid(), ttl );
         Map<String, Object> userOrganizationData = management.getAdminUserOrganizationData( user, !shallow );
         userOrganizationData.put( "token", token );
         response.setData( userOrganizationData );
@@ -214,21 +214,27 @@ public class UserResource extends AbstractContextResource {
                     properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
         }
 
+        UUID organizationId = null;
+
         try {
             this.token = token;
+            TokenInfo tokenInfo = management.getPasswordResetTokenInfoForAdminUser(token);
+            if (tokenInfo != null) {
+                organizationId = tokenInfo.getWorkflowOrgId();
+            }
 
-            if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), token ) ) {
-                return handleViewable( "resetpw_set_form", this );
+            if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), tokenInfo ) ) {
+                return handleViewable( "resetpw_set_form", this, organizationId );
             }
             else {
-                return handleViewable( "resetpw_email_form", this );
+                return handleViewable( "resetpw_email_form", this, organizationId );
             }
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, organizationId );
         }
     }
 
@@ -255,8 +261,14 @@ public class UserResource extends AbstractContextResource {
                     properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
         }
 
+        UUID organizationId = null;
+
         try {
             this.token = token;
+            TokenInfo tokenInfo = management.getPasswordResetTokenInfoForAdminUser(token);
+            if (tokenInfo != null) {
+                organizationId = tokenInfo.getWorkflowOrgId();
+            }
 
             //      if(user == null) {
             //        errorMsg = "Incorrect username entered";
@@ -264,26 +276,26 @@ public class UserResource extends AbstractContextResource {
             //      }
 
             if ( ( password1 != null ) || ( password2 != null ) ) {
-                if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), token ) ) {
+                if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), tokenInfo ) ) {
                     if ( ( password1 != null ) && password1.equals( password2 ) ) {
                         management.setAdminUserPassword( user.getUuid(), password1 );
                         management.revokeAccessTokenForAdminUser( user.getUuid(), token );
-                        return handleViewable( "resetpw_set_success", this );
+                        return handleViewable( "resetpw_set_success", this, organizationId );
                     }
                     else {
                         errorMsg = "Passwords didn't match, let's try again...";
-                        return handleViewable( "resetpw_set_form", this );
+                        return handleViewable( "resetpw_set_form", this, organizationId );
                     }
                 }
                 else {
                     errorMsg = "Sorry, you have an invalid token. Let's try again...";
-                    return handleViewable( "resetpw_email_form", this );
+                    return handleViewable( "resetpw_email_form", this, organizationId );
                 }
             }
 
             if ( !useReCaptcha() ) {
                 management.startAdminUserPasswordResetFlow( null, user );
-                return handleViewable( "resetpw_email_success", this );
+                return handleViewable( "resetpw_email_success", this, organizationId );
             }
 
             ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
@@ -294,18 +306,18 @@ public class UserResource extends AbstractContextResource {
 
             if ( reCaptchaResponse.isValid() ) {
                 management.startAdminUserPasswordResetFlow( null, user );
-                return handleViewable( "resetpw_email_success", this );
+                return handleViewable( "resetpw_email_success", this, organizationId );
             }
             else {
                 errorMsg = "Incorrect Captcha";
-                return handleViewable( "resetpw_email_form", this );
+                return handleViewable( "resetpw_email_form", this, organizationId );
             }
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, organizationId );
         }
     }
 
@@ -338,18 +350,22 @@ public class UserResource extends AbstractContextResource {
                     properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
         }
 
+        UUID organizationId = null;
+
         try {
-            management.handleActivationTokenForAdminUser( user.getUuid(), token );
-            return handleViewable( "activate", this );
+            TokenInfo tokenInfo = management.getActivationTokenInfoForAdminUser(token) ;
+            organizationId = tokenInfo.getWorkflowOrgId();
+            management.handleActivationTokenForAdminUser( user.getUuid(), tokenInfo );
+            return handleViewable( "activate", this, organizationId );
         }
         catch ( TokenException e ) {
-            return handleViewable( "bad_activation_token", this );
+            return handleViewable( "bad_activation_token", this, organizationId );
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, organizationId );
         }
     }
 
@@ -367,21 +383,25 @@ public class UserResource extends AbstractContextResource {
                     properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
         }
 
+        UUID organizationId = null;
+
         try {
-            ActivationState state = management.handleConfirmationTokenForAdminUser( user.getUuid(), token );
+            TokenInfo tokenInfo = management.getConfirmationTokenInfoForAdminUser(token) ;
+            organizationId = tokenInfo.getWorkflowOrgId();
+            ActivationState state = management.handleConfirmationTokenForAdminUser( user.getUuid(), tokenInfo );
             if ( state == ActivationState.CONFIRMED_AWAITING_ACTIVATION ) {
-                return handleViewable( "confirm", this );
+                return handleViewable( "confirm", this, organizationId );
             }
-            return handleViewable( "activate", this );
+            return handleViewable( "activate", this, organizationId );
         }
         catch ( TokenException e ) {
-            return handleViewable( "bad_confirmation_token", this );
+            return handleViewable( "bad_confirmation_token", this, organizationId );
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return new Viewable( "error", e );
+            return handleViewable( "error", e, organizationId );
         }
     }
 
