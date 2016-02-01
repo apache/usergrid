@@ -37,7 +37,7 @@ import org.apache.tika.mime.MediaType;
 
 /** Detect the mime type of an Asset */
 public final class AssetMimeHandler {
-    private static final Logger LOG = LoggerFactory.getLogger( AssetMimeHandler.class );
+    private static final Logger logger = LoggerFactory.getLogger( AssetMimeHandler.class );
 
     private Detector detector;
 
@@ -98,7 +98,7 @@ public final class AssetMimeHandler {
             fileMetadata.put( AssetUtils.CONTENT_TYPE, mediaType.toString() );
         }
         catch ( IOException e ) {
-            LOG.error( "error detecting mime type", e );
+            logger.error( "error detecting mime type", e );
         }
 
         return mediaType.toString();

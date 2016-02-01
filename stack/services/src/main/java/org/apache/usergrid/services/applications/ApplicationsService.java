@@ -49,8 +49,8 @@ public class ApplicationsService extends AbstractService {
 
     public ApplicationsService() {
         super();
-        if (logger.isDebugEnabled()) {
-            logger.debug("/applications");
+        if (logger.isTraceEnabled()) {
+            logger.trace("/applications");
         }
         declareEntityDictionary( "counters" );
         declareEntityCommand( "hello" );
@@ -149,7 +149,7 @@ public class ApplicationsService extends AbstractService {
 
                     em.createApplicationCollection( collection );
                     if (logger.isDebugEnabled()) {
-                        logger.debug("Created collection " + collection + " for application " + sm.getApplicationId());
+                        logger.debug("Created collection {} for application {}", collection, sm.getApplicationId());
                     }
                 }
             }

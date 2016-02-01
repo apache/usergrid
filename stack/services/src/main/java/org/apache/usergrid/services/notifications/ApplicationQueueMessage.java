@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 public class ApplicationQueueMessage implements Serializable {
 
-    private static final Logger log = LoggerFactory.getLogger(ApplicationQueueMessage.class);
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationQueueMessage.class);
     private UUID applicationId;
     private UUID notificationId;
     private UUID deviceId;

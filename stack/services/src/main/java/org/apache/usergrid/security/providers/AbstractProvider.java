@@ -72,7 +72,7 @@ public abstract class AbstractProvider implements SignInAsProvider {
         try {
             return entityManager.getDictionaryAsMap(entityManager.getApplication(), providerKey);
         } catch (Exception ex) {
-            logger.error("Error in loadConfigurationFor for " + providerKey, ex);
+            logger.error("Error in loadConfigurationFor for {}", providerKey, ex);
         }
         return null;
     }
@@ -82,7 +82,7 @@ public abstract class AbstractProvider implements SignInAsProvider {
         try {
             entityManager.addMapToDictionary(entityManager.getApplication(), providerKey, config);
         } catch (Exception ex) {
-            logger.error("Error in saveToConfiguration for " + providerKey, ex);
+            logger.error("Error in saveToConfiguration for {}", providerKey, ex);
         }
     }
 }

@@ -39,7 +39,7 @@ import java.util.UUID;
 /** A binary store implementation using the local file system */
 public class LocalFileBinaryStore implements BinaryStore {
 
-    private static final Logger LOG = LoggerFactory.getLogger( LocalFileBinaryStore.class );
+    private static final Logger logger = LoggerFactory.getLogger( LocalFileBinaryStore.class );
 
     private String reposLocation = FileUtils.getTempDirectoryPath();
 
@@ -102,7 +102,7 @@ public class LocalFileBinaryStore implements BinaryStore {
                 em.update( entity );
 
             } catch ( Exception e ) {
-                LOG.error( "Error updating entity with error message", e);
+                logger.error( "Error updating entity with error message", e);
             }
             return;
         }

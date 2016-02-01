@@ -86,7 +86,9 @@ public class NotificationsService extends AbstractCollectionService {
     private QueueManagerFactory queueManagerFactory;
 
     public NotificationsService() {
-        logger.info("/notifications");
+        if (logger.isTraceEnabled()) {
+            logger.trace("/notifications");
+        }
     }
 
     @Override
@@ -129,7 +131,9 @@ public class NotificationsService extends AbstractCollectionService {
 
     @Override
     public ServiceResults postCollection(ServiceContext context) throws Exception {
-        logger.info("NotificationService: start request.");
+        if (logger.isTraceEnabled()) {
+            logger.trace("NotificationService: start request.");
+        }
         Timer.Context timer = postTimer.time();
         postMeter.mark();
         try {
@@ -149,12 +153,16 @@ public class NotificationsService extends AbstractCollectionService {
                 properties.put("started", notification.getStarted());
                 properties.put("state", notification.getState());
                 notification.addProperties(properties);
-                logger.info("ApplicationQueueMessage: notification {} properties updated in duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("ApplicationQueueMessage: notification {} properties updated in duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
+                }
             }
 
             long now = System.currentTimeMillis();
             notificationQueueManager.queueNotification(notification, null);
-            logger.info("NotificationService: notification {} post queue duration {} ms ", notification.getUuid(), System.currentTimeMillis() - now);
+            if (logger.isTraceEnabled()) {
+                logger.trace("NotificationService: notification {} post queue duration {} ms ", notification.getUuid(), System.currentTimeMillis() - now);
+            }
             // future: somehow return 202?
             return results;
         }catch (Exception e){

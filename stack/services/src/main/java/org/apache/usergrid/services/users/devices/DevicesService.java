@@ -34,28 +34,28 @@ public class DevicesService extends org.apache.usergrid.services.devices.Devices
 
     public DevicesService() {
         super();
-        if (logger.isDebugEnabled()) {
-            logger.debug("/users/*/devices");
+        if (logger.isTraceEnabled()) {
+            logger.trace("/users/*/devices");
         }
     }
 
     @Override
     public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Registering device {}", id);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Registering device {}", id);
         }
         unregisterDeviceToUsers(id,context.getOwner());
-        ServiceResults results = super.putItemById( context, id );
-        return results;
+        return super.putItemById( context, id );
     }
 
 
     @Override
     public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception {
-        logger.info( "Attempting to connect an entity to device {}", id );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Attempting to connect an entity to device {}", id);
+        }
         unregisterDeviceToUsers(id,context.getOwner());
-        ServiceResults results = super.postItemById( context, id );
-        return results;
+        return super.postItemById( context, id );
     }
 
     protected void unregisterDeviceToUsers(UUID deviceId, EntityRef owner){
@@ -63,7 +63,7 @@ public class DevicesService extends org.apache.usergrid.services.devices.Devices
             EntityRef device = new SimpleEntityRef("device",deviceId);
             deleteEntityConnection(device,owner);
         } catch (Exception e) {
-            logger.error("Failed to delete connection for " + deviceId.toString(), e);
+            logger.error("Failed to delete connection for {}", deviceId.toString(), e);
         }
 
     }

@@ -34,8 +34,8 @@ public class AssetsService extends AbstractPathBasedColllectionService {
 
     public AssetsService() {
         super();
-        if (logger.isDebugEnabled()) {
-            logger.debug("/assets");
+        if (logger.isTraceEnabled()) {
+            logger.trace("/assets");
         }
         declareServiceCommands( "data" );
     }
@@ -44,8 +44,8 @@ public class AssetsService extends AbstractPathBasedColllectionService {
     @Override
     public ServiceResults getEntityCommand( ServiceContext context, List<EntityRef> refs, String command )
             throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("handling command: {}", command);
+        if (logger.isTraceEnabled()) {
+            logger.trace("handling command: {}", command);
         }
 
         ServiceResults sr = ServiceResults.genericServiceResults();
@@ -56,8 +56,8 @@ public class AssetsService extends AbstractPathBasedColllectionService {
 
     @Override
     public ServiceResults getServiceCommand( ServiceContext context, String command ) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("in getServiceCommand with command: {}", command);
+        if (logger.isTraceEnabled()) {
+            logger.trace("in getServiceCommand with command: {}", command);
         }
         return ServiceResults.genericServiceResults();
     }

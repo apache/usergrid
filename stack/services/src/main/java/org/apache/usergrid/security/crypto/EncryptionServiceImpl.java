@@ -57,7 +57,7 @@ public class EncryptionServiceImpl implements EncryptionService {
     public boolean verify( String inputSecret, CredentialsInfo creds, UUID userId, UUID applicationId ) {
 
 
-        String[] storedCommands = null;
+        String[] storedCommands;
 
         // We have the new format of crypto chain. read them and apply them
         if ( creds.getCryptoChain() != null && creds.getCryptoChain().length > 0 ) {
@@ -84,8 +84,7 @@ public class EncryptionServiceImpl implements EncryptionService {
             // verify we have a command to load
             if ( command == null ) {
                 throw new IllegalArgumentException( String.format(
-                        "No command implementat for name %s exists, yet it is persisted on a user's credentials info."
-                                + "  This means their credentials either need removed, or this command needs supported",
+                        "No command implementation for name %s exists, yet it is persisted on a user's credentials info.  This means their credentials either need to be removed, or this command needs to be supported",
                         commandName ) );
             }
 
@@ -97,7 +96,6 @@ public class EncryptionServiceImpl implements EncryptionService {
     }
 
 
-    /** @param wiredCommands the wiredCommands to set */
     @Autowired
     public void setCommands( List<EncryptionCommand> inputCommands ) {
         this.inputCommands = inputCommands;
@@ -112,7 +110,7 @@ public class EncryptionServiceImpl implements EncryptionService {
                             EncryptionCommand.class ) );
         }
 
-        commands = new HashMap<String, EncryptionCommand>();
+        commands = new HashMap<>();
 
         /**
          * Create the map by name so we can reference them later.

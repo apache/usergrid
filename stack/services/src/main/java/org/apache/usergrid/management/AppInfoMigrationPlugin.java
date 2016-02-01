@@ -143,7 +143,7 @@ public class AppInfoMigrationPlugin implements MigrationPlugin {
         if ( version == getMaxVersion() ) {
 
             if (logger.isDebugEnabled()) {
-                logger.debug("Skipping Migration Plugin: " + getName());
+                logger.debug("Skipping Migration Plugin: {}", getName());
             }
 
             return;

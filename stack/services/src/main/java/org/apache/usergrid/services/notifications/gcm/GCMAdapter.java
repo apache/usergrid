@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class GCMAdapter implements ProviderAdapter {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GCMAdapter.class);
+    private static final Logger logger = LoggerFactory.getLogger(GCMAdapter.class);
     private static final int SEND_RETRIES = 3;
     private static int BATCH_SIZE = 1000;
     private final Notifier notifier;
@@ -65,10 +65,14 @@ public class GCMAdapter implements ProviderAdapter {
         ids.add("device_token");
         try {
             MulticastResult result = sender.send(message, ids, 1);
-            LOG.debug("testConnection result: {}", result);
+            if (logger.isTraceEnabled()) {
+                logger.trace("testConnection result: {}", result);
+            }
         } catch (InvalidRequestException e){
             // do nothing, we don't have a valid device token to test with
-            LOG.debug("here for testing only");
+            if (logger.isTraceEnabled()) {
+                logger.trace("no valid device token");
+            }
         }
         catch (IOException e) {
             if(isInvalidRequestException(e)){
@@ -164,7 +168,7 @@ public class GCMAdapter implements ProviderAdapter {
                 }
             }
         }catch (Exception e){
-            LOG.error("error while trying to send on stop",e);
+            logger.error("error while trying to send on stop",e);
         }
     }
 
@@ -265,7 +269,9 @@ public class GCMAdapter implements ProviderAdapter {
                 }
 
 
-                LOG.debug("sendNotification result: {}", multicastResult);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("sendNotification result: {}", multicastResult);
+                }
 
                 for (int i = 0; i < multicastResult.getResults().size(); i++) {
                     Result result = multicastResult.getResults().get(i);

@@ -84,16 +84,16 @@ public abstract class PrincipalIdentifier {
 
 
     protected void grant( UsergridAuthorizationInfo info, String permission ) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Principal {} granted permission: {}", this, permission);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Principal {} granted permission: {}", this, permission);
         }
         info.addStringPermission(permission);
     }
 
 
     protected void role( UsergridAuthorizationInfo info, String role ) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Principal {} added to role: {}", this, role);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Principal {} added to role: {}", this, role);
         }
         info.addRole(role);
     }

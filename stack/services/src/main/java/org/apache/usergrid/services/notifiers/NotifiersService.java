@@ -32,7 +32,9 @@ public class NotifiersService extends AbstractCollectionService {
 
     public NotifiersService() {
         super();
-        logger.info("/notifiers");
+        if (logger.isTraceEnabled()) {
+            logger.trace("/notifiers");
+        }
     }
 
     @Override

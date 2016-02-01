@@ -39,7 +39,7 @@ public class PythonUtils {
             pyObject = interpreter.get( clsName );
         }
         catch ( Exception e ) {
-            logger.error( "The Python module '" + moduleName + "' is not found: " + compactWhitespace( e.toString() ) );
+            logger.error( "The Python module '{}' is not found: {}", moduleName, compactWhitespace( e.toString() ) );
         }
         return pyObject;
     }
@@ -71,7 +71,7 @@ public class PythonUtils {
                     interfaceType.toString().indexOf( " " ) + 1, interfaceType.toString().length() ) ) );
         }
         catch ( Exception ex ) {
-            logger.error( "Unable to create Python object: " + compactWhitespace( ex.toString() ) );
+            logger.error( "Unable to create Python object: {}", compactWhitespace( ex.toString() ) );
         }
 
         return javaObj;
