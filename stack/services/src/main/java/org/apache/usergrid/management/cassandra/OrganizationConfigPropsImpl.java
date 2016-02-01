@@ -18,13 +18,21 @@ package org.apache.usergrid.management.cassandra;
 
 
 import org.apache.usergrid.management.OrganizationConfigProps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 
 
 public class OrganizationConfigPropsImpl implements OrganizationConfigProps {
+    private static final Logger logger = LoggerFactory.getLogger( OrganizationConfigPropsImpl.class );
+
+    private static final String REGEX_PROPERTY_NAME = "usergrid.org.config.property.regex";
+    private static final String DEFAULT_REGEX = "usergrid[.]view[.].*";
 
     private static final String DEFAULTVALUE_API_URL_BASE = "http://localhost:8080";
     private static final String DEFAULTVALUE_DEFAULT_CONNECTION_PARAM = "all";
@@ -61,6 +69,9 @@ public class OrganizationConfigPropsImpl implements OrganizationConfigProps {
     protected final Map<String, String> defaultProperties;
     protected final Map<String, String> orgProperties;
 
+    protected final String propertyNameRegex;
+    protected Pattern propertyNameRegexPattern;
+
 
     public OrganizationConfigPropsImpl(Properties properties) {
         this(properties, null);
@@ -70,29 +81,42 @@ public class OrganizationConfigPropsImpl implements OrganizationConfigProps {
         this.properties = new Properties(properties);
         this.properties.putAll(properties);
 
-        this.defaultProperties = new HashMap<>(noConfigDefaults);
-        // add any corresponding properties to default props map
-        noConfigDefaults.keySet().forEach((k) -> {
-            String value = properties.getProperty(k);
+        String regex = properties.getProperty(REGEX_PROPERTY_NAME);
+        this.propertyNameRegex = !regex.isEmpty() ? regex : DEFAULT_REGEX;
+        try {
+            this.propertyNameRegexPattern = Pattern.compile(this.propertyNameRegex);
+        }
+        catch(PatternSyntaxException e) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Invalid regex in " + REGEX_PROPERTY_NAME + " property: " + propertyNameRegex);
+            }
+            this.propertyNameRegexPattern = null;
+        }
 
-            // ok if value is empty string
-            if (value != null) {
-                this.defaultProperties.put(k, value);
+        this.defaultProperties = new HashMap<>(noConfigDefaults);
+
+        // add any corresponding properties to default props map
+        this.properties.forEach((k,v) -> {
+            if (orgPropertyNameValid(k.toString()) && v != null) {
+                this.defaultProperties.put(k.toString(), v.toString());
             }
         });
 
         this.orgProperties = map != null ? new HashMap<>(map) : new HashMap<>();
-        //noConfigDefaults.forEach((k,v) -> map.put(k, properties.getProperty(k, v)));
     }
 
     public OrganizationConfigPropsImpl(OrganizationConfigProps orgConfigProps) {
         this.properties = orgConfigProps.getPropertiesMap();
         this.defaultProperties = orgConfigProps.getDefaultPropertiesMap();
         this.orgProperties = orgConfigProps.getOrgPropertiesMap();
+        this.propertyNameRegex = orgConfigProps.getOrgPropertyNameRegex();
+        this.propertyNameRegexPattern = Pattern.compile(this.propertyNameRegex);
     }
 
+    @Override
     public boolean orgPropertyNameValid(String name) {
-        return noConfigDefaults.containsKey(name);
+        return noConfigDefaults.containsKey(name) ||
+                (propertyNameRegexPattern != null && propertyNameRegexPattern.matcher(name).matches());
     }
 
     @Override
@@ -115,6 +139,11 @@ public class OrganizationConfigPropsImpl implements OrganizationConfigProps {
     @Override
     public Map<String, String> getOrgPropertiesMap() {
         return new HashMap<>(orgProperties);
+    }
+
+    @Override
+    public String getOrgPropertyNameRegex() {
+        return propertyNameRegex;
     }
 
     //

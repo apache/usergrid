@@ -33,6 +33,7 @@ import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
+import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.services.ServiceResults;
 
 import com.google.common.collect.BiMap;
@@ -50,11 +51,23 @@ public interface ManagementService {
 
 	AccessInfo authorizeClient( String clientId, String clientSecret, long ttl ) throws Exception;
 
+	TokenInfo getConfirmationTokenInfoForAdminUser( String token ) throws Exception;
+
 	ActivationState handleConfirmationTokenForAdminUser( UUID userId, String token ) throws Exception;
+
+	ActivationState handleConfirmationTokenForAdminUser( UUID userId, TokenInfo tokenInfo ) throws Exception;
+
+	TokenInfo getActivationTokenInfoForAdminUser( String token ) throws Exception;
 
 	ActivationState handleActivationTokenForAdminUser( UUID userId, String token ) throws Exception;
 
+	ActivationState handleActivationTokenForAdminUser( UUID userId, TokenInfo tokenInfo ) throws Exception;
+
 	ActivationState handleActivationTokenForOrganization( UUID organizationId, String token ) throws Exception;
+
+	TokenInfo getPasswordResetTokenInfoForAdminUser( String token ) throws Exception;
+
+	boolean checkPasswordResetTokenForAdminUser( UUID userId, TokenInfo tokenInfo ) throws Exception;
 
 	boolean checkPasswordResetTokenForAdminUser( UUID userId, String token ) throws Exception;
 
