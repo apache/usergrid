@@ -15,7 +15,7 @@
         "ReleaseBucket": {
             "Description": "S3 Bucket where Usergrid assembly is to be found.",
             "Type": "String",
-            "Default": "ug-cloudformation"
+            "Default": "usergrid-cloudformation"
         },
         "RestMinServers": {
             "Description": "Minimum number of REST servers.",
@@ -61,7 +61,7 @@
         "KeyPair": {
           "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
           "Type": "AWS::EC2::KeyPair::KeyName",
-          "Default": "ug-cloudformation",
+          "Default": "usergrid-cloudformation",
           "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
         },
         "CassClusterName": {
@@ -266,7 +266,7 @@
         }
     },
     "Resources": {
-        "GraphiteUser": {
+        "usergrid-GraphiteUser": {
             "Type": "AWS::IAM::User",
             "Properties": {
                 "Path": "/",
@@ -291,7 +291,7 @@
             "Type": "AWS::IAM::AccessKey",
             "Properties": {
                 "UserName": {
-                    "Ref": "GraphiteUser"
+                    "Ref": "usergrid-GraphiteUser"
                 }
             }
         },
@@ -470,7 +470,7 @@
                 }
             }
         },
-        "OpsCenterUser": {
+        "usergrid-OpsCenterUser": {
                         "Type": "AWS::IAM::User",
                         "Properties": {
                             "Path": "/",
@@ -495,7 +495,7 @@
                         "Type": "AWS::IAM::AccessKey",
                         "Properties": {
                             "UserName": {
-                                "Ref": "OpsCenterUser"
+                                "Ref": "usergrid-OpsCenterUser"
                             }
                         }
                     },
@@ -689,7 +689,7 @@
                             }
                         }
                     },
-        "RestUser": {
+        "usergrid-RestUser": {
             "Type": "AWS::IAM::User",
             "Properties": {
                 "Path": "/",
@@ -713,11 +713,11 @@
             "Type": "AWS::IAM::AccessKey",
             "Properties": {
                 "UserName": {
-                    "Ref": "RestUser"
+                    "Ref": "usergrid-RestUser"
                 }
             }
         },
-        "CassUser": {
+        "usergrid-CassUser": {
             "Type": "AWS::IAM::User",
             "Properties": {
                 "Path": "/",
@@ -741,11 +741,11 @@
             "Type": "AWS::IAM::AccessKey",
             "Properties": {
                 "UserName": {
-                    "Ref": "CassUser"
+                    "Ref": "usergrid-CassUser"
                 }
             }
         },
-        "ESUser": {
+        "usergrid-ESUser": {
             "Type": "AWS::IAM::User",
             "Properties": {
                 "Path": "/",
@@ -769,7 +769,7 @@
             "Type": "AWS::IAM::AccessKey",
             "Properties": {
                 "UserName": {
-                    "Ref": "CassUser"
+                    "Ref": "usergrid-CassUser"
                 }
             }
         },
@@ -1661,54 +1661,6 @@
                             "Ref": "NotificationEmail"
                         },
                         "Protocol": "email"
-                    }
-                ]
-            }
-        },
-        "DnsRecord": {
-            "Type": "AWS::Route53::RecordSetGroup",
-            "Properties": {
-                "HostedZoneName": {
-                    "Fn::Join": [
-                        ".",
-                        [
-                            {
-                                "Ref": "DnsDomain"
-                            },
-                            ""
-                        ]
-                    ]
-                },
-                "RecordSets": [
-                    {
-                        "Name": {
-                            "Fn::Join": [
-                                ".",
-                                [
-                                    {
-                                        "Ref": "DnsSubDomain"
-                                    },
-                                    {
-                                        "Ref": "DnsDomain"
-                                    }
-                                ]
-                            ]
-                        },
-                        "Type": "A",
-                        "AliasTarget": {
-                            "HostedZoneId": {
-                                "Fn::GetAtt": [
-                                    "RestElasticLoadBalancer",
-                                    "CanonicalHostedZoneNameID"
-                                ]
-                            },
-                            "DNSName": {
-                                "Fn::GetAtt": [
-                                    "RestElasticLoadBalancer",
-                                    "CanonicalHostedZoneName"
-                                ]
-                            }
-                        }
                     }
                 ]
             }
