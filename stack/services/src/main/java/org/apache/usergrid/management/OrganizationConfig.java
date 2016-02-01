@@ -28,10 +28,8 @@ import java.util.*;
 public class OrganizationConfig {
 
     private OrganizationConfigProps configProps;
-    //private Map<String, String> defaultProperties;
     private UUID id;
     private String name;
-    //private Map<String, String> orgProperties;
 
 
     // shouldn't use the default constructor
@@ -52,10 +50,8 @@ public class OrganizationConfig {
 
     public OrganizationConfig(OrganizationConfigProps configFileProperties, UUID id, String name) {
         this.configProps = new OrganizationConfigPropsImpl(configFileProperties);
-        //defaultProperties = configFileProperties.getOrgPropertyMap();
         this.id = id;
         this.name = name;
-        //this.orgProperties = new HashMap<>();
     }
 
     public OrganizationConfig(OrganizationConfigProps configFileProperties) {
@@ -78,24 +74,33 @@ public class OrganizationConfig {
     }
 
     private void orgPropertyValidate(Map<String, Object> entityProperties) throws IllegalArgumentException {
-        Set<String> entityPropertyKeys = new HashSet<>(entityProperties.keySet());
-        entityPropertyKeys.removeAll(configProps.getOrgPropertyNames());
-        // if anything remains in the key set, it is not a valid property
-        if (entityPropertyKeys.size() > 0) {
-            throw new IllegalArgumentException("Invalid organization config keys: " + String.join(", ", entityPropertyKeys));
+        Set<String> invalidKeys = new HashSet<>();
+        entityProperties.keySet().forEach((k) -> {
+           if (!configProps.orgPropertyNameValid(k)) {
+               invalidKeys.add(k);
+           }
+        });
+
+        if (invalidKeys.size() > 0) {
+            throw new IllegalArgumentException("Invalid organization config keys: " + String.join(", ", invalidKeys));
         }
 
+        invalidKeys.clear();
         entityProperties.forEach((k,v) -> {
             if (!v.getClass().equals(String.class)) {
-                throw new IllegalArgumentException("Organization config values must be strings.");
+                invalidKeys.add(k);
             }
         });
+
+        if (invalidKeys.size() > 0) {
+            throw new IllegalArgumentException("Organization config value(s) not strings: " + String.join(", ", invalidKeys));
+        }
     }
 
     private void addOrgProperties(Map<String, Object> newOrgProperties) {
         newOrgProperties.forEach((k,v) -> {
             // only take valid properties, validation (if required) happened earlier
-            if (configProps.getOrgPropertyNames().contains(k)) {
+            if (configProps.orgPropertyNameValid(k)) {
                 // ignore non-strings, validation happened earlier
                 if (v.getClass().equals(String.class)) {
                     this.configProps.setProperty(k, v.toString());

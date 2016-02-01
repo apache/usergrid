@@ -71,9 +71,7 @@ import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 
-import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getSubjectUserId;
-import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isApplicationAdmin;
-import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isApplicationUser;
+import static org.apache.usergrid.security.shiro.utils.SubjectUtils.*;
 import static org.apache.usergrid.utils.ConversionUtils.string;
 
 
@@ -222,6 +220,8 @@ public class UserResource extends ServiceResource {
 
         ApiResponse response = createApiResponse();
         response.setAction( "set user credentials" );
+
+        @SuppressWarnings("unchecked")
         Map<String, Object> credentialsJson = ( Map<String, Object> ) json.get( "credentials" );
 
 
@@ -398,17 +398,17 @@ public class UserResource extends ServiceResource {
         this.token = token;
         try {
             if ( management.checkPasswordResetTokenForAppUser( getApplicationId(), getUserUuid(), token ) ) {
-                return handleViewable( "resetpw_set_form", this );
+                return handleViewable( "resetpw_set_form", this, getOrganizationName() );
             }
             else {
-                return handleViewable( "resetpw_email_form", this );
+                return handleViewable( "resetpw_email_form", this, getOrganizationName() );
             }
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, getOrganizationName() );
         }
     }
 
@@ -433,22 +433,22 @@ public class UserResource extends ServiceResource {
                     if ( ( password1 != null ) && password1.equals( password2 ) ) {
                         management.setAppUserPassword( getApplicationId(), getUser().getUuid(), password1 );
                         management.revokeAccessTokenForAppUser( token );
-                        return handleViewable( "resetpw_set_success", this );
+                        return handleViewable( "resetpw_set_success", this, getOrganizationName() );
                     }
                     else {
                         errorMsg = "Passwords didn't match, let's try again...";
-                        return handleViewable( "resetpw_set_form", this );
+                        return handleViewable( "resetpw_set_form", this, getOrganizationName() );
                     }
                 }
                 else {
                     errorMsg = "Sorry, you have an invalid token. Let's try again...";
-                    return handleViewable( "resetpw_email_form", this );
+                    return handleViewable( "resetpw_email_form", this, getOrganizationName() );
                 }
             }
 
             if ( !useReCaptcha() ) {
                 management.startAppUserPasswordResetFlow( getApplicationId(), getUser() );
-                return handleViewable( "resetpw_email_success", this );
+                return handleViewable( "resetpw_email_success", this, getOrganizationName() );
             }
 
             ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
@@ -459,18 +459,18 @@ public class UserResource extends ServiceResource {
 
             if ( reCaptchaResponse.isValid() ) {
                 management.startAppUserPasswordResetFlow( getApplicationId(), getUser() );
-                return handleViewable( "resetpw_email_success", this );
+                return handleViewable( "resetpw_email_success", this, getOrganizationName() );
             }
             else {
                 errorMsg = "Incorrect Captcha";
-                return handleViewable( "resetpw_email_form", this );
+                return handleViewable( "resetpw_email_form", this, getOrganizationName() );
             }
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, getOrganizationName() );
         }
     }
 
@@ -515,16 +515,16 @@ public class UserResource extends ServiceResource {
 
         try {
             management.handleActivationTokenForAppUser( getApplicationId(), getUserUuid(), token );
-            return handleViewable( "activate", this );
+            return handleViewable( "activate", this, getOrganizationName() );
         }
         catch ( TokenException e ) {
-            return handleViewable( "bad_activation_token", this );
+            return handleViewable( "bad_activation_token", this, getOrganizationName() );
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, getOrganizationName() );
         }
     }
 
@@ -538,18 +538,18 @@ public class UserResource extends ServiceResource {
             ActivationState state =
                     management.handleConfirmationTokenForAppUser( getApplicationId(), getUserUuid(), token );
             if ( state == ActivationState.CONFIRMED_AWAITING_ACTIVATION ) {
-                return handleViewable( "confirm", this );
+                return handleViewable( "confirm", this, getOrganizationName() );
             }
-            return handleViewable( "activate", this );
+            return handleViewable( "activate", this, getOrganizationName() );
         }
         catch ( TokenException e ) {
-            return handleViewable( "bad_confirmation_token", this );
+            return handleViewable( "bad_confirmation_token", this, getOrganizationName() );
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, getOrganizationName() );
         }
     }
 
@@ -684,6 +684,7 @@ public class UserResource extends ServiceResource {
             extensionResource = getSubResource( extensionCls );
         }
         catch ( Exception e ) {
+            // intentionally empty
         }
         if ( extensionResource != null ) {
             return extensionResource;

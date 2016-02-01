@@ -2197,10 +2197,32 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
+    public TokenInfo getPasswordResetTokenInfoForAdminUser( String token ) throws Exception {
+        TokenInfo tokenInfo = null;
+        try {
+            tokenInfo = getTokenInfoFromAccessToken(token, TOKEN_TYPE_PASSWORD_RESET, ADMIN_USER);
+        }
+        catch (Exception e) {
+            // intentionally empty
+        }
+        return tokenInfo;
+    }
+
+
+    @Override
     public boolean checkPasswordResetTokenForAdminUser( UUID userId, String token ) throws Exception {
+        return checkPasswordResetTokenForAdminUser(userId, getPasswordResetTokenInfoForAdminUser(token));
+    }
+
+
+    @Override
+    public boolean checkPasswordResetTokenForAdminUser( UUID userId, TokenInfo tokenInfo ) throws Exception {
+        if (tokenInfo == null) {
+            return false;
+        }
         AuthPrincipalInfo principal = null;
         try {
-            principal = getPrincipalFromAccessToken( token, TOKEN_TYPE_PASSWORD_RESET, ADMIN_USER );
+            principal = tokenInfo.getPrincipal();
         }
         catch ( Exception e ) {
             logger.error( "Unable to verify token", e );
@@ -2470,9 +2492,20 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    // token may contain the workflow organization id
+    public TokenInfo getConfirmationTokenInfoForAdminUser( String token ) throws Exception {
+        return getTokenInfoFromAccessToken(token, TOKEN_TYPE_CONFIRM, ADMIN_USER);
+    }
+
+
+    @Override
     public ActivationState handleConfirmationTokenForAdminUser( UUID userId, String token ) throws Exception {
-        TokenInfo tokenInfo = getTokenInfoFromAccessToken(token, TOKEN_TYPE_CONFIRM, ADMIN_USER);
+        return handleConfirmationTokenForAdminUser(userId, getConfirmationTokenInfoForAdminUser(token));
+    }
+
+
+    @Override
+    // token may contain the workflow organization id
+    public ActivationState handleConfirmationTokenForAdminUser( UUID userId, TokenInfo tokenInfo ) throws Exception {
         if (tokenInfo != null) {
             AuthPrincipalInfo principal = tokenInfo.getPrincipal();
             if ((principal != null) && userId.equals(principal.getUuid())) {
@@ -2496,9 +2529,20 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    // token may contain the workflow organization id
+    public TokenInfo getActivationTokenInfoForAdminUser( String token ) throws Exception {
+        return getTokenInfoFromAccessToken(token, TOKEN_TYPE_ACTIVATION, ADMIN_USER);
+    }
+
+
+    @Override
     public ActivationState handleActivationTokenForAdminUser( UUID userId, String token ) throws Exception {
-        TokenInfo tokenInfo = getTokenInfoFromAccessToken(token, TOKEN_TYPE_ACTIVATION, ADMIN_USER);
+        return handleActivationTokenForAdminUser(userId, getActivationTokenInfoForAdminUser(token));
+    }
+
+
+    @Override
+    // token may contain the workflow organization id
+    public ActivationState handleActivationTokenForAdminUser( UUID userId, TokenInfo tokenInfo ) throws Exception {
         if (tokenInfo != null) {
             AuthPrincipalInfo principal = tokenInfo.getPrincipal();
             if ((principal != null) && userId.equals(principal.getUuid())) {
