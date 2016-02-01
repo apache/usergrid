@@ -25,6 +25,7 @@ import net.tanesha.recaptcha.ReCaptcha;
 import net.tanesha.recaptcha.ReCaptchaFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.management.OrganizationConfig;
 import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
@@ -43,6 +44,7 @@ import javax.xml.ws.spi.http.HttpContext;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 
 public abstract class AbstractContextResource {
@@ -163,6 +165,51 @@ public abstract class AbstractContextResource {
 
 
     public Viewable handleViewable(String template, Object model) {
+        return handleViewable(template, model, management.getOrganizationConfigDefaultsOnly());
+    }
+
+
+    public Viewable handleViewable(String template, Object model, String organizationName) {
+        OrganizationConfig orgConfig;
+        try {
+            if (!StringUtils.isBlank(organizationName)) {
+                orgConfig = management.getOrganizationConfigByName(organizationName);
+            } else {
+                orgConfig = management.getOrganizationConfigDefaultsOnly();
+            }
+        }
+        catch (Exception e) {
+            // fall back to non-org
+            if (logger.isInfoEnabled()) {
+                logger.info("handleViewable: unable to retrieve org config by org name: " + organizationName);
+            }
+            orgConfig = management.getOrganizationConfigDefaultsOnly();
+        }
+        return handleViewable(template, model, orgConfig);
+    }
+
+
+    public Viewable handleViewable(String template, Object model, UUID organizationId) {
+        OrganizationConfig orgConfig;
+        try {
+            if (organizationId != null) {
+                orgConfig = management.getOrganizationConfigByUuid(organizationId);
+            } else {
+                orgConfig = management.getOrganizationConfigDefaultsOnly();
+            }
+        }
+        catch (Exception e) {
+            // fall back to non-org
+            if (logger.isInfoEnabled() && organizationId != null) {
+                logger.info("handleViewable: unable to retrieve org config by org UUID: " + organizationId.toString());
+            }
+            orgConfig = management.getOrganizationConfigDefaultsOnly();
+        }
+        return handleViewable(template, model, orgConfig);
+    }
+
+
+    public Viewable handleViewable(String template, Object model, OrganizationConfig orgConfig) {
 
         String className = this.getClass().getName().toLowerCase();
         String packageName = AbstractContextResource.class.getPackage().getName();
@@ -171,7 +218,7 @@ public abstract class AbstractContextResource {
             StringUtils.removeEnd(className.toLowerCase(), "resource")
                 .substring(packageName.length()) + "." + template.toLowerCase();
 
-        String redirect_url = properties.getProperty(template_property);
+        String redirect_url = orgConfig.getProperty(template_property);
 
         if (StringUtils.isNotBlank(redirect_url)) {
             if (logger.isDebugEnabled()) {
@@ -184,8 +231,7 @@ public abstract class AbstractContextResource {
             logger.debug("Dispatching to viewable with template: {}", template, template_property);
         }
 
-        Viewable viewable = new Viewable(template, model);
-        return viewable;
+        return new Viewable(template, model);
     }
 
 

@@ -130,16 +130,16 @@ public class OrganizationResource extends AbstractContextResource {
 
         try {
             management.handleActivationTokenForOrganization( organization.getUuid(), token );
-            return handleViewable( "activate", this );
+            return handleViewable( "activate", this, organization.getName() );
         }
         catch ( TokenException e ) {
-            return handleViewable( "bad_activation_token", this );
+            return handleViewable( "bad_activation_token", this, organization.getName() );
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, organization.getName() );
         }
     }
 
@@ -152,18 +152,18 @@ public class OrganizationResource extends AbstractContextResource {
         try {
             ActivationState state = management.handleActivationTokenForOrganization( organization.getUuid(), token );
             if ( state == ActivationState.CONFIRMED_AWAITING_ACTIVATION ) {
-                return handleViewable( "confirm", this );
+                return handleViewable( "confirm", this, organization.getName() );
             }
-            return handleViewable( "activate", this );
+            return handleViewable( "activate", this, organization.getName() );
         }
         catch ( TokenException e ) {
-            return handleViewable( "bad_activation_token", this );
+            return handleViewable( "bad_activation_token", this, organization.getName() );
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, organization.getName() );
         }
     }
 
