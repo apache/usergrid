@@ -50,6 +50,8 @@ public interface OrganizationConfigProps {
 
     Map<String, String> getOrgPropertiesMap();
 
+    String getOrgPropertyNameRegex();
+
     String getProperty(String name);
 
     String getProperty(String name, String defaultValue);
@@ -65,5 +67,7 @@ public interface OrganizationConfigProps {
     String getFullUrlTemplate(WorkflowUrl urlType);
 
     String getFullUrl(WorkflowUrl urlType, Object ... arguments);
+
+    boolean orgPropertyNameValid(String name);
 
 }

@@ -23,8 +23,6 @@ package org.apache.usergrid.corepersistence.rx.impl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
-import com.amazonaws.services.opsworks.model.App;
-
 import rx.Observable;
 
 

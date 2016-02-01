@@ -287,11 +287,6 @@
                 </exclusions>
             </dependency>
 
-            <dependency>
-                <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk-s3</artifactId>
-                <version>${aws.version}</version>
-            </dependency>
 
 
             <dependency>
@@ -1566,13 +1561,6 @@
             </build>
         </profile>
     </profiles>
-    <repositories>
-        <repository>
-            <id>local-dependencies</id>
-            <name>local-depedendencies</name>
-            <url>file://${project.basedir}/../m2/repository</url>
-        </repository>
-    </repositories>
 
     <scm>
         <url>https://git-wip-us.apache.org/repos/asf/usergrid.git</url>

@@ -33,8 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.rx.OrderedMerge;
 
-import com.amazonaws.services.redshift.model.UnsupportedOptionException;
-
 import rx.Observable;
 import rx.Subscriber;
 import rx.schedulers.Schedulers;
@@ -197,7 +195,7 @@ public class MultiKeyColumnNameIterator<C, T> implements Iterable<T>, Iterator<T
 
         @Override
         public void remove() {
-            throw new UnsupportedOptionException( "Remove is unsupported" );
+            throw new UnsupportedOperationException( "Remove is unsupported" );
         }
 
 
