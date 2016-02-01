@@ -105,7 +105,7 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
 
         this.bucketName = properties.getProperty( "usergrid.binary.bucketname" );
         if(bucketName == null){
-            logger.error( "usergrid.binary.bucketname  not properly set so amazon bucket is null" );
+            logger.error( "usergrid.binary.bucketname not properly set so amazon bucket is null" );
             throw new AwsPropertiesNotFoundException( "usergrid.binary.bucketname" );
 
         }
@@ -213,7 +213,7 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
 
                     if(written> maxSizeBytes){
                         overSizeLimit = true;
-                        logger.error( "OVERSIZED FILE. STARTING ABORT" );
+                        logger.error( "OVERSIZED FILE ({}). STARTING ABORT", written );
                         break;
                         //set flag here and break out of loop to run abort
                     }
@@ -268,7 +268,7 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
                     timesIterated--;
                     listResult = getS3Client().listMultipartUploads( listRequest );
                     if (logger.isDebugEnabled()) {
-                        logger.debug("Files that haven't been aborted are: ", listResult.getMultipartUploads().listIterator().toString());
+                        logger.debug("Files that haven't been aborted are: {}", listResult.getMultipartUploads().listIterator().toString());
                     }
 
                 }

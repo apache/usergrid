@@ -46,7 +46,9 @@ public class JobScheduler{
         SchedulerService scheduler = getSchedulerService();
         scheduler.createJob("notificationBatchJob", soonestPossible, jobData);
 
-        logger.info("notification {} batch scheduled for delivery", notification.getUuid());
+        if (logger.isTraceEnabled()) {
+            logger.trace("notification {} batch scheduled for delivery", notification.getUuid());
+        }
     }
     public boolean scheduleQueueJob(Notification notification) throws Exception {
         return scheduleQueueJob(notification,false);
@@ -70,7 +72,9 @@ public class JobScheduler{
             jobData.setProperty("deliver", notification.getDeliver());
             SchedulerService scheduler = getSchedulerService();
             scheduler.createJob("queueJob", scheduleAt, jobData);
-            logger.info("notification {} scheduled for queuing", notification.getUuid());
+            if (logger.isTraceEnabled()) {
+                logger.trace("notification {} scheduled for queuing", notification.getUuid());
+            }
         }
         return scheduled;
     }

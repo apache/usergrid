@@ -94,7 +94,7 @@ public class ImportServiceImpl implements ImportService {
         try {
             rootEM = emf.getEntityManager(emf.getManagementAppId());
         } catch (Exception e) {
-            logger.error("application doesn't exist within the current context");
+            logger.error("application doesn't exist within the current context", e);
             return null;
         }
 
@@ -105,7 +105,7 @@ public class ImportServiceImpl implements ImportService {
         try {
             importEntity = rootEM.create(importEntity);
         } catch (Exception e) {
-            logger.error("Import entity creation failed");
+            logger.error("Import entity creation failed", e);
             return null;
         }
 
@@ -313,9 +313,9 @@ public class ImportServiceImpl implements ImportService {
      */
     private JobData createFileTask(Map<String, Object> config, String file, EntityRef importRef) throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("scheduleFile() for import {}:{} file {}",
-                new Object[]{importRef.getType(), importRef.getType(), file});
+        if (logger.isTraceEnabled()) {
+            logger.trace("scheduleFile() for import {}:{} file {}",
+                importRef.getType(), importRef.getType(), file);
         }
 
         EntityManager rootEM;
@@ -338,16 +338,15 @@ public class ImportServiceImpl implements ImportService {
             // create a connection between the main import job and the sub FileImport Job
             rootEM.createConnection(importEntity, IMPORT_FILE_INCLUDES_CONNECTION, fileImport);
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("Created connection from {}:{} to {}:{}",
-                    new Object[]{
+            if (logger.isTraceEnabled()) {
+                logger.trace("Created connection from {}:{} to {}:{}",
                         importEntity.getType(), importEntity.getUuid(),
                         fileImport.getType(), fileImport.getUuid()
-                    });
+                    );
             }
 
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            logger.error("Exception creating file task connection", e.getMessage());
             return null;
         }
 
@@ -523,21 +522,21 @@ public class ImportServiceImpl implements ImportService {
     @Override
     public void doImport(JobExecution jobExecution) throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("doImport()");
+        if (logger.isTraceEnabled()) {
+            logger.trace("doImport()");
         }
 
-        Map<String, Object> config =
-            (Map<String, Object>) jobExecution.getJobData().getProperty("importInfo");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> config = (Map<String, Object>) jobExecution.getJobData().getProperty("importInfo");
         if (config == null) {
             logger.error("doImport(): Import Information passed through is null");
             return;
         }
 
-        Map<String, Object> properties =
-            (Map<String, Object>) config.get("properties");
-        Map<String, Object> storage_info =
-            (Map<String, Object>) properties.get("storage_info");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> properties = (Map<String, Object>) config.get("properties");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> storage_info = (Map<String, Object>) properties.get("storage_info");
 
         String bucketName = (String) storage_info.get("bucket_location");
         String accessId = (String) storage_info.get("s3_access_id");
@@ -553,8 +552,8 @@ public class ImportServiceImpl implements ImportService {
         importEntity.setStarted(System.currentTimeMillis());
         importEntity.setErrorMessage(" ");
         rootEM.update(importEntity);
-        if (logger.isDebugEnabled()) {
-            logger.debug("doImport(): updated state");
+        if (logger.isTraceEnabled()) {
+            logger.trace("doImport(): updated state");
         }
 
         // if no S3 importer was passed in then create one
@@ -633,13 +632,13 @@ public class ImportServiceImpl implements ImportService {
                 final int count = getConnectionCount(importEntity);
 
                 if (count == fileJobs.size()) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Got ALL {} of {} expected connections", count, fileJobs.size());
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Got ALL {} of {} expected connections", count, fileJobs.size());
                     }
                     done = true;
                 } else {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Got {} of {} expected connections. Waiting...", count, fileJobs.size());
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Got {} of {} expected connections. Waiting...", count, fileJobs.size());
                     }
                     Thread.sleep(1000);
                 }
@@ -673,14 +672,14 @@ public class ImportServiceImpl implements ImportService {
 
         // get values we need
 
-        Map<String, Object> properties =
-            (Map<String, Object>) jobExecution.getJobData().getProperty("properties");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> properties = (Map<String, Object>) jobExecution.getJobData().getProperty("properties");
         if (properties == null) {
             logger.error("downloadAndImportFile(): Import Information passed through is null");
             return;
         }
-        Map<String, Object> storage_info =
-            (Map<String, Object>) properties.get("storage_info");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> storage_info = (Map<String, Object>) properties.get("storage_info");
 
         String bucketName = (String) storage_info.get("bucket_location");
         String accessId = (String) storage_info.get("s3_access_id");
@@ -805,6 +804,7 @@ public class ImportServiceImpl implements ImportService {
             try {
                 Thread.sleep(5000);
             } catch (Exception intentionallyIgnored) {
+                // intentionally ignored
             }
 
             // get file import entities for this import job
@@ -818,13 +818,13 @@ public class ImportServiceImpl implements ImportService {
             PagingResultsIterator itr = new PagingResultsIterator(entities);
 
             if (!itr.hasNext()) {
-                logger.warn("Found no FileImport entities for import {}, " +
-                    "unable to check if complete", importEntity.getUuid());
+                logger.warn("Found no FileImport entities for import {}, unable to check if complete",
+                        importEntity.getUuid());
                 return;
             }
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("Checking {} file import jobs to see if we are done for file {}",
+            if (logger.isTraceEnabled()) {
+                logger.trace("Checking {} file import jobs to see if we are done for file {}",
                     new Object[]{entities.size(), fileImport.getFileName()});
             }
 
@@ -842,7 +842,7 @@ public class ImportServiceImpl implements ImportService {
                         continue;
                     default:         // not something we recognize as complete, short circuit
                         if (logger.isDebugEnabled()) {
-                            logger.debug("not done yet, bail out...");
+                            logger.debug("not done yet, bail out... {}", fi.getState().toString());
                         }
                         return;
                 }
@@ -857,13 +857,13 @@ public class ImportServiceImpl implements ImportService {
             }
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("successCount = {} failCount = {}", new Object[]{successCount, failCount});
+        if (logger.isTraceEnabled()) {
+            logger.trace("successCount = {} failCount = {}", successCount, failCount);
         }
 
         if (importEntity != null) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("FINISHED");
+            if (logger.isTraceEnabled()) {
+                logger.trace("FINISHED");
             }
 
             if (failCount == 0) {
@@ -875,9 +875,9 @@ public class ImportServiceImpl implements ImportService {
 
             try {
                 rootEM.update(importEntity);
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Updated import entity {}:{} with state {}",
-                        new Object[]{importEntity.getType(), importEntity.getUuid(), importEntity.getState()});
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Updated import entity {}:{} with state {}",
+                        importEntity.getType(), importEntity.getUuid(), importEntity.getState());
                 }
             } catch (Exception e) {
                 logger.error("Error updating import entity", e);
@@ -945,14 +945,13 @@ public class ImportServiceImpl implements ImportService {
         // FIRST PASS: import all entities in the file
 
 
-        boolean entitiesOnly = true;
-
         // observable that parses JSON and emits write events
         JsonParser jp = getJsonParserForFile(file);
 
         // TODO: move JSON parser into observable creation so open/close happens within the stream
+        // entitiesOnly = true
         final JsonEntityParserObservable jsonObservableEntities =
-            new JsonEntityParserObservable(jp, em, rootEm, fileImport, tracker, entitiesOnly);
+            new JsonEntityParserObservable(jp, em, rootEm, fileImport, tracker, true);
 
         final Observable<WriteEvent> entityEventObservable = Observable.create(jsonObservableEntities);
 
@@ -970,28 +969,27 @@ public class ImportServiceImpl implements ImportService {
         jp.close();
 
         if (FileImport.State.FAILED.equals(fileImport.getState())) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("\n\nFailed to completely write entities, skipping second phase. File: {}\n",
+            if (logger.isTraceEnabled()) {
+                logger.trace("\n\nFailed to completely write entities, skipping second phase. File: {}\n",
                     fileImport.getFileName());
             }
             return;
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug("\n\nWrote entities. File: {}\n", fileImport.getFileName());
+        if (logger.isTraceEnabled()) {
+            logger.trace("\n\nWrote entities. File: {}\n", fileImport.getFileName());
         }
 
 
         // SECOND PASS: import all connections and dictionaries
 
 
-        entitiesOnly = false;
-
         // observable that parses JSON and emits write events
         jp = getJsonParserForFile(file);
 
         // TODO: move JSON parser into observable creation so open/close happens within the stream
+        // entitiesOnly = false
         final JsonEntityParserObservable jsonObservableOther =
-            new JsonEntityParserObservable(jp, em, rootEm, fileImport, tracker, entitiesOnly);
+            new JsonEntityParserObservable(jp, em, rootEm, fileImport, tracker, false);
 
         final Observable<WriteEvent> otherEventObservable = Observable.create(jsonObservableOther);
 
@@ -1008,8 +1006,8 @@ public class ImportServiceImpl implements ImportService {
 
         jp.close();
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("\n\nparseEntitiesAndConnectionsFromJson(): Wrote others for file {}\n",
+        if (logger.isTraceEnabled()) {
+            logger.trace("\n\nparseEntitiesAndConnectionsFromJson(): Wrote others for file {}\n",
                 fileImport.getFileName());
         }
 
@@ -1025,14 +1023,14 @@ public class ImportServiceImpl implements ImportService {
 
         if (FileImport.State.FAILED.equals(fileImport.getState())) {
             if (logger.isDebugEnabled()) {
-                logger.debug("\n\nFailed to completely wrote connections and dictionaries. File: {}\n",
+                logger.debug("\n\nFailed to completely write connections and dictionaries. File: {}\n",
                     fileImport.getFileName());
             }
             return;
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("\n\nWrote connections and dictionaries. File: {}\n", fileImport.getFileName());
+        if (logger.isTraceEnabled()) {
+            logger.trace("\n\nWrote connections and dictionaries. File: {}\n", fileImport.getFileName());
         }
     }
 
@@ -1058,9 +1056,9 @@ public class ImportServiceImpl implements ImportService {
         @Override
         public void doWrite(EntityManager em, FileImport fileImport, FileImportTracker tracker) {
             try {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Writing imported entity {}:{} into app {}",
-                        new Object[]{entityType, entityUuid, em.getApplication().getUuid()});
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Writing imported entity {}:{} into app {}",
+                        entityType, entityUuid, em.getApplication().getUuid());
                 }
 
                 em.create(entityUuid, entityType, properties);
@@ -1068,7 +1066,7 @@ public class ImportServiceImpl implements ImportService {
                 tracker.entityWritten();
 
             } catch (Exception e) {
-                logger.error("Error writing entity. From file:" + fileImport.getFileName(), e);
+                logger.error("Error writing entity. From file:{}", fileImport.getFileName(), e);
 
                 tracker.entityFailed(e.getMessage() + " From file: " + fileImport.getFileName());
             }
@@ -1100,11 +1098,10 @@ public class ImportServiceImpl implements ImportService {
                     entityRef = em.get(ownerEntityRef.getUuid());
                 }
 
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Creating connection from {}:{} to {}:{}",
-                        new Object[]{
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Creating connection from {}:{} to {}:{}",
                             ownerEntityRef.getType(), ownerEntityRef.getUuid(),
-                            entityRef.getType(), entityRef.getUuid()});
+                            entityRef.getType(), entityRef.getUuid());
                 }
 
                 em.createConnection(ownerEntityRef, connectionType, entityRef);
@@ -1112,7 +1109,7 @@ public class ImportServiceImpl implements ImportService {
                 tracker.connectionWritten();
 
             } catch (Exception e) {
-                logger.error("Error writing connection. From file: " + fileImport.getFileName(), e);
+                logger.error("Error writing connection. From file: {}", fileImport.getFileName(), e);
 
                 tracker.connectionFailed(e.getMessage() + " From file: " + fileImport.getFileName());
             }
@@ -1137,9 +1134,9 @@ public class ImportServiceImpl implements ImportService {
         public void doWrite(EntityManager em, FileImport fileImport, FileImportTracker stats) {
             try {
 
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Adding map to {}:{} dictionary {}",
-                        new Object[]{ownerEntityRef.getType(), ownerEntityRef.getType(), dictionaryName});
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Adding map to {}:{} dictionary {}",
+                        ownerEntityRef.getType(), ownerEntityRef.getType(), dictionaryName);
                 }
 
                 em.addMapToDictionary(ownerEntityRef, dictionaryName, dictionary);
@@ -1298,8 +1295,8 @@ public class ImportServiceImpl implements ImportService {
                     subscriber.onCompleted();
                 }
 
-                if (logger.isDebugEnabled()) {
-                    logger.debug("process(): done parsing JSON");
+                if (logger.isTraceEnabled()) {
+                    logger.trace("process(): done parsing JSON");
                 }
 
             } catch (Exception e) {

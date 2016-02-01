@@ -109,7 +109,7 @@ public class Realm extends AuthorizingRealm {
     public void setPermissionResolver( PermissionResolver permissionResolver ) {
         if ( !( permissionResolver instanceof CustomPermissionResolver ) ) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Replacing {} with AllowAllCredentialsMatcher", permissionResolver);
+                logger.debug("Replacing {} with CustomPermissionResolver", permissionResolver);
             }
             permissionResolver = new CustomPermissionResolver();
         }
@@ -201,8 +201,8 @@ public class Realm extends AuthorizingRealm {
             throw new AuthenticationException( "Unable to authenticate" );
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Authenticated: {}", principal);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Authenticated: {}", principal);
         }
 
         return new SimpleAuthenticationInfo( pcToken.getPrincipal(), pcToken.getCredentials(), getName() );

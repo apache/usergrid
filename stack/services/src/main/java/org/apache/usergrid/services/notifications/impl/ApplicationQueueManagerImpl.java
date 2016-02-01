@@ -83,14 +83,18 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         long startTime = System.currentTimeMillis();
 
         if (notification.getCanceled() == Boolean.TRUE) {
-            logger.info("notification " + notification.getUuid() + " canceled");
+            if (logger.isDebugEnabled()) {
+                logger.debug("notification " + notification.getUuid() + " canceled");
+            }
             if (jobExecution != null) {
                 jobExecution.killed();
             }
             return;
         }
 
-        logger.info("notification {} start queuing", notification.getUuid());
+        if (logger.isTraceEnabled()) {
+            logger.trace("notification {} start queuing", notification.getUuid());
+        }
 
         final PathQuery<Device> pathQuery = notification.getPathQuery().buildPathQuery() ; //devices query
         final AtomicInteger deviceCount = new AtomicInteger(); //count devices so you can make a judgement on batching
@@ -100,7 +104,9 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         //get devices in querystring, and make sure you have access
         if (pathQuery != null) {
             final HashMap<Object,ProviderAdapter> notifierMap =  getAdapterMap();
-            logger.info("notification {} start query", notification.getUuid());
+            if (logger.isTraceEnabled()) {
+                logger.trace("notification {} start query", notification.getUuid());
+            }
             final Iterator<Device> iterator = pathQuery.iterator(em);
             //if there are more pages (defined by PAGE_SIZE) you probably want this to be async, also if this is already a job then don't reschedule
             if (iterator instanceof ResultsIterator && ((ResultsIterator) iterator).hasPages() && jobExecution == null) {
@@ -119,13 +125,19 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                     long now = System.currentTimeMillis();
                     List<EntityRef> devicesRef = getDevices(entity); // resolve group
 
-                    logger.info("notification {} queue  {} devices, duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), devicesRef.size());
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("notification {} queue  {} devices, duration {} ms", notification.getUuid(), devicesRef.size(), (System.currentTimeMillis() - now));
+                    }
 
                     for (EntityRef deviceRef : devicesRef) {
-                        logger.info("notification {} starting to queue device {} ", notification.getUuid(), deviceRef.getUuid());
+                        if (logger.isTraceEnabled()) {
+                            logger.trace("notification {} starting to queue device {} ", notification.getUuid(), deviceRef.getUuid());
+                        }
                         long hash = MurmurHash.hash(deviceRef.getUuid());
                         if (sketch.estimateCount(hash) > 0) { //look for duplicates
-                            logger.warn("Maybe Found duplicate device: {}", deviceRef.getUuid());
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Maybe Found duplicate device: {}", deviceRef.getUuid());
+                            }
                             continue;
                         } else {
                             sketch.add(hash, 1);
@@ -143,7 +155,9 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                                 notifierKey = entry.getKey().toLowerCase();
                                 break;
                             }
-                            logger.info("Provider query for notification {} device {} took "+(System.currentTimeMillis()-now)+" ms",notification.getUuid(),deviceRef.getUuid());
+                            if (logger.isTraceEnabled()) {
+                                logger.trace("Provider query for notification {} device {} took {} ms", notification.getUuid(), deviceRef.getUuid(), (System.currentTimeMillis() - now));
+                            }
                         }
 
                         if (notifierId == null) {
@@ -156,11 +170,15 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                             // update queued time
                             now = System.currentTimeMillis();
                             notification.setQueued(System.currentTimeMillis());
-                            logger.info("notification {} device {} queue time set. duration "+(System.currentTimeMillis()-now)+" ms", notification.getUuid(), deviceRef.getUuid());
+                            if (logger.isTraceEnabled()) {
+                                logger.trace("notification {} device {} queue time set. duration {} ms", notification.getUuid(), deviceRef.getUuid(), (System.currentTimeMillis() - now));
+                            }
                         }
                         now = System.currentTimeMillis();
                         qm.sendMessage(message);
-                        logger.info("notification {} post-queue to device {} duration " + (System.currentTimeMillis() - now) + " ms "+queueName+" queue", notification.getUuid(), deviceRef.getUuid());
+                        if (logger.isTraceEnabled()) {
+                            logger.trace("notification {} post-queue to device {} duration {} ms, {} queue", notification.getUuid(), deviceRef.getUuid(), (System.currentTimeMillis() - now), queueName);
+                        }
                         deviceCount.incrementAndGet();
                         queueMeter.mark();
                     }
@@ -185,11 +203,13 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                                             , 10);
 
             o.toBlocking().lastOrDefault( null );
-            logger.info( "notification {} done queueing duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
+            if (logger.isTraceEnabled()) {
+                logger.trace("notification {} done queueing duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
+            }
         }
 
         // update queued time
-        Map<String, Object> properties = new HashMap<String, Object>(2);
+        Map<String, Object> properties = new HashMap<>(2);
         properties.put("queued", notification.getQueued());
         properties.put("state", notification.getState());
         if(errorMessages.size()>0){
@@ -215,7 +235,9 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         }
 
         long elapsed = notification.getQueued() != null ? notification.getQueued() - startTime : 0;
-        logger.info("notification {} done queuing to {} devices in " + elapsed + " ms", notification.getUuid().toString(), deviceCount.get());
+        if (logger.isTraceEnabled()) {
+            logger.trace("notification {} done queuing to {} devices in {} ms", notification.getUuid().toString(), deviceCount.get(), elapsed);
+        }
     }
 
     /**
@@ -260,7 +282,9 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
      */
     @Override
     public Observable sendBatchToProviders(final List<QueueMessage> messages, final String queuePath) {
-        logger.info("sending batch of {} notifications.", messages.size());
+        if (logger.isTraceEnabled()) {
+            logger.trace("sending batch of {} notifications.", messages.size());
+        }
 
         final Map<Object, ProviderAdapter> notifierMap = getAdapterMap();
         final ApplicationQueueManagerImpl proxy = this;
@@ -274,7 +298,9 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 ApplicationQueueMessage message = null;
                 try {
                     message = (ApplicationQueueMessage) queueMessage.getBody();
-                    logger.info("start sending notification for device {} for Notification: {} on thread "+Thread.currentThread().getId(), message.getDeviceId(), message.getNotificationId());
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("start sending notification for device {} for Notification: {} on thread {}", message.getDeviceId(), message.getNotificationId(), Thread.currentThread().getId());
+                    }
 
                     UUID deviceUUID = message.getDeviceId();
 
@@ -292,7 +318,9 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                     final Map<String, Object> payloads = notification.getPayloads();
                     final Map<String, Object> translatedPayloads = translatePayloads(payloads, notifierMap);
-                    logger.info("sending notification for device {} for Notification: {}", deviceUUID, notification.getUuid());
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("sending notification for device {} for Notification: {}", deviceUUID, notification.getUuid());
+                    }
 
                     try {
                         String notifierName = message.getNotifierKey().toLowerCase();
@@ -315,7 +343,9 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                                 } catch (Exception e) {
                                     tracker.failed(0, e.getMessage());
                                 } finally {
-                                    logger.info("sending to device {} for Notification: {} duration " + (System.currentTimeMillis() - now) + " ms", deviceUUID, notification.getUuid());
+                                    if (logger.isTraceEnabled()) {
+                                        logger.trace("sending to device {} for Notification: {} duration {} ms", deviceUUID, notification.getUuid(), (System.currentTimeMillis() - now));
+                                    }
                                 }
                             }
                         }
@@ -448,13 +478,13 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         for (final ProviderAdapter providerAdapter : providerAdapters) {
             try {
                 if (providerAdapter != null) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("checking notifier {} for inactive devices", providerAdapter.getNotifier());
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("checking notifier {} for inactive devices", providerAdapter.getNotifier());
                     }
                     providerAdapter.removeInactiveDevices();
 
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("finished checking notifier {} for inactive devices", providerAdapter.getNotifier());
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("finished checking notifier {} for inactive devices", providerAdapter.getNotifier());
                     }
                 }
             } catch (Exception e) {
@@ -470,18 +500,24 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
     private boolean isOkToSend(Notification notification) {
         Map<String,Long> stats = notification.getStatistics();
         if (stats != null && notification.getExpectedCount() == (stats.get("sent")+ stats.get("errors"))) {
-            logger.info("notification {} already processed. not sending.",
-                    notification.getUuid());
+            if (logger.isDebugEnabled()) {
+                logger.debug("notification {} already processed. not sending.",
+                        notification.getUuid());
+            }
             return false;
         }
         if (notification.getCanceled() == Boolean.TRUE) {
-            logger.info("notification {} canceled. not sending.",
-                    notification.getUuid());
+            if (logger.isDebugEnabled()) {
+                logger.debug("notification {} canceled. not sending.",
+                        notification.getUuid());
+            }
             return false;
         }
         if (notification.isExpired()) {
-            logger.info("notification {} expired. not sending.",
-                    notification.getUuid());
+            if (logger.isDebugEnabled()) {
+                logger.debug("notification {} expired. not sending.",
+                        notification.getUuid());
+            }
             return false;
         }
         return true;

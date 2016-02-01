@@ -429,8 +429,8 @@ public class SubjectUtils {
             currentUser.checkPermission( permission );
         }
         catch ( org.apache.shiro.authz.UnauthenticatedException e ) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("checkPermission(): Subject is anonymous");
+            if (logger.isTraceEnabled()) {
+                logger.trace("checkPermission(): Subject is anonymous");
             }
         }
     }

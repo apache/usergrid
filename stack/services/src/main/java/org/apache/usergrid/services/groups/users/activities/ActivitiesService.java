@@ -40,8 +40,8 @@ public class ActivitiesService extends GenericCollectionService {
 
     public ActivitiesService() {
         super();
-        if (logger.isDebugEnabled()) {
-            logger.debug("/groups/*/users/*/activities");
+        if (logger.isTraceEnabled()) {
+            logger.trace("/groups/*/users/*/activities");
         }
     }
 

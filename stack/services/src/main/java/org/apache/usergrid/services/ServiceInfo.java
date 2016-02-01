@@ -256,7 +256,7 @@ public class ServiceInfo {
             return servicePatternCache.get( servicePattern );
         }
         catch ( ExecutionException ee ) {
-            logger.error("Error in getClassName for service pattern: "+servicePattern, ee);
+            logger.error("Error in getClassName for service pattern: {}", servicePattern, ee);
         }
 
         return _getClassName( servicePattern );

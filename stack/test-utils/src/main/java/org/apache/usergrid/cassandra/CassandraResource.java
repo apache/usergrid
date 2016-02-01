@@ -108,7 +108,7 @@ public class CassandraResource extends EnvironResource {
 
             System.setProperty( "cassandra." + RPC_PORT_KEY, Integer.toString( port ) );
 
-            logger.info( "project.properties loaded properties for ports : " + "[rpc] = [{}]", new Object[] { port } );
+            logger.info( "project.properties loaded properties for ports : [rpc] = [{}]", port );
 
 
             initialized = true;
