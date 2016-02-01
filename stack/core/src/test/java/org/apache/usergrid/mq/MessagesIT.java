@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 
 
 public class MessagesIT extends AbstractCoreIT {
-    private static final Logger LOG = LoggerFactory.getLogger( MessagesIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( MessagesIT.class );
 
     @Rule
     public ImmediateCounterRule counterRule = new ImmediateCounterRule( );
@@ -51,32 +51,32 @@ public class MessagesIT extends AbstractCoreIT {
     @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1116. ")
     @Test
     public void testMessages() throws Exception {
-        LOG.info( "MessagesIT.testMessages" );
+        logger.info( "MessagesIT.testMessages" );
 
         Message message = new Message();
         message.setStringProperty( "foo", "bar" );
-        LOG.info( JsonUtils.mapToFormattedJsonString( message ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( message ) );
 
-        LOG.info( "Posting message #1 to queue /foo/bar" );
+        logger.info( "Posting message #1 to queue /foo/bar" );
 
         QueueManager qm = app.getQm();
         qm.postToQueue( "/foo/bar", message );
 
-        LOG.info( "Getting message #1" );
+        logger.info( "Getting message #1" );
 
         message = qm.getMessage( message.getUuid() );
-        LOG.info( JsonUtils.mapToFormattedJsonString( message ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( message ) );
 
-        LOG.info( "Getting message from /foo/bar, should be message #1" );
+        logger.info( "Getting message from /foo/bar, should be message #1" );
 
         QueueResults messages = qm.getFromQueue( "/foo/bar", null );
-        LOG.info( JsonUtils.mapToFormattedJsonString( messages ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( messages ) );
         assertEquals( 1, messages.size() );
 
-        LOG.info( "Getting message from /foo/bar, should empty" );
+        logger.info( "Getting message from /foo/bar, should empty" );
 
         messages = qm.getFromQueue( "/foo/bar", null );
-        LOG.info( JsonUtils.mapToFormattedJsonString( messages ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( messages ) );
         assertEquals( 0, messages.size() );
 
         message = new Message();
@@ -88,21 +88,21 @@ public class MessagesIT extends AbstractCoreIT {
         qm.postToQueue( "/foo/bar", message );
 /*
         messages = qm.getFromQueue("/foo/bar", null);
-		LOG.info(JsonUtils.mapToFormattedJsonString(messages));
+		logger.info(JsonUtils.mapToFormattedJsonString(messages));
 		assertEquals(1, messages.size());
 
 		messages = qm.getFromQueue("/foo/bar", null);
-		LOG.info(JsonUtils.mapToFormattedJsonString(messages));
+		logger.info(JsonUtils.mapToFormattedJsonString(messages));
 		assertEquals(1, messages.size());
 
 		messages = qm.getFromQueue("/foo/bar", null);
-		LOG.info(JsonUtils.mapToFormattedJsonString(messages));
+		logger.info(JsonUtils.mapToFormattedJsonString(messages));
 		assertEquals(0, messages.size());
 
 		messages = qm.getFromQueue("/foo/bar",
 				new QueueQuery().withPosition(QueuePosition.END)
 						.withPreviousCount(3));
-		LOG.info(JsonUtils.mapToFormattedJsonString(messages));
+		logger.info(JsonUtils.mapToFormattedJsonString(messages));
 		assertEquals(3, messages.size());
 */
 
@@ -110,8 +110,8 @@ public class MessagesIT extends AbstractCoreIT {
 
         //TODO Re-evaluate queues and make a cleaner interface
 //        Map<String, Long> counters = qm.getQueueCounters( "/" );
-//        LOG.info( "dumping counters...." + counters );
-//        LOG.info( JsonUtils.mapToFormattedJsonString( counters ) );
+//        logger.info( "dumping counters...." + counters );
+//        logger.info( JsonUtils.mapToFormattedJsonString( counters ) );
 //        assertEquals( 1, counters.size() );
 //        assertNotNull( counters.get( "/foo/bar/" ) );
 //        assertEquals( new Long( 3 ), counters.get( "/foo/bar/" ) );
@@ -126,47 +126,47 @@ public class MessagesIT extends AbstractCoreIT {
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put( "foo", "alpha" );
         Queue q = qm.updateQueue( "/foo/1/", properties );
-        LOG.info( JsonUtils.mapToFormattedJsonString( q ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( q ) );
 
         q = qm.getQueue( "/foo/1/" );
-        LOG.info( JsonUtils.mapToFormattedJsonString( q ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( q ) );
         assertEquals( "alpha", q.getStringProperty( "foo" ) );
 
         properties = new HashMap<String, Object>();
         properties.put( "foo", "bravo" );
         q = qm.updateQueue( "/foo/2/", properties );
-        LOG.info( JsonUtils.mapToFormattedJsonString( q ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( q ) );
 
         properties = new HashMap<String, Object>();
         properties.put( "foo", "charlie" );
         q = qm.updateQueue( "/foo/3/", properties );
-        LOG.info( JsonUtils.mapToFormattedJsonString( q ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( q ) );
 
         qm.subscribeToQueue( "/pubtest/", "/foo/1/" );
         qm.subscribeToQueue( "/pubtest/", "/foo/2/" );
         qm.subscribeToQueue( "/pubtest/", "/foo/3/" );
 
         QueueSet results = qm.searchSubscribers( "/pubtest/", Query.findForProperty( "foo", "bravo" ) );
-        LOG.info( JsonUtils.mapToFormattedJsonString( results ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( results ) );
         assertEquals( 1, results.size() );
 
         properties = new HashMap<String, Object>();
         properties.put( "foo", "delta" );
         q = qm.updateQueue( "/foo/2/", properties );
-        LOG.info( JsonUtils.mapToFormattedJsonString( q ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( q ) );
 
         results = qm.searchSubscribers( "/pubtest/", Query.findForProperty( "foo", "bravo" ) );
-        LOG.info( JsonUtils.mapToFormattedJsonString( results ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( results ) );
         assertEquals( 0, results.size() );
 
         results = qm.searchSubscribers( "/pubtest/", Query.findForProperty( "foo", "delta" ) );
-        LOG.info( JsonUtils.mapToFormattedJsonString( results ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( results ) );
         assertEquals( 1, results.size() );
 
         qm.unsubscribeFromQueue( "/pubtest/", "/foo/2/" );
 
         results = qm.searchSubscribers( "/pubtest/", Query.findForProperty( "foo", "delta" ) );
-        LOG.info( JsonUtils.mapToFormattedJsonString( results ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( results ) );
         assertEquals( 0, results.size() );
     }
 
@@ -174,7 +174,7 @@ public class MessagesIT extends AbstractCoreIT {
     @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1116. ")
     @Test
     public void testConsumer() throws Exception {
-        LOG.info( "Creating messages" );
+        logger.info( "Creating messages" );
 
         QueueManager qm = app.getQm();
         Message message;
@@ -183,14 +183,14 @@ public class MessagesIT extends AbstractCoreIT {
             message = new Message();
             message.setStringProperty( "foo", "bar" + i );
 
-            LOG.info( "Posting message #" + i + " to queue /foo/bar: " + message.getUuid() );
+            logger.info( "Posting message #" + i + " to queue /foo/bar: " + message.getUuid() );
 
             qm.postToQueue( "/foo/bar", message );
         }
 
         for ( int i = 0; i < 11; i++ ) {
             QueueResults messages = qm.getFromQueue( "/foo/bar", new QueueQuery().withConsumer( "consumer1" ) );
-            LOG.info( JsonUtils.mapToFormattedJsonString( messages ) );
+            logger.info( JsonUtils.mapToFormattedJsonString( messages ) );
             if ( i < 10 ) {
                 assertEquals( 1, messages.size() );
                 assertEquals( "bar" + i, messages.getMessages().get( 0 ).getStringProperty( "foo" ) );
@@ -202,7 +202,7 @@ public class MessagesIT extends AbstractCoreIT {
 
         for ( int i = 0; i < 11; i++ ) {
             QueueResults messages = qm.getFromQueue( "/foo/bar", new QueueQuery().withConsumer( "consumer2" ) );
-            LOG.info( JsonUtils.mapToFormattedJsonString( messages ) );
+            logger.info( JsonUtils.mapToFormattedJsonString( messages ) );
             if ( i < 10 ) {
                 assertEquals( 1, messages.size() );
                 assertEquals( "bar" + i, messages.getMessages().get( 0 ).getStringProperty( "foo" ) );
@@ -228,7 +228,7 @@ public class MessagesIT extends AbstractCoreIT {
         // create 2 messages
         Message message = new Message();
         message.setStringProperty( "foo", "bar" );
-        LOG.info( "Posting message to queue " + queuePath + ": " + message.getUuid() );
+        logger.info( "Posting message to queue " + queuePath + ": " + message.getUuid() );
         Message posted1 = qm.postToQueue( queuePath, message );
 
         assertTrue( qm.hasMessagesInQueue( queuePath, null ) );
@@ -237,7 +237,7 @@ public class MessagesIT extends AbstractCoreIT {
 
         message = new Message();
         message.setStringProperty( "foo", "bar" );
-        LOG.info( "Posting message to queue " + queuePath + ": " + message.getUuid() );
+        logger.info( "Posting message to queue " + queuePath + ": " + message.getUuid() );
         Message posted2 = qm.postToQueue( queuePath, message );
 
         assertTrue( qm.hasMessagesInQueue( queuePath, null ) );

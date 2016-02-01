@@ -24,15 +24,12 @@ import org.apache.usergrid.services.ServiceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class JobScheduler{
     public static final long SCHEDULER_GRACE_PERIOD = 250;
     private final EntityManager em;
 
     protected ServiceManager sm;
-    private final Logger LOG = LoggerFactory.getLogger(NotificationsService.class);
+    private static final Logger logger = LoggerFactory.getLogger(NotificationsService.class);
 
     public JobScheduler(ServiceManager sm,EntityManager em){
         this.sm=sm; this.em = em;
@@ -49,7 +46,7 @@ public class JobScheduler{
         SchedulerService scheduler = getSchedulerService();
         scheduler.createJob("notificationBatchJob", soonestPossible, jobData);
 
-        LOG.info("notification {} batch scheduled for delivery", notification.getUuid());
+        logger.info("notification {} batch scheduled for delivery", notification.getUuid());
     }
     public boolean scheduleQueueJob(Notification notification) throws Exception {
         return scheduleQueueJob(notification,false);
@@ -73,7 +70,7 @@ public class JobScheduler{
             jobData.setProperty("deliver", notification.getDeliver());
             SchedulerService scheduler = getSchedulerService();
             scheduler.createJob("queueJob", scheduleAt, jobData);
-            LOG.info("notification {} scheduled for queuing", notification.getUuid());
+            logger.info("notification {} scheduled for queuing", notification.getUuid());
         }
         return scheduled;
     }

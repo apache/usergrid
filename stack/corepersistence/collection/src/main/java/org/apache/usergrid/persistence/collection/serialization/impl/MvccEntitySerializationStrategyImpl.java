@@ -43,8 +43,8 @@ import org.apache.usergrid.persistence.collection.serialization.impl.util.Legacy
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -81,7 +81,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
     protected final Keyspace keyspace;
     protected final SerializationFig serializationFig;
     protected final CassandraFig cassandraFig;
-    private final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>  columnFamily;
+    private final MultiTenantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> columnFamily;
 
 
     @Inject
@@ -185,7 +185,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
                 return Observable.just( listObservable ).map( scopedRowKeys -> {
 
                     try {
-                        return keyspace.prepareQuery( columnFamily ).getKeySlice( rowKeys )
+                        return keyspace.prepareQuery( columnFamily ).getKeySlice( scopedRowKeys )
                                        .withColumnRange( maxVersion, null, false, 1 ).execute().getResult();
                     }
                     catch ( ConnectionException e ) {
@@ -333,10 +333,10 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
 
         //create the CF entity data.  We want it reversed b/c we want the most recent version at the top of the
         //row for fast seeks
-        MultiTennantColumnFamilyDefinition cf =
-                new MultiTennantColumnFamilyDefinition( columnFamily, BytesType.class.getSimpleName(),
+        MultiTenantColumnFamilyDefinition cf =
+                new MultiTenantColumnFamilyDefinition( columnFamily, BytesType.class.getSimpleName(),
                         ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")",
-                        BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                        BytesType.class.getSimpleName(), MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
 
 
         return Collections.singleton( cf );
@@ -446,6 +446,6 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
      * Get the column family to perform operations with
      * @return
      */
-    protected abstract MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> getColumnFamily();
+    protected abstract MultiTenantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> getColumnFamily();
 
 }

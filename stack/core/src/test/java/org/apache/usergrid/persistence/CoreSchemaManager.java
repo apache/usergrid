@@ -17,7 +17,6 @@
 package org.apache.usergrid.persistence;
 
 
-import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +33,7 @@ import me.prettyprint.hector.api.Cluster;
 
 /** @author zznate */
 public class CoreSchemaManager implements SchemaManager {
-    private static final Logger LOG = LoggerFactory.getLogger( CoreSchemaManager.class );
+    private static final Logger logger = LoggerFactory.getLogger( CoreSchemaManager.class );
 
     private final Setup setup;
     private final Cluster cluster;
@@ -52,7 +51,7 @@ public class CoreSchemaManager implements SchemaManager {
             setup.initSubsystems();
         }
         catch ( Exception ex ) {
-            LOG.error( "Could not setup usergrid core schema", ex );
+            logger.error( "Could not setup usergrid core schema", ex );
             throw new RuntimeException( "Could not setup usergrid core schema", ex );
         }
     }
@@ -74,7 +73,7 @@ public class CoreSchemaManager implements SchemaManager {
         }
 
         catch ( Exception ex ) {
-            LOG.error( "Could not create default applications", ex );
+            logger.error( "Could not create default applications", ex );
             throw new RuntimeException("Could not create default applications", ex );
         }
     }
@@ -82,7 +81,7 @@ public class CoreSchemaManager implements SchemaManager {
 
     @Override
     public void destroy() {
-        LOG.info( "dropping keyspaces" );
+        logger.info( "dropping keyspaces" );
         try {
             cluster.dropKeyspace( CassandraService.getApplicationKeyspace() );
         }
@@ -98,7 +97,7 @@ public class CoreSchemaManager implements SchemaManager {
             //swallow if it just doesn't exist
         }
 
-        LOG.info( "keyspaces dropped" );
+        logger.info( "keyspaces dropped" );
 
 
         final EsProvider provider =

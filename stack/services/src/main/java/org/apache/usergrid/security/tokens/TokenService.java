@@ -18,6 +18,7 @@ package org.apache.usergrid.security.tokens;
 
 
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.usergrid.security.AuthPrincipalInfo;
 
@@ -31,8 +32,14 @@ public interface TokenService {
     public String createToken( TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
                                Map<String, Object> state, long duration ) throws Exception;
 
+    public String createToken( TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
+                               Map<String, Object> state, long duration, UUID workflowOrgId ) throws Exception;
+
     public void importToken( String token, TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
-                               Map<String, Object> state, long duration ) throws Exception;
+                             Map<String, Object> state, long duration ) throws Exception;
+
+    public void importToken( String token, TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
+                               Map<String, Object> state, long duration, UUID workflowOrgId ) throws Exception;
 
     /** Get the token info for the string version of this token */
     public TokenInfo getTokenInfo( String token ) throws Exception;

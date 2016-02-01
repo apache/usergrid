@@ -36,7 +36,7 @@ import java.io.IOException;
  */
 public class ClientSetup implements TestRule {
 
-    private Logger logger = LoggerFactory.getLogger( ClientSetup.class );
+    private static final Logger logger = LoggerFactory.getLogger(ClientSetup.class);
 
     RestClient restClient;
 
@@ -54,25 +54,24 @@ public class ClientSetup implements TestRule {
     protected Entity application;
 
 
-    public ClientSetup (String serverUrl) {
+    public ClientSetup(String serverUrl) {
 
-        restClient = new RestClient( serverUrl );
+        restClient = new RestClient(serverUrl);
     }
 
-    public Statement apply( Statement base, Description description ) {
-        return statement( base, description );
+    public Statement apply(Statement base, Description description) {
+        return statement(base, description);
     }
 
 
-    private Statement statement( final Statement base, final Description description ) {
+    private Statement statement(final Statement base, final Description description) {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                before( description );
+                before(description);
                 try {
                     base.evaluate();
-                }
-                finally {
+                } finally {
                     cleanup();
                 }
             }
@@ -85,7 +84,7 @@ public class ClientSetup implements TestRule {
     }
 
 
-    protected void before( Description description ) throws IOException {
+    protected void before(Description description) throws IOException {
         String testClass = description.getTestClass().getName();
         String methodName = description.getMethodName();
         String name = testClass + "." + methodName;
@@ -93,48 +92,56 @@ public class ClientSetup implements TestRule {
         try {
             restClient.superuserSetup();
             superuserToken = restClient.management().token().get(superuserName, superuserPassword);
-        } catch ( BadRequestException e ) {
-            if ( logger.isDebugEnabled() ) {
-                logger.debug( "Error creating superuser, may already exist", e );
-            } else {
-                logger.warn( "Error creating superuser, may already exist");
-            }
+        } catch (BadRequestException e) {
+            logger.warn("Error creating superuser, may already exist");
         }
 
 
-        username = "user_"+name + UUIDUtils.newTimeUUID();
+        username = "user_" + name + UUIDUtils.newTimeUUID();
         password = username;
-        orgName = "org_"+name+UUIDUtils.newTimeUUID();
-        appName = "app_"+name+UUIDUtils.newTimeUUID();
+        orgName = "org_" + name + UUIDUtils.newTimeUUID();
+        appName = "app_" + name + UUIDUtils.newTimeUUID();
 
         organization = restClient.management().orgs().post(
-            new Organization( orgName, username, username + "@usergrid.com", username, password, null ) );
+            new Organization(orgName, username, username + "@usergrid.com", username, password, null));
 
-        restClient.management().token().get(username,password);
+        restClient.management().token().get(username, password);
 
-        clientCredentials = restClient.management().orgs().org( orgName ).credentials().get(Credentials.class);
+        clientCredentials = restClient.management().orgs().org(orgName).credentials().get(Credentials.class);
 
         ApiResponse appResponse = restClient.management().orgs()
-            .org( organization.getName() ).app().post(new Application(appName));
-        appUuid = ( String ) appResponse.getEntities().get( 0 ).get( "uuid" );
-        application = new Application( appResponse );
+            .org(organization.getName()).app().post(new Application(appName));
+        appUuid = (String) appResponse.getEntities().get(0).get("uuid");
+        application = new Application(appResponse);
         refreshIndex();
 
         ApiResponse response = restClient.management().token().post(new Token(username, password));
         refreshIndex();
     }
 
-    public String getUsername(){return username;}
+    public String getUsername() {
+        return username;
+    }
 
-    public String getEmail(){return username+"@usergrid.com";}
+    public String getEmail() {
+        return username + "@usergrid.com";
+    }
 
-    public String getPassword(){return password;}
+    public String getPassword() {
+        return password;
+    }
 
-    public Organization getOrganization(){return organization;}
+    public Organization getOrganization() {
+        return organization;
+    }
 
-    public String getOrganizationName(){return orgName;}
+    public String getOrganizationName() {
+        return orgName;
+    }
 
-    public String getAppName() {return appName;}
+    public String getAppName() {
+        return appName;
+    }
 
     public String getAppUuid() {
         return appUuid;
@@ -157,15 +164,15 @@ public class ClientSetup implements TestRule {
     }
 
     public void refreshIndex() {
-        this.restClient.refreshIndex(getOrganizationName(),getAppName(),
+        this.restClient.refreshIndex(getOrganizationName(), getAppName(),
             CpNamingUtils.getManagementApplicationId().getUuid().toString());
 
-        if(!CpNamingUtils.getManagementApplicationId().getUuid().toString().equals(getAppUuid())) {
+        if (!CpNamingUtils.getManagementApplicationId().getUuid().toString().equals(getAppUuid())) {
             this.restClient.refreshIndex(getOrganizationName(), getAppName(), getAppUuid());
         }
     }
 
-    public RestClient getRestClient(){
+    public RestClient getRestClient() {
         return restClient;
     }
 }

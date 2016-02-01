@@ -67,19 +67,25 @@ public class TestJobListener implements JobListener {
 
 
     public void onSubmit( JobExecution execution ) {
-        LOG.debug( "Job execution {} submitted with count {}.", execution, submittedCounter.incrementAndGet() );
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Job execution {} submitted with count {}.", execution, submittedCounter.incrementAndGet());
+        }
     }
 
 
     public void onSuccess( JobExecution execution ) {
-        LOG.debug( "Job execution {} succeeded with count {}.", execution, successCounter.incrementAndGet() );
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Job execution {} succeeded with count {}.", execution, successCounter.incrementAndGet());
+        }
 
         latch.countDown();
     }
 
 
     public void onFailure( JobExecution execution ) {
-        LOG.debug( "Job execution {} failed with count {}.", execution, failureCounter.incrementAndGet() );
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Job execution {} failed with count {}.", execution, failureCounter.incrementAndGet());
+        }
 
         latch.countDown();
     }

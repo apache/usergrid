@@ -61,7 +61,9 @@ public class UsersResource extends AbstractContextResource {
 
 
     public UsersResource() {
-        logger.debug( "ManagementUsersResource initialized" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("ManagementUsersResource initialized");
+        }
     }
 
 
@@ -89,7 +91,7 @@ public class UsersResource extends AbstractContextResource {
 
     private UserResource getUserResource(UserInfo user, String type, String value) throws ManagementException {
         if (user == null) {
-            throw new ManagementException("Could not find organization for " + type + " : " + value);
+            throw new ManagementException("Could not find user for " + type + ": " + value);
         }
         return getSubResource(UserResource.class).init( user );
     }
@@ -125,7 +127,7 @@ public class UsersResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "create user" );
 
-        UserInfo user = management.createAdminUser( username, name, email, password, false, false );
+        UserInfo user = management.createAdminUser( null, username, name, email, password, false, false );
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         if ( user != null ) {
             result.put( "user", user );
@@ -199,7 +201,7 @@ public class UsersResource extends AbstractContextResource {
             if (reCaptchaPassed) {
                 user = management.findAdminUser(email);
                 if (user != null) {
-                    management.startAdminUserPasswordResetFlow(user);
+                    management.startAdminUserPasswordResetFlow(null, user);
                     return handleViewable("resetpw_email_success", this);
                 } else {
                     errorMsg = "We don't recognize that email, try again...";

@@ -23,6 +23,8 @@ package org.apache.usergrid.rest.test.resource.model;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.usergrid.rest.exceptions.UnsupportedRestOperationException;
+
 
 /**
  * A stateful iterable collection response. Used to dole out entities in iterable form
@@ -85,7 +87,7 @@ public class Collection implements Iterable<Entity>, Iterator<Entity> {
 
     @Override
     public void remove() {
-        throw new UnsupportedOperationException( "Remove is unsupported" );
+        throw new UnsupportedRestOperationException( "Remove is unsupported" );
     }
 
     public int getNumOfEntities(){

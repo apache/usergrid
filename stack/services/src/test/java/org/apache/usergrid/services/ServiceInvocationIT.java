@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 
 public class ServiceInvocationIT extends AbstractServiceIT {
-    private static final Logger LOG = LoggerFactory.getLogger( ServiceInvocationIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( ServiceInvocationIT.class );
 
     @Rule
     public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
@@ -44,7 +44,7 @@ public class ServiceInvocationIT extends AbstractServiceIT {
 
     @Test
     public void testServices() throws Exception {
-        LOG.info( "testServices" );
+        logger.info( "testServices" );
 
         app.put( "username", "edanuff" );
         app.put( "email", "ed@anuff.com" );

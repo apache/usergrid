@@ -41,7 +41,7 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class TracingFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
-    private Logger logger = LoggerFactory.getLogger( TracingFilter.class );
+    private static final Logger logger = LoggerFactory.getLogger( TracingFilter.class );
 
     @Autowired
     private TraceTagManager traceTagManager;

@@ -30,7 +30,6 @@ import org.apache.usergrid.services.ServiceManager;
 import org.apache.usergrid.services.ServiceManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.*;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -48,7 +47,7 @@ public abstract class QueueListener  {
 
     public  long DEFAULT_SLEEP = 5000;
 
-    private static final Logger LOG = LoggerFactory.getLogger(QueueListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(QueueListener.class);
 
     private MetricsFactory metricsService;
 
@@ -72,7 +71,6 @@ public abstract class QueueListener  {
     public  final int MAX_THREADS = 2;
     private Integer batchSize = 10;
     private String queueName;
-    public QueueManager TEST_QUEUE_MANAGER;
     private int consecutiveCallsToRemoveDevices;
     private Meter meter;
     private Timer timer;
@@ -104,7 +102,7 @@ public abstract class QueueListener  {
         boolean shouldRun = new Boolean(properties.getProperty("usergrid.queues.listener.run", "true"));
 
         if(shouldRun) {
-            LOG.info("QueueListener: starting.");
+            logger.info("QueueListener: starting.");
             int threadCount = 0;
 
             try {
@@ -123,25 +121,25 @@ public abstract class QueueListener  {
                 pool = Executors.newFixedThreadPool(maxThreads);
 
                 while (threadCount++ < maxThreads) {
-                    LOG.info("QueueListener: Starting thread {}.", threadCount);
+                    logger.info("QueueListener: Starting thread {}.", threadCount);
                     Runnable task = new Runnable() {
                         @Override
                         public void run() {
                             try {
                                 execute();
                             } catch (Exception e) {
-                                LOG.error("failed to start push", e);
+                                logger.error("failed to start push", e);
                             }
                         }
                     };
                     futures.add( pool.submit(task));
                 }
             } catch (Exception e) {
-                LOG.error("QueueListener: failed to start:", e);
+                logger.error("QueueListener: failed to start:", e);
             }
-            LOG.info("QueueListener: done starting.");
+            logger.info("QueueListener: done starting.");
         }else{
-            LOG.info("QueueListener: never started due to config value usergrid.queues.listener.run.");
+            logger.info("QueueListener: never started due to config value usergrid.queues.listener.run.");
         }
 
     }
@@ -158,11 +156,11 @@ public abstract class QueueListener  {
         Thread.currentThread().setName("queues_Processor"+UUID.randomUUID());
 
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
-        LOG.info("QueueListener: Starting execute process.");
+        logger.info("QueueListener: Starting execute process.");
         svcMgr = smf.getServiceManager(smf.getManagementAppId());
-        LOG.info("getting from queue {} ", queueName);
+        logger.info("getting from queue {} ", queueName);
         QueueScope queueScope = new QueueScopeImpl( queueName, QueueScope.RegionImplementation.LOCAL);
-        QueueManager queueManager = TEST_QUEUE_MANAGER != null ? TEST_QUEUE_MANAGER : queueManagerFactory.getQueueManager(queueScope);
+        QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
         // run until there are no more active jobs
         long runCount = 0;
 
@@ -177,7 +175,7 @@ public abstract class QueueListener  {
                     .buffer(getBatchSize())
                     .doOnNext(messages -> {
                         try {
-                            LOG.info("retrieved batch of {} messages from queue {} ", messages.size(), queueName);
+                            logger.info("retrieved batch of {} messages from queue {} ", messages.size(), queueName);
 
                             if (messages.size() > 0) {
 
@@ -190,30 +188,30 @@ public abstract class QueueListener  {
                                 queueManager.commitMessages(messages);
 
                                 meter.mark(messages.size());
-                                LOG.info("sent batch {} messages duration {} ms", messages.size(), System.currentTimeMillis() - now);
+                                logger.info("sent batch {} messages duration {} ms", messages.size(), System.currentTimeMillis() - now);
 
                                 if (sleepBetweenRuns > 0) {
-                                    LOG.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
+                                    logger.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
                                     Thread.sleep(sleepBetweenRuns);
                                 }
 
                             } else {
-                                LOG.info("no messages...sleep...{}", sleepWhenNoneFound);
+                                logger.info("no messages...sleep...{}", sleepWhenNoneFound);
                                 Thread.sleep(sleepWhenNoneFound);
                             }
                             timerContext.stop();
                             //send to the providers
                             consecutiveExceptions.set(0);
                         } catch (Exception ex) {
-                            LOG.error("failed to dequeue", ex);
+                            logger.error("failed to dequeue", ex);
                             try {
                                 long sleeptime = sleepWhenNoneFound * consecutiveExceptions.incrementAndGet();
                                 long maxSleep = 15000;
                                 sleeptime = sleeptime > maxSleep ? maxSleep : sleeptime;
-                                LOG.info("sleeping due to failures {} ms", sleeptime);
+                                logger.info("sleeping due to failures {} ms", sleeptime);
                                 Thread.sleep(sleeptime);
                             } catch (InterruptedException ie) {
-                                LOG.info("sleep interrupted");
+                                logger.info("sleep interrupted");
                             }
                         }
                     }).toBlocking().lastOrDefault(null);
@@ -222,7 +220,7 @@ public abstract class QueueListener  {
 
 
     public void stop(){
-        LOG.info("stop processes");
+        logger.info("stop processes");
 
         if(futures == null){
             return;

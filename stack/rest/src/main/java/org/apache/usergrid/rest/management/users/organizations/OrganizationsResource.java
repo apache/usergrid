@@ -113,8 +113,8 @@ public class OrganizationsResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "new organization for user" );
 
-        if ( organizationName == null ) {
-            throw new ManagementException( "Could not find organization for name: " + organizationName );
+        if ( organizationName == null || organizationName.isEmpty() ) {
+            throw new ManagementException( "Organization not specified." );
         }
 
         OrganizationInfo organization = management.createOrganization( organizationName, user, false );

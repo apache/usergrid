@@ -98,7 +98,7 @@ public class SwaggerServlet extends HttpServlet implements Filter {
     public String loadTempate( String template ) {
         String templateString = readClasspathFileAsString( template );
         Map<String, String> valuesMap = new HashMap<String, String>();
-        String basePath = properties != null ? properties.getProperty( "swagger.basepath", SWAGGER_BASE_PATH ) :
+        String basePath = properties != null ? properties.getProperty( "usergrid.api.url.base", SWAGGER_BASE_PATH ) :
                           SWAGGER_BASE_PATH;
         valuesMap.put( "basePath", basePath );
         StrSubstitutor sub = new StrSubstitutor( valuesMap );

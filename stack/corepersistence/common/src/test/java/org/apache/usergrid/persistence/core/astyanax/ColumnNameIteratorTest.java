@@ -59,6 +59,9 @@ public class ColumnNameIteratorTest {
     @Inject
     public CassandraFig cassandraFig;
 
+    @Inject
+    public CassandraCluster cassandraCluster;
+
     protected static Keyspace keyspace;
 
     protected ApplicationScope scope;
@@ -99,7 +102,7 @@ public class ColumnNameIteratorTest {
 
 
         AstyanaxKeyspaceProvider astyanaxKeyspaceProvider =
-                new AstyanaxKeyspaceProvider( cassandraFig, cassandraConfig );
+                new AstyanaxKeyspaceProvider( cassandraCluster );
 
         keyspace = astyanaxKeyspaceProvider.get();
 

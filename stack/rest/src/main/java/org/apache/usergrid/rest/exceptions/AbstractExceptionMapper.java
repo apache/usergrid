@@ -18,6 +18,8 @@ package org.apache.usergrid.rest.exceptions;
 
 
 import org.apache.usergrid.rest.ApiResponse;
+import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +58,7 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
     @Override
     public Response toResponse( E e ) {
         // if we don't know what type of error it is then it's a 500
-        return toResponse( INTERNAL_SERVER_ERROR, (E) new UncaughtException(e) );
+        return toResponse( INTERNAL_SERVER_ERROR, e );
     }
 
 
@@ -73,7 +75,7 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
 
         } else {
             if (logger.isDebugEnabled()) {
-                logger.debug(e.getClass().getCanonicalName() + " Uncaught Exception (" + status + ")", e);
+                logger.debug(e.getClass().getCanonicalName() + " Following Exception Thrown (" + status + ")", e);
             }
         }
 
@@ -105,8 +107,9 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
             // only log real errors as errors
             logger.error( "Server Error (" + status + "):\n" + jsonResponse );
         } else if ( logger.isDebugEnabled() ) {
-            logger.debug( "Server Error (" + status + "):\n" + jsonResponse );
+            logger.debug( "Client Error (" + status + "):\n" + jsonResponse );
         }
+
         String callback = httpServletRequest.getParameter( "callback" );
         if ( isJSONP() && isNotBlank( callback ) ) {
             jsonResponse = wrapJSONPResponse( callback, jsonResponse );

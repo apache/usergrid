@@ -63,14 +63,20 @@ public class ShiroCache<K, V> implements Cache<K,V> {
             if ( logger.isDebugEnabled() ) {
                 if (value instanceof UsergridAuthorizationInfo) {
                     UsergridAuthorizationInfo info = (UsergridAuthorizationInfo) value;
-                    logger.debug("Got from AUTHZ cache {} for app {}", getKeyString(key), info.toString());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Got from AUTHZ cache {} for app {}", getKeyString(key), info.toString());
+                    }
 
                 } else if (value instanceof UsergridAuthenticationInfo) {
                     UsergridAuthenticationInfo info = (UsergridAuthenticationInfo) value;
-                    logger.debug("Got from AUTHC cache {} for app {}", getKeyString(key), info.toString());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Got from AUTHC cache {} for app {}", getKeyString(key), info.toString());
+                    }
 
                 } else if (value == null) {
-                    logger.debug("Got NULL from cache app {} for key {}", getKeyString(key), key.toString());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Got NULL from cache app {} for key {}", getKeyString(key), key.toString());
+                    }
                 }
             }
 

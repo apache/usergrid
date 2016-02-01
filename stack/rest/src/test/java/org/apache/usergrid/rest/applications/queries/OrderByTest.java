@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
  * @since 4.0
  */
 public class OrderByTest extends QueryTestBase {
-    private static Logger log = LoggerFactory.getLogger(OrderByTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrderByTest.class);
 
     @Test
     public void orderByLongAsc() throws IOException {
@@ -241,7 +241,7 @@ public class OrderByTest extends QueryTestBase {
         for (int i = 0; i < 20; i++) {
             props.put("ordinal", i);
             Entity activity = this.app().collection("activity").post(props);
-            log.info("Created", activity.get("created").toString());
+            logger.info("Created", activity.get("created").toString());
             if (i == 5) {
                 created = Long.parseLong(activity.get("created").toString());
             }
@@ -331,8 +331,8 @@ public class OrderByTest extends QueryTestBase {
             props.put("ordinal", i);
             Entity e = this.app().collection("activity").post(props);
             activities[i] = e;
-            log.info(String.valueOf(e.get("uuid").toString()));
-            log.info(String.valueOf(Long.parseLong(activities[0].get("created").toString())));
+            logger.info(String.valueOf(e.get("uuid").toString()));
+            logger.info(String.valueOf(Long.parseLong(activities[0].get("created").toString())));
         }
 
         refreshIndex();

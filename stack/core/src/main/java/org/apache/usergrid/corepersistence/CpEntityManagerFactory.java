@@ -166,7 +166,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             if ( em.getApplication() == null ) {
                 logger.info("Creating management application");
                 Map mgmtAppProps = new HashMap<String, Object>();
-                mgmtAppProps.put(PROPERTY_NAME, "systemapp");
+                mgmtAppProps.put(PROPERTY_NAME, CassandraService.MANAGEMENT_APPLICATION);
                 em.create( getManagementAppId(), TYPE_APPLICATION, mgmtAppProps);
                 em.getApplication();
             }
@@ -206,16 +206,15 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public Entity createApplicationV2(String organizationName, String name) throws Exception {
-        return createApplicationV2( organizationName, name, null, null );
+        return createApplicationV2( organizationName, name, null, null, false);
     }
 
 
     @Override
     public Entity createApplicationV2(
-        String orgName, String name, UUID applicationId, Map<String, Object> properties) throws Exception {
+        String orgName, String name, UUID applicationId, Map<String, Object> properties, boolean forMigration) throws Exception {
 
         String appName = buildAppName( orgName, name );
-
 
         final Optional<UUID> appId = applicationIdCache.getApplicationId( appName );
 
@@ -225,10 +224,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         applicationId = applicationId==null ?  UUIDGenerator.newTimeUUID() : applicationId;
 
-        logger.debug( "New application orgName {} orgAppName {} id {} ",
-            new Object[] { orgName, name, applicationId.toString() } );
+        if (logger.isDebugEnabled()) {
+            logger.debug("New application orgName {} orgAppName {} id {} ",
+                new Object[]{orgName, name, applicationId.toString()});
+        }
 
-        return initializeApplicationV2( orgName, applicationId, appName, properties );
+        return initializeApplicationV2( orgName, applicationId, appName, properties, forMigration);
     }
 
 
@@ -242,8 +243,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
      * @return UUID of newly created Entity of type application_info
      */
     @Override
-    public Entity initializeApplicationV2( String organizationName, final UUID applicationId, String name,
-                                       Map<String, Object> properties ) throws Exception {
+    public Entity initializeApplicationV2(String organizationName, final UUID applicationId, String name,
+                                          Map<String, Object> properties, boolean forMigration) throws Exception {
 
         // Ensure our management system exists before creating our application
         init();
@@ -267,7 +268,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
         properties.put( PROPERTY_NAME, appName );
         appEm.create(applicationId, TYPE_APPLICATION, properties);
-        appEm.resetRoles();
+
+        // only reset roles if this application isn't being migrated (meaning dictionary and role data already exists)
+        if(!forMigration){
+            appEm.resetRoles();
+        }
+
 
 
         // create application info entity in the management app
@@ -473,9 +479,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         Id managementId = new SimpleId( managementApp.getUuid(), managementApp.getType() );
 
 
-
-        logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}",
-            new Object[]{edgeType, managementId.getType(), managementId.getUuid()});
+        if (logger.isDebugEnabled()) {
+            logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}",
+                new Object[]{edgeType, managementId.getType(), managementId.getUuid()});
+        }
 
         Observable<MarkedEdge> edges = gm.loadEdgesFromSource(
             new SimpleSearchByEdgeType( managementId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,

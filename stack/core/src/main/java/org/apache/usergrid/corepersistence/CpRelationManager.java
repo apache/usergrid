@@ -178,9 +178,11 @@ public class CpRelationManager implements RelationManager {
 
         String edgeTypePrefix = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
 
-        logger.debug( "getCollectionIndexes(): Searching for edge type prefix {} to target {}:{}", new Object[] {
-            edgeTypePrefix, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid()
-        } );
+        if (logger.isDebugEnabled()) {
+            logger.debug("getCollectionIndexes(): Searching for edge type prefix {} to target {}:{}", new Object[]{
+                edgeTypePrefix, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid()
+            });
+        }
 
         Observable<Set<String>> types =
             gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( cpHeadEntity.getId(), edgeTypePrefix, null ) )
@@ -241,7 +243,9 @@ public class CpRelationManager implements RelationManager {
 
         return edges.collect( () -> new LinkedHashMap<EntityRef, Set<String>>(), ( entityRefSetMap, edge ) -> {
             if ( fromEntityType != null && !fromEntityType.equals( edge.getSourceNode().getType() ) ) {
-                logger.debug( "Ignoring edge from entity type {}", edge.getSourceNode().getType() );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Ignoring edge from entity type {}", edge.getSourceNode().getType());
+                }
                 return;
             }
 
@@ -260,9 +264,11 @@ public class CpRelationManager implements RelationManager {
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
 
-        logger.debug( "isConnectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[] {
-            connectionType, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
-        } );
+        if (logger.isDebugEnabled()) {
+            logger.debug("isConnectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[]{
+                connectionType, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
+            });
+        }
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
         Observable<MarkedEdge> edges = gm.loadEdgeVersions( CpNamingUtils
@@ -279,10 +285,11 @@ public class CpRelationManager implements RelationManager {
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
-
-        logger.debug( "isCollectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[] {
-            collectionName, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
-        } );
+        if (logger.isDebugEnabled()) {
+            logger.debug("isCollectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[]{
+                collectionName, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
+            });
+        }
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
         Observable<MarkedEdge> edges = gm.loadEdgeVersions( CpNamingUtils
@@ -410,7 +417,9 @@ public class CpRelationManager implements RelationManager {
             }
         } ).toBlocking().lastOrDefault( null );
 
-        //check if we need to reverse our edges
+
+        // remove any duplicate edges (keeps the duplicate edge with same timestamp)
+        removeDuplicateEdgesAsync(gm, edge);
 
 
         if ( logger.isDebugEnabled() ) {
@@ -691,28 +700,9 @@ public class CpRelationManager implements RelationManager {
         indexService.queueNewEdge( applicationScope, targetEntity, edge );
 
 
-        //now read all older versions of an edge, and remove them.  Finally calling delete
-        final SearchByEdge searchByEdge =
-            new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), Long.MAX_VALUE,
-                SearchByEdgeType.Order.DESCENDING, Optional.absent() );
+        // remove any duplicate edges (keeps the duplicate edge with same timestamp)
+        removeDuplicateEdgesAsync(gm, edge);
 
-
-        //load our versions, only retain the most recent one
-        gm.loadEdgeVersions(searchByEdge).skip(1).flatMap(edgeToDelete -> {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Marking edge {} for deletion", edgeToDelete);
-            }
-            return gm.markEdge(edgeToDelete );
-        }).lastOrDefault(null).doOnNext(lastEdge -> {
-            //no op if we hit our default
-            if (lastEdge == null) {
-                return;
-            }
-
-            //don't queue delete b/c that de-indexes, we need to delete the edges only since we have a version still existing to index.
-
-            gm.deleteEdge(lastEdge).toBlocking().lastOrDefault(null); // this should throw an exception
-        }).toBlocking().lastOrDefault(null);//this should throw an exception
 
 
         return connection;
@@ -868,7 +858,11 @@ public class CpRelationManager implements RelationManager {
         List<Entity> entities = new ArrayList<Entity>();
         for ( EntityRef ref : containers.keySet() ) {
             Entity entity = em.get( ref );
-            logger.debug( "   Found connecting entity: " + entity.getProperties() );
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("   Found connecting entity: " + entity.getProperties());
+            }
+
             entities.add( entity );
         }
         return Results.fromEntities( entities );
@@ -1018,4 +1012,29 @@ public class CpRelationManager implements RelationManager {
         }
         return entity;
     }
+
+    private void removeDuplicateEdgesAsync(GraphManager gm, Edge edge){
+
+        //now read all older versions of an edge, and remove them.  Finally calling delete
+        final SearchByEdge searchByEdge =
+            new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), Long.MAX_VALUE,
+                SearchByEdgeType.Order.DESCENDING, Optional.absent() );
+
+        //load our versions, only retain the most recent one
+        gm.loadEdgeVersions(searchByEdge).skip(1).flatMap(edgeToDelete -> {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Duplicate edge. Marking edge {} for deletion", edgeToDelete);
+            }
+            return gm.markEdge(edgeToDelete );
+        }).lastOrDefault(null).doOnNext(lastEdge -> {
+            //no op if we hit our default
+            if (lastEdge == null) {
+                return;
+            }
+            //don't queue delete b/c that de-indexes, we need to delete the edges only since we have a version still existing to index.
+            gm.deleteEdge(lastEdge).toBlocking().lastOrDefault(null); // this should throw an exception
+        }).toBlocking().lastOrDefault(null);//this should throw an exception
+
+    }
+
 }

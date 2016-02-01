@@ -26,7 +26,6 @@ import org.apache.usergrid.management.OrganizationConfig;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.persistence.entities.Export;
-import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
@@ -51,9 +50,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -76,13 +73,17 @@ public class OrganizationResource extends AbstractContextResource {
 
 
     public OrganizationResource() {
-        logger.debug("OrganizationResource created");
+        if (logger.isDebugEnabled()) {
+            logger.debug("OrganizationResource created");
+        }
     }
 
 
     public OrganizationResource init( OrganizationInfo organization ) {
         this.organization = organization;
-        logger.debug("OrganizationResource initialized for org {}", organization.getName());
+        if (logger.isDebugEnabled()) {
+            logger.debug("OrganizationResource initialized for org {}", organization.getName());
+        }
         return this;
     }
 
@@ -262,7 +263,9 @@ public class OrganizationResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.debug( "executePut" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("executePut");
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "put" );
@@ -284,28 +287,35 @@ public class OrganizationResource extends AbstractContextResource {
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
-        logger.debug( "executePostJson" );
+        if (logger.isDebugEnabled()) {
+            logger.debug("executePostJson");
+        }
 
-        UsergridAwsCredentials uac = new UsergridAwsCredentials();
-
-        UUID jobUUID = null;
-        Map<String, String> uuidRet = new HashMap<String, String>();
-
-        Map<String,Object> properties;
-        Map<String, Object> storage_info;
+        Map<String, String> uuidRet = new HashMap<>();
 
         try {
-            if((properties = ( Map<String, Object> )  json.get( "properties" )) == null){
+            Object propertiesObj = json.get("properties");
+            if (propertiesObj == null) {
                 throw new NullArgumentException("Could not find 'properties'");
             }
-            storage_info = ( Map<String, Object> ) properties.get( "storage_info" );
+            if (!(propertiesObj instanceof Map)) {
+                throw new IllegalArgumentException("'properties' not a map");
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String,Object> properties = (Map<String,Object>)propertiesObj;
+
             String storage_provider = ( String ) properties.get( "storage_provider" );
             if(storage_provider == null) {
                 throw new NullArgumentException( "Could not find field 'storage_provider'" );
             }
-            if(storage_info == null) {
+
+            Object storageInfoObj = properties.get("storage_info");
+            if(storageInfoObj == null) {
                 throw new NullArgumentException( "Could not find field 'storage_info'" );
             }
+            @SuppressWarnings("unchecked")
+            Map<String,Object> storage_info = (Map<String, Object>)storageInfoObj;
 
             String bucketName = ( String ) storage_info.get( "bucket_location" );
             String accessId = ( String ) storage_info.get( "s3_access_id" );
@@ -324,7 +334,7 @@ public class OrganizationResource extends AbstractContextResource {
 
             json.put( "organizationId",organization.getUuid());
 
-            jobUUID = exportService.schedule( json );
+            UUID jobUUID = exportService.schedule( json );
             uuidRet.put( "Export Entity", jobUUID.toString() );
         }
         catch ( NullArgumentException e ) {
@@ -364,28 +374,51 @@ public class OrganizationResource extends AbstractContextResource {
     }
 
 
+    protected Set<String> getSetFromCommaSeparatedString(String input) {
+        Set<String> ret = new HashSet<>();
+        StringTokenizer tokenizer = new StringTokenizer(input, ",");
+
+        while (tokenizer.hasMoreTokens()) {
+            ret.add(tokenizer.nextToken());
+        }
+
+        return ret;
+    }
+
+
+    protected Map<String, Object> getConfigData(OrganizationConfig orgConfig, String itemsParam,
+                                                boolean includeDefaults, boolean includeOverrides) {
+        boolean itemsParamEmpty = itemsParam == null || itemsParam.isEmpty() || itemsParam.equals("*");
+        return orgConfig.getOrgConfigCustomMap(itemsParamEmpty ? null : getSetFromCommaSeparatedString(itemsParam),
+                includeDefaults, includeOverrides);
+    }
+
+
     @JSONP
     @RequireSystemAccess
     @GET
     @Path("config")
     public ApiResponse getConfig( @Context UriInfo ui,
-                                      @QueryParam("callback") @DefaultValue("callback") String callback )
+                                  @QueryParam("items") @DefaultValue("") String itemsParam,
+                                  @QueryParam("separate_defaults") @DefaultValue("false") boolean separateDefaults,
+                                  @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
         logger.info( "Get configuration for organization: " + organization.getUuid() );
 
-        // TODO: check for super user, @RequireSystemAccess didn't work
-
         ApiResponse response = createApiResponse();
         response.setAction( "get organization configuration" );
-
-        // TODO: check for super user
+        //response.setParams(ui.getQueryParameters());
 
         OrganizationConfig orgConfig =
                 management.getOrganizationConfigByUuid( organization.getUuid() );
 
-        response.setProperty( "configuration", management.getOrganizationConfigData( orgConfig ) );
-        // response.setOrganizationConfig( orgConfig );
+        if (separateDefaults) {
+            response.setProperty("orgConfiguration", getConfigData(orgConfig, itemsParam, false, true));
+            response.setProperty("defaults", getConfigData(orgConfig, itemsParam, true, false));
+        } else {
+            response.setProperty("configuration", getConfigData(orgConfig, itemsParam, true, true));
+        }
 
         return response;
     }
@@ -396,27 +429,44 @@ public class OrganizationResource extends AbstractContextResource {
     @JSONP
     @PUT
     @Path("config")
-    public ApiResponse putConfig( @Context UriInfo ui, Map<String, Object> json,
-                                       @QueryParam("callback") @DefaultValue("callback") String callback )
+    public ApiResponse putConfig( @Context UriInfo ui,
+                                  Map<String, Object> json,
+                                  @QueryParam("separate_defaults") @DefaultValue("false") boolean separateDefaults,
+                                  @QueryParam("only_changed") @DefaultValue("false") boolean onlyChanged,
+                                  @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.debug("Put configuration for organization: " + organization.getUuid());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Put configuration for organization: " + organization.getUuid());
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction("put organization configuration");
-
-        // TODO: check for super user
-
-        // response.setParams(ui.getQueryParameters());
+        //response.setParams(ui.getQueryParameters());
 
         OrganizationConfig orgConfig =
                 management.getOrganizationConfigByUuid( organization.getUuid() );
-        orgConfig.addProperties(json);
+
+        // validates JSON and throws IllegalArgumentException if invalid
+        // exception will be handled up the chain
+        orgConfig.addProperties(json, true);
+
         management.updateOrganizationConfig(orgConfig);
 
         // refresh orgConfig -- to pick up removed entries and defaults
         orgConfig = management.getOrganizationConfigByUuid( organization.getUuid() );
-        response.setProperty( "configuration", management.getOrganizationConfigData( orgConfig ) );
+
+        String itemsToReturn = "";
+        if (onlyChanged) {
+            itemsToReturn = String.join(",", json.keySet());
+        }
+
+        if (separateDefaults) {
+            response.setProperty("orgConfiguration", getConfigData(orgConfig, itemsToReturn, false, true));
+            response.setProperty("defaults", getConfigData(orgConfig, itemsToReturn, true, false));
+        } else {
+            response.setProperty( "configuration", getConfigData(orgConfig, itemsToReturn, true, true));
+        }
 
         return response;
     }

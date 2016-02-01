@@ -17,7 +17,6 @@
 package org.apache.usergrid.management.export;
 
 
-import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;

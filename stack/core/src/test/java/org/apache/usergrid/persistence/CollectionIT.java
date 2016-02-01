@@ -33,8 +33,6 @@ import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsE
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
-import rx.Observable;
-import rx.schedulers.Schedulers;
 
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.assertEquals;
@@ -48,7 +46,7 @@ import static org.junit.Assert.fail;
 //@UseModules({ GuiceModule.class })
 public class CollectionIT extends AbstractCoreIT {
 
-    private static final Logger LOG = LoggerFactory.getLogger( CollectionIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( CollectionIT.class );
 
     @Rule
     public Application app = new CoreApplication( setup );
@@ -57,7 +55,7 @@ public class CollectionIT extends AbstractCoreIT {
     @Test
     public void testSimpleCrud() throws Exception {
 
-        LOG.debug( "testSimpleCrud" );
+        logger.debug( "testSimpleCrud" );
 
         app.put( "username", "edanuff" );
         app.put( "email", "ed@anuff.com" );
@@ -75,7 +73,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testCollection() throws Exception {
-        LOG.debug( "testCollection" );
+        logger.debug( "testCollection" );
 
         app.put( "username", "edanuff" );
         app.put( "email", "ed@anuff.com" );
@@ -96,13 +94,13 @@ public class CollectionIT extends AbstractCoreIT {
         Entity activity = app.create( "activity" );
         assertNotNull( activity );
 
-        LOG.info( "" + activity.getClass() );
-        LOG.info( JsonUtils.mapToFormattedJsonString( activity ) );
+        logger.info( "" + activity.getClass() );
+        logger.info( JsonUtils.mapToFormattedJsonString( activity ) );
 
         activity = app.get( activity.getUuid(), activity.getType() );
 
-        LOG.info( "Activity class = {}", activity.getClass() );
-        LOG.info( JsonUtils.mapToFormattedJsonString( activity ) );
+        logger.info( "Activity class = {}", activity.getClass() );
+        logger.info( JsonUtils.mapToFormattedJsonString( activity ) );
 
         app.addToCollection( user, "activities", activity );
 
@@ -170,7 +168,7 @@ public class CollectionIT extends AbstractCoreIT {
         r = app.searchCollection( user, "activities", query );
         assertEquals( 3, r.size() );
         entities = r.getEntities();
-        LOG.info( JsonUtils.mapToFormattedJsonString( entities ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( entities ) );
         assertEquals( entities.get( 0 ).getUuid(), activity2.getUuid() );
         assertEquals( entities.get( 1 ).getUuid(), activity.getUuid() );
         assertEquals( entities.get( 2 ).getUuid(), activity3.getUuid() );
@@ -202,7 +200,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void containsTest() throws Exception {
-        LOG.debug("testCollection");
+        logger.debug("testCollection");
 
         app.put("username", "edanuff");
         app.put("email", "ed@anuff.com");
@@ -223,13 +221,13 @@ public class CollectionIT extends AbstractCoreIT {
         Entity activity = app.create("activity");
         assertNotNull(activity);
 
-        LOG.info("" + activity.getClass());
-        LOG.info(JsonUtils.mapToFormattedJsonString(activity));
+        logger.info("" + activity.getClass());
+        logger.info(JsonUtils.mapToFormattedJsonString(activity));
 
         activity = app.get(activity.getUuid(), activity.getType());
 
-        LOG.info("Activity class = {}", activity.getClass());
-        LOG.info(JsonUtils.mapToFormattedJsonString(activity));
+        logger.info("Activity class = {}", activity.getClass());
+        logger.info(JsonUtils.mapToFormattedJsonString(activity));
 
         app.addToCollection(user, "activities", activity);
 
@@ -281,7 +279,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void userFirstNameSearch() throws Exception {
-        LOG.debug( "userFirstNameSearch" );
+        logger.debug( "userFirstNameSearch" );
 
 
         EntityManager em = app.getEntityManager();
@@ -341,7 +339,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void userMiddleNameSearch() throws Exception {
-        LOG.debug( "userMiddleNameSearch" );
+        logger.debug( "userMiddleNameSearch" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -373,7 +371,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void userLastNameSearch() throws Exception {
-        LOG.debug( "userLastNameSearch" );
+        logger.debug( "userLastNameSearch" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -405,7 +403,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testGroups() throws Exception {
-        LOG.debug("testGroups");
+        logger.debug("testGroups");
 
         EntityManager em = app.getEntityManager();
         assertNotNull(em);
@@ -443,7 +441,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         Results r = em.searchCollectionConsistent( group, "users", query.withResultsLevel( Level.LINKED_PROPERTIES ),1 );
 
-        LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
         assertEquals(1, r.size());
         assertTrue(r.getEntities().get(0).getUuid().equals(user1.getUuid()));
 
@@ -456,7 +454,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void groupNameSearch() throws Exception {
-        LOG.debug( "groupNameSearch" );
+        logger.debug( "groupNameSearch" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -488,7 +486,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void groupTitleSearch() throws Exception {
-        LOG.debug( "groupTitleSearch" );
+        logger.debug( "groupTitleSearch" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -521,7 +519,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testSubkeys() throws Exception {
-        LOG.debug( "testSubkeys" );
+        logger.debug( "testSubkeys" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -566,14 +564,14 @@ public class CollectionIT extends AbstractCoreIT {
         final Query query = Query.fromQL( "verb = 'post'" );
 
         Results r = em.searchCollection(user, "activities", query);
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals( 2, r.size() );
     }
 
 
     @Test
     public void emptyQuery() throws Exception {
-        LOG.debug( "emptyQuery" );
+        logger.debug( "emptyQuery" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -616,7 +614,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void emptyQueryReverse() throws Exception {
-        LOG.debug( "emptyQueryReverse" );
+        logger.debug( "emptyQueryReverse" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -660,7 +658,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void orQuery() throws Exception {
-        LOG.debug( "orQuery" );
+        logger.debug( "orQuery" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -739,7 +737,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void andQuery() throws Exception {
-        LOG.debug( "andQuery" );
+        logger.debug( "andQuery" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -800,7 +798,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void notQuery() throws Exception {
-        LOG.debug( "notQuery" );
+        logger.debug( "notQuery" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -931,7 +929,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testKeywordsOrQuery() throws Exception {
-        LOG.debug( "testKeywordsOrQuery" );
+        logger.debug( "testKeywordsOrQuery" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -955,14 +953,14 @@ public class CollectionIT extends AbstractCoreIT {
 
         Query query = Query.fromQL( "select * where keywords contains 'hot' or title contains 'hot'" );
         Results r = em.searchCollection( em.getApplicationRef(), "games", query );
-        LOG.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
+        logger.info(JsonUtils.mapToFormattedJsonString(r.getEntities()));
         assertEquals( 3, r.size() );
     }
 
 
     @Test
     public void testKeywordsAndQuery() throws Exception {
-        LOG.debug( "testKeywordsOrQuery" );
+        logger.debug( "testKeywordsOrQuery" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -986,7 +984,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         Query query = Query.fromQL( "select * where keywords contains 'new' and title contains 'extreme'" );
         Results r = em.searchCollection( em.getApplicationRef(), "games", query );
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
         assertEquals(2, r.size());
 
         assertEquals( thirdGame.getUuid(), r.getEntities().get( 0 ).getUuid() );
@@ -996,7 +994,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void pagingAfterDelete() throws Exception {
-        LOG.debug( "pagingAfterDelete" );
+        logger.debug( "pagingAfterDelete" );
 
 
         EntityManager em = app.getEntityManager();
@@ -1020,7 +1018,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         Results r = em.searchCollection( em.getApplicationRef(), "objects", query );
 
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
 
         assertEquals( initialSize, r.size() );
 
@@ -1080,7 +1078,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void pagingLessThanWithCriteria() throws Exception {
-        LOG.debug( "pagingLessThanWithCriteria" );
+        logger.debug( "pagingLessThanWithCriteria" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -1108,7 +1106,7 @@ public class CollectionIT extends AbstractCoreIT {
 
             r = em.searchCollection( em.getApplicationRef(), "pages", query );
 
-            LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+            logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
 
             assertEquals( pageSize, r.size() );
 
@@ -1130,7 +1128,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void pagingGreaterThanWithCriteria() throws Exception {
-        LOG.debug( "pagingGreaterThanWithCriteria" );
+        logger.debug( "pagingGreaterThanWithCriteria" );
 
 
         EntityManager em = app.getEntityManager();
@@ -1162,7 +1160,7 @@ public class CollectionIT extends AbstractCoreIT {
 
             r = em.searchCollection( em.getApplicationRef(), "pages", query );
 
-            LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+            logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
 
             assertEquals( pageSize, r.size() );
 
@@ -1187,7 +1185,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void pagingWithBoundsCriteria() throws Exception {
-        LOG.debug( "pagingWithBoundsCriteria" );
+        logger.debug( "pagingWithBoundsCriteria" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -1217,7 +1215,7 @@ public class CollectionIT extends AbstractCoreIT {
 
             r = em.searchCollection( em.getApplicationRef(), "pages", query );
 
-            LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+            logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
 
             assertEquals( pageSize, r.size() );
 
@@ -1240,7 +1238,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testPagingWithGetNextResults() throws Exception {
-        LOG.debug( "testPagingWithGetNextResults" );
+        logger.debug( "testPagingWithGetNextResults" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -1268,7 +1266,7 @@ public class CollectionIT extends AbstractCoreIT {
         // check they're all the same before deletion
         for ( int i = 1; i < 10; i++ ) {
 
-            LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+            logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
 
             assertEquals( pageSize, r.size() );
 
@@ -1280,7 +1278,7 @@ public class CollectionIT extends AbstractCoreIT {
 
                 assertEquals( entityId, returnedId );
             }
-            LOG.info( "collection loop "+i );
+            logger.info( "collection loop "+i );
 
             r = r.getNextPageResults();
         }
@@ -1296,7 +1294,7 @@ public class CollectionIT extends AbstractCoreIT {
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
-        LOG.debug( "subpropertyQuerying" );
+        logger.debug( "subpropertyQuerying" );
 
         Map<String, Object> root = new HashMap<String, Object>();
 
@@ -1346,7 +1344,7 @@ public class CollectionIT extends AbstractCoreIT {
     public void arrayQuerying() throws Exception {
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
-        LOG.debug( "arrayQuerying" );
+        logger.debug( "arrayQuerying" );
 
 
         Map<String, Object> root = new HashMap<String, Object>();
@@ -1409,7 +1407,7 @@ public class CollectionIT extends AbstractCoreIT {
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
-        LOG.debug( "stringWithSpaces" );
+        logger.debug( "stringWithSpaces" );
 
         Map<String, Object> props = new HashMap<String, Object>();
 
@@ -1432,7 +1430,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testSelectTerms() throws Exception {
-        LOG.debug( "testSelectTerms" );
+        logger.debug( "testSelectTerms" );
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
 
@@ -1462,7 +1460,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testRedefineTerms() throws Exception {
-        LOG.debug( "testRedefineTerms" );
+        logger.debug( "testRedefineTerms" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -1494,7 +1492,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testSelectEmailViaConnection() throws Exception {
-        LOG.debug( "testSelectEmailViaConnection" );
+        logger.debug( "testSelectEmailViaConnection" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -1549,7 +1547,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void testNotQueryAnd() throws Exception {
-        LOG.debug( "testNotQueryAnd" );
+        logger.debug( "testNotQueryAnd" );
 
 
         EntityManager em = app.getEntityManager();
@@ -1614,7 +1612,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void runtimeTypeCorrect() throws Exception {
-        LOG.debug( "runtimeTypeCorrect" );
+        logger.debug( "runtimeTypeCorrect" );
 
 
         EntityManager em = app.getEntityManager();
@@ -1638,7 +1636,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         Results r = em.getCollection( em.getApplicationRef(), "users", null, 50, Level.ALL_PROPERTIES, false );
 
-        LOG.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( r.getEntities() ) );
 
         assertEquals( size, r.size() );
 
@@ -1654,7 +1652,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void badOrderByBadGrammarAsc() throws Exception {
-        LOG.debug( "badOrderByBadGrammarAsc" );
+        logger.debug( "badOrderByBadGrammarAsc" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -1684,7 +1682,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void badOrderByBadGrammarDesc() throws Exception {
-        LOG.debug( "badOrderByBadGrammarDesc" );
+        logger.debug( "badOrderByBadGrammarDesc" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -1715,7 +1713,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void uuidIdentifierTest() throws Exception {
-        LOG.debug( "uuidIdentifierTest" );
+        logger.debug( "uuidIdentifierTest" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -1746,7 +1744,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void nameIdentifierTest() throws Exception {
-        LOG.debug( "nameIdentifierTest" );
+        logger.debug( "nameIdentifierTest" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -1780,7 +1778,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test
     public void emailIdentifierTest() throws Exception {
-        LOG.debug( "emailIdentifierTest" );
+        logger.debug( "emailIdentifierTest" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -1814,7 +1812,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test( expected = DuplicateUniquePropertyExistsException.class )
     public void duplicateIdentifierTest() throws Exception {
-        LOG.debug( "duplicateIdentifierTest" );
+        logger.debug( "duplicateIdentifierTest" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );
@@ -1836,7 +1834,7 @@ public class CollectionIT extends AbstractCoreIT {
 
     @Test( expected = DuplicateUniquePropertyExistsException.class )
     public void duplicateNameTest() throws Exception {
-        LOG.debug( "duplicateNameTest" );
+        logger.debug( "duplicateNameTest" );
 
         EntityManager em = app.getEntityManager();
         assertNotNull( em );

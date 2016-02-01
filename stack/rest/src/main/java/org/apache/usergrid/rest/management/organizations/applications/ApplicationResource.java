@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
+import org.apache.usergrid.rest.exceptions.UnsupportedRestOperationException;
 import org.apache.usergrid.rest.management.organizations.applications.imports.ImportsResource;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.rest.utils.JSONPUtils;
@@ -493,7 +494,7 @@ public class ApplicationResource extends AbstractContextResource {
         // for now, only works in test mode
         String testProp = ( String ) props.get( "usergrid.test" );
         if ( testProp == null || !Boolean.parseBoolean( testProp ) ) {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedRestOperationException("Test props not not functioning correctly.");
         }
 
         if ( applicationId == null ) {
@@ -502,14 +503,18 @@ public class ApplicationResource extends AbstractContextResource {
 
         management.deleteApplication( applicationId );
 
-        logger.debug( "ApplicationResource.delete() deleted appId = {}", applicationId);
+        if (logger.isDebugEnabled()) {
+            logger.debug("ApplicationResource.delete() deleted appId = {}", applicationId);
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "delete" );
         response.setApplication(emf.getEntityManager( applicationId ).getApplication());
         response.setParams(ui.getQueryParameters());
 
-        logger.debug( "ApplicationResource.delete() sending response ");
+        if (logger.isDebugEnabled()) {
+            logger.debug("ApplicationResource.delete() sending response ");
+        }
 
         return response;
     }

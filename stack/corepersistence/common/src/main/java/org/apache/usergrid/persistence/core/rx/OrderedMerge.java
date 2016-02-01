@@ -50,7 +50,7 @@ import rx.subscriptions.CompositeSubscription;
  */
 public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
 
-    private static Logger log = LoggerFactory.getLogger( OrderedMerge.class );
+    private static final Logger log = LoggerFactory.getLogger( OrderedMerge.class );
 
     //the comparator to compare items
     private final Comparator<T> comparator;
@@ -149,7 +149,7 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
             //we're done, just drain the queue since there are no more running producers
             if ( completed == innerSubscribers.size() ) {
 
-                log.trace( "Completing Observable.  Draining elements from the subscribers", innerSubscribers.size() );
+                if (log.isTraceEnabled()) log.trace( "Completing Observable.  Draining elements from the subscribers", innerSubscribers.size() );
 
                 //Drain the queues
                 while ( !subscriber.isUnsubscribed() && (!nextValues.isEmpty() || !toProduce.isEmpty()) ) {
@@ -225,7 +225,7 @@ public final class OrderedMerge<T> implements Observable.OnSubscribe<T> {
 
                         final T value = inner.pop();
 
-                        log.trace( "Emitting value {}", value );
+                        if (log.isTraceEnabled()) log.trace( "Emitting value {}", value );
 
                         subscriber.onNext( value );
 

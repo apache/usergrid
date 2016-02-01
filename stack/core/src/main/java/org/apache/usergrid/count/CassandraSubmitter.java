@@ -39,7 +39,7 @@ import com.yammer.metrics.core.TimerContext;
  * @author zznate
  */
 public class CassandraSubmitter implements BatchSubmitter {
-    private final Logger log = LoggerFactory.getLogger( CassandraSubmitter.class );
+    private static final Logger log = LoggerFactory.getLogger( CassandraSubmitter.class );
 
     private final int threadCount = 3;
     private final CassandraCounterStore cassandraCounterStore;

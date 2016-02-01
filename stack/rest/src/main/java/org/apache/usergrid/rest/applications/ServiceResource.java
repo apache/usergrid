@@ -17,10 +17,13 @@
 package org.apache.usergrid.rest.applications;
 
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.OrganizationConfig;
+import org.apache.usergrid.management.OrganizationConfigProps;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
@@ -274,7 +277,8 @@ public class ServiceResource extends AbstractContextResource {
                 // use the default query parameter functionality
                 OrganizationConfig orgConfig =
                     management.getOrganizationConfigForApplication(services.getApplicationId());
-                String defaultConnectionQueryParm = orgConfig.getDefaultConnectionParam();
+                String defaultConnectionQueryParm =
+                        orgConfig.getProperty(OrganizationConfigProps.ORGPROPERTIES_DEFAULT_CONNECTION_PARAM);
                 returnInboundConnections =
                     (defaultConnectionQueryParm.equals("in")) || (defaultConnectionQueryParm.equals("all"));
                 returnOutboundConnections =
@@ -657,15 +661,18 @@ public class ServiceResource extends AbstractContextResource {
 
         FormDataBodyPart fileBodyPart = multiPart.getField( FILE_FIELD_NAME );
 
-        if ( data.isEmpty() && fileBodyPart != null ) { // ensure entity is created even if there are no properties
-            data.put( AssetUtils.FILE_METADATA, new HashMap() );
-        }
+        data.put( AssetUtils.FILE_METADATA, new HashMap() );
 
         // process entity
         ApiResponse response = createApiResponse();
         response.setAction( serviceAction.name().toLowerCase() );
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
+
+        //Updates entity with fields that are in text/plain as per loop above
+        if(data.get( FILE_FIELD_NAME )==null){
+            data.put( FILE_FIELD_NAME,null );
+        }
         ServicePayload payload = getPayload( data );
         ServiceResults serviceResults = executeServiceRequest( ui, response, serviceAction, payload );
 
@@ -686,7 +693,8 @@ public class ServiceResource extends AbstractContextResource {
                     logger.error(re.getMessage());
                     response.setError( "500", re );
                 }
-                em.update( entity );
+                //em.update( entity );
+                entity = serviceResults.getEntity();
                 serviceResults.setEntity( entity );
             }
         }
@@ -822,6 +830,10 @@ public class ServiceResource extends AbstractContextResource {
             }catch(AwsPropertiesNotFoundException apnfe){
                 logger.error( "Amazon Property needed for this operation not found",apnfe );
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }
+            catch(AmazonServiceException ase){
+                logger.error(ase.getMessage());
+                return Response.status(ase.getStatusCode()).build();
             }
             catch(RuntimeException re){
                 logger.error(re.getMessage());

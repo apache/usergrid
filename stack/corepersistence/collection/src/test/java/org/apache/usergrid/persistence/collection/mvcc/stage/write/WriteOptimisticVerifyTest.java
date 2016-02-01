@@ -58,7 +58,7 @@ import static org.mockito.Mockito.when;
 @UseModules( TestCollectionModule.class )
 public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
-    private static final Logger log = LoggerFactory.getLogger(WriteOptimisticVerifyTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(WriteOptimisticVerifyTest.class);
 
     @Override
     protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
@@ -150,7 +150,7 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
             newStage.call( new CollectionIoEvent<>(scope, mvccEntity));
 
         } catch (WriteOptimisticVerifyException e) {
-            log.info("Error", e);
+            logger.info("Error", e);
             conflictDetected = true;
             rollbackAction.call( e );
         }

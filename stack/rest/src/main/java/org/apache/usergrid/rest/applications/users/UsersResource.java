@@ -89,11 +89,11 @@ public class UsersResource extends ServiceResource {
     @Path("{itemName}")
     public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )
             throws Exception {
+
         if(logger.isDebugEnabled()){
             logger.debug( "ServiceResource.addNameParameter" );
             logger.debug( "Current segment is " + itemName.getPath() );
         }
-
 
         if ( itemName.getPath().startsWith( "{" ) ) {
             Query query = Query.fromJsonString( itemName.getPath() );

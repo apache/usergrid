@@ -243,7 +243,9 @@ public class UserResource extends AbstractContextResource {
                                              @FormParam( "recaptcha_challenge_field" ) String challenge,
                                              @FormParam( "recaptcha_response_field" ) String uresponse ) {
 
-        logger.debug("handlePasswordResetForm");
+        if (logger.isDebugEnabled()) {
+            logger.debug("handlePasswordResetForm");
+        }
 
         final boolean externalTokensEnabled =
                 !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
@@ -280,7 +282,7 @@ public class UserResource extends AbstractContextResource {
             }
 
             if ( !useReCaptcha() ) {
-                management.startAdminUserPasswordResetFlow( user );
+                management.startAdminUserPasswordResetFlow( null, user );
                 return handleViewable( "resetpw_email_success", this );
             }
 
@@ -291,7 +293,7 @@ public class UserResource extends AbstractContextResource {
                     reCaptcha.checkAnswer( httpServletRequest.getRemoteAddr(), challenge, uresponse );
 
             if ( reCaptchaResponse.isValid() ) {
-                management.startAdminUserPasswordResetFlow( user );
+                management.startAdminUserPasswordResetFlow( null, user );
                 return handleViewable( "resetpw_email_success", this );
             }
             else {
@@ -404,7 +406,7 @@ public class UserResource extends AbstractContextResource {
 
         ApiResponse response = createApiResponse();
 
-        management.startAdminUserActivationFlow( user );
+        management.startAdminUserActivationFlow( null, user );
 
         response.setAction( "reactivate user" );
         return response;

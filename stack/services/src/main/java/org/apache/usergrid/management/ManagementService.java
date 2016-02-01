@@ -41,332 +41,322 @@ import rx.Observable;
 
 public interface ManagementService {
 
-    public void activateAdminUser( UUID userId ) throws Exception;
+	void activateAdminUser( UUID userId ) throws Exception;
 
-    public void activateOrganization( OrganizationInfo organization ) throws Exception;
+	void activateOrganization( OrganizationInfo organization ) throws Exception;
 
-    public void addAdminUserToOrganization( UserInfo user, OrganizationInfo organization, boolean email )
-            throws Exception;
+	void addAdminUserToOrganization( UserInfo user, OrganizationInfo organization, boolean email )
+			throws Exception;
 
-    public AccessInfo authorizeClient( String clientId, String clientSecret, long ttl ) throws Exception;
+	AccessInfo authorizeClient( String clientId, String clientSecret, long ttl ) throws Exception;
 
-    public ActivationState handleConfirmationTokenForAdminUser( UUID userId, String token ) throws Exception;
+	ActivationState handleConfirmationTokenForAdminUser( UUID userId, String token ) throws Exception;
 
-    public ActivationState handleActivationTokenForAdminUser( UUID userId, String token ) throws Exception;
+	ActivationState handleActivationTokenForAdminUser( UUID userId, String token ) throws Exception;
 
-    public ActivationState handleActivationTokenForOrganization( UUID organizationId, String token ) throws Exception;
+	ActivationState handleActivationTokenForOrganization( UUID organizationId, String token ) throws Exception;
 
-    public boolean checkPasswordResetTokenForAdminUser( UUID userId, String token ) throws Exception;
+	boolean checkPasswordResetTokenForAdminUser( UUID userId, String token ) throws Exception;
 
-    public UserInfo createAdminUser( String username, String name, String email, String password, boolean activated,
-                                     boolean disabled ) throws Exception;
+	UserInfo createAdminUser( UUID organizationId, String username, String name, String email, String password,
+									 boolean activated, boolean disabled ) throws Exception;
 
-    public UserInfo createAdminUser( String username, String name, String email, String password, boolean activated,
-                                     boolean disabled, Map<String, Object> userProperties ) throws Exception;
+	UserInfo createAdminUser( UUID organizationId, String username, String name, String email, String password,
+									 boolean activated, boolean disabled, Map<String, Object> userProperties ) throws Exception;
 
-    public UserInfo createAdminFrom( User user, String password ) throws Exception;
+	UserInfo createAdminFrom( UUID organizationId, User user, String password ) throws Exception;
 
-    public UserInfo createAdminFromPrexistingPassword( User user, CredentialsInfo ci ) throws Exception;
+	UserInfo createAdminFromPrexistingPassword( UUID organizationId, User user, CredentialsInfo ci ) throws Exception;
 
-    public ApplicationInfo createApplication( UUID organizationId, String applicationName ) throws Exception;
-    public ApplicationInfo createApplication( UUID organizationId, String applicationName,
-                                              Map<String, Object> properties ) throws Exception;
-    public ApplicationInfo createApplication( UUID organizationId, String applicationName, UUID applicationId,
-                                              Map<String, Object> properties ) throws Exception;
+	ApplicationInfo createApplication( UUID organizationId, String applicationName ) throws Exception;
+	ApplicationInfo createApplication( UUID organizationId, String applicationName,
+											  Map<String, Object> properties ) throws Exception;
+	ApplicationInfo createApplication(UUID organizationId, String applicationName, UUID applicationId,
+											 Map<String, Object> properties, boolean forMigration) throws Exception;
 
-    public OrganizationInfo createOrganization(String organizationName, UserInfo user, boolean activated)
-            throws Exception;
+	OrganizationInfo createOrganization(String organizationName, UserInfo user, boolean activated)
+			throws Exception;
 
-    public OrganizationInfo createOrganization(UUID orgUuid, String organizationName, UserInfo user, boolean activated)
-            throws Exception;
+	OrganizationInfo createOrganization(UUID orgUuid, String organizationName, UserInfo user, boolean activated)
+			throws Exception;
 
-    public OrganizationOwnerInfo createOwnerAndOrganization( String organizationName, String username, String name,
-                                                             String email, String password ) throws Exception;
+	OrganizationOwnerInfo createOwnerAndOrganization( String organizationName, String username, String name,
+															 String email, String password ) throws Exception;
 
-    public OrganizationOwnerInfo createOwnerAndOrganization( String organizationName, String username, String name,
-                                                             String email, String password, boolean activated,
-                                                             boolean disabled ) throws Exception;
+	OrganizationOwnerInfo createOwnerAndOrganization( String organizationName, String username, String name,
+															 String email, String password, boolean activated,
+															 boolean disabled ) throws Exception;
 
-    public OrganizationOwnerInfo createOwnerAndOrganization( String organizationName, String username, String name,
-                                                             String email, String password, boolean activated,
-                                                             boolean disabled, Map<String, Object> userProperties,
-                                                             Map<String, Object> properties ) throws Exception;
+	OrganizationOwnerInfo createOwnerAndOrganization( String organizationName, String username, String name,
+															 String email, String password, boolean activated,
+															 boolean disabled, Map<String, Object> userProperties,
+															 Map<String, Object> properties ) throws Exception;
 
-    public void updateOrganization( OrganizationInfo organizationInfo ) throws Exception;
+	void updateOrganization( OrganizationInfo organizationInfo ) throws Exception;
 
-    /** Deactivate the user and return it's current state */
-    public User deactivateUser( UUID applicationId, UUID userId ) throws Exception;
+	/** Deactivate the user and return it's current state */
+	User deactivateUser( UUID applicationId, UUID userId ) throws Exception;
 
-    public void deactivateOrganization( UUID organizationId ) throws Exception;
+	void deactivateOrganization( UUID organizationId ) throws Exception;
 
-    public UUID addApplicationToOrganization(UUID organizationId, Entity appInfo) throws Exception;
+	UUID addApplicationToOrganization(UUID organizationId, Entity appInfo) throws Exception;
 
-    public void deleteOrganizationApplication( UUID organizationId, UUID applicationId ) throws Exception;
+	void deleteOrganizationApplication( UUID organizationId, UUID applicationId ) throws Exception;
 
-    public void disableAdminUser( UUID userId ) throws Exception;
+	void disableAdminUser( UUID userId ) throws Exception;
 
-    public void disableOrganization( UUID organizationId ) throws Exception;
+	void disableOrganization( UUID organizationId ) throws Exception;
 
-    public void enableAdminUser( UUID userId ) throws Exception;
+	void enableAdminUser( UUID userId ) throws Exception;
 
-    public void enableOrganization( UUID organizationId ) throws Exception;
+	void enableOrganization( UUID organizationId ) throws Exception;
 
-    public UserInfo findAdminUser( String identifier );
+	UserInfo findAdminUser( String identifier );
 
-    public String getAccessTokenForAdminUser( UUID userId, long duration ) throws Exception;
+	String getAccessTokenForAdminUser( UUID userId, long duration ) throws Exception;
 
    /** Revoke all active access tokens for this admin user */
-    public void revokeAccessTokensForAdminUser( UUID userId ) throws Exception;
+	void revokeAccessTokensForAdminUser( UUID userId ) throws Exception;
 
-    public void revokeAccessTokenForAdminUser( UUID userId, String token ) throws Exception;
+	void revokeAccessTokenForAdminUser( UUID userId, String token ) throws Exception;
 
-    public String getActivationTokenForAdminUser( UUID userId, long ttl ) throws Exception;
+	String getActivationTokenForAdminUser( UUID userId, long ttl, UUID organizationId ) throws Exception;
 
-    public String getConfirmationTokenForAdminUser( UUID userId, long ttl ) throws Exception;
+	String getConfirmationTokenForAdminUser( UUID userId, long ttl, UUID organizationId ) throws Exception;
 
-    public String getActivationTokenForOrganization( UUID organizationId, long ttl ) throws Exception;
+	String getActivationTokenForOrganization( UUID organizationId, long ttl ) throws Exception;
 
-    /** Import an Admin User token generated by some other system */
-    public void importTokenForAdminUser( UUID userId, String token, long ttl ) throws Exception;
+	/** Import an Admin User token generated by some other system */
+	void importTokenForAdminUser( UUID userId, String token, long ttl ) throws Exception;
 
-    public ServiceResults getAdminUserActivities( UserInfo user ) throws Exception;
+	ServiceResults getAdminUserActivities( UserInfo user ) throws Exception;
 
-    public ServiceResults getAdminUserActivity( UserInfo user ) throws Exception;
+	ServiceResults getAdminUserActivity( UserInfo user ) throws Exception;
 
-    public UserInfo getAdminUserByEmail( String email ) throws Exception;
+	UserInfo getAdminUserByEmail( String email ) throws Exception;
 
-    public UserInfo getAdminUserByIdentifier( Identifier id ) throws Exception;
+	UserInfo getAdminUserByIdentifier( Identifier id ) throws Exception;
 
-    public UserInfo getAdminUserByUsername( String username ) throws Exception;
+	UserInfo getAdminUserByUsername( String username ) throws Exception;
 
-    public Entity getAdminUserEntityByIdentifier( Identifier id ) throws Exception;
+	Entity getAdminUserEntityByIdentifier( Identifier id ) throws Exception;
 
-    public Entity getAdminUserEntityByUuid( UUID id ) throws Exception;
+	Entity getAdminUserEntityByUuid( UUID id ) throws Exception;
 
-    public Entity getAdminUserEntityFromAccessToken( String token ) throws Exception;
+	Entity getAdminUserEntityFromAccessToken( String token ) throws Exception;
 
-    public UserInfo getAdminUserInfoFromAccessToken( String token ) throws Exception;
+	UserInfo getAdminUserInfoFromAccessToken( String token ) throws Exception;
 
-    public Map<String, Object> getAdminUserOrganizationData( UserInfo user, boolean deep ) throws Exception;
+	Map<String, Object> getAdminUserOrganizationData( UserInfo user, boolean deep ) throws Exception;
 
-    public Map<String, Object> getAdminUserOrganizationData( UUID userId ) throws Exception;
+	Map<String, Object> getAdminUserOrganizationData( UUID userId ) throws Exception;
 
-    public List<UserInfo> getAdminUsersForOrganization( UUID organizationId ) throws Exception;
+	List<UserInfo> getAdminUsersForOrganization( UUID organizationId ) throws Exception;
 
-    public ApplicationInfo getApplicationInfo( String applicationName ) throws Exception;
+	ApplicationInfo getApplicationInfo( String applicationName ) throws Exception;
 
-    public ApplicationInfo getApplicationInfo( UUID applicationId ) throws Exception;
+	ApplicationInfo getApplicationInfo( UUID applicationId ) throws Exception;
 
-    ApplicationInfo getDeletedApplicationInfo(UUID applicationId) throws Exception;
+	ApplicationInfo getDeletedApplicationInfo(UUID applicationId) throws Exception;
 
-    public ApplicationInfo getApplicationInfo( Identifier id ) throws Exception;
+	ApplicationInfo getApplicationInfo( Identifier id ) throws Exception;
 
-    public ApplicationInfo getApplicationInfoFromAccessToken( String token ) throws Exception;
+	ApplicationInfo getApplicationInfoFromAccessToken( String token ) throws Exception;
 
-    public ServiceResults getApplicationMetadata( UUID applicationId ) throws Exception;
+	ServiceResults getApplicationMetadata( UUID applicationId ) throws Exception;
 
-    public BiMap<UUID, String> getApplicationsForOrganization( UUID organizationId ) throws Exception;
+	BiMap<UUID, String> getApplicationsForOrganization( UUID organizationId ) throws Exception;
 
-    public BiMap<UUID, String> getApplicationsForOrganizations( Set<UUID> organizationIds ) throws Exception;
+	BiMap<UUID, String> getApplicationsForOrganizations( Set<UUID> organizationIds ) throws Exception;
 
-    public String getClientIdForApplication( UUID applicationId );
+	String getClientIdForApplication( UUID applicationId );
 
-    public String getClientIdForOrganization( UUID organizationId );
+	String getClientIdForOrganization( UUID organizationId );
 
-    public String getClientSecretForApplication( UUID applicationId ) throws Exception;
+	String getClientSecretForApplication( UUID applicationId ) throws Exception;
 
-    public String getClientSecretForOrganization( UUID organizationId ) throws Exception;
+	String getClientSecretForOrganization( UUID organizationId ) throws Exception;
 
-    public ServiceResults getOrganizationActivity( OrganizationInfo organization ) throws Exception;
+	ServiceResults getOrganizationActivity( OrganizationInfo organization ) throws Exception;
 
-    public ServiceResults getOrganizationActivityForAdminUser( OrganizationInfo organization, UserInfo user )
-            throws Exception;
+	ServiceResults getOrganizationActivityForAdminUser( OrganizationInfo organization, UserInfo user )
+			throws Exception;
 
-    public OrganizationInfo getOrganizationByIdentifier( Identifier id ) throws Exception;
+	OrganizationInfo getOrganizationByIdentifier( Identifier id ) throws Exception;
 
-    public OrganizationInfo getOrganizationByName( String organizationName ) throws Exception;
+	OrganizationInfo getOrganizationByName( String organizationName ) throws Exception;
 
-    public OrganizationInfo getOrganizationByUuid( UUID id ) throws Exception;
+	OrganizationInfo getOrganizationByUuid( UUID id ) throws Exception;
 
-    public Map<String, Object> getOrganizationData( OrganizationInfo organization ) throws Exception;
+	Map<String, Object> getOrganizationData( OrganizationInfo organization ) throws Exception;
 
-    public OrganizationInfo getOrganizationForApplication( UUID applicationId ) throws Exception;
+	UUID getOrganizationIdForApplication( UUID applicationId ) throws Exception;
 
-    public OrganizationInfo getOrganizationInfoFromAccessToken( String token ) throws Exception;
+	OrganizationInfo getOrganizationForApplication( UUID applicationId ) throws Exception;
 
-    public BiMap<UUID, String> getOrganizations() throws Exception;
+	OrganizationInfo getOrganizationInfoFromAccessToken( String token ) throws Exception;
 
-    public BiMap<UUID, String> getOrganizationsForAdminUser( UUID userId ) throws Exception;
+	BiMap<UUID, String> getOrganizations() throws Exception;
 
-    public String getPasswordResetTokenForAdminUser( UUID userId, long ttl ) throws Exception;
+	BiMap<UUID, String> getOrganizationsForAdminUser( UUID userId ) throws Exception;
 
-    public UserInfo getAdminUserByUuid( UUID id ) throws Exception;
+	String getPasswordResetTokenForAdminUser( UUID userId, long ttl, UUID organizationId ) throws Exception;
 
-    public UUID importApplication( UUID organizationId, Application application ) throws Exception;
+	UserInfo getAdminUserByUuid( UUID id ) throws Exception;
 
-    public OrganizationInfo importOrganization( UUID organizationId, OrganizationInfo organizationInfo,
-                                                Map<String, Object> properties ) throws Exception;
+	UUID importApplication( UUID organizationId, Application application ) throws Exception;
 
-    public boolean isAdminUserActivated( UUID userId ) throws Exception;
+	OrganizationInfo importOrganization( UUID organizationId, OrganizationInfo organizationInfo,
+												Map<String, Object> properties ) throws Exception;
 
-    public boolean isAdminUserEnabled( UUID userId ) throws Exception;
+	boolean isAdminUserActivated( UUID userId ) throws Exception;
 
-    public boolean isOrganizationActivated( UUID organizationId ) throws Exception;
+	boolean isAdminUserEnabled( UUID userId ) throws Exception;
 
-    public boolean isOrganizationEnabled( UUID organizationId ) throws Exception;
+	boolean isOrganizationActivated( UUID organizationId ) throws Exception;
 
-    public boolean newAdminUsersNeedSysAdminApproval();
+	boolean isOrganizationEnabled( UUID organizationId ) throws Exception;
 
-    public boolean newAdminUsersRequireConfirmation();
+	boolean newAdminUsersNeedSysAdminApproval();
 
-    public String newClientSecretForApplication( UUID applicationId ) throws Exception;
+	boolean newAdminUsersRequireConfirmation();
 
-    public String newClientSecretForOrganization( UUID organizationId ) throws Exception;
+	String newClientSecretForApplication( UUID applicationId ) throws Exception;
 
-    public boolean newOrganizationsNeedSysAdminApproval();
+	String newClientSecretForOrganization( UUID organizationId ) throws Exception;
 
-    public void postOrganizationActivity( UUID organizationId, UserInfo user, String verb, EntityRef object,
-                                          String objectType, String objectName, String title, String content )
-            throws Exception;
+	boolean newOrganizationsNeedSysAdminApproval();
 
-    public void removeAdminUserFromOrganization( UUID userId, UUID organizationId ) throws Exception;
+	void postOrganizationActivity( UUID organizationId, UserInfo user, String verb, EntityRef object,
+										  String objectType, String objectName, String title, String content )
+			throws Exception;
 
-    public void removeOrganizationApplication( UUID organizationId, UUID applicationId ) throws Exception;
+	void removeAdminUserFromOrganization( UUID userId, UUID organizationId ) throws Exception;
 
-    public void startAdminUserActivationFlow( UserInfo user ) throws Exception;
+	void removeOrganizationApplication( UUID organizationId, UUID applicationId ) throws Exception;
 
-    public void sendAdminUserEmail( UserInfo user, String subject, String html ) throws Exception;
+	void startAdminUserActivationFlow( UUID organizationId, UserInfo user ) throws Exception;
 
-    public void startAdminUserPasswordResetFlow( UserInfo user ) throws Exception;
+	void sendAdminUserEmail( UserInfo user, String subject, String html ) throws Exception;
 
-    public void startOrganizationActivationFlow( OrganizationInfo organization ) throws Exception;
+	void startAdminUserPasswordResetFlow( UUID organizationId, UserInfo user ) throws Exception;
 
-    public void sendOrganizationEmail( OrganizationInfo organization, String subject, String html ) throws Exception;
+	void startOrganizationActivationFlow( OrganizationInfo organization ) throws Exception;
 
-    public void setAdminUserPassword( UUID userId, String newPassword ) throws Exception;
+	void sendOrganizationEmail( OrganizationInfo organization, String subject, String html ) throws Exception;
 
-    public void setAdminUserPassword( UUID userId, String oldPassword, String newPassword ) throws Exception;
+	void setAdminUserPassword( UUID userId, String newPassword ) throws Exception;
 
-    public void setup() throws Exception;
+	void setAdminUserPassword( UUID userId, String oldPassword, String newPassword ) throws Exception;
 
-    public UserInfo updateAdminUser( UserInfo user, String username, String name, String email,
-                                     Map<String, Object> json ) throws Exception;
+	void setup() throws Exception;
 
-    public boolean verifyAdminUserPassword( UUID userId, String password ) throws Exception;
+	UserInfo updateAdminUser( UserInfo user, String username, String name, String email,
+									 Map<String, Object> json ) throws Exception;
 
-    public UserInfo verifyAdminUserPasswordCredentials( String name, String password ) throws Exception;
+	boolean verifyAdminUserPassword( UUID userId, String password ) throws Exception;
 
-    public UserInfo verifyMongoCredentials( String name, String nonce, String key ) throws Exception;
+	UserInfo verifyAdminUserPasswordCredentials( String name, String password ) throws Exception;
 
-    public void activateAppUser( UUID applicationId, UUID userId ) throws Exception;
+	UserInfo verifyMongoCredentials( String name, String nonce, String key ) throws Exception;
 
-    public ActivationState handleActivationTokenForAppUser( UUID applicationId, UUID userId, String token )
-            throws Exception;
+	void activateAppUser( UUID applicationId, UUID userId ) throws Exception;
 
-    public ActivationState handleConfirmationTokenForAppUser( UUID applicationId, UUID userId, String token )
-            throws Exception;
+	ActivationState handleActivationTokenForAppUser( UUID applicationId, UUID userId, String token )
+			throws Exception;
 
-    public boolean checkPasswordResetTokenForAppUser( UUID applicationId, UUID userId, String token ) throws Exception;
+	ActivationState handleConfirmationTokenForAppUser( UUID applicationId, UUID userId, String token )
+			throws Exception;
 
-    public String getAccessTokenForAppUser( UUID applicationId, UUID userId, long duration ) throws Exception;
+	boolean checkPasswordResetTokenForAppUser( UUID applicationId, UUID userId, String token ) throws Exception;
 
-    public Long getLastAdminPasswordChange( UUID userId ) throws Exception;
+	String getAccessTokenForAppUser( UUID applicationId, UUID userId, long duration ) throws Exception;
 
-    /** Revoke all active access tokens for this admin user */
-    public void revokeAccessTokensForAppUser( UUID applicationId, UUID userId ) throws Exception;
+	Long getLastAdminPasswordChange( UUID userId ) throws Exception;
 
-    public void revokeAccessTokenForAppUser( String token ) throws Exception;
+	/** Revoke all active access tokens for this admin user */
+	void revokeAccessTokensForAppUser( UUID applicationId, UUID userId ) throws Exception;
 
-    public User getAppUserByIdentifier( UUID applicationId, Identifier identifier ) throws Exception;
+	void revokeAccessTokenForAppUser( String token ) throws Exception;
 
-    public void startAppUserPasswordResetFlow( UUID applicationId, User user ) throws Exception;
+	User getAppUserByIdentifier( UUID applicationId, Identifier identifier ) throws Exception;
 
-    public void startAppUserActivationFlow( UUID applicationId, User user ) throws Exception;
+	void startAppUserPasswordResetFlow( UUID applicationId, User user ) throws Exception;
 
-    public void setAppUserPassword( UUID applicationId, UUID userId, String newPassword ) throws Exception;
+	void startAppUserActivationFlow( UUID applicationId, User user ) throws Exception;
 
-    public void setAppUserPassword( UUID applicationId, UUID userId, String oldPassword, String newPassword )
-            throws Exception;
+	void setAppUserPassword( UUID applicationId, UUID userId, String newPassword ) throws Exception;
 
-    CredentialsInfo getAppUserCredentialsInfo( final UUID applicationId, final UUID userId ) throws Exception;
+	void setAppUserPassword( UUID applicationId, UUID userId, String oldPassword, String newPassword )
+			throws Exception;
 
-    /**
-     * Set the credentials info into the
-     * @param applicationId
-     * @param userId
-     * @param credentialsInfo
-     * @throws Exception
-     */
-    void  setAppUserCredentialsInfo( final UUID applicationId, final UUID userId, final CredentialsInfo credentialsInfo ) throws Exception;
+	CredentialsInfo getAppUserCredentialsInfo( final UUID applicationId, final UUID userId ) throws Exception;
 
+	void  setAppUserCredentialsInfo( final UUID applicationId, final UUID userId, final CredentialsInfo credentialsInfo ) throws Exception;
 
-    public User verifyAppUserPasswordCredentials( UUID applicationId, String name, String password ) throws Exception;
 
-    public UserInfo getAppUserFromAccessToken( String token ) throws Exception;
+	User verifyAppUserPasswordCredentials( UUID applicationId, String name, String password ) throws Exception;
 
-    public void setAppUserPin( UUID applicationId, UUID userId, String newPin ) throws Exception;
+	UserInfo getAppUserFromAccessToken( String token ) throws Exception;
 
-    public void sendAppUserPin( UUID applicationId, UUID userId ) throws Exception;
+	void setAppUserPin( UUID applicationId, UUID userId, String newPin ) throws Exception;
 
-    public User verifyAppUserPinCredentials( UUID applicationId, String name, String pin ) throws Exception;
+	void sendAppUserPin( UUID applicationId, UUID userId ) throws Exception;
 
-    public PrincipalCredentialsToken getPrincipalCredentialsTokenForClientCredentials( String clientId,
-                                                                                       String clientSecret )
-            throws Exception;
+	User verifyAppUserPinCredentials( UUID applicationId, String name, String pin ) throws Exception;
 
-    public void confirmAdminUser( UUID userId ) throws Exception;
+	PrincipalCredentialsToken getPrincipalCredentialsTokenForClientCredentials( String clientId,
+																					   String clientSecret )
+			throws Exception;
 
-    public void unconfirmAdminUser( UUID userId ) throws Exception;
+	void confirmAdminUser( UUID userId ) throws Exception;
 
-    public boolean isAdminUserConfirmed( UUID userId ) throws Exception;
+	void unconfirmAdminUser( UUID userId ) throws Exception;
 
-    public void countAdminUserAction( UserInfo user, String action ) throws Exception;
+	boolean isAdminUserConfirmed( UUID userId ) throws Exception;
 
-    public boolean newAppUsersNeedAdminApproval( UUID applicationId ) throws Exception;
+	void countAdminUserAction( UserInfo user, String action ) throws Exception;
 
-    public boolean newAppUsersRequireConfirmation( UUID applicationId ) throws Exception;
+	boolean newAppUsersNeedAdminApproval( UUID applicationId ) throws Exception;
 
-    public abstract void provisionSuperuser() throws Exception;
+	boolean newAppUsersRequireConfirmation( UUID applicationId ) throws Exception;
 
-    public void resetSuperUser(String username, String password, String email) throws Exception;
+	void provisionSuperuser() throws Exception;
 
-    public List<OrganizationInfo> getOrganizations( UUID startResult, int count ) throws Exception;
+	void resetSuperUser(String username, String password, String email) throws Exception;
 
-    /** Add the properties to the organization */
-    public void setOrganizationProps( UUID orgId, Map<String, Object> props ) throws Exception;
+	List<OrganizationInfo> getOrganizations( UUID startResult, int count ) throws Exception;
 
-    /** Get the organization properties, returns them in the group object */
-    public Group getOrganizationProps( UUID orgId ) throws Exception;
+	/** Add the properties to the organization */
+	void setOrganizationProps( UUID orgId, Map<String, Object> props ) throws Exception;
 
-    public Object registerAppWithAPM( OrganizationInfo orgInfo, ApplicationInfo appInfo ) throws Exception;
+	/** Get the organization properties, returns them in the group object */
+	Group getOrganizationProps( UUID orgId ) throws Exception;
 
-    /** For testing purposes only */
-    public Properties getProperties();
+	Object registerAppWithAPM( OrganizationInfo orgInfo, ApplicationInfo appInfo ) throws Exception;
 
-    public void deleteApplication(UUID applicationId) throws Exception;
+	/** For testing purposes only */
+	Properties getProperties();
 
-    public ApplicationInfo restoreApplication(UUID applicationId) throws Exception;
+	void deleteApplication(UUID applicationId) throws Exception;
 
-    long getApplicationSize(final UUID applicationId);
+	ApplicationInfo restoreApplication(UUID applicationId) throws Exception;
 
-    long getCollectionSize(final UUID applicationId, final String collectionName);
+	long getApplicationSize(final UUID applicationId);
 
-    Map<String,Long> getEachCollectionSize(final UUID applicationId);
+	long getCollectionSize(final UUID applicationId, final String collectionName);
 
-    public OrganizationConfig getOrganizationConfigByName( String organizationName ) throws Exception;
+	Map<String,Long> getEachCollectionSize(final UUID applicationId);
 
-    public OrganizationConfig getOrganizationConfigByUuid( UUID id ) throws Exception;
+	OrganizationConfig getOrganizationConfigDefaultsOnly();
 
-    public Map<String, Object> getOrganizationConfigData( OrganizationConfig organizationConfig ) throws Exception;
+	OrganizationConfig getOrganizationConfigByName( String organizationName ) throws Exception;
 
-    public OrganizationConfig getOrganizationConfigForApplication( UUID applicationId ) throws Exception;
+	OrganizationConfig getOrganizationConfigByUuid( UUID id ) throws Exception;
 
-    public void updateOrganizationConfig( OrganizationConfig organizationConfig ) throws Exception;
+	OrganizationConfig getOrganizationConfigForApplication( UUID applicationId ) throws Exception;
 
-    /**
-     * will delete all entities
-     * @param applicationId
-     * @return
-     */
-    Observable<Id> deleteAllEntities(final UUID applicationId,final int limit);
+	void updateOrganizationConfig( OrganizationConfig organizationConfig ) throws Exception;
+
+	Observable<Id> deleteAllEntities(final UUID applicationId,final int limit);
 }

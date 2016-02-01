@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -35,7 +34,7 @@ import static org.junit.Assert.assertNotNull;
 
 
 public class GeoQueryBooleanTest extends AbstractCoreIT {
-    private static final Logger log = LoggerFactory.getLogger( GeoQueryBooleanTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( GeoQueryBooleanTest.class );
 
 
     public GeoQueryBooleanTest() {
@@ -46,7 +45,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
     @Test
     public void testGeoQueryWithOr() throws Exception {
 
-        log.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
+        logger.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
 
 
         EntityManager em = app.getEntityManager();
@@ -110,7 +109,7 @@ public class GeoQueryBooleanTest extends AbstractCoreIT {
     @Test
     public void testGeoQueryWithNot() throws Exception {
 
-        log.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
+        logger.info( "GeoQueryBooleanTest.testGeoQueryWithOr" );
 
         EntityManager em = app.getEntityManager();
 

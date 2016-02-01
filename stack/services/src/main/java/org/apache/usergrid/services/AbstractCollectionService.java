@@ -152,9 +152,11 @@ public class AbstractCollectionService extends AbstractService {
         Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
 
         if ( entity == null ) {
+
             if (logger.isDebugEnabled()) {
                 logger.debug("miss on entityType: {} with name: {}", getEntityType(), name);
             }
+
             String msg = "Cannot find entity with name: "+name;
             throw new EntityNotFoundException( msg );
         }
@@ -244,7 +246,10 @@ public class AbstractCollectionService extends AbstractService {
             return getItemsByQuery( context, new Query() );
         }
 
-        logger.debug("Limiting collection to " + Query.DEFAULT_LIMIT);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Limiting collection to " + Query.DEFAULT_LIMIT);
+        }
+
         int count = Query.DEFAULT_LIMIT;
 
         Results r = em.getCollection( context.getOwner(), context.getCollectionName(),
@@ -350,11 +355,18 @@ public class AbstractCollectionService extends AbstractService {
         if ( context.getPayload().isBatch() ) {
             List<Entity> entities = new ArrayList<Entity>();
             List<Map<String, Object>> batch = context.getPayload().getBatchProperties();
-            logger.debug( "Attempting to batch create " + batch.size() + " entities in collection " + context
-                    .getCollectionName() );
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Attempting to batch create " + batch.size() + " entities in collection " + context
+                    .getCollectionName());
+            }
+
             int i = 1;
+
             for ( Map<String, Object> p : batch ) {
-                logger.debug( "Creating entity " + i + " in collection " + context.getCollectionName() );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Creating entity " + i + " in collection " + context.getCollectionName());
+                }
 
                 Entity item = null;
 
@@ -363,16 +375,20 @@ public class AbstractCollectionService extends AbstractService {
                             p );
                 }
                 catch ( Exception e ) {
-                    logger.debug( "Entity " + i + " unable to be created in collection " + context.getCollectionName(),
-                            e );
+                    // TODO should we not log this as error?
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Entity " + i + " unable to be created in collection " + context.getCollectionName(),
+                            e);
+                    }
 
                     i++;
                     continue;
                 }
-
-                logger.debug(
+                if (logger.isDebugEnabled()) {
+                    logger.debug(
                         "Entity " + i + " created in collection " + context.getCollectionName() + " with UUID " + item
-                                .getUuid() );
+                            .getUuid());
+                }
 
                 item = importEntity( context, item );
                 entities.add( item );

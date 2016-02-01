@@ -44,7 +44,7 @@ import static org.junit.Assert.*;
 
 public class CollectionsResourceIT extends AbstractRestIT {
 
-    private static Logger log = LoggerFactory.getLogger( CollectionsResourceIT.class );
+    private static final Logger log = LoggerFactory.getLogger( CollectionsResourceIT.class );
 
 
     /***

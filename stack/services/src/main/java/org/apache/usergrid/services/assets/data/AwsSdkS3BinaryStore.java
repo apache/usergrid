@@ -21,7 +21,6 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
@@ -35,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentialsProvider;
 import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
 import org.apache.usergrid.utils.StringUtils;
@@ -44,16 +42,11 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
-import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.glacier.model.ListMultipartUploadsResult;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
@@ -140,6 +133,9 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
 
         Boolean overSizeLimit = false;
 
+        EntityManager em = emf.getEntityManager( appId );
+
+
         if ( written < FIVE_MB ) { // total smaller than 5mb
 
             ObjectMetadata om = new ObjectMetadata();
@@ -156,6 +152,9 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
             if(md5sum != null)
                 fileMetadata.put( AssetUtils.CHECKSUM, md5sum );
             fileMetadata.put( AssetUtils.E_TAG, eTag );
+
+            em.update( entity );
+
         }
         else { // bigger than 5mb... dump 5 mb tmp files and upload from them
             written = 0; //reset written to 0, we still haven't wrote anything in fact
@@ -236,7 +235,6 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
             //check for flag here then abort.
             if(overSizeLimit) {
 
-                EntityManager em = emf.getEntityManager( appId );
                 AbortMultipartUploadRequest abortRequest =
                     new AbortMultipartUploadRequest( bucketName, uploadFileName, initResponse.getUploadId() );
 
@@ -262,7 +260,9 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
                     Thread.sleep( 1000 );
                     timesIterated--;
                     listResult = getS3Client().listMultipartUploads( listRequest );
-                    logger.debug( "Files that haven't been aborted are: ",listResult.getMultipartUploads().listIterator().toString() );
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Files that haven't been aborted are: ", listResult.getMultipartUploads().listIterator().toString());
+                    }
 
                 }
                 if ( timesIterated == 0 ){
@@ -280,6 +280,7 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
                 CompleteMultipartUploadResult amazonResult = getS3Client().completeMultipartUpload( request );
                 fileMetadata.put( AssetUtils.CONTENT_LENGTH, written );
                 fileMetadata.put( AssetUtils.E_TAG, amazonResult.getETag() );
+                em.update( entity );
             }
         }
     }

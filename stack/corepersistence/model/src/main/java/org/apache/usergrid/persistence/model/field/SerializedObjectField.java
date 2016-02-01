@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.model.field;
 /**
  * Classy class class.
  */
-public class SerializedObjectField extends AbstractField<String> {
+public final class SerializedObjectField extends AbstractField<String> {
     Class classinfo;
 
     public SerializedObjectField(String name, String value, Class classinfo) {
@@ -35,17 +35,17 @@ public class SerializedObjectField extends AbstractField<String> {
     }
 
     @Override
-    public String getValue() {
+    public final String getValue() {
         return value;
     }
 
-    public Class getClassinfo() {
+    public final Class getClassinfo() {
         return classinfo;
     }
 
 
     @Override
-    public FieldTypeName getTypeName() {
+    public final FieldTypeName getTypeName() {
         return FieldTypeName.SERIALIZED_OBJECT;
     }
 }

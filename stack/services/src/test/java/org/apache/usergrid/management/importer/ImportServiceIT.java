@@ -101,7 +101,7 @@ public class ImportServiceIT {
         }
 
         //creates sample test application
-        adminUser = setup.getMgmtSvc().createAdminUser(
+        adminUser = setup.getMgmtSvc().createAdminUser( null,
             username, username, username+"@test.com", username, false, false );
         organization = setup.getMgmtSvc().createOrganization( username, adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), username+"app" ).getId();
@@ -181,7 +181,7 @@ public class ImportServiceIT {
            // wait...
         }
 
-        logger.debug("\n\nImport the application\n\n");
+        logger.debug("Import the application\n\n");
 
         // import
         S3Import s3Import = new S3ImportImpl();
@@ -203,7 +203,9 @@ public class ImportServiceIT {
            // wait...
         }
 
-        logger.debug("\n\nVerify Import\n\n");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Verify Import");
+        }
 
         try {
             //checks if temp import files are created i.e. downloaded from S3
@@ -213,14 +215,19 @@ public class ImportServiceIT {
 
             // check if all collections in the application are updated
             for (String collectionName : collections) {
-                logger.debug("Checking collection {}", collectionName);
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Checking collection {}", collectionName);
+                }
 
                 Results collection = em.getCollection(applicationId, collectionName, null, Level.ALL_PROPERTIES);
 
                 for (Entity eachEntity : collection.getEntities() ) {
 
-                    logger.debug("Checking entity {} {}:{}",
-                        new Object[] { eachEntity.getName(), eachEntity.getType(), eachEntity.getUuid()} );
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Checking entity {} {}:{}",
+                            new Object[]{eachEntity.getName(), eachEntity.getType(), eachEntity.getUuid()});
+                    }
 
                     //check for dictionaries --> checking permissions in the dictionaries
                     EntityRef er;
