@@ -16,8 +16,6 @@
  */
 package org.apache.usergrid.services.notifications.impl;
 
-import com.clearspring.analytics.hash.MurmurHash;
-import com.clearspring.analytics.stream.frequency.CountMinSketch;
 import com.codahale.metrics.Meter;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.persistence.*;
@@ -114,7 +112,6 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 em.update(notification);
                 return;
             }
-            final CountMinSketch sketch = new CountMinSketch(0.0001,.99,7364181); //add probablistic counter to find dups
             final UUID appId = em.getApplication().getUuid();
             final Map<String,Object> payloads = notification.getPayloads();
 
@@ -132,15 +129,6 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                     for (EntityRef deviceRef : devicesRef) {
                         if (logger.isTraceEnabled()) {
                             logger.trace("notification {} starting to queue device {} ", notification.getUuid(), deviceRef.getUuid());
-                        }
-                        long hash = MurmurHash.hash(deviceRef.getUuid());
-                        if (sketch.estimateCount(hash) > 0) { //look for duplicates
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("Maybe Found duplicate device: {}", deviceRef.getUuid());
-                            }
-                            continue;
-                        } else {
-                            sketch.add(hash, 1);
                         }
                         String notifierId = null;
                         String notifierKey = null;
@@ -194,13 +182,10 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
             //process up to 10 concurrently
             Observable o = rx.Observable.create( new IteratorObservable<Entity>( iterator ) )
-
-                                        .flatMap(entity -> Observable.just(entity).map(entityListFunct)
-                                            .doOnError(throwable -> {
-                                                logger.error("Failed while writing",
-                                                    throwable);
-                                            })
-                                            , 10);
+                .distinct( entity -> entity.getUuid() )
+                .flatMap(entity ->
+                    Observable.just(entity).map(entityListFunct)
+                        .doOnError(throwable -> logger.error("Failed while writing", throwable)) , 10);
 
             o.toBlocking().lastOrDefault( null );
             if (logger.isTraceEnabled()) {
