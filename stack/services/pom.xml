@@ -56,9 +56,6 @@
                     <include>**/*.xml</include>
                 </includes>
             </resource>
-            <resource>
-                <directory>src/main/python</directory>
-            </resource>
         </resources>
         <testResources>
             <!-- the filtering causes corruption in the p12 files, so exclude them in filtering and copy without filtering -->
@@ -74,9 +71,6 @@
                 <excludes>
                     <exclude>**/*.p12</exclude>
                 </excludes>
-            </testResource>
-            <testResource>
-                <directory>src/main/python</directory>
             </testResource>
             <testResource>
                 <directory>src/test/resources</directory>
