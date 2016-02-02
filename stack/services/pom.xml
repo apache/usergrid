@@ -317,11 +317,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.python</groupId>
-            <artifactId>jython</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
         </dependency>
@@ -450,12 +445,6 @@
         <dependency>
             <groupId>io.apigee.gcm</groupId>
             <artifactId>gcm-server</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.clearspring.analytics</groupId>
-            <artifactId>stream</artifactId>
-            <version>2.7.0</version>
         </dependency>
 
         <dependency>

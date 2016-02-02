@@ -363,12 +363,10 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Entity create( UUID importId, String entityType, Map<String, Object> properties ) throws Exception {
 
-        UUID timestampUuid = importId != null ? importId : UUIDUtils.newTimeUUID();
-
         //Adding graphite metrics
         Timer.Context timeCassCreation = entCreateTimer.time();
 
-        Entity entity = batchCreate( entityType, null, properties, importId, timestampUuid );
+        Entity entity = batchCreate( entityType, null, properties, importId);
 
         timeCassCreation.stop();
         return entity;
@@ -380,7 +378,7 @@ public class CpEntityManager implements EntityManager {
         //Adding graphite metrics
         Timer.Context timeCassCreation = entCreateTimer.time();
 
-        Entity entity = batchCreate( id.getType(), null, properties, id.getUuid(), UUIDUtils.newTimeUUID() );
+        Entity entity = batchCreate( id.getType(), null, properties, id.getUuid());
 
         timeCassCreation.stop();
 
@@ -404,12 +402,10 @@ public class CpEntityManager implements EntityManager {
     public <A extends Entity> A create( String entityType, Class<A> entityClass,
             Map<String, Object> properties, UUID importId ) throws Exception {
 
-        UUID timestampUuid = importId != null ? importId : UUIDUtils.newTimeUUID();
-
         Timer.Context timeEntityCassCreation = entCreateBatchTimer.time();
 
 
-        A entity = batchCreate( entityType, entityClass, properties, importId, timestampUuid );
+        A entity = batchCreate( entityType, entityClass, properties, importId);
 
         //Adding graphite metrics
         timeEntityCassCreation.stop();
@@ -1657,7 +1653,7 @@ public class CpEntityManager implements EntityManager {
             String propertyName, UUID ownerId, Map<String, Object> additionalProperties ) throws Exception {
 
         UUID timestampUuid = UUIDUtils.newTimeUUID();
-        long timestamp = UUIDUtils.getUUIDLong( timestampUuid );
+        long timestamp = UUIDUtils.getTimestampInMicros( timestampUuid );
 
         Map<String, Object> properties = new TreeMap<>( CASE_INSENSITIVE_ORDER );
         properties.put( PROPERTY_TYPE, Role.ENTITY_TYPE );
@@ -1672,7 +1668,7 @@ public class CpEntityManager implements EntityManager {
         }
 
         UUID id = UUIDGenerator.newTimeUUID();
-        batchCreate( Role.ENTITY_TYPE, null, properties, id, timestampUuid );
+        batchCreate( Role.ENTITY_TYPE, null, properties, id);
 
         Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
         CassandraPersistenceUtils.addInsertToMutator( batch, ENTITY_DICTIONARIES,
@@ -2472,8 +2468,8 @@ public class CpEntityManager implements EntityManager {
 
 
     @Override
-    public <A extends Entity> A batchCreate( String entityType, Class<A> entityClass, Map<String, Object> properties,
-                                             UUID importId, UUID timestampUuid )
+    public <A extends Entity> A batchCreate(String entityType, Class<A> entityClass, Map<String, Object> properties,
+                                            UUID importId)
             throws Exception {
 
         String eType = Schema.normalizeEntityType( entityType );
@@ -2486,7 +2482,24 @@ public class CpEntityManager implements EntityManager {
             return null;
         }
 
-        long timestamp = UUIDUtils.getUUIDLong( timestampUuid );
+
+        long timestamp = UUIDUtils.getTimestampInMicros( UUIDUtils.newTimeUUID() );
+
+        // if the entity UUID is provided, attempt to get a time from the UUID or from it's created property
+        if ( importId != null ) {
+            long timestampFromImport = -1L;
+            if ( UUIDUtils.isTimeBased( importId ) ) {
+                timestampFromImport = UUIDUtils.getTimestampInMicros( importId );
+            }
+            else if ( properties.get( PROPERTY_CREATED ) != null ) {
+                // the entity property would be stored as milliseconds
+                timestampFromImport = getLong( properties.get( PROPERTY_CREATED ) ) * 1000;
+
+            }
+            if (timestampFromImport >= 0){
+                timestamp = timestampFromImport;
+            }
+        }
 
         UUID itemId = UUIDGenerator.newTimeUUID();
 
@@ -2497,17 +2510,10 @@ public class CpEntityManager implements EntityManager {
             itemId = importId;
         }
         if ( properties == null ) {
-            properties = new TreeMap<String, Object>( CASE_INSENSITIVE_ORDER );
+            properties = new TreeMap<>( CASE_INSENSITIVE_ORDER );
         }
 
-        if ( importId != null ) {
-            if ( UUIDUtils.isTimeBased( importId ) ) {
-                timestamp = UUIDUtils.getTimestampInMicros( importId );
-            }
-            else if ( properties.get( PROPERTY_CREATED ) != null ) {
-                timestamp = getLong( properties.get( PROPERTY_CREATED ) ) * 1000;
-            }
-        }
+
 
         if ( entityClass == null ) {
             entityClass = ( Class<A> ) Schema.getDefaultSchema().getEntityClass( entityType );
@@ -2715,7 +2721,7 @@ public class CpEntityManager implements EntityManager {
             boolean removeFromDictionary, UUID timestampUuid )
             throws Exception {
 
-        long timestamp = UUIDUtils.getUUIDLong( timestampUuid );
+        long timestamp = UUIDUtils.getTimestampInMicros( timestampUuid );
 
         // dictionaryName = dictionaryName.toLowerCase();
         if ( elementCoValue == null ) {

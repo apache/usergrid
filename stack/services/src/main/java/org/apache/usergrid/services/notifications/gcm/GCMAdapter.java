@@ -16,7 +16,6 @@
  */
 package org.apache.usergrid.services.notifications.gcm;
 
-import com.clearspring.analytics.hash.MurmurHash;
 import com.google.android.gcm.server.*;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
@@ -61,7 +60,7 @@ public class GCMAdapter implements ProviderAdapter {
     public void testConnection() throws Exception {
         Sender sender = new Sender(notifier.getApiKey());
         Message message = new Message.Builder().addData("registration_id", "").build();
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
         ids.add("device_token");
         try {
             MulticastResult result = sender.send(message, ids, 1);
@@ -103,11 +102,14 @@ public class GCMAdapter implements ProviderAdapter {
 
     private Batch getBatch( Map<String, Object> payload) {
         synchronized (this) {
-            long hash = MurmurHash.hash64(payload);
-            Batch batch = batches.get(hash);
-            if (batch == null && payload != null) {
-                batch = new Batch(notifier, payload);
-                batches.put(hash, batch);
+            Batch batch = new Batch(notifier,null);
+            if( payload != null ) {
+                long hash = payload.hashCode(); // assume there won't be collisions in our amount of concurrency
+                batch = batches.get(hash);
+                if (batch == null) {
+                    batch = new Batch(notifier, payload);
+                    batches.put(hash, batch);
+                }
             }
             return batch;
         }
@@ -188,13 +190,13 @@ public class GCMAdapter implements ProviderAdapter {
         private Map payload;
         private List<String> ids;
         private List<TaskTracker> trackers;
-        private Map<String, Date> inactiveDevices = new HashMap<String, Date>();
+        private Map<String, Date> inactiveDevices = new HashMap<>();
 
         Batch(Notifier notifier, Map<String,Object> payload) {
             this.notifier = notifier;
             this.payload = payload;
-            this.ids = new ArrayList<String>();
-            this.trackers = new ArrayList<TaskTracker>();
+            this.ids = new ArrayList<>();
+            this.trackers = new ArrayList<>();
         }
 
         synchronized Map<String, Date> getAndClearInactiveDevices() {
@@ -262,7 +264,7 @@ public class GCMAdapter implements ProviderAdapter {
                         this.trackers.clear();
 
                         return;
-                        
+
                     }else {
                         throw new ConnectionException(e.getMessage(), e);
                     }
