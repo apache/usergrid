@@ -44,20 +44,26 @@ public class DevicesService extends AbstractCollectionService {
 
     public DevicesService() {
         super();
-        logger.debug( "/devices" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("/devices");
+        }
     }
 
 
     @Override
     public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception {
-        logger.debug("Registering device {}", id);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Registering device {}", id);
+        }
         return super.putItemById( context, id );
     }
 
 
     @Override
     public ServiceResults postItemById( ServiceContext context, UUID id ) throws Exception {
-        logger.info("Attempting to connect an entity to device {}", id);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Attempting to connect an entity to device {}", id);
+        }
         return super.postItemById( context, id );
     }
 

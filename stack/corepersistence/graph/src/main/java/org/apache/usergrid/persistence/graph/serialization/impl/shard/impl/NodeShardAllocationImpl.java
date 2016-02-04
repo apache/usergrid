@@ -37,7 +37,6 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEd
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupCompaction;
@@ -58,12 +57,11 @@ import com.netflix.astyanax.util.TimeUUIDUtils;
 public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
-    private static final Logger LOG = LoggerFactory.getLogger( NodeShardAllocationImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( NodeShardAllocationImpl.class );
 
     private final EdgeShardSerialization edgeShardSerialization;
     private final EdgeColumnFamilies edgeColumnFamilies;
     private final ShardedEdgeSerialization shardedEdgeSerialization;
-    private final NodeShardApproximation nodeShardApproximation;
     private final TimeService timeService;
     private final GraphFig graphFig;
     private final ShardGroupCompaction shardGroupCompaction;
@@ -72,13 +70,11 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     @Inject
     public NodeShardAllocationImpl( final EdgeShardSerialization edgeShardSerialization,
                                     final EdgeColumnFamilies edgeColumnFamilies,
-                                    final ShardedEdgeSerialization shardedEdgeSerialization,
-                                    final NodeShardApproximation nodeShardApproximation, final TimeService timeService,
+                                    final ShardedEdgeSerialization shardedEdgeSerialization, final TimeService timeService,
                                     final GraphFig graphFig, final ShardGroupCompaction shardGroupCompaction ) {
         this.edgeShardSerialization = edgeShardSerialization;
         this.edgeColumnFamilies = edgeColumnFamilies;
         this.shardedEdgeSerialization = shardedEdgeSerialization;
-        this.nodeShardApproximation = nodeShardApproximation;
         this.timeService = timeService;
         this.graphFig = graphFig;
         this.shardGroupCompaction = shardGroupCompaction;
@@ -142,11 +138,13 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * Nothing to do, it's been created very recently, we don't create a new one
          */
         if ( shardEntryGroup.isCompactionPending() ) {
+            if (logger.isTraceEnabled()) logger.trace( "Shard entry group {} is compacting, not auditing", shardEntryGroup );
             return false;
         }
 
         //we can't allocate, we have more than 1 write shard currently.  We need to compact first
         if ( shardEntryGroup.entrySize() != 1 ) {
+            if (logger.isTraceEnabled()) logger.trace( "Shard entry group {} does not have 1 entry, not allocating", shardEntryGroup );
             return false;
         }
 
@@ -155,9 +153,12 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * Check the min shard in our system
          */
         final Shard shard = shardEntryGroup.getMinShard();
+        final long minTime = getMinTime();
 
 
-        if ( shard.getCreatedTime() >= getMinTime() ) {
+
+        if ( shard.getCreatedTime() >= minTime ) {
+            if (logger.isTraceEnabled()) logger.trace( "Shard entry group {}  and shard {} is before the minimum created time of {}.  Not allocating.does not have 1 entry, not allocating", shardEntryGroup, shard, minTime );
             return false;
         }
 
@@ -166,18 +167,11 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * Check out if we have a count for our shard allocation
          */
 
-        final long count = nodeShardApproximation.getCount( scope, shard, directedEdgeMeta );
+
 
         final long shardSize = graphFig.getShardSize();
 
 
-        if ( count < shardSize ) {
-            return false;
-        }
-
-        if ( LOG.isDebugEnabled() ) {
-            LOG.debug( "Count of {} has exceeded shard config of {} will begin compacting", count, shardSize );
-        }
 
         /**
          * We want to allocate a new shard as close to the max value as possible.  This way if we're filling up a
@@ -205,8 +199,8 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
         if ( !edges.hasNext() ) {
-            LOG.warn(
-                "Tried to allocate a new shard for edge meta data {}, " + "but no max value could be found in that row",
+            if (logger.isTraceEnabled()) logger.trace(
+                "Tried to allocate a new shard for edge meta data {}, but no max value could be found in that row",
                 directedEdgeMeta );
             return false;
         }
@@ -234,10 +228,10 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
         /**
-         * Sanity check in case our counters become severely out of sync with our edge state in cassandra.
+         * Sanity check in case we audit before we have a full shard
          */
         if ( marked == null ) {
-            LOG.warn( "Incorrect shard count for shard group {}", shardEntryGroup );
+            if (logger.isTraceEnabled()) logger.trace( "Shard {} in shard group {} not full, not splitting",  shard, shardEntryGroup );
             return false;
         }
 
@@ -245,7 +239,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         final Shard newShard = new Shard( marked.getTimestamp(), createTimestamp, false );
 
-        LOG.info( "Allocating new shard {} for edge meta {}", newShard, directedEdgeMeta );
+        logger.info( "Allocating new shard {} for edge meta {}", newShard, directedEdgeMeta );
 
         final MutationBatch batch = this.edgeShardSerialization.writeShardMeta( scope, newShard, directedEdgeMeta );
 
@@ -264,7 +258,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     @Override
     public long getMinTime() {
 
-        final long minimumAllowed = 2 * graphFig.getShardCacheTimeout();
+        final long minimumAllowed = ( long ) (2.5 * graphFig.getShardCacheTimeout());
 
         final long minDelta = graphFig.getShardMinDelta();
 
@@ -286,7 +280,6 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     private boolean isNewNode( DirectedEdgeMeta directedEdgeMeta ) {
 
 
-        //TODO: TN this is broken....
         //The timeout is in milliseconds.  Time for a time uuid is 1/10000 of a milli, so we need to get the units
         // correct
         final long timeoutDelta = graphFig.getShardCacheTimeout();

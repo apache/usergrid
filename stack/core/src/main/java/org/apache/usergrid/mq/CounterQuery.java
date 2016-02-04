@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.usergrid.mq.Query.CounterFilterPredicate;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.utils.JsonUtils;
@@ -35,8 +33,6 @@ import static org.apache.usergrid.utils.MapUtils.toMapList;
 
 
 public class CounterQuery {
-
-    public static final Logger logger = LoggerFactory.getLogger( CounterQuery.class );
 
     public static final int DEFAULT_MAX_RESULTS = 10;
 

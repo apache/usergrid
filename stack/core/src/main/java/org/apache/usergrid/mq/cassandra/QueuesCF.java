@@ -31,7 +31,7 @@ import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtil
 
 public enum QueuesCF implements CFEnum {
 
-    MESSAGE_PROPERTIES( "Entity_Properties", "BytesType", false ),
+    MESSAGE_PROPERTIES( "Entity_Properties", "BytesType" ),
 
     QUEUE_PROPERTIES( "Queue_Properties", "BytesType" ),
 

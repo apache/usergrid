@@ -129,7 +129,9 @@ public class OrganizationResource extends AbstractContextResource {
     public ApplicationResource getApplicationByName( @PathParam("applicationName") String applicationName )
             throws Exception {
 
-        logger.debug("getApplicationByName: " + applicationName );
+        if (logger.isTraceEnabled()) {
+            logger.trace("getApplicationByName: {}", applicationName);
+        }
 
         if ( "options".equalsIgnoreCase( request.getMethod() ) ) {
             throw new NoOpException();
@@ -144,7 +146,7 @@ public class OrganizationResource extends AbstractContextResource {
             UUID applicationId = UUIDUtils.tryExtractUUID( applicationName );
 
             if ( applicationId == null ) {
-                throw new OrganizationApplicationNotFoundException( orgAppName, uriInfo, properties );
+                throw new OrganizationApplicationNotFoundException( orgAppName, uriInfo, properties, management );
             }else{
                 optionalAppId = Optional.fromNullable(applicationId);
             }

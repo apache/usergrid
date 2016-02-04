@@ -135,7 +135,9 @@ public class OrganizationsResource extends AbstractContextResource {
                                             @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
 
-        logger.debug("newOrganization");
+        if (logger.isTraceEnabled()) {
+            logger.trace("newOrganization");
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "new organization" );
@@ -172,7 +174,9 @@ public class OrganizationsResource extends AbstractContextResource {
                                                     @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
 
-        logger.debug( "New organization: {}", organizationNameForm );
+        if (logger.isTraceEnabled()) {
+            logger.trace("New organization: {}", organizationNameForm);
+        }
 
         String organizationName = organizationNameForm != null ? organizationNameForm : organizationNameQuery;
         String username = usernameForm != null ? usernameForm : usernameQuery;
@@ -205,7 +209,9 @@ public class OrganizationsResource extends AbstractContextResource {
         Preconditions.checkArgument(
             StringUtils.isNotBlank( organizationName ), "The organization parameter was missing" );
 
-        logger.debug( "New organization: {}", organizationName );
+        if (logger.isDebugEnabled()) {
+            logger.debug("New organization: {}", organizationName);
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "new organization" );

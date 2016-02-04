@@ -17,6 +17,19 @@
 package org.apache.usergrid.tools;
 
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.services.*;
+import org.apache.usergrid.utils.HttpUtils;
+import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.utils.UUIDUtils;
+import org.codehaus.jackson.JsonFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -24,26 +37,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import org.codehaus.jackson.JsonFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.services.ServiceAction;
-import org.apache.usergrid.services.ServiceManager;
-import org.apache.usergrid.services.ServiceParameter;
-import org.apache.usergrid.services.ServicePayload;
-import org.apache.usergrid.services.ServiceRequest;
-import org.apache.usergrid.services.ServiceResults;
-import org.apache.usergrid.utils.HttpUtils;
-import org.apache.usergrid.utils.JsonUtils;
-import org.apache.usergrid.utils.UUIDUtils;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.usergrid.persistence.index.exceptions.QueryParseException;
 
 
 public class Cli extends ToolBase {
@@ -79,7 +72,7 @@ public class Cli extends ToolBase {
     }
 
 
-    public void handleInput() throws QueryParseException {
+    public void handleInput() throws Exception {
         BufferedReader d = new BufferedReader( new InputStreamReader( System.in ) );
 
         UUID applicationId = null;

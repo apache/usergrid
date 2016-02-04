@@ -23,9 +23,11 @@ package org.apache.usergrid.corepersistence.index;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.usergrid.ExperimentalTest;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import org.junit.experimental.categories.Category;
 import rx.Observable;
 import rx.Subscription;
 import rx.observables.ConnectableObservable;
@@ -41,6 +43,7 @@ import static org.junit.Assert.assertTrue;
 public class RxTest {
 
     @Test
+    @Category(ExperimentalTest.class )
     public void testPublish() throws InterruptedException {
 
         final int count = 10;
@@ -63,7 +66,7 @@ public class RxTest {
 
 
     @Test
-    @Ignore("This seems like it should work, yet blocks forever")
+    @Category(ExperimentalTest.class )
     public void testConnectableObserver() throws InterruptedException {
 
         final int count = 10;

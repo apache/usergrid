@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.inject.Injector;
-import org.apache.usergrid.corepersistence.CpSetup;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +55,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 public class JobSchedulerService extends AbstractScheduledService {
     protected static final long DEFAULT_DELAY = 1000;
 
-    private static final Logger LOG = LoggerFactory.getLogger( JobSchedulerService.class );
+    private static final Logger logger = LoggerFactory.getLogger( JobSchedulerService.class );
 
     private long interval = DEFAULT_DELAY;
     private int workerSize = 1;
@@ -94,7 +93,7 @@ public class JobSchedulerService extends AbstractScheduledService {
         failCounter = metricsFactory.getCounter( JobSchedulerService.class, "scheduler.failed_jobs" );
 
         try {
-            LOG.info( "Running one check iteration ..." );
+            logger.info( "Running one check iteration ..." );
             List<JobDescriptor> activeJobs;
 
             // run until there are no more active jobs
@@ -102,8 +101,8 @@ public class JobSchedulerService extends AbstractScheduledService {
 
                 // get the semaphore if we can. This means we have space for at least 1
                 // job
-                if ( LOG.isDebugEnabled() ) {
-                    LOG.debug( "About to acquire semaphore.  Capacity is {}", capacitySemaphore.availablePermits() );
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug( "About to acquire semaphore.  Capacity is {}", capacitySemaphore.availablePermits() );
                 }
 
                 capacitySemaphore.acquire();
@@ -113,25 +112,31 @@ public class JobSchedulerService extends AbstractScheduledService {
 
                 int capacity = capacitySemaphore.availablePermits();
 
-                LOG.debug( "Capacity is {}", capacity );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Capacity is {}", capacity);
+                }
 
                 activeJobs = jobAccessor.getJobs( capacity );
 
                 // nothing to do, we don't have any jobs to run
                 if ( activeJobs.size() == 0 ) {
-                    LOG.debug( "No jobs returned. Exiting run loop" );
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("No jobs returned. Exiting run loop");
+                    }
                     return;
                 }
 
                 for ( JobDescriptor jd : activeJobs ) {
-                    LOG.info( "Submitting work for {}", jd );
+                    logger.info( "Submitting work for {}", jd );
                     submitWork( jd );
-                    LOG.info( "Work submitted for {}", jd );
+                    logger.info( "Work submitted for {}", jd );
                 }
             }
         }
         catch ( Throwable t ) {
-            LOG.debug( "Scheduler run failed, error is", t );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Scheduler run failed, error is", t);
+            }
         }
     }
 
@@ -157,7 +162,7 @@ public class JobSchedulerService extends AbstractScheduledService {
             job = jobFactory.jobsFrom( jobDescriptor );
         }
         catch ( JobNotFoundException e ) {
-            LOG.error( "Could not create jobs", e );
+            logger.error( "Could not create jobs", e );
             return;
         }
 
@@ -179,7 +184,7 @@ public class JobSchedulerService extends AbstractScheduledService {
             capacitySemaphore.acquire();
         }
         catch ( InterruptedException e ) {
-            LOG.error( "Unable to acquire semaphore capacity before submitting job", e );
+            logger.error( "Unable to acquire semaphore capacity before submitting job", e );
             //just return, they'll get picked up again later
             return;
         }
@@ -192,7 +197,9 @@ public class JobSchedulerService extends AbstractScheduledService {
             @Override
             public Void call() throws Exception {
 
-                LOG.debug( "Starting the job with job id {}", execution.getJobId() );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Starting the job with job id {}", execution.getJobId());
+                }
                 runCounter.inc();
 
                 execution.start( maxFailCount );
@@ -208,7 +215,7 @@ public class JobSchedulerService extends AbstractScheduledService {
                     catch ( Exception t ) {
                         //we purposefully swallow all exceptions here, we don't want it to effect the outcome
                         //of finally popping this job from the queue
-                        LOG.error( "Unable to invoke dead event on job", t );
+                        logger.error( "Unable to invoke dead event on job", t );
                     }
 
                     return null;
@@ -219,7 +226,7 @@ public class JobSchedulerService extends AbstractScheduledService {
                 // TODO wrap and throw specifically typed exception for onFailure,
                 // needs jobId
 
-                LOG.info( "Starting job {} with execution data {}", job, execution );
+                logger.info( "Starting job {} with execution data {}", job, execution );
 
                 job.execute( execution );
 
@@ -239,7 +246,9 @@ public class JobSchedulerService extends AbstractScheduledService {
                  * Release semaphore first in case there are other problems with communicating with Cassandra
                  */
 
-                LOG.debug( "Job succeeded with the job id {}", execution.getJobId() );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Job succeeded with the job id {}", execution.getJobId());
+                }
                 capacitySemaphore.release();
                 timer.stop();
                 runCounter.dec();
@@ -248,7 +257,7 @@ public class JobSchedulerService extends AbstractScheduledService {
 
                 //TODO, refactor into the execution itself for checking if done
                 if ( execution.getStatus() == Status.IN_PROGRESS ) {
-                    LOG.info( "Successful completion of bulkJob {}", execution );
+                    logger.info( "Successful completion of bulkJob {}", execution );
                     execution.completed();
                 }
 
@@ -267,14 +276,14 @@ public class JobSchedulerService extends AbstractScheduledService {
                 /**
                  * Release semaphore first in case there are other problems with communicating with Cassandra
                  */
-                LOG.error( "Job failed with the job id {}", execution.getJobId() );
+                logger.error( "Job failed with the job id {}", execution.getJobId() );
                 capacitySemaphore.release();
                 timer.stop();
                 runCounter.dec();
                 failCounter.inc();
 
 
-                LOG.error( "Failed execution for bulkJob", throwable );
+                logger.error( "Failed execution for bulkJob", throwable );
                 // mark it as failed
                 if ( execution.getStatus() == Status.IN_PROGRESS ) {
                     execution.failed();
@@ -364,11 +373,11 @@ public class JobSchedulerService extends AbstractScheduledService {
                 .listeningDecorator( Executors.newScheduledThreadPool( workerSize, JobThreadFactory.INSTANCE ) );
         capacitySemaphore = new Semaphore( workerSize );
 
-        LOG.info( "Starting executor pool.  Capacity is {}", workerSize );
+        logger.info( "Starting executor pool.  Capacity is {}", workerSize );
 
         super.startUp();
 
-        LOG.info( "Job Scheduler started" );
+        logger.info( "Job Scheduler started" );
     }
 
 
@@ -379,11 +388,11 @@ public class JobSchedulerService extends AbstractScheduledService {
      */
     @Override
     protected void shutDown() throws Exception {
-        LOG.info( "Shutting down job scheduler" );
+        logger.info( "Shutting down job scheduler" );
 
         service.shutdown();
 
-        LOG.info( "Job scheduler shut down" );
+        logger.info( "Job scheduler shut down" );
         super.shutDown();
     }
 

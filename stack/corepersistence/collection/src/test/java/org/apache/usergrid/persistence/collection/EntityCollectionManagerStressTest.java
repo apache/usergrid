@@ -21,9 +21,10 @@ package org.apache.usergrid.persistence.collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Ignore;
+import org.apache.usergrid.StressTest;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,15 +51,15 @@ import static org.junit.Assert.assertNotNull;
 
 @RunWith(ITRunner.class)
 @UseModules(TestCollectionModule.class)
-@Ignore("Stress test should not be run in embedded mode")
+@Category(StressTest.class)
 public class EntityCollectionManagerStressTest {
-    private static final Logger log = LoggerFactory.getLogger(
+    private static final Logger logger = LoggerFactory.getLogger(
             EntityCollectionManagerStressTest.class );
 
     @Inject
     private EntityCollectionManagerFactory factory;
 
-      @Inject
+    @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
@@ -88,11 +89,11 @@ public class EntityCollectionManagerStressTest {
             ids.add(returned.getId());
 
             if ( i % 1000 == 0 ) {
-                log.info("   Wrote: " + i);
+                logger.info("   Wrote: " + i);
             }
         }
         timer.stop();
-        log.info( "Total time to write {} entries {}ms", limit, timer.getTime());
+        logger.info( "Total time to write {} entries {}ms", limit, timer.getTime());
         timer.reset();
 
         timer.start();
@@ -102,6 +103,6 @@ public class EntityCollectionManagerStressTest {
             assertNotNull("Returned has a version", entity.getVersion());
         }
         timer.stop();
-        log.info( "Total time to read {} entries {}ms", limit, timer.getTime());
+        logger.info( "Total time to read {} entries {}ms", limit, timer.getTime());
     }
 }

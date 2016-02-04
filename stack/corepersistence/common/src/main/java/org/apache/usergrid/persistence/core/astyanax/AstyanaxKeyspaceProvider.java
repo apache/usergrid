@@ -44,55 +44,21 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory;
  */
 @Singleton
 public class AstyanaxKeyspaceProvider implements Provider<Keyspace> {
-    private final CassandraFig cassandraFig;
-    private final CassandraConfig cassandraConfig;
+
+    private final CassandraCluster cassandraCluster;
 
 
     @Inject
-    public AstyanaxKeyspaceProvider( final CassandraFig cassandraFig, final CassandraConfig cassandraConfig) {
-        this.cassandraFig = cassandraFig;
-        this.cassandraConfig = cassandraConfig;
+    public AstyanaxKeyspaceProvider( final CassandraCluster cassandraCluster) {
+
+        this.cassandraCluster = cassandraCluster;
     }
 
 
     @Override
     public Keyspace get() {
 
-        AstyanaxConfiguration config = new AstyanaxConfigurationImpl()
-                .setDiscoveryType( NodeDiscoveryType.valueOf( cassandraFig.getDiscoveryType() ) )
-                .setTargetCassandraVersion( cassandraFig.getVersion() )
-                .setDefaultReadConsistencyLevel( cassandraConfig.getReadCL() )
-                .setDefaultWriteConsistencyLevel( cassandraConfig.getWriteCL() );
-
-        ConnectionPoolConfiguration connectionPoolConfiguration =
-                new ConnectionPoolConfigurationImpl( "UsergridConnectionPool" )
-                        .setPort( cassandraFig.getThriftPort() )
-                        .setLocalDatacenter( cassandraFig.getLocalDataCenter() )
-                        .setMaxConnsPerHost( cassandraFig.getConnections() )
-                        .setSeeds( cassandraFig.getHosts() )
-                        .setSocketTimeout( cassandraFig.getTimeout() );
-
-        AstyanaxContext<Keyspace> context =
-                new AstyanaxContext.Builder().forCluster( cassandraFig.getClusterName() )
-                        .forKeyspace( cassandraFig.getApplicationKeyspace())
-
-                        /*
-                         * TODO tnine Filter this by adding a host supplier.  We will get token discovery from cassandra
-                         * but only connect
-                         * to nodes that have been specified.  Good for real time updates of the cass system without
-                         * adding
-                         * load to them during runtime
-                         */
-
-                        .withAstyanaxConfiguration( config )
-                        .withConnectionPoolConfiguration( connectionPoolConfiguration )
-                        .withConnectionPoolMonitor( new Slf4jConnectionPoolMonitorImpl() )
-                        .buildKeyspace( ThriftFamilyFactory.getInstance() );
-
-        context.start();
-
-
-        return context.getClient();
+        return cassandraCluster.getApplicationKeyspace();
     }
 
 

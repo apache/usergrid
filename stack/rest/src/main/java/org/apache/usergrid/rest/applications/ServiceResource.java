@@ -17,10 +17,12 @@
 package org.apache.usergrid.rest.applications;
 
 
+import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.OrganizationConfig;
+import org.apache.usergrid.management.OrganizationConfigProps;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
@@ -127,6 +129,11 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
+    public String getOrganizationName() {
+        return services.getApplication().getOrganizationName();
+    }
+
+
     public List<ServiceParameter> getServiceParameters() {
         if ( serviceParameters != null ) {
             return serviceParameters;
@@ -134,7 +141,7 @@ public class ServiceResource extends AbstractContextResource {
         if ( getServiceResourceParent() != null ) {
             return getServiceResourceParent().getServiceParameters();
         }
-        serviceParameters = new ArrayList<ServiceParameter>();
+        serviceParameters = new ArrayList<>();
         return serviceParameters;
     }
 
@@ -179,7 +186,11 @@ public class ServiceResource extends AbstractContextResource {
 
     @Path("file")
     public AbstractContextResource getFileResource( @Context UriInfo ui ) throws Exception {
-        logger.debug( "in assets in ServiceResource" );
+
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.getFileResource" );
+        }
+
         ServiceParameter.addParameter( getServiceParameters(), "assets" );
 
         PathSegment ps = getFirstPathSegment( "assets" );
@@ -195,7 +206,9 @@ public class ServiceResource extends AbstractContextResource {
     public AbstractContextResource addIdParameter( @Context UriInfo ui, @PathParam("entityId") PathSegment entityId )
             throws Exception {
 
-        logger.debug( "ServiceResource.addIdParameter" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.addIdParameter" );
+        }
 
         UUID itemId = UUID.fromString( entityId.getPath() );
 
@@ -210,10 +223,11 @@ public class ServiceResource extends AbstractContextResource {
     @Path("{itemName}")
     public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )
             throws Exception {
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.addNameParameter" );
+            logger.trace( "Current segment is {}", itemName.getPath() );
+        }
 
-        logger.debug( "ServiceResource.addNameParameter" );
-
-        logger.debug( "Current segment is {}", itemName.getPath() );
 
         if ( itemName.getPath().startsWith( "{" ) ) {
             Query query = Query.fromJsonString( itemName.getPath() );
@@ -233,8 +247,10 @@ public class ServiceResource extends AbstractContextResource {
 
     public ServiceResults executeServiceRequest( UriInfo ui, ApiResponse response, ServiceAction action,
                                                  ServicePayload payload ) throws Exception {
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeServiceRequest" );
+        }
 
-        logger.debug( "ServiceResource.executeServiceRequest" );
 
         boolean tree = "true".equalsIgnoreCase( ui.getQueryParameters().getFirst( "tree" ) );
 
@@ -265,7 +281,8 @@ public class ServiceResource extends AbstractContextResource {
                 // use the default query parameter functionality
                 OrganizationConfig orgConfig =
                     management.getOrganizationConfigForApplication(services.getApplicationId());
-                String defaultConnectionQueryParm = orgConfig.getDefaultConnectionParam();
+                String defaultConnectionQueryParm =
+                        orgConfig.getProperty(OrganizationConfigProps.ORGPROPERTIES_DEFAULT_CONNECTION_PARAM);
                 returnInboundConnections =
                     (defaultConnectionQueryParm.equals("in")) || (defaultConnectionQueryParm.equals("all"));
                 returnOutboundConnections =
@@ -321,7 +338,9 @@ public class ServiceResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.debug( "ServiceResource.executeGet" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeGet" );
+        }
 
         ApiResponse response = createApiResponse();
 
@@ -370,7 +389,9 @@ public class ServiceResource extends AbstractContextResource {
     public ApiResponse executePostWithObject( @Context UriInfo ui, Object json,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
-        logger.debug( "ServiceResource.executePostWithMap" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executePostWithMap" );
+        }
 
         ApiResponse response = createApiResponse();
 
@@ -417,7 +438,9 @@ public class ServiceResource extends AbstractContextResource {
     public ApiResponse executePost( @Context UriInfo ui, String body,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
-        logger.debug( "ServiceResource.executePost: body = " + body );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executePost: body = {}", body );
+        }
 
         Object json;
         if ( StringUtils.isEmpty( body ) ) {
@@ -451,7 +474,9 @@ public class ServiceResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.debug( "ServiceResource.executePut" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executePut" );
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> json = mapper.readValue( body, mapTypeReference );
@@ -470,7 +495,9 @@ public class ServiceResource extends AbstractContextResource {
         @QueryParam("app_delete_confirm") String confirmAppDelete )
         throws Exception {
 
-        logger.debug( "ServiceResource.executeDelete" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeDelete" );
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "delete" );
@@ -587,7 +614,9 @@ public class ServiceResource extends AbstractContextResource {
                                                  @QueryParam("callback") @DefaultValue("callback") String callback,
                                                  FormDataMultiPart multiPart ) throws Exception {
 
-        logger.debug( "ServiceResource.executeMultiPartPost" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeMultiPartPost" );
+        }
         return executeMultiPart( ui, callback, multiPart, ServiceAction.POST );
     }
 
@@ -601,7 +630,9 @@ public class ServiceResource extends AbstractContextResource {
                                                 @QueryParam("callback") @DefaultValue("callback") String callback,
                                                 FormDataMultiPart multiPart ) throws Exception {
 
-        logger.debug( "ServiceResource.executeMultiPartPut" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeMultiPartPut" );
+        }
         return executeMultiPart( ui, callback, multiPart, ServiceAction.PUT );
     }
 
@@ -621,28 +652,33 @@ public class ServiceResource extends AbstractContextResource {
 
         // collect form data values
         List<BodyPart> bodyParts = multiPart.getBodyParts();
-        HashMap<String, Object> data = new HashMap<String, Object>();
+        HashMap<String, Object> data = new HashMap<>();
         for ( BodyPart bp : bodyParts ) {
             FormDataBodyPart bodyPart = ( FormDataBodyPart ) bp;
             if ( bodyPart.getMediaType().equals( MediaType.TEXT_PLAIN_TYPE ) ) {
                 data.put( bodyPart.getName(), bodyPart.getValue() );
             }
             else {
-                logger.info( "skipping bodyPart {} of media type {}", bodyPart.getName(), bodyPart.getMediaType() );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("skipping bodyPart {} of media type {}", bodyPart.getName(), bodyPart.getMediaType());
+                }
             }
         }
 
         FormDataBodyPart fileBodyPart = multiPart.getField( FILE_FIELD_NAME );
 
-        if ( data.isEmpty() && fileBodyPart != null ) { // ensure entity is created even if there are no properties
-            data.put( AssetUtils.FILE_METADATA, new HashMap() );
-        }
+        data.put( AssetUtils.FILE_METADATA, new HashMap() );
 
         // process entity
         ApiResponse response = createApiResponse();
         response.setAction( serviceAction.name().toLowerCase() );
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
+
+        //Updates entity with fields that are in text/plain as per loop above
+        if(data.get( FILE_FIELD_NAME )==null){
+            data.put( FILE_FIELD_NAME,null );
+        }
         ServicePayload payload = getPayload( data );
         ServiceResults serviceResults = executeServiceRequest( ui, response, serviceAction, payload );
 
@@ -663,7 +699,8 @@ public class ServiceResource extends AbstractContextResource {
                     logger.error(re.getMessage());
                     response.setError( "500", re );
                 }
-                em.update( entity );
+                //em.update( entity );
+                entity = serviceResults.getEntity();
                 serviceResults.setEntity( entity );
             }
         }
@@ -723,7 +760,9 @@ public class ServiceResource extends AbstractContextResource {
                                       @HeaderParam("range") String rangeHeader,
                                       @HeaderParam("if-modified-since") String modifiedSince ) throws Exception {
 
-        logger.debug( "ServiceResource.executeStreamGet" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeStreamGet" );
+        }
 
         //Needed for testing
         if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
@@ -740,8 +779,10 @@ public class ServiceResource extends AbstractContextResource {
         ServiceResults serviceResults = executeServiceRequest( ui, response, ServiceAction.GET, null );
         Entity entity = serviceResults.getEntity();
 
-        logger.info( "In ServiceResource.executeStreamGet with id: {}, range: {}, modifiedSince: {}",
-            new Object[] { entityId, rangeHeader, modifiedSince } );
+        if(logger.isTraceEnabled()){
+            logger.trace( "In ServiceResource.executeStreamGet with id: {}, range: {}, modifiedSince: {}",
+                entityId, rangeHeader, modifiedSince );
+        }
 
         Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
 
@@ -756,7 +797,7 @@ public class ServiceResource extends AbstractContextResource {
 
         boolean range = StringUtils.isNotBlank( rangeHeader );
         long start = 0, end = 0, contentLength = 0;
-        InputStream inputStream = null;
+        InputStream inputStream;
 
         if ( range ) { // honor range request, calculate start & end
 
@@ -795,6 +836,10 @@ public class ServiceResource extends AbstractContextResource {
             }catch(AwsPropertiesNotFoundException apnfe){
                 logger.error( "Amazon Property needed for this operation not found",apnfe );
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }
+            catch(AmazonServiceException ase){
+                logger.error(ase.getMessage());
+                return Response.status(ase.getStatusCode()).build();
             }
             catch(RuntimeException re){
                 logger.error(re.getMessage());

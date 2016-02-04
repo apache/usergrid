@@ -94,7 +94,7 @@ public class EdgeDataMigrationImpl implements DataMigration {
                                                     final MutationBatch batch = keyspace.prepareMutationBatch();
 
                                                     for ( Edge edge : edges ) {
-                                                        logger.info( "Migrating meta for edge {}", edge );
+                                                        logger.info("Migrating meta for edge {}", edge);
                                                         final MutationBatch edgeBatch =
                                                             migration.to.writeEdge( graphNode.applicationScope, edge );
                                                         batch.mergeShallow( edgeBatch );

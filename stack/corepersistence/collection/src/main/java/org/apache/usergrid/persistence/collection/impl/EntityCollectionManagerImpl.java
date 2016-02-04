@@ -63,6 +63,7 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.codahale.metrics.Timer;
@@ -83,8 +84,7 @@ import rx.functions.Action0;
 
 
 /**
- * Simple implementation.  Should perform  writes, delete and load. <p/> TODO: maybe refactor the stage operations into
- * their own classes for clarity and organization?
+ * Simple implementation.  Should perform  writes, delete and load.
  */
 public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
@@ -117,7 +117,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final Timer deleteTimer;
     private final Timer fieldIdTimer;
     private final Timer fieldEntityTimer;
-    private final Timer updateTimer;
     private final Timer loadTimer;
     private final Timer getLatestTimer;
 
@@ -165,7 +164,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.deleteTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.delete");
         this.fieldIdTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.fieldId");
         this.fieldEntityTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.fieldEntity");
-        this.updateTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.update");
         this.loadTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.load");
         this.getLatestTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.latest");
     }
@@ -188,7 +186,15 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData, writeStart );
 
 
-        final Observable<Entity> write = observable.map( writeCommit );
+        final Observable<Entity> write = observable.map( writeCommit )
+                                                   .map(ioEvent -> {
+                //fire this in the background so we don't block writes
+                Observable.just( ioEvent ).compose( uniqueCleanup ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
+                return ioEvent;
+            }
+         )
+                                                                              //now extract the ioEvent we need to return and update the version
+                                                                              .map( ioEvent -> ioEvent.getEvent().getEntity().get() );
 
         return ObservableTimer.time( write, writeTimer );
     }
@@ -356,6 +362,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                         continue;
                     }
 
+                    //TODO, we need to validate the property in the entity matches the property in the unique value
+
 
                     //else add it to our result set
                     response.addEntity( expectedUnique.getField(), entity );
@@ -376,6 +384,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         return ObservableTimer.time( fieldSetObservable, fieldEntityTimer );
     }
+
+
 
 
     // fire the stages

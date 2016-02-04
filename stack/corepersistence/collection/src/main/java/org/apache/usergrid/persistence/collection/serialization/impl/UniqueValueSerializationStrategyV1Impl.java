@@ -26,13 +26,12 @@ import java.util.Collection;
 import org.apache.cassandra.db.marshal.BytesType;
 
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.impl.util.LegacyScopeUtils;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -54,8 +53,8 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
 
     private static final EntityVersionSerializer ENTITY_VERSION_SER = new EntityVersionSerializer();
 
-    private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Field>>, EntityVersion>
-        CF_UNIQUE_VALUES = new MultiTennantColumnFamily<>( "Unique_Values", ROW_KEY_SER, ENTITY_VERSION_SER );
+    private static final MultiTenantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Field>>, EntityVersion>
+        CF_UNIQUE_VALUES = new MultiTenantColumnFamily<>( "Unique_Values", ROW_KEY_SER, ENTITY_VERSION_SER );
 
 
     private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
@@ -65,9 +64,9 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
         new CollectionScopedRowKeySerializer<>( ID_SER );
 
 
-    private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UniqueFieldEntry>
+    private static final MultiTenantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UniqueFieldEntry>
         CF_ENTITY_UNIQUE_VALUE_LOG =
-        new MultiTennantColumnFamily<>( "Entity_Unique_Values", ENTITY_ROW_KEY_SER, UniqueFieldEntrySerializer.get() );
+        new MultiTenantColumnFamily<>( "Entity_Unique_Values", ENTITY_ROW_KEY_SER, UniqueFieldEntrySerializer.get() );
 
 
     /**
@@ -85,30 +84,30 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
 
 
     @Override
-    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
+    public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
 
-        final MultiTennantColumnFamilyDefinition uniqueLookupCF =
-            new MultiTennantColumnFamilyDefinition( CF_UNIQUE_VALUES, BytesType.class.getSimpleName(),
+        final MultiTenantColumnFamilyDefinition uniqueLookupCF =
+            new MultiTenantColumnFamilyDefinition( CF_UNIQUE_VALUES, BytesType.class.getSimpleName(),
                 ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
 
-        final MultiTennantColumnFamilyDefinition uniqueLogCF =
-            new MultiTennantColumnFamilyDefinition( CF_ENTITY_UNIQUE_VALUE_LOG, BytesType.class.getSimpleName(),
+        final MultiTenantColumnFamilyDefinition uniqueLogCF =
+            new MultiTenantColumnFamilyDefinition( CF_ENTITY_UNIQUE_VALUE_LOG, BytesType.class.getSimpleName(),
                 ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
 
         return Arrays.asList( uniqueLookupCF, uniqueLogCF );
     }
 
 
     @Override
-    protected MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Field>>, EntityVersion> getUniqueValuesCF() {
+    protected MultiTenantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Field>>, EntityVersion> getUniqueValuesCF() {
         return CF_UNIQUE_VALUES;
     }
 
 
     @Override
-    protected MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UniqueFieldEntry>
+    protected MultiTenantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UniqueFieldEntry>
     getEntityUniqueLogCF() {
         return CF_ENTITY_UNIQUE_VALUE_LOG;
     }

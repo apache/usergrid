@@ -136,7 +136,7 @@ public class MapUtils extends org.apache.commons.collections.MapUtils {
             v = ( V ) map.get( k );
         }
         catch ( ClassCastException e ) {
-            //LOG.war( "Map value {} was not the expected class", map.get( k ), e );
+            //logger.war( "Map value {} was not the expected class", map.get( k ), e );
         }
 
         return v;
@@ -268,6 +268,12 @@ public class MapUtils extends org.apache.commons.collections.MapUtils {
         return cast( properties );
     }
 
+
+    public static <S, T> Map<String, Object> toStringObjectMap(Map<S, T> map) {
+        Map<String, Object> newMap = new HashMap<>();
+        map.forEach((k,v) -> newMap.put(k.toString(), v));
+        return newMap;
+    }
 
     public static <S, T> HashMapBuilder<S, T> hashMap( S key, T value ) {
         return new HashMapBuilder<S, T>().map( key, value );

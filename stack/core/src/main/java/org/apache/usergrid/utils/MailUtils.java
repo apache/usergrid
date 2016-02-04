@@ -125,7 +125,7 @@ public class MailUtils {
 
             transport.sendMessage( msg, msg.getAllRecipients() );
             transport.close();
-            logger.info( String.format( LOG_PREFIX_OK, to ) );
+            logger.info( String.format( LOG_PREFIX_OK + " Message-id: "+msg.getMessageID(), to ) );
         }
         catch ( AddressException ae ) {
             logger.error( createErrorMessage( "could not send to bad address", to ), ae );

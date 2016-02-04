@@ -19,7 +19,6 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.index.*;
@@ -31,12 +30,11 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-import rx.Observable;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
-    private static final Logger log = LoggerFactory.getLogger( EsEntityIndexBatchImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexBatchImpl.class );
 
 
     private final IndexAlias alias;
@@ -70,9 +68,9 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         final String writeAlias = alias.getWriteAlias();
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Indexing to alias {} with scope {} on edge {} with entity data {}",
-                    new Object[] { writeAlias, applicationScope, indexEdge, entity } );
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Indexing to alias {} with scope {} on edge {} with entity data {}",
+                    writeAlias, applicationScope, indexEdge, entity );
         }
 
         //add app id for indexing
@@ -94,9 +92,9 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             throw new IllegalStateException("No indexes exist for " + indexLocationStrategy.getAlias().getWriteAlias());
         }
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Deindexing to indexes {} with scope {} on edge {} with id {} and version {} ",
-                new Object[] { indexes, applicationScope, searchEdge, id, version } );
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Deindexing to indexes {} with scope {} on edge {} with id {} and version {} ",
+                indexes, applicationScope, searchEdge, id, version );
         }
 
 
@@ -113,9 +111,9 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             throw new IllegalStateException("No indexes exist for " + indexLocationStrategy.getAlias().getWriteAlias());
         }
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Deindexing to indexes {} with with documentId {} ",
-                new Object[] { indexes, docId } );
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Deindexing to indexes {} with with documentId {} ",
+                indexes, docId );
         }
 
 

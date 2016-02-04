@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence.cassandra;
 
 
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import me.prettyprint.cassandra.connection.HConnectionManager;
 import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
@@ -110,13 +111,13 @@ public class CassandraService {
 
 //Wire guice injector via spring here, just pass the injector in the spring
     public CassandraService( Properties properties, Cluster cluster,
-                             CassandraHostConfigurator cassandraHostConfigurator, LockManager lockManager,
+                             CassandraHostConfigurator cassandraHostConfigurator,
                            final Injector injector) {
         this.properties = properties;
         this.cluster = cluster;
         chc = cassandraHostConfigurator;
-        this.lockManager = lockManager;
-        db_logger.info( "" + cluster.getKnownPoolHosts( false ) );
+        lockManager = injector.getInstance( LockManager.class );
+        db_logger.info( "{}", cluster.getKnownPoolHosts( false ) );
         //getInjector
         applicationKeyspace  = injector.getInstance( CassandraFig.class ).getApplicationKeyspace();
     }
@@ -384,8 +385,8 @@ public class CassandraService {
                                                      Serializer<N> nameSerializer, Serializer<V> valueSerializer )
             throws Exception {
 
-        if ( db_logger.isInfoEnabled() ) {
-            db_logger.info( "getColumns cf={} key={}", columnFamily, key );
+        if ( db_logger.isTraceEnabled() ) {
+            db_logger.trace( "getColumns cf={} key={}", columnFamily, key );
         }
 
         SliceQuery<ByteBuffer, N, V> q = createSliceQuery( ko, be, nameSerializer, valueSerializer );
@@ -396,12 +397,12 @@ public class CassandraService {
         ColumnSlice<N, V> slice = r.get();
         List<HColumn<N, V>> results = slice.getColumns();
 
-        if ( db_logger.isInfoEnabled() ) {
+        if ( db_logger.isTraceEnabled() ) {
             if ( results == null ) {
-                db_logger.info( "getColumns returned null" );
+                db_logger.trace( "getColumns returned null" );
             }
             else {
-                db_logger.info( "getColumns returned {} columns", results.size() );
+                db_logger.trace( "getColumns returned {} columns", results.size() );
             }
         }
 
@@ -444,7 +445,7 @@ public class CassandraService {
                                                              Object finish, int count, boolean reversed )
             throws Exception {
 
-        if ( db_logger.isDebugEnabled() ) {
+        if ( db_logger.isTraceEnabled() ) {
             db_logger.debug( "getColumns cf=" + columnFamily + " key=" + key + " start=" + start + " finish=" + finish
                     + " count=" + count + " reversed=" + reversed );
         }
@@ -484,12 +485,12 @@ public class CassandraService {
         ColumnSlice<ByteBuffer, ByteBuffer> slice = r.get();
         List<HColumn<ByteBuffer, ByteBuffer>> results = slice.getColumns();
 
-        if ( db_logger.isDebugEnabled() ) {
+        if ( db_logger.isTraceEnabled() ) {
             if ( results == null ) {
-                db_logger.debug( "getColumns returned null" );
+                db_logger.trace("getColumns returned null");
             }
             else {
-                db_logger.debug( "getColumns returned " + results.size() + " columns" );
+                db_logger.trace("getColumns returned {} columns", results.size());
             }
         }
 
@@ -513,8 +514,8 @@ public class CassandraService {
                                                   Serializer<N> nameSerializer, Serializer<V> valueSerializer )
             throws Exception {
 
-        if ( db_logger.isDebugEnabled() ) {
-            db_logger.debug( "getColumns cf=" + columnFamily + " key=" + key + " names=" + columnNames );
+        if ( db_logger.isTraceEnabled() ) {
+            db_logger.trace( "getColumns cf={} key={} names={}", columnFamily, key, columnNames );
         }
 
         SliceQuery<ByteBuffer, N, V> q = createSliceQuery( ko, be, nameSerializer, valueSerializer );
@@ -528,12 +529,12 @@ public class CassandraService {
         ColumnSlice<N, V> slice = r.get();
         List<HColumn<N, V>> results = slice.getColumns();
 
-        if ( db_logger.isInfoEnabled() ) {
+        if ( db_logger.isTraceEnabled() ) {
             if ( results == null ) {
-                db_logger.info( "getColumns returned null" );
+                db_logger.trace( "getColumns returned null" );
             }
             else {
-                db_logger.info( "getColumns returned " + results.size() + " columns" );
+                db_logger.trace( "getColumns returned {} columns", results.size());
             }
         }
 
@@ -557,8 +558,8 @@ public class CassandraService {
                                            Serializer<N> nameSerializer, Serializer<V> valueSerializer )
             throws Exception {
 
-        if ( db_logger.isDebugEnabled() ) {
-            db_logger.debug( "getColumn cf=" + columnFamily + " key=" + key + " column=" + column );
+        if ( db_logger.isTraceEnabled() ) {
+            db_logger.trace( "getColumn cf={} key={} column={}", columnFamily, key, column );
         }
 
     /*
@@ -572,9 +573,9 @@ public class CassandraService {
                 q.setKey( bytebuffer( key ) ).setName( column ).setColumnFamily( columnFamily.toString() ).execute();
         HColumn<N, V> result = r.get();
 
-        if ( db_logger.isInfoEnabled() ) {
+        if ( db_logger.isTraceEnabled() ) {
             if ( result == null ) {
-                db_logger.info( "getColumn returned null" );
+                db_logger.trace( "getColumn returned null" );
             }
         }
 
@@ -586,8 +587,8 @@ public class CassandraService {
                                                 Serializer<N> nameSerializer, Serializer<V> valueSerializer )
             throws Exception {
 
-        if ( db_logger.isDebugEnabled() ) {
-            db_logger.debug( "getColumn cf=" + columnFamily + " key=" + key + " column=" + columns );
+        if ( db_logger.isTraceEnabled() ) {
+            db_logger.trace( "getColumn cf={} key={} column={}", columnFamily, key, columns );
         }
 
     /*
@@ -602,9 +603,9 @@ public class CassandraService {
                  .execute();
         ColumnSlice<N, V> result = r.get();
 
-        if ( db_logger.isDebugEnabled() ) {
+        if ( db_logger.isTraceEnabled() ) {
             if ( result == null ) {
-                db_logger.debug( "getColumn returned null" );
+                db_logger.trace( "getColumn returned null" );
             }
         }
 
@@ -615,9 +616,8 @@ public class CassandraService {
     public void setColumn( Keyspace ko, Object columnFamily, Object key, Object columnName, Object columnValue,
                            int ttl ) throws Exception {
 
-        if ( db_logger.isDebugEnabled() ) {
-            db_logger.debug( "setColumn cf=" + columnFamily + " key=" + key + " name=" + columnName + " value="
-                    + columnValue );
+        if ( db_logger.isTraceEnabled() ) {
+            db_logger.trace( "setColumn cf={} key={} name={} value={}", columnFamily, key, columnName, columnValue );
         }
 
         ByteBuffer name_bytes = null;
@@ -650,9 +650,8 @@ public class CassandraService {
 
     public void setColumns( Keyspace ko, Object columnFamily, byte[] key, Map<?, ?> map, int ttl ) throws Exception {
 
-        if ( db_logger.isDebugEnabled() ) {
-            db_logger.debug( "setColumns cf=" + columnFamily + " key=" + key + " map=" + map + ( ttl != 0 ?
-                                                                                                 " ttl=" + ttl : "" ) );
+        if ( db_logger.isTraceEnabled() ) {
+            db_logger.trace( "setColumns cf={} key={} map={} ttl={}", columnFamily, key, map, ttl);
         }
 
         Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
@@ -713,8 +712,8 @@ public class CassandraService {
      */
     public void deleteRow( Keyspace ko, final Object columnFamily, final Object key ) throws Exception {
 
-        if ( db_logger.isDebugEnabled() ) {
-            db_logger.debug( "deleteRow cf=" + columnFamily + " key=" + key );
+        if ( db_logger.isTraceEnabled() ) {
+            db_logger.trace( "deleteRow cf={} key={}", columnFamily, key );
         }
 
         CountingMutator.createFlushingMutator( ko, be ).addDeletion( bytebuffer( key ), columnFamily.toString() ).execute();

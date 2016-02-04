@@ -36,7 +36,7 @@
 		http://www.springframework.org/schema/util
 		http://www.springframework.org/schema/util/spring-util-3.1.xsd">
 
-	
+
 	<bean id="properties"
 		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
 		<property name="singleton" value="true" />

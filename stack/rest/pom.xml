@@ -51,11 +51,22 @@
         </resources>
 
         <testResources>
+            <!-- the filtering causes corruption in the p12 files, so exclude them in filtering and copy without filtering -->
             <testResource>
                 <directory>src/test/resources</directory>
                 <filtering>true</filtering>
                 <includes>
                     <include>**/*</include>
+                </includes>
+                <excludes>
+                    <exclude>**/*.p12</exclude>
+                </excludes>
+            </testResource>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>**/*.p12</include>
                 </includes>
             </testResource>
         </testResources>
@@ -79,12 +90,17 @@
                     <threadCount>${usergrid.rest.threads}</threadCount>
                     <useSystemClassLoader>false</useSystemClassLoader>
                     <reuseForks>true</reuseForks>
-                    <argLine>-Dwebapp.directory=${basedir}/src/main/webapp -Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar -Djava.util.logging.config.file=${basedir}/src/test/resources/logging.properties ${ug.argline}
+                    <argLine>-Dwebapp.directory=${basedir}/src/main/webapp
+                        -Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax}
+                        -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
+                        -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
+                        -Djava.util.logging.config.file=${basedir}/src/test/resources/logging.properties ${ug.argline}
                     </argLine>
                     <includes>
                         <include>**/*IT.java</include>
                         <include>**/*Test.java</include>
-                   </includes>
+                    </includes>
+                    <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest</excludedGroups>
 
                 </configuration>
 
@@ -395,6 +411,16 @@
             <artifactId>usergrid-java-client</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+            <version>3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-apache-client</artifactId>
+            <version>1.19</version>
+        </dependency>
 
     </dependencies>
 
@@ -411,7 +437,17 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>${surefire.plugin.version}</version>
                         <configuration>
-                            <argLine>-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec  -Dwebapp.directory=${basedir}/src/main/webapp -Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8  -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar -Djava.util.logging.config.file=${basedir}/src/test/resources/logging.properties ${ug.argline}</argLine>
+                            <argLine>
+                                -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec
+                                -Dwebapp.directory=${basedir}/src/main/webapp
+                                -Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true
+                                -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
+                                -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
+                                -Djava.util.logging.config.file=${basedir}/src/test/resources/logging.properties
+                                ${ug.argline}
+                            </argLine>
+                            <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest
+                            </excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>

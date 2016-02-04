@@ -24,6 +24,7 @@ import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
+import org.apache.usergrid.rest.utils.CertificateUtils;
 import org.apache.usergrid.services.ServiceAction;
 import org.apache.usergrid.services.ServicePayload;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -38,9 +39,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.UUID;
+import java.util.*;
 
 import static org.apache.usergrid.services.ServiceParameter.addParameter;
 
@@ -57,7 +56,9 @@ public class NotifiersResource extends ServiceResource {
     public AbstractContextResource addIdParameter(@Context UriInfo ui,
             @PathParam("entityId") PathSegment entityId) throws Exception {
 
-        logger.info("NotifiersResource.addIdParameter");
+        if (logger.isTraceEnabled()) {
+            logger.trace("NotifiersResource.addIdParameter");
+        }
 
         UUID itemId = UUID.fromString(entityId.getPath());
 
@@ -73,9 +74,10 @@ public class NotifiersResource extends ServiceResource {
     public AbstractContextResource addNameParameter(@Context UriInfo ui,
             @PathParam("itemName") PathSegment itemName) throws Exception {
 
-        logger.info("NotifiersResource.addNameParameter");
-
-        logger.info("Current segment is " + itemName.getPath());
+        if (logger.isTraceEnabled()) {
+            logger.trace("NotifiersResource.addNameParameter");
+            logger.trace("Current segment is {}", itemName.getPath());
+        }
 
         if (itemName.getPath().startsWith("{")) {
             Query query = Query.fromJsonString(itemName.getPath());
@@ -111,7 +113,14 @@ public class NotifiersResource extends ServiceResource {
             FormDataMultiPart multiPart)
             throws Exception {
 
-        logger.debug("ServiceResource.uploadData");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Notifiers.executeMultiPartPost");
+        }
+
+        String certInfoParam = getValueOrNull(multiPart, "certInfo");
+        if (certInfoParam != null){
+            throw new IllegalArgumentException("Cannot create or update with certInfo parameter.  It is derived.");
+        }
 
         String name =         getValueOrNull(multiPart, "name");
         String provider =     getValueOrNull(multiPart, "provider");
@@ -119,20 +128,42 @@ public class NotifiersResource extends ServiceResource {
         String certPassword = getValueOrNull(multiPart, "certificatePassword");
 
         InputStream is = null;
+        Map<String, Object> certAttributes = null;
+        String filename = null;
+        byte[] certBytes = null;
         if (multiPart.getField("p12Certificate") != null) {
+            filename = multiPart.getField("p12Certificate").getContentDisposition().getFileName();
             is = multiPart.getField("p12Certificate").getEntityAs(InputStream.class);
+            if (is != null) {
+                certBytes = IOUtils.toByteArray(is);
+                certAttributes = CertificateUtils.getCertAtrributes(certBytes, certPassword);
+            }
+        }else{
+            throw new IllegalArgumentException("Certificate is invalid .p12 file or incorrect certificatePassword");
+        }
+
+        // check to see if the certificate is valid
+        if(!CertificateUtils.isValid(certAttributes)){
+            throw new IllegalArgumentException("p12Certificate is expired.");
         }
 
 
         HashMap<String, Object> certProps = new LinkedHashMap<String, Object>();
+
         certProps.put("name", name);
         certProps.put("provider", provider);
         certProps.put("environment", environment);
         certProps.put("certificatePassword", certPassword);
-        if (is != null) {
-            byte[] certBytes = IOUtils.toByteArray(is);
+
+        if(certBytes != null && certBytes.length > 0 ){
             certProps.put("p12Certificate", certBytes);
         }
+        HashMap<String, Object> certInfo = new LinkedHashMap<String, Object>();
+        if (certAttributes != null){
+            certInfo.put("filename", filename);
+            certInfo.put("details", certAttributes);
+        }
+        certProps.put("certInfo", certInfo);
 
         ApiResponse response = createApiResponse();
         response.setAction("post");

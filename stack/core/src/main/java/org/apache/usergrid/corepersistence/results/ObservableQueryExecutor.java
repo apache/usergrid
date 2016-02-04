@@ -135,11 +135,16 @@ public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
             observable = buildNewResultsPage( cursor ).map( resultsPage -> createResultsInternal( resultsPage ) ).defaultIfEmpty(
             new Results() );
 
-        logger.trace( "Trying to load results page" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Trying to load results page");
+        }
+
         //take the first from our observable
         final Results resultsPage = observable.take(1).toBlocking().first();
 
-        logger.trace( "Results page loaded {}", resultsPage );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Results page loaded {}", resultsPage);
+        }
 
         //set the results for the iterator
         this.results = resultsPage;

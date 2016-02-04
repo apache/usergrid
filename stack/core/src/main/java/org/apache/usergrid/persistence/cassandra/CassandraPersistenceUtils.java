@@ -103,7 +103,7 @@ public class CassandraPersistenceUtils {
 
         if ( batch_logger.isDebugEnabled() ) {
             batch_logger.debug( "{} cf={} key={} name={} value={}",
-                    new Object[] { operation, columnFamily, key, columnName, columnValue } );
+                    operation, columnFamily, key, columnName, columnValue );
         }
     }
 
@@ -224,7 +224,11 @@ public class CassandraPersistenceUtils {
             return NULL_ID;
         }
         UUID uuid = UUID.nameUUIDFromBytes( keyStr.getBytes() ); //UUIDUtils.newTimeUUID(); //UUID.nameUUIDFromBytes( keyStr.getBytes() );
-        logger.debug( "Key {} equals UUID {}", keyStr, uuid );
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("Key {} equals UUID {}", keyStr, uuid);
+        }
+
         return uuid;
     }
 

@@ -27,7 +27,7 @@ import org.apache.usergrid.utils.JsonUtils;
 
 public abstract class AbstractCoreIT {
 
-    private static final Logger LOG = LoggerFactory.getLogger( AbstractCoreIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( AbstractCoreIT.class );
 
     @ClassRule
     public static CoreITSetup setup = new CoreITSetupImpl( );
@@ -38,8 +38,8 @@ public abstract class AbstractCoreIT {
 
 
     public void dump( String name, Object obj ) {
-        if ( obj != null && LOG.isInfoEnabled() ) {
-            LOG.info( name + ":\n" + JsonUtils.mapToFormattedJsonString( obj ) );
+        if ( obj != null && logger.isInfoEnabled() ) {
+            logger.info( name + ":\n" + JsonUtils.mapToFormattedJsonString( obj ) );
         }
     }
 }

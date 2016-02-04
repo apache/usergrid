@@ -71,7 +71,9 @@ public class UsersResource extends ServiceResource {
     public AbstractContextResource addIdParameter( @Context UriInfo ui, @PathParam("entityId") PathSegment entityId )
             throws Exception {
 
-        logger.info( "ServiceResource.addIdParameter" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.addIdParameter" );
+        }
 
         UUID itemId = UUID.fromString( entityId.getPath() );
 
@@ -88,9 +90,10 @@ public class UsersResource extends ServiceResource {
     public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )
             throws Exception {
 
-        logger.info( "ServiceResource.addNameParameter" );
-
-        logger.info( "Current segment is " + itemName.getPath() );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.addNameParameter" );
+            logger.trace( "Current segment is {}", itemName.getPath() );
+        }
 
         if ( itemName.getPath().startsWith( "{" ) ) {
             Query query = Query.fromJsonString( itemName.getPath() );
@@ -117,7 +120,7 @@ public class UsersResource extends ServiceResource {
     @Path("resetpw")
     @Produces(MediaType.TEXT_HTML)
     public Viewable showPasswordResetForm( @Context UriInfo ui ) {
-        return handleViewable( "resetpw_email_form", this );
+        return handleViewable( "resetpw_email_form", this, getOrganizationName() );
     }
 
 
@@ -138,30 +141,30 @@ public class UsersResource extends ServiceResource {
 
             if ( isBlank( email ) ) {
                 errorMsg = "No email provided, try again...";
-                return handleViewable( "resetpw_email_form", this );
+                return handleViewable( "resetpw_email_form", this, getOrganizationName() );
             }
 
             if ( !useReCaptcha() || reCaptchaResponse.isValid() ) {
                 user = management.getAppUserByIdentifier( getApplicationId(), Identifier.fromEmail( email ) );
                 if ( user != null ) {
                     management.startAppUserPasswordResetFlow( getApplicationId(), user );
-                    return handleViewable( "resetpw_email_success", this );
+                    return handleViewable( "resetpw_email_success", this, getOrganizationName() );
                 }
                 else {
                     errorMsg = "We don't recognize that email, try again...";
-                    return handleViewable( "resetpw_email_form", this );
+                    return handleViewable( "resetpw_email_form", this, getOrganizationName() );
                 }
             }
             else {
                 errorMsg = "Incorrect Captcha, try again...";
-                return handleViewable( "resetpw_email_form", this );
+                return handleViewable( "resetpw_email_form", this, getOrganizationName() );
             }
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "resetpw_email_form", e );
+            return handleViewable( "resetpw_email_form", e, getOrganizationName() );
         }
     }
 
@@ -209,7 +212,9 @@ public class UsersResource extends ServiceResource {
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.debug( "UsersResource.executePost: body = " + body);
+        if(logger.isTraceEnabled()){
+            logger.trace( "UsersResource.executePost: body = {}", body);
+        }
 
         Object json = readJsonToObject( body );
 
@@ -221,7 +226,9 @@ public class UsersResource extends ServiceResource {
 
         boolean activated = !( ( confRequred != null ) && confRequred );
 
-        logger.debug("Confirmation required: {} Activated: {}", confRequred, activated );
+        if(logger.isTraceEnabled()){
+            logger.trace("Confirmation required: {} Activated: {}", confRequred, activated );
+        }
 
         if ( json instanceof Map ) {
             @SuppressWarnings("unchecked") Map<String, Object> map = ( Map<String, Object> ) json;
@@ -242,7 +249,7 @@ public class UsersResource extends ServiceResource {
             }
         }
 
-        ApiResponse response = ( ApiResponse ) super.executePostWithObject( ui, json, callback );
+        ApiResponse response = super.executePostWithObject( ui, json, callback );
 
         if ( ( response.getEntities() != null ) && ( response.getEntities().size() == 1 ) ) {
 

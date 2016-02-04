@@ -107,7 +107,7 @@ public class ServiceManager {
                 applicationId = application.getUuid();
             }
             catch ( Exception e ) {
-                logger.error( "This should never happen", e );
+                logger.error( "ServiceManager init failure", e );
                 throw new RuntimeException( e );
             }
         }
@@ -210,7 +210,9 @@ public class ServiceManager {
             return null;
         }
 
-        logger.debug( "Looking up service pattern: {}", serviceType );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Looking up service pattern: {}", serviceType);
+        }
 
         ServiceInfo info = ServiceInfo.getServiceInfo( serviceType );
 
@@ -221,7 +223,9 @@ public class ServiceManager {
         Service service = getServiceInstance( info );
 
         if ( service != null ) {
-            logger.debug( "Returning service instance: {}", service.getClass() );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Returning service instance: {}", service.getClass());
+            }
         }
 
 		/*
@@ -276,7 +280,9 @@ public class ServiceManager {
 
         Class<Service> cls;
         try {
-            logger.debug( "Attempting to instantiate service class {}", classname );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Attempting to instantiate service class {}", classname);
+            }
             cls = ( Class<Service> ) Class.forName( classname );
             if ( cls.isInterface() ) {
                 cls = ( Class<Service> ) Class.forName( classname.concat( IMPL ) );
@@ -286,7 +292,7 @@ public class ServiceManager {
             }
         }
         catch ( ClassNotFoundException e1 ) {
-            logger.debug( "Could not load class", e1 );
+            logger.error("Could not load class", e1);
         }
         return null;
     }
@@ -322,7 +328,7 @@ public class ServiceManager {
                 s = cls.newInstance();
             }
             catch ( Exception e ) {
-                logger.error( "cannot instantiate " + cls.getName(), e );
+                logger.error( "cannot instantiate {}", cls.getName(), e );
             }
             if ( s instanceof AbstractService ) {
                 AbstractService as = ( ( AbstractService ) s );

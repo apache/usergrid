@@ -155,9 +155,9 @@ public class CpRelationManager implements RelationManager {
         this.connectionService = connectionService;
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Loading head entity {}:{} from app {}", new Object[] {
+            logger.debug( "Loading head entity {}:{} from app {}",
                 headEntity.getType(), headEntity.getUuid(), applicationScope
-            } );
+            );
         }
 
         Id entityId = new SimpleId( headEntity.getUuid(), headEntity.getType() );
@@ -178,9 +178,10 @@ public class CpRelationManager implements RelationManager {
 
         String edgeTypePrefix = CpNamingUtils.getEdgeTypeFromCollectionName( collectionName );
 
-        logger.debug( "getCollectionIndexes(): Searching for edge type prefix {} to target {}:{}", new Object[] {
-            edgeTypePrefix, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid()
-        } );
+        if (logger.isTraceEnabled()) {
+            logger.trace("getCollectionIndexes(): Searching for edge type prefix {} to target {}:{}",
+                edgeTypePrefix, cpHeadEntity.getId().getType(), cpHeadEntity.getId().getUuid() );
+        }
 
         Observable<Set<String>> types =
             gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( cpHeadEntity.getId(), edgeTypePrefix, null ) )
@@ -241,7 +242,9 @@ public class CpRelationManager implements RelationManager {
 
         return edges.collect( () -> new LinkedHashMap<EntityRef, Set<String>>(), ( entityRefSetMap, edge ) -> {
             if ( fromEntityType != null && !fromEntityType.equals( edge.getSourceNode().getType() ) ) {
-                logger.debug( "Ignoring edge from entity type {}", edge.getSourceNode().getType() );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Ignoring edge from entity type {}", edge.getSourceNode().getType());
+                }
                 return;
             }
 
@@ -260,9 +263,10 @@ public class CpRelationManager implements RelationManager {
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
 
-        logger.debug( "isConnectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[] {
-            connectionType, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
-        } );
+        if (logger.isTraceEnabled()) {
+            logger.trace("isConnectionMember(): Checking for edge type {} from {}:{} to {}:{}",
+                connectionType, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid() );
+        }
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
         Observable<MarkedEdge> edges = gm.loadEdgeVersions( CpNamingUtils
@@ -279,10 +283,10 @@ public class CpRelationManager implements RelationManager {
 
         Id entityId = new SimpleId( entity.getUuid(), entity.getType() );
 
-
-        logger.debug( "isCollectionMember(): Checking for edge type {} from {}:{} to {}:{}", new Object[] {
-            collectionName, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid()
-        } );
+        if (logger.isTraceEnabled()) {
+            logger.trace("isCollectionMember(): Checking for edge type {} from {}:{} to {}:{}",
+                collectionName, headEntity.getType(), headEntity.getUuid(), entity.getType(), entity.getUuid() );
+        }
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
         Observable<MarkedEdge> edges = gm.loadEdgeVersions( CpNamingUtils
@@ -377,9 +381,8 @@ public class CpRelationManager implements RelationManager {
         }
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Loaded member entity {}:{} from   app {}\n   " + " data {}", new Object[] {
-                itemRef.getType(), itemRef.getUuid(), applicationScope, CpEntityMapUtils.toMap( memberEntity )
-            } );
+            logger.debug( "Loaded member entity {}:{} from   app {}\n    data {}",
+                itemRef.getType(), itemRef.getUuid(), applicationScope, CpEntityMapUtils.toMap( memberEntity ) );
         }
 
 
@@ -404,19 +407,19 @@ public class CpRelationManager implements RelationManager {
         } ).doOnCompleted( () -> {
             indexService.queueNewEdge( applicationScope, memberEntity, edge );
             if ( logger.isDebugEnabled() ) {
-                logger.debug( "Added entity {}:{} to collection {}", new Object[] {
-                    itemRef.getUuid().toString(), itemRef.getType(), collectionName
-                } );
+                logger.debug( "Added entity {}:{} to collection {}",
+                    itemRef.getUuid().toString(), itemRef.getType(), collectionName );
             }
         } ).toBlocking().lastOrDefault( null );
 
-        //check if we need to reverse our edges
+
+        // remove any duplicate edges (keeps the duplicate edge with same timestamp)
+        removeDuplicateEdgesAsync(gm, edge);
 
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Added entity {}:{} to collection {}", new Object[] {
-                itemRef.getUuid().toString(), itemRef.getType(), collectionName
-            } );
+            logger.debug( "Added entity {}:{} to collection {}",
+                itemRef.getUuid().toString(), itemRef.getType(), collectionName  );
         }
 
 
@@ -497,9 +500,8 @@ public class CpRelationManager implements RelationManager {
 
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Loading entity to remove from collection " + "{}:{} from app {}\n", new Object[] {
-                itemRef.getType(), itemRef.getUuid(), applicationScope
-            } );
+            logger.debug( "Loading entity to remove from collection {}:{} from app {}\n",
+                itemRef.getType(), itemRef.getUuid(), applicationScope );
         }
 
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
@@ -641,11 +643,8 @@ public class CpRelationManager implements RelationManager {
             Thread.sleep( sleepTime );
         }
         while ( !found && length <= maxLength );
-        if ( logger.isInfoEnabled() ) {
-            logger.info( String
-                .format( "Consistent Search finished in %s,  results=%s, expected=%s...dumping stack", length,
-                    results.size(), expectedResults ) );
-        }
+        logger.info( "Consistent Search finished in {}, results={}, expected={}...dumping stack",
+            length, results.size(), expectedResults );
         return results;
     }
 
@@ -666,12 +665,10 @@ public class CpRelationManager implements RelationManager {
         ConnectionRefImpl connection = new ConnectionRefImpl( headEntity, connectionType, connectedEntityRef );
 
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "createConnection(): " + "Indexing connection type '{}'\n   from source {}:{}]\n"
-                + "   to target {}:{}\n   app {}", new Object[] {
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "createConnection(): Indexing connection type '{}'\n   from source {}:{}]\n   to target {}:{}\n   app {}",
                 connectionType, headEntity.getType(), headEntity.getUuid(), connectedEntityRef.getType(),
-                connectedEntityRef.getUuid(), applicationScope
-            } );
+                connectedEntityRef.getUuid(), applicationScope );
         }
 
         final Id entityId = new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() );
@@ -691,28 +688,9 @@ public class CpRelationManager implements RelationManager {
         indexService.queueNewEdge( applicationScope, targetEntity, edge );
 
 
-        //now read all older versions of an edge, and remove them.  Finally calling delete
-        final SearchByEdge searchByEdge =
-            new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), Long.MAX_VALUE,
-                SearchByEdgeType.Order.DESCENDING, Optional.absent() );
+        // remove any duplicate edges (keeps the duplicate edge with same timestamp)
+        removeDuplicateEdgesAsync(gm, edge);
 
-
-        //load our versions, only retain the most recent one
-        gm.loadEdgeVersions(searchByEdge).skip(1).flatMap(edgeToDelete -> {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Marking edge {} for deletion", edgeToDelete);
-            }
-            return gm.markEdge(edgeToDelete );
-        }).lastOrDefault(null).doOnNext(lastEdge -> {
-            //no op if we hit our default
-            if (lastEdge == null) {
-                return;
-            }
-
-            //don't queue delete b/c that de-indexes, we need to delete the edges only since we have a version still existing to index.
-
-            gm.deleteEdge(lastEdge).toBlocking().lastOrDefault(null); // this should throw an exception
-        }).toBlocking().lastOrDefault(null);//this should throw an exception
 
 
         return connection;
@@ -768,11 +746,10 @@ public class CpRelationManager implements RelationManager {
         String connectionType = connectionRef.getTargetRefs().getConnectionType();
 
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Deleting connection '{}' from source {}:{} \n   to target {}:{}", new Object[] {
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Deleting connection '{}' from source {}:{} \n   to target {}:{}",
                 connectionType, connectingEntityRef.getType(), connectingEntityRef.getUuid(),
-                connectedEntityRef.getType(), connectedEntityRef.getUuid()
-            } );
+                connectedEntityRef.getType(), connectedEntityRef.getUuid() );
         }
 
         Id entityId = new SimpleId( connectedEntityRef.getUuid(), connectedEntityRef.getType() );
@@ -868,7 +845,11 @@ public class CpRelationManager implements RelationManager {
         List<Entity> entities = new ArrayList<Entity>();
         for ( EntityRef ref : containers.keySet() ) {
             Entity entity = em.get( ref );
-            logger.debug( "   Found connecting entity: " + entity.getProperties() );
+
+            if (logger.isTraceEnabled()) {
+                logger.trace("   Found connecting entity: " + entity.getProperties());
+            }
+
             entities.add( entity );
         }
         return Results.fromEntities( entities );
@@ -1018,4 +999,29 @@ public class CpRelationManager implements RelationManager {
         }
         return entity;
     }
+
+    private void removeDuplicateEdgesAsync(GraphManager gm, Edge edge){
+
+        //now read all older versions of an edge, and remove them.  Finally calling delete
+        final SearchByEdge searchByEdge =
+            new SimpleSearchByEdge( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), Long.MAX_VALUE,
+                SearchByEdgeType.Order.DESCENDING, Optional.absent() );
+
+        //load our versions, only retain the most recent one
+        gm.loadEdgeVersions(searchByEdge).skip(1).flatMap(edgeToDelete -> {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Duplicate edge. Marking edge {} for deletion", edgeToDelete);
+            }
+            return gm.markEdge(edgeToDelete );
+        }).lastOrDefault(null).doOnNext(lastEdge -> {
+            //no op if we hit our default
+            if (lastEdge == null) {
+                return;
+            }
+            //don't queue delete b/c that de-indexes, we need to delete the edges only since we have a version still existing to index.
+            gm.deleteEdge(lastEdge).toBlocking().lastOrDefault(null); // this should throw an exception
+        }).toBlocking().lastOrDefault(null);//this should throw an exception
+
+    }
+
 }

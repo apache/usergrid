@@ -51,7 +51,9 @@ public class GroupsService extends AbstractPathBasedColllectionService {
 
     public GroupsService() {
         super();
-        logger.debug( "/groups" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("/groups");
+        }
 
         // rolenames is the one case of Entity Dictionary name not equal to path segment
         declareEntityDictionary( new EntityDictionaryEntry( "rolenames", "roles" ) );
@@ -69,7 +71,9 @@ public class GroupsService extends AbstractPathBasedColllectionService {
             throw new IllegalArgumentException( "You must provide a 'path' property when creating a group" );
         }
 
-        logger.debug( "Creating group with path {}", path );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Creating group with path {}", path);
+        }
 
         Preconditions.checkArgument( matcher.matchesAllOf( path ), "Illegal characters found in group name: " + path );
 

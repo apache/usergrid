@@ -42,7 +42,7 @@ import static org.junit.Assert.fail;
 
 public class OrderedMergeTest {
 
-    private static final Logger log = LoggerFactory.getLogger( OrderedMergeTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( OrderedMergeTest.class );
 
 
     @Test
@@ -74,7 +74,7 @@ public class OrderedMergeTest {
 
             @Override
             public void onNext( final Integer integer ) {
-                log.info( "onNext invoked with {}", integer );
+                logger.info( "onNext invoked with {}", integer );
                 results.add( integer );
             }
         } );
@@ -122,14 +122,14 @@ public class OrderedMergeTest {
 
             @Override
             public void onError( final Throwable e ) {
-                e.printStackTrace();
+                logger.error("Test failed due to exception", e);
                 fail( "An error was thrown " );
             }
 
 
             @Override
             public void onNext( final Integer integer ) {
-                log.info( "onNext invoked with {}", integer );
+                logger.info( "onNext invoked with {}", integer );
                 results.add( integer );
             }
         } );
@@ -148,7 +148,7 @@ public class OrderedMergeTest {
 
 
     @Test
-    @Ignore( "Doesn't work until backpressure is implemented" )
+    @Ignore( "Pending implementation of backpressure" )
     public void multipleOperatorSingleThreadSizeException() throws InterruptedException {
 
         List<Integer> expected1List = Arrays.asList( 5, 3, 2, 0 );
@@ -182,7 +182,7 @@ public class OrderedMergeTest {
 
             @Override
             public void onError( final Throwable e ) {
-                log.error( "Expected error thrown", e );
+                logger.error( "Expected error thrown", e );
 
                 if ( e.getMessage().contains( "The maximum queue size of 2 has been reached" ) ) {
                     errorThrown[0] = true;
@@ -194,7 +194,7 @@ public class OrderedMergeTest {
 
             @Override
             public void onNext( final Integer integer ) {
-                log.info( "onNext invoked with {}", integer );
+                logger.info( "onNext invoked with {}", integer );
                 results.add( integer );
             }
         } );
@@ -250,7 +250,7 @@ public class OrderedMergeTest {
 
             @Override
             public void onNext(final Integer integer) {
-                log.info("onNext invoked with {}", integer);
+                logger.info("onNext invoked with {}", integer);
                 results.add(integer);
             }
         });
@@ -269,8 +269,7 @@ public class OrderedMergeTest {
 
 
     @Test
-    @Ignore("Shouldn't throw an exception, should work with current impl.  "
-            + "Needs to be changed when backpressure is introduced" )
+    @Ignore("Pending implementation of backpressure")
     public void multipleOperatorMultipleThreadSizeException() throws InterruptedException {
 
         List<Integer> expected1List = Arrays.asList( 10, 4, 3, 2, 1 );
@@ -307,7 +306,7 @@ public class OrderedMergeTest {
 
             @Override
             public void onError( final Throwable e ) {
-                log.error("Expected error thrown", e);
+                logger.error("Expected error thrown", e);
 
                 if ( e.getMessage().contains( "The maximum queue size of 2 has been reached" ) ) {
                     errorThrown[0] = true;
@@ -319,7 +318,7 @@ public class OrderedMergeTest {
 
             @Override
             public void onNext( final Integer integer ) {
-                log.info("onNext invoked with {}", integer);
+                logger.info("onNext invoked with {}", integer);
             }
         } );
 
@@ -374,14 +373,14 @@ public class OrderedMergeTest {
 
             @Override
             public void onError( final Throwable e ) {
-                e.printStackTrace();
+                logger.error("Test failed due to exception", e);
                 fail("An error was thrown ");
             }
 
 
             @Override
             public void onNext( final Integer integer ) {
-                log.info( "onNext invoked with {}", integer );
+                logger.info( "onNext invoked with {}", integer );
                 results.add(integer);
             }
         } );
@@ -450,7 +449,7 @@ public class OrderedMergeTest {
 
               @Override
               public void onNext( final Integer integer ) {
-                  log.info( "onNext invoked with {}", integer );
+                  logger.info( "onNext invoked with {}", integer );
                   results.add( integer );
               }
           } );
@@ -474,10 +473,10 @@ public class OrderedMergeTest {
 
         final AtomicInteger i = new AtomicInteger();
         Observable.from(expected).doOnNext(x -> {
-            log.info("print " + x);
+            logger.info("print " + x);
             i.set(x);
-        }).doOnError(e -> log.error(e.getMessage())).subscribe();
-        log.info("last");
+        }).doOnError(e -> logger.error(e.getMessage())).subscribe();
+        logger.info("last");
         assertTrue(i.get()==0);
     }
 
@@ -488,10 +487,10 @@ public class OrderedMergeTest {
             List<Integer> expected = Arrays.asList(10, 9, 9, 8, 7, 6, 6, 5, 5, 5, 4, 3, 3, 2, 2, 1, 1, 0);
 
             Observable.from(expected).doOnNext(x -> {
-                log.info("print " + x);
+                logger.info("print " + x);
                 throw new RuntimeException();
-            }).doOnError(e -> log.error(e.getMessage())).subscribe();
-            log.info("last");
+            }).doOnError(e -> logger.error(e.getMessage())).subscribe();
+            logger.info("last");
             fail();
         } catch (Exception e) {
         }
@@ -547,7 +546,7 @@ public class OrderedMergeTest {
 
               @Override
               public void onNext( final Integer integer ) {
-                  log.info( "onNext invoked with {}", integer );
+                  logger.info( "onNext invoked with {}", integer );
                   results.add( integer );
               }
           } );

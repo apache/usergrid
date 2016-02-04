@@ -40,7 +40,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestCount {
 
-    private static final Logger log = LoggerFactory.getLogger( TestCount.class );
+    private static final Logger logger = LoggerFactory.getLogger( TestCount.class );
 
 
     @Test
@@ -125,7 +125,7 @@ public class TestCount {
 
                     final Integer value = values.get( i );
 
-                    log.info( "Emitting {}", value );
+                    logger.info( "Emitting {}", value );
 
 
                     subscriber.onNext( value );

@@ -55,12 +55,14 @@ import static org.apache.usergrid.utils.ConversionUtils.string;
 
 public class UsersService extends AbstractCollectionService {
 
-    private static final Logger LOG = LoggerFactory.getLogger( UsersService.class );
+    private static final Logger logger = LoggerFactory.getLogger( UsersService.class );
 
 
     public UsersService() {
         super();
-        LOG.debug( "/users" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("/users");
+        }
 
         makeConnectionPrivate( "following" );
 

@@ -20,6 +20,8 @@
 
 package org.apache.usergrid.persistence.queue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 
 import java.io.IOException;
@@ -37,6 +39,9 @@ import java.util.concurrent.TimeUnit;
  * Default queue manager implementation, uses in memory linked queue
  */
 public class LocalQueueManager implements QueueManager {
+
+    private static final Logger logger = LoggerFactory.getLogger(LocalQueueManager.class);
+
     public ArrayBlockingQueue<QueueMessage> queue = new ArrayBlockingQueue<>(10000);
 
     @Override

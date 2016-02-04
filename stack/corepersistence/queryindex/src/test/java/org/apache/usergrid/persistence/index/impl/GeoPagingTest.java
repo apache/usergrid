@@ -58,14 +58,13 @@ import static org.junit.Assert.fail;
 /**
  * // TODO: Document this
  *
- * @author ApigeeCorporation
  * @since 4.0
  */
 
 @RunWith( EsRunner.class )
 @UseModules( { TestIndexModule.class } )
 public class GeoPagingTest extends BaseIT {
-    private static Logger log = LoggerFactory.getLogger( GeoPagingTest.class );
+    private static final  Logger log = LoggerFactory.getLogger( GeoPagingTest.class );
 
     @Inject
     public EntityIndexFactory eif;

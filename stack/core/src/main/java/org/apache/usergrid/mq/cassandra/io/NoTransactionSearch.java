@@ -89,7 +89,7 @@ public class NoTransactionSearch extends AbstractSearch
         if ( logger.isDebugEnabled() )
         {
             logger.debug( "Last message id is '{}' for queueId '{}' and clientId '{}'",
-                    new Object[] { lastReadMessageId, queueId, consumerId } );
+                    lastReadMessageId, queueId, consumerId );
         }
 
         return new SearchParam( lastReadMessageId, false, lastReadMessageId != null, query.getLimit( DEFAULT_READ ) );

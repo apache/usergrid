@@ -20,6 +20,7 @@ package org.apache.usergrid.security.tokens.cassandra;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+import org.apache.usergrid.utils.ConversionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,6 +89,8 @@ public class TokenServiceImpl implements TokenService {
     private static final String TOKEN_ENTITY = "entity";
     private static final String TOKEN_APPLICATION = "application";
     private static final String TOKEN_STATE = "state";
+    private static final String TOKEN_WORKFLOW_ORG_ID = "workflowOrgId";
+
 
     private static final String TOKEN_TYPE_ACCESS = "access";
 
@@ -107,6 +110,7 @@ public class TokenServiceImpl implements TokenService {
         set.add( TOKEN_APPLICATION );
         set.add( TOKEN_STATE );
         set.add( TOKEN_DURATION );
+        set.add( TOKEN_WORKFLOW_ORG_ID );
         TOKEN_PROPERTIES = Collections.unmodifiableSet(set);
     }
 
@@ -204,13 +208,21 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public String createToken( TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
                                Map<String, Object> state, long duration ) throws Exception {
-        return createToken( tokenCategory, type, principal, state, duration, System.currentTimeMillis() );
+        return createToken( tokenCategory, type, principal, state, duration, null, System.currentTimeMillis() );
+    }
+
+
+    @Override
+    public String createToken( TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
+                               Map<String, Object> state, long duration, UUID workflowOrgId ) throws Exception {
+        return createToken( tokenCategory, type, principal, state, duration, workflowOrgId, System.currentTimeMillis() );
     }
 
 
     /** Exposed for testing purposes. The interface does not allow creation timestamp checking */
     public String createToken( TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
-                               Map<String, Object> state, long duration, long creationTimestamp ) throws Exception {
+                               Map<String, Object> state, long duration, UUID workflowOrgId,
+                               long creationTimestamp ) throws Exception {
 
         long maxTokenTtl = getMaxTtl( tokenCategory, principal );
 
@@ -237,7 +249,8 @@ public class TokenServiceImpl implements TokenService {
         if ( type == null ) {
             type = TOKEN_TYPE_ACCESS;
         }
-        TokenInfo tokenInfo = new TokenInfo( uuid, type, timestamp, timestamp, 0, duration, principal, state );
+        TokenInfo tokenInfo = new TokenInfo( uuid, type, timestamp, timestamp, 0, duration, principal,
+                state, workflowOrgId );
         putTokenInfo( tokenInfo );
 
         // generate token from the UUID that we created
@@ -248,6 +261,14 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public void importToken(String token, TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
                             Map<String, Object> state, long duration) throws Exception {
+
+        importToken(token, tokenCategory, type, principal, state, duration, null);
+    }
+
+
+    @Override
+    public void importToken(String token, TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
+                            Map<String, Object> state, long duration, UUID workflowOrgId) throws Exception {
 
         // same logic as create token
 
@@ -278,7 +299,8 @@ public class TokenServiceImpl implements TokenService {
             type = TOKEN_TYPE_ACCESS;
         }
 
-        TokenInfo tokenInfo = new TokenInfo( uuid, type, timestamp, timestamp, 0, duration, principal, state );
+        TokenInfo tokenInfo = new TokenInfo( uuid, type, timestamp, timestamp, 0, duration, principal,
+                state, workflowOrgId );
         putTokenInfo( tokenInfo );
     }
 
@@ -449,7 +471,13 @@ public class TokenServiceImpl implements TokenService {
         }
         @SuppressWarnings("unchecked") Map<String, Object> state =
                 ( Map<String, Object> ) JsonUtils.fromByteBuffer( columns.get( TOKEN_STATE ) );
-        return new TokenInfo( uuid, type, created, accessed, inactive, duration, principal, state );
+
+        UUID workflowOrgId = null;
+        if (columns.containsKey(TOKEN_WORKFLOW_ORG_ID)) {
+            workflowOrgId = ConversionUtils.uuid(columns.get(TOKEN_WORKFLOW_ORG_ID));
+        }
+
+        return new TokenInfo( uuid, type, created, accessed, inactive, duration, principal, state, workflowOrgId );
     }
 
 
@@ -503,6 +531,11 @@ public class TokenServiceImpl implements TokenService {
             m.addInsertion( tokenUUID, TOKENS_CF,
                     createColumn( TOKEN_STATE, JsonUtils.toByteBuffer( tokenInfo.getState() ), ttl, se,
                             be ) );
+        }
+
+        if ( tokenInfo.getWorkflowOrgId() != null ) {
+            m.addInsertion( tokenUUID, TOKENS_CF,
+                    createColumn( TOKEN_WORKFLOW_ORG_ID, bytebuffer( tokenInfo.getWorkflowOrgId() ), ttl, se, be ) );
         }
 
         m.execute();

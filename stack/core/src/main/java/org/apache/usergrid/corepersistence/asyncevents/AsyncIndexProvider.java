@@ -63,7 +63,7 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     public AsyncIndexProvider(final IndexProcessorFig indexProcessorFig,
                               final QueueManagerFactory queueManagerFactory,
                               final MetricsFactory metricsFactory,
-                              final RxTaskScheduler rxTaskScheduler,
+                              @EventExecutionScheduler final RxTaskScheduler rxTaskScheduler,
                               final EntityCollectionManagerFactory entityCollectionManagerFactory,
                               final EventBuilder eventBuilder,
                               final IndexLocationStrategyFactory indexLocationStrategyFactory,

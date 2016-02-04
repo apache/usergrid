@@ -71,8 +71,8 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
 
     private static final ObjectSerializer COLUMN_VALUE_SERIALIZER = ObjectSerializer.get();
 
-    public static final MultiTennantColumnFamily<BucketScopedRowKey<String>, String> SCOPED_CACHE
-        = new MultiTennantColumnFamily<>( "SCOPED_CACHE",
+    public static final MultiTenantColumnFamily<BucketScopedRowKey<String>, String> SCOPED_CACHE
+        = new MultiTenantColumnFamily<>( "SCOPED_CACHE",
             BUCKET_ROWKEY_SERIALIZER, COLUMN_NAME_SERIALIZER, COLUMN_VALUE_SERIALIZER );
 
     /** Number of buckets to hash across */
@@ -135,12 +135,11 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
                 V value = MAPPER.readValue(result.getByteArrayValue(), typeRef);
 
                 logger.debug("Read cache item from scope {}\n   key/value types {}/{}\n   key:value: {}:{}",
-                    new Object[]{
                         scope.getApplication().getUuid(),
                         key.getClass().getSimpleName(),
                         value.getClass().getSimpleName(),
                         key,
-                        value});
+                        value);
 
                 return value;
 
@@ -196,12 +195,11 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
         executeBatch(batch);
 
         logger.debug("Wrote cache item to scope {}\n   key/value types {}/{}\n   key:value: {}:{}",
-            new Object[] {
                 scope.getApplication().getUuid(),
                 key.getClass().getSimpleName(),
                 value.getClass().getSimpleName(),
                 key,
-                value});
+                value);
 
         return value;
     }
@@ -278,13 +276,13 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
     //------------------------------------------------------------------------------------------
 
     @Override
-    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
-        final MultiTennantColumnFamilyDefinition scopedCache =
-            new MultiTennantColumnFamilyDefinition( SCOPED_CACHE,
+    public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
+        final MultiTenantColumnFamilyDefinition scopedCache =
+            new MultiTenantColumnFamilyDefinition( SCOPED_CACHE,
                 BytesType.class.getSimpleName(),
                 BytesType.class.getSimpleName(),
                 BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
 
         return Arrays.asList(scopedCache);
     }

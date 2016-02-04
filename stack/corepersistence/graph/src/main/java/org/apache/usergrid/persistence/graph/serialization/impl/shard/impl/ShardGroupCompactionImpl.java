@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
-import org.apache.usergrid.persistence.core.executor.TaskExecutorFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
@@ -66,7 +65,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -82,7 +80,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
 
     private final AtomicLong countAudits;
-    private static final Logger LOG = LoggerFactory.getLogger( ShardGroupCompactionImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( ShardGroupCompactionImpl.class );
 
 
     private static final Charset CHARSET = Charset.forName( "UTF-8" );
@@ -149,8 +147,8 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         Preconditions
             .checkArgument( group.shouldCompact( startTime ), "Compaction cannot be run yet.  Ignoring compaction." );
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("Compacting shard group. count is {} ", countAudits.get());
+        if(logger.isTraceEnabled()) {
+            logger.trace("Compacting shard group. Audit count is {} ", countAudits.get());
         }
         final CompactionResult.CompactionBuilder resultBuilder = CompactionResult.builder();
 
@@ -215,7 +213,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                         deleteRowBatch.execute();
                     }
                     catch ( Throwable t ) {
-                        LOG.error( "Unable to move edges from shard {} to shard {}", sourceShard, targetShard );
+                        logger.error( "Unable to move edges from shard {} to shard {}", sourceShard, targetShard );
                     }
                 }
             }
@@ -227,11 +225,13 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             deleteRowBatch.execute();
         }
         catch ( Throwable t ) {
-            LOG.error( "Unable to move edges to target shard {}", targetShard );
+            logger.error( "Unable to move edges to target shard {}", targetShard );
         }
 
 
-        LOG.info( "Finished compacting {} shards and moved {} edges", sourceShards, edgeCount );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Finished compacting {} shards and moved {} edges", sourceShards, edgeCount);
+        }
 
         resultBuilder.withCopiedEdges( edgeCount ).withSourceShards( sourceShards ).withTargetShard( targetShard );
 
@@ -255,7 +255,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                     continue;
                 }
 
-                LOG.info( "Source shards have been fully drained.  Removing shard {}", source );
+                logger.info( "Source shards have been fully drained.  Removing shard {}", source );
 
                 final MutationBatch shardRemoval = edgeShardSerialization.removeShardMeta( scope, source, edgeMeta );
                 shardRemovalRollup.mergeShallow( shardRemoval );
@@ -272,7 +272,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             }
 
 
-            LOG.info( "Shard has been fully compacted.  Marking shard {} as compacted in Cassandra", targetShard );
+            logger.info( "Shard has been fully compacted.  Marking shard {} as compacted in Cassandra", targetShard );
 
             //Overwrite our shard index with a newly created one that has been marked as compacted
             Shard compactedShard = new Shard( targetShard.getShardIndex(), timeService.getCurrentTime(), true );
@@ -306,9 +306,10 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
         countAudits.getAndIncrement();
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("Auditing shard group. count is {} ", countAudits.get());
+        if(logger.isTraceEnabled()) {
+            logger.trace("Auditing shard group {}. count is {} ", group, countAudits.get());
         }
+
         /**
          * Try and submit.  During back pressure, we may not be able to submit, that's ok.  Better to drop than to
          * hose the system
@@ -321,7 +322,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         catch ( RejectedExecutionException ree ) {
 
             //ignore, if this happens we don't care, we're saturated, we can check later
-            LOG.error( "Rejected audit for shard of scope {} edge, meta {} and group {}", scope, edgeMeta, group );
+            logger.info( "Rejected audit for shard of scope {} edge, meta {} and group {}", scope, edgeMeta, group );
 
             return Futures.immediateFuture( AuditResult.NOT_CHECKED );
         }
@@ -332,13 +333,15 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         Futures.addCallback( future, new FutureCallback<AuditResult>() {
             @Override
             public void onSuccess( @Nullable final AuditResult result ) {
-                LOG.debug( "Successfully completed audit of task {}", result );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Successfully completed audit of task {}", result);
+                }
             }
 
 
             @Override
             public void onFailure( final Throwable t ) {
-                LOG.error( "Unable to perform audit.  Exception is ", t );
+                logger.error( "Unable to perform audit.  Exception is ", t );
             }
         } );
 
@@ -413,8 +416,8 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                  */
                 try {
                     CompactionResult result = compact( scope, edgeMeta, group );
-                    LOG.info( "Compaction result for compaction of scope {} with edge meta data of {} and shard group "
-                            + "{} is {}", new Object[] { scope, edgeMeta, group, result } );
+                    logger.info( "Compaction result for compaction of scope {} with edge meta data of {} and shard group {} is {}",
+                            scope, edgeMeta, group, result );
                 }
                 finally {
                     shardCompactionTaskTracker.complete( scope, edgeMeta, group );

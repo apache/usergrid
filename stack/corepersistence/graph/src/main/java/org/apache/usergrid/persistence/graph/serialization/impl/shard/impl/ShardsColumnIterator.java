@@ -1,7 +1,6 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -9,16 +8,12 @@ import java.util.NoSuchElementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
-import org.apache.usergrid.persistence.core.astyanax.MultiKeyColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.MultiRowColumnIterator;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.model.ConsistencyLevel;
-import com.netflix.astyanax.query.RowQuery;
 import com.netflix.astyanax.util.RangeBuilder;
 
 
@@ -36,7 +31,7 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
 
     private final EdgeSearcher<R, C, T> searcher;
 
-    private final MultiTennantColumnFamily<ScopedRowKey<R>, C> cf;
+    private final MultiTenantColumnFamily<ScopedRowKey<R>, C> cf;
 
     private Iterator<T> currentColumnIterator;
 
@@ -47,9 +42,9 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
     private final ConsistencyLevel consistencyLevel;
 
 
-    public ShardsColumnIterator( final EdgeSearcher<R, C, T> searcher,
-                             final MultiTennantColumnFamily<ScopedRowKey<R>, C> cf, final Keyspace keyspace,
-                             final ConsistencyLevel consistencyLevel, final int pageSize ) {
+    public ShardsColumnIterator(final EdgeSearcher<R, C, T> searcher,
+                                final MultiTenantColumnFamily<ScopedRowKey<R>, C> cf, final Keyspace keyspace,
+                                final ConsistencyLevel consistencyLevel, final int pageSize ) {
         this.searcher = searcher;
         this.cf = cf;
         this.keyspace = keyspace;
@@ -93,7 +88,9 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
      */
     private void startIterator() {
 
-        logger.trace( "Starting shards column iterator" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Starting shards column iterator");
+        }
 
 
         /**
@@ -113,7 +110,9 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
          */
         final List<ScopedRowKey<R>> rowKeys = searcher.getRowKeys();
 
-        logger.trace( "Searching with row keys {}", rowKeys );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Searching with row keys {}", rowKeys);
+        }
 
         currentColumnIterator = new MultiRowColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher, searcher.getComparator(), rowKeys, pageSize);
 

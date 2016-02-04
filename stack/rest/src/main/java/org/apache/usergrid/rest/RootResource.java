@@ -102,7 +102,9 @@ public class RootResource extends AbstractContextResource implements MetricProce
         @QueryParam("deleted") @DefaultValue("false") Boolean deleted,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws URISyntaxException {
 
-        logger.info( "RootResource.getData" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("RootResource.getData");
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "get applications" );
@@ -340,7 +342,10 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @Path("orgs/{organizationName}")
     public OrganizationResource getOrganizationByName3( @PathParam("organizationName") String organizationName )
             throws Exception {
-        logger.debug("getOrganizationByName3");
+        if (logger.isTraceEnabled()) {
+            logger.trace("getOrganizationByName3");
+        }
+
         return getOrganizationByName( organizationName );
     }
 

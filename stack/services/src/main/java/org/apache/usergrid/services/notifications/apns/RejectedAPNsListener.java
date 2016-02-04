@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
  */
 public class RejectedAPNsListener implements RejectedNotificationListener<SimpleApnsPushNotification>{
 
+    private static final Logger logger = LoggerFactory.getLogger(RejectedAPNsListener.class);
+
     @Override
     public void handleRejectedNotification(PushManager<? extends SimpleApnsPushNotification> pushManager, SimpleApnsPushNotification notification, RejectedNotificationReason rejectionReason) {
         try {
@@ -48,6 +50,4 @@ public class RejectedAPNsListener implements RejectedNotificationListener<Simple
         }
         System.out.format("%s was rejected with rejection reason %s\n", notification, rejectionReason);
     }
-
-    private static final Logger logger = LoggerFactory.getLogger(RejectedAPNsListener.class);
 }

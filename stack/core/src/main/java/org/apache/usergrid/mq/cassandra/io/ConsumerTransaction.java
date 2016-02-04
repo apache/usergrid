@@ -127,7 +127,9 @@ public class ConsumerTransaction extends NoTransactionSearch
         // Generate a new expiration and insert it
         UUID expirationId = UUIDUtils.newTimeUUID( now + query.getTimeout() );
 
-        logger.debug( "Writing new timeout at '{}' for message '{}'", expirationId, messageId );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Writing new timeout at '{}' for message '{}'", expirationId, messageId);
+        }
 
 
         Mutator<ByteBuffer> mutator = CountingMutator.createFlushingMutator( ko, be );
@@ -300,7 +302,9 @@ public class ConsumerTransaction extends NoTransactionSearch
         }
         catch ( UGLockException e )
         {
-            logger.debug( "Unable to acquire lock", e );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Unable to acquire lock", e);
+            }
             throw new QueueException( "Unable to acquire lock", e );
         }
         finally
@@ -311,7 +315,9 @@ public class ConsumerTransaction extends NoTransactionSearch
             }
             catch ( UGLockException e )
             {
-                logger.debug( "Unable to release lock", e );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Unable to release lock", e);
+                }
                 throw new QueueException( "Unable to release lock", e );
             }
         }
@@ -344,13 +350,13 @@ public class ConsumerTransaction extends NoTransactionSearch
         for ( HColumn<UUID, UUID> column : cassResults )
         {
 
-            if ( logger.isDebugEnabled() )
+            if ( logger.isTraceEnabled() )
             {
-                logger.debug( "Adding uuid '{}' for original message '{}' to results for queue '{}' and consumer '{}'",
-                        new Object[] { column.getName(), column.getValue(), queueId, consumerId } );
-                logger.debug( "Max timeuuid : '{}', Current timeuuid : '{}', comparison '{}'", new Object[] {
+                logger.trace( "Adding uuid '{}' for original message '{}' to results for queue '{}' and consumer '{}'",
+                        column.getName(), column.getValue(), queueId, consumerId );
+                logger.trace( "Max timeuuid : '{}', Current timeuuid : '{}', comparison '{}'",
                         startTimeUUID, column.getName(), UUIDUtils.compare( startTimeUUID, column.getName() )
-                } );
+                );
             }
 
             results.add( new TransactionPointer( column.getName(), column.getValue() ) );
@@ -394,11 +400,11 @@ public class ConsumerTransaction extends NoTransactionSearch
         {
             UUID pointer = pointers.get( i ).expiration;
 
-            if ( logger.isDebugEnabled() )
+            if ( logger.isTraceEnabled() )
             {
-                logger.debug( "Removing transaction pointer '{}' for queue '{}' and consumer '{}'", new Object[] {
+                logger.trace( "Removing transaction pointer '{}' for queue '{}' and consumer '{}'",
                         pointer, queueId, consumerId
-                } );
+                );
             }
 
             mutator.addDeletion( key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(), pointer, ue, cass.createTimestamp() );
@@ -439,7 +445,9 @@ public class ConsumerTransaction extends NoTransactionSearch
             UUID expirationId = UUIDUtils.newTimeUUID( futureTimeout, counter );
             UUID messageId = message.getUuid();
 
-            logger.debug( "Writing new timeout at '{}' for message '{}'", expirationId, messageId );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Writing new timeout at '{}' for message '{}'", expirationId, messageId);
+            }
 
             mutator.addInsertion( key, CONSUMER_QUEUE_TIMEOUTS.getColumnFamily(),
                     createColumn( expirationId, messageId, time, ue, ue ) );

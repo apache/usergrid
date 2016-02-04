@@ -150,7 +150,8 @@ public class ExportServiceIT {
 
 
     //Tests to make sure we can call the job with mock data and it runs.
-    @Ignore("Connections won't save when run with maven, but on local builds it will.")
+    // Connections won't save when run with maven, but on local builds it will.
+    @Ignore("Pending merge of export-feature branch")
     public void testConnectionsOnCollectionExport() throws Exception {
 
         File f = null;
@@ -663,81 +664,6 @@ public class ExportServiceIT {
 
 
     @Test
-    @Ignore("this is a meaningless test because our export format does not support export of organizations")
-    public void testExportOneOrganization() throws Exception {
-
-        // create a bunch of organizations, each with applications and collections of entities
-
-        int maxOrgs = 3;
-        int maxApps = 3;
-        int maxEntities = 20;
-
-        List<ApplicationInfo> appsMade = new ArrayList<>();
-        List<OrganizationInfo> orgsMade = new ArrayList<>();
-
-        for ( int orgIndex = 0; orgIndex < maxOrgs; orgIndex++ ) {
-
-
-            String orgName = "org_" + RandomStringUtils.randomAlphanumeric(10);
-            OrganizationInfo orgMade = setup.getMgmtSvc().createOrganization( orgName, adminUser, true );
-            orgsMade.add( orgMade );
-            logger.debug("Created org {}", orgName);
-
-            for ( int appIndex = 0; appIndex < maxApps; appIndex++ ) {
-
-                String appName =  "app_" + RandomStringUtils.randomAlphanumeric(10);
-                ApplicationInfo appMade = setup.getMgmtSvc().createApplication( orgMade.getUuid(), appName );
-                appsMade.add( appMade );
-                logger.debug("Created app {}", appName);
-
-                for (int entityIndex = 0; entityIndex < maxEntities; entityIndex++) {
-
-                    EntityManager appEm = setup.getEmf().getEntityManager( appMade.getId() );
-                    appEm.create( appName + "_type", new HashMap<String, Object>() {{
-                        put("property1", "value1");
-                        put("property2", "value2");
-                    }});
-                }
-            }
-        }
-
-        // export one of the organizations only, using mock S3 export that writes to local disk
-
-        String exportFileName = "exportOneOrganization.json";
-        S3Export s3Export = new MockS3ExportImpl( exportFileName );
-
-        HashMap<String, Object> payload = payloadBuilder(appsMade.get(0).getName());
-        payload.put("organizationId", orgsMade.get(0).getUuid() );
-        payload.put( "applicationId", appsMade.get(0).getId() );
-
-        ExportService exportService = setup.getExportService();
-        UUID exportUUID = exportService.schedule( payload );
-
-        JobData jobData = jobDataCreator( payload, exportUUID, s3Export );
-        JobExecution jobExecution = mock( JobExecution.class );
-        when( jobExecution.getJobData() ).thenReturn(jobData);
-
-        exportService.doExport( jobExecution );
-
-        // finally, we check that file was created and contains the right number of entities in the array
-
-        File exportedFile = new File( exportFileName );
-        exportedFile.deleteOnExit();
-
-        TypeReference<HashMap<String,Object>> typeRef
-            = new TypeReference<HashMap<String,Object>>() {};
-
-        ObjectMapper mapper = new ObjectMapper();
-        Map<String,Object> jsonMap = mapper.readValue(new FileReader( exportedFile ), typeRef);
-        Map collectionsMap = (Map)jsonMap.get("collections");
-
-        List collectionList = (List)collectionsMap.get("users");
-
-        assertEquals( 3, collectionList.size() );
-    }
-
-
-    @Test
     public void testExportDoJob() throws Exception {
 
         String appName = newOrgAppAdminRule.getApplicationInfo().getName();
@@ -821,10 +747,12 @@ public class ExportServiceIT {
 
 
     @Test
-    @Ignore // TODO: fix this test...
+    @Ignore("Pending merge of export-feature branch")
     public void testIntegration100EntitiesOn() throws Exception {
 
-        logger.debug("testIntegration100EntitiesOn(): starting...");
+        if (logger.isDebugEnabled()) {
+            logger.debug("testIntegration100EntitiesOn(): starting...");
+        }
 
         ExportService exportService = setup.getExportService();
 
@@ -909,8 +837,8 @@ public class ExportServiceIT {
         }
     }
 
-    @Ignore("Why is this ignored?")
     @Test
+    @Ignore("Pending merge of export-feature branch")
     public void testIntegration100EntitiesForAllApps() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();
@@ -992,8 +920,8 @@ public class ExportServiceIT {
     }
 
 
-    @Ignore("Why is this ignored")
     @Test
+    @Ignore("Pending merge of export-feature branch")
     public void testIntegration100EntitiesOnOneOrg() throws Exception {
 
         S3Export s3Export = new S3ExportImpl();

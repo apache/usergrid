@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class TaskManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TaskManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(TaskManager.class);
 
     private Notification notification;
     private AtomicLong successes = new AtomicLong();
@@ -53,28 +53,42 @@ public class TaskManager {
         completed(notifier,null,deviceUUID,null);
     }
     public void completed(Notifier notifier, Receipt receipt, UUID deviceUUID, String newProviderId) throws Exception {
-        LOG.debug("REMOVED {}", deviceUUID);
+        if (logger.isTraceEnabled()) {
+            logger.trace("REMOVED {}", deviceUUID);
+        }
         try {
-            LOG.debug("notification {} removing device {} from remaining", notification.getUuid(), deviceUUID);
+            if (logger.isTraceEnabled()) {
+                logger.trace("notification {} removing device {} from remaining", notification.getUuid(), deviceUUID);
+            }
 
             EntityRef deviceRef = new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID);
             if (receipt != null) {
-                LOG.debug("notification {} sent to device {}. saving receipt.", notification.getUuid(), deviceUUID);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("notification {} sent to device {}. saving receipt.", notification.getUuid(), deviceUUID);
+                }
                 receipt.setSent(System.currentTimeMillis());
                 this.saveReceipt(notification, deviceRef, receipt,false);
-                LOG.debug("notification {} receipt saved for device {}", notification.getUuid(), deviceUUID);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("notification {} receipt saved for device {}", notification.getUuid(), deviceUUID);
+                }
                 successes.incrementAndGet();
             }
 
             if (newProviderId != null) {
-                LOG.debug("notification {} replacing device {} notifierId", notification.getUuid(), deviceUUID);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("notification {} replacing device {} notifierId", notification.getUuid(), deviceUUID);
+                }
                 replaceProviderId(deviceRef, notifier, newProviderId);
             }
 
-            LOG.debug("notification {} completed device {}", notification.getUuid(), deviceUUID);
+            if (logger.isTraceEnabled()) {
+                logger.trace("notification {} completed device {}", notification.getUuid(), deviceUUID);
+            }
 
         } finally {
-            LOG.debug("COUNT is: {}", successes.get());
+            if (logger.isTraceEnabled()) {
+                logger.trace("COUNT is: {}", successes.get());
+            }
             if (hasFinished) { //process has finished but notifications are still coming in
                 finishedBatch();
 
@@ -85,12 +99,8 @@ public class TaskManager {
     public void failed(Notifier notifier, Receipt receipt, UUID deviceUUID, Object code, String message) throws Exception {
 
         try {
-            if (LOG.isDebugEnabled()) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("notification ").append(notification.getUuid());
-                sb.append(" for device ").append(deviceUUID);
-                sb.append(" got error ").append(code);
-                LOG.debug(sb.toString());
+            if (logger.isDebugEnabled()) {
+                logger.debug("notification {} for device {} got error {}", notification.getUuid(), deviceUUID, code);
             }
 
             failures.incrementAndGet();
@@ -100,7 +110,9 @@ public class TaskManager {
             receipt.setErrorCode(code);
             receipt.setErrorMessage(message);
             this.saveReceipt(notification, new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID), receipt,true);
-            LOG.debug("notification {} receipt saved for device {}", notification.getUuid(), deviceUUID);
+            if (logger.isDebugEnabled()) {
+                logger.debug("notification {} receipt saved for device {}", notification.getUuid(), deviceUUID);
+            }
         } finally {
             completed(notifier, deviceUUID);
         }
@@ -142,12 +154,15 @@ public class TaskManager {
         finishedBatch(true,false);
     }
     public void finishedBatch(boolean fetch, boolean force) throws Exception {
+
         if (notification.getDebug() || getFailures() > 0 || force) {
             long successes = this.successes.get(); //reset counters
             long failures = this.failures.get(); //reset counters
+
             for (int i = 0; i < successes; i++) {
                 this.successes.decrementAndGet();
             }
+
             for (int i = 0; i < failures; i++) {
                 this.failures.decrementAndGet();
             }
@@ -175,7 +190,7 @@ public class TaskManager {
             notification.addProperties(properties);
 
             long latency = notification.getFinished() - notification.getStarted();
-            LOG.info("notification finished batch: {} of {} devices in " + latency + "ms", notification.getUuid(), totals);
+            logger.info("notification finished batch: {} of {} devices in {} ms", notification.getUuid(), totals, latency);
 
             em.update(notification);
 //        Set<Notifier> notifiers = new HashSet<>(proxy.getAdapterMap().values()); // remove dups

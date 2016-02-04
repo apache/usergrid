@@ -203,7 +203,7 @@ public abstract class AbstractSearch implements QueueSearch {
                 && comparator.compare( start, finish_uuid ) < 1 ) {
 
             logger.info( "Starting search with start UUID {}, finish UUID {}, and reversed {}",
-                    new Object[] { lastValue, finish_uuid, params.reversed } );
+                    lastValue, finish_uuid, params.reversed );
 
 
             SliceQuery<ByteBuffer, UUID, ByteBuffer> q = createSliceQuery( ko, be, ue, be );
@@ -230,7 +230,9 @@ public abstract class AbstractSearch implements QueueSearch {
 
                 results.add( columnName );
 
-                logger.debug( "Added id '{}' to result set for queue id '{}'", start, queueId );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Added id '{}' to result set for queue id '{}'", start, queueId);
+                }
 
                 if ( results.size() >= params.limit ) {
                     return results;
@@ -297,9 +299,8 @@ public abstract class AbstractSearch implements QueueSearch {
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Writing last client id pointer of '{}' for queue '{}' and consumer '{}' with timestamp '{}",
-                    new Object[] {
                             lastReturnedId, queueId, consumerId, colTimestamp
-                    } );
+                    );
         }
 
         mutator.addInsertion( consumerId, CONSUMERS.getColumnFamily(),

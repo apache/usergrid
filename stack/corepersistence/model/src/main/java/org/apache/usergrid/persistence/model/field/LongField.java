@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.model.field;
  * @author: tnine
  *
  */
-public class LongField extends AbstractField<Long> {
+public final class LongField extends AbstractField<Long> {
 
     public LongField(String name, Long value) {
         super(name, value);
@@ -37,7 +37,7 @@ public class LongField extends AbstractField<Long> {
 
 
     @Override
-    public FieldTypeName getTypeName() {
+    public final FieldTypeName getTypeName() {
                 return FieldTypeName.LONG;
             }
 

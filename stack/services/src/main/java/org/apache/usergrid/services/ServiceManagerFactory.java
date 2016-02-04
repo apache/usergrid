@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
+import com.google.inject.Injector;
+import org.apache.usergrid.locking.Lock;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -47,11 +49,11 @@ public class ServiceManagerFactory implements ApplicationContextAware {
 
 
     public ServiceManagerFactory( EntityManagerFactory emf, Properties properties, SchedulerService schedulerService,
-                                  LockManager lockManager, QueueManagerFactory qmf ) {
+                                  QueueManagerFactory qmf, final Injector injector ) {
         this.emf = emf;
         this.properties = properties;
         this.schedulerService = schedulerService;
-        this.lockManager = lockManager;
+        lockManager = injector.getInstance(LockManager.class);
         this.qmf = qmf;
     }
 
