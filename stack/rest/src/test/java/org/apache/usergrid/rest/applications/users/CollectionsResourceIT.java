@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.applications.users;
 
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -28,16 +29,30 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.cassandra.Concurrent;
+import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.mutation.Mutator;
+
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_PROPERTIES;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.addDeleteToMutator;
+import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.key;
+import static org.apache.usergrid.persistence.cassandra.Serializers.be;
+import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMicros;
+import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.apache.usergrid.utils.MapUtils.hashMap;
+import static org.junit.Assert.assertThat;
 
 
 /**
@@ -196,5 +211,142 @@ public class CollectionsResourceIT extends AbstractRestIT {
             int secondFred = s.indexOf( "fred", firstFred + 4 );
             Assert.assertEquals( "Should not be more than one name property", -1, secondFred );
         }
+    }
+
+
+    @Test
+    public void testUpdatingMissingEntityByName() throws Exception {
+
+        UUID entityId = null;
+
+        // create an "app_user" object with name fred
+        Map<String, String> payload = hashMap( "type", "app_user" ).map( "name", "mokey" );
+
+        JsonNode node =
+                resource().path( "/test-organization/test-app/app_users" ).queryParam( "access_token", access_token )
+                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                          .post( JsonNode.class, payload );
+
+        String uuidString = node.get( "entities" ).get( 0 ).get( "uuid" ).asText();
+        entityId = UUIDUtils.tryGetUUID( uuidString );
+        UUID applicationId = UUIDUtils.tryGetUUID( node.get( "application" ).asText() );
+
+
+        UUID timestampUuid = newTimeUUID();
+        long timestamp = getTimestampInMicros( timestampUuid );
+
+        //Delete only the entity properties out of the filesystem.
+        Keyspace ko = setup.getCassSvc().getApplicationKeyspace( applicationId );
+
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
+        addDeleteToMutator( m, ENTITY_PROPERTIES, key( entityId ), timestamp );
+
+        m.execute();
+
+        payload = hashMap( "name", "mokey" );
+
+
+        // check REST API response for duplicate name property
+        // have to look at raw response data, Jackson will remove dups
+        node = resource().path( "/test-organization/test-app/app_users/mokey" ) //+entityId )
+                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                         .type( MediaType.APPLICATION_JSON_TYPE ).put( JsonNode.class, payload );
+
+        assertNotNull( node );
+
+
+        node = resource().path( "/test-organization/test-app/app_users/mokey" )//+entityId )
+                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                         .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+
+        assertNotNull( node );
+    }
+
+    @Test
+    public void testAddingAndRemovingProperties() throws Exception {
+
+        UUID entityId = null;
+        String entityName = "tonythetiger";
+        // create an "app_user" object with name fred
+        Map<String, String> payload = hashMap( "type", "app_user" ).map( "name", entityName ).map("testProperty","randomValue");
+
+        JsonNode node =
+                resource().path( "/test-organization/test-app/app_users" ).queryParam( "access_token", access_token )
+                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                          .post( JsonNode.class, payload );
+
+        String uuidString = node.get( "entities" ).get( 0 ).get( "uuid" ).asText();
+        entityId = UUIDUtils.tryGetUUID( uuidString );
+        UUID applicationId = UUIDUtils.tryGetUUID( node.get( "application" ).asText() );
+
+        payload = hashMap( "testProperty", null );
+        payload.put( "newTestProperty","newRandomValue" );
+
+
+        // check REST API response for duplicate name property
+        // have to look at raw response data, Jackson will remove dups
+        node = resource().path( "/test-organization/test-app/app_users/"+entityName ) //+entityId )
+                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                         .type( MediaType.APPLICATION_JSON_TYPE ).put( JsonNode.class, payload );
+
+        assertNotNull( node );
+
+
+        node = resource().path( "/test-organization/test-app/app_users/"+entityName )//+entityId )
+                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                         .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+
+        assertNotNull( node );
+        assertEquals( entityName,node.get( "entities" ).get( 0 ).get( "name" ).asText() );
+        assertNull( node.get( "entities" ).get( 0 ).get( "testProperty" ) );
+        assertEquals( "newRandomValue",node.get( "entities" ).get( 0 ).get( "newTestProperty" ).asText() );
+    }
+
+
+    @Test
+    public void testDeleteByNameOfMissingEntityAndRecreation() throws Exception {
+
+        UUID entityId = null;
+
+        // create an "app_user" object with name fred
+        Map<String, String> payload = hashMap( "type", "app_user" ).map( "name", "rock" );
+
+        JsonNode node =
+                resource().path( "/test-organization/test-app/app_users" ).queryParam( "access_token", access_token )
+                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                          .post( JsonNode.class, payload );
+
+        String uuidString = node.get( "entities" ).get( 0 ).get( "uuid" ).asText();
+        entityId = UUIDUtils.tryGetUUID( uuidString );
+        UUID applicationId = UUIDUtils.tryGetUUID( node.get( "application" ).asText() );
+
+
+        UUID timestampUuid = newTimeUUID();
+        long timestamp = getTimestampInMicros( timestampUuid );
+
+        //Delete only the entity properties out of the filesystem.
+        Keyspace ko = setup.getCassSvc().getApplicationKeyspace( applicationId );
+
+        Mutator<ByteBuffer> m = CountingMutator.createFlushingMutator( ko, be );
+        addDeleteToMutator( m, ENTITY_PROPERTIES, key( entityId ), timestamp );
+
+        m.execute();
+
+        //delete the incomplete entity
+        node = resource().path( "/test-organization/test-app/app_users/rock" )
+                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                         .type( MediaType.APPLICATION_JSON_TYPE ).delete( JsonNode.class );
+
+        assertNotNull( node );
+
+        //try recreating an entity with the exact same payload and see if it can be recreated with a different uuid.
+        node = resource().path( "/test-organization/test-app/app_users" ).queryParam( "access_token", access_token )
+                         .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                         .post( JsonNode.class, payload );
+
+        assertNotNull( node );
+        uuidString = node.get( "entities" ).get( 0 ).get( "uuid" ).asText();
+        assertThat( entityId, not( UUIDUtils.tryGetUUID( uuidString ) ) );
+        assertThat( "rock", equalTo( node.get( "entities" ).get( 0 ).get( "name" ).asText() ) );
     }
 }
