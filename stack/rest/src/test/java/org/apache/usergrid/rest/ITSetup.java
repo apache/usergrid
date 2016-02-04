@@ -29,6 +29,7 @@ import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.security.providers.SignInProviderFactory;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.services.ServiceManagerFactory;
@@ -50,6 +51,7 @@ public class ITSetup extends ExternalResource {
     private TokenService tokenService;
     private SignInProviderFactory providerFactory;
     private Properties properties;
+    private CassandraService cassSvc;
 
 
     public ITSetup( CassandraResource cassandraResource ) {
@@ -73,7 +75,6 @@ public class ITSetup extends ExternalResource {
     protected void before() throws Throwable {
         synchronized ( cassandraResource ) {
             super.before();
-
             managementService = cassandraResource.getBean( ManagementService.class );
 
             if ( !setupCalled ) {
@@ -87,6 +88,7 @@ public class ITSetup extends ExternalResource {
             providerFactory = cassandraResource.getBean( SignInProviderFactory.class );
             properties = cassandraResource.getBean( "properties", Properties.class );
             smf = cassandraResource.getBean( ServiceManagerFactory.class );
+            cassSvc = cassandraResource.getBean( CassandraService.class );
 
             tomcatResource.before();
 
@@ -150,6 +152,11 @@ public class ITSetup extends ExternalResource {
     public TokenService getTokenSvc() {
         protect();
         return tokenService;
+    }
+
+    public CassandraService getCassSvc(){
+        protect();
+        return cassSvc;
     }
 
 
