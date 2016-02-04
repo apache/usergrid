@@ -41,6 +41,11 @@ The following operators and data types are supported by the SQL-like query langu
         <td>select * where quantity < '4000' and not quantity = '2000'</td>
     </tr>
     <tr>
+        <td>contains</td>
+        <td>Narrow by contained text</td>
+        <td>select * where title contains 'tale'</td>
+    </tr>
+    <tr>
         <td>and</td>
         <td>Union of results</td>
         <td>select * where quantity > '1000' and quantity < '4000'</td>
@@ -50,12 +55,22 @@ The following operators and data types are supported by the SQL-like query langu
         <td>Intersection of results</td>
         <td>select * where quantity = '1000' or quantity = '4000'</td>
     </tr>
-    <tr>
-        <td>contains</td>
-        <td>Narrow by contained text</td>
-        <td>select * where title contains 'tale'</td>
-    </tr>
 </table>
+
+
+### Precedence 
+
+The operators at the bottom of the above table are the ones with lower precedence. 
+When a query is evaluated the comparison operators (=, > , <, <= and >=) will be evaluated first.
+And next "not", "contains" and "or" will be evaluated and in that order.
+
+Though they are not shown above, parentheses are allowed and may be used to group query expressions.
+
+For example, given our rules of precedence, these two queries are equivalent:
+
+    select * where age > 6 or size = 'large' and color = 'tabby'
+    
+    select * where (age > 6 or size = 'large') and color = 'tabby'
 
 
 ## Data types
