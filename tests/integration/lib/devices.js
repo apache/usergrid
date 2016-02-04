@@ -17,24 +17,27 @@
  * under the License.
  */
 
-'use strict';
-var token = require("../../lib/token")
-var config = require("../../config")
-var should = require("should")
-var setup = require("../setup")
+var request = require("request");
+var urls = require("./urls");
+var responseLib = require("./response");
 module.exports = {};
 
-module.exports.test = function() {
-    describe('get a user token', function() {
-        it('should return valid token', function() {
-            var user = setup.users[0];
-            token.getAppToken(user.username, user.password, function(err, tokenData) {
-                should(err).be.null;
-                tokenData.should.have.property('access_token').and.have.lengthOf(63);;
-                tokenData.should.have.property('expires_in');
-                tokenData.should.have.property('expires_in').which.is.a.Number;
-                tokenData.user.username.should.equal(user.username)
-            });
-        });
+
+module.exports.add = function(device, cb) {
+    request.put({
+        url: urls.appendOrgCredentials(urls.getAppUrl() + "devices/" + device.name),
+        json: device
+    }, function(err, response, body) {
+        var error = responseLib.getError(err, response);
+        cb(error, error ? null : body.entities.pop());
     });
+};
+
+
+module.exports.get = function(deviceUUID, cb) {
+    request.get(urls.appendOrgCredentials(urls.getAppUrl() + "devices/" + deviceUUID), function(err, response, body) {
+        var json = JSON.parse(body);
+        var error = response.statusCode === 404 ? null : responseLib.getError(err, response);
+        cb(error, error ? null : response.statusCode === 404 ? null : json.entities.pop());
+    })
 };
