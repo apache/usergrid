@@ -18,31 +18,46 @@
  */
 
 var request = require("request");
-var token = require("./token");
 var urls = require("./urls");
 var responseLib = require("./response");
+
 module.exports = {};
 
-module.exports.add = function(user, cb) {
-    request.post(urls.appendOrgCredentials(urls.getAppUrl() + "users"), {
-        json: user
+function buildUrl(collection1, entity1, collection2, entity2, relationship){
+
+    var url = urls.getAppUrl();
+    if ( relationship !== null && relationship !== undefined && relationship !== ""){
+        url += collection1 + "/" + entity1 + "/" + relationship + "/" + collection2 + "/" + entity2;
+    }else{
+        url += collection1 + "/" + entity1 + "/" + collection2 + "/" + entity2;
+    }
+
+    return urls.appendOrgCredentials(url);
+}
+
+module.exports.connect = function(collection1, entity1, collection2, entity2, relationship, cb) {
+
+    var url = buildUrl(collection1, entity1, collection2, entity2, relationship);
+
+    request.post({
+        url : url,
+        json: {}
     }, function(err, response, body) {
-        var error = responseLib.getError(err, response);
+        var error = responseLib.getError(err, response, body);
         cb(error, error ? null : body.entities.pop());
     });
 };
 
-module.exports.addToRole = function(username, role, cb) {
-    request.post(urls.appendOrgCredentials(urls.getAppUrl() + "roles/" + role + "/users/" + username), null, function(err, response, body) {
-        var error = responseLib.getError(err, response);
-        cb(error);
-    });
-};
 
-module.exports.get = function(username, cb) {
-    request.get(urls.appendOrgCredentials(urls.getAppUrl() + "users/" + username), function(err, response, body) {
+module.exports.disconnect = function(collection1, entity1, collection2, entity2, relationship, cb) {
+
+    var url = buildUrl(collection1, entity1, collection2, entity2, relationship);
+
+    request.del(url, function(err, response, body) {
         var json = JSON.parse(body);
         var error = response.statusCode === 404 ? null : responseLib.getError(err, response);
         cb(error, error ? null : response.statusCode === 404 ? null : json.entities.pop());
     })
 };
+
+
