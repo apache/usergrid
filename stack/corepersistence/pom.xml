@@ -52,7 +52,7 @@ limitations under the License.
 
         <antlr.version>3.5.2</antlr.version>
         <archaius.version>0.5.12</archaius.version>
-        <astyanax.version>1.56.49-SNAPSHOT-UG-1</astyanax.version>
+        <astyanax.version>3.9.0</astyanax.version>
         <cassandra.version>1.2.18</cassandra.version>
 <!--        <chop.version>1.0</chop.version>-->
         <commons.codec.version>1.6</commons.codec.version>
@@ -160,13 +160,5 @@ limitations under the License.
         </testResources>
 
     </build>
-
-    <repositories>
-        <repository>
-            <id>local-dependencies</id>
-            <name>local-depedendencies</name>
-            <url>file://${project.basedir}/../m2/repository</url>
-        </repository>
-    </repositories>
 
 </project>

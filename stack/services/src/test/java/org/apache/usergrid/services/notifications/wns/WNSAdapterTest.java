@@ -19,15 +19,11 @@
  */
 package org.apache.usergrid.services.notifications.wns;
 
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.services.AbstractServiceIT;
 import org.junit.Test;
 
-import java.util.UUID;
 
 /**
  * test windows phone.
