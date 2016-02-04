@@ -472,13 +472,3 @@ Resources that might be useful to those deploying Usergrid:
 ## The End
 
 That's all folks.
-
-
-
-
-
-
-
-
-
-
