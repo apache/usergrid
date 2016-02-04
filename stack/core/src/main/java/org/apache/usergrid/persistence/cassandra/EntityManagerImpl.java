@@ -1615,7 +1615,7 @@ public class EntityManagerImpl implements EntityManager {
             }
         }
 
-        addDeleteToMutator( m, ENTITY_PROPERTIES, key( entityId ), timestamp );
+        //addDeleteToMutator( m, ENTITY_PROPERTIES, key( entityId ), timestamp );
 
         batchExecute( m, CassandraService.RETRY_COUNT );
     }
