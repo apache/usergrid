@@ -165,7 +165,7 @@ Apache Usergrid Documentation
 
    installation/ug1-deploy-to-tomcat
    installation/ug1-launcher-quick-start
-   installation/ug2-deploy-to-tomcat
+   installation/deployment-guide
     
 .. _about:
 

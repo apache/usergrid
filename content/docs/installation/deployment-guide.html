@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Usergrid 2.1.0 Deployment Guide &mdash; Apache Usergrid 1.0 documentation</title>
+  <title>Usergrid 2.1.0 (unreleased) Deployment Guide &mdash; Apache Usergrid 1.0 documentation</title>
   
 
   
@@ -30,7 +30,9 @@
   
 
   
-    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/> 
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Presentations &amp; Videos" href="../reference/presos-and-videos.html"/>
+        <link rel="prev" title="Usegrid 1: Launcher Quick-start" href="ug1-launcher-quick-start.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -183,10 +185,34 @@
 <li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Installing the Stack</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Usergrid 2.1.0 (unreleased) Deployment Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#draft">DRAFT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#intended-audience">Intended audience</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#prerequsites">Prerequsites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-started">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deploying-the-usergrid-stack">Deploying the Usergrid Stack</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#stack-step-1-setup-cassandra">Stack STEP #1: Setup Cassandra</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stack-step-2-setup-elasticsearch">Stack STEP #2: Setup ElasticSearch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stack-step-3-setup-tomcat">Stack STEP #3: Setup Tomcat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stack-step-4-configure-usergrid-stack-logging">Stack STEP #4: Configure Usergrid Stack &amp; Logging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#example-usergrid-stack-properties-file">Example Usergrid Stack Properties File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configure-logging">Configure Logging</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#stack-step-5-deploy-root-war-to-tomcat">Stack STEP #5: Deploy ROOT.war to Tomcat</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#initialize-the-usergrid-database">Initialize the Usergrid Database</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#deploying-the-usergrid-portal">Deploying the Usergrid Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#additional-resources">Additional Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-end">The End</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">More about Usergrid</span></p>
 <ul>
@@ -216,7 +242,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../index.html">Docs</a> &raquo;</li>
       
-    <li>Usergrid 2.1.0 Deployment Guide</li>
+    <li>Usergrid 2.1.0 (unreleased) Deployment Guide</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -230,13 +256,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="usergrid-2-1-0-deployment-guide">
-<h1>Usergrid 2.1.0 Deployment Guide<a class="headerlink" href="#usergrid-2-1-0-deployment-guide" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="usergrid-2-1-0-unreleased-deployment-guide">
+<h1>Usergrid 2.1.0 (unreleased) Deployment Guide<a class="headerlink" href="#usergrid-2-1-0-unreleased-deployment-guide" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="draft">
 <h2>DRAFT<a class="headerlink" href="#draft" title="Permalink to this headline">¶</a></h2>
-<p>This document explains how to deploy the Usergrid Backend-as-a-Service
-(BaaS), which comprises the Usergrid Stack, a Java web application, and
-the Usergrid Portal, which is an HTML5/JavaScript application.</p>
+<p>This document explains how to deploy the Usergrid v2.1.0
+Backend-as-a-Service (BaaS), which comprises the Usergrid Stack, a Java
+web application, and the Usergrid Portal, which is an HTML5/JavaScript
+application.</p>
 </div>
 <div class="section" id="intended-audience">
 <h2>Intended audience<a class="headerlink" href="#intended-audience" title="Permalink to this headline">¶</a></h2>
@@ -335,8 +362,8 @@ recommended.</p>
 <p><strong>Use the right Java.</strong> Cassandra requires Java and we recommend that
 you use the same version of Java for Cassandra as you use to run Tomcat
 and ElasticSearch.</p>
-<p><strong>Refer to the `Apache Cassandra
-documentation &lt;http://wiki.apache.org/cassandra/GettingStarted&gt;`__ for
+<p><strong>Refer to the</strong> <a class="reference external" href="http://wiki.apache.org/cassandra/GettingStarted">Apache Cassandra
+documentation</a> <strong>for
 instructions on how to install Cassandra</strong>. The <a class="reference external" href="http://docs.datastax.com/en/cassandra/1.2/cassandra/features/featuresTOC.html">Datastax documentation
 for Cassandra
 1.2</a>
@@ -357,10 +384,10 @@ you should run a cluster in production.</p>
 <p><strong>Use the right Java</strong>. ElasticSearch requires Java and you <em>must</em>
 ensure that you use the same version of Java for ElasticSearch as you do
 for running Tomcat.</p>
-<p><strong>Refer to the `ElasticSearch 1.4
-documentation &lt;https://www.elastic.co/guide/en/elasticsearch/reference/1.4/index.html&gt;`__
-for instructions on how to install</strong>. Once you are up and running make a
-note of these things:</p>
+<p><strong>Refer to the</strong> <a class="reference external" href="https://www.elastic.co/guide/en/elasticsearch/reference/1.4/index.html">ElasticSearch 1.4
+documentation</a>
+<strong>for instructions on how to install</strong>. Once you are up and running make
+a note of these things:</p>
 <ul class="simple">
 <li>The name of the ElasticSearch cluster</li>
 <li>Hostname or IP address of each ElasticSearch node</li>
@@ -378,10 +405,10 @@ zero, otherwise the cluster will report status YELLOW.</p>
 <p>The Usergrid Stack is contained in a file named ROOT.war, a standard
 Java EE WAR ready for deployment to Tomcat. On each machine that will
 run the Usergrid Stack you must install the Java SE 8 JDK and Tomcat 7+.</p>
-<p><strong>Refer to the `Apache Tomcat
-7 &lt;https://tomcat.apache.org/tomcat-7.0-doc/setup.html&gt;`__ documentation
-for instructions on how to install</strong>. Once Tomcat installed, you need to
-create and edit some configuration files.</p>
+<p><strong>Refer to the</strong> <a class="reference external" href="https://tomcat.apache.org/tomcat-7.0-doc/setup.html">Apache Tomcat
+7</a>
+<strong>documentation for instructions on how to install</strong>. Once Tomcat
+installed, you need to create and edit some configuration files.</p>
 </div>
 <div class="section" id="stack-step-4-configure-usergrid-stack-logging">
 <h3>Stack STEP #4: Configure Usergrid Stack &amp; Logging<a class="headerlink" href="#stack-step-4-configure-usergrid-stack-logging" title="Permalink to this headline">¶</a></h3>
@@ -410,27 +437,81 @@ need to change indicated like shell variables, e.g.
 <code class="docutils literal"><span class="pre">${USERGRID_CLUSTER_NAME}</span></code>. Here&#8217;s a guide to the things you need to
 set:</p>
 <p><strong>Table 1: Values to set in Example Properties file:</strong></p>
-<p>| Value | Description | |&#8212;&#8212;&#8212;&#8212;-|&#8212;&#8212;&#8212;&#8212;-| |
-<strong>BASEURL</strong> | This is the base URL for the Usergrid installation, e.g.
-<code class="docutils literal"><span class="pre">https://api.example.com</span></code>. | | <strong>USERGRID_CLUSTER_NAME</strong> | This
-is your name for your Usergrid installation. | |
-<strong>CASSANDRA_CLUSTER_NAME</strong> | Name of Cassandra cluster, must match
-what&#8217;s in Cassandra configuration. | | <strong>CASSANDRA_HOSTS</strong> |
-Comma-separated lists of Cassandra hosts, with port numbers if you are
+<table class="usergrid-table">
+<tr>
+  <th><p>Value</p>
+</th>
+  <th><p>Description</p>
+</th>
+</tr>
+<tr>
+    <td><p><strong>BASEURL</strong></p>
+</td>
+    <td><p>This is the base URL for the Usergrid installation, e.g.
+<code class="docutils literal"><span class="pre">https://api.example.com</span></code>.</p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>USERGRID_CLUSTER_NAME</strong></p>
+</td>
+    <td><p>This is your name for your Usergrid installation.</p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>CASSANDRA_CLUSTER_NAME</strong></p>
+</td>
+    <td><p>Name of Cassandra cluster, must match what&#8217;s in Cassandra configuration.</p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>CASSANDRA_HOSTS</strong></p>
+</td>
+    <td><p>Comma-separated lists of Cassandra hosts, with port numbers if you are
 not using the default 9120. The default for this property is
-<code class="docutils literal"><span class="pre">localhost:9120</span></code> | | <strong>ELASTICSEARCH_CLUSTER_NAME</strong> | Name of
-ElasticSearch cluster, must match what&#8217;s in ElasticSearch configuration.
-| | <strong>ELASTICSEARCH_HOSTS</strong> | Comma-separated lists of ElasticSearch
-hosts, with port numbers if you are not using the default 9300. The
-default for this property is <code class="docutils literal"><span class="pre">localhost:9300</span></code> | |
-<strong>SUPER_USER_EMAIL</strong> | Email address of person responsible for the
-superuser account. | | <strong>SUPER_USER_PASSWORD</strong> | Password for the
-superuser account. | | <strong>TEST_ADMIN_USER_EMAIL</strong> | If
-<code class="docutils literal"><span class="pre">usergrid.setup-test-account=true</span></code>, as shown below, Usergrid will
-create a test account and you should specify a valid email here. | |
-<strong>TEST_ADMIN_USER_PASSWORD</strong> | Password for the username &#8216;test&#8217;
-account. |</p>
-<p>Make sure you set all of the above properties when you edit this example
+<code class="docutils literal"><span class="pre">localhost:9120</span></code></p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>ELASTICSEARCH_CLUSTER_NAME</strong></p>
+</td>
+    <td><p>Name of ElasticSearch cluster, must match what&#8217;s in ElasticSearch
+configuration.</p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>ELASTICSEARCH_HOSTS</strong></p>
+</td>
+    <td><p>Comma-separated lists of ElasticSearch hosts, with port numbers if you
+are not using the default 9300. The default for this property is
+<code class="docutils literal"><span class="pre">localhost:9300</span></code></p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>SUPER_USER_EMAIL</strong></p>
+</td>
+    <td><p>Email address of person responsible for the superuser account.</p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>SUPER_USER_PASSWORD</strong></p>
+</td>
+    <td><p>Password for the superuser account.</p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>TEST_ADMIN_USER_EMAIL</strong></p>
+</td>
+    <td><p>If <code class="docutils literal"><span class="pre">usergrid.setup-test-account=true</span></code>, as shown below, Usergrid will
+create a test account and you should specify a valid email here.</p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>TEST_ADMIN_USER_PASSWORD</strong></p>
+</td>
+    <td><p>Password for the username &#8216;test&#8217; account.</p>
+</td>
+</tr>
+</table><p>Make sure you set all of the above properties when you edit this example
 for your installation.</p>
 <p>Example 1: usergrid-deployment.properties file</p>
 <div class="highlight-python"><div class="highlight"><pre>usergrid.cluster_name=${USERGRID_CLUSTER_NAME}
@@ -700,6 +781,15 @@ instances running Cassandra and ElasticSearch.</p>
            </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../reference/presos-and-videos.html" class="btn btn-neutral float-right" title="Presentations &amp; Videos" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ug1-launcher-quick-start.html" class="btn btn-neutral" title="Usegrid 1: Launcher Quick-start" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
