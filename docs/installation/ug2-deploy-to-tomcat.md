@@ -2,6 +2,7 @@
 
 __NOTE__: Beware that Usergrid 2 is UNRELEASED SOFTWARE
 
+
 ## Requirements
 
 * [JDK 1.8](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
@@ -9,44 +10,56 @@ __NOTE__: Beware that Usergrid 2 is UNRELEASED SOFTWARE
 * [Tomcat 7+](https://tomcat.apache.org/download-70.cgi)
 * [Cassandra 1.2.1*](http://cassandra.apache.org/download/)
 * [ElasticSearch 1.4+](https://www.elastic.co/downloads/elasticsearch) 
-* [Usergrid 2.0](https://github.com/apache/usergrid/tree/two-dot-o)
+* [Usergrid 2.1](https://github.com/apache/usergrid/tree/2.1-release)
 
-##Running
-
+## Running
 
 1. Start up Cassandra [^1]
 	a. To do this you can navigate to the cassandra folder and run ```./bin/cassandra ```
 2. Start up Elasticsearch
 	a. To do this you can navigate to the folder where you extracted elasticsearch and run ```/bin/elasticsearch``` 	
 
-###Running Usergrid	
+### Running Usergrid	
 
-####Build The Java Sdk
+#### Build The Java SDK
 
 1. Navigate to where you cloned the usergrid repo
 2. Navigate to the ```sdks/java``` directory
 3. Run ```mvn clean install```
 
-####Build The Stack Itself
+#### Build The Stack Itself
 
 1. Navigate to the ```stack``` directory.
 2. Run ```mvn clean install -DskipTests```
 3. This will generate a war at ```rest/target/ROOT.war```
 
-####Deploying the Stack Locally
+#### Deploying the Stack Locally
+
 1. Take this war and deploy it on downloaded tomcat.
 1. In the lib directory of the tomcat you must also put usergrid-deployment.properties. ( An example file is provided below)
 1. Start up Tomcat
 	a. To do this you can navigate to folder where Tomcat is install and run ```./bin/catalina.sh start```
-1. Go to a web browser and input the following to initilizing the database ```localhost:8080/system/database/setup```. 
-	a. The credentials it asks for are the admin credentialls and password as defined in the usergrid-deployment.properties. 
-	b. You can also do a curl call with basic auth to automatically authenticate the call instead of using the web browser.
-1. Then using the same steps as before call ```localhost:8080/system/superuser/setup```
+	
+Next, you need to make some API calls to initialize Usergrid's storage and indexing systems. You can make these
+API calls using curl or your favorite HTTP client. These calls can only be done with the superuser credentials
+that appear in your __usergrid-deployment.properties__ file. Here's how to do the calls with curl (and assuming
+your superuser password is 'test'):
 
-The stack is now ready to be queried against, but to get the most out of it you'll need to initilize and use our portal!
+    curl -X PUT http://localhost:8080/system/database/setup -u superuser:test
+    curl -X PUT http://localhost:8080/system/database/bootstrap -u superuser:test
+    curl -X GET http://localhost:8080/system/superuser/setup -u superuser:test
 
-####Running The Portal Locally
-#####Requirments 
+Once those three calls execute without error, then you are done. If you do see errors the double-check that you
+have Cassandra and ElasticSearch running and that your properties files lists your Cassandra and ElasticSearch 
+hostnames correctly. Also check that ElasticSearch cluster name (in elasticsearch.yml) matches the one in the
+Usergrid properties file. If the problem persists come talk to us on the Usergrid mailing list, we might be able to help.
+
+The stack is now ready to be queried against, but to get the most out of it you'll need to initialize and use our portal!
+
+#### Running The Portal Locally
+
+##### Requirments 
+
 [nodejs 0.10+](https://nodejs.org/download/) 
 
 1. Make sure you've installed node.js above. Any version above .10 or .10 should work fine.
@@ -58,11 +71,12 @@ The stack is now ready to be queried against, but to get the most out of it you'
 Now usergrid is fully ready to use! Feel free to query against it or use it however you like!
 
 
-
 Example __usergrid-deployment.properties__ file
 ---
 ```
 # core persistence properties
+
+usergrid.cluster_name property=usergrid
 
 cassandra.embedded=false
 cassandra.version=1.2.18
