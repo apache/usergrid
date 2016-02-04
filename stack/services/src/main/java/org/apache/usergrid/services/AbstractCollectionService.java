@@ -18,6 +18,7 @@ package org.apache.usergrid.services;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +26,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
@@ -288,31 +290,22 @@ public class AbstractCollectionService extends AbstractService {
     @Override
     public ServiceResults putItemByName( ServiceContext context, String name ) throws Exception {
 
-        if ( context.moreParameters() ) {
-            return getItemByName( context, name );
-        }
-
         EntityRef ref = em.getAlias( getEntityType(), name );
-        Entity entity;
-        if ( ref == null ) {
-            // null entity ref means we tried to put a non-existing entity
-            // before we create a new entity for it, we should check for permission
+        if(ref == null){
+            logger.error("The following name wasn't found in entity_unique column family. {}",name);
+
             checkPermissionsForCollection(context);
+
             Map<String, Object> properties = context.getPayload().getProperties();
             if ( !properties.containsKey( "name" ) || !( ( String ) properties.get( "name" ) ).trim().equalsIgnoreCase(
                     name ) ) {
                 properties.put( "name", name );
             }
-            entity = em.create( getEntityType(), properties );
-        }
-        else {
-            entity = em.get( ref );
-            entity = importEntity( context, entity );
-            checkPermissionsForEntity( context, entity );
-            updateEntity( context, entity );
+            Entity entity = em.create( getEntityType(), properties );
+            return new ServiceResults( this, context, Type.COLLECTION, Results.fromEntity( entity ), null, null );
         }
 
-        return new ServiceResults( this, context, Type.COLLECTION, Results.fromEntity( entity ), null, null );
+        return putItemById( context, ref.getUuid() );
     }
 
 
@@ -470,14 +463,15 @@ public class AbstractCollectionService extends AbstractService {
 
         Entity item = em.get( id );
         if ( item == null ) {
+            logger.error(
+                    "Found entity reference but not entity properties when trying to delete uuid: {}.Please delete by"
+                            + " Name.", id );
             throw new ServiceResourceNotFoundException( context );
         }
 
         validateEntityType( item, id );
 
         item = importEntity( context, item );
-
-        prepareToDelete( context, item );
 
         em.removeFromCollection( context.getOwner(), context.getCollectionName(), item );
 
@@ -491,20 +485,29 @@ public class AbstractCollectionService extends AbstractService {
         if ( context.moreParameters() ) {
             return getItemByName( context, name );
         }
-
         EntityRef ref = em.getAlias( getEntityType(), name );
+
         if ( ref == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
+
+        checkPermissionsForEntity( context, ref );
+
         Entity entity = em.get( ref );
         if ( entity == null ) {
-            throw new ServiceResourceNotFoundException( context );
+            logger.error(
+                    "Found entity reference but not entity properties when trying to delete. Cleaning up uuid: {}",
+                    ref.getUuid() );
+            String entityType = getEntityType();
+            Map<String, Object> properties = new HashMap<String, Object>();
+            properties.put( "name", name );
+            em.create( ref.getUuid(), entityType, properties );
+
+            em.removeFromCollection( context.getOwner(), context.getCollectionName(), ref );
+            return new ServiceResults( this, context, Type.COLLECTION, Results.fromRef( ref ), null, null );
         }
+
         entity = importEntity( context, entity );
-
-        checkPermissionsForEntity( context, entity );
-
-        prepareToDelete( context, entity );
 
         em.removeFromCollection( context.getOwner(), context.getCollectionName(), entity );
 
