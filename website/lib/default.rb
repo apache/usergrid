@@ -5,7 +5,7 @@ include Nanoc::Helpers::Rendering
 require 'pandoc-ruby'
 require 'htmlentities'
 
-class PandocFilter < Nanoc3::Filter
+class PandocFilter < Nanoc::Filter
   identifier :pandoc
   type :text
 
@@ -14,7 +14,7 @@ class PandocFilter < Nanoc3::Filter
   end
 end
 
-class FencedCodeBlock < Nanoc3::Filter
+class FencedCodeBlock < Nanoc::Filter
   identifier :fenced_code_block
   
   def run(content, params={})

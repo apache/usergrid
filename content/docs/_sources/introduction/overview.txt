@@ -6,8 +6,8 @@ The Usergrid documentation is written for a couple of distinctly different audie
 
 
 * __Deployment/Operations Engineer__: this is for you if you are the person who will be installing Usergrid, setting up the required Cassandra database and other things that Usergrid needs. Currently, we have limited docs for installation, deployment and maintenance of Usergrid:
-    * [Deploying to Tomcat](../ug1-deploy-to-tomacat): How to build and deploy Usergrid to Tomcat and Cassandra.
-    * [Launcher Quick Start](../ug1-launcher-quick-start): How to build and run Usergrid via the Usergrid Launcher.
+    * [Deploying to Tomcat](../installation/ug1-deploy-to-tomcat): How to build and deploy Usergrid to Tomcat and Cassandra.
+    * [Launcher Quick Start](../installation/ug1-launcher-quick-start): How to build and run Usergrid via the Usergrid Launcher.
     
     
 * __Open Source Contributor__: How to "give back" and contribute to Usergrid. Usergrid welcomes code and documentation contributions, GitHub pull-requests, bug reports and suggestions for improvement.  

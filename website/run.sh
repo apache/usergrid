@@ -1,1 +1,1 @@
-nanoc autocompile
+nanoc view
