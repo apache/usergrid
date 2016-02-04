@@ -565,7 +565,7 @@ public class AbstractCollectionService extends AbstractService {
     }
 
 
-    private void validateEntityType( EntityRef item, UUID id ) throws UnexpectedEntityTypeException {
+    protected void validateEntityType( EntityRef item, UUID id ) throws UnexpectedEntityTypeException {
         if ( !getEntityType().equalsIgnoreCase( item.getType() ) ) {
             throw new UnexpectedEntityTypeException(
                     "Entity " + id + " is not the expected type, expected " + getEntityType() + ", found " + item
