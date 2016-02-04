@@ -132,18 +132,22 @@ public class ScopedCacheTest {
         ScopedCache<String, Map<String, Object>> cache = cf.getScopedCache(scope);
         assertNotNull("should get a cache", cache);
 
-        // cache item for 1 second
+        // cache item for 3 seconds
+        final int timeout = 3000;
 
         Map<String, Object> item = new HashMap<String, Object>() {{
             put("field1", "value1");
         }};
-        cache.put("item", item, 1);
+        cache.put("item", item, timeout/1000);
+
+        // in the event that the tests have slowed c*, sleep some to ensure the write has committed
+        try { Thread.sleep(500); } catch (InterruptedException ignored) {}
 
         Map<String, Object> retrievedItem = cache.get("item", typeRef);
         assertNotNull("should get back item", retrievedItem);
         assertEquals("value1", retrievedItem.get("field1"));
 
-        try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
+        try { Thread.sleep(timeout); } catch (InterruptedException ignored) {}
 
         assertNull( cache.get("item", typeRef));
     }
@@ -155,12 +159,13 @@ public class ScopedCacheTest {
         ScopedCache<String, Map<String, Object>> cache = cf.getScopedCache(scope);
         assertNotNull("should get a cache", cache);
 
-        // cache item for 1 second
+        // cache item for 3 seconds
+        final int timeout = 3000;
 
         Map<String, Object> item = new HashMap<String, Object>() {{
             put("field1", "value1");
         }};
-        cache.put("item", item, 1);
+        cache.put("item", item, timeout/1000);
 
         Map<String, Object> retrievedItem = cache.get("item", typeRef);
         assertNotNull( "should get back item", retrievedItem );

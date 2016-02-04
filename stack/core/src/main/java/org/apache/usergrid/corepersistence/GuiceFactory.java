@@ -103,7 +103,7 @@ public class GuiceFactory implements FactoryBean<Injector> {
 
             hostsString = hostsString.substring( 0, hostsString.length() - 1 );
 
-            logger.info( "hostsString: " + hostsString );
+            logger.info( "hostsString: {}", hostsString );
 
             Properties cpProps = new Properties();
 
@@ -119,7 +119,9 @@ public class GuiceFactory implements FactoryBean<Injector> {
             cpProps.put( "collections.keyspace.strategy.options",
                 getAndValidateProperty( "cassandra.keyspace.replication" ) );
 
-            logger.debug( "Set Cassandra properties for Core Persistence: " + cpProps.toString() );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Set Cassandra properties for Core Persistence: {}", cpProps.toString());
+            }
 
             // Make all Usergrid properties into Core Persistence config
             cpProps.putAll( systemProperties );

@@ -218,9 +218,9 @@ public class AbstractConnectionsService extends AbstractService {
         // the context of the entity they're trying to load isn't owned by the owner
         // in the path, don't return it
         if ( !em.isConnectionMember( context.getOwner(), context.getCollectionName(), entity ) ) {
-            logger.info( "Someone tried to GET entity {} they don't own. Entity id {} with owner {}", new Object[] {
+            logger.info( "Someone tried to GET entity {} they don't own. Entity id {} with owner {}",
                     getEntityType(), id, context.getOwner()
-            } );
+            );
             throw new ServiceResourceNotFoundException( context );
         }
 
@@ -281,11 +281,13 @@ public class AbstractConnectionsService extends AbstractService {
 
         int count = query.getLimit();
         Level level = Level.REFS;
+
         if ( !context.moreParameters() ) {
             count = Query.MAX_LIMIT;
             level = Level.ALL_PROPERTIES;
-            if (logger.isDebugEnabled()) {
-            	logger.debug("Query does not have more parameters, overwriting limit to: {} and level to {}" ,
+
+            if (logger.isTraceEnabled()) {
+            	logger.trace("Query does not have more parameters, overwriting limit to: {} and level to {}" ,
                     count, level.name());
             }
         }
@@ -304,7 +306,9 @@ public class AbstractConnectionsService extends AbstractService {
 
         if ( connecting() ) {
             if ( query.hasQueryPredicates() ) {
-                logger.debug( "Attempted query of backwards connections" );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Attempted query of backwards connections");
+                }
                 return null;
             }
             else {

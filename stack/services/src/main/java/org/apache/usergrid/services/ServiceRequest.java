@@ -213,7 +213,9 @@ public class ServiceRequest {
         }
         catch ( Exception e ) {
             // don't log as error because some exceptions are not actually errors, e.g. resource not found
-            logger.debug( debugString(), e );
+            if (logger.isDebugEnabled()) {
+                logger.debug(debugString(), e);
+            }
             throw e;
         }
     }

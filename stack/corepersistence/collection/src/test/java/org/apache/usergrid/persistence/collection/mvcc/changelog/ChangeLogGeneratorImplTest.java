@@ -48,7 +48,7 @@ import static org.junit.Assert.assertTrue;
  * Test basic operation of change log
  */
 public class ChangeLogGeneratorImplTest {
-    private static final Logger LOG = LoggerFactory.getLogger( ChangeLogGeneratorImplTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( ChangeLogGeneratorImplTest.class );
 
 
     /**
@@ -57,7 +57,7 @@ public class ChangeLogGeneratorImplTest {
     @Test
     public void testBasicOperation() throws ConnectionException {
 
-        LOG.info( "ChangeLogGeneratorImpl test" );
+        logger.info( "ChangeLogGeneratorImpl test" );
 
 
         final Id entityId = new SimpleId( "test" );
@@ -117,7 +117,7 @@ public class ChangeLogGeneratorImplTest {
     @Test
     public void testDeletedVersionFirst() throws ConnectionException {
 
-        LOG.info( "ChangeLogGeneratorImpl test" );
+        logger.info( "ChangeLogGeneratorImpl test" );
 
 
         final Id entityId = new SimpleId( "test" );
@@ -175,7 +175,7 @@ public class ChangeLogGeneratorImplTest {
     @Test
     public void testDeletedMiddle() throws ConnectionException {
 
-        LOG.info( "ChangeLogGeneratorImpl test" );
+        logger.info( "ChangeLogGeneratorImpl test" );
 
 
         final Id entityId = new SimpleId( "test" );

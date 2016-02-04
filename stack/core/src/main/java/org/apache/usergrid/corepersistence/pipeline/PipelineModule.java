@@ -37,7 +37,7 @@ public class PipelineModule extends AbstractModule {
 
             //Use Guice to create the builder since we don't really need to do anything
         //other than DI when creating the filters
-       install( new FactoryModuleBuilder().build( FilterFactory.class ) );
+        install( new FactoryModuleBuilder().build( FilterFactory.class ) );
 
         install( new FactoryModuleBuilder().build( PipelineBuilderFactory.class ) );
     }

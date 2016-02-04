@@ -85,7 +85,9 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
             }
             return optionalUuid;
         } catch (Exception e) {
-            logger.debug("Returning for key {} value null", applicationName );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Returning for key {} value null", applicationName);
+            }
             return null;
         }
     }

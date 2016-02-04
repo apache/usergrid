@@ -183,27 +183,27 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         String primaryTopicArn = AmazonNotificationUtils.getTopicArn( sns, queueName, true );
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "SNS/SQS Setup: primaryTopicArn=" + primaryTopicArn );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "SNS/SQS Setup: primaryTopicArn={}", primaryTopicArn );
         }
 
         String queueUrl = AmazonNotificationUtils.getQueueUrlByName( sqs, queueName );
         String primaryQueueArn = AmazonNotificationUtils.getQueueArnByName( sqs, queueName );
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "SNS/SQS Setup: primaryQueueArn=" + primaryQueueArn );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "SNS/SQS Setup: primaryQueueArn={}", primaryQueueArn );
         }
 
         if ( primaryQueueArn == null ) {
-            if ( logger.isDebugEnabled() ) {
-                logger.debug( "SNS/SQS Setup: primaryQueueArn is null, creating queue..." );
+            if ( logger.isTraceEnabled() ) {
+                logger.trace( "SNS/SQS Setup: primaryQueueArn is null, creating queue..." );
             }
 
             queueUrl = AmazonNotificationUtils.createQueue( sqs, queueName, fig );
             primaryQueueArn = AmazonNotificationUtils.getQueueArnByUrl( sqs, queueUrl );
 
-            if ( logger.isDebugEnabled() ) {
-                logger.debug( "SNS/SQS Setup: New Queue URL=[{}] ARN=[{}]", queueUrl, primaryQueueArn );
+            if ( logger.isTraceEnabled() ) {
+                logger.trace( "SNS/SQS Setup: New Queue URL=[{}] ARN=[{}]", queueUrl, primaryQueueArn );
             }
         }
 
@@ -219,15 +219,15 @@ public class SNSQueueManagerImpl implements QueueManager {
         }
         catch ( AmazonServiceException e ) {
             logger.error(
-                String.format( "Unable to subscribe PRIMARY queue=[%s] to topic=[%s]", queueUrl, primaryTopicArn ), e );
+                "Unable to subscribe PRIMARY queue=[{}] to topic=[{}]", queueUrl, primaryTopicArn, e );
         }
 
         if ( fig.isMultiRegion() && scope.getRegionImplementation() == QueueScope.RegionImplementation.ALL ) {
 
             String multiRegion = fig.getRegionList();
 
-            if ( logger.isDebugEnabled() ) {
-                logger.debug( "MultiRegion Setup specified, regions: [{}]", multiRegion );
+            if ( logger.isTraceEnabled() ) {
+                logger.trace( "MultiRegion Setup specified, regions: [{}]", multiRegion );
             }
 
             String[] regionNames = multiRegion.split( "," );
@@ -261,7 +261,9 @@ public class SNSQueueManagerImpl implements QueueManager {
                 arrQueueArns.put( queueArn, regionName );
             }
 
-            logger.debug( "Creating Subscriptions..." );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Creating Subscriptions...");
+            }
 
             for ( Map.Entry<String, String> queueArnEntry : arrQueueArns.entrySet() ) {
                 String queueARN = queueArnEntry.getKey();
@@ -297,20 +299,21 @@ public class SNSQueueManagerImpl implements QueueManager {
 
                         SubscribeResult subscribeResult = subscribeSnsClient.subscribe( subscribeRequest );
                         String subscriptionARN = subscribeResult.getSubscriptionArn();
-                        if ( logger.isDebugEnabled() ) {
-                            logger.debug(
+                        if ( logger.isTraceEnabled() ) {
+                            logger.trace(
                                 "Successfully subscribed Queue ARN=[{}] to Topic ARN=[{}], subscription ARN=[{}]",
                                 queueARN, topicARN, subscriptionARN );
                         }
                     }
                     catch ( Exception e ) {
-                        logger.error( String
-                            .format( "ERROR Subscribing Queue ARN/Region=[%s / %s] and Topic ARN/Region=[%s / %s]",
-                                queueARN, strSqsRegion, topicARN, strSnsRegion ), e );
+                        logger.error( "ERROR Subscribing Queue ARN/Region=[{} / {}] and Topic ARN/Region=[{} / {}]",
+                                queueARN, strSqsRegion, topicARN, strSnsRegion , e );
                     }
                 }
 
-                logger.info( "Adding permission to receive messages..." );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Adding permission to receive messages...");
+                }
                 // add permission to each queue, providing a list of topics that it's subscribed to
                 AmazonNotificationUtils
                     .setQueuePermissionsToReceive( subscribeSqsClient, subscribeQueueUrl, topicArnList );
@@ -409,8 +412,8 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         String url = getReadQueue().getUrl();
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Getting up to {} messages from {}", limit, url );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Getting up to {} messages from {}", limit, url );
         }
 
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest( url );
@@ -422,8 +425,8 @@ public class SNSQueueManagerImpl implements QueueManager {
             ReceiveMessageResult result = sqs.receiveMessage( receiveMessageRequest );
             List<Message> messages = result.getMessages();
 
-            if ( logger.isDebugEnabled() ) {
-                logger.debug( "Received {} messages from {}", messages.size(), url );
+            if ( logger.isTraceEnabled() ) {
+                logger.trace( "Received {} messages from {}", messages.size(), url );
             }
 
             List<QueueMessage> queueMessages = new ArrayList<>( messages.size() );
@@ -452,7 +455,7 @@ public class SNSQueueManagerImpl implements QueueManager {
                     }
                 }
                 catch ( Exception e ) {
-                    logger.error( String.format( "failed to deserialize message: %s", message.getBody() ), e );
+                    logger.error( "failed to deserialize message: {}", message.getBody(), e );
                     throw new RuntimeException( e );
                 }
 
@@ -465,10 +468,10 @@ public class SNSQueueManagerImpl implements QueueManager {
             return  queueMessages ;
         }
         catch ( com.amazonaws.services.sqs.model.QueueDoesNotExistException dne ) {
-            logger.error( String.format( "Queue does not exist! [%s]", url ), dne );
+            logger.error( "Queue does not exist! [{}]", url , dne );
         }
         catch ( Exception e ) {
-            logger.error( String.format( "Programming error getting messages from queue=[%s] exist!", url ), e );
+            logger.error( "Programming error getting messages from queue=[{}] exist!", url, e );
         }
 
         return  new ArrayList<>( 0 ) ;
@@ -516,8 +519,8 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         String topicArn = getWriteTopicArn();
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Publishing Message...{} to arn: {}", stringBody, topicArn );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Publishing Message...{} to arn: {}", stringBody, topicArn );
         }
 
         PublishRequest publishRequest = new PublishRequest( topicArn, stringBody );
@@ -531,8 +534,8 @@ public class SNSQueueManagerImpl implements QueueManager {
 
             @Override
             public void onSuccess( PublishRequest request, PublishResult result ) {
-                if ( logger.isDebugEnabled() ) {
-                    logger.debug( "Successfully published... messageID=[{}],  arn=[{}]", result.getMessageId(),
+                if ( logger.isTraceEnabled() ) {
+                    logger.trace( "Successfully published... messageID=[{}],  arn=[{}]", result.getMessageId(),
                         request.getTopicArn() );
                 }
             }
@@ -566,8 +569,8 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         String url = getReadQueue().getUrl();
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Publishing Message...{} to url: {}", stringBody, url );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Publishing Message...{} to url: {}", stringBody, url );
         }
 
         SendMessageRequest request = new SendMessageRequest( url, stringBody );
@@ -583,8 +586,8 @@ public class SNSQueueManagerImpl implements QueueManager {
 
             @Override
             public void onSuccess( final SendMessageRequest request, final SendMessageResult sendMessageResult ) {
-                if ( logger.isDebugEnabled() ) {
-                    logger.debug( "Successfully send... messageBody=[{}],  url=[{}]", request.getMessageBody(),
+                if ( logger.isTraceEnabled() ) {
+                    logger.trace( "Successfully send... messageBody=[{}],  url=[{}]", request.getMessageBody(),
                         request.getQueueUrl() );
                 }
             }
@@ -604,8 +607,8 @@ public class SNSQueueManagerImpl implements QueueManager {
     @Override
     public void commitMessage( final QueueMessage queueMessage ) {
         String url = getReadQueue().getUrl();
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Commit message {} to queue {}", queueMessage.getMessageId(), url );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Commit message {} to queue {}", queueMessage.getMessageId(), url );
         }
 
         sqs.deleteMessage(
@@ -617,8 +620,8 @@ public class SNSQueueManagerImpl implements QueueManager {
     public void commitMessages( final List<QueueMessage> queueMessages ) {
         String url = getReadQueue().getUrl();
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Commit messages {} to queue {}", queueMessages.size(), url );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Commit messages {} to queue {}", queueMessages.size(), url );
         }
 
         List<DeleteMessageBatchRequestEntry> entries = new ArrayList<>();

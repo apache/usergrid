@@ -18,6 +18,8 @@
 package org.apache.usergrid.persistence.collection.guice;
 
 
+import java.util.concurrent.ThreadPoolExecutor;
+
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -25,11 +27,19 @@ import org.apache.usergrid.persistence.collection.cache.EntityCacheFig;
 import org.apache.usergrid.persistence.collection.impl.EntityCollectionManagerFactoryImpl;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGenerator;
 import org.apache.usergrid.persistence.collection.mvcc.changelog.ChangeLogGeneratorImpl;
+import org.apache.usergrid.persistence.collection.scheduler.CollectionExecutorScheduler;
+import org.apache.usergrid.persistence.collection.scheduler.CollectionSchedulerFig;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.impl.SerializationModule;
 import org.apache.usergrid.persistence.collection.service.impl.ServiceModule;
+import org.apache.usergrid.persistence.core.executor.TaskExecutorFactory;
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
+import org.apache.usergrid.persistence.core.rx.RxTaskSchedulerImpl;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 
 /**
@@ -45,6 +55,7 @@ public abstract class CollectionModule extends AbstractModule {
 
         // noinspection unchecked
         install( new GuicyFigModule( SerializationFig.class ) );
+        install( new GuicyFigModule( CollectionSchedulerFig.class ) );
         install( new SerializationModule() );
         install( new ServiceModule() );
 
@@ -59,6 +70,27 @@ public abstract class CollectionModule extends AbstractModule {
 
         configureMigrationProvider();
 
+    }
+
+
+
+
+    @Provides
+    @Inject
+    @CollectionExecutorScheduler
+    @Singleton
+    public RxTaskScheduler getRxTaskScheduler( final CollectionSchedulerFig collectionSchedulerFig ){
+
+        final String poolName = collectionSchedulerFig.getIoSchedulerName();
+        final int threadCount = collectionSchedulerFig.getMaxIoThreads();
+
+
+        final ThreadPoolExecutor executor = TaskExecutorFactory.createTaskExecutor( poolName, threadCount, 0,
+            TaskExecutorFactory.RejectionAction.CALLERRUNS );
+
+        final RxTaskScheduler taskScheduler = new RxTaskSchedulerImpl(executor  );
+
+        return taskScheduler;
     }
 
 

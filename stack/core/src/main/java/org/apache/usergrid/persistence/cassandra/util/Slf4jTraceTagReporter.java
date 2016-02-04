@@ -47,10 +47,10 @@ public class Slf4jTraceTagReporter implements TraceTagReporter {
     public void report( TraceTag traceTag ) {
         logger.info( "TraceTag: {}", traceTag.getTraceName() );
         for ( TimedOpTag timedOpTag : traceTag ) {
-            logger.info( "----opId: {} opName: {} startTime: {} elapsed: {}", new Object[] {
+            logger.info( "----opId: {} opName: {} startTime: {} elapsed: {}",
                     timedOpTag.getOpTag(), timedOpTag.getTagName(), new Date( timedOpTag.getStart() ),
                     timedOpTag.getElapsed()
-            } );
+            );
         }
         logger.info( "------" );
     }

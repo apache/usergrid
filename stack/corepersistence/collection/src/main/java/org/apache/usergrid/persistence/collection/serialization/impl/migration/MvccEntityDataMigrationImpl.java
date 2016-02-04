@@ -68,7 +68,7 @@ import rx.schedulers.Schedulers;
 public class MvccEntityDataMigrationImpl implements DataMigration{
 
 
-    private static final Logger LOGGER = LoggerFactory.getLogger( MvccEntityDataMigrationImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( MvccEntityDataMigrationImpl.class );
 
     private final Keyspace keyspace;
     private final VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions;
@@ -149,7 +149,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration{
                                     new EntityToSaveMessage(currentScope, allVersions.next());
                                 subscriber.onNext(message);
                             }catch (Exception e){
-                                LOGGER.error("Failed to load entity " +entityIdScope.getId(),e);
+                                logger.error("Failed to load entity {}", entityIdScope.getId(),e);
                             }
                         }
 
@@ -224,7 +224,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration{
                                     totalBatch.mergeShallow(mb);
                                 }
                             }catch (Exception e){
-                                LOGGER.error("Failed to migrate entity "+ message.entity.getId().getUuid()+ " :: " + message.entity.getId().getType(),e);
+                                logger.error("Failed to migrate entity {} :: {}", message.entity.getId().getUuid(), message.entity.getId().getType(),e);
                             }
 
 

@@ -45,7 +45,10 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
 
     @Override
     public void filter( ContainerRequestContext request ) {
-        logger.info("Filtering: " + request.getUriInfo().getBaseUri());
+        if(logger.isTraceEnabled()){
+            logger.trace("Filtering: {}", request.getUriInfo().getBaseUri());
+        }
+
 
         Map<String, String> auth_types = getAuthTypes( request );
         if ( ( auth_types == null ) || !auth_types.containsKey( AUTH_BASIC_TYPE ) ) {
@@ -65,7 +68,9 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
         if ( name.equals( sysadmin_login_name ) && password.equals( sysadmin_login_password )
                 && sysadmin_login_allowed ) {
             request.setSecurityContext( new SysAdminRoleAuthenticator() );
-            logger.debug( "System administrator access allowed" );
+            if (logger.isTraceEnabled()) {
+                logger.trace("System administrator access allowed");
+            }
         }
     }
 

@@ -17,95 +17,202 @@
 package org.apache.usergrid.management;
 
 
-import java.util.Map;
-import java.util.UUID;
+import org.apache.usergrid.management.cassandra.OrganizationConfigPropsImpl;
+import org.apache.usergrid.management.OrganizationConfigProps.*;
+import org.apache.usergrid.utils.MapUtils;
 
-import static org.apache.usergrid.persistence.Schema.PROPERTY_PATH;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
+import java.util.*;
+
 
 
 public class OrganizationConfig {
 
-    public static final String DEFAULT_CONNECTION_PARAM_PROPERTY = "defaultConnectionParam";
-    private static final String DEFAULT_CONNECTION_PARAM_DEFAULT_VALUE = "all";
-
-    private static final String [] propertyNames = {
-            DEFAULT_CONNECTION_PARAM_PROPERTY
-    };
-
-    private static final String [] defaultValues = {
-            DEFAULT_CONNECTION_PARAM_DEFAULT_VALUE
-    };
-
+    private OrganizationConfigProps configProps;
     private UUID id;
     private String name;
-    private Map<String, Object> properties;
 
 
-    public OrganizationConfig() {
+    // shouldn't use the default constructor
+    private OrganizationConfig() {
     }
 
+    public OrganizationConfig(OrganizationConfig orgConfig) {
+        this.id = orgConfig.getUuid();
+        this.name = orgConfig.getName();
+        this.configProps = orgConfig.getOrgConfigProps();
+    }
 
-    public OrganizationConfig(UUID id, String name) {
+    public OrganizationConfig(Properties properties) {
+        this.configProps = new OrganizationConfigPropsImpl(properties);
+        this.id = null;
+        this.name = null;
+    }
+
+    public OrganizationConfig(OrganizationConfigProps configFileProperties, UUID id, String name) {
+        this.configProps = new OrganizationConfigPropsImpl(configFileProperties);
         this.id = id;
         this.name = name;
     }
 
-
-    public OrganizationConfig(Map<String, Object> properties) {
-        id = ( UUID ) properties.get( PROPERTY_UUID );
-        name = ( String ) properties.get( PROPERTY_PATH );
+    public OrganizationConfig(OrganizationConfigProps configFileProperties) {
+        this(configFileProperties, null, null);
     }
 
+    public OrganizationConfig(OrganizationConfigProps configFileProperties, UUID id, String name,
+                              Map<Object, Object> newOrgProperties, boolean validateOrgProperties)
+            throws IllegalArgumentException {
+        this(configFileProperties, id, name);
 
-    public OrganizationConfig(UUID id, String name, Map<String, Object> properties) {
-        this( id, name );
-        this.properties = properties;
+        Map<String, Object> orgPropertiesMap = MapUtils.toStringObjectMap(newOrgProperties);
 
-        // add default values to properties map
-        addDefaultsToProperties();
+        // orgPropertyValidate will throw IllegalArgumentException
+        if (validateOrgProperties) {
+            orgPropertyValidate(orgPropertiesMap);
+        }
+
+        addOrgProperties(orgPropertiesMap);
     }
 
-    private void addDefaultsToProperties()  {
-        for (int i=0; i < propertyNames.length; i++) {
-            if (!properties.containsKey(propertyNames[i])) {
-                properties.put(propertyNames[i], defaultValues[i]);
+    private void orgPropertyValidate(Map<String, Object> entityProperties) throws IllegalArgumentException {
+        Set<String> invalidKeys = new HashSet<>();
+        entityProperties.keySet().forEach((k) -> {
+           if (!configProps.orgPropertyNameValid(k)) {
+               invalidKeys.add(k);
+           }
+        });
+
+        if (invalidKeys.size() > 0) {
+            throw new IllegalArgumentException("Invalid organization config keys: " + String.join(", ", invalidKeys));
+        }
+
+        invalidKeys.clear();
+        entityProperties.forEach((k,v) -> {
+            if (!v.getClass().equals(String.class)) {
+                invalidKeys.add(k);
             }
+        });
+
+        if (invalidKeys.size() > 0) {
+            throw new IllegalArgumentException("Organization config value(s) not strings: " + String.join(", ", invalidKeys));
         }
     }
 
+    private void addOrgProperties(Map<String, Object> newOrgProperties) {
+        newOrgProperties.forEach((k,v) -> {
+            // only take valid properties, validation (if required) happened earlier
+            if (configProps.orgPropertyNameValid(k)) {
+                // ignore non-strings, validation happened earlier
+                if (v.getClass().equals(String.class)) {
+                    this.configProps.setProperty(k, v.toString());
+                }
+            }
+        });
+    }
+
+    // adds supplied properties to existing properties
+    public void addProperties(Map<String, Object> newOrgProperties, boolean validateOrgProperties)
+        throws IllegalArgumentException {
+
+        // entityPropertyValidate will throw IllegalArgumentException if invalid
+        if (validateOrgProperties) {
+            orgPropertyValidate(newOrgProperties);
+        }
+
+        // don't clear properties map -- these overwrite/add to existing
+        addOrgProperties(newOrgProperties);
+    }
+
+    public Map<String, Object> getOrgConfigCustomMap(Set<String> items, boolean includeDefaults, boolean includeOverrides) {
+        Map<String, Object> map = new HashMap<>();
+
+        if (includeDefaults) {
+            map.putAll(configProps.getDefaultPropertiesMap());
+        }
+
+        if (includeOverrides) {
+            map.putAll(configProps.getOrgPropertiesMap());
+        }
+
+        if (items != null) {
+            // filter out properties not specified
+            map.keySet().retainAll(items);
+        }
+
+        return map;
+    }
+
+    public Map<String, Object> getOrgConfigMap() {
+        return getOrgConfigCustomMap(null, true, true);
+    }
+
+    public Map<String, Object> getOrgConfigOverridesMap() {
+        return getOrgConfigCustomMap(null, false, true);
+    }
+
+    public Map<String, Object> getOrgConfigDefaultsMap() {
+        return getOrgConfigCustomMap(null, false, true);
+    }
+
+    // only include specified items
+    public Map<String, Object> getFilteredOrgConfigMap(Set<String> items) {
+        return getOrgConfigCustomMap(items, true, true);
+    }
+
+    public Map<String, Object> getFilteredOrgConfigOverridesMap(Set<String> items) {
+        return getOrgConfigCustomMap(items, false, true);
+    }
+
+    public Map<String, Object> getFilteredOrgConfigDefaultsMap(Set<String> items) {
+        return getOrgConfigCustomMap(items, false, true);
+    }
+
+    public String getProperty(String key) {
+        return configProps.getProperty(key);
+    }
+
+    public String getProperty(String name, String defaultValue) {
+        return configProps.getProperty(name, defaultValue);
+    }
+
+    public boolean boolProperty(String name, boolean defaultValue) {
+        return configProps.boolProperty(name, defaultValue);
+    }
+
+    public int intProperty(String name, int defaultValue) {
+        return configProps.intProperty(name, defaultValue);
+    }
+
+    public long longProperty(String name, long defaultValue) {
+        return configProps.longProperty(name, defaultValue);
+    }
 
     public UUID getUuid() {
         return id;
     }
 
-
     public void setUuid( UUID id ) {
         this.id = id;
     }
-
 
     public String getName() {
         return name;
     }
 
-
     public void setName( String name ) {
         this.name = name;
     }
 
-
-    public String getDefaultConnectionParam() {
-        String defaultParam = DEFAULT_CONNECTION_PARAM_DEFAULT_VALUE;
-        if ( properties != null ) {
-            Object paramValue = properties.get( DEFAULT_CONNECTION_PARAM_PROPERTY );
-            if ( paramValue instanceof String ) {
-                defaultParam = ( String ) paramValue;
-            }
-        }
-        return defaultParam;
+    protected OrganizationConfigProps getOrgConfigProps() {
+        return new OrganizationConfigPropsImpl(configProps);
     }
 
+    public String getFullUrlTemplate(WorkflowUrl urlType) {
+        return configProps.getFullUrlTemplate(urlType);
+    }
+
+    public String getFullUrl(WorkflowUrl urlType, Object ... arguments) {
+        return configProps.getFullUrl(urlType, arguments);
+    }
 
     @Override
     public int hashCode() {
@@ -115,7 +222,6 @@ public class OrganizationConfig {
         result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
         return result;
     }
-
 
     @Override
     public boolean equals( Object obj ) {
@@ -145,26 +251,7 @@ public class OrganizationConfig {
         else if ( !name.equals( other.name ) ) {
             return false;
         }
-        return true;
+        return getOrgConfigMap().equals(other.getOrgConfigMap());
     }
 
-
-    public Map<String, Object> getProperties() {
-        return properties;
-    }
-
-
-    public void setProperties( Map<String, Object> properties ) {
-        this.properties = properties;
-
-        // add default values to properties map
-        addDefaultsToProperties();
-    }
-
-    public void addProperties( Map<String, Object> properties ) {
-        this.properties.putAll(properties);
-
-        // add default values to properties map
-        addDefaultsToProperties();
-    }
 }

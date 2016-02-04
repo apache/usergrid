@@ -37,7 +37,7 @@ import rx.Subscriber;
  */
 public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T> {
 
-    private static final Logger log = LoggerFactory.getLogger( ObservableIterator.class );
+    private static final Logger logger = LoggerFactory.getLogger( ObservableIterator.class );
 
     private final String name;
 
@@ -66,7 +66,7 @@ public abstract class ObservableIterator<T> implements Observable.OnSubscribe<T>
             while ( itr.hasNext() && !subscriber.isUnsubscribed() ) {
                 final T next = itr.next();
 
-                log.trace( "Iterator '{}' emitting item '{}'", name, next );
+                if (logger.isTraceEnabled()) logger.trace( "Iterator '{}' emitting item '{}'", name, next );
 
                 subscriber.onNext( next );
             }

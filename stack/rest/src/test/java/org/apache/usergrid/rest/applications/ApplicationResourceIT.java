@@ -225,40 +225,6 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
     }
 
-    /**
-     * Verifies that we return JSON even when text/html is requested.
-     * (for backwards compatibility)
-     */
-    @Test
-    @Ignore("this form of backwards compatibility no longer needed")
-    public void jsonForAcceptsTextHtml() throws Exception {
-
-        //Create the organization resource
-        OrganizationResource orgResource = clientSetup.getRestClient()
-            .management().orgs().org( clientSetup.getOrganizationName() );
-
-        //retrieve the credentials
-        Credentials orgCredentials = new Credentials( orgResource.credentials().get(ApiResponse.class));
-        String clientId = orgCredentials.getClientId();
-        String clientSecret = orgCredentials.getClientSecret();
-
-        //retrieve the users collection, setting the "Accept" header to text/html
-        Invocation.Builder builder = this.app().collection( "users" ).getTarget()
-            //Add the org credentials to the query
-            .queryParam( "grant_type", "client_credentials" )
-            .queryParam( "client_id", clientId )
-            .queryParam( "client_secret", clientSecret )
-            .request();
-
-        ApiResponse apiResponse = builder
-            .accept(MediaType.TEXT_HTML)
-            .get(ApiResponse.class);
-
-        Collection users = new Collection(apiResponse);
-        //make sure that a valid response is returned without error
-        assertNotNull(users);
-        assertNull(users.getResponse().getError());
-    }
 
     /**
      * Retrieve an application using password credentials
@@ -369,22 +335,6 @@ public class ApplicationResourceIT extends AbstractRestIT {
 //        assertNull(credentials.entrySet().toString());
         assertNotNull(credentials.getClientId());
         assertNotNull(credentials.getClientSecret());
-    }
-
-
-    @Test
-    @Ignore //This is implemented now
-    public void noAppDelete() throws IOException {
-        String orgName = clientSetup.getOrganizationName().toLowerCase();
-        String appName = clientSetup.getAppName().toLowerCase();
-
-        ApiResponse apiResponse = target().path( String.format( "/%s/%s", orgName, appName ) )
-            .queryParam( "access_token", this.getAdminToken().getAccessToken() )
-            .request()
-            .accept( MediaType.APPLICATION_JSON )
-            .delete( ApiResponse.class );
-
-        assertNotNull(apiResponse.getError());
     }
 
     /**
@@ -591,7 +541,6 @@ public class ApplicationResourceIT extends AbstractRestIT {
      * Retrieve an oauth authorization using invalid credentials
      */
     @Test
-    @Ignore("viewable return types are not working in embedded tomcat 7.x")
     public void authorizationCodeWithWrongCredentials() throws Exception {
         //Create form input with bogus credentials
         Form payload = new Form();
@@ -696,34 +645,41 @@ public class ApplicationResourceIT extends AbstractRestIT {
     }
 
     /**
-     * Retrieve an access token using HTTP Basic authentication
+     * Retrieve an app user access token using HTTP Basic authentication
      */
     @Test
-    @Ignore
-    //Are we trying to generate token with token? Couldn't find enpoint that accepts token for generating token
     public void clientCredentialsFlowWithHeaderAuthorization() throws Exception {
-        //retrieve the credentials
-        Credentials orgCredentials = getAppCredentials();
-        String clientId = orgCredentials.getClientId();
-        String clientSecret = orgCredentials.getClientSecret();
 
+        // get app credentials from /<org>/<app>/credentials end-point (using admin credentials)
+        Credentials appCredentials = getAppCredentials();
+        String clientId = appCredentials.getClientId();
+        String clientSecret = appCredentials.getClientSecret();
+
+        // use app credentials to admin user access token
         Token token = clientSetup.getRestClient().management().token()
             .post(Token.class,new Token("client_credentials", clientId, clientSecret));
 
-        //GET the token endpoint, adding authorization header
-        Token apiResponse = this.app().token().getTarget( false )
+        String clientCredentials = clientId + ":" + clientSecret;
+        String encodedToken = Base64.encodeToString( clientCredentials.getBytes() );
+
+        Map<String, String> payload = hashMap( "grant_type", "client_credentials" );
+
+        // use admin user access token to get app user access token
+        Token apiResponse = this.app().token().getTarget( false ).request()
             //add the auth header
-            .request()
-            .header( "Authorization", "Bearer " + token.getAccessToken() )
+            .header( "Authorization", "Basic " + encodedToken )
             .accept( MediaType.APPLICATION_JSON )
-            .post(javax.ws.rs.client.Entity.entity(
-                hashMap( "grant_type", "client_credentials" ), MediaType.APPLICATION_JSON_TYPE ), Token.class );
+            .post(javax.ws.rs.client.Entity.entity(payload, MediaType.APPLICATION_JSON_TYPE ), Token.class );
 
         //Assert that a valid token with a valid TTL is returned
         assertNotNull("A valid response was returned.", apiResponse);
         assertNull("There is no error.", apiResponse.getError());
         assertNotNull("It has access_token.", apiResponse.getAccessToken());
         assertNotNull("It has expires_in.", apiResponse.getExpirationDate());
+
+
+
+
     }
 
     /**
@@ -777,33 +733,6 @@ public class ApplicationResourceIT extends AbstractRestIT {
         //Assert that a valid token with a valid TTL is returned
         assertNotNull("It has access_token.", apiResponse.getAccessToken());
         assertNotNull("It has expires_in.", apiResponse.getExpirationDate());
-    }
-
-    /**
-     * Ensure that the Apigee Mobile Analytics config returns valid JSON
-     */
-    @Test
-    @Ignore
-    public void validateApigeeApmConfigAPP() throws IOException {
-        String orgName = clientSetup.getOrganizationName().toLowerCase();
-        String appName = clientSetup.getAppName().toLowerCase();
-
-        try {
-            //GET the APM endpoint
-            String response = target().path( String.format( "/%s/%s/apm/apigeeMobileConfig", orgName, appName ) )
-                .request()
-                .accept( MediaType.APPLICATION_JSON )
-                .get(String.class);
-            //Parse the response
-            JsonNode node = mapper.readTree(response);
-
-            //if things are kosher then JSON should have value for instaOpsApplicationId
-            assertTrue("it's valid json for APM", node.has("instaOpsApplicationId"));
-        } catch (ClientErrorException uie) {
-            //Validate that APM config exists
-            assertNotEquals("APM Config API exists", Response.Status.NOT_FOUND,
-                uie.getResponse().getStatus()); //i.e It should not be "Not Found"
-        }
     }
 
 

@@ -23,12 +23,14 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.usergrid.StressTest;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.index.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +79,7 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith( EsRunner.class )
 @UseModules( { TestIndexModule.class } )
+@Category( StressTest.class )
 public class IndexLoadTestsIT extends BaseIT {
     private static final Logger log = LoggerFactory.getLogger( IndexLoadTestsIT.class );
     public static final String FIELD_WORKER_INDEX = "workerIndex";
@@ -120,6 +123,7 @@ public class IndexLoadTestsIT extends BaseIT {
     private EntityIndex entityIndex;
 
 
+    @Before
     public void before(){
         appId = new SimpleId(UUID.randomUUID(), "application" );
 

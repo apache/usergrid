@@ -17,6 +17,7 @@
 package org.apache.usergrid.security.tokens;
 
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,10 +35,17 @@ public class TokenInfo {
     long duration;
     AuthPrincipalInfo principal;
     Map<String, Object> state;
+    UUID workflowOrgId;
 
 
     public TokenInfo( UUID uuid, String type, long created, long accessed, long inactive, long duration,
                       AuthPrincipalInfo principal, Map<String, Object> state ) {
+        this(uuid, type, created, accessed, inactive, duration, principal, state, null);
+    }
+
+
+    public TokenInfo( UUID uuid, String type, long created, long accessed, long inactive, long duration,
+                      AuthPrincipalInfo principal, Map<String, Object> state, UUID workflowOrgId ) {
         this.uuid = uuid;
         this.type = type;
         this.created = created;
@@ -46,6 +54,7 @@ public class TokenInfo {
         this.principal = principal;
         this.duration = duration;
         this.state = state;
+        this.workflowOrgId = workflowOrgId;
     }
 
 
@@ -137,5 +146,15 @@ public class TokenInfo {
 
     public void setState( Map<String, Object> state ) {
         this.state = state;
+    }
+
+
+    public UUID getWorkflowOrgId() {
+        return workflowOrgId;
+    }
+
+
+    public void setWorkflowOrgId( UUID workflowOrgId ) {
+        this.workflowOrgId = workflowOrgId;
     }
 }

@@ -39,10 +39,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
+import org.apache.usergrid.StressTest;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,9 +81,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 
-//@Ignore( "Kills cassandra, needs to be part of functional testing" )
 public class GraphManagerShardConsistencyIT {
-    private static final Logger log = LoggerFactory.getLogger( GraphManagerShardConsistencyIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( GraphManagerShardConsistencyIT.class );
 
     private static final MetricRegistry registry = new MetricRegistry();
 
@@ -134,7 +134,7 @@ public class GraphManagerShardConsistencyIT {
 
 
         reporter =
-                Slf4jReporter.forRegistry( registry ).outputTo( log ).convertRatesTo( TimeUnit.SECONDS )
+                Slf4jReporter.forRegistry( registry ).outputTo(logger).convertRatesTo( TimeUnit.SECONDS )
                              .convertDurationsTo( TimeUnit.MILLISECONDS ).build();
 
 
@@ -227,7 +227,7 @@ public class GraphManagerShardConsistencyIT {
         final long minExecutionTime = graphFig.getShardMinDelta() + graphFig.getShardCacheTimeout();
 
 
-        log.info( "Writing {} edges per worker on {} workers in {} injectors", workerWriteLimit, numWorkersPerInjector,
+        logger.info( "Writing {} edges per worker on {} workers in {} injectors", workerWriteLimit, numWorkersPerInjector,
             numInjectors );
 
 
@@ -266,31 +266,35 @@ public class GraphManagerShardConsistencyIT {
         final Meter readMeter = registry.meter( "readThroughput" );
 
 
-        /**
-         * Start reading continuously while we migrate data to ensure our view is always correct
-         */
-        final ListenableFuture<Long> future =
-            executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
-
         final List<Throwable> failures = new ArrayList<>();
 
+        for(int i = 0; i < 2; i ++) {
 
-        //add the future
-        Futures.addCallback( future, new FutureCallback<Long>() {
 
-            @Override
-            public void onSuccess( @Nullable final Long result ) {
-                log.info( "Successfully ran the read, re-running" );
+            /**
+             * Start reading continuously while we migrate data to ensure our view is always correct
+             */
+            final ListenableFuture<Long> future =
                 executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
-            }
 
 
-            @Override
-            public void onFailure( final Throwable t ) {
-                failures.add( t );
-                log.error( "Failed test!", t );
-            }
-        } );
+            //add the future
+            Futures.addCallback( future, new FutureCallback<Long>() {
+
+                @Override
+                public void onSuccess( @Nullable final Long result ) {
+                    logger.info( "Successfully ran the read, re-running" );
+                    executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
+                }
+
+
+                @Override
+                public void onFailure( final Throwable t ) {
+                    failures.add( t );
+                    logger.error( "Failed test!", t );
+                }
+            } );
+        }
 
 
         int compactedCount;
@@ -332,7 +336,7 @@ public class GraphManagerShardConsistencyIT {
                 final ShardEntryGroup group = groups.next();
                 shardEntryGroups.add( group );
 
-                log.info( "Compaction pending status for group {} is {}", group, group.isCompactionPending() );
+                logger.info( "Compaction pending status for group {} is {}", group, group.isCompactionPending() );
 
                 if ( !group.isCompactionPending() ) {
                     compactedCount++;
@@ -342,7 +346,7 @@ public class GraphManagerShardConsistencyIT {
 
             //we're done
             if ( compactedCount >= expectedShardCount ) {
-                log.info( "All compactions complete, sleeping" );
+                logger.info( "All compactions complete, sleeping" );
 
                 //                final Object mutex = new Object();
                 //
@@ -357,6 +361,11 @@ public class GraphManagerShardConsistencyIT {
 
             Thread.sleep( 2000 );
         }
+
+
+        //now continue reading everything for 30 seconds
+
+        Thread.sleep(30000);
 
         executor.shutdownNow();
     }
@@ -389,7 +398,7 @@ public class GraphManagerShardConsistencyIT {
 
 
     @Test(timeout=120000)
-    @Ignore("This works, but is occasionally causing cassandra to fall over.  Unignore when merged with new shard strategy")
+    @Category(StressTest.class)
     public void writeThousandsDelete()
         throws InterruptedException, ExecutionException, MigrationException, UnsupportedEncodingException {
 
@@ -457,7 +466,7 @@ public class GraphManagerShardConsistencyIT {
         final long minExecutionTime = graphFig.getShardMinDelta() + graphFig.getShardCacheTimeout();
 
 
-        log.info( "Writing {} edges per worker on {} workers in {} injectors", workerWriteLimit, numWorkersPerInjector,
+        logger.info( "Writing {} edges per worker on {} workers in {} injectors", workerWriteLimit, numWorkersPerInjector,
             numInjectors );
 
 
@@ -508,11 +517,11 @@ public class GraphManagerShardConsistencyIT {
 
             shardCount++;
 
-            log.info( "Compaction pending status for group {} is {}", group, group.isCompactionPending() );
+            logger.info( "Compaction pending status for group {} is {}", group, group.isCompactionPending() );
         }
 
 
-        log.info( "found {} shard groups", shardCount );
+        logger.info( "found {} shard groups", shardCount );
 
 
         //now mark and delete all the edges
@@ -549,7 +558,7 @@ public class GraphManagerShardConsistencyIT {
 
             @Override
             public void onSuccess( @Nullable final Long result ) {
-                log.info( "Successfully ran the read, re-running" );
+                logger.info( "Successfully ran the read, re-running" );
                 executor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
             }
 
@@ -557,7 +566,7 @@ public class GraphManagerShardConsistencyIT {
             @Override
             public void onFailure( final Throwable t ) {
                 failures.add( t );
-                log.error( "Failed test!", t );
+                logger.error( "Failed test!", t );
             }
         } );
 
@@ -598,7 +607,7 @@ public class GraphManagerShardConsistencyIT {
 
                 group = groups.next();
 
-                log.info( "Shard size for group is {}", group.getReadShards() );
+                logger.info( "Shard size for group is {}", group.getReadShards() );
 
                 shardCount += group.getReadShards().size();
             }
@@ -606,7 +615,7 @@ public class GraphManagerShardConsistencyIT {
 
             //we're done, 1 shard remains, we have a group, and it's our default shard
             if ( shardCount == 1 && group != null &&  group.getMinShard().getShardIndex() == Shard.MIN_SHARD.getShardIndex()  ) {
-                log.info( "All compactions complete," );
+                logger.info( "All compactions complete," );
 
                 break;
             }
@@ -663,7 +672,7 @@ public class GraphManagerShardConsistencyIT {
 
 
                 if ( i % 1000 == 0 ) {
-                    log.info( "   Wrote: " + i );
+                    logger.info( "   Wrote: " + i );
                 }
             }
 
@@ -706,10 +715,10 @@ public class GraphManagerShardConsistencyIT {
 
                                                         .countLong().toBlocking().last();
 
-                log.info( "Completed reading {} edges", returnedEdgeCount );
+                logger.info( "Completed reading {} edges", returnedEdgeCount );
 
                 if ( writeCount != returnedEdgeCount ) {
-                    log.warn( "Unexpected edge count returned!!!  Expected {} but was {}", writeCount,
+                    logger.warn( "Unexpected edge count returned!!!  Expected {} but was {}", writeCount,
                         returnedEdgeCount );
                 }
 

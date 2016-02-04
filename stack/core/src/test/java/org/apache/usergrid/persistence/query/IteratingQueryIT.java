@@ -45,7 +45,7 @@ import static org.junit.Assert.assertTrue;
 
 /** @author tnine */
 public class IteratingQueryIT {
-    private static final Logger LOG = LoggerFactory.getLogger( IteratingQueryIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( IteratingQueryIT.class );
 
     @ClassRule
     public static CoreITSetup setup = new CoreITSetupImpl(  );
@@ -288,7 +288,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
@@ -302,7 +302,7 @@ public class IteratingQueryIT {
         Thread.sleep(1000);
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL("order by  created" );
         query.setLimit( queryLimit );
@@ -328,7 +328,7 @@ public class IteratingQueryIT {
         while ( results.getCursor() != null );
 
         stop = System.currentTimeMillis();
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
 
         assertEquals( size, count );
     }
@@ -348,7 +348,7 @@ public class IteratingQueryIT {
 
         List<String> expected = new ArrayList<String>( size / intersectIncrement );
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
@@ -371,7 +371,7 @@ public class IteratingQueryIT {
 
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL( "select * where intersect = true order by created asc" );
         query.setLimit( queryLimit );
@@ -397,7 +397,7 @@ public class IteratingQueryIT {
 
         stop = System.currentTimeMillis();
 
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
 
         assertEquals( expected.size(), count );
     }
@@ -416,7 +416,7 @@ public class IteratingQueryIT {
 
         io.doSetup();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         List<String> expectedResults = new ArrayList<String>( size / secondIncrement );
 
@@ -441,7 +441,7 @@ public class IteratingQueryIT {
         this.app.refreshIndex();
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL( "select * where intersect = true AND intersect2 = true order by  created" );
         query.setLimit( queryLimit );
@@ -468,7 +468,7 @@ public class IteratingQueryIT {
 
         stop = System.currentTimeMillis();
 
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
 
         assertEquals( expectedResults.size(), count );
     }
@@ -485,7 +485,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
@@ -498,7 +498,7 @@ public class IteratingQueryIT {
 
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL( "select * where intersect = true AND intersect2 = true order by  created" );
         query.setLimit( queryLimit );
@@ -511,7 +511,7 @@ public class IteratingQueryIT {
 
         stop = System.currentTimeMillis();
 
-        LOG.info( "Query took {} ms to return {} entities", stop - start, 0 );
+        logger.info( "Query took {} ms to return {} entities", stop - start, 0 );
 
         assertEquals( 0, results.size() );
     }
@@ -530,7 +530,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         List<String> expectedResults = new ArrayList<String>( size / secondIncrement );
 
@@ -555,7 +555,7 @@ public class IteratingQueryIT {
 
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL( "select * where intersect = true OR intersect2 = true order by created" );
         query.setLimit( queryLimit );
@@ -582,7 +582,7 @@ public class IteratingQueryIT {
 
         stop = System.currentTimeMillis();
 
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
 
         assertEquals( expectedResults.size(), count );
     }
@@ -601,7 +601,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         List<String> expectedResults = new ArrayList<String>( size / secondIncrement );
 
@@ -626,7 +626,7 @@ public class IteratingQueryIT {
         app.refreshIndex();
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL( "select * where NOT (intersect = true AND intersect2 = true) order by created" );
         query.setLimit( queryLimit );
@@ -653,7 +653,7 @@ public class IteratingQueryIT {
 
         stop = System.currentTimeMillis();
 
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
 
         assertEquals( expectedResults.size(), count );
     }
@@ -670,7 +670,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         List<String> expected = new ArrayList<String>( matchMax );
 
@@ -692,7 +692,7 @@ public class IteratingQueryIT {
         app.refreshIndex();
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL( "select * where searched = true order by created" );
         query.setLimit( queryLimit );
@@ -712,7 +712,7 @@ public class IteratingQueryIT {
         assertTrue( results.getCursor() == null );
 
         stop = System.currentTimeMillis();
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
 
         assertEquals( expected.size(), count );
     }
@@ -728,7 +728,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         List<String> expected = new ArrayList<String>( size );
 
@@ -746,7 +746,7 @@ public class IteratingQueryIT {
 
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL( "select * where index >= "+ startValue + " order by index desc" );
         query.setLimit( queryLimit );
@@ -775,7 +775,7 @@ public class IteratingQueryIT {
         assertEquals( expected.size() - delta, count );
 
         stop = System.currentTimeMillis();
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
     }
 
 
@@ -789,7 +789,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         List<String> expected = new ArrayList<String>( size );
 
@@ -807,7 +807,7 @@ public class IteratingQueryIT {
 
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL( "select * where index >= "+ startValue + " order by index desc" );
         query.setLimit( queryLimit );
@@ -836,7 +836,7 @@ public class IteratingQueryIT {
         assertEquals( expected.size() - delta, count );
 
         stop = System.currentTimeMillis();
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
     }
 
 
@@ -850,7 +850,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         List<String> expected = new ArrayList<String>( size );
 
@@ -868,7 +868,7 @@ public class IteratingQueryIT {
         app.refreshIndex();
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL( "select * where index >= "+ startValue + " order by index desc" );
         query.setLimit( queryLimit );
@@ -896,7 +896,7 @@ public class IteratingQueryIT {
         assertEquals( expected.size() - startValue, count );
 
         stop = System.currentTimeMillis();
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
     }
 
 
@@ -910,7 +910,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         List<String> expected = new ArrayList<String>( size );
 
@@ -929,7 +929,7 @@ public class IteratingQueryIT {
         Thread.sleep(500);
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL( "select * where index >= "+ startValue + " order by index desc" );
         query.setLimit( queryLimit );
@@ -957,7 +957,7 @@ public class IteratingQueryIT {
         assertEquals( expected.size() - startValue , count );
 
         stop = System.currentTimeMillis();
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
     }
 
 
@@ -972,7 +972,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         List<String> expected = new ArrayList<String>( size );
 
@@ -990,7 +990,7 @@ public class IteratingQueryIT {
         app.refreshIndex();
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL(
             String.format( "select * where index >= %d AND index <= %d order by index desc", startValue,
@@ -1021,7 +1021,7 @@ public class IteratingQueryIT {
         assertEquals( expected.size() - startValue - delta +1 , count );
 
         stop = System.currentTimeMillis();
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
     }
 
 
@@ -1036,7 +1036,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         List<String> expected = new ArrayList<String>( size );
 
@@ -1054,7 +1054,7 @@ public class IteratingQueryIT {
 
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL(
             String.format( "select * where index >= %d AND index <= %d order by index asc", startValue,
@@ -1085,7 +1085,7 @@ public class IteratingQueryIT {
         assertEquals( expected.size() - startValue - delta + 1, count );
 
         stop = System.currentTimeMillis();
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
     }
 
 
@@ -1102,7 +1102,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
@@ -1114,7 +1114,7 @@ public class IteratingQueryIT {
 
         long stop = System.currentTimeMillis();
 
-        LOG.info("Writes took {} ms", stop - start );
+        logger.info("Writes took {} ms", stop - start );
 
 
         Query query = new Query();
@@ -1141,7 +1141,7 @@ public class IteratingQueryIT {
         while ( results.getCursor() != null );
 
         stop = System.currentTimeMillis();
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
 
         assertEquals( size, count );
     }
@@ -1188,7 +1188,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
@@ -1214,7 +1214,7 @@ public class IteratingQueryIT {
 
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         app.refreshIndex();
 
@@ -1248,7 +1248,7 @@ public class IteratingQueryIT {
 
         stop = System.currentTimeMillis();
 
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
 
         assertEquals( sortedResults.size(), count );
     }
@@ -1267,7 +1267,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         Set<Entity> sortedResults = new TreeSet<Entity>( new Comparator<Entity>() {
 
@@ -1320,7 +1320,7 @@ public class IteratingQueryIT {
 
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         app.refreshIndex();
 
@@ -1352,7 +1352,7 @@ public class IteratingQueryIT {
 
         stop = System.currentTimeMillis();
 
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
 
         assertEquals( sortedResults.size(), count );
     }
@@ -1374,7 +1374,7 @@ public class IteratingQueryIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
         for ( int i = 0; i < size; i++ ) {
             Map<String, Object> entity = new HashMap<String, Object>();
@@ -1388,7 +1388,7 @@ public class IteratingQueryIT {
 
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         Query query = Query.fromQL("select * where NOT boolean = false order by index asc");
         query.setLimit( 2 );
@@ -1416,7 +1416,7 @@ public class IteratingQueryIT {
         while ( results.getCursor() != null );
 
         stop = System.currentTimeMillis();
-        LOG.info( "Query took {} ms to return {} entities", stop - start, count );
+        logger.info( "Query took {} ms to return {} entities", stop - start, count );
 
         assertEquals( size/2, count );
     }

@@ -39,5 +39,7 @@ public enum FieldTypeName {
     LONG,
     SET,
     STRING,
-    UUID
+    UUID,
+    DISTANCE,
+    NULL
 }

@@ -46,7 +46,7 @@ public class FacebookProvider extends AbstractProvider {
     private static final String DEF_API_URL = "https://graph.facebook.com/me";
     private static final String DEF_PICTURE_URL = "http://graph.facebook.com/%s/picture";
 
-    private Logger logger = LoggerFactory.getLogger( FacebookProvider.class );
+    private static final Logger logger = LoggerFactory.getLogger( FacebookProvider.class );
 
     private String apiUrl = DEF_API_URL;
     private String pictureUrl = DEF_PICTURE_URL;
@@ -73,7 +73,7 @@ public class FacebookProvider extends AbstractProvider {
             }
         }
         catch ( Exception ex ) {
-            ex.printStackTrace();
+            logger.error("Error in configure()", ex);
         }
     }
 
@@ -110,8 +110,9 @@ public class FacebookProvider extends AbstractProvider {
         String fb_user_name = ( String ) fb_user.get( "name" );
         String fb_user_username = ( String ) fb_user.get( "username" );
         String fb_user_email = ( String ) fb_user.get( "email" );
+
         if ( logger.isDebugEnabled() ) {
-            logger.debug( JsonUtils.mapToFormattedJsonString( fb_user ) );
+            logger.debug( "FacebookProvider.createOrAuthenticate: {}", JsonUtils.mapToFormattedJsonString( fb_user ) );
         }
 
         User user = null;
@@ -127,7 +128,7 @@ public class FacebookProvider extends AbstractProvider {
                 throw new BadTokenException( "Could not lookup user for that Facebook ID", ex );
             }
             if ( r.size() > 1 ) {
-                logger.error( "Multiple users for FB ID: " + fb_user_id );
+                logger.error( "Multiple users for FB ID: {}", fb_user_id );
                 throw new BadTokenException( "multiple users with same Facebook ID" );
             }
 

@@ -62,7 +62,9 @@ public class SwaggerServlet extends HttpServlet implements Filter {
     @Override
     public void init( ServletConfig config ) throws ServletException {
         super.init( config );
-        logger.info( "init(ServletConfig config)" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("init(ServletConfig config)");
+        }
         if ( sc == null ) {
             sc = config.getServletContext();
         }
@@ -73,7 +75,9 @@ public class SwaggerServlet extends HttpServlet implements Filter {
 
     @Override
     public void init( FilterConfig config ) throws ServletException {
-        logger.info( "init(FilterConfig paramFilterConfig)" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("init(FilterConfig paramFilterConfig)");
+        }
         if ( sc == null ) {
             sc = config.getServletContext();
         }
@@ -98,7 +102,7 @@ public class SwaggerServlet extends HttpServlet implements Filter {
     public String loadTempate( String template ) {
         String templateString = readClasspathFileAsString( template );
         Map<String, String> valuesMap = new HashMap<String, String>();
-        String basePath = properties != null ? properties.getProperty( "swagger.basepath", SWAGGER_BASE_PATH ) :
+        String basePath = properties != null ? properties.getProperty( "usergrid.api.url.base", SWAGGER_BASE_PATH ) :
                           SWAGGER_BASE_PATH;
         valuesMap.put( "basePath", basePath );
         StrSubstitutor sub = new StrSubstitutor( valuesMap );
@@ -107,7 +111,9 @@ public class SwaggerServlet extends HttpServlet implements Filter {
 
 
     public void loadSwagger() {
-        logger.info( "loadSwagger()" );
+        if (logger.isTraceEnabled()) {
+            logger.trace( "loadSwagger()" );
+        }
         pathToJson.put( "/resources.json", loadTempate( "/swagger/resources.json" ) );
         pathToJson.put( "/applications.json", loadTempate( "/swagger/applications.json" ) );
         pathToJson.put( "/management.json", loadTempate( "/swagger/management.json" ) );
@@ -120,7 +126,9 @@ public class SwaggerServlet extends HttpServlet implements Filter {
 
         String path = request.getServletPath();
 
-        logger.info( "Swagger request: " + path );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Swagger request: {}" + path);
+        }
 
         handleJsonOutput( request, response );
     }

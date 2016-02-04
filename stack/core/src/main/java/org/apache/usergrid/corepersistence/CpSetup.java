@@ -19,15 +19,6 @@ package org.apache.usergrid.corepersistence;
 
 import java.util.UUID;
 
-import com.google.inject.Binding;
-import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexLocationStrategy;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,14 +40,12 @@ import me.prettyprint.hector.api.ddl.ComparatorType;
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.getCfDefs;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_ORGANIZATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.PRINCIPAL_TOKEN_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.PROPERTIES_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.getApplicationKeyspace;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.keyspaceForApplication;
 
 
 /**
@@ -109,7 +98,8 @@ public class CpSetup implements Setup {
         injector.getInstance( DataMigrationManager.class ).migrate();
 
         try {
-            emf.initializeApplicationV2( DEFAULT_ORGANIZATION, emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
+            emf.initializeApplicationV2( DEFAULT_ORGANIZATION, emf.getManagementAppId(),
+                MANAGEMENT_APPLICATION, null, false);
         }
         catch ( ApplicationAlreadyExistsException ex ) {
             logger.warn( "Application {}/{} already exists", DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION );
@@ -181,7 +171,7 @@ public class CpSetup implements Setup {
 
         // Need this legacy stuff for queues
 
-        logger.info( "Creating static application keyspace " + getApplicationKeyspace() );
+        logger.info( "Creating static application keyspace {}", getApplicationKeyspace() );
 
         cass.createColumnFamily( getApplicationKeyspace(),
             createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF,

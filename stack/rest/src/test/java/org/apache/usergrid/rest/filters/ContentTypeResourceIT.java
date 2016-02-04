@@ -50,11 +50,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author tnine
  */
-
-// @Ignore("Client login is causing tests to fail due to socket closure by grizzly.  Need to re-enable once we're not
-// using grizzly to test")
 public class ContentTypeResourceIT extends AbstractRestIT {
-
 
     /**
      * Creates a simple entity of type game. Does not set the content type. The type should be set to json to match the

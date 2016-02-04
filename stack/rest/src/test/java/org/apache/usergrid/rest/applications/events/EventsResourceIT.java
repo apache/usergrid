@@ -41,11 +41,11 @@ import org.junit.Ignore;
 
 public class EventsResourceIT extends AbstractRestIT {
 
-    private static Logger log = LoggerFactory.getLogger( EventsResourceIT.class );
+    private static final Logger log = LoggerFactory.getLogger( EventsResourceIT.class );
 
 
     @Test
-    @Ignore("Events not working yet")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1118. Events not working yet")
     public void testEventPostandGet() throws IOException {
 
         Map<String, Object> payload = new LinkedHashMap<String, Object>();

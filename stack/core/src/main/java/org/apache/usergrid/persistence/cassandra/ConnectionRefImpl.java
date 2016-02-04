@@ -549,11 +549,11 @@ public class ConnectionRefImpl implements ConnectionRef {
 
             byte[] raw_id = byteStream.toByteArray();
 
-            logger.info( "raw connection index id: " + Hex.encodeHexString( raw_id ) );
+            logger.info( "raw connection index id: {}", Hex.encodeHexString( raw_id ) );
 
             uuid = UUID.nameUUIDFromBytes( raw_id );
 
-            logger.info( "connection index uuid: " + uuid );
+            logger.info( "connection index uuid: {}", uuid );
         }
         catch ( IOException e ) {
             logger.error( "Unable to create connection index UUID", e );

@@ -23,8 +23,9 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 import java.io.IOException;
 import java.util.UUID;
 
-import org.junit.Ignore;
+import org.apache.usergrid.StressTest;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +49,7 @@ import com.fasterxml.jackson.dataformat.smile.SmileFactory;
  *
  * @author tnine
  */
+@Category(StressTest.class)
 public class SerializationComparison {
 
     private static final Logger logger = LoggerFactory.getLogger( SerializationComparison.class );
@@ -56,7 +58,6 @@ public class SerializationComparison {
 
 
     @Test
-    @Ignore("Too heavy for normal build process?")
     public void smileSerialization() throws IOException {
         SmileFactory smile = new SmileFactory();
 

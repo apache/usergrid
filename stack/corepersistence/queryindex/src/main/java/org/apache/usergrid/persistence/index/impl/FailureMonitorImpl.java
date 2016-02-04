@@ -37,7 +37,7 @@ import org.apache.usergrid.persistence.index.IndexFig;
  */
 public class FailureMonitorImpl implements FailureMonitor {
 
-    private static final Logger LOG = LoggerFactory.getLogger( FailureMonitorImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( FailureMonitorImpl.class );
 
     /**
      * Exceptions that will cause us to increment our count and restart
@@ -74,9 +74,8 @@ public class FailureMonitorImpl implements FailureMonitor {
         final int maxCount = indexFig.getFailRefreshCount();
 
         if ( fails > maxCount ) {
-            LOG.error( "Unable to connect to elasticsearch.  Reason is {}", message, throwable );
-            LOG.warn( "We have failed to connect to Elastic Search {} times.  "
-                    + "Max allowed is {}.  Resetting connection", fails, maxCount );
+            logger.error( "Unable to connect to elasticsearch.  Reason is {}", message, throwable );
+            logger.warn( "We have failed to connect to Elastic Search {} times.  Max allowed is {}.  Resetting connection", fails, maxCount );
 
             esProvider.releaseClient();
         }

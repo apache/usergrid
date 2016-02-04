@@ -38,7 +38,9 @@ public class RolesService extends org.apache.usergrid.services.roles.RolesServic
 
     public RolesService() {
         super();
-        logger.info( "/users/*/roles" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("/users/*/roles");
+        }
     }
 
 

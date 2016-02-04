@@ -29,10 +29,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.usergrid.StressTest;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,9 +64,9 @@ import static org.junit.Assert.fail;
 
 @RunWith( ITRunner.class )
 @UseModules( TestGraphModule.class )
-@Ignore("Not for testing during build.  Kills embedded Cassandra")
+@Category(StressTest.class)
 public class GraphManagerLoadTest {
-    private static final Logger log = LoggerFactory.getLogger( GraphManagerLoadTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( GraphManagerLoadTest.class );
 
     @Inject
     private GraphManagerFactory factory;
@@ -95,7 +96,6 @@ public class GraphManagerLoadTest {
     }
 
 
-//    @Ignore
     @Test
     public void writeThousandsSingleSource() throws InterruptedException, ExecutionException {
         EdgeGenerator generator = new EdgeGenerator() {
@@ -124,7 +124,7 @@ public class GraphManagerLoadTest {
 
 
     @Test
-    @Ignore("Too heavy for normal build process")
+    @Category(StressTest.class)
     public void writeThousandsSingleTarget() throws InterruptedException, ExecutionException {
         EdgeGenerator generator = new EdgeGenerator() {
 
@@ -207,12 +207,12 @@ public class GraphManagerLoadTest {
 
 
                 if ( i % 1000 == 0 ) {
-                    log.info( "   Wrote: " + i );
+                    logger.info( "   Wrote: " + i );
                 }
             }
 
             timer.stop();
-            log.info( "Total time to write {} entries {} ms", writeLimit, timer.getTime() );
+            logger.info( "Total time to write {} entries {} ms", writeLimit, timer.getTime() );
             timer.reset();
 
             timer.start();
@@ -236,7 +236,7 @@ public class GraphManagerLoadTest {
 
                 @Override
                 public void onNext( final List<MarkedEdge> edges ) {
-                    log.info("Read {} edges", edges.size());
+                    logger.info("Read {} edges", edges.size());
                 }
             } );
 
@@ -244,7 +244,7 @@ public class GraphManagerLoadTest {
             latch.await();
 
 
-            log.info( "Total time to read {} entries {} ms", readCount, timer.getTime() );
+            logger.info( "Total time to read {} entries {} ms", readCount, timer.getTime() );
 
             return true;
         }

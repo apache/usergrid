@@ -44,7 +44,9 @@ public class RolesService extends AbstractCollectionService {
 
     public RolesService() {
         super();
-        logger.debug( "/roles" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("/roles");
+        }
 
         declareEntityDictionary( "permissions" );
     }

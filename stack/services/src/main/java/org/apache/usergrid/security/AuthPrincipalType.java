@@ -44,10 +44,10 @@ public enum AuthPrincipalType {
 
     private synchronized static void register( AuthPrincipalType type ) {
         if ( prefixes == null ) {
-            prefixes = new ConcurrentHashMap<String, AuthPrincipalType>();
+            prefixes = new ConcurrentHashMap<>();
         }
         if ( base64Prefixes == null ) {
-            base64Prefixes = new ConcurrentHashMap<String, AuthPrincipalType>();
+            base64Prefixes = new ConcurrentHashMap<>();
         }
         prefixes.put( type.getPrefix(), type );
         base64Prefixes.put( type.getBase64Prefix(), type );

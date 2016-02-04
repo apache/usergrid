@@ -130,7 +130,9 @@ public class ManagementResource extends AbstractContextResource {
 
 
     public ManagementResource() {
-        logger.info( "ManagementResource initialized" );
+        if (logger.isTraceEnabled()) {
+            logger.trace( "ManagementResource initialized" );
+        }
     }
 
 
@@ -221,7 +223,9 @@ public class ManagementResource extends AbstractContextResource {
                 user = SubjectUtils.getUser();
             }
 
-            logger.info( "ManagementResource.getAccessToken with username: {}", username );
+            if (logger.isTraceEnabled()) {
+                logger.trace("ManagementResource.getAccessToken with username: {}", username);
+            }
 
             String errorDescription = "invalid username or password";
 
@@ -255,7 +259,9 @@ public class ManagementResource extends AbstractContextResource {
                         user = management.verifyAdminUserPasswordCredentials( username, password );
 
                         if ( user != null ) {
-                            logger.info( "found user from verify: {}", user.getUuid() );
+                            if (logger.isTraceEnabled()) {
+                                logger.trace("found user from verify: {}", user.getUuid());
+                            }
                         }
                     }
                     catch ( UnactivatedAdminUserException uaue ) {
@@ -268,7 +274,7 @@ public class ManagementResource extends AbstractContextResource {
                     }
                     catch ( UnconfirmedAdminUserException uaue ) {
                         errorDescription = "User must be confirmed to authenticate";
-                        logger.warn( "Responding with HTTP 403 forbidden response for unconfirmed user {}" , user);
+                        logger.warn("Responding with HTTP 403 forbidden response for unconfirmed user");
 
                         OAuthResponse response = OAuthResponse.errorResponse( SC_FORBIDDEN )
                                                               .setError( OAuthError.TokenResponse.INVALID_GRANT )
@@ -343,7 +349,9 @@ public class ManagementResource extends AbstractContextResource {
                                         @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
 
-        logger.info( "ManagementResource.getAccessTokenPost" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("ManagementResource.getAccessTokenPost");
+        }
 
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
                 callback, false, false);
@@ -453,7 +461,9 @@ public class ManagementResource extends AbstractContextResource {
                                          @FormParam( "username" ) String username,
                                          @FormParam( "password" ) String password ) {
 
-       logger.debug( "ManagementResource /authorize: {}/{}", username, password );
+        if (logger.isTraceEnabled()) {
+            logger.trace("ManagementResource /authorize: {}", username);
+        }
 
        try {
             responseType = response_type;
@@ -467,6 +477,7 @@ public class ManagementResource extends AbstractContextResource {
                 user = management.verifyAdminUserPasswordCredentials( username, password );
             }
             catch ( Exception e1 ) {
+                // intentionally empty
             }
             if ( ( user != null ) && isNotBlank( redirect_uri ) ) {
                 if ( !redirect_uri.contains( "?" ) ) {
@@ -491,7 +502,7 @@ public class ManagementResource extends AbstractContextResource {
             throw e;
         }
         catch ( Exception e ) {
-            logger.debug("handleAuthorizeForm failed", e);
+            logger.error("handleAuthorizeForm failed", e);
             return handleViewable( "error", e );
         }
     }
@@ -582,7 +593,7 @@ public class ManagementResource extends AbstractContextResource {
         if ( ttl == -1 ) {
             throw new IllegalArgumentException("ttl must be specified");
         }
-        AccessInfo accessInfo = null;
+        AccessInfo accessInfo;
 
         Timer processingTimer = getMetricsFactory().getTimer(
             ManagementResource.class, SSO_PROCESSING_TIME );
@@ -667,7 +678,7 @@ public class ManagementResource extends AbstractContextResource {
 
         } catch (Exception e) {
             timerContext.stop();
-            logger.debug("Error validating external token", e);
+            logger.error("Error validating external token", e);
             throw e;
         }
 

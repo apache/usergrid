@@ -21,11 +21,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.clearspring.analytics.hash.MurmurHash;
 import com.fasterxml.uuid.EthernetAddress;
 import com.fasterxml.uuid.UUIDComparator;
 
@@ -47,7 +45,7 @@ import static org.apache.usergrid.utils.ConversionUtils.uuid;
 
 
 public class UUIDUtils {
-    private static final Logger LOG = LoggerFactory.getLogger( UUIDUtils.class );
+    private static final Logger logger = LoggerFactory.getLogger( UUIDUtils.class );
     private static final int[] MICROS = new int[1000];
 
 
@@ -324,7 +322,7 @@ public class UUIDUtils {
             uuid = UUID.fromString( s );
         }
         catch ( Exception e ) {
-            LOG.info( "Could not convert String {} into a UUID", s, e );
+            logger.info( "Could not convert String {} into a UUID", s, e );
         }
         return uuid;
     }
@@ -354,16 +352,6 @@ public class UUIDUtils {
             return null;
         }
         return tryGetUUID( s.substring( offset, offset + 36 ) );
-    }
-
-    public static long getUUIDLong(UUID id){
-        long timestamp = 0;
-        if(UUIDUtils.isTimeBased(id)) {
-            timestamp = UUIDUtils.getTimestampInMicros(id);
-        }else{
-            timestamp = MurmurHash.hash64(id);
-        }
-        return timestamp;
     }
 
 

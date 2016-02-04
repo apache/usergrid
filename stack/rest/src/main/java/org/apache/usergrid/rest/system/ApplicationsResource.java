@@ -73,7 +73,7 @@ public class ApplicationsResource extends AbstractContextResource {
         throws Exception {
 
         if(confirmApplicationName == null){
-            throw new IllegalArgumentException("please make add a QueryString for confirmApplicationName");
+            throw new IllegalArgumentException("confirmApplicationName query parameter is required");
         }
 
         final UUID jobId = UUIDGenerator.newTimeUUID();
@@ -82,7 +82,7 @@ public class ApplicationsResource extends AbstractContextResource {
         final String name =  em.getApplication().getApplicationName();
         if(!name.toLowerCase().equals(confirmApplicationName.toLowerCase())){
             throw new IllegalArgumentException(
-                "confirmApplicationName: " + confirmApplicationName + " does not equal " + name);
+                "confirmApplicationName mismatch: " + confirmApplicationName + " does not equal " + name);
         }
         final StatusService statusService = injector.getInstance(StatusService.class);
 
@@ -124,9 +124,9 @@ public class ApplicationsResource extends AbstractContextResource {
                     try {
                         statusService.setStatus(applicationId, jobId, StatusService.Status.FAILED, map).toBlocking().lastOrDefault(null);//leave as subscribe if fails retry
                     }catch (Exception subE){
-                        logger.error("failed to update status "+jobId,subE);
+                        logger.error("failed to update status {}",jobId,subE);
                     }
-                    logger.error( "Failed to delete appid:"+applicationId + " jobid:"+jobId+" count:"+itemsDeleted, e );
+                    logger.error( "Failed to delete appid:{} jobid:{} count:{}",applicationId,jobId,itemsDeleted, e );
                 }
             }
         };
@@ -139,7 +139,7 @@ public class ApplicationsResource extends AbstractContextResource {
             //should throw exception if can't start
             statusService.setStatus(applicationId, jobId, StatusService.Status.STARTED, new LinkedHashMap<>()).toBlocking().lastOrDefault(null);
         }catch (Exception e){
-            logger.error("failed to set status for " + jobId, e);
+            logger.error("failed to set status for {}", jobId, e);
         }
         Map<String,Object> data = new HashMap<>();
         data.put("jobId",jobId);

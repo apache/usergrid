@@ -87,7 +87,7 @@ public class ExportServiceImpl implements ExportService {
             return null;
         }
 
-        EntityManager em = null;
+        EntityManager em;
         try {
             em = emf.getEntityManager( emf.getManagementAppId() );
             Set<String> collections = em.getApplicationCollections();
@@ -188,9 +188,10 @@ public class ExportServiceImpl implements ExportService {
 
     @Override
     public void doExport( final JobExecution jobExecution ) throws Exception {
+        @SuppressWarnings("unchecked")
         Map<String, Object> config = ( Map<String, Object> ) jobExecution.getJobData().getProperty( "exportInfo" );
         Object s3PlaceHolder = jobExecution.getJobData().getProperty( "s3Export" );
-        S3Export s3Export = null;
+        S3Export s3Export;
 
         if ( config == null ) {
             logger.error( "Export Information passed through is null" );
@@ -222,7 +223,7 @@ public class ExportServiceImpl implements ExportService {
         }
 
         if ( config.get( "organizationId" ) == null ) {
-            logger.error( "No organization could be found" );
+            logger.error( "doExport: No organization could be found" );
             export.setState( Export.State.FAILED );
             em.update( export );
             return;

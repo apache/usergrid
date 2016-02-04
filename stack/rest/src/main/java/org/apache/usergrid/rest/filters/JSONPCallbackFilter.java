@@ -44,7 +44,9 @@ public class JSONPCallbackFilter implements ContainerRequestFilter {
 
 
     public JSONPCallbackFilter() {
-        logger.info( "JSONPCallbackFilter is installed" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("JSONPCallbackFilter is installed");
+        }
     }
 
 

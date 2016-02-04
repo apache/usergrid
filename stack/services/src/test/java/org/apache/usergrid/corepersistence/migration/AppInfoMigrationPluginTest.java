@@ -120,7 +120,7 @@ public class AppInfoMigrationPluginTest {
         List<Entity> deletedApps = new ArrayList<>();
 
         setup.getEmf().initializeApplicationV2(
-            CassandraService.DEFAULT_ORGANIZATION, AppInfoMigrationPlugin.SYSTEM_APP_ID, "systemapp", null);
+            CassandraService.DEFAULT_ORGANIZATION, AppInfoMigrationPlugin.SYSTEM_APP_ID, "systemapp", null, false);
 
         EntityManager systemAppEm = setup.getEmf().getEntityManager( AppInfoMigrationPlugin.SYSTEM_APP_ID );
 
@@ -194,7 +194,9 @@ public class AppInfoMigrationPluginTest {
 
     private void checkApplicationsBroken( List<Entity> deletedApps ) throws Exception {
 
-        logger.debug("\n\nChecking applications broken\n");
+        if (logger.isDebugEnabled()) {
+            logger.debug("\n\nChecking applications broken\n");
+        }
 
 
         for ( Entity applicationInfo : deletedApps ) {
@@ -209,7 +211,9 @@ public class AppInfoMigrationPluginTest {
 
     private void checkApplicationsOk( String orgName) throws Exception {
 
-        logger.debug("\n\nChecking applications OK\n");
+        if (logger.isDebugEnabled()) {
+            logger.debug("\n\nChecking applications OK\n");
+        }
 
         for (int i=0; i<10; i++) {
 

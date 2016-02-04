@@ -17,16 +17,14 @@
 package org.apache.usergrid.rest.security;
 
 
+import org.apache.shiro.subject.Subject;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.exceptions.SecurityException;
-import org.apache.usergrid.rest.security.annotations.RequireAdminUserAccess;
-import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
-import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
-import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
+import org.apache.usergrid.rest.security.annotations.*;
 import org.apache.usergrid.rest.utils.PathingUtils;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.ServiceManagerFactory;
@@ -116,8 +114,10 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
     public void configure(ResourceInfo resourceInfo, FeatureContext featureContext) {
         Method am = resourceInfo.getResourceMethod();
 
-        logger.debug( "configure {} method {}",
-            resourceInfo.getResourceClass().getSimpleName(), resourceInfo.getResourceMethod().getName() );
+        if (logger.isTraceEnabled()) {
+            logger.trace("configure {} method {}",
+                resourceInfo.getResourceClass().getSimpleName(), resourceInfo.getResourceMethod().getName());
+        }
 
         if ( am.isAnnotationPresent( RequireApplicationAccess.class ) ) {
             featureContext.register( ApplicationFilter.class );
@@ -131,6 +131,9 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
         }
         else if ( am.isAnnotationPresent( RequireAdminUserAccess.class ) ) {
             featureContext.register( SystemFilter.AdminUserFilter.class );
+        }
+        else if ( am.isAnnotationPresent( CheckPermissionsForPath.class ) ) {
+            featureContext.register( PathPermissionsFilter.class );
         }
 
     }
@@ -146,14 +149,21 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
         @Override
         public void filter(ContainerRequestContext request) throws IOException {
 
-            logger.debug( "Filtering {}", request.getUriInfo().getRequestUri().toString() );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Filtering {}", request.getUriInfo().getRequestUri().toString());
+            }
 
             if ( request.getMethod().equalsIgnoreCase( "OPTIONS" ) ) {
-                logger.debug( "Skipping option request" );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Skipping option request");
+                }
             }
 
             MultivaluedMap<java.lang.String, java.lang.String> params = uriInfo.getPathParameters();
-            logger.debug( "Params: {}", params.keySet() );
+
+            if (logger.isTraceEnabled()) {
+                logger.trace("Params: {}", params.keySet());
+            }
 
             authorize( request );
         }
@@ -172,8 +182,8 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
             }
             else {
                 String applicationName = PathingUtils.assembleAppName( uriInfo.getPathParameters() );
-                if ( logger.isDebugEnabled() ) {
-                    logger.debug( "Pulled applicationName {}", applicationName );
+                if ( logger.isTraceEnabled() ) {
+                    logger.trace( "Pulled applicationName {}", applicationName );
                 }
                 application = Identifier.fromName( applicationName );
             }
@@ -228,14 +238,20 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
         @Override
         public void authorize( ContainerRequestContext request ) {
-            logger.debug( "OrganizationFilter.authorize" );
+            if (logger.isTraceEnabled()) {
+                logger.trace("OrganizationFilter.authorize");
+            }
 
             if ( !isPermittedAccessToOrganization( getOrganizationIdentifier() ) ) {
-                logger.debug("No organization access authorized");
+                if (logger.isTraceEnabled()) {
+                    logger.trace("No organization access authorized");
+                }
                 throw mappableSecurityException( "unauthorized", "No organization access authorized" );
             }
 
-            logger.debug( "OrganizationFilter.authorize - leaving" );
+            if (logger.isTraceEnabled()) {
+                logger.trace("OrganizationFilter.authorize - leaving");
+            }
         }
     }
 
@@ -268,7 +284,9 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
         @Override
         public void authorize( ContainerRequestContext request ) {
-            logger.debug( "ApplicationFilter.authorize" );
+            if (logger.isTraceEnabled()) {
+                logger.trace("ApplicationFilter.authorize");
+            }
             if ( SubjectUtils.isAnonymous() ) {
                 ApplicationInfo application = null;
                 try {
@@ -276,13 +294,15 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                     application = management.getApplicationInfo( getApplicationIdentifier() );
                 }
                 catch ( Exception e ) {
-                    e.printStackTrace();
+                    logger.error("Error getting applicationInfo in authorize()", e);
                 }
                 EntityManager em = getEntityManagerFactory().getEntityManager( application.getId() );
                 Map<String, String> roles = null;
                 try {
                     roles = em.getRoles();
-                    logger.debug( "found roles {}", roles );
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("found roles {}", roles);
+                    }
                 }
                 catch ( Exception e ) {
                     logger.error( "Unable retrieve roles", e );
@@ -312,15 +332,21 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
         @Override
         public void authorize(ContainerRequestContext request) {
-            logger.debug( "SystemFilter.authorize" );
+            if (logger.isTraceEnabled()) {
+                logger.trace("SystemFilter.authorize");
+            }
             try {
                 if (!request.getSecurityContext().isUserInRole( ROLE_SERVICE_ADMIN )) {
-                    logger.debug( "You are not the system admin." );
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("You are not the system admin.");
+                    }
                     throw mappableSecurityException( "unauthorized", "No system access authorized",
                         SecurityException.REALM );
                 }
             } catch (IllegalStateException e) {
-                logger.debug( "This is an invalid state", e );
+                if (logger.isDebugEnabled()) {
+                    logger.debug("This is an invalid state", e);
+                }
                 if ((request.getSecurityContext().getUserPrincipal() == null) ||
                     !ROLE_SERVICE_ADMIN.equals( request.getSecurityContext().getUserPrincipal().getName() )) {
                     throw mappableSecurityException( "unauthorized", "No system access authorized",
@@ -339,7 +365,9 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
             @Override
             public void authorize(ContainerRequestContext request) {
-                logger.debug( "AdminUserFilter.authorize" );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("AdminUserFilter.authorize");
+                }
                 if (!isUser( getUserIdentifier() )) {
                     throw mappableSecurityException( "unauthorized", "No admin user access authorized" );
                 }
@@ -347,4 +375,88 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
         }
 
     }
+
+    // This filter is created in REST from logic in org.apache.usergrid.services.AbstractService.checkPermissionsForPath
+    @Resource
+    public static class PathPermissionsFilter extends AbstractFilter {
+
+        EntityManagerFactory emf;
+        ManagementService management;
+
+        @Autowired
+        public void setEntityManagerFactory( EntityManagerFactory emf ) {
+            this.emf = emf;
+        }
+
+
+        public EntityManagerFactory getEntityManagerFactory() {
+            return emf;
+        }
+
+        @Autowired
+        public void setManagementService( ManagementService management ) {
+            this.management = management;
+        }
+
+        @Inject
+        public PathPermissionsFilter(UriInfo uriInfo) {
+            super( uriInfo );
+        }
+
+
+        @Override
+        public void authorize( ContainerRequestContext request ) {
+            if(logger.isTraceEnabled()){
+                logger.debug( "PathPermissionsFilter.authorize" );
+            }
+
+            final String PATH_MSG =
+                "---- Checked permissions for path --------------------------------------------\n" + "Requested path: {} \n"
+                    + "Requested action: {} \n" + "Requested permission: {} \n" + "Permitted: {} \n";
+
+            ApplicationInfo application;
+
+            try {
+
+                application = management.getApplicationInfo( getApplicationIdentifier() );
+                EntityManager em = emf.getEntityManager( application.getId() );
+                Subject currentUser = SubjectUtils.getSubject();
+
+                if ( currentUser == null ) {
+                    return;
+                }
+                String applicationName = application.getName().toLowerCase();
+                String operation = request.getMethod().toLowerCase();
+                String path = request.getUriInfo().getPath().toLowerCase().replace(applicationName, "");
+                String perm =  getPermissionFromPath( em.getApplicationRef().getUuid(), operation, path );
+
+                boolean permitted = currentUser.isPermitted( perm );
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug( PATH_MSG, path, operation, perm, permitted );
+                }
+
+                if(!permitted){
+                    // throwing this so we can raise a proper mapped REST exception
+                    throw new Exception("Subject not permitted");
+                }
+
+
+                SubjectUtils.checkPermission( perm );
+                Subject subject = SubjectUtils.getSubject();
+
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug("Checked subject {} for perm {}", subject != null ? subject.toString() : "", perm);
+                    logger.debug("------------------------------------------------------------------------------");
+                }
+
+
+            } catch (Exception e){
+                throw mappableSecurityException( "unauthorized",
+                    "Subject does not have permission to access this resource" );
+            }
+
+        }
+    }
+
+
 }

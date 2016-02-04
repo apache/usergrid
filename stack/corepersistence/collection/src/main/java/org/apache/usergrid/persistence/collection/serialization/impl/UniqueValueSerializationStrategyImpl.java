@@ -34,13 +34,12 @@ import org.apache.usergrid.persistence.collection.serialization.SerializationFig
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
-import org.apache.usergrid.persistence.collection.serialization.impl.util.LegacyScopeUtils;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
 import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -48,7 +47,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 
 import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
 import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
@@ -69,11 +67,11 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     private static final Logger log = LoggerFactory.getLogger( UniqueValueSerializationStrategyImpl.class );
 
 
-    private final MultiTennantColumnFamily<ScopedRowKey<FieldKey>, EntityVersion>
+    private final MultiTenantColumnFamily<ScopedRowKey<FieldKey>, EntityVersion>
         CF_UNIQUE_VALUES;
 
 
-    private final MultiTennantColumnFamily<ScopedRowKey<EntityKey>, UniqueFieldEntry>
+    private final MultiTenantColumnFamily<ScopedRowKey<EntityKey>, UniqueFieldEntry>
         CF_ENTITY_UNIQUE_VALUE_LOG ;
 
     public static final int COL_VALUE = 0x0;
@@ -227,12 +225,11 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
             ScopedRowKey.fromKey( applicationId, entityKey ) ) );
 
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Writing unique value version={} name={} value={} ",
-                new Object[] {
+        if ( log.isTraceEnabled() ) {
+            log.trace( "Writing unique value version={} name={} value={} ",
                     uniqueValue.getEntityVersion(), uniqueValue.getField().getName(),
                     uniqueValue.getField().getValue()
-                } );
+                );
         }
 
 
@@ -367,17 +364,17 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
 
     @Override
-    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
+    public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
 
-        final MultiTennantColumnFamilyDefinition uniqueLookupCF =
-            new MultiTennantColumnFamilyDefinition( CF_UNIQUE_VALUES, BytesType.class.getSimpleName(),
+        final MultiTenantColumnFamilyDefinition uniqueLookupCF =
+            new MultiTenantColumnFamilyDefinition( CF_UNIQUE_VALUES, BytesType.class.getSimpleName(),
                 ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
 
-        final MultiTennantColumnFamilyDefinition uniqueLogCF =
-            new MultiTennantColumnFamilyDefinition( CF_ENTITY_UNIQUE_VALUE_LOG, BytesType.class.getSimpleName(),
+        final MultiTenantColumnFamilyDefinition uniqueLogCF =
+            new MultiTenantColumnFamilyDefinition( CF_ENTITY_UNIQUE_VALUE_LOG, BytesType.class.getSimpleName(),
                 ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
 
         return Arrays.asList( uniqueLookupCF, uniqueLogCF );
     }
@@ -386,7 +383,7 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     /**
      * Get the column family for the unique fields
      */
-    protected abstract MultiTennantColumnFamily<ScopedRowKey<FieldKey>, EntityVersion> getUniqueValuesCF();
+    protected abstract MultiTenantColumnFamily<ScopedRowKey<FieldKey>, EntityVersion> getUniqueValuesCF();
 
 
     /**
@@ -409,7 +406,7 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     /**
      * Get the column family for the unique field CF
      */
-    protected abstract MultiTennantColumnFamily<ScopedRowKey<EntityKey>, UniqueFieldEntry> getEntityUniqueLogCF();
+    protected abstract MultiTenantColumnFamily<ScopedRowKey<EntityKey>, UniqueFieldEntry> getEntityUniqueLogCF();
 
     /**
      * Generate a key that is compatible with the column family

@@ -19,74 +19,76 @@ package org.apache.usergrid.tools;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
-import org.apache.usergrid.ServiceITSuite;
-import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
 import org.junit.ClassRule;
+import org.apache.usergrid.services.AbstractServiceIT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Scheduler;
-import rx.schedulers.Schedulers;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.usergrid.StressTest;
 
 /**
  * TODO: better test, this is really just a smoke test.
  */
-public class ExportAppTest {
+public class ExportAppTest extends AbstractServiceIT {
     static final Logger logger = LoggerFactory.getLogger( ExportAppTest.class );
-    
+
     int NUM_COLLECTIONS = 10;
-    int NUM_ENTITIES = 50; 
+    int NUM_ENTITIES = 50;
     int NUM_CONNECTIONS = 3;
 
     @ClassRule
-    public static ServiceITSetup setup = new ServiceITSetupImpl( ServiceITSuite.cassandraResource );
+    public static ServiceITSetup setup = new ServiceITSetupImpl();
+
 
     @org.junit.Test
     public void testBasicOperation() throws Exception {
-       
+
         String rand = RandomStringUtils.randomAlphanumeric( 10 );
-        
+
         // create app with some data
 
         String orgName = "org_" + rand;
         String appName = "app_" + rand;
-        
+        String userName = "user_" + rand;
+
+
         ExportDataCreator creator = new ExportDataCreator();
         creator.startTool( new String[] {
                 "-organization", orgName,
                 "-application", appName,
-                "-host", "localhost:" + ServiceITSuite.cassandraResource.getRpcPort()
+                "-username", userName,
+                "-host", "localhost:9160",
+                "-eshost", "localhost:9200",
+                "-escluster", "elasticsearch"
+
         }, false);
-        
+
         long start = System.currentTimeMillis();
-        
+
+        // export app to a directory
+
         String directoryName = "target/export" + rand;
 
         ExportApp exportApp = new ExportApp();
-        exportApp.startTool( new String[]{
+        exportApp.startTool( new String[] {
                 "-application", orgName + "/" + appName,
                 "-writeThreads", "100",
-                "-host", "localhost:" + ServiceITSuite.cassandraResource.getRpcPort(),
+                "-host", "localhost:9160",
+                "-eshost", "localhost:9200",
+                "-escluster", "elasticsearch",
                 "-outputDir", directoryName
         }, false );
 
         logger.info( "100 read and 100 write threads = " + (System.currentTimeMillis() - start) / 1000 + "s" );
-        
+
+        // check that we got the expected number of export files
+
         File exportDir = new File(directoryName);
         assertTrue( getFileCount( exportDir, "entities"    ) > 0 );
         assertTrue( getFileCount( exportDir, "connections" ) > 0 );
@@ -94,10 +96,12 @@ public class ExportAppTest {
         assertTrue( getFileCount( exportDir, "connections" ) <= 100 );
 
         File exportDir1 = new File(directoryName + "1");
-        exportApp.startTool( new String[]{
+        exportApp.startTool( new String[] {
                 "-application", orgName + "/" + appName,
                 "-writeThreads", "1",
-                "-host", "localhost:" + ServiceITSuite.cassandraResource.getRpcPort(),
+                "-host", "localhost:9160",
+                "-eshost", "localhost:9200",
+                "-escluster", "elasticsearch",
                 "-outputDir", directoryName + "1"
         }, false );
 

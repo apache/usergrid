@@ -44,7 +44,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.google.common.base.Optional;
 
 import rx.Observable;
-
+import rx.functions.Func1;
 
 
 /**
@@ -120,7 +120,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
 
                 if (isDeleted) {
 
-                    logger.trace("Edge {} is deleted, deleting the edge", markedEdge);
+                    logger.info("Edge {} is deleted when seeking, deleting the edge", markedEdge);
                     final Observable<IndexOperationMessage> indexMessageObservable = eventBuilder.buildDeleteEdge(applicationScope, markedEdge);
 
                     indexMessageObservable
@@ -133,7 +133,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                 if (isSourceNodeDeleted) {
 
                     final Id sourceNodeId = markedEdge.getSourceNode();
-                    logger.trace("Edge {} has a deleted source node, deleting the entity for id {}", markedEdge, sourceNodeId);
+                    logger.info("Edge {} has a deleted source node, deleting the entity for id {}", markedEdge, sourceNodeId);
 
                     final EventBuilderImpl.EntityDeleteResults
                         entityDeleteResults = eventBuilder.buildEntityDelete(applicationScope, sourceNodeId);
@@ -153,7 +153,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                 if (isTargetNodeDelete) {
 
                     final Id targetNodeId = markedEdge.getTargetNode();
-                    logger.trace("Edge {} has a deleted target node, deleting the entity for id {}", markedEdge, targetNodeId);
+                    logger.info("Edge {} has a deleted target node, deleting the entity for id {}", markedEdge, targetNodeId);
 
                     final EventBuilderImpl.EntityDeleteResults
                         entityDeleteResults = eventBuilder.buildEntityDelete(applicationScope, targetNodeId);
@@ -175,10 +175,13 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                 return !isDeleted && !isSourceNodeDeleted && !isTargetNodeDelete;
 
 
-            })
+            })  // any non-deleted edges should be de-duped here so the results are unique
+                .distinct( new EdgeDistinctKey() )
                 //set the edge state for cursors
                 .doOnNext( edge -> {
-                    logger.trace( "Seeking over edge {}", edge );
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Seeking over edge {}", edge);
+                    }
                     edgeCursorState.update( edge );
                 } )
 
@@ -245,11 +248,43 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
     private Observable.Transformer<IndexOperationMessage, IndexOperationMessage> applyCollector() {
 
         return observable -> observable
-            .filter((IndexOperationMessage msg) -> !msg.isEmpty())
             .collect(() -> new IndexOperationMessage(), (collector, single) -> collector.ingest(single))
+            .filter(msg -> !msg.isEmpty())
             .doOnNext(indexOperation -> {
                 asyncEventService.queueIndexOperationMessage(indexOperation);
             });
+
+    }
+
+    /**
+     *  Return a key that Rx can use for determining a distinct edge.  Build a string containing the hash code
+     *  of the source, target, and type to ensure uniqueness rather than the int sum of the hash codes.  Edge
+     *  timestamp is specifically left out as edges with the same source,target,type but different timestamps
+     *  are considered duplicates.
+     */
+    private class EdgeDistinctKey implements Func1<Edge,String> {
+
+        @Override
+        public String call(Edge edge) {
+
+            return buildDistinctKey(edge.getSourceNode().hashCode(), edge.getTargetNode().hashCode(),
+                edge.getType().hashCode());
+        }
+    }
+
+    protected static String buildDistinctKey(final int sourceHash, final int targetHash, final int typeHash){
+
+        final String DISTINCT_KEY_SEPARATOR = ":";
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder
+            .append(sourceHash)
+            .append(DISTINCT_KEY_SEPARATOR)
+            .append(targetHash)
+            .append(DISTINCT_KEY_SEPARATOR)
+            .append(typeHash);
+
+        return stringBuilder.toString();
 
     }
 

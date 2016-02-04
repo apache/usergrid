@@ -24,59 +24,65 @@ import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManager;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MultivaluedMap;
 
 
-/** @author zznate */
+/**
+ * @author zznate
+ */
 public abstract class AbstractProvider implements SignInAsProvider {
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractProvider.class);
 
     protected EntityManager entityManager;
     protected ManagementService managementService;
     protected Client client;
 
 
-    AbstractProvider( EntityManager entityManager, ManagementService managementService ) {
+    AbstractProvider(EntityManager entityManager, ManagementService managementService) {
         this.entityManager = entityManager;
         this.managementService = managementService;
         ClientConfig clientConfig = new ClientConfig();
-        clientConfig.register( new JacksonFeature() );
-        client = ClientBuilder.newClient( clientConfig );
+        clientConfig.register(new JacksonFeature());
+        client = ClientBuilder.newClient(clientConfig);
     }
 
 
     abstract void configure();
 
-    abstract Map<String, Object> userFromResource( String externalToken );
+    abstract Map<String, Object> userFromResource(String externalToken);
 
     public abstract Map<Object, Object> loadConfigurationFor();
 
-    public abstract void saveToConfiguration( Map<String, Object> config );
+    public abstract void saveToConfiguration(Map<String, Object> config);
 
     protected MultivaluedMap getMultivaluedMapImpl() {
-      return new MultivaluedMapImpl();
+        return new MultivaluedMapImpl();
     }
 
-    /** Encapsulates the dictionary lookup for any configuration required */
-    protected Map<Object, Object> loadConfigurationFor( String providerKey ) {
+    /**
+     * Encapsulates the dictionary lookup for any configuration required
+     */
+    protected Map<Object, Object> loadConfigurationFor(String providerKey) {
         try {
-            return entityManager.getDictionaryAsMap( entityManager.getApplication(), providerKey );
-        }
-        catch ( Exception ex ) {
-            ex.printStackTrace();
+            return entityManager.getDictionaryAsMap(entityManager.getApplication(), providerKey);
+        } catch (Exception ex) {
+            logger.error("Error in loadConfigurationFor for {}", providerKey, ex);
         }
         return null;
     }
 
 
-    protected void saveToConfiguration( String providerKey, Map<String, Object> config ) {
+    protected void saveToConfiguration(String providerKey, Map<String, Object> config) {
         try {
-            entityManager.addMapToDictionary( entityManager.getApplication(), providerKey, config );
-        }
-        catch ( Exception ex ) {
-            ex.printStackTrace();
+            entityManager.addMapToDictionary(entityManager.getApplication(), providerKey, config);
+        } catch (Exception ex) {
+            logger.error("Error in saveToConfiguration for {}", providerKey, ex);
         }
     }
 }
