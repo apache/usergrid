@@ -18,6 +18,7 @@
  */
 
 var entities = require("../../lib/entities");
+var random = require("../../lib/random");
 var should = require("should");
 
 module.exports = {
@@ -26,7 +27,16 @@ module.exports = {
         describe("create entities", function() {
             it("should create " + numberOfRecords.toString() + " entities in the cats collection", function(done) {
                 this.slow(numberOfRecords * 500);
-                entities.create('cats', numberOfRecords, function(err, body) {
+                var entity = {
+                    firstProperty: "somethingConsistent",
+                    secondProperty: "somethingRandom: " + random.randomString(10),
+                    thirdPropertyTypeInt: random.randomNumber(5),
+                    location: {  // Apigee San Jose
+                        latitude: 37.3338716,
+                        longitude: -121.894249
+                    }
+                };
+                entities.create('cats', entity, numberOfRecords, function(err, body) {
                     should(err).be.null;
                     body.entities.should.be.an.instanceOf(Array).and.have.lengthOf(numberOfRecords);
                     done();
