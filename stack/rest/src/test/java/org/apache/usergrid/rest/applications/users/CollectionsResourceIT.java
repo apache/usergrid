@@ -262,6 +262,46 @@ public class CollectionsResourceIT extends AbstractRestIT {
         assertNotNull( node );
     }
 
+    @Test
+    public void testAddingAndRemovingProperties() throws Exception {
+
+        UUID entityId = null;
+        String entityName = "tonythetiger";
+        // create an "app_user" object with name fred
+        Map<String, String> payload = hashMap( "type", "app_user" ).map( "name", entityName ).map("testProperty","randomValue");
+
+        JsonNode node =
+                resource().path( "/test-organization/test-app/app_users" ).queryParam( "access_token", access_token )
+                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
+                          .post( JsonNode.class, payload );
+
+        String uuidString = node.get( "entities" ).get( 0 ).get( "uuid" ).asText();
+        entityId = UUIDUtils.tryGetUUID( uuidString );
+        UUID applicationId = UUIDUtils.tryGetUUID( node.get( "application" ).asText() );
+
+        payload = hashMap( "testProperty", null );
+        payload.put( "newTestProperty","newRandomValue" );
+
+
+        // check REST API response for duplicate name property
+        // have to look at raw response data, Jackson will remove dups
+        node = resource().path( "/test-organization/test-app/app_users/"+entityName ) //+entityId )
+                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                         .type( MediaType.APPLICATION_JSON_TYPE ).put( JsonNode.class, payload );
+
+        assertNotNull( node );
+
+
+        node = resource().path( "/test-organization/test-app/app_users/"+entityName )//+entityId )
+                         .queryParam( "access_token", access_token ).accept( MediaType.APPLICATION_JSON )
+                         .type( MediaType.APPLICATION_JSON_TYPE ).get( JsonNode.class );
+
+        assertNotNull( node );
+        assertEquals( entityName,node.get( "entities" ).get( 0 ).get( "name" ).asText() );
+        assertNull( node.get( "entities" ).get( 0 ).get( "testProperty" ) );
+        assertEquals( "newRandomValue",node.get( "entities" ).get( 0 ).get( "newTestProperty" ).asText() );
+    }
+
 
     @Test
     public void testDeleteByNameOfMissingEntityAndRecreation() throws Exception {
