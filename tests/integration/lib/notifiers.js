@@ -23,13 +23,21 @@ var responseLib = require("./response");
 module.exports = {};
 
 
-module.exports.send = function(path, payload, cb) {
-    request.post({
-        url: urls.appendOrgCredentials(urls.getAppUrl() + path + "/notifications"),
-        json: payload
+module.exports.add = function(notifier, cb) {
+    request.put({
+        url: urls.appendOrgCredentials(urls.getAppUrl() + "notifiers/" + notifier.name),
+        json: notifier
     }, function(err, response, body) {
-        //console.log(JSON.stringify(body, null, 2));
         var error = responseLib.getError(err, response);
         cb(error, error ? null : body.entities.pop());
     });
+};
+
+
+module.exports.get = function(notifierUUID, cb) {
+    request.get(urls.appendOrgCredentials(urls.getAppUrl() + "notifiers/" + notifierUUID), function(err, response, body) {
+        var json = JSON.parse(body);
+        var error = response.statusCode === 404 ? null : responseLib.getError(err, response);
+        cb(error, error ? null : response.statusCode === 404 ? null : json.entities.pop());
+    })
 };
