@@ -16,21 +16,14 @@
  */
 package org.apache.usergrid.tools;
 
-import com.google.common.collect.BiMap;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.UserInfo;
+import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.entities.Group;
-import rx.Observable;
 import rx.Scheduler;
-import rx.Subscriber;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
@@ -38,15 +31,15 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static org.apache.usergrid.tools.DuplicateOrgInterface.Org;
-import static org.apache.usergrid.tools.DuplicateOrgInterface.OrgUser;
+import static org.apache.usergrid.tools.UserOrgInterface.Org;
+import static org.apache.usergrid.tools.UserOrgInterface.OrgUser;
 
 /**
  * Find duplicate orgs, delete all but oldest of each and assign users to it.
  */
 public class DuplicateOrgRepair extends ToolBase {
 
-    DuplicateOrgInterface   manager = null;
+    UserOrgInterface        manager = null;
     
     Map<String, Set<Org>>   orgsByName = new HashMap<String, Set<Org>>();
     
@@ -74,6 +67,16 @@ public class DuplicateOrgRepair extends ToolBase {
 
     boolean                 testing = false;
 
+
+    DuplicateOrgRepair() {
+        super();
+    }
+    
+    DuplicateOrgRepair( EntityManagerFactory emf, ManagementService managementService ) {
+        this();
+        this.emf = emf;
+        this.managementService = managementService;
+    }
     
     @Override
     @SuppressWarnings("static-access")
@@ -165,9 +168,9 @@ public class DuplicateOrgRepair extends ToolBase {
 
         if ( manager == null ) { // we use a special manager when mockTesting
             if (dryRun) {
-                manager = new DryRunManager();
+                manager = new DryRunUserOrgManager( emf, managementService );
             } else {
-                manager = new RepairManager();
+                manager = new UserOrgManager( emf, managementService );
             }
         } 
 
@@ -178,7 +181,7 @@ public class DuplicateOrgRepair extends ToolBase {
             Org org1 = manager.getOrg( org1uuid );
             Org org2 = manager.getOrg( org2uuid );
             
-            if ( org1.getName().equals( org2.getName() )) {
+            if ( org1.getName().equalsIgnoreCase( org2.getName() )) {
                 buildOrgMaps( org1, org2 );
             } else {
                 logger.error("org1 and org2 do not have same duplicate name");
@@ -203,8 +206,8 @@ public class DuplicateOrgRepair extends ToolBase {
     }
     
     
-    public RepairManager createNewRepairManager() {
-        return new RepairManager();
+    public UserOrgManager createNewRepairManager() {
+        return new UserOrgManager( emf, managementService );
     }
 
 
@@ -213,8 +216,8 @@ public class DuplicateOrgRepair extends ToolBase {
         Set<Org> orgs = new HashSet<Org>();
         orgs.add( org1 );
         orgs.add( org2 );
-        orgsByName.put( org1.getName(), orgs );
-        duplicatesByName.put( org1.getName(), orgs );
+        orgsByName.put(       org1.getName().toLowerCase(), orgs );
+        duplicatesByName.put( org1.getName().toLowerCase(), orgs );
 
         orgsById.put( org1.getId(), org1 );
         orgsById.put( org2.getId(), org2 );
@@ -250,12 +253,12 @@ public class DuplicateOrgRepair extends ToolBase {
                
                 // orgs by name and duplicate orgs by name maps
                 
-                Set<Org> orgs = orgsByName.get( org.getName() );
+                Set<Org> orgs = orgsByName.get( org.getName().toLowerCase() );
                 if (orgs == null) {
                     orgs = new HashSet<Org>();
-                    orgsByName.put( org.getName(), orgs );
+                    orgsByName.put( org.getName().toLowerCase(), orgs );
                 } else {
-                    duplicatesByName.put( org.getName(), orgs );
+                    duplicatesByName.put( org.getName().toLowerCase(), orgs );
                 }
                 orgs.add( org );
                 
@@ -310,7 +313,7 @@ public class DuplicateOrgRepair extends ToolBase {
                     }
 
                 } catch (Exception e) {
-                    logger.error("Error getting orgs for user {}:{}", user.getName(), user.getId());
+                    logger.error("Error getting orgs for user {}:{}", user.getUsername(), user.getId());
                     logger.error("Stack trace is: ", e);
                 }
             }
@@ -327,7 +330,7 @@ public class DuplicateOrgRepair extends ToolBase {
         
         for ( String dupName : duplicatesByName.keySet() ) {
             Set<Org> duplicateOrgs = duplicatesByName.get(dupName);
-            Org bestOrg = selectBest( duplicateOrgs );
+            Org bestOrg = manager.selectBest( duplicateOrgs );
             
             for ( Org org : duplicateOrgs ) {
                 
@@ -338,24 +341,24 @@ public class DuplicateOrgRepair extends ToolBase {
                     for (OrgUser user : orgUsers) {
                         if (dryRun) {
                             Object[] args = new Object[]{
-                                    user.getName(), user.getId(), bestOrg.getName(), bestOrg.getId()};
+                                    user.getUsername(), user.getId(), bestOrg.getName(), bestOrg.getId()};
                             logger.info( "Would add user {}:{} to org {}:{}", args );
                             args = new Object[]{
-                                    user.getName(), user.getId(), org.getName(), org.getId()};
+                                    user.getUsername(), user.getId(), org.getName(), org.getId()};
                             logger.info( "Would remove user {}:{}  org {}:{}", args );
                         } else {
                             try {
                                 manager.addUserToOrg( user, bestOrg );
                             } catch ( Exception e ) {
                                 Object[] args = new Object[]{ 
-                                        user.getName(), user.getId(), bestOrg.getName(), bestOrg.getId()};
+                                        user.getUsername(), user.getId(), bestOrg.getName(), bestOrg.getId()};
                                 logger.error( "Error adding user {}:{} to org {}:{}", args );
                             }
                             try {
                                 manager.removeUserFromOrg( user, org );
                             } catch ( Exception e ) {
                                 Object[] args = new Object[]{ 
-                                        user.getName(), user.getId(), org.getName(), org.getId()};
+                                        user.getUsername(), user.getId(), org.getName(), org.getId()};
                                 logger.info( "Error removing user {}:{}  org {}:{}", args );
                             }
                         }
@@ -399,7 +402,7 @@ public class DuplicateOrgRepair extends ToolBase {
     private void removeDuplicateOrgs() throws Exception {
         for ( String dupName : duplicatesByName.keySet() ) {
             Set<Org> orgs = duplicatesByName.get( dupName );
-            Org best = selectBest( orgs );
+            Org best = manager.selectBest( orgs );
             for ( Org candidate : orgs ) {
                 if ( !candidate.equals(best) ) {
                     if ( dryRun ) {
@@ -411,306 +414,8 @@ public class DuplicateOrgRepair extends ToolBase {
                 }
             }
         }
+        
         logger.info( "DuplicateOrgRepair renamed/removed duplicate orgs"); 
     }
 
-
-    /**
-     * select best org from a set of duplicates by picking the oldest org
-     */
-    public Org selectBest(Set<Org> orgs) throws Exception {
-        Org oldest = null;
-        for ( Org org :orgs ) {
-            if ( oldest == null || org.compareTo( oldest ) < 0 ) {
-                oldest = org;
-            }
-        }
-        return oldest;
-    }
-
-    
-    class RepairManager implements DuplicateOrgInterface {
-
-        @Override
-        public Observable<Org> getOrgs() throws Exception {
-
-            return Observable.create( new Observable.OnSubscribe<Org>() {
-
-                @Override
-                public void call(Subscriber<? super Org> subscriber) {
-                    subscriber.onStart();
-                    try {
-                        int count = 0;
-
-                        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
-                        String queryString = "select *";
-                        Query query = Query.fromQL( queryString );
-                        query.withLimit( MAX_ENTITY_FETCH );
-                        
-                        Results results = em.searchCollection( em.getApplicationRef(), "groups", query );
-
-                        while (results.size() > 0) {
-                            for (Entity orgEntity : results.getEntities()) {
-                                
-                                Org org = new Org(
-                                    orgEntity.getUuid(), 
-                                    orgEntity.getProperty( "path" )+"", 
-                                    orgEntity.getCreated() );
-                                org.sourceValue = orgEntity;
-                                
-                                subscriber.onNext( org );
-
-                                if ( count++ % 1000 == 0 ) {
-                                    logger.info("Emitted {} orgs", count );
-                                }
-
-                                // logger.info( "org: {}, \"{}\", {}", new Object[]{
-                                //     orgEntity.getProperty( "path" ),
-                                //     orgEntity.getUuid(),
-                                //     orgEntity.getCreated()} );
-                            }
-                            if (results.getCursor() == null) {
-                                break;
-                            }
-                            query.setCursor( results.getCursor() );
-                            results = em.searchCollection( em.getApplicationRef(), "groups", query );
-                        }
-
-                    } catch (Exception e) {
-                        subscriber.onError( e );
-                    }
-                    subscriber.onCompleted();
-                }
-            } );
-        }
-
-        @Override
-        public Observable<OrgUser> getUsers() throws Exception {
-
-            return Observable.create( new Observable.OnSubscribe<OrgUser>() {
-
-                @Override
-                public void call(Subscriber<? super OrgUser> subscriber) {
-                    subscriber.onStart();
-                    try {
-                        int count = 0;
-                        
-                        Query query = new Query();
-                        query.setLimit( MAX_ENTITY_FETCH );
-                        query.setResultsLevel( Results.Level.ALL_PROPERTIES );
-                        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
-                        Results results = em.searchCollection( em.getApplicationRef(), "users", query );
-
-                        while (results.size() > 0) {
-                            for (Entity entity : results.getList()) {
-
-                                OrgUser orgUser = new OrgUser( 
-                                    entity.getUuid(), 
-                                    entity.getProperty( "username" ) + "" );
-                                orgUser.sourceValue = entity;
-
-                                subscriber.onNext( orgUser );
-
-                                if ( count++ % 1000 == 0 ) {
-                                    logger.info("Emitted {} users", count );
-                                }
-
-                                // logger.info( "org: {}, \"{}\", {}", new Object[]{
-                                //     entity.getProperty( "path" ),
-                                //     entity.getUuid(),
-                                //     entity.getCreated()} );
-                            }
-                            if (results.getCursor() == null) {
-                                break;
-                            }
-                            query.setCursor( results.getCursor() );
-                            results = em.searchCollection( em.getApplicationRef(), "users", query );
-                        }
-
-                    } catch (Exception e) {
-                        subscriber.onError( e );
-                    }
-                    subscriber.onCompleted();
-                }
-            } );
-        }
-
-        @Override
-        public Set<Org> getUsersOrgs(OrgUser user) throws Exception {
-           
-            Set<Org> ret = new HashSet<Org>();
-            
-            Map<String, Object> orgData = managementService.getAdminUserOrganizationData( user.getId() );
-           
-            Map<String, Object> orgs = (Map<String, Object>)orgData.get("organizations");
-            for ( String orgName : orgs.keySet() ) {
-
-                Map<String, Object> orgMap = (Map<String, Object>)orgs.get( orgName );
-                Group group = managementService.getOrganizationProps( 
-                        UUID.fromString( orgMap.get( "uuid" ).toString() ) );
-
-                Org org = new Org(
-                    group.getUuid(),
-                    group.getPath(), 
-                    group.getCreated()
-                );
-                ret.add(org);   
-            }
-            
-            return ret;
-        }
-
-        
-        @Override
-        public void removeOrg(Org keeper, Org duplicate) throws Exception {
-            
-            // rename org so that it is no longer a duplicate
-            EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
-            em.delete( new SimpleEntityRef( "group", duplicate.getId() ));
-            logger.info("Deleted org {}:{}", new Object[] { duplicate.getName(), duplicate.getId() });
-
-            // fix the org name index
-            OrganizationInfo orgInfoKeeper = managementService.getOrganizationByUuid( keeper.getId() );
-            try {
-                managementService.updateOrganizationUniqueIndex( orgInfoKeeper, duplicate.getId() );
-                logger.info("Updated index for keeper {}:{} not dup {}", new Object[] {
-                        orgInfoKeeper.getName(), orgInfoKeeper.getUuid(), duplicate.getId() });
-                
-            } catch ( Exception e ) {
-                // if there are multiple duplicates this will fail for all but one of them. That's OK
-                logger.warn("Error repairing unique value keeper {} duplicate {}", 
-                        keeper.getId(), duplicate.getId());
-            }
-        }
-        
-
-        @Override
-        public Set<OrgUser> getOrgUsers(Org org) throws Exception {
-            
-            Set<OrgUser> ret = new HashSet<OrgUser>();
-            
-            List<UserInfo> userInfos = managementService.getAdminUsersForOrganization( org.getId() );
-            
-            for ( UserInfo userInfo : userInfos ) {
-                OrgUser orgUser = new OrgUser( userInfo.getUuid(), userInfo.getUsername() );
-                ret.add(orgUser);
-            }
-            
-            return ret;
-        }
-
-        
-        @Override
-        public void removeUserFromOrg(OrgUser user, Org org) throws Exception {
-            // forcefully remove admin user from org
-            managementService.removeAdminUserFromOrganization( user.getId(), org.getId(), true );
-            logger.info("Removed user {}:{} from org {}:{}", new Object[] {
-                    user.getName(), user.getId(), org.getName(), org.getId() });
-        }
-
-        
-        @Override
-        public void addUserToOrg(OrgUser user, Org org) throws Exception {
-            UserInfo userInfo = managementService.getAdminUserByUsername( user.getName() );
-            OrganizationInfo orgInfo = managementService.getOrganizationByUuid( org.getId() );
-            managementService.addAdminUserToOrganization( userInfo, orgInfo, false );
-            logger.info("Added user {}:{} to org {}:{}", new Object[] {
-                    user.getName(), user.getId(), org.getName(), org.getId() });
-        }
-
-        
-        @Override
-        public Set<UUID> getOrgApps(Org org) throws Exception {
-            BiMap<UUID, String> apps = managementService.getApplicationsForOrganization( org.getId() );
-            return apps.keySet();
-        }
-
-        
-        @Override
-        public void removeAppFromOrg(UUID appId, Org org) throws Exception {
-            managementService.removeOrganizationApplication( org.getId(), appId );
-            logger.info("Removed app {} from org {}:{}", new Object[] {
-                    appId, org.getName(), org.getId() });
-        }
-
-        
-        @Override
-        public void addAppToOrg(UUID appId, Org org) throws Exception {
-            managementService.addApplicationToOrganization( org.getId(), appId );
-            logger.info("Added app {} to org {}:{}", new Object[] {
-                    appId, org.getName(), org.getId() });
-        }
-
-        
-        @Override
-        public void logDuplicates(Map<String, Set<Org>> duplicatesByName) {
-
-            for ( String orgName : duplicatesByName.keySet() ) {
-                Set<Org> orgs = duplicatesByName.get(orgName);
-                for ( Org org : orgs ) {
-                    Entity orgEntity = (Entity)org.sourceValue;
-
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(orgEntity.toString()).append(", ");
-                    
-                    try {
-                        BiMap<UUID, String> apps = 
-                            managementService.getApplicationsForOrganization( orgEntity.getUuid() );
-                        String sep = "";
-                        for ( UUID uuid : apps.keySet() ) {
-                            String appName = apps.get(uuid);
-                            sb.append(appName).append(":").append(uuid).append(sep);
-                            sep = ", ";
-                        }
-                        
-                    } catch (Exception e) {
-                        logger.error("Error getting applications for org {}:{}", org.getName(), org.getId() );
-                    }
-                    
-                    logger.info(sb.toString());
-                }
-            }
-        }
-
-        
-        @Override
-        public Org getOrg(UUID uuid) throws Exception {
-
-            EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
-            Entity entity = em.get( uuid );
-
-            Org org = new Org(
-                    entity.getUuid(),
-                    entity.getProperty( "path" )+"",
-                    entity.getCreated() );
-            org.sourceValue = entity;
-            
-            return org;
-        }
-    }
-
-    
-    class DryRunManager extends RepairManager {
-        
-        @Override
-        public void removeUserFromOrg(OrgUser user, Org org) throws Exception {
-        }
-
-        @Override
-        public void addUserToOrg(OrgUser user, Org org) throws Exception {
-        }
-
-        @Override
-        public void addAppToOrg(UUID appId, Org org) throws Exception {
-        }
-
-        @Override
-        public void removeAppFromOrg(UUID appId, Org org) throws Exception {
-        }
-
-        @Override
-        public void removeOrg(Org keeper, Org duplicate) throws Exception {
-        }
-    }
-    
 }
