@@ -564,7 +564,8 @@ public class SNSQueueManagerImpl implements QueueManager {
             logger.error( "SQS client is null, perhaps it failed to initialize successfully" );
             return;
         }
-
+        final long startSend = System.currentTimeMillis();
+        logger.info("starting send message");
         final String stringBody = toString( body );
 
         String url = getReadQueue().getUrl();
@@ -575,6 +576,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         SendMessageRequest request = new SendMessageRequest( url, stringBody );
 
+        logger.info("now sending.  time spent since starting to send in ms: {}", System.currentTimeMillis() - startSend);
         sqsAsync.sendMessageAsync( request, new AsyncHandler<SendMessageRequest, SendMessageResult>() {
 
             @Override

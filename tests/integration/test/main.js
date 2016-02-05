@@ -57,8 +57,11 @@ describe("** Usergrid REST Integration Tests **", function() {
     describe("groups", function() {
         require("./groups/groups.js").test();
     });
+    describe("notifications", function() {
+        require("./notifications/notifications.js").test();
+    });
     after(function(done) {
-        this.timeout(40000);
+        this.timeout(180000);
         console.log("    teardown");
         teardown.do(function(err) {
             should(err).be.null;
