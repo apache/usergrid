@@ -1,8 +1,8 @@
-# Usergrid 2.1.0 Deployment Guide
+# Usergrid 2.1.0 (unreleased) Deployment Guide
 
 ## DRAFT 
 
-This document explains how to deploy the Usergrid Backend-as-a-Service (BaaS), 
+This document explains how to deploy the Usergrid v2.1.0 Backend-as-a-Service (BaaS), 
 which comprises the Usergrid Stack, a Java web application, and the Usergrid Portal,
 which is an HTML5/JavaScript application. 
 
@@ -102,8 +102,8 @@ a three or more node cluster is recommended.
 __Use the right Java.__ Cassandra requires Java and we recommend that you use the same version of Java 
 for Cassandra as you use to run Tomcat and ElasticSearch.
 
-__Refer to the [Apache Cassandra documentation](http://wiki.apache.org/cassandra/GettingStarted) 
-for instructions on how to install Cassandra__. The [Datastax documentation for Cassandra 1.2](http://docs.datastax.com/en/cassandra/1.2/cassandra/features/featuresTOC.html) is also helpful. 
+__Refer to the__ [Apache Cassandra documentation](http://wiki.apache.org/cassandra/GettingStarted) 
+__for instructions on how to install Cassandra__. The [Datastax documentation for Cassandra 1.2](http://docs.datastax.com/en/cassandra/1.2/cassandra/features/featuresTOC.html) is also helpful. 
 Once you are up and running make a note of these things:
 
    * The name of the Cassandra cluster
@@ -121,9 +121,9 @@ a cluster in production.
 __Use the right Java__. ElasticSearch requires Java and you *must* ensure that you use the 
 same version of Java for ElasticSearch as you do for running Tomcat.
 
-__Refer to the 
+__Refer to the__ 
 [ElasticSearch 1.4 documentation](https://www.elastic.co/guide/en/elasticsearch/reference/1.4/index.html) 
-for instructions on how to install__. Once you are up and running make a note of these things:
+__for instructions on how to install__. Once you are up and running make a note of these things:
 
    * The name of the ElasticSearch cluster
    * Hostname or IP address of each ElasticSearch node
@@ -141,7 +141,7 @@ The Usergrid Stack is contained in a file named ROOT.war, a standard Java EE WAR
 ready for deployment to Tomcat. On each machine that will run the Usergrid Stack 
 you must install the Java SE 8 JDK and Tomcat 7+. 
 
-__Refer to the [Apache Tomcat 7](https://tomcat.apache.org/tomcat-7.0-doc/setup.html) documentation for  instructions on how to install__. Once Tomcat installed, you need to create and edit some configuration files.
+__Refer to the__ [Apache Tomcat 7](https://tomcat.apache.org/tomcat-7.0-doc/setup.html) __documentation for  instructions on how to install__. Once Tomcat installed, you need to create and edit some configuration files.
 
 
 ### Stack STEP #4: Configure Usergrid Stack & Logging
@@ -170,19 +170,52 @@ shell variables, e.g. `${USERGRID_CLUSTER_NAME}`. Here's a guide to the things y
 
 __Table 1: Values to set in Example Properties file:__
 
-| Value       | Description |
-|-------------|-------------|
-| __BASEURL__ | This is the base URL for the Usergrid installation, e.g. `https://api.example.com`. |
-| __USERGRID_CLUSTER_NAME__ | This is your name for your Usergrid installation. |
-| __CASSANDRA_CLUSTER_NAME__ | Name of Cassandra cluster, must match what's in Cassandra configuration. |
-| __CASSANDRA_HOSTS__ | Comma-separated lists of Cassandra hosts, with port numbers if you are not using the default 9120. The default for this property is `localhost:9120` |
-| __ELASTICSEARCH_CLUSTER_NAME__ | Name of ElasticSearch cluster, must match what's in ElasticSearch configuration. |
-| __ELASTICSEARCH_HOSTS__ | Comma-separated lists of ElasticSearch hosts, with port numbers if you are not using the default 9300. The default for this property is `localhost:9300` |
-| __SUPER_USER_EMAIL__ | Email address of person responsible for the superuser account. |
-| __SUPER_USER_PASSWORD__ | Password for the superuser account. |
-| __TEST_ADMIN_USER_EMAIL__ | If `usergrid.setup-test-account=true`, as shown below, Usergrid will create a test account and you should specify a valid email here. |
-| __TEST_ADMIN_USER_PASSWORD__ | Password for the username 'test' account. |
-   
+<table class="usergrid-table">
+<tr>
+  <th>Value</th>
+  <th>Description</th>
+</tr>
+<tr>
+    <td>__BASEURL__</td>
+    <td>This is the base URL for the Usergrid installation, e.g. `https://api.example.com`. </td>
+</tr>
+<tr>
+    <td>__USERGRID_CLUSTER_NAME__</td>
+    <td>This is your name for your Usergrid installation. </td>
+</tr>
+<tr>
+    <td>__CASSANDRA_CLUSTER_NAME__</td>
+    <td>Name of Cassandra cluster, must match what's in Cassandra configuration. </td>
+</tr>
+<tr>
+    <td>__CASSANDRA_HOSTS__</td>
+    <td>Comma-separated lists of Cassandra hosts, with port numbers if you are not using the default 9160. The default for this property is `localhost:9160` </td>
+</tr>
+<tr>
+    <td>__ELASTICSEARCH_CLUSTER_NAME__</td>
+    <td>Name of ElasticSearch cluster, must match what's in ElasticSearch configuration. </td>
+</tr>
+<tr>
+    <td>__ELASTICSEARCH_HOSTS__</td>
+    <td>Comma-separated lists of ElasticSearch hosts, with port numbers if you are not using the default 9300. The default for this property is `localhost:9300` </td>
+</tr>
+<tr>
+    <td>__SUPER_USER_EMAIL__</td>
+    <td>Email address of person responsible for the superuser account. </td>
+</tr>
+<tr>
+    <td>__SUPER_USER_PASSWORD__</td>
+    <td>Password for the superuser account. </td>
+</tr>
+<tr>
+    <td>__TEST_ADMIN_USER_EMAIL__</td>
+    <td>If `usergrid.setup-test-account=true`, as shown below, Usergrid will create a test account and you should specify a valid email here. </td>
+</tr>
+<tr>
+    <td>__TEST_ADMIN_USER_PASSWORD__</td>
+    <td>Password for the username 'test' account. </td>
+</tr>
+</table>   
    
 Make sure you set all of the above properties when you edit this example for your installation.   
    
@@ -439,13 +472,3 @@ Resources that might be useful to those deploying Usergrid:
 ## The End
 
 That's all folks.
-
-
-
-
-
-
-
-
-
-
