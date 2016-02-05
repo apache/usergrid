@@ -38,7 +38,7 @@ usergrid_git_web_url='https://git-wip-us.apache.org/repos/asf?p=usergrid.git'
 usergrid_svn_dist_url='https://dist.apache.org/repos/dist/dev/usergrid'
 
 
-#--------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
 # Process command line arguments
 
 function print_help_and_exit {
@@ -93,7 +93,7 @@ if [[ "${1:-dry-run}" == "publish" ]]; then
 fi
 
 
-#--------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
 # Make sure repo is latest and clean
 
 # Update local repository
@@ -118,7 +118,7 @@ if [[ "$base_dir" != "$PWD" ]]; then
 fi
 
 
-#--------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
 # Calculate the new version string
 
 current_version=$(cat .usergridversion | tr '[a-z]' '[A-Z]')
@@ -147,7 +147,7 @@ else
 fi
 
 
-#--------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
 # Add the rc tag to the current version
 
 current_version_tag="${current_version}-rc${rc_tag_version}"
@@ -171,7 +171,7 @@ EOF
 }
 
 
-#--------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
 # Make sure repo is clean, then branch
 
 # If anything goes wrong from here then print roll back instructions before exiting.
@@ -193,7 +193,7 @@ echo "Creating ${current_version_tag} branch"
 git branch $current_version_tag $(git rev-parse HEAD)
 
 
-#--------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
 # Build the source distribution from the new branch
 
 echo "Checking out ${current_version_tag} branch and updating .usergridversion"
@@ -211,7 +211,7 @@ mkdir -p ${dist_dir}
 git archive --prefix=${dist_name}/ -o ${dist_dir}/${dist_name}.tar.gz HEAD
 
 
-#--------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
 # Create the binary release
 
 binary_name="apache-usergrid-${current_version_tag}-binary"
@@ -222,8 +222,7 @@ cp target/${binary_name}.tar.gz ${dist_dir}
 popd 
 
 
-
-#--------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
 # Sign the tarballs
 
 cd ${dist_dir}
@@ -242,7 +241,7 @@ shasum ${dist_name}.tar.gz > ${dist_name}.tar.gz.sha
 shasum ${binary_name}.tar.gz > ${binary_name}.tar.gz.sha
 
 
-#--------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
 # Publish release candidate to svn and commit and push the new git branch
 
 if [[ $publish == 1 ]]; then
@@ -266,8 +265,8 @@ cd ${base_dir}
 current_commit_id=`git rev-parse HEAD`
 
 
-#--------------------------------------------------------------------------------------
-# Create the email template for the release candidate to be sent to the mailing lists.
+#----------------------------------------------------------------------------------
+# Create the email for the release candidate to be sent to the mailing lists.
 
 echo "Done creating the release candidate. The following draft email has been created"
 echo "to send to the dev@usergrid.apache.org mailing list"
@@ -325,11 +324,11 @@ The vote will close on ${vote_end}
 __EOF__
 )
 
-echo "--------------------------------------------------------------------------------"
+echo "-----------------------------------------------------------------------------"
 echo
 echo "${MESSAGE}"
 echo
-echo "--------------------------------------------------------------------------------"
+echo "-----------------------------------------------------------------------------"
 echo
 
 # Print reset instructions if this was a dry-run
