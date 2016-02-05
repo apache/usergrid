@@ -189,7 +189,7 @@ __Table 1: Values to set in Example Properties file:__
 </tr>
 <tr>
     <td>__CASSANDRA_HOSTS__</td>
-    <td>Comma-separated lists of Cassandra hosts, with port numbers if you are not using the default 9120. The default for this property is `localhost:9120` </td>
+    <td>Comma-separated lists of Cassandra hosts, with port numbers if you are not using the default 9160. The default for this property is `localhost:9160` </td>
 </tr>
 <tr>
     <td>__ELASTICSEARCH_CLUSTER_NAME__</td>
