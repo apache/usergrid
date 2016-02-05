@@ -214,7 +214,7 @@ git archive --prefix=${dist_name}/ -o ${dist_dir}/${dist_name}.tar.gz HEAD
 #--------------------------------------------------------------------------------------
 # Create the binary release
 
-./binary-release.sh ${current_version_tag}
+./release/binary-release.sh ${current_version_tag}
 
 binary_name="apache-usergrid-${current_version_tag}-binary"
 cp target/${binary_name}.tar.gz ${dist_dir}
