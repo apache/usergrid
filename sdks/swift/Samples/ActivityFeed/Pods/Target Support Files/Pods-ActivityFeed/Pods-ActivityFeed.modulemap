@@ -1,0 +1,6 @@
+framework module Pods_ActivityFeed {
+  umbrella header "Pods-ActivityFeed-umbrella.h"
+
+  export *
+  module * { export * }
+}
