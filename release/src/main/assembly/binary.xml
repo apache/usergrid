@@ -25,6 +25,8 @@
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
 
+    <!-- Include individual files -->
+
     <files>
         
         <!-- Legal and Documentation -->
@@ -47,13 +49,15 @@
             <outputDirectory>${artifact.artifactId}-${releaseVersion}/stack</outputDirectory>
         </file>
         
-        <!-- Tools -->
+	<!-- Tools adds about 100mb to the download so let's omit it for now.
         <file>
             <source>../stack/tools/target/usergrid-tools-2.1.0-SNAPSHOT.jar</source>
             <outputDirectory>${artifact.artifactId}-${releaseVersion}/tools</outputDirectory>
-        </file>
+        </file> -->
         
     </files>
+
+    <!-- Include Portal and SDK directory trees -->
 
     <fileSets>
 
