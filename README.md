@@ -1,8 +1,6 @@
 Apache Usergrid
 ===============
 
-__WARNING__: This is the __two-dot-o__ branch and work is underway here on a new persistence system for Usergrid. We refer to the new persistence system as Core Persistence and you can find its modules in the stack/corepersistence directory. 
-
 Overview
 --------
 
@@ -17,7 +15,7 @@ Apache Usergrid provides all code necessary to build and power modern mobile app
 
 Look for much more detailed README files in their corresponding subdirectories, or check out [our website](http://usergrid.apache.org/) for more info.
 
-* The server-side stack, a Java 7 + Cassandra codebase that powers all of the features, is located under [`/stack`](stack). You can install dependencies and compile it with maven. See [stack/README.md](stack#requirements) for instructions.
+* The server-side stack, a Java 8 + Cassandra + ElasticSearch codebase that powers all of the features, is located under [`/stack`](stack). You can install dependencies and compile it with maven. See [stack/README.md](stack#requirements) for instructions.
 
 * The admin portal is a pure HTML5+JavaScript app allowing you to register developers and let them manage their apps in a multi-tenant cluster. Located under [`/portal`](portal)
 

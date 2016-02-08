@@ -1,20 +1,25 @@
 #!/bin/bash
+#---------------------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one or more 
+# contributor license agreements.  See the NOTICE file distributed with 
+# this work for additional information regarding copyright ownership.  
+# The ASF licenses this file to you under the Apache License, Version 2.0 
+# (the "License"); you may not use this file except in compliance with the 
+# License.  You may obtain a copy of the License at
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See 
+# the License for the specific language governing permissions and 
 # limitations under the License.
-#
-#
+#---------------------------------------------------------------------------
+
 # This script is used to publish the official release after a successful
 # vote of a release-candidate.
+
+export RELEASE_BRANCH=release
 
 set -e
 set -o nounset
@@ -23,6 +28,10 @@ usergrid_git_url='https://git-wip-us.apache.org/repos/asf/usergrid.git'
 usergrid_git_web_url='https://git-wip-us.apache.org/repos/asf?p=usergrid.git'
 usergrid_svn_dist_url='https://dist.apache.org/repos/dist/release/usergrid'
 usergrid_svn_dev_dist_url='https://dist.apache.org/repos/dist/dev/usergrid'
+
+
+#---------------------------------------------------------------------------------
+# Process command line arguments
 
 function print_help_and_exit {
 cat <<EOF
@@ -62,6 +71,10 @@ if [[ "${1:-dry-run}" == "publish" ]]; then
   publish=1
 fi
 
+
+#----------------------------------------------------------------------------------
+# Make sure we have signing key and repo is latest and clean
+
 # Update local repository
 git fetch --all -q
 git fetch --tags -q
@@ -86,9 +99,9 @@ fi
 base_dir=$(git rev-parse --show-toplevel)
 # Verify that this is a clean repository
 if [[ -n "`git status --porcelain`" ]]; then
-  echo "ERROR: Please run from a clean master."
+  echo "ERROR: Please run from a clean $RELEASE_BRANCH"
   exit 1
-elif [[ "`git rev-parse --abbrev-ref HEAD`" == "master" ]]; then
+elif [[ "`git rev-parse --abbrev-ref HEAD`" == "$RELEASE_BRANCH" ]]; then
   echo "ERROR: This script must be run from the released branch."
   exit 1
 fi
@@ -97,6 +110,10 @@ if [[ "$base_dir" != "$PWD" ]]; then
   echo "Warrning: This script must be run from the root of the repository ${base_dir}"
   cd $base_dir
 fi
+
+
+#----------------------------------------------------------------------------------
+# Calculate the new version string
 
 # Make sure that this is not on a snapshot release
 tagged_version=$(cat .usergridversion | tr '[a-z]' '[A-Z]')
@@ -123,12 +140,19 @@ if [[ $publish == 0 ]]; then
   echo "Performing dry-run"
 fi
 
+
+#----------------------------------------------------------------------------------
 # Create a branch for the release and update the .usergridversion and tag it
+
 echo "Creating release branch and tag for ${current_version}"
 git checkout -b $current_version
 echo $current_version > .usergridversion
 git add .usergridversion
 git commit -m "Updating .usergridversion to ${current_version}."
+
+
+# TODO: ensure that the tag has the same date as the last commit made
+# in the release branch
 
 git tag -s "${current_version}" -m "usergrid-${current_version} release." $current_version
 
@@ -136,6 +160,10 @@ git tag -s "${current_version}" -m "usergrid-${current_version} release." $curre
   #git push origin $current_version
   #git push origin --tags
 #fi
+
+
+#----------------------------------------------------------------------------------
+# Build the source distribution from the new branch
 
 dist_name="apache-usergrid-${current_version}"
 
@@ -151,21 +179,40 @@ cd $dist_dir
 #  svn co --depth=empty ${usergrid_svn_dist_url}/${current_version} ${release_dir}
 #fi
 
-# Now that the .usergridversion has been updated to the release version build the release source dist from it
+# Now that the .usergridversion has been updated to the release version build 
+# the release source dist from it
 cd $base_dir
 git archive --prefix=${dist_name}/ -o ${release_dir}/${dist_name}.tar.gz HEAD
 
+
+#----------------------------------------------------------------------------------
+# Build the binary distribution from the new branch
+
+binary_name="apache-usergrid-${current_version_tag}-binary"
+
+pushd release
+./binary-release.sh ${current_version_tag}
+cp target/${binary_name}.tar.gz ${dist_dir}
+popd 
+
+
+#----------------------------------------------------------------------------------
+# Sign the tarballs
+
 cd ${release_dir}
-# Sign the tarball.
+
 echo "Signing the distribution"
 gpg --armor --output ${release_dir}/${dist_name}.tar.gz.asc --detach-sig ${release_dir}/${dist_name}.tar.gz
 
-# Create the checksums
 echo "Creating checksums"
+
 # md5
 gpg --print-md MD5 ${dist_name}.tar.gz > ${dist_name}.tar.gz.md5
+gpg --print-md MD5 ${binary_name}.tar.gz > ${binary_name}.tar.gz.md5
+
 # sha
 shasum ${dist_name}.tar.gz > ${dist_name}.tar.gz.sha
+shasum ${binary_name}.tar.gz > ${binary_name}.tar.gz.sha
 
 #if [[ $publish == 1 ]]; then
   # Commit the release

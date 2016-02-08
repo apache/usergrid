@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+-->
+
+<assembly>
+    <id>binary</id>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <files>
+        
+        <!-- Legal and Documentation -->
+        <file>
+            <source>../CHANGELOG</source>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}</outputDirectory>
+        </file> 
+        <file>
+            <source>../LICENSE</source>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}</outputDirectory>
+        </file> 
+        <file>
+            <source>../NOTICE</source>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}</outputDirectory>
+        </file> 
+        
+        <!-- Stack -->
+        <file>
+            <source>../stack/rest/target/ROOT.war</source>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}/stack</outputDirectory>
+        </file>
+        
+        <!-- Tools -->
+        <file>
+            <source>../stack/tools/target/usergrid-tools-2.1.0-SNAPSHOT.jar</source>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}/tools</outputDirectory>
+        </file>
+        
+    </files>
+
+    <fileSets>
+
+        <!-- Portal and source (HTML5/JavaScript and Angular) -->
+        <fileSet>
+            <directory>../portal</directory>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}/portal</outputDirectory>
+            <excludes>
+                <exclude>%ant[**/.idea/**]</exclude>
+                <exclude>%ant[**/node_modules/**]</exclude>
+                <exclude>%ant[**/bower_components/**]</exclude>
+                <exclude>%ant[**/dist/usergrid-portal/**]</exclude>
+                <exclude>%ant[**/dist-cov/**]</exclude>
+            </excludes>
+        </fileSet>
+
+        <!-- HTML5/JavaScript SDK and source -->
+        <fileSet>
+            <directory>../sdks/html5-javascript</directory> 
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}/sdks/html5-javascript</outputDirectory>
+            <excludes>
+                <exclude>%ant[**/.idea/**]</exclude>
+            </excludes>
+        </fileSet>
+
+        <!-- Java SDK and source -->
+        <fileSet>
+            <directory>../sdks/java</directory>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}/sdks/java</outputDirectory>
+            <excludes>
+                <exclude>%ant[**/.idea/**]</exclude>
+                <exclude>%ant[**/target/classes/**]</exclude>
+                <exclude>%ant[**/target/generated-sources/**]</exclude>
+                <exclude>%ant[**/target/maven-archiver/**]</exclude>
+                <exclude>%ant[**/target/maven-status/**]</exclude>
+            </excludes>
+        </fileSet>
+        
+    </fileSets>
+
+</assembly>
+
