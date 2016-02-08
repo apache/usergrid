@@ -1,0 +1,10 @@
+PODS:
+  - UsergridSDK (2.1.0-RC.2)
+
+DEPENDENCIES:
+  - UsergridSDK (>= 2.1.0-RC.2)
+
+SPEC CHECKSUMS:
+  UsergridSDK: d8519b4864e1c69a909aa40c85870ce8a3c88c83
+
+COCOAPODS: 0.39.0

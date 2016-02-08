@@ -1,0 +1,17 @@
+use_frameworks!
+inhibit_all_warnings!
+
+def shared_pods
+    pod 'UsergridSDK', '>= 2.1.0-RC.2'
+end
+
+target 'ActivityFeed' do
+    platform :ios, '9.0'
+    shared_pods
+    pod 'SlackTextViewController'
+end
+
+target 'WatchSample Extension' do
+    platform :watchos, '2.1'
+    shared_pods
+end

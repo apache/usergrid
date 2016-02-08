@@ -1,0 +1,6 @@
+framework module UsergridSDK {
+  umbrella header "UsergridSDK-umbrella.h"
+
+  export *
+  module * { export * }
+}
