@@ -18,24 +18,32 @@
  */
 package org.apache.usergrid.persistence.core.datastax;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.datastax.driver.core.Session;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import java.util.HashMap;
+import java.util.Map;
 
-public class DataStaxSessionProvider implements Provider<Session> {
+public class CQLUtils {
 
-    private final DataStaxCluster dataStaxCluster;
+    public static String getFormattedReplication(String strategy, String strategyOptions) throws JsonProcessingException {
 
-    @Inject
-    public DataStaxSessionProvider( final DataStaxCluster dataStaxCluster ){
-
-        this.dataStaxCluster = dataStaxCluster;
+        Map<String, String> replicationSettings = new HashMap<>();
+        replicationSettings.put("class", strategy);
+        String[] strategyOptionsSplit = strategyOptions.split(",");
+        for ( String option : strategyOptionsSplit){
+            String[] splitOptions = option.split(":");
+            replicationSettings.put(splitOptions[0], splitOptions[1]);
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(replicationSettings).replace("\"", "'");
     }
 
-    @Override
-    public Session get(){
 
-        return dataStaxCluster.getApplicationSession();
+    public static void createColumnFamily(){
+
+
     }
+
+
 }
