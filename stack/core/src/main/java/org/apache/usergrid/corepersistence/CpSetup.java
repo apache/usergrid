@@ -83,6 +83,9 @@ public class CpSetup implements Setup {
         //a no op, creating the injector creates the connections
         //init our index if required
         this.emf.initializeManagementIndex();
+
+        logger.info( "Initialize application keyspace" );
+        migrate();
         setupStaticKeyspace();
         setupSystemKeyspace();
 
@@ -129,9 +132,7 @@ public class CpSetup implements Setup {
     @Override
     public void setupSystemKeyspace() throws Exception {
 
-        logger.info( "Initialize system keyspace" );
-
-        migrate();
+        logger.info( "Initialize system tables" );
 
         cass.createColumnFamily( getApplicationKeyspace(),
             createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
@@ -145,7 +146,7 @@ public class CpSetup implements Setup {
         cass.createColumnFamily( getApplicationKeyspace(),
             createColumnFamilyDefinition( getApplicationKeyspace(), PRINCIPAL_TOKEN_CF, ComparatorType.UUIDTYPE ) );
 
-        logger.info( "System keyspace initialized" );
+        logger.info( "System tables initialized" );
     }
 
 
@@ -167,11 +168,9 @@ public class CpSetup implements Setup {
     @Override
     public void setupStaticKeyspace() throws Exception {
 
-        migrate();
-
         // Need this legacy stuff for queues
 
-        logger.info( "Creating static application keyspace {}", getApplicationKeyspace() );
+        logger.info( "Initialize application tables" );
 
         cass.createColumnFamily( getApplicationKeyspace(),
             createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF,
@@ -182,6 +181,8 @@ public class CpSetup implements Setup {
 
         cass.createColumnFamilies( getApplicationKeyspace(),
             getCfDefs( QueuesCF.class, getApplicationKeyspace() ) );
+
+        logger.info( "Application tables initialized" );
 
     }
 

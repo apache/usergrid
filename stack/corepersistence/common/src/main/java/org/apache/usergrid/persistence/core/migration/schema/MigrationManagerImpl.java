@@ -20,22 +20,21 @@ package org.apache.usergrid.persistence.core.migration.schema;
 
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
+import com.datastax.driver.core.Session;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.datastax.CQLUtils;
+import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.migration.util.AstayanxUtils;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
 import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
 import com.netflix.astyanax.ddl.KeyspaceDefinition;
 
@@ -51,18 +50,20 @@ public class MigrationManagerImpl implements MigrationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( MigrationManagerImpl.class );
 
+    private final CassandraFig cassandraFig;
     private final Set<Migration> migrations;
     private final Keyspace keyspace;
-
-    private final MigrationManagerFig fig;
+    private final DataStaxCluster dataStaxCluster;
 
 
     @Inject
-    public MigrationManagerImpl( final Keyspace keyspace, final Set<Migration> migrations,
-                                 MigrationManagerFig fig ) {
+    public MigrationManagerImpl( final CassandraFig cassandraFig, final Keyspace keyspace,
+                                 final Set<Migration> migrations, final DataStaxCluster dataStaxCluster) {
+
+        this.cassandraFig = cassandraFig;
         this.keyspace = keyspace;
         this.migrations = migrations;
-        this.fig = fig;
+        this.dataStaxCluster = dataStaxCluster;
     }
 
 
@@ -72,7 +73,7 @@ public class MigrationManagerImpl implements MigrationManager {
 
         try {
 
-            testAndCreateKeyspace();
+            createOrUpdateKeyspace();
 
             for ( Migration migration : migrations ) {
 
@@ -116,86 +117,54 @@ public class MigrationManagerImpl implements MigrationManager {
 
         logger.info( "Created column family {}", columnFamily.getColumnFamily().getName() );
 
-        waitForMigration();
+        waitForSchemaAgreement();
     }
 
 
     /**
-     * Check if they keyspace exists.  If it doesn't create it
+     * Execute CQL to create the keyspace if it does not already exists.  Always update the keyspace with the
+     * configured strategy options to allow for real time replication updates.
+     *
+     * @throws Exception
      */
-    private void testAndCreateKeyspace() throws ConnectionException {
+    private void createOrUpdateKeyspace() throws Exception {
 
+        Session clusterSession = dataStaxCluster.getClusterSession();
 
-        KeyspaceDefinition keyspaceDefinition = null;
+        final String createApplicationKeyspace = String.format(
+            "CREATE KEYSPACE IF NOT EXISTS \"%s\" WITH replication = %s",
+            cassandraFig.getApplicationKeyspace(),
+            CQLUtils.getFormattedReplication( cassandraFig.getStrategy(), cassandraFig.getStrategyOptions() )
 
-        try {
-            keyspaceDefinition = keyspace.describeKeyspace();
+        );
 
-        }catch( NotFoundException nfe){
-            //if we execute this immediately after a drop keyspace in 1.2.x, Cassandra is returning the NFE instead of a BadRequestException
-            //swallow and log, then continue to create the keyspaces.
-            logger.info( "Received a NotFoundException when attempting to describe keyspace.  It does not exist" );
-        }
-        catch(Exception e){
-            AstayanxUtils.isKeyspaceMissing("Unable to connect to cassandra", e);
-        }
+        final String updateApplicationKeyspace = String.format(
+            "ALTER KEYSPACE \"%s\" WITH replication = %s",
+            cassandraFig.getApplicationKeyspace(),
+            CQLUtils.getFormattedReplication( cassandraFig.getStrategy(), cassandraFig.getStrategyOptions() )
+        );
 
+        logger.info("Creating application keyspace with the following CQL: {}", createApplicationKeyspace);
+        clusterSession.execute(createApplicationKeyspace);
+        logger.info("Updating application keyspace with the following CQL: {}", updateApplicationKeyspace);
+        clusterSession.execute(updateApplicationKeyspace);
 
-        if ( keyspaceDefinition != null ) {
-            return;
-        }
+        // this session pool is only used when running database setup so close it when finished to clear resources
+        clusterSession.close();
 
-
-        ImmutableMap.Builder<String, Object> strategyOptions = getKeySpaceProps();
-
-
-        ImmutableMap<String, Object> options =
-                ImmutableMap.<String, Object>builder().put( "strategy_class", fig.getStrategyClass() )
-                            .put( "strategy_options", strategyOptions.build() ).build();
-
-
-        keyspace.createKeyspace( options );
-
-        strategyOptions.toString();
-
-        logger.info( "Created keyspace {} with options {}", keyspace.getKeyspaceName(), options.toString() );
-
-        waitForMigration();
+        waitForSchemaAgreement();
     }
 
 
     /**
-     * Get keyspace properties
+     * Wait until all Cassandra nodes agree on the schema.  Sleeps 100ms between checks.
+     *
      */
-    private ImmutableMap.Builder<String, Object> getKeySpaceProps() {
-        ImmutableMap.Builder<String, Object> keyspaceProps = ImmutableMap.<String, Object>builder();
-
-        String optionString = fig.getStrategyOptions();
-
-        if(optionString == null){
-            return keyspaceProps;
-        }
-
-
-
-        for ( String key : optionString.split( "," ) ) {
-
-            final String[] options = key.split( ":" );
-
-            keyspaceProps.put( options[0], options[1] );
-        }
-
-        return keyspaceProps;
-    }
-
-
-    private void waitForMigration() throws ConnectionException {
+    private void waitForSchemaAgreement() {
 
         while ( true ) {
 
-            final Map<String, List<String>> versions = keyspace.describeSchemaVersions();
-
-            if ( versions != null && versions.size() == 1 ) {
+            if( dataStaxCluster.getCluster().getMetadata().checkSchemaAgreement() ){
                 return;
             }
 
@@ -208,4 +177,6 @@ public class MigrationManagerImpl implements MigrationManager {
             }
         }
     }
+
+
 }
