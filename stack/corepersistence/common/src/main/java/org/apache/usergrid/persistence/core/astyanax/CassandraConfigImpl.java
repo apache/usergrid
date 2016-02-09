@@ -45,13 +45,13 @@ public class CassandraConfigImpl implements CassandraConfig {
     @Inject
     public CassandraConfigImpl( final CassandraFig cassandraFig ) {
 
-        this.readCl = ConsistencyLevel.valueOf( cassandraFig.getReadCL() );
+        this.readCl = ConsistencyLevel.valueOf( cassandraFig.getAstyanaxReadCL() );
 
-        this.writeCl = ConsistencyLevel.valueOf( cassandraFig.getWriteCL() );
+        this.writeCl = ConsistencyLevel.valueOf( cassandraFig.getAstyanaxWriteCL() );
 
         this.shardSettings = parseShardSettings( cassandraFig.getShardValues() );
 
-        this.consistentCl = ConsistencyLevel.valueOf(cassandraFig.getConsistentReadCL());
+        this.consistentCl = ConsistencyLevel.valueOf(cassandraFig.getAstyanaxConsistentReadCL());
 
         //add the listeners to update the values
         cassandraFig.addPropertyChangeListener( new PropertyChangeListener() {
@@ -59,11 +59,11 @@ public class CassandraConfigImpl implements CassandraConfig {
             public void propertyChange( final PropertyChangeEvent evt ) {
                 final String propName = evt.getPropertyName();
 
-                if ( CassandraFig.READ_CL.equals( propName ) ) {
+                if ( CassandraFig.ASTYANAX_READ_CL.equals( propName ) ) {
                     readCl = ConsistencyLevel.valueOf( evt.getNewValue().toString() );
                 }
 
-                else if ( CassandraFig.WRITE_CL.equals( propName ) ) {
+                else if ( CassandraFig.ASTYANAX_WRITE_CL.equals( propName ) ) {
                     writeCl = ConsistencyLevel.valueOf( evt.getNewValue().toString() );
                 }
                 else if (CassandraFig.SHARD_VALUES.equals(propName)){

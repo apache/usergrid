@@ -37,7 +37,7 @@ public interface CassandraConfig {
     ConsistencyLevel getReadCL();
 
     /**
-     * Get the currently configured ReadCL that is more consitent than getReadCL
+     * Get the currently configured ReadCL that is more consitent than getAstyanaxReadCL
      * @return
      */
     ConsistencyLevel getConsistentReadCL();
