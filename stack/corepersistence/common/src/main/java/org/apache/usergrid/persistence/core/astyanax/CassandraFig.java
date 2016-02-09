@@ -25,17 +25,22 @@ import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
 
-
 /**
  * Cassandra configuration interface.
  */
 @FigSingleton
 public interface CassandraFig extends GuicyFig {
 
+    // cassndra properties used by datastax driver
+    String READ_CL = "cassandra.readcl";
+    String WRITE_CL = "cassandra.writecl";
+    String STRATEGY = "cassandra.strategy";
+    String STRATEGY_OPTIONS = "cassandra.strategy.options";
+
     // main application cassandra properties
-    String READ_CONSISTENT_CL = "usergrid.consistent.read.cl";
-    String READ_CL = "usergrid.read.cl";
-    String WRITE_CL = "usergrid.write.cl";
+    String ASTYANAX_READ_CONSISTENT_CL = "usergrid.consistent.read.cl";
+    String ASTYANAX_READ_CL = "usergrid.read.cl";
+    String ASTYANAX_WRITE_CL = "usergrid.write.cl";
     String SHARD_VALUES = "cassandra.shardvalues";
     String THRIFT_TRANSPORT_SIZE = "cassandra.thrift.transport.frame";
 
@@ -54,6 +59,9 @@ public interface CassandraFig extends GuicyFig {
     // re-usable default values
     String DEFAULT_CONNECTION_POOLSIZE = "15";
     String DEFAULT_LOCKS_EXPIRATION = "3600000";  // 1 hour
+    String DEFAULT_LOCAL_DC = "";
+    String DEFAULT_USERNAME = "";
+    String DEFAULT_PASSWORD = "";
 
 
     @Key( "cassandra.hosts" )
@@ -75,7 +83,16 @@ public interface CassandraFig extends GuicyFig {
     @Default( "9160" )
     int getThriftPort();
 
+    @Key( "cassandra.username" )
+    @Default( DEFAULT_USERNAME )
+    String getUsername();
+
+    @Key( "cassandra.password" )
+    @Default( DEFAULT_PASSWORD )
+    String getPassword();
+
     @Key( "cassandra.datacenter.local" )
+    @Default( DEFAULT_LOCAL_DC )
     String getLocalDataCenter();
 
     @Key( "cassandra.connections" )
@@ -86,22 +103,43 @@ public interface CassandraFig extends GuicyFig {
     @Default( "10000" )
     int getTimeout();
 
+    @Key( "cassandra.timeout.pool" )
+    @Default( "5000" )
+    int getPoolTimeout();
+
     @Key("cassandra.discovery")
     @Default( "RING_DESCRIBE" )
     String getDiscoveryType();
 
 
     @Default("CL_LOCAL_QUORUM")
-    @Key(READ_CL)
-    String getReadCL();
+    @Key(ASTYANAX_READ_CL)
+    String getAstyanaxReadCL();
 
     @Default("CL_QUORUM")
-    @Key(READ_CONSISTENT_CL)
-    String getConsistentReadCL();
+    @Key(ASTYANAX_READ_CONSISTENT_CL)
+    String getAstyanaxConsistentReadCL();
 
     @Default("CL_LOCAL_QUORUM")
+    @Key(ASTYANAX_WRITE_CL)
+    String getAstyanaxWriteCL();
+
+
+    @Default("LOCAL_QUORUM")
+    @Key(READ_CL)
+    String getReadCl();
+
+    @Default("LOCAL_QUORUM")
     @Key(WRITE_CL)
-    String getWriteCL();
+    String getWriteCl();
+
+    @Default("SimpleStrategy")
+    @Key( STRATEGY )
+    String getStrategy();
+
+    @Default("replication_factor:1")
+    @Key( STRATEGY_OPTIONS )
+    String getStrategyOptions();
 
     /**
      * Return the history of all shard values which are immutable.  For instance, if shard values

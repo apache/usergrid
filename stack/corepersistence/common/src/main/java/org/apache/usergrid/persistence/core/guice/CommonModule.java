@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.core.guice;
 
 import com.netflix.astyanax.Keyspace;
 import org.apache.usergrid.persistence.core.astyanax.*;
+import org.apache.usergrid.persistence.core.datastax.impl.DatastaxClusterImpl;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
@@ -60,6 +61,9 @@ public class CommonModule extends AbstractModule {
 
         // bind our Cassandra cluster to the Astyanax Implementation
         bind(CassandraCluster.class).to(CassandraClusterImpl.class).asEagerSingleton();
+
+        // bind our Datastax cluster
+        bind(DatastaxClusterImpl.class).asEagerSingleton();
 
         // bind our keyspace to the AstyanaxKeyspaceProvider
         bind(Keyspace.class).toProvider(AstyanaxKeyspaceProvider.class).asEagerSingleton();
