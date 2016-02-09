@@ -162,6 +162,7 @@ Apache Usergrid Documentation
 .. toctree::
    :maxdepth: 2
    :caption: Installing Usergrid
+   
    installation/deployment-guide
     
 .. _about:
