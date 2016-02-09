@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Users &amp; Devices &mdash; Apache Usergrid 1.0 documentation</title>
+  <title>Using a Sandbox Application &mdash; Apache Usergrid 1.0 documentation</title>
   
 
   
@@ -30,7 +30,9 @@
   
 
   
-    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/> 
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Using the API" href="using-the-api.html"/>
+        <link rel="prev" title="Creating a new application" href="creating-a-new-application.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -86,11 +88,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Using Usergrid</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/creating-account.html">Creating a Usergrid Account</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/creating-a-new-application.html">Creating a new application</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/using-the-api.html">Using the API</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="creating-account.html">Creating a Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Using a Sandbox Application</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#what-is-the-sandbox-application">What is the sandbox application?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#is-the-sandbox-secure">Is the sandbox secure?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-new-sandbox-application">Creating a New Sandbox Application</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="using-the-api.html">Using the API</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Data Storage</span></p>
 <ul>
@@ -114,15 +121,15 @@
 </ul>
 <p class="caption"><span class="caption-text">Push Notifications</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="overview.html">Push notifications overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="adding-push-support.html">Adding push notifications support</a></li>
-<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started with push notifications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: Push notifications sample app</a></li>
-<li class="toctree-l1"><a class="reference internal" href="registering.html">Registering with a notification service</a></li>
-<li class="toctree-l1"><a class="reference internal" href="creating-notifiers.html">Creating notifiers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="managing-users-and-devices.html">Managing users and devices</a></li>
-<li class="toctree-l1"><a class="reference internal" href="creating-and-managing-notifications.html">Creating and managing notifications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/troubleshooting.html">Troubleshooting</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
 <ul>
@@ -210,11 +217,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../index.html">Docs</a> &raquo;</li>
       
-    <li>Users &amp; Devices</li>
+    <li>Using a Sandbox Application</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/push-notifications/users-devices.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/using-usergrid/using-a-sandbox-app.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -224,264 +231,69 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="users-devices">
-<h1>Users &amp; Devices<a class="headerlink" href="#users-devices" title="Permalink to this headline">¶</a></h1>
-<p>Users and Devices are the primary ways to identify access to the system.
-Devices are great to track anonymous access, while Users allow you to
-model signing up, signing in, etc.</p>
-<div class="section" id="users">
-<h2>Users<a class="headerlink" href="#users" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="using-a-sandbox-application">
+<h1>Using a Sandbox Application<a class="headerlink" href="#using-a-sandbox-application" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="what-is-the-sandbox-application">
+<h2>What is the sandbox application?<a class="headerlink" href="#what-is-the-sandbox-application" title="Permalink to this headline">¶</a></h2>
+<p>When you create a new Usergrid account (see <a class="reference external" href="creating-account.html">Creating an Usergrid
+Account</a>) to use services for developers,
+Usergrid creates a new application for you on its servers. With the new
+application, called &#8220;sandbox,&#8221; you can add your own example data and try
+out API calls that do things with the data. Be sure to see Using the API
+for suggestions.</p>
 </div>
-<div class="section" id="properties">
-<h2>Properties<a class="headerlink" href="#properties" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="13%" />
-<col width="10%" />
-<col width="77%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Property</th>
-<th class="head">Type</th>
-<th class="head">Description</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>uuid</td>
-<td>UUID</td>
-<td>User’s unique entity ID</td>
-</tr>
-<tr class="row-odd"><td>type</td>
-<td>string</td>
-<td>Type of entity, in this case “user”</td>
-</tr>
-<tr class="row-even"><td>created</td>
-<td>long</td>
-<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity creation</td>
-</tr>
-<tr class="row-odd"><td>modified</td>
-<td>long</td>
-<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity modification</td>
-</tr>
-<tr class="row-even"><td>username</td>
-<td>string</td>
-<td>Valid and unique string username (mandatory)</td>
-</tr>
-<tr class="row-odd"><td>password</td>
-<td>string</td>
-<td>User password</td>
-</tr>
-<tr class="row-even"><td>email</td>
-<td>string</td>
-<td>Valid and unique email address</td>
-</tr>
-<tr class="row-odd"><td>name</td>
-<td>string</td>
-<td>User display name</td>
-</tr>
-<tr class="row-even"><td>activated</td>
-<td>boolean</td>
-<td>Whether the user account is activated</td>
-</tr>
-<tr class="row-odd"><td>disabled</td>
-<td>boolean</td>
-<td>Whether the user account is administratively disabled</td>
-</tr>
-<tr class="row-even"><td>firstname</td>
-<td>string</td>
-<td>User first name</td>
-</tr>
-<tr class="row-odd"><td>middlename</td>
-<td>string</td>
-<td>User middle name</td>
-</tr>
-<tr class="row-even"><td>lastname</td>
-<td>string</td>
-<td>User last name</td>
-</tr>
-<tr class="row-odd"><td>picture</td>
-<td>string</td>
-<td>User picture</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="sets">
-<h2>Sets<a class="headerlink" href="#sets" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="23%" />
-<col width="15%" />
-<col width="62%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Set</th>
-<th class="head">Type</th>
-<th class="head">Description</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>connections</td>
-<td>string</td>
-<td>Set of connection types (e.g., likes)</td>
-</tr>
-<tr class="row-odd"><td>rolenames</td>
-<td>string</td>
-<td>Set of roles assigned to a user</td>
-</tr>
-<tr class="row-even"><td>permissions</td>
-<td>string</td>
-<td>Set of user permissions</td>
-</tr>
-<tr class="row-odd"><td>credentials</td>
-<td>string</td>
-<td>Set of user credentials</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="relationshops">
-<h2>Relationshops<a class="headerlink" href="#relationshops" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="17%" />
-<col width="15%" />
-<col width="68%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Collection</th>
-<th class="head">Type</th>
-<th class="head">Description</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>groups</td>
-<td>group</td>
-<td>Collection of groups to which a user belongs</td>
-</tr>
-<tr class="row-odd"><td>devices</td>
-<td>device</td>
-<td>Collection of devices in the service</td>
-</tr>
-<tr class="row-even"><td>activities</td>
-<td>activity</td>
-<td>Collection of activities a user has performed</td>
-</tr>
-<tr class="row-odd"><td>feed</td>
-<td>activity</td>
-<td>Inbox of activity notifications a user has received</td>
-</tr>
-<tr class="row-even"><td>roles</td>
-<td>role</td>
-<td>Set of roles assigned to a user</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="facebook-sign-in">
-<h2>Facebook Sign-in<a class="headerlink" href="#facebook-sign-in" title="Permalink to this headline">¶</a></h2>
-<p>You can authenticate your Apache Usergrid requests by logging into
-Facebook. To access Apache Usergrid resources, you need to provide an
-access token with each request (unless you use the sandbox app). You can
-get an access token by connecting to an appropriate web service endpoint
-and providing the correct client credentials — this is further described
-in <a class="reference external" href="/authenticating-users-and-application-clients">Authenticating users and application
-clients</a>. However, you
-can also obtain an access token by logging into Facebook.</p>
-<p>To enable authentication to Apache Usergrid through Facebook, do the
-following in your app:</p>
-<ol class="arabic">
-<li><p class="first">Make a login call to the Facebook API (do this using the <a class="reference external" href="https://developers.facebook.com/docs/sdks/">Facebook
-SDK</a> or
-<a class="reference external" href="https://developers.facebook.com/docs/facebook-login/">API</a>). If
-the login succeeds, a Facebook access token is returned.</p>
-</li>
-<li><p class="first">Send the Facebook access token to Apache Usergrid. If the Facebook
-access token is valid and the user does not already exist in App
-Services, Apache Usergrid provisions a new Apache Usergrid user. It
-also returns an Apache Usergrid access token, which you can use for
-subsequent Apache Usergrid API calls. Behind the scenes, Apache
-Usergrid uses the Facebook access token to retrieve the user&#8217;s
-profile information from Facebook.</p>
-<p>If the Facebook access token is invalid, Facebook returns an OAuth
-authentication error, and the login does not succeed.</p>
+<div class="section" id="is-the-sandbox-secure">
+<h2>Is the sandbox secure?<a class="headerlink" href="#is-the-sandbox-secure" title="Permalink to this headline">¶</a></h2>
+<p>To keep things simple and make it easier for you to try things out, the
+sandbox application has all authentication disabled. That way, it
+doesn’t require an access token for application-level calls to the API.
+Permissions are so open on the sandbox application because its &#8220;guest&#8221;
+role offers full permissions for all access paths &#8211; that is, GET, POST,
+PUT, and DELETE for /**. Learn more about roles and permissions in
+Managing access by defining permission rules.</p>
+<!-- workaround a Sphinx bug -->
+<div class="admonition warning"><p class="first admonition-title"><p>Warning</p>
+</p><p class="last">
+<p class="last"><p>Never use a sandbox app for production. Keep in mind that the lack of
+authentication means that a sandbox application is not secure enough for
+important or sensitive data. A sandbox is just for experimentation while
+you learn how the services work, and should never be used for a
+production application. As with other Usergrid applications you create,
+a sandbox application is an area of the data store where you can put
+your own data. You can create as many other applications as you like,
+including more sandbox applications. When it comes to production
+(secured) applications, a good rule of thumb is to create one
+application for each mobile app you develop.</p>
+</p>
+</div></div>
+<div class="section" id="creating-a-new-sandbox-application">
+<h2>Creating a New Sandbox Application<a class="headerlink" href="#creating-a-new-sandbox-application" title="Permalink to this headline">¶</a></h2>
+<p>You may want to create (or re-create) a sandbox application. For
+example, you may want to create a sandbox application for another
+organization or you may want to create another application for testing
+purposes.</p>
+<!-- workaround a Sphinx bug -->
+<div class="admonition warning"><p class="first admonition-title"><p>Warning</p>
+</p><p class="last"><p>Guest Role should never be given full permissions. Giving the guest role
+full permissions should be used only for testing and should not be used
+in production. Before you make your app “live”, you should remove the
+guest permissions for /**.</p>
+</p></div><p>Use the following steps to create a sandbox app:</p>
+<ol class="arabic simple">
+<li>Create a new application using the admin portal. You can name the
+application whatever you like (including &#8220;sandbox&#8221;).</li>
+<li>Set full access permissions for the guest role, as follows:<ol class="arabic">
+<li>In the admin portal, click Users, then click Roles.</li>
+<li>On the Roles page, in the list of roles, click Guest.</li>
+<li>For the Guest role, under Permissions, click Add Permission.</li>
+<li>In the New Permission dialog, enter the following in the Path box:
+<code class="docutils literal"><span class="pre">/**</span></code></li>
+<li>Select the following check boxes: get, post, put, and delete.</li>
+<li>Click the Add button.</li>
+<li>If there are other permissions listed, delete them.</li>
+</ol>
 </li>
 </ol>
-<p>The request to authenticate to Apache Usergrid using a Facebook access
-token is:</p>
-<div class="highlight-python"><div class="highlight"><pre>GET https://api.usergrid.com/{my_org}/{my_app}/auth/facebook?fb_access_token={fb_access_token}
-</pre></div>
-</div>
-<p>where:</p>
-<ul class="simple">
-<li>{my_org} is the organization UUID or organization name.</li>
-<li>{my_app} is the application UUID or application name.</li>
-<li>{fb_access_token} is the Facebook access token.</li>
-</ul>
-</div>
-<div class="section" id="devices">
-<h2>Devices<a class="headerlink" href="#devices" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="id1">
-<h2>Properties<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="11%" />
-<col width="9%" />
-<col width="80%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Property</th>
-<th class="head">Type</th>
-<th class="head">Description</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>uuid</td>
-<td>UUID</td>
-<td>Entity unique ID</td>
-</tr>
-<tr class="row-odd"><td>type</td>
-<td>string</td>
-<td>Entity type (e.g., device)</td>
-</tr>
-<tr class="row-even"><td>created</td>
-<td>long</td>
-<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity creation</td>
-</tr>
-<tr class="row-odd"><td>modified</td>
-<td>long</td>
-<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity modification</td>
-</tr>
-<tr class="row-even"><td>name</td>
-<td>string</td>
-<td>Device name (mandatory)</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="relationships">
-<h2>Relationships<a class="headerlink" href="#relationships" title="Permalink to this headline">¶</a></h2>
-<p>Devices have the following associated collection.</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="20%" />
-<col width="11%" />
-<col width="69%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Collection</th>
-<th class="head">Type</th>
-<th class="head">Description</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>users</td>
-<td>user</td>
-<td>Collection of users to which a device belongs</td>
-</tr>
-</tbody>
-</table>
 </div>
 </div>
 
@@ -489,6 +301,15 @@ token is:</p>
            </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="using-the-api.html" class="btn btn-neutral float-right" title="Using the API" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="creating-a-new-application.html" class="btn btn-neutral" title="Creating a new application" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

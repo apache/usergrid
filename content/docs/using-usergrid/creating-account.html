@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Users &amp; Devices &mdash; Apache Usergrid 1.0 documentation</title>
+  <title>Creating a Usergrid Account &mdash; Apache Usergrid 1.0 documentation</title>
   
 
   
@@ -30,7 +30,9 @@
   
 
   
-    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/> 
+    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+        <link rel="next" title="Creating a new application" href="creating-a-new-application.html"/>
+        <link rel="prev" title="Async vs. sync calls" href="../introduction/async-vs-sync.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -86,11 +88,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Using Usergrid</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/creating-account.html">Creating a Usergrid Account</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/creating-a-new-application.html">Creating a new application</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/using-the-api.html">Using the API</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Creating a Usergrid Account</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#next-steps">Next steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using-the-api.html">Using the API</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Data Storage</span></p>
 <ul>
@@ -114,15 +119,15 @@
 </ul>
 <p class="caption"><span class="caption-text">Push Notifications</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="overview.html">Push notifications overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="adding-push-support.html">Adding push notifications support</a></li>
-<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started with push notifications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: Push notifications sample app</a></li>
-<li class="toctree-l1"><a class="reference internal" href="registering.html">Registering with a notification service</a></li>
-<li class="toctree-l1"><a class="reference internal" href="creating-notifiers.html">Creating notifiers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="managing-users-and-devices.html">Managing users and devices</a></li>
-<li class="toctree-l1"><a class="reference internal" href="creating-and-managing-notifications.html">Creating and managing notifications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/troubleshooting.html">Troubleshooting</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
 <ul>
@@ -210,11 +215,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../index.html">Docs</a> &raquo;</li>
       
-    <li>Users &amp; Devices</li>
+    <li>Creating a Usergrid Account</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/push-notifications/users-devices.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/using-usergrid/creating-account.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -224,264 +229,46 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="users-devices">
-<h1>Users &amp; Devices<a class="headerlink" href="#users-devices" title="Permalink to this headline">¶</a></h1>
-<p>Users and Devices are the primary ways to identify access to the system.
-Devices are great to track anonymous access, while Users allow you to
-model signing up, signing in, etc.</p>
-<div class="section" id="users">
-<h2>Users<a class="headerlink" href="#users" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="properties">
-<h2>Properties<a class="headerlink" href="#properties" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="13%" />
-<col width="10%" />
-<col width="77%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Property</th>
-<th class="head">Type</th>
-<th class="head">Description</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>uuid</td>
-<td>UUID</td>
-<td>User’s unique entity ID</td>
-</tr>
-<tr class="row-odd"><td>type</td>
-<td>string</td>
-<td>Type of entity, in this case “user”</td>
-</tr>
-<tr class="row-even"><td>created</td>
-<td>long</td>
-<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity creation</td>
-</tr>
-<tr class="row-odd"><td>modified</td>
-<td>long</td>
-<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity modification</td>
-</tr>
-<tr class="row-even"><td>username</td>
-<td>string</td>
-<td>Valid and unique string username (mandatory)</td>
-</tr>
-<tr class="row-odd"><td>password</td>
-<td>string</td>
-<td>User password</td>
-</tr>
-<tr class="row-even"><td>email</td>
-<td>string</td>
-<td>Valid and unique email address</td>
-</tr>
-<tr class="row-odd"><td>name</td>
-<td>string</td>
-<td>User display name</td>
-</tr>
-<tr class="row-even"><td>activated</td>
-<td>boolean</td>
-<td>Whether the user account is activated</td>
-</tr>
-<tr class="row-odd"><td>disabled</td>
-<td>boolean</td>
-<td>Whether the user account is administratively disabled</td>
-</tr>
-<tr class="row-even"><td>firstname</td>
-<td>string</td>
-<td>User first name</td>
-</tr>
-<tr class="row-odd"><td>middlename</td>
-<td>string</td>
-<td>User middle name</td>
-</tr>
-<tr class="row-even"><td>lastname</td>
-<td>string</td>
-<td>User last name</td>
-</tr>
-<tr class="row-odd"><td>picture</td>
-<td>string</td>
-<td>User picture</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="sets">
-<h2>Sets<a class="headerlink" href="#sets" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="23%" />
-<col width="15%" />
-<col width="62%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Set</th>
-<th class="head">Type</th>
-<th class="head">Description</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>connections</td>
-<td>string</td>
-<td>Set of connection types (e.g., likes)</td>
-</tr>
-<tr class="row-odd"><td>rolenames</td>
-<td>string</td>
-<td>Set of roles assigned to a user</td>
-</tr>
-<tr class="row-even"><td>permissions</td>
-<td>string</td>
-<td>Set of user permissions</td>
-</tr>
-<tr class="row-odd"><td>credentials</td>
-<td>string</td>
-<td>Set of user credentials</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="relationshops">
-<h2>Relationshops<a class="headerlink" href="#relationshops" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="17%" />
-<col width="15%" />
-<col width="68%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Collection</th>
-<th class="head">Type</th>
-<th class="head">Description</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>groups</td>
-<td>group</td>
-<td>Collection of groups to which a user belongs</td>
-</tr>
-<tr class="row-odd"><td>devices</td>
-<td>device</td>
-<td>Collection of devices in the service</td>
-</tr>
-<tr class="row-even"><td>activities</td>
-<td>activity</td>
-<td>Collection of activities a user has performed</td>
-</tr>
-<tr class="row-odd"><td>feed</td>
-<td>activity</td>
-<td>Inbox of activity notifications a user has received</td>
-</tr>
-<tr class="row-even"><td>roles</td>
-<td>role</td>
-<td>Set of roles assigned to a user</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="facebook-sign-in">
-<h2>Facebook Sign-in<a class="headerlink" href="#facebook-sign-in" title="Permalink to this headline">¶</a></h2>
-<p>You can authenticate your Apache Usergrid requests by logging into
-Facebook. To access Apache Usergrid resources, you need to provide an
-access token with each request (unless you use the sandbox app). You can
-get an access token by connecting to an appropriate web service endpoint
-and providing the correct client credentials — this is further described
-in <a class="reference external" href="/authenticating-users-and-application-clients">Authenticating users and application
-clients</a>. However, you
-can also obtain an access token by logging into Facebook.</p>
-<p>To enable authentication to Apache Usergrid through Facebook, do the
-following in your app:</p>
-<ol class="arabic">
-<li><p class="first">Make a login call to the Facebook API (do this using the <a class="reference external" href="https://developers.facebook.com/docs/sdks/">Facebook
-SDK</a> or
-<a class="reference external" href="https://developers.facebook.com/docs/facebook-login/">API</a>). If
-the login succeeds, a Facebook access token is returned.</p>
-</li>
-<li><p class="first">Send the Facebook access token to Apache Usergrid. If the Facebook
-access token is valid and the user does not already exist in App
-Services, Apache Usergrid provisions a new Apache Usergrid user. It
-also returns an Apache Usergrid access token, which you can use for
-subsequent Apache Usergrid API calls. Behind the scenes, Apache
-Usergrid uses the Facebook access token to retrieve the user&#8217;s
-profile information from Facebook.</p>
-<p>If the Facebook access token is invalid, Facebook returns an OAuth
-authentication error, and the login does not succeed.</p>
-</li>
-</ol>
-<p>The request to authenticate to Apache Usergrid using a Facebook access
-token is:</p>
-<div class="highlight-python"><div class="highlight"><pre>GET https://api.usergrid.com/{my_org}/{my_app}/auth/facebook?fb_access_token={fb_access_token}
-</pre></div>
-</div>
-<p>where:</p>
+  <div class="section" id="creating-a-usergrid-account">
+<h1>Creating a Usergrid Account<a class="headerlink" href="#creating-a-usergrid-account" title="Permalink to this headline">¶</a></h1>
+<p>To get started using the Usergrid, you&#8217;ll need an Usergrid account.
+(Before reading this, you should already be familiar with what Usergrid
+can do to support your apps. If you&#8217;re still curious about that, you
+might want to read Usergrid features first.)</p>
+<p>With an account, you get the following useful things:</p>
 <ul class="simple">
-<li>{my_org} is the organization UUID or organization name.</li>
-<li>{my_app} is the application UUID or application name.</li>
-<li>{fb_access_token} is the Facebook access token.</li>
+<li>A sandbox application you can try things with (we automatically
+create one for you with your new account). The sandbox is a
+partitioned area of the data store where you can add example data and
+try out API calls. The sandbox isn&#8217;t secure, but it&#8217;s handy to play
+in. For more about the sandbox, see <a class="reference external" href="../getting-started/using-a-sandbox-app.html">Using Your Application
+Sandbox</a>.</li>
+<li>The ability to create more applications (in addition to the sandbox).
+You can (and should!) make these as secure as you need to. These are
+the applications that you&#8217;ll have behind the apps you make available
+to your users.</li>
+<li>Access to the Admin Portal. In the portal, you can do the following:<ul>
+<li>Create and manage applications.</li>
+<li>Manage your app&#8217;s users, including access levels.</li>
+<li>Manage the data in your app.</li>
+<li>Manage app features, including push notifications, activities,
+analytics, and so on.</li>
+<li>Try out API calls with a shell command window.</li>
+<li>To create an Usergrid account and see a very short tutorial to get
+started with, go to the get started page of the Portal.</li>
 </ul>
-</div>
-<div class="section" id="devices">
-<h2>Devices<a class="headerlink" href="#devices" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="id1">
-<h2>Properties<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="11%" />
-<col width="9%" />
-<col width="80%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Property</th>
-<th class="head">Type</th>
-<th class="head">Description</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>uuid</td>
-<td>UUID</td>
-<td>Entity unique ID</td>
-</tr>
-<tr class="row-odd"><td>type</td>
-<td>string</td>
-<td>Entity type (e.g., device)</td>
-</tr>
-<tr class="row-even"><td>created</td>
-<td>long</td>
-<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity creation</td>
-</tr>
-<tr class="row-odd"><td>modified</td>
-<td>long</td>
-<td><a class="reference external" href="http://en.wikipedia.org/wiki/Unix_time">UNIX timestamp</a> of entity modification</td>
-</tr>
-<tr class="row-even"><td>name</td>
-<td>string</td>
-<td>Device name (mandatory)</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section" id="relationships">
-<h2>Relationships<a class="headerlink" href="#relationships" title="Permalink to this headline">¶</a></h2>
-<p>Devices have the following associated collection.</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="20%" />
-<col width="11%" />
-<col width="69%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Collection</th>
-<th class="head">Type</th>
-<th class="head">Description</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>users</td>
-<td>user</td>
-<td>Collection of users to which a device belongs</td>
-</tr>
-</tbody>
-</table>
+</li>
+</ul>
+<div class="section" id="next-steps">
+<h2>Next steps<a class="headerlink" href="#next-steps" title="Permalink to this headline">¶</a></h2>
+<p>Ready to learn and do more?</p>
+<ul class="simple">
+<li>Install an SDK that will be most useful for your application
+environment. For more about Usergrid&#8217;s SDKs, see
+<a class="reference external" href="../sdks/tbd.html">SDKs</a>.</li>
+<li>Review Usergrid features for information on concepts and features.</li>
+<li>Consult the API Reference for usage details.</li>
+</ul>
 </div>
 </div>
 
@@ -489,6 +276,15 @@ token is:</p>
            </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="creating-a-new-application.html" class="btn btn-neutral float-right" title="Creating a new application" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../introduction/async-vs-sync.html" class="btn btn-neutral" title="Async vs. sync calls" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
