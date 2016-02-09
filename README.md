@@ -1,15 +1,6 @@
 Apache Usergrid
 ===============
 
-__NOTICE__: This master branch represents active and ongoing development of the Usergrid team.  This branch represents Usergrid 2.x which requires some new components. In addition to a Cassandra cluster, Usergrid 2.x also requires an ElasticSearch cluster and a distributed Queue system (currently only AWS SQS is supported). 
-
-Prerequisites
--------------
-
-* Java 8 - Java7 will not work
-* ElasticSearch 1.4+
-* Cassandra 2.0+
-
 Overview
 --------
 
@@ -25,7 +16,7 @@ Apache Usergrid provides all code necessary to build and power modern mobile app
 
 Look for much more detailed README files in their corresponding subdirectories, or check out [our website](http://usergrid.apache.org/) for more info.
 
-* The server-side stack, a Java 7 + Cassandra codebase that powers all of the features, is located under [`/stack`](stack). You can install dependencies and compile it with maven. See [stack/README.md](stack#requirements) for instructions.
+* The server-side stack, a Java 8 + Cassandra + ElasticSearch codebase that powers all of the features, is located under [`/stack`](stack). You can install dependencies and compile it with maven. See [stack/README.md](stack#requirements) for instructions.
 
 * The admin portal is a pure HTML5+JavaScript app allowing you to register developers and let them manage their apps in a multi-tenant cluster. Located under [`/portal`](portal)
 

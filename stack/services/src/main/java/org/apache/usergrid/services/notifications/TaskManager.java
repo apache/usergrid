@@ -89,10 +89,10 @@ public class TaskManager {
             if (logger.isTraceEnabled()) {
                 logger.trace("COUNT is: {}", successes.get());
             }
-            if (hasFinished) { //process has finished but notifications are still coming in
-                finishedBatch();
-
-            }
+//            if (hasFinished) { //process has finished but notifications are still coming in
+//                finishedBatch();
+//
+//            }
         }
     }
 
@@ -115,6 +115,7 @@ public class TaskManager {
             }
         } finally {
             completed(notifier, deviceUUID);
+            finishedBatch();
         }
     }
 
@@ -128,7 +129,7 @@ public class TaskManager {
                 Receipt savedReceipt = em.create(receipt);
                 receipt.setUuid(savedReceipt.getUuid());
                 List<EntityRef> entities = Arrays.asList(notification, device);
-//              em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
+                em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
             } else {
                 em.update(receipt);
             }
@@ -150,51 +151,34 @@ public class TaskManager {
             }
         }
     }
+
     public void finishedBatch() throws Exception {
-        finishedBatch(true,false);
+        finishedBatch(true);
     }
-    public void finishedBatch(boolean fetch, boolean force) throws Exception {
 
-        if (notification.getDebug() || getFailures() > 0 || force) {
-            long successes = this.successes.get(); //reset counters
-            long failures = this.failures.get(); //reset counters
+    public void finishedBatch(boolean refreshNotification) throws Exception {
 
-            for (int i = 0; i < successes; i++) {
-                this.successes.decrementAndGet();
-            }
+        long successes = this.successes.get(); //reset counters
+        long failures = this.failures.get(); //reset counters
 
-            for (int i = 0; i < failures; i++) {
-                this.failures.decrementAndGet();
-            }
-
-            this.hasFinished = true;
-
-            // refresh notification
-            if (fetch)
-                notification = em.get(this.notification.getUuid(), Notification.class);
-
-            //and write them out again, this will produce the most accurate count
-            Map<String, Long> stats = new HashMap<>(2);
-            stats.put("sent", successes);
-            stats.put("errors", failures);
-            notification.updateStatistics(successes, failures);
-
-            long totals = (notification.getStatistics().get("sent") + notification.getStatistics().get("errors"));
-            //none of this is known and should you ever do this
-            notification.setModified(System.currentTimeMillis());
-            notification.setFinished(notification.getModified());
-
-            Map<String, Object> properties = new HashMap<>();
-            properties.put("finished", notification.getModified());
-            properties.put("state", notification.getState());
-            notification.addProperties(properties);
-
-            long latency = notification.getFinished() - notification.getStarted();
-            logger.info("notification finished batch: {} of {} devices in {} ms", notification.getUuid(), totals, latency);
-
-            em.update(notification);
-//        Set<Notifier> notifiers = new HashSet<>(proxy.getAdapterMap().values()); // remove dups
-//        proxy.asyncCheckForInactiveDevices(notifiers);
+        for (int i = 0; i < successes; i++) {
+            this.successes.decrementAndGet();
         }
+        for (int i = 0; i < failures; i++) {
+            this.failures.decrementAndGet();
+        }
+
+        this.hasFinished = true;
+
+        // force refresh notification by fetching it
+        if (refreshNotification) {
+            notification = em.get(this.notification.getUuid(), Notification.class);
+        }
+
+        notification.updateStatistics(successes, failures);
+        notification.setModified(System.currentTimeMillis());
+        notification.setFinished(notification.getModified());
+
+        em.update(notification);
     }
 }

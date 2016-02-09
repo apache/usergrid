@@ -1,18 +1,22 @@
 #!/bin/bash
+#---------------------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one or more 
+# contributor license agreements.  See the NOTICE file distributed with 
+# this work for additional information regarding copyright ownership.  
+# The ASF licenses this file to you under the Apache License, Version 2.0 
+# (the "License"); you may not use this file except in compliance with the 
+# License.  You may obtain a copy of the License at
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See 
+# the License for the specific language governing permissions and 
 # limitations under the License.
-#
-#
+#---------------------------------------------------------------------------
+
+
 # This script is used to create a release candidate. It will update the current
 # .usergridversion as well as creates a branch for the new release candidate and
 # publishes the source distrobution and signatures to be voted on.
@@ -23,6 +27,10 @@
 # A email template will be generated after successfully generating a release
 # candidate which will need to be sent to the dev@ and private@ mailing lists.
 #
+
+# for the 2.1.0 release, we will release from 'release' instead of the usual 'master'
+export RELEASE_BRANCH=release
+
 set -o errexit
 set -o nounset
 
@@ -92,8 +100,8 @@ base_dir=$(git rev-parse --show-toplevel)
 if [[ -n "`git status --porcelain`" ]]; then
   echo "ERROR: Please run from a clean git repository."
   exit 1
-elif [[ "`git rev-parse --abbrev-ref HEAD`" != "master" ]]; then
-  echo "ERROR: This script must be run from master."
+elif [[ "`git rev-parse --abbrev-ref HEAD`" != "$RELEASE_BRANCH" ]]; then
+  echo "ERROR: This script must be run from $RELEASE_BRANCH"
   exit 1
 fi
 
@@ -143,7 +151,7 @@ function print_reset_instructions {
 cat <<EOF
 To roll back your local repo you will need to run:
 
-  git checkout master
+  git checkout $RELEASE_BRANCH
   git reset --hard ${current_git_rev}
   git branch -D ${current_version_tag}
 EOF
@@ -203,9 +211,9 @@ if [[ $publish == 1 ]]; then
   echo "Pushing new branch ${current_version_tag} to origin"
   cd ${base_dir}
   git push origin ${current_version_tag}
-  echo "Pushing updated .usergridversion to master"
-  git checkout master
-  git push origin master
+  echo "Pushing updated .usergridversion to $RELEASE_BRANCH"
+  git checkout $RELEASE_BRANCH
+  git push origin $RELEASE_BRANCH
 fi
 
 cd ${base_dir}

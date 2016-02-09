@@ -72,7 +72,7 @@ public interface QueueFig extends GuicyFig {
 
     // current msg size 1.2kb * 850000 = 1.02 GB (let this default be the most we'll queue in heap)
     @Key("usergrid.queue.publish.queuesize")
-    @Default("850000")
+    @Default("250000")
     int getAsyncQueueSize();
 
     /**
