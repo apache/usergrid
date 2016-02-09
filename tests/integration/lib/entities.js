@@ -117,7 +117,7 @@ function deleteAllEntities(collection, cb) {
                     deleteAllEntities(collection, function(e) {
                         cb(e);
                     });
-                }, 600); // Mandatory, since it seems to not retrieve entities if you make a request in < 600ms
+                }, 100); // add some delay
             });
         } else {
             cb();

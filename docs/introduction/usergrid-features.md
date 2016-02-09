@@ -74,8 +74,8 @@ The device entity allows you to capture geolocation data from your users' GPS-en
 
 To learn more about geolocation, see [Geolocation](../geolocation/geolocation.html).
 
-## Push notifications (Coming soon...)
+## Push notifications 
 
-__(Coming Usergrid 2.0)__ Push notifications are the most effective way to engage your users with relevant content, and thanks to Usergrid, implementing them can be done in minutes. Simply register your app and your user's devices with a notification provider, such as Apple Push Notification Service or Google Cloud Messaging, then use the Usergrid notification entity to send millions of push notifications a month at no cost. When used in conjunction with queries of user and application data, push notifications become a powerful tool for leveraging user data, ensuring relevancy and driving engagement.
+__(Introduced in Usergrid 2)__ Push notifications are the most effective way to engage your users with relevant content, and thanks to Usergrid, implementing them can be done in minutes. Simply register your app and your user's devices with a notification provider, such as Apple Push Notification Service or Google Cloud Messaging, then use the Usergrid notification entity to send millions of push notifications a month at no cost. When used in conjunction with queries of user and application data, push notifications become a powerful tool for leveraging user data, ensuring relevancy and driving engagement.
 
 To learn more about push notifications, see [Push notifications overview](../push-notifications/tbd.html).

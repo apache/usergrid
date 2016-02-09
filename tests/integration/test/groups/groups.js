@@ -1,3 +1,6 @@
+/**
+ * Created by russo on 2/4/16.
+ */
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -34,7 +37,7 @@ module.exports = {
         var username = "groupuser";
         var password = "password";
         var usersArray = [];
-        for (var i = 1; i <= 5; i++) {
+        for (var i = 0; i < 5; i++) {
             usersArray.push({
                 "username": username + "-" + i,
                 "password": password,
@@ -46,7 +49,7 @@ module.exports = {
         // build devices
         var name = "device";
         var devicesArray = [];
-        for (var j = 1; j <= 5; j++) {
+        for (var j = 0; j < 5; j++) {
             devicesArray.push({
                 "name": name + "-" + j,
                 "gcm.notifier.id": DEVICE_TOKEN
@@ -55,7 +58,7 @@ module.exports = {
 
 
         describe("users", function () {
-            it("should create some devices", function (done) {
+            it("should create some users", function (done) {
                 this.slow(2000);
                 async.each(usersArray, function (user, cb) {
                     users.add(user, function (err, user) {
@@ -74,51 +77,6 @@ module.exports = {
         });
 
 
-        describe("devices", function () {
-            it("should create some devices", function (done) {
-                this.slow(2000);
-                async.each(devicesArray, function (device, cb) {
-                    devices.add(device, function (err, device) {
-                        should(err).be.null;
-                        device.should.not.be.null;
-                        cb(err, device);
-                    });
-
-                }, function (err) {
-
-                    done()
-
-                });
-
-            })
-
-        });
-
-
-        describe("user<->devices", function () {
-            it("should connect devices to users", function (done) {
-                this.slow(2000);
-                async.eachSeries(usersArray, function (user, cb) {
-                    async.each(devicesArray, function (device, cb) {
-                        connections.connect("users", user.username, "devices", device.name, null, function (err) {
-                            cb(err, device);
-                        });
-                    });
-                    cb(null);
-
-                }, function (err) {
-
-                    if (err) {
-                        console.log("error adding users " + err);
-                    }
-                    done();
-                });
-
-            })
-
-        });
-
-
         describe("groups", function () {
             it("should create some groups", function (done) {
                 this.slow(2000);
@@ -130,7 +88,6 @@ module.exports = {
                     path: "group2"
                 };
 
-                console.log("        creating some groups");
                 groups.add(group1, function (err) {
                     if (err) {
                         console.log("failed to create " + "group1:" + err);

@@ -28,6 +28,7 @@ module.exports.send = function(path, payload, cb) {
         url: urls.appendOrgCredentials(urls.getAppUrl() + path + "/notifications"),
         json: payload
     }, function(err, response, body) {
+        //console.log(JSON.stringify(body, null, 2));
         var error = responseLib.getError(err, response);
         cb(error, error ? null : body.entities.pop());
     });
