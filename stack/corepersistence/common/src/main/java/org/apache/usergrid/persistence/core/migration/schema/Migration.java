@@ -33,4 +33,6 @@ public interface Migration {
      * Get the column families required for this implementation.  If one does not exist it will be created.
      */
     Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies();
+
+    //Collection<String> getTables();
 }
