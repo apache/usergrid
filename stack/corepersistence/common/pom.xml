@@ -196,17 +196,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>com.datastax.cassandra</groupId>
-            <artifactId>cassandra-driver-mapping</artifactId>
-            <version>${datastax.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.datastax.cassandra</groupId>
-                    <artifactId>cassandra-driver-core</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
 
         <!-- LZ4 compression used for Datastax Java Driver:
              https://datastax.github.io/java-driver/2.1.7/features/compression/ -->

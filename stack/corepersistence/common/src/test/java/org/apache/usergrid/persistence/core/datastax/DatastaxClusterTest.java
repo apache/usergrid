@@ -1,5 +1,3 @@
-package org.apache.usergrid.persistence.core.datastax;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +16,8 @@ package org.apache.usergrid.persistence.core.datastax;
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.usergrid.persistence.core.datastax;
+
 public class DatastaxClusterTest {
 
     //TODO
