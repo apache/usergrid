@@ -22,6 +22,8 @@
 package org.apache.usergrid.persistence.core.datastax;
 
 
+import com.google.common.base.Preconditions;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,6 +66,12 @@ public class TableDefinition {
     public TableDefinition( final String tableName, final Collection<String> primaryKeys,
                             final Map<String, String> columns, final CacheOption cacheOption,
                             final Map<String, String> clusteringOrder){
+
+        Preconditions.checkNotNull(tableName, "Table name cannot be null");
+        Preconditions.checkNotNull(primaryKeys, "Primary Key(s) cannot be null");
+        Preconditions.checkNotNull(columns, "Columns cannot be null");
+        Preconditions.checkNotNull(cacheOption, "CacheOption cannot be null");
+
 
         this.tableName = tableName;
         this.primaryKeys = primaryKeys;
