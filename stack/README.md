@@ -20,6 +20,11 @@ From the command line, go to the usergrid directory and type the following:
 
     mvn clean install -DskipTests=true
 
+If you want to run tests you will need to have Cassandra and ElasticSearch running on your computer and on the default ports. The following command will do the build and run all JUnit tests:
+
+    mvn clean install
+
+
 ## Running
 
 The build process will package the Usergrid Stack into one file `stack/rest/target/ROOT.war`
@@ -73,7 +78,7 @@ Let’s use it to create a collection with some data in it:
 
 ## Contributing
 
-We welcome all contributions, including via pull requests on GitHub! If you want to submit code, please read more about our [contribution workflow](https://cwiki.apache.org/confluence/display/usergrid/GitHub+Based+Contribution+Workflow)
+We welcome all contributions, including via pull requests on GitHub! For more information see [How to Contribute Code & Docs](http://usergrid.apache.org/docs/reference/contribute-code.html).
 
 
 ## Licenses
