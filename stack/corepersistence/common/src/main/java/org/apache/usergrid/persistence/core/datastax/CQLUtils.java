@@ -18,14 +18,14 @@
  */
 package org.apache.usergrid.persistence.core.datastax;
 
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.ProtocolVersion;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.usergrid.persistence.core.util.StringUtils;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.StringJoiner;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 public class CQLUtils {
 
@@ -45,6 +45,10 @@ public class CQLUtils {
     static String PRIMARY_KEY = "PRIMARY KEY";
     static String COMPACT_STORAGE = "COMPACT STORAGE";
     static String CLUSTERING_ORDER_BY = "CLUSTERING ORDER BY";
+    static String COMMA = ",";
+    static String PAREN_LEFT = "(";
+    static String PAREN_RIGHT = ")";
+
 
     private final static ObjectMapper mapper = new ObjectMapper();
 
@@ -80,22 +84,28 @@ public class CQLUtils {
             throw new Exception("Invalid Action specified.  Must of of type CQLUtils.Action");
         }
 
-        cql.add( "\""+tableDefinition.getTableName()+"\"" );
+        cql.add( quote( tableDefinition.getTableName() ) );
 
 
-        StringJoiner columnsString = new StringJoiner(",");
-        Map<String, String> columns = tableDefinition.getColumns();
-        columns.forEach( (key, value) -> columnsString.add(key+" "+value));
-        columnsString.add(PRIMARY_KEY +" ( "+StringUtils.join(tableDefinition.getPrimaryKeys(), ",") + " )");
-
-        StringJoiner orderingString = new StringJoiner(" ");
-        Map<String, String> ordering = tableDefinition.getClusteringOrder();
-        ordering.forEach( (key, value) -> orderingString.add(key+" "+value));
 
         if ( tableAction.equals(ACTION.CREATE) ){
-            cql.add("(").add(columnsString.toString()).add(")")
+
+            cql.add(PAREN_LEFT).add( spaceSeparatedKeyValue(tableDefinition.getColumns()) ).add(COMMA)
+                .add(PRIMARY_KEY)
+                .add(PAREN_LEFT).add(PAREN_LEFT)
+                .add( StringUtils.join(tableDefinition.getPartitionKeys(), COMMA) ).add(PAREN_RIGHT);
+
+            if ( tableDefinition.getColumnKeys() != null && !tableDefinition.getColumnKeys().isEmpty() ){
+
+                cql.add(COMMA).add( StringUtils.join(tableDefinition.getColumnKeys(), COMMA) );
+            }
+
+            cql.add(PAREN_RIGHT).add(PAREN_RIGHT)
                 .add(WITH)
-                .add(CLUSTERING_ORDER_BY).add("(").add(orderingString.toString()).add(")")
+                .add(CLUSTERING_ORDER_BY)
+                .add(PAREN_LEFT)
+                .add( spaceSeparatedKeyValue(tableDefinition.getClusteringOrder()) )
+                .add(PAREN_RIGHT)
                 .add(AND)
                 .add(COMPACT_STORAGE)
                 .add(AND);
@@ -116,6 +126,43 @@ public class CQLUtils {
 
         return cql.toString();
 
+    }
+
+    public static String quote( String value){
+
+        return "\"" + value + "\"";
+
+    }
+
+    public static String spaceSeparatedKeyValue(Map<String, String> columns){
+
+        StringJoiner columnsSchema = new StringJoiner(",");
+        columns.forEach( (key, value) -> columnsSchema.add(key+" "+value));
+
+        return columnsSchema.toString();
+
+    }
+
+
+    /**
+     * Below functions borrowed from Astyanax until the schema is re-written to be more CQL friendly
+     */
+
+    public static int getShortLength(ByteBuffer bb) {
+        int length = (bb.get() & 255) << 8;
+        return length | bb.get() & 255;
+    }
+
+    public static ByteBuffer getBytes(ByteBuffer bb, int length) {
+        ByteBuffer copy = bb.duplicate();
+        copy.limit(copy.position() + length);
+        bb.position(bb.position() + length);
+        return copy;
+    }
+
+    public static ByteBuffer getWithShortLength(ByteBuffer bb) {
+        int length = getShortLength(bb);
+        return getBytes(bb, length);
     }
 
 

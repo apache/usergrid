@@ -82,6 +82,22 @@ public class MapManagerTest {
         assertEquals( value, returned );
     }
 
+    @Test
+    public void writeReadStringWithLongKey() {
+        MapManager mm = mmf.createMapManager( this.scope );
+
+        final String key = "key1234567890123456789012345678901234567890123456789012345678901234567890" +
+            "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890" +
+            "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+        final String value = "value";
+
+        mm.putString( key, value );
+
+        final String returned = mm.getString( key );
+
+        assertEquals( value, returned );
+    }
+
 
     @Test
     public void multiReadNoKey() {

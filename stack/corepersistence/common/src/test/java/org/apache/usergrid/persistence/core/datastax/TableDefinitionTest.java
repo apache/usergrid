@@ -32,7 +32,7 @@ public class TableDefinitionTest {
     public void testNullTableName(){
 
         try{
-            TableDefinition table1 = new TableDefinition(null, null, null, null, null);
+            TableDefinition table1 = new TableDefinition(null, null, null, null, null, null);
         } catch (NullPointerException npe){
             assertEquals("Table name cannot be null", npe.getMessage());
         }
@@ -44,7 +44,7 @@ public class TableDefinitionTest {
     public void testNullPrimaryKeys(){
 
         try{
-            TableDefinition table1 = new TableDefinition("table1", null, null, null, null);
+            TableDefinition table1 = new TableDefinition("table1", null, null, null, null, null);
         } catch (NullPointerException npe){
             assertEquals("Primary Key(s) cannot be null", npe.getMessage());
         }
@@ -57,7 +57,7 @@ public class TableDefinitionTest {
 
         try{
             TableDefinition table1 = new TableDefinition("table1",
-                new ArrayList<>(), null, null, null);
+                new ArrayList<>(), null, null, null, null);
         } catch (NullPointerException npe){
             assertEquals("Columns cannot be null", npe.getMessage());
         }
@@ -71,7 +71,7 @@ public class TableDefinitionTest {
         try{
             TableDefinition table1 = new TableDefinition("table1",
                 new ArrayList<>(),
-                new HashMap<>(), null, null);
+                new ArrayList<>(), new HashMap<>(), null, null);
         } catch (NullPointerException npe){
             assertEquals("CacheOption cannot be null", npe.getMessage());
         }

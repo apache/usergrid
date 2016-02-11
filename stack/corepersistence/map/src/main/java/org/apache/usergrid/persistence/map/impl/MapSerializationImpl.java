@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.map.impl;
 
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,6 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.datastax.driver.core.*;
+import com.datastax.driver.core.querybuilder.Clause;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Using;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.UTF8Type;
 
@@ -39,6 +44,7 @@ import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.shard.ExpandingShardLocator;
 import org.apache.usergrid.persistence.core.shard.StringHashUtils;
 import org.apache.usergrid.persistence.map.MapScope;
@@ -47,23 +53,18 @@ import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
-import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.CompositeBuilder;
 import com.netflix.astyanax.model.CompositeParser;
-import com.netflix.astyanax.model.ConsistencyLevel;
-import com.netflix.astyanax.model.Row;
-import com.netflix.astyanax.model.Rows;
 import com.netflix.astyanax.serializers.BooleanSerializer;
 import com.netflix.astyanax.serializers.StringSerializer;
 
 
 @Singleton
 public class MapSerializationImpl implements MapSerialization {
+
+    private static final String MAP_KEYS_TABLE = CQLUtils.quote("Map_Keys");
+    private static final String MAP_ENTRIES_TABLE = CQLUtils.quote("Map_Entries");
 
     private static final MapKeySerializer KEY_SERIALIZER = new MapKeySerializer();
 
@@ -81,7 +82,7 @@ public class MapSerializationImpl implements MapSerialization {
     private static final StringSerializer STRING_SERIALIZER = StringSerializer.get();
 
 
-    private static final StringResultsBuilder STRING_RESULTS_BUILDER = new StringResultsBuilder();
+    private static final StringResultsBuilderCQL STRING_RESULTS_BUILDER_CQL = new StringResultsBuilderCQL();
 
 
     /**
@@ -117,137 +118,111 @@ public class MapSerializationImpl implements MapSerialization {
     private final Keyspace keyspace;
     private final CassandraConfig cassandraConfig;
 
+    private final Session session;
+
 
     @Inject
-    public MapSerializationImpl( final Keyspace keyspace, final CassandraConfig cassandraConfig ) {
+    public MapSerializationImpl( final Keyspace keyspace, final CassandraConfig cassandraConfig,
+                                 final Session session ) {
         this.keyspace = keyspace;
+        this.session = session;
         this.cassandraConfig = cassandraConfig;
     }
 
 
     @Override
     public String getString( final MapScope scope, final String key ) {
-        Column<Boolean> col = getValue( scope, key, cassandraConfig.getReadCL()  );
-        return ( col != null ) ? col.getStringValue() : null;
+
+        ByteBuffer value = getValueCQL( scope, key, cassandraConfig.getDataStaxReadCl() ) ;
+        return value != null ? (String)DataType.text().deserialize(value,ProtocolVersion.NEWEST_SUPPORTED ): null;
     }
 
 
     @Override
     public String getStringHighConsistency( final MapScope scope, final String key ) {
-        Column<Boolean> col = getValue( scope, key, cassandraConfig.getConsistentReadCL() ); // TODO: why boolean?
-        return ( col != null ) ? col.getStringValue() : null;
+
+        ByteBuffer value = getValueCQL( scope, key, cassandraConfig.getDataStaxReadConsistentCl() ) ;
+        return value != null ? (String)DataType.text().deserialize(value,ProtocolVersion.NEWEST_SUPPORTED ): null;
     }
 
 
     @Override
     public Map<String, String> getStrings( final MapScope scope, final Collection<String> keys ) {
-        return getValues( scope, keys, STRING_RESULTS_BUILDER );
+        return getValuesCQL( scope, keys, STRING_RESULTS_BUILDER_CQL );
     }
 
 
     @Override
     public void putString( final MapScope scope, final String key, final String value ) {
-        final RowOp op = new RowOp() {
-            @Override
-            public void putValue( final ColumnListMutation<Boolean> columnListMutation ) {
-                columnListMutation.putColumn( true, value );
-            }
 
-
-            @Override
-            public void putKey( final ColumnListMutation<String> keysMutation ) {
-                keysMutation.putColumn( key, true );
-            }
-        };
-
-
-        writeString( scope, key, value, op );
+        writeStringCQL( scope, key, value, -1 );
     }
 
 
     @Override
     public void putString( final MapScope scope, final String key, final String value, final int ttl ) {
+
         Preconditions.checkArgument( ttl > 0, "ttl must be > than 0" );
-
-        final RowOp op = new RowOp() {
-            @Override
-            public void putValue( final ColumnListMutation<Boolean> columnListMutation ) {
-                columnListMutation.putColumn( true, value, ttl );
-            }
-
-
-            @Override
-            public void putKey( final ColumnListMutation<String> keysMutation ) {
-                keysMutation.putColumn( key, true, ttl );
-            }
-        };
-
-
-        writeString( scope, key, value, op );
+        writeStringCQL( scope, key, value, ttl );
     }
 
 
     /**
      * Write our string index with the specified row op
      */
-    private void writeString( final MapScope scope, final String key, final String value, final RowOp rowOp ) {
+    private void writeStringCQL( final MapScope scope, final String key, final String value, int ttl ) {
 
         Preconditions.checkNotNull( scope, "mapscope is required" );
         Preconditions.checkNotNull( key, "key is required" );
         Preconditions.checkNotNull( value, "value is required" );
 
-        final MutationBatch batch = keyspace.prepareMutationBatch();
+        Statement mapEntry;
+        Statement mapKey;
+        if (ttl > 0){
+            Using timeToLive = QueryBuilder.ttl(ttl);
 
-        //add it to the entry
-        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey( scope, key );
-
-        //serialize to the
-        // entry
-
-
-        rowOp.putValue( batch.withRow( MAP_ENTRIES, entryRowKey ) );
-
-
-        //add it to the keys
-
-        final int bucket = BUCKET_LOCATOR.getCurrentBucket( key );
-
-        final BucketScopedRowKey<String> keyRowKey = BucketScopedRowKey.fromKey( scope.getApplication(), key, bucket );
-
-        //serialize to the entry
-
-        rowOp.putKey( batch.withRow( MAP_KEYS, keyRowKey ) );
+            mapEntry = QueryBuilder.insertInto(MAP_ENTRIES_TABLE)
+                .using(timeToLive)
+                .value("key", getMapEntryPartitionKey(scope, key))
+                .value("column1", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED))
+                .value("value", DataType.text().serialize(value, ProtocolVersion.NEWEST_SUPPORTED));
 
 
-        executeBatch( batch );
+            final int bucket = BUCKET_LOCATOR.getCurrentBucket( key );
+            mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
+                .using(timeToLive)
+                .value("key", getMapKeyPartitionKey(scope, key, bucket))
+                .value("column1", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED))
+                .value("value", DataType.text().serialize(value, ProtocolVersion.NEWEST_SUPPORTED));
+        }else{
+
+            mapEntry = QueryBuilder.insertInto(MAP_ENTRIES_TABLE)
+                .value("key", getMapEntryPartitionKey(scope, key))
+                .value("column1", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED))
+                .value("value", DataType.text().serialize(value, ProtocolVersion.NEWEST_SUPPORTED));
+
+            // get a bucket number for the map keys table
+            final int bucket = BUCKET_LOCATOR.getCurrentBucket( key );
+
+            mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
+                .value("key", getMapKeyPartitionKey(scope, key, bucket))
+                .value("column1", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED))
+                .value("value", DataType.text().serialize(value, ProtocolVersion.NEWEST_SUPPORTED));
+
+        }
+
+        session.execute(mapEntry);
+        session.execute(mapKey);
+
     }
 
-
-    /**
-     * Callbacks for performing row operations
-     */
-    private static interface RowOp {
-
-        /**
-         * Callback to do the row
-         *
-         * @param columnListMutation The column mutation
-         */
-        void putValue( final ColumnListMutation<Boolean> columnListMutation );
-
-
-        /**
-         * Write the key
-         */
-        void putKey( final ColumnListMutation<String> keysMutation );
-    }
 
 
     @Override
     public UUID getUuid( final MapScope scope, final String key ) {
 
-        Column<Boolean> col = getValue( scope, key, cassandraConfig.getReadCL() );
-        return ( col != null ) ? col.getUUIDValue() : null;
+        ByteBuffer value = getValueCQL( scope, key, cassandraConfig.getDataStaxReadCl() );
+        return value != null ? (UUID)DataType.uuid().deserialize(value, ProtocolVersion.NEWEST_SUPPORTED ) : null;
     }
 
 
@@ -258,31 +233,34 @@ public class MapSerializationImpl implements MapSerialization {
         Preconditions.checkNotNull( key, "key is required" );
         Preconditions.checkNotNull( putUuid, "value is required" );
 
-        final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        //add it to the entry
-        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey( scope, key );
+        Statement mapEntry = QueryBuilder.insertInto(MAP_ENTRIES_TABLE)
+            .value("key", getMapEntryPartitionKey(scope, key))
+            .value("column1", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED))
+            .value("value", DataType.uuid().serialize(putUuid, ProtocolVersion.NEWEST_SUPPORTED));
 
-        //serialize to the entry
-        batch.withRow( MAP_ENTRIES, entryRowKey ).putColumn( true, putUuid );
+        session.execute(mapEntry);
 
-        //add it to the keys
 
         final int bucket = BUCKET_LOCATOR.getCurrentBucket( key );
+        Statement mapKey;
+        mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
+            .value("key", getMapKeyPartitionKey(scope, key, bucket))
+            .value("column1", DataType.text().serialize(key, ProtocolVersion.NEWEST_SUPPORTED))
+            .value("value", DataType.serializeValue(null, ProtocolVersion.NEWEST_SUPPORTED));
 
-        final BucketScopedRowKey<String> keyRowKey = BucketScopedRowKey.fromKey( scope.getApplication(), key, bucket );
-
-        //serialize to the entry
-        batch.withRow( MAP_KEYS, keyRowKey ).putColumn( key, true );
-
-        executeBatch( batch );
+        session.execute(mapKey);
     }
+
+
+
 
 
     @Override
     public Long getLong( final MapScope scope, final String key ) {
-        Column<Boolean> col = getValue( scope, key, cassandraConfig.getReadCL() );
-        return ( col != null ) ? col.getLongValue() : null;
+
+        ByteBuffer value = getValueCQL( scope, key, cassandraConfig.getDataStaxReadCl());
+        return value != null ? (Long)DataType.bigint().deserialize(value, ProtocolVersion.NEWEST_SUPPORTED ) : null;
     }
 
 
@@ -293,46 +271,50 @@ public class MapSerializationImpl implements MapSerialization {
         Preconditions.checkNotNull( key, "key is required" );
         Preconditions.checkNotNull( value, "value is required" );
 
-        final MutationBatch batch = keyspace.prepareMutationBatch();
+        Statement mapEntry = QueryBuilder.insertInto(MAP_ENTRIES_TABLE)
+            .value("key", getMapEntryPartitionKey(scope, key))
+            .value("column1", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED))
+            .value("value", DataType.bigint().serialize(value, ProtocolVersion.NEWEST_SUPPORTED));
 
-        //add it to the entry
-        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey( scope, key );
+        session.execute(mapEntry);
 
-        //serialize to the entry
-        batch.withRow( MAP_ENTRIES, entryRowKey ).putColumn( true, value );
 
-        //add it to the keys
         final int bucket = BUCKET_LOCATOR.getCurrentBucket( key );
+        Statement mapKey;
+        mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
+            .value("key", getMapKeyPartitionKey(scope, key, bucket))
+            .value("column1", DataType.text().serialize(key, ProtocolVersion.NEWEST_SUPPORTED))
+            .value("value", DataType.serializeValue(null, ProtocolVersion.NEWEST_SUPPORTED));
 
-        final BucketScopedRowKey<String> keyRowKey = BucketScopedRowKey.fromKey( scope.getApplication(), key, bucket );
-
-        //serialize to the entry
-        batch.withRow( MAP_KEYS, keyRowKey ).putColumn( key, true );
-
-        executeBatch( batch );
+        session.execute(mapKey);
     }
 
 
     @Override
     public void delete( final MapScope scope, final String key ) {
-        final MutationBatch batch = keyspace.prepareMutationBatch();
-        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey( scope, key );
 
-        //serialize to the entry
-        batch.withRow( MAP_ENTRIES, entryRowKey ).delete();
+        Statement deleteMapEntry;
+        Clause equalsEntryKey = QueryBuilder.eq("key", getMapEntryPartitionKey(scope, key));
+        deleteMapEntry = QueryBuilder.delete().from(MAP_ENTRIES_TABLE)
+            .where(equalsEntryKey);
+        session.execute(deleteMapEntry);
 
-        //add it to the keys, we're not sure which one it may have come from
+
+
+        // not sure which bucket the value is in, execute a delete against them all
         final int[] buckets = BUCKET_LOCATOR.getAllBuckets( key );
-
-
-        final List<BucketScopedRowKey<String>> rowKeys =
-            BucketScopedRowKey.fromRange( scope.getApplication(), key, buckets );
-
-        for ( BucketScopedRowKey<String> rowKey : rowKeys ) {
-            batch.withRow( MAP_KEYS, rowKey ).deleteColumn( key );
+        List<ByteBuffer> mapKeys = new ArrayList<>();
+        for( int bucket :  buckets){
+            mapKeys.add( getMapKeyPartitionKey(scope, key, bucket));
         }
 
-        executeBatch( batch );
+        Statement deleteMapKey;
+        Clause inKey = QueryBuilder.in("key", mapKeys);
+        deleteMapKey = QueryBuilder.delete().from(MAP_KEYS_TABLE)
+            .where(inKey);
+        session.execute(deleteMapKey);
+
+
     }
 
 
@@ -353,72 +335,38 @@ public class MapSerializationImpl implements MapSerialization {
     }
 
 
-    private Column<Boolean> getValue( MapScope scope, String key, final ConsistencyLevel consistencyLevel ) {
+    private ByteBuffer getValueCQL( MapScope scope, String key, final ConsistencyLevel consistencyLevel ) {
 
-        //add it to the entry
-        final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey( scope, key );
+        Clause in = QueryBuilder.in("key", getMapEntryPartitionKey(scope, key) );
+        Statement statement = QueryBuilder.select().all().from(MAP_ENTRIES_TABLE)
+            .where(in)
+            .setConsistencyLevel(consistencyLevel);
 
-        //now get all columns, including the "old row key value"
-        try {
-            final Column<Boolean> result =
-                keyspace.prepareQuery( MAP_ENTRIES ).setConsistencyLevel( consistencyLevel ).getKey( entryRowKey ).getColumn( true ).execute().getResult();
+        ResultSet resultSet = session.execute(statement);
+        com.datastax.driver.core.Row row = resultSet.one();
 
-            return result;
-        }
-        catch ( NotFoundException nfe ) {
-            //nothing to return
-            return null;
-        }
-        catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to connect to cassandra", e );
-        }
+        return row != null ? row.getBytes("value") : null;
     }
 
 
-    /**
-     * Get multiple values, using the string builder
-     */
-    private <T> T getValues( final MapScope scope, final Collection<String> keys, final ResultsBuilder<T> builder ) {
+
+    private <T> T getValuesCQL( final MapScope scope, final Collection<String> keys, final ResultsBuilderCQL<T> builder ) {
+
+        final List<ByteBuffer> serializedKeys = new ArrayList<>();
+
+        keys.forEach(key -> serializedKeys.add(getMapEntryPartitionKey(scope,key)));
+
+        Clause in = QueryBuilder.in("key", serializedKeys );
+        Statement statement = QueryBuilder.select().all().from(MAP_ENTRIES_TABLE)
+            .where(in);
 
 
-        final List<ScopedRowKey<MapEntryKey>> rowKeys = new ArrayList<>( keys.size() );
+        ResultSet resultSet = session.execute(statement);
 
-        for ( final String key : keys ) {
-            //add it to the entry
-            final ScopedRowKey<MapEntryKey> entryRowKey = MapEntryKey.fromKey( scope, key );
-
-            rowKeys.add( entryRowKey );
-        }
-
-
-        //now get all columns, including the "old row key value"
-        try {
-            final Rows<ScopedRowKey<MapEntryKey>, Boolean> rows =
-                keyspace.prepareQuery( MAP_ENTRIES ).setConsistencyLevel( cassandraConfig.getReadCL() ).getKeySlice(
-                    rowKeys ).withColumnSlice( true ).execute()
-                        .getResult();
-
-
-            return builder.buildResults( rows );
-        }
-        catch ( NotFoundException nfe ) {
-            //nothing to return
-            return null;
-        }
-        catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to connect to cassandra", e );
-        }
+        return builder.buildResultsCQL( resultSet );
     }
 
 
-    private void executeBatch( MutationBatch batch ) {
-        try {
-            batch.execute();
-        }
-        catch ( ConnectionException e ) {
-            throw new RuntimeException( "Unable to connect to cassandra", e );
-        }
-    }
 
 
     /**
@@ -491,37 +439,114 @@ public class MapSerializationImpl implements MapSerialization {
     }
 
 
+
     /**
      * Build the results from the row keys
      */
-    private static interface ResultsBuilder<T> {
 
-        public T buildResults( final Rows<ScopedRowKey<MapEntryKey>, Boolean> rows );
+    private interface ResultsBuilderCQL<T> {
+
+        T buildResultsCQL( final ResultSet resultSet );
     }
 
 
-    public static class StringResultsBuilder implements ResultsBuilder<Map<String, String>> {
+    public static class StringResultsBuilderCQL implements ResultsBuilderCQL<Map<String, String>> {
 
         @Override
-        public Map<String, String> buildResults( final Rows<ScopedRowKey<MapEntryKey>, Boolean> rows ) {
-            final int size = rows.size();
+        public Map<String, String> buildResultsCQL( final ResultSet resultSet ) {
 
-            final Map<String, String> results = new HashMap<>( size );
 
-            for ( int i = 0; i < size; i++ ) {
+            final Map<String, String> results = new HashMap<>();
 
-                final Row<ScopedRowKey<MapEntryKey>, Boolean> row = rows.getRowByIndex( i );
+            resultSet.all().forEach( row -> {
 
-                final String value = row.getColumns().getStringValue( true, null );
+                @SuppressWarnings("unchecked")
+                List<Object> keys = (List) deserializeMapEntryKey(row.getBytes("key"));
+                String value = (String)DataType.text().deserialize( row.getBytes("value"),
+                    ProtocolVersion.NEWEST_SUPPORTED );
 
-                if ( value == null ) {
-                    continue;
-                }
+                // the actual string key value is the last element
+                results.put((String)keys.get(keys.size() -1), value);
 
-                results.put( row.getKey().getKey().key, value );
-            }
+            });
 
             return results;
         }
+    }
+
+    private static Object deserializeMapEntryKey(ByteBuffer bb){
+
+        List<Object> stuff = new ArrayList<>();
+        while(bb.hasRemaining()){
+            ByteBuffer data = CQLUtils.getWithShortLength(bb);
+            if(stuff.size() == 0){
+                stuff.add(DataType.uuid().deserialize(data.slice(), ProtocolVersion.NEWEST_SUPPORTED));
+            }else{
+                stuff.add(DataType.text().deserialize(data.slice(), ProtocolVersion.NEWEST_SUPPORTED));
+            }
+            byte equality = bb.get(); // we don't use this but take the equality byte off the buffer
+
+        }
+
+        return stuff;
+
+    }
+
+    public static ByteBuffer serializeKeys(UUID ownerUUID, String ownerType, String mapName, String mapKey,
+                                           int bucketNumber ){
+
+        List<Object> keys = new ArrayList<>(4);
+        keys.add(0, ownerUUID);
+        keys.add(1, ownerType);
+        keys.add(2, mapName);
+        keys.add(3, mapKey);
+
+        if( bucketNumber > 0){
+            keys.add(4, bucketNumber);
+        }
+
+        // UUIDs are 16 bytes, allocate the buffer accordingly
+        int size = 16+ownerType.length()+mapName.length()+mapKey.length();
+        if(bucketNumber > 0 ){
+            // ints are 4 bytes
+            size += 4;
+        }
+
+        // we always need to add length for the 2 byte short and 1 byte equality
+        size += keys.size()*3;
+
+        ByteBuffer stuff = ByteBuffer.allocate(size);
+
+        for (Object key : keys) {
+
+            ByteBuffer kb = DataType.serializeValue(key, ProtocolVersion.NEWEST_SUPPORTED);
+            if (kb == null) {
+                kb = ByteBuffer.allocate(0);
+            }
+
+            stuff.putShort((short) kb.remaining());
+            stuff.put(kb.slice());
+            stuff.put((byte) 0);
+
+
+        }
+        stuff.flip();
+        return stuff.duplicate();
+
+    }
+
+
+    private ByteBuffer getMapEntryPartitionKey(MapScope scope, String key){
+
+        return serializeKeys(scope.getApplication().getUuid(),
+            scope.getApplication().getType(), scope.getName(), key, -1);
+
+    }
+
+    private ByteBuffer getMapKeyPartitionKey(MapScope scope, String key, int bucketNumber){
+
+        return serializeKeys(scope.getApplication().getUuid(),
+            scope.getApplication().getType(), scope.getName(), key, bucketNumber);
+
     }
 }

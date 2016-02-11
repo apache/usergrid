@@ -48,6 +48,25 @@ public interface CassandraConfig {
      */
     ConsistencyLevel getWriteCL();
 
+
+    /**
+     * Get the currently configured read CL for DataStax driver
+     * @return
+     */
+    com.datastax.driver.core.ConsistencyLevel getDataStaxReadCl();
+
+    /**
+     * Get the currently configured write CL for DataStax driver
+     * @return
+     */
+    com.datastax.driver.core.ConsistencyLevel getDataStaxWriteCl();
+
+    /**
+     * Get the currently configured consistent read CL for DataStax driver
+     * @return
+     */
+    com.datastax.driver.core.ConsistencyLevel getDataStaxReadConsistentCl();
+
     /**
      * Return the number of shards that has been set in the property file
      * @return

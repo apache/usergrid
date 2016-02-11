@@ -43,9 +43,11 @@ public class CQLUtilsTest {
         columns.put("column1", "text");
         columns.put("value", "blob");
 
-        List<String> primaryKeys = new ArrayList<>();
-        primaryKeys.add("key");
-        primaryKeys.add("column1");
+        List<String> partitionKeys = new ArrayList<>();
+        partitionKeys.add("key");
+
+        List<String> columnKeys = new ArrayList<>();
+        columnKeys.add("column1");
 
         Map<String, String> clusteringOrder = new HashMap<>();
         clusteringOrder.put("column1", "DESC");
@@ -54,7 +56,8 @@ public class CQLUtilsTest {
 
         TableDefinition table1 = new TableDefinition(
             "table1",
-            primaryKeys,
+            partitionKeys,
+            columnKeys,
             columns,
             TableDefinition.CacheOption.KEYS,
             clusteringOrder
@@ -65,8 +68,8 @@ public class CQLUtilsTest {
 
         assertTrue( createCQL.contains( CQLUtils.CREATE_TABLE ) && !createCQL.contains( CQLUtils.ALTER_TABLE ) );
         assertTrue( updateCQL.contains( CQLUtils.ALTER_TABLE ) && !updateCQL.contains( CQLUtils.CREATE_TABLE ) );
-        //logger.info("CREATE: {}", createCQL);
-        //logger.info("UPDATE: {}", updateCQL);
+        logger.info("CREATE: {}", createCQL);
+        logger.info("UPDATE: {}", updateCQL);
 
     }
 
