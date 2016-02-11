@@ -101,6 +101,22 @@ public class MultiRowColumnIteratorTest {
                 return ConsistencyLevel.CL_QUORUM;
             }
 
+            @Override
+            public com.datastax.driver.core.ConsistencyLevel getDataStaxReadCl() {
+                return com.datastax.driver.core.ConsistencyLevel.LOCAL_ONE;
+            }
+
+            @Override
+            public com.datastax.driver.core.ConsistencyLevel getDataStaxReadConsistentCl() {
+                return com.datastax.driver.core.ConsistencyLevel.ALL;
+            }
+
+
+            @Override
+            public com.datastax.driver.core.ConsistencyLevel getDataStaxWriteCl() {
+                return com.datastax.driver.core.ConsistencyLevel.QUORUM;
+            }
+
 
             @Override
             public int[] getShardSettings() {

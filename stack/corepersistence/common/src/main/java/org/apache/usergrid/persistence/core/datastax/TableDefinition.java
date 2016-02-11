@@ -53,7 +53,8 @@ public class TableDefinition {
 
 
     private final String tableName;
-    private final Collection<String> primaryKeys;
+    private final Collection<String> partitionKeys;
+    private final Collection<String> columnKeys;
     private final Map<String, String> columns;
     private final CacheOption cacheOption;
     private final Map<String, Object> compaction;
@@ -63,18 +64,19 @@ public class TableDefinition {
     private final String gcGraceSeconds;
     private final Map<String, String> clusteringOrder;
 
-    public TableDefinition( final String tableName, final Collection<String> primaryKeys,
-                            final Map<String, String> columns, final CacheOption cacheOption,
-                            final Map<String, String> clusteringOrder){
+    public TableDefinition( final String tableName, final Collection<String> partitionKeys,
+                            final Collection<String> columnKeys, final Map<String, String> columns,
+                            final CacheOption cacheOption, final Map<String, String> clusteringOrder){
 
         Preconditions.checkNotNull(tableName, "Table name cannot be null");
-        Preconditions.checkNotNull(primaryKeys, "Primary Key(s) cannot be null");
+        Preconditions.checkNotNull(partitionKeys, "Primary Key(s) cannot be null");
         Preconditions.checkNotNull(columns, "Columns cannot be null");
         Preconditions.checkNotNull(cacheOption, "CacheOption cannot be null");
 
 
         this.tableName = tableName;
-        this.primaryKeys = primaryKeys;
+        this.partitionKeys = partitionKeys;
+        this.columnKeys = columnKeys;
         this.columns = columns;
         this.cacheOption = cacheOption;
         this.clusteringOrder = clusteringOrder;
@@ -97,8 +99,12 @@ public class TableDefinition {
         return tableName;
     }
 
-    public Collection<String> getPrimaryKeys() {
-        return primaryKeys;
+    public Collection<String> getPartitionKeys() {
+        return partitionKeys;
+    }
+
+    public Collection<String> getColumnKeys() {
+        return columnKeys;
     }
 
     public Map<String, String> getColumns() {

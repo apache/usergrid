@@ -41,6 +41,12 @@ public class CassandraConfigImpl implements CassandraConfig {
     private int[] shardSettings;
     private ConsistencyLevel consistentCl;
 
+    // DataStax driver's CL
+    private com.datastax.driver.core.ConsistencyLevel dataStaxReadCl;
+    private com.datastax.driver.core.ConsistencyLevel dataStaxWriteCl;
+    private com.datastax.driver.core.ConsistencyLevel dataStaxReadConsistentCl;
+
+
 
     @Inject
     public CassandraConfigImpl( final CassandraFig cassandraFig ) {
@@ -52,6 +58,12 @@ public class CassandraConfigImpl implements CassandraConfig {
         this.shardSettings = parseShardSettings( cassandraFig.getShardValues() );
 
         this.consistentCl = ConsistencyLevel.valueOf(cassandraFig.getAstyanaxConsistentReadCL());
+
+        this.dataStaxReadCl = com.datastax.driver.core.ConsistencyLevel.valueOf( cassandraFig.getReadCl());
+
+        this.dataStaxReadConsistentCl = com.datastax.driver.core.ConsistencyLevel.valueOf( cassandraFig.getReadCl());
+
+        this.dataStaxWriteCl = com.datastax.driver.core.ConsistencyLevel.valueOf( cassandraFig.getWriteCl() );
 
         //add the listeners to update the values
         cassandraFig.addPropertyChangeListener( new PropertyChangeListener() {
@@ -87,6 +99,21 @@ public class CassandraConfigImpl implements CassandraConfig {
     @Override
     public ConsistencyLevel getWriteCL() {
         return writeCl;
+    }
+
+    @Override
+    public com.datastax.driver.core.ConsistencyLevel getDataStaxReadCl() {
+        return dataStaxReadCl;
+    }
+
+    @Override
+    public com.datastax.driver.core.ConsistencyLevel getDataStaxWriteCl() {
+        return dataStaxWriteCl;
+    }
+
+    @Override
+    public com.datastax.driver.core.ConsistencyLevel getDataStaxReadConsistentCl() {
+        return dataStaxReadConsistentCl;
     }
 
 
