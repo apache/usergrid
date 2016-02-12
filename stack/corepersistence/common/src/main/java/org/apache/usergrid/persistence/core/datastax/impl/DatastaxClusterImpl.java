@@ -24,6 +24,7 @@ import com.datastax.driver.core.policies.LoadBalancingPolicy;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,18 +99,17 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             cluster.getConfiguration().getPoolingOptions().getIdleTimeoutSeconds(),
             cluster.getConfiguration().getPoolingOptions().getPoolTimeoutMillis() / 1000);
 
-
-
-
-
+        createOrUpdateKeyspace();
 
     }
 
+    @Override
     public Cluster getCluster(){
 
         return cluster;
     }
 
+    @Override
     public Session getClusterSession(){
 
         if ( clusterSession == null || clusterSession.isClosed() ){
@@ -119,13 +119,63 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         return clusterSession;
     }
 
+    @Override
     public Session getApplicationSession(){
 
         if ( applicationSession == null || applicationSession.isClosed() ){
-            applicationSession = cluster.connect( "\""+cassandraFig.getApplicationKeyspace()+"\"" );
+            applicationSession = cluster.connect( CQLUtils.quote(cassandraFig.getApplicationKeyspace() ) );
         }
         return applicationSession;
     }
 
+    private void createOrUpdateKeyspace() throws Exception {
+
+        clusterSession = getClusterSession();
+
+        final String createApplicationKeyspace = String.format(
+            "CREATE KEYSPACE IF NOT EXISTS \"%s\" WITH replication = %s",
+            cassandraFig.getApplicationKeyspace(),
+            CQLUtils.getFormattedReplication( cassandraFig.getStrategy(), cassandraFig.getStrategyOptions() )
+
+        );
+
+        final String updateApplicationKeyspace = String.format(
+            "ALTER KEYSPACE \"%s\" WITH replication = %s",
+            cassandraFig.getApplicationKeyspace(),
+            CQLUtils.getFormattedReplication( cassandraFig.getStrategy(), cassandraFig.getStrategyOptions() )
+        );
+
+        logger.info("Creating application keyspace with the following CQL: {}", createApplicationKeyspace);
+        clusterSession.execute(createApplicationKeyspace);
+        logger.info("Updating application keyspace with the following CQL: {}", updateApplicationKeyspace);
+        clusterSession.executeAsync(updateApplicationKeyspace);
+
+        // this session pool is only used when running database setup so close it when finished to clear resources
+        clusterSession.close();
+
+        waitForSchemaAgreement();
+    }
+
+    /**
+     * Wait until all Cassandra nodes agree on the schema.  Sleeps 100ms between checks.
+     *
+     */
+    private void waitForSchemaAgreement() {
+
+        while ( true ) {
+
+            if( cluster.getMetadata().checkSchemaAgreement() ){
+                return;
+            }
+
+            //sleep and try it again
+            try {
+                Thread.sleep( 100 );
+            }
+            catch ( InterruptedException e ) {
+                //swallow
+            }
+        }
+    }
 
 }
