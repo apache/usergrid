@@ -147,7 +147,7 @@ public class MigrationManagerImpl implements MigrationManager {
         logger.info("Creating application keyspace with the following CQL: {}", createApplicationKeyspace);
         clusterSession.execute(createApplicationKeyspace);
         logger.info("Updating application keyspace with the following CQL: {}", updateApplicationKeyspace);
-        clusterSession.execute(updateApplicationKeyspace);
+        clusterSession.executeAsync(updateApplicationKeyspace);
 
         // this session pool is only used when running database setup so close it when finished to clear resources
         clusterSession.close();

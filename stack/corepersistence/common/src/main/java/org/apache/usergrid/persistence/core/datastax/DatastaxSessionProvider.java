@@ -22,7 +22,9 @@ package org.apache.usergrid.persistence.core.datastax;
 import com.datastax.driver.core.Session;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.Singleton;
 
+@Singleton
 public class DataStaxSessionProvider implements Provider<Session> {
 
     private final DataStaxCluster dataStaxCluster;
