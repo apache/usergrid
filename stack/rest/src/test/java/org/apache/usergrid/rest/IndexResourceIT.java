@@ -93,7 +93,9 @@ public class IndexResourceIT extends AbstractRestIT {
         HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
             .credentials( "superuser", "superpassword" ).build();
 
-        result = res.register( feature ).request().get( ApiResponse.class );
+        result = res.register( feature ).request()
+                .accept( MediaType.APPLICATION_JSON )
+                .get( ApiResponse.class );
 
         assertNotNull( result );
         assertEquals(status,result.getProperties().get("jobId").toString());

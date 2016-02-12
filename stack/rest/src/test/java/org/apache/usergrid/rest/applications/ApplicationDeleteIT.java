@@ -77,6 +77,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .request()
+            .accept(MediaType.APPLICATION_JSON)
             .delete();
 
         Assert.assertEquals("Error must be 400", 400, response.getStatus() );
@@ -86,6 +87,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .queryParam("access_token", orgAdminToken.getAccessToken() )
             .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .request()
+            .accept(MediaType.APPLICATION_JSON)
             .delete();
 
         // test that we can no longer get the app
@@ -95,6 +97,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
                 .org(orgName).apps().app(appToDeleteName).getTarget()
                 .queryParam("access_token", orgAdminToken.getAccessToken())
                 .request()
+                .accept(MediaType.APPLICATION_JSON)
                 .get(ApiResponse.class);
 
             fail("Must not be able to get deleted app");
@@ -109,6 +112,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         try {
             clientSetup.getRestClient().org( orgName ).app( appToDeleteName ).getTarget()
                        .queryParam( "access_token", orgAdminToken.getAccessToken() ).request()
+                        .accept(MediaType.APPLICATION_JSON)
                        .get( ApiResponse.class );
 
             fail( "Must not be able to get deleted app" );
@@ -127,6 +131,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
                 .org(orgName).app(appToDeleteName).collection("things").getTarget()
                 .queryParam("access_token", orgAdminToken.getAccessToken() )
                 .request()
+                .accept(MediaType.APPLICATION_JSON)
                 .get( ApiResponse.class );
 
             fail("Must not be able to get deleted app's collection");
@@ -145,6 +150,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
                 .org(orgName).app(appToDeleteName).collection("things").entity( entityId ).getTarget()
                 .queryParam( "access_token", orgAdminToken.getAccessToken())
                 .request()
+                .accept(MediaType.APPLICATION_JSON)
                 .get( ApiResponse.class );
 
             fail("Must not be able to get deleted app entity");
@@ -177,6 +183,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .getTarget().queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
             .request()
+            .accept(MediaType.APPLICATION_JSON)
             .delete();
         Assert.assertEquals( "Error must be 404", 404, response1.getStatus() );
 
@@ -186,6 +193,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .management().orgs().org( orgName ).app().getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .request()
+            .accept(MediaType.APPLICATION_JSON)
             .post( javax.ws.rs.client.Entity.json( new Application( appToDeleteName ) ), ApiResponse.class );
 
         Assert.assertEquals("Must be able to create app with same name as deleted app",
@@ -225,6 +233,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .request()
+            .accept( MediaType.APPLICATION_JSON )
             .delete();
 
         refreshIndex();
@@ -238,6 +247,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .request()
+            .accept( MediaType.APPLICATION_JSON )
             .put( javax.ws.rs.client.Entity.entity( "", MediaType.APPLICATION_JSON )); // must send body
 
         refreshIndex();
@@ -268,6 +278,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .org( orgName ).app( appToDeleteName ).collection( "things" ).entity( entityId ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .request()
+            .accept( MediaType.APPLICATION_JSON )
             .get( ApiResponse.class );
         Assert.assertEquals( entityId, entityResponse.getEntities().get(0).getUuid() );
 
@@ -277,6 +288,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .org( orgName ).app( appToDeleteName ).collection( "things" ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .request()
+            .accept( MediaType.APPLICATION_JSON )
             .get( ApiResponse.class );
         Assert.assertEquals( entities.size(), collectionReponse.getEntityCount() );
     }
@@ -305,6 +317,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
             .request()
+            .accept(MediaType.APPLICATION_JSON)
             .delete();
 
         // create new app with same name
@@ -317,6 +330,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .request()
+            .accept(MediaType.APPLICATION_JSON)
             .put( javax.ws.rs.client.Entity.entity( "", MediaType.TEXT_PLAIN ) );// must send body with put
 
         Assert.assertEquals( 409, response.getStatus() );
@@ -347,6 +361,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
             .request()
+            .accept(MediaType.APPLICATION_JSON)
             .delete();
 
         // create new app with same name
@@ -360,6 +375,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
             .request()
+            .accept(MediaType.APPLICATION_JSON)
             .delete();
 
         Assert.assertEquals( 409, response.getStatus() );
@@ -373,6 +389,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .management().orgs().org( orgName ).app().getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .request()
+            .accept(MediaType.APPLICATION_JSON)
             .post( javax.ws.rs.client.Entity.json(new Application( appName )), ApiResponse.class );
         UUID appId = appCreateResponse.getEntities().get(0).getUuid();
 
@@ -390,6 +407,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
                 .org(orgName).app( appName ).collection("things").getTarget()
                 .queryParam("access_token", orgAdminToken.getAccessToken())
                 .request()
+                .accept(MediaType.APPLICATION_JSON)
                 .post( javax.ws.rs.client.Entity.json(entity), ApiResponse.class );
 
             entities.add( createResponse.getEntities().get(0) );

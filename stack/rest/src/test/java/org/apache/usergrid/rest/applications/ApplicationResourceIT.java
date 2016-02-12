@@ -16,19 +16,16 @@
  */
 package org.apache.usergrid.rest.applications;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import junit.framework.Assert;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.shiro.codec.Base64;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.endpoints.mgmt.OrganizationResource;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 import org.apache.usergrid.utils.MapUtils;
 import org.glassfish.jersey.client.ClientProperties;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,6 +88,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
             .queryParam("client_id", appCredentials.getClientId())
             .queryParam("client_secret", appCredentials.getClientSecret())
             .request()
+            .accept(MediaType.APPLICATION_JSON)
             .get(ApiResponse.class);
         //assert that a valid response is returned without error
         assertNotNull(apiResponse);
@@ -148,7 +146,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         // create new app
 
-        Map<String, String> data = new HashMap<String, String>();
+        Map<String, String> data = new HashMap<>();
         data.put( "name", appName );
 
         ApiResponse appResponse = pathResource( "management/orgs/" + orgName + "/applications" )
@@ -209,13 +207,15 @@ public class ApplicationResourceIT extends AbstractRestIT {
         //retrieve the credentials
         Credentials orgCredentials = getOrgCredentials();
 
-        //retrieve the users collection without setting the "Accept" header
+        //retrieve the users collection without giving an "Accept" header value
+        // need the accept("") because without it we get a default Accept header added
         Invocation.Builder builder = this.app().collection( "users" ).getTarget( false )
             //Add the org credentials to the query
             .queryParam( "grant_type", "client_credentials" )
             .queryParam("client_id", orgCredentials.getClientId() )
             .queryParam( "client_secret", orgCredentials.getClientSecret() )
-            .request();
+            .request()
+            .accept("");
 
         ApiResponse apiResponse = builder.get(ApiResponse.class);
         Collection users = new Collection(apiResponse);
@@ -758,6 +758,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         //retrieve the users collection for the application using the new token
         ApiResponse response = this.app().collection( "users" ).getTarget( true, token ).request()
+            .accept(MediaType.APPLICATION_JSON)
             .get(ApiResponse.class);
         //assert that we did not receive an error
         assertNull(response.getError());
@@ -786,6 +787,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         //retrieve the users collection for the application using the new token
         ApiResponse response = this.app().collection( "users" ).getTarget( true, token ).request()
+            .accept(MediaType.APPLICATION_JSON)
             .get( ApiResponse.class);
         //assert that we did not receive an error
         assertNull(response.getError());

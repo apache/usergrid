@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest.test.resource.endpoints;
 
 
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
@@ -44,8 +43,6 @@ import java.util.Set;
  * The NamedResource stores the parent of the class, the context in which the class operates and then Name of this resource
  */
 public class NamedResource implements UrlResource {
-
-    public static String SLASH = "/";
 
     protected final String name;
     protected final ClientContext context;
@@ -175,9 +172,6 @@ public class NamedResource implements UrlResource {
     /**
      * Need to refactor all instances of tokens to either be passed in or manually set during the test.
      * There isn't any reason we would want a rest forwarding framework to set something on behave of the user.
-     *
-     * @param map
-     * @return
      */
     //For edge cases like Organizations and Tokens
     public ApiResponse post(Map map) {
@@ -280,15 +274,19 @@ public class NamedResource implements UrlResource {
 
     //For edge cases like Organizations and Tokens without any payload
     public <T> T get(Class<T> type, boolean useToken) {
-        return get(type, null, useToken);
+        return get(type, null, useToken, MediaType.APPLICATION_JSON);
     }
 
 
     public <T> T get(Class<T> type, QueryParameters queryParameters) {
-        return get(type, queryParameters, true);
+        return get(type, queryParameters, true, MediaType.APPLICATION_JSON);
     }
 
     public <T> T get(Class<T> type, QueryParameters queryParameters, boolean useToken) {
+        return get(type, queryParameters, useToken, MediaType.APPLICATION_JSON);
+    }
+
+    public <T> T get(Class<T> type, QueryParameters queryParameters, boolean useToken, String accept) {
 
         WebTarget resource = getTarget(useToken);
         if (queryParameters != null) {
@@ -297,7 +295,7 @@ public class NamedResource implements UrlResource {
 
         GenericType<T> gt = new GenericType<>((Class) type);
         return resource.request()
-            .accept(MediaType.APPLICATION_JSON)
+            .accept(accept)
             .get(gt);
     }
 
@@ -307,7 +305,7 @@ public class NamedResource implements UrlResource {
 
     public ApiResponse post(boolean useToken, MultiPart multiPartForm) {
         WebTarget resource = getTarget(useToken);
-        return resource.request().post(
+        return resource.request().accept(MediaType.APPLICATION_JSON).post(
             javax.ws.rs.client.Entity.entity(multiPartForm, multiPartForm.getMediaType()), ApiResponse.class);
     }
 
@@ -317,7 +315,7 @@ public class NamedResource implements UrlResource {
 
     public ApiResponse put(boolean useToken, byte[] data, MediaType type) {
         WebTarget resource = getTarget(useToken);
-        return resource.request().put(
+        return resource.request().accept(MediaType.APPLICATION_JSON).put(
             javax.ws.rs.client.Entity.entity(data, type), ApiResponse.class);
     }
 
@@ -327,7 +325,7 @@ public class NamedResource implements UrlResource {
 
     public ApiResponse put(boolean useToken, FormDataMultiPart multiPartForm) {
         WebTarget resource = getTarget(useToken);
-        return resource.request().put(
+        return resource.request().accept(MediaType.APPLICATION_JSON).put(
             javax.ws.rs.client.Entity.entity(multiPartForm, multiPartForm.getMediaType()), ApiResponse.class);
     }
 
@@ -335,13 +333,17 @@ public class NamedResource implements UrlResource {
         return put(true, multiPartForm);
     }
 
-    public InputStream getAssetAsStream(boolean useToken) {
+    public InputStream getAssetAsStream(boolean useToken, MediaType acceptType) {
         WebTarget resource = getTarget(useToken);
-        return resource.request().accept(MediaType.APPLICATION_OCTET_STREAM_TYPE).get(InputStream.class);
+        return resource.request().accept(acceptType).get(InputStream.class);
+    }
+
+    public InputStream getAssetAsStream(boolean useToken) {
+        return getAssetAsStream(useToken, MediaType.APPLICATION_OCTET_STREAM_TYPE);
     }
 
     public InputStream getAssetAsStream() {
-        return getAssetAsStream(true);
+        return getAssetAsStream(true, MediaType.APPLICATION_OCTET_STREAM_TYPE);
     }
 
     public ApiResponse delete() {
@@ -349,7 +351,7 @@ public class NamedResource implements UrlResource {
     }
 
     public ApiResponse delete(boolean useToken) {
-        return getTarget(useToken).request().delete(ApiResponse.class);
+        return getTarget(useToken).request().accept(MediaType.APPLICATION_JSON).delete(ApiResponse.class);
     }
 
     public ApiResponse delete(boolean useToken, QueryParameters queryParameters) {
@@ -358,7 +360,7 @@ public class NamedResource implements UrlResource {
         if (queryParameters != null) {
             resource = addParametersToResource(resource, queryParameters);
         }
-        return resource.request().delete(ApiResponse.class);
+        return resource.request().accept(MediaType.APPLICATION_JSON).delete(ApiResponse.class);
     }
 
     public NamedResource getSubResource(String path) {

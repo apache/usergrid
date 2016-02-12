@@ -196,6 +196,7 @@ public class RegistrationIT extends AbstractRestIT {
             this.management().orgs().org( this.clientSetup.getOrganizationName() ).users().getTarget( false )
                 .queryParam( "access_token", token )
                 .request()
+                .accept(MediaType.APPLICATION_JSON)
                 .get( String.class );
 
             //There is nothing in this test that should indicate why an admin access wouldn't be allowed.

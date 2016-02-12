@@ -33,6 +33,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.NotAcceptableException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
@@ -128,7 +130,7 @@ public class AssetResourceIT extends AbstractRestIT {
         FormDataMultiPart form = new FormDataMultiPart()
             //TODO:Fix name field in assets, i mean what are they supposed to do?
             .field( "name", "verifyMetadataChangedTest" )
-            .field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+            .field( "file", data, MediaType.valueOf("image/jpeg") );
         ApiResponse putResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
         this.refreshIndex();
 
@@ -173,7 +175,7 @@ public class AssetResourceIT extends AbstractRestIT {
         data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/cassandra_eye.jpg" ) );
         form = new FormDataMultiPart()
             .field( "name", "verifyMetadataChangedTest" )
-            .field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
+            .field( "file", data, MediaType.valueOf("image/jpeg") );
         putResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
         this.refreshIndex();
 
@@ -412,5 +414,178 @@ public class AssetResourceIT extends AbstractRestIT {
         InputStream assetIs = pathResource( getOrgAppPath( "foos/" + uuid ) ).getAssetAsStream();
         byte[] foundData = IOUtils.toByteArray(assetIs);
         assertEquals(7979, foundData.length);
+    }
+
+    @Test
+    public void assetErrors() throws Exception {
+
+        this.refreshIndex();
+
+        String collectionName = "assetErrorTests";
+        MediaType imageJpegMediaType = MediaType.valueOf("image/jpeg");
+
+        Map<String, String> payload = hashMap("name", "cassandra_eye.jpg");
+        ApiResponse postResponse = pathResource( getOrgAppPath(collectionName)).post(payload);
+        final UUID uuid = postResponse.getEntities().get(0).getUuid();
+        assertNotNull(uuid);
+
+        this.refreshIndex();
+
+        // try to retrieve entity as text/html
+        try {
+            pathResource(getOrgAppPath(collectionName + "/" + uuid))
+                    .get(ApiResponse.class, null, true, MediaType.TEXT_HTML);
+            assertFalse("Should have thrown NotAcceptableException", true);
+        }
+        catch (NotAcceptableException nae) {
+            // happy path
+        }
+        catch (Exception e) {
+            assertFalse("Should have thrown NotAcceptableException, caught " + e.getClass().getName(), true);
+        }
+
+        byte[] data = IOUtils.toByteArray(this.getClass().getResourceAsStream("/cassandra_eye.jpg"));
+        FormDataMultiPart form = new FormDataMultiPart()
+                .field("name", "bogus")
+                .field("file", data, imageJpegMediaType);
+
+        // try bogus PUT to collection (PUT /collection)
+        ApiResponse bogusPutResponse = pathResource(getOrgAppPath(collectionName)).put(form);
+        assertEquals("PUT with invalid URL should return IllegalArgumentException",
+                bogusPutResponse.getException(), "java.lang.IllegalArgumentException");
+
+        // try bogus POST to collection (POST /collection/entity/somethingelse)
+        ApiResponse bogusPostResponse = pathResource(getOrgAppPath(collectionName + "/" + uuid + "/whatever"))
+                .put(form);
+        assertEquals("POST with invalid URL should return IllegalArgumentException", bogusPostResponse.getException(), "java.lang.IllegalArgumentException");
+
+        form = new FormDataMultiPart()
+                .field("name", "validImage")
+                .field("file", data, imageJpegMediaType);
+
+        // good PUT
+        ApiResponse goodPutResponse = pathResource(getOrgAppPath(collectionName + "/" + uuid))
+                .put(form);
+        assertNull(goodPutResponse.getError());
+
+        // good POST #1
+        ApiResponse goodPostResponse = pathResource(getOrgAppPath(collectionName + "/" + uuid))
+                .post(form);
+        assertNull(goodPostResponse.getError());
+
+        // good POST #2 (creates entity on fly)
+        ApiResponse goodPostResponse2 = pathResource(getOrgAppPath(collectionName))
+                .post(form);
+        assertNull(goodPostResponse2.getError());
+
+        this.refreshIndex();
+
+        // test that asset GET /coll and GET /coll/entity/whatever are rejected
+        try {
+            pathResource(getOrgAppPath(collectionName + "/" + uuid + "/whatever"))
+                    .get(ApiResponse.class, null, true, MediaType.APPLICATION_OCTET_STREAM);
+            assertFalse("Should have thrown NotFoundException", true);
+        }
+        catch (NotFoundException nfe) {
+            // happy path
+        }
+        catch (Exception e) {
+            assertFalse("Should have thrown NotFoundException, caught " + e.getClass().getName(), true);
+        }
+
+        try {
+            pathResource(getOrgAppPath(collectionName))
+                    .get(ApiResponse.class, null, true, MediaType.APPLICATION_OCTET_STREAM);
+            assertFalse("Should have thrown NotFoundException", true);
+        }
+        catch (NotFoundException nfe) {
+            // happy path
+        }
+        catch (Exception e) {
+            assertFalse("Should have thrown NotFoundException, caught " + e.getClass().getName(), true);
+        }
+
+        // test that entity not found on asset retrieval returns 404
+        try {
+            pathResource(getOrgAppPath(collectionName + "/doesntExist"))
+                    .get(ApiResponse.class, null, true, MediaType.APPLICATION_OCTET_STREAM);
+            assertFalse("Should have thrown NotFoundException", true);
+        }
+        catch (NotFoundException nfe) {
+            // happy path
+        }
+        catch (Exception e) {
+            assertFalse("Should have thrown NotFoundException, caught " + e.getClass().getName(), true);
+        }
+
+        // test that no asset for existing entity on asset retrieval returns 404
+        Map<String, String> noAssetPayload = hashMap("name", "noAsset");
+        postResponse = pathResource( getOrgAppPath(collectionName)).post(noAssetPayload);
+        final UUID noAssetUuid = postResponse.getEntities().get(0).getUuid();
+        assertNotNull(noAssetUuid);
+
+        this.refreshIndex();
+
+        try {
+            pathResource(getOrgAppPath(collectionName + "/" + noAssetUuid))
+                    .get(ApiResponse.class, null, true, MediaType.APPLICATION_JSON);
+            // should retrieve entity successfully
+        }
+        catch (Exception e) {
+            assertFalse("Should not have thrown an exception", true);
+        }
+
+        try {
+            pathResource(getOrgAppPath(collectionName + "/" + noAssetUuid))
+                    .get(ApiResponse.class, null, true, MediaType.APPLICATION_OCTET_STREAM);
+            assertFalse("Should have thrown NotFoundException", true);
+        }
+        catch (NotFoundException nfe) {
+            // happy path
+        }
+        catch (Exception e) {
+            assertFalse("Should have thrown NotFoundException, caught " + e.getClass().getName(), true);
+        }
+
+        // test asset content type incompatible with accept header
+        // (image/jpeg or image/* or application/octet-stream can retrieve a jpg)
+        try {
+            pathResource(getOrgAppPath(collectionName + "/" + uuid)).getAssetAsStream();
+            // happy path
+        }
+        catch (Exception e) {
+            assertFalse("Should not have thrown exception, caught " + e.getClass().getName(), true);
+        }
+
+        try {
+            pathResource(getOrgAppPath(collectionName + "/" + uuid))
+                    .getAssetAsStream(true, imageJpegMediaType);
+            // happy path
+        }
+        catch (Exception e) {
+            assertFalse("Should not have thrown exception, caught " + e.getClass().getName(), true);
+        }
+
+        try {
+            pathResource(getOrgAppPath(collectionName + "/" + uuid))
+                    .getAssetAsStream(true, MediaType.valueOf("image/*"));
+            // happy path
+        }
+        catch (Exception e) {
+            assertFalse("Should not have thrown exception, caught " + e.getClass().getName(), true);
+        }
+
+        try {
+            pathResource(getOrgAppPath(collectionName + "/" + uuid))
+                    .getAssetAsStream(true, MediaType.TEXT_PLAIN_TYPE);
+            assertFalse("Should have thrown NotAcceptableException", true);
+        }
+        catch (NotAcceptableException nae) {
+            // happy path
+        }
+        catch (Exception e) {
+            assertFalse("Should have thrown NotAcceptableException, caught " + e.getClass().getName(), true);
+        }
+
     }
 }

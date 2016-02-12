@@ -32,6 +32,7 @@ import org.apache.usergrid.rest.test.resource.model.User;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.glassfish.jersey.client.ClientResponse;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.ws.rs.client.Invocation;
@@ -216,7 +217,8 @@ public class ContentTypeResourceIT extends AbstractRestIT {
 
         Invocation.Builder builder = app().collection( "games" ).getTarget()
             .queryParam( "access_token", this.getAdminToken().getAccessToken() )
-            .request();
+            .request()
+            .accept(MediaType.APPLICATION_JSON);
 
         Response clientResponse = builder.post(
             javax.ws.rs.client.Entity.json( new HashMap() {{ put( "name", "bar2" ); }} ), Response.class );
@@ -229,16 +231,18 @@ public class ContentTypeResourceIT extends AbstractRestIT {
         assertEquals(1, contentType.size());
         assertEquals(MediaType.APPLICATION_JSON, contentType.get(0));
 
-        //do the get with no content type, it should get set to application/json
-
+        // set Accept header blank -- should default to application/json
         builder = app().collection( "games" ).getTarget()
             .queryParam( "access_token", this.getAdminToken().getAccessToken() )
-            .request();
+            .request()
+            .accept("");
 
-        HttpGet get = new HttpGet( String.format("/%s/%s/games",
-            this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+        // not used
+//        HttpGet get = new HttpGet( String.format("/%s/%s/games",
+//            this.clientSetup.getOrganization().getName(), this.clientSetup.getAppName()) );
+//
+//        get.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken() );
 
-        get.setHeader( HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken() );
         clientResponse = builder.get( Response.class );
 
         assertEquals(200, clientResponse.getStatus());

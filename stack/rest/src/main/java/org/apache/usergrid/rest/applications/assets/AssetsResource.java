@@ -89,12 +89,13 @@ public class AssetsResource extends ServiceResource {
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executeGet( @Context UriInfo ui,
+                                   @Context HttpHeaders headers,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
         if (logger.isTraceEnabled()) {
             logger.trace("In AssetsResource.executeGet with ui: {} and callback: {}", ui, callback);
         }
-        return super.executeGet( ui, callback );
+        return super.executeGet( ui, headers, callback );
     }
 
 
