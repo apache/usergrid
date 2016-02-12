@@ -94,7 +94,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         }
 
         this.cluster = datastaxCluster.build();
-        logger.info("Initialized datastax cluster client. Hosts={}, Idle Timeout={}s,  Request Timeout={}s",
+        logger.info("Initialized datastax cluster client. Hosts={}, Idle Timeout={}s,  Pool Timeout={}s",
             cluster.getMetadata().getAllHosts().toString(),
             cluster.getConfiguration().getPoolingOptions().getIdleTimeoutSeconds(),
             cluster.getConfiguration().getPoolingOptions().getPoolTimeoutMillis() / 1000);
