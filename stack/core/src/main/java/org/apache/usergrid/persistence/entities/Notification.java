@@ -90,7 +90,7 @@ public class Notification extends TypedEntity {
     @EntityProperty
     protected String priority;
 
-    /** Error messages that may have been encounted by Usergrid when trying to process the notification */
+    /** Error messages that may have been encountered by Usergrid when trying to process the notification */
     @EntityProperty
     protected String errorMessage;
 

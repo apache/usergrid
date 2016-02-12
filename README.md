@@ -1,31 +1,20 @@
 Apache Usergrid
 ===============
 
-__NOTICE__: This master branch represents active and ongoing development of the Usergrid team.  This branch represents Usergrid 2.x which requires some new components. In addition to a Cassandra cluster, Usergrid 2.x also requires an ElasticSearch cluster and a distributed Queue system (currently only AWS SQS is supported). 
-
-Prerequisites
--------------
-
-* Java 8 - Java7 will not work
-* ElasticSearch 1.4+
-* Cassandra 2.0+
-
 Overview
 --------
 
-**Apache Usergrid is a multi-tenant Backend-as-a-Service stack for web & mobile applications, based on RESTful APIs.**
+**Usergrid is a multi-tenant Backend-as-a-Service stack for web & mobile apps, based on RESTful APIs.**
 
 ## Contributing
 
-We accept all contributions via our GitHub, so you can fork our repo (apache/usergrid) and then submit a PR back to us for approval. For larger PRs you'll need to have an ICLA form on file with Apache. For more information see our [Contribution Workflow Policy](https://cwiki.apache.org/confluence/display/usergrid/Usergrid+Contribution+Workflow), and specifically our [External Contributors Guide](https://cwiki.apache.org/confluence/display/usergrid/Usergrid+External+Contributors+Guide).
+We accept all contributions via our GitHub, so you can fork our repo (apache/usergrid) and then submit a PR back to us for approval. For larger PRs you'll need to have an ICLA form on file with Apache. For more information see [How to Contribute Code & Docs](http://usergrid.apache.org/docs/reference/contribute-code.html).
 
 ## Build awesome apps with Usergrid!
 
 Apache Usergrid provides all code necessary to build and power modern mobile applications.  This includes the server stack, administrative portal website, SDKs in most popular languages, as well as command line tools. 
 
-Look for much more detailed README files in their corresponding subdirectories, or check out [our website](http://usergrid.apache.org/) for more info.
-
-* The server-side stack, a Java 7 + Cassandra codebase that powers all of the features, is located under [`/stack`](stack). You can install dependencies and compile it with maven. See [stack/README.md](stack#requirements) for instructions.
+* The server-side stack, a Java 8 + Cassandra + ElasticSearch codebase that powers all of the features, is located under [`/stack`](stack). You can install dependencies and compile it with maven. See [stack/README.md](stack#requirements) for instructions.
 
 * The admin portal is a pure HTML5+JavaScript app allowing you to register developers and let them manage their apps in a multi-tenant cluster. Located under [`/portal`](portal)
 
@@ -35,5 +24,5 @@ Look for much more detailed README files in their corresponding subdirectories, 
 
 ## For more information
 
-See the [Apache Usergrid web site](http://usergrid.apache.org/).
+See the Apache Usergrid [web site](http://usergrid.apache.org) and [documentation](http://usergrid.apache.org).
 

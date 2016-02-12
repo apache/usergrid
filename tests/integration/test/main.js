@@ -25,7 +25,7 @@ var async = require('async');
 var request = require('request');
 var colors = require('colors');
 
-describe("baas 2.0 tests", function() {
+describe("** Usergrid REST Integration Tests **", function() {
     before(function(done) {
         console.log("    setup");
         setup.do(function(err) {
@@ -54,8 +54,14 @@ describe("baas 2.0 tests", function() {
     describe("queries", function() {
         require('./queries/integerComparison.js').test();
     });
+    describe("groups", function() {
+        require("./groups/groups.js").test();
+    });
+    describe("notifications", function() {
+        require("./notifications/notifications.js").test();
+    });
     after(function(done) {
-        this.timeout(40000);
+        this.timeout(180000);
         console.log("    teardown");
         teardown.do(function(err) {
             should(err).be.null;

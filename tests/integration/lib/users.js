@@ -45,4 +45,4 @@ module.exports.get = function(username, cb) {
         var error = response.statusCode === 404 ? null : responseLib.getError(err, response);
         cb(error, error ? null : response.statusCode === 404 ? null : json.entities.pop());
     })
-}
+};

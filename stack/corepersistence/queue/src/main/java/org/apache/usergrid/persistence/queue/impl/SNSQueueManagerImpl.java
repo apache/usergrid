@@ -564,7 +564,6 @@ public class SNSQueueManagerImpl implements QueueManager {
             logger.error( "SQS client is null, perhaps it failed to initialize successfully" );
             return;
         }
-
         final String stringBody = toString( body );
 
         String url = getReadQueue().getUrl();

@@ -1,17 +1,29 @@
-# Documentation Overview
+# Getting Started
 
-The Usergrid documentation is written for a couple of distinctly different audiences:
-
-* __Application Developer__: this is you if you are a Javascript, iOS, Android, Java or other developer who wants to build an app that uses the Usergrid APIs for data storage, user management, authentication, etc. __Most of our docs are written for application developers__ so browse the left side-bar and work your way down the topics list.
+The Usergrid documentation is written for a couple of distinctly different audiences.
 
 
-* __Deployment/Operations Engineer__: this is for you if you are the person who will be installing Usergrid, setting up the required Cassandra database and other things that Usergrid needs. Currently, we have limited docs for installation, deployment and maintenance of Usergrid:
-    * [Deploying to Tomcat](../installation/ug1-deploy-to-tomcat): How to build and deploy Usergrid to Tomcat and Cassandra.
-    * [Launcher Quick Start](../installation/ug1-launcher-quick-start): How to build and run Usergrid via the Usergrid Launcher.
-    
-    
-* __Open Source Contributor__: How to "give back" and contribute to Usergrid. Usergrid welcomes code and documentation contributions, GitHub pull-requests, bug reports and suggestions for improvement.  
-    * [How to Contribute Code & Docs](../reference/contribute-code):
+## For Application Developers
+
+Most of the Usergrid docs are written for you. Browse the left side-bar and work your way down the topics list to learn how to get started using Usergrid for data storage, user management, authentication, push notifications and more. 
+
+* A good place to start is [Using Usergrid](../using-usergrid/creating-account.html)
+
+
+## For Deployment and Operations folks
+
+If you are the person who will be installing Usergrid, setting up the required Cassandra database, ElasticSearch and other things that Usergrid needs, then you should probably start here:
+
+* [Usergrid Deployment Guide](../installation/deployment-guide.html)
+  
+   
+## For Open Source contributoes 
+
+If you want to build Usergrid from source-code then start at our [GitHub repo](http://github.com/apache/usergrid). You will find README files there that explain how to build the Stack, the Portal, SDKs and other components.
+
+If you want to contribute new code or documentation to the Usergrid project then this is a good place to start:
+
+* [How to Contribute Code & Docs](../reference/contribute-code.html)
 
 
 

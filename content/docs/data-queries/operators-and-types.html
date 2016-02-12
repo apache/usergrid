@@ -80,19 +80,19 @@
         
           
           
-              <p class="caption"><span class="caption-text">Introduction</span></p>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Getting Started</span></p>
+<p class="caption"><span class="caption-text">Using Usergrid</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/creating-account.html">Creating a Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/using-the-api.html">Using the API</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Data Storage</span></p>
 <ul>
@@ -106,7 +106,10 @@
 <li class="toctree-l1"><a class="reference internal" href="querying-your-data.html">Querying your data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="query-parameters.html">Query parameters &amp; clauses</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Query operators &amp; data types</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#operators">Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#operators">Operators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#precedence">Precedence</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#data-types">Data types</a></li>
 </ul>
 </li>
@@ -188,11 +191,9 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<p class="caption"><span class="caption-text">Installing Usergrid</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/deployment-guide.html">Usergrid 2.1.0 (unreleased) Deployment Guide</a></li>
 </ul>
 <p class="caption"><span class="caption-text">More about Usergrid</span></p>
 <ul>
@@ -300,6 +301,14 @@ query language in Usergrid.</p>
 </td>
     </tr>
     <tr>
+        <td><p>contains</p>
+</td>
+        <td><p>Narrow by contained text</p>
+</td>
+        <td><p>select * where title contains &#8216;tale&#8217;</p>
+</td>
+    </tr>
+    <tr>
         <td><p>and</p>
 </td>
         <td><p>Union of results</p>
@@ -315,15 +324,23 @@ query language in Usergrid.</p>
         <td><p>select * where quantity = &#8216;1000&#8217; or quantity = &#8216;4000&#8217;</p>
 </td>
     </tr>
-    <tr>
-        <td><p>contains</p>
-</td>
-        <td><p>Narrow by contained text</p>
-</td>
-        <td><p>select * where title contains &#8216;tale&#8217;</p>
-</td>
-    </tr>
-</table></div>
+</table><div class="section" id="precedence">
+<h3>Precedence<a class="headerlink" href="#precedence" title="Permalink to this headline">¶</a></h3>
+<p>The operators at the bottom of the above table are the ones with lower
+precedence. When a query is evaluated the comparison operators (=, &gt; ,
+&lt;, &lt;= and &gt;=) will be evaluated first. And next &#8220;not&#8221;, &#8220;contains&#8221; and
+&#8220;or&#8221; will be evaluated and in that order.</p>
+<p>Though they are not shown above, parentheses are allowed and may be used
+to group query expressions.</p>
+<p>For example, given our rules of precedence, these two queries are
+equivalent:</p>
+<div class="highlight-python"><div class="highlight"><pre>select * where age &gt; 6 or size = &#39;large&#39; and color = &#39;tabby&#39;
+
+select * where (age &gt; 6 or size = &#39;large&#39;) and color = &#39;tabby&#39;
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="data-types">
 <h2>Data types<a class="headerlink" href="#data-types" title="Permalink to this headline">¶</a></h2>
 <p>As you develop queries, remember that entity properties each conform to
