@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.core.migration.schema;
 import java.util.Collection;
 
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 
 
 /**
@@ -34,5 +35,5 @@ public interface Migration {
      */
     Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies();
 
-    //Collection<String> getTables();
+    Collection<TableDefinition> getTables();
 }
