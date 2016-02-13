@@ -91,7 +91,7 @@ public class MigrationManagerImpl implements MigrationManager {
                     continue;
                 }
 
-                if (columnFamilies != null && columnFamilies.isEmpty()) {
+                if (columnFamilies != null && !columnFamilies.isEmpty()) {
                     for (MultiTenantColumnFamilyDefinition cf : columnFamilies) {
                         testAndCreateColumnFamilyDef(cf);
                     }
@@ -181,9 +181,6 @@ public class MigrationManagerImpl implements MigrationManager {
         clusterSession.execute(createApplicationKeyspace);
         logger.info("Updating application keyspace with the following CQL: {}", updateApplicationKeyspace);
         clusterSession.executeAsync(updateApplicationKeyspace);
-
-        // this session pool is only used when running database setup so close it when finished to clear resources
-        clusterSession.close();
 
         waitForSchemaAgreement();
     }

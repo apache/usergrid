@@ -18,13 +18,9 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -377,6 +373,12 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                 MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
 
         return Arrays.asList( uniqueLookupCF, uniqueLogCF );
+    }
+
+    @Override
+    public Collection<TableDefinition> getTables() {
+
+        return Collections.emptyList();
     }
 
 

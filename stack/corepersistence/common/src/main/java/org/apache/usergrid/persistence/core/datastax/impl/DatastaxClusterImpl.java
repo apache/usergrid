@@ -150,8 +150,6 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         logger.info("Updating application keyspace with the following CQL: {}", updateApplicationKeyspace);
         clusterSession.executeAsync(updateApplicationKeyspace);
 
-        // this session pool is only used when running database setup so close it when finished to clear resources
-        clusterSession.close();
 
         waitForSchemaAgreement();
     }

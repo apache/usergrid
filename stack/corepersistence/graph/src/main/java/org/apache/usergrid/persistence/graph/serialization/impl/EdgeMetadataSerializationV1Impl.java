@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 
 import org.apache.cassandra.db.marshal.BytesType;
@@ -36,6 +37,7 @@ import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefi
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.StringColumnParser;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -374,6 +376,12 @@ public class EdgeMetadataSerializationV1Impl implements EdgeMetadataSerializatio
     public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
         return Arrays.asList( graphCf( CF_SOURCE_EDGE_TYPES ), graphCf( CF_TARGET_EDGE_TYPES ),
                 graphCf( CF_SOURCE_EDGE_ID_TYPES ), graphCf( CF_TARGET_EDGE_ID_TYPES ) );
+    }
+
+    @Override
+    public Collection<TableDefinition> getTables() {
+
+        return Collections.emptyList();
     }
 
 
