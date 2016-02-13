@@ -49,24 +49,25 @@ public class MapSerializationImpl implements MapSerialization {
     private static final String MAP_ENTRIES_TABLE = CQLUtils.quote("Map_Entries");
     private static final Collection<String> MAP_ENTRIES_PARTITION_KEYS = Collections.singletonList("key");
     private static final Collection<String> MAP_ENTRIES_COLUMN_KEYS = Collections.singletonList("column1");
-    private static final Map<String, String> MAP_ENTRIES_COLUMNS =
-        new HashMap<String, String>() {{
-            put( "key", "blob");
-            put( "column1", "blob");
-            put( "value", "blob"); }};
+    private static final Map<String, DataType.Name> MAP_ENTRIES_COLUMNS =
+        new HashMap<String, DataType.Name>() {{
+            put( "key", DataType.Name.BLOB );
+            put( "column1", DataType.Name.BLOB );
+            put( "value", DataType.Name.BLOB ); }};
     private static final Map<String, String> MAP_ENTRIES_CLUSTERING_ORDER =
-        new HashMap<String, String>(){{ put("column1", "ASC"); }};
+        new HashMap<String, String>(){{ put( "column1", "ASC" ); }};
+
 
     private static final String MAP_KEYS_TABLE = CQLUtils.quote("Map_Keys");
     private static final Collection<String> MAP_KEYS_PARTITION_KEYS = Collections.singletonList("key");
     private static final Collection<String> MAP_KEYS_COLUMN_KEYS = Collections.singletonList("column1");
-    private static final Map<String, String> MAP_KEYS_COLUMNS =
-        new HashMap<String, String>() {{
-            put( "key", "blob");
-            put( "column1", "blob");
-            put( "value", "blob"); }};
+    private static final Map<String, DataType.Name> MAP_KEYS_COLUMNS =
+        new HashMap<String, DataType.Name>() {{
+            put( "key", DataType.Name.BLOB );
+            put( "column1", DataType.Name.BLOB );
+            put( "value", DataType.Name.BLOB ); }};
     private static final Map<String, String> MAP_KEYS_CLUSTERING_ORDER =
-        new HashMap<String, String>(){{ put("column1", "ASC"); }};
+        new HashMap<String, String>(){{ put( "column1", "ASC" ); }};
 
 
 

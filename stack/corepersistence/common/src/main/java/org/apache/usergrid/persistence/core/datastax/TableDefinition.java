@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.core.datastax;
 
 
+import com.datastax.driver.core.DataType;
 import com.google.common.base.Preconditions;
 
 import java.util.Collection;
@@ -53,7 +54,7 @@ public class TableDefinition {
     private final String tableName;
     private final Collection<String> partitionKeys;
     private final Collection<String> columnKeys;
-    private final Map<String, String> columns;
+    private final Map<String, DataType.Name> columns;
     private final CacheOption cacheOption;
     private final Map<String, Object> compaction;
     private final String bloomFilterChance;
@@ -63,7 +64,7 @@ public class TableDefinition {
     private final Map<String, String> clusteringOrder;
 
     public TableDefinition( final String tableName, final Collection<String> partitionKeys,
-                            final Collection<String> columnKeys, final Map<String, String> columns,
+                            final Collection<String> columnKeys, final Map<String, DataType.Name> columns,
                             final CacheOption cacheOption, final Map<String, String> clusteringOrder){
 
         Preconditions.checkNotNull(tableName, "Table name cannot be null");
@@ -105,7 +106,7 @@ public class TableDefinition {
         return columnKeys;
     }
 
-    public Map<String, String> getColumns() {
+    public Map<String, DataType.Name> getColumns() {
         return columns;
     }
 

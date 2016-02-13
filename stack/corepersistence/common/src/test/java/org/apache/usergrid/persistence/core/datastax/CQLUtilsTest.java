@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.core.datastax;
 
 
+import com.datastax.driver.core.DataType;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,10 +39,10 @@ public class CQLUtilsTest {
     public void testTableCQL() throws Exception {
 
 
-        Map<String, String> columns = new HashMap<>();
-        columns.put("key", "blob");
-        columns.put("column1", "text");
-        columns.put("value", "blob");
+        Map<String, DataType.Name> columns = new HashMap<>();
+        columns.put("key", DataType.Name.BLOB);
+        columns.put("column1", DataType.Name.TEXT);
+        columns.put("value", DataType.Name.BLOB);
 
         List<String> partitionKeys = new ArrayList<>();
         partitionKeys.add("key");
@@ -55,7 +56,7 @@ public class CQLUtilsTest {
 
 
         TableDefinition table1 = new TableDefinition(
-            "table1",
+            CQLUtils.quote("table1"),
             partitionKeys,
             columnKeys,
             columns,
@@ -66,10 +67,21 @@ public class CQLUtilsTest {
         String createCQL = CQLUtils.getTableCQL(table1, CQLUtils.ACTION.CREATE);
         String updateCQL = CQLUtils.getTableCQL(table1, CQLUtils.ACTION.UPDATE);
 
-        assertTrue( createCQL.contains( CQLUtils.CREATE_TABLE ) && !createCQL.contains( CQLUtils.ALTER_TABLE ) );
-        assertTrue( updateCQL.contains( CQLUtils.ALTER_TABLE ) && !updateCQL.contains( CQLUtils.CREATE_TABLE ) );
-        logger.info("CREATE: {}", createCQL);
-        logger.info("UPDATE: {}", updateCQL);
+        assertTrue(
+            createCQL.contains(CQLUtils.CREATE_TABLE ) &&
+                !createCQL.contains( CQLUtils.ALTER_TABLE )  &&
+                createCQL.contains( DataType.Name.BLOB.toString() ) &&
+                createCQL.contains( DataType.Name.TEXT.toString() )
+
+        );
+        assertTrue(
+            updateCQL.contains( CQLUtils.ALTER_TABLE ) &&
+                !updateCQL.contains( CQLUtils.CREATE_TABLE ) &&
+                !updateCQL.contains( DataType.Name.BLOB.toString() ) &&
+                !updateCQL.contains( DataType.Name.TEXT.toString() )
+        );
+        logger.info(createCQL);
+        logger.info(updateCQL);
 
     }
 
