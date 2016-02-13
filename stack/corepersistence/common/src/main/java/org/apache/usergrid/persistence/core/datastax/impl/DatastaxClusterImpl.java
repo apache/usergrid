@@ -52,7 +52,6 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             cluster.getConfiguration().getPoolingOptions().getIdleTimeoutSeconds(),
             cluster.getConfiguration().getPoolingOptions().getPoolTimeoutMillis() / 1000);
 
-        createOrUpdateKeyspace();
 
     }
 
