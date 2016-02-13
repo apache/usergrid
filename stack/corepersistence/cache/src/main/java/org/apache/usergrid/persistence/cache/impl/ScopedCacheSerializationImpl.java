@@ -39,6 +39,7 @@ import com.netflix.astyanax.serializers.StringSerializer;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.usergrid.persistence.cache.CacheScope;
 import org.apache.usergrid.persistence.core.astyanax.*;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.shard.ExpandingShardLocator;
 import org.apache.usergrid.persistence.core.shard.StringHashUtils;
 import org.slf4j.Logger;
@@ -47,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.Callable;
 
 
@@ -284,7 +286,13 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
                 BytesType.class.getSimpleName(),
                 MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
 
-        return Arrays.asList(scopedCache);
+        return Collections.singletonList(scopedCache);
+    }
+
+    @Override
+    public Collection<TableDefinition> getTables() {
+
+        return Collections.emptyList();
     }
 
 

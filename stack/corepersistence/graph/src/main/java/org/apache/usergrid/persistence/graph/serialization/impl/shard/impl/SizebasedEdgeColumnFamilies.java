@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.DynamicCompositeType;
@@ -32,6 +33,7 @@ import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdge;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeRowKey;
@@ -141,6 +143,12 @@ public class SizebasedEdgeColumnFamilies implements EdgeColumnFamilies {
                         new MultiTenantColumnFamilyDefinition( EDGE_VERSIONS, BytesType.class.getSimpleName(),
                                 ColumnTypes.LONG_TYPE_REVERSED, BytesType.class.getSimpleName(),
                                 MultiTenantColumnFamilyDefinition.CacheOption.ALL ) );
+    }
+
+    @Override
+    public Collection<TableDefinition> getTables() {
+
+        return Collections.emptyList();
     }
 
 
