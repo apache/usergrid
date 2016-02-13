@@ -26,6 +26,7 @@ import com.datastax.driver.core.Session;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,17 +80,35 @@ public class MigrationManagerImpl implements MigrationManager {
 
                 final Collection<MultiTenantColumnFamilyDefinition> columnFamilies = migration.getColumnFamilies();
 
+                final Collection<TableDefinition> tables = migration.getTables();
 
-                if ( columnFamilies == null || columnFamilies.size() == 0 ) {
+
+                if ((columnFamilies == null || columnFamilies.size() == 0) &&
+                    (tables == null || tables.size() == 0)) {
                     logger.warn(
-                            "Class {} implements {} but returns null column families for migration.  Either implement this method or remove the interface from the class",
-                            migration.getClass(), Migration.class );
+                        "Class {} implements {} but returns null for getColumnFamilies and getTables for migration.  Either implement this method or remove the interface from the class",
+                        migration.getClass().getSimpleName(), Migration.class.getSimpleName());
                     continue;
                 }
 
-                for ( MultiTenantColumnFamilyDefinition cf : columnFamilies ) {
-                    testAndCreateColumnFamilyDef( cf );
+                if (columnFamilies != null && columnFamilies.isEmpty()) {
+                    for (MultiTenantColumnFamilyDefinition cf : columnFamilies) {
+                        testAndCreateColumnFamilyDef(cf);
+                    }
                 }
+
+
+                if ( tables != null && !tables.isEmpty() ) {
+                    for (TableDefinition tableDefinition : tables) {
+
+                        createTable(tableDefinition);
+
+                    }
+                }
+
+
+
+
             }
         }
         catch ( Throwable t ) {
@@ -116,6 +135,20 @@ public class MigrationManagerImpl implements MigrationManager {
         keyspace.createColumnFamily( columnFamily.getColumnFamily(), columnFamily.getOptions() );
 
         logger.info( "Created column family {}", columnFamily.getColumnFamily().getName() );
+
+        waitForSchemaAgreement();
+    }
+
+    private void createTable(TableDefinition tableDefinition ) throws Exception {
+
+        logger.info("Creating, if not exists, table: {}", tableDefinition.getTableName());
+        String CQL = CQLUtils.getTableCQL( tableDefinition, CQLUtils.ACTION.CREATE );
+        logger.info( CQL );
+        if (logger.isDebugEnabled()){
+            logger.debug( CQL );
+        }
+        dataStaxCluster.getApplicationSession()
+            .execute( CQL );
 
         waitForSchemaAgreement();
     }

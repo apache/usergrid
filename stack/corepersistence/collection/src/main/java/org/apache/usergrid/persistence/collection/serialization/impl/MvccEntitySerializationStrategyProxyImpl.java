@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.CollectionMigrationPlugin;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.migration.data.MigrationInfoCache;
 import org.apache.usergrid.persistence.core.migration.data.MigrationRelationship;
 import org.apache.usergrid.persistence.core.migration.data.VersionedMigrationSet;
@@ -183,6 +184,11 @@ public class MvccEntitySerializationStrategyProxyImpl implements MvccEntitySeria
 
     @Override
     public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Collection<TableDefinition> getTables() {
         return Collections.emptyList();
     }
 

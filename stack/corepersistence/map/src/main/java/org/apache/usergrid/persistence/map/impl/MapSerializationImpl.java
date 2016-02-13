@@ -21,30 +21,17 @@ package org.apache.usergrid.persistence.map.impl;
 
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Using;
-import org.apache.cassandra.db.marshal.BytesType;
-import org.apache.cassandra.db.marshal.UTF8Type;
 
-import org.apache.usergrid.persistence.core.astyanax.BucketScopedRowKey;
-import org.apache.usergrid.persistence.core.astyanax.BucketScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
-import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
-import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.shard.ExpandingShardLocator;
 import org.apache.usergrid.persistence.core.shard.StringHashUtils;
 import org.apache.usergrid.persistence.map.MapScope;
@@ -53,50 +40,39 @@ import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.model.CompositeBuilder;
-import com.netflix.astyanax.model.CompositeParser;
-import com.netflix.astyanax.serializers.BooleanSerializer;
-import com.netflix.astyanax.serializers.StringSerializer;
 
 
 @Singleton
 public class MapSerializationImpl implements MapSerialization {
 
-    private static final String MAP_KEYS_TABLE = CQLUtils.quote("Map_Keys");
+
     private static final String MAP_ENTRIES_TABLE = CQLUtils.quote("Map_Entries");
+    private static final Collection<String> MAP_ENTRIES_PARTITION_KEYS = Collections.singletonList("key");
+    private static final Collection<String> MAP_ENTRIES_COLUMN_KEYS = Collections.singletonList("column1");
+    private static final Map<String, String> MAP_ENTRIES_COLUMNS =
+        new HashMap<String, String>() {{
+            put( "key", "blob");
+            put( "column1", "blob");
+            put( "value", "blob"); }};
+    private static final Map<String, String> MAP_ENTRIES_CLUSTERING_ORDER =
+        new HashMap<String, String>(){{ put("column1", "ASC"); }};
 
-    private static final MapKeySerializer KEY_SERIALIZER = new MapKeySerializer();
+    private static final String MAP_KEYS_TABLE = CQLUtils.quote("Map_Keys");
+    private static final Collection<String> MAP_KEYS_PARTITION_KEYS = Collections.singletonList("key");
+    private static final Collection<String> MAP_KEYS_COLUMN_KEYS = Collections.singletonList("column1");
+    private static final Map<String, String> MAP_KEYS_COLUMNS =
+        new HashMap<String, String>() {{
+            put( "key", "blob");
+            put( "column1", "blob");
+            put( "value", "blob"); }};
+    private static final Map<String, String> MAP_KEYS_CLUSTERING_ORDER =
+        new HashMap<String, String>(){{ put("column1", "ASC"); }};
 
-    private static final BucketScopedRowKeySerializer<String> MAP_KEY_SERIALIZER =
-        new BucketScopedRowKeySerializer<>( KEY_SERIALIZER );
 
-
-    private static final MapEntrySerializer ENTRY_SERIALIZER = new MapEntrySerializer();
-    private static final ScopedRowKeySerializer<MapEntryKey> MAP_ENTRY_SERIALIZER =
-        new ScopedRowKeySerializer<>( ENTRY_SERIALIZER );
-
-
-    private static final BooleanSerializer BOOLEAN_SERIALIZER = BooleanSerializer.get();
-
-    private static final StringSerializer STRING_SERIALIZER = StringSerializer.get();
 
 
     private static final StringResultsBuilderCQL STRING_RESULTS_BUILDER_CQL = new StringResultsBuilderCQL();
 
-
-    /**
-     * CFs where the row key contains the source node id
-     */
-    public static final MultiTenantColumnFamily<ScopedRowKey<MapEntryKey>, Boolean> MAP_ENTRIES =
-        new MultiTenantColumnFamily<>( "Map_Entries", MAP_ENTRY_SERIALIZER, BOOLEAN_SERIALIZER );
-
-
-    /**
-     * CFs where the row key contains the source node id
-     */
-    public static final MultiTenantColumnFamily<BucketScopedRowKey<String>, String> MAP_KEYS =
-        new MultiTenantColumnFamily<>( "Map_Keys", MAP_KEY_SERIALIZER, STRING_SERIALIZER );
 
     /**
      * Number of buckets to hash across.
@@ -115,16 +91,13 @@ public class MapSerializationImpl implements MapSerialization {
     private static final ExpandingShardLocator<String> BUCKET_LOCATOR =
         new ExpandingShardLocator<>( MAP_KEY_FUNNEL, NUM_BUCKETS );
 
-    private final Keyspace keyspace;
     private final CassandraConfig cassandraConfig;
 
     private final Session session;
 
 
     @Inject
-    public MapSerializationImpl( final Keyspace keyspace, final CassandraConfig cassandraConfig,
-                                 final Session session ) {
-        this.keyspace = keyspace;
+    public MapSerializationImpl( final CassandraConfig cassandraConfig, final Session session ) {
         this.session = session;
         this.cassandraConfig = cassandraConfig;
     }
@@ -321,17 +294,27 @@ public class MapSerializationImpl implements MapSerialization {
     @Override
     public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
 
-        final MultiTenantColumnFamilyDefinition mapEntries =
-            new MultiTenantColumnFamilyDefinition( MAP_ENTRIES, BytesType.class.getSimpleName(),
-                BytesType.class.getSimpleName(), BytesType.class.getSimpleName(),
-                MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
+        // This here only until all traces of Astyanax are removed.
+        return Collections.emptyList();
 
-        final MultiTenantColumnFamilyDefinition mapKeys =
-            new MultiTenantColumnFamilyDefinition( MAP_KEYS, BytesType.class.getSimpleName(),
-                UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName(),
-                MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
+    }
+
+
+    @Override
+    public Collection<TableDefinition> getTables() {
+
+        final TableDefinition mapEntries =
+            new TableDefinition( MAP_ENTRIES_TABLE, MAP_ENTRIES_PARTITION_KEYS, MAP_ENTRIES_COLUMN_KEYS,
+                MAP_ENTRIES_COLUMNS, TableDefinition.CacheOption.KEYS, MAP_ENTRIES_CLUSTERING_ORDER);
+
+        final TableDefinition mapKeys =
+            new TableDefinition( MAP_KEYS_TABLE, MAP_KEYS_PARTITION_KEYS, MAP_KEYS_COLUMN_KEYS,
+                MAP_KEYS_COLUMNS, TableDefinition.CacheOption.KEYS, MAP_KEYS_CLUSTERING_ORDER);
+
+
 
         return Arrays.asList( mapEntries, mapKeys );
+
     }
 
 
@@ -350,6 +333,7 @@ public class MapSerializationImpl implements MapSerialization {
 
 
 
+
     private <T> T getValuesCQL( final MapScope scope, final Collection<String> keys, final ResultsBuilderCQL<T> builder ) {
 
         final List<ByteBuffer> serializedKeys = new ArrayList<>();
@@ -364,78 +348,6 @@ public class MapSerializationImpl implements MapSerialization {
         ResultSet resultSet = session.execute(statement);
 
         return builder.buildResultsCQL( resultSet );
-    }
-
-
-
-
-    /**
-     * Inner class to serialize and edgeIdTypeKey
-     */
-    private static class MapKeySerializer implements CompositeFieldSerializer<String> {
-
-
-        @Override
-        public void toComposite( final CompositeBuilder builder, final String key ) {
-            builder.addString( key );
-        }
-
-
-        @Override
-        public String fromComposite( final CompositeParser composite ) {
-            final String key = composite.readString();
-
-            return key;
-        }
-    }
-
-
-    /**
-     * Inner class to serialize and edgeIdTypeKey
-     */
-    private static class MapEntrySerializer implements CompositeFieldSerializer<MapEntryKey> {
-
-        @Override
-        public void toComposite( final CompositeBuilder builder, final MapEntryKey key ) {
-
-            builder.addString( key.mapName );
-            builder.addString( key.key );
-        }
-
-
-        @Override
-        public MapEntryKey fromComposite( final CompositeParser composite ) {
-
-            final String mapName = composite.readString();
-
-            final String entryKey = composite.readString();
-
-            return new MapEntryKey( mapName, entryKey );
-        }
-    }
-
-
-    /**
-     * Entries for serializing map entries and keys to a row
-     */
-    private static class MapEntryKey {
-        public final String mapName;
-        public final String key;
-
-
-        private MapEntryKey( final String mapName, final String key ) {
-            this.mapName = mapName;
-            this.key = key;
-        }
-
-
-        /**
-         * Create a scoped row key from the key
-         */
-        public static ScopedRowKey<MapEntryKey> fromKey( final MapScope mapScope, final String key ) {
-
-            return ScopedRowKey.fromKey( mapScope.getApplication(), new MapEntryKey( mapScope.getName(), key ) );
-        }
     }
 
 

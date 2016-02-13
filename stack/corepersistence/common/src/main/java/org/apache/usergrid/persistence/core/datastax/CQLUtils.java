@@ -30,7 +30,7 @@ import java.util.*;
 public class CQLUtils {
 
 
-    enum ACTION {
+    public enum ACTION {
         CREATE, UPDATE
     }
 
@@ -84,7 +84,7 @@ public class CQLUtils {
             throw new Exception("Invalid Action specified.  Must of of type CQLUtils.Action");
         }
 
-        cql.add( quote( tableDefinition.getTableName() ) );
+        cql.add( tableDefinition.getTableName() );
 
 
 
