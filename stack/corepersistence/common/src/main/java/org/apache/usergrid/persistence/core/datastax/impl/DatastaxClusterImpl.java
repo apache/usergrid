@@ -26,6 +26,7 @@ import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
+import org.safehaus.guicyfig.Overrides;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +93,8 @@ public class DataStaxClusterImpl implements DataStaxCluster {
      * Execute CQL that will create the keyspace if it doesn't exist and alter it if it does.
      * @throws Exception
      */
-    private void createOrUpdateKeyspace() throws Exception {
+    @Override
+    public void createOrUpdateKeyspace() throws Exception {
 
         clusterSession = getClusterSession();
 
