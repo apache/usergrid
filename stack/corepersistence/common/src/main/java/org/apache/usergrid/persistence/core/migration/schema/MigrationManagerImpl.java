@@ -71,8 +71,9 @@ public class MigrationManagerImpl implements MigrationManager {
     @Override
     public void migrate() throws MigrationException {
 
-
         try {
+
+            dataStaxCluster.createOrUpdateKeyspace();
 
             for ( Migration migration : migrations ) {
 

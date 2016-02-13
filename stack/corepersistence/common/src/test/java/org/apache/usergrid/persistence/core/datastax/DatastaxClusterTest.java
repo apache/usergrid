@@ -57,7 +57,7 @@ public class DatastaxClusterTest {
         cluster = dataStaxCluster.getCluster();
         assertTrue(!cluster.isClosed());
 
-        
+
     }
 
     @Test
