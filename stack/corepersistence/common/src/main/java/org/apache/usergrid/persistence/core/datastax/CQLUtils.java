@@ -134,10 +134,10 @@ public class CQLUtils {
 
     }
 
-    public static String spaceSeparatedKeyValue(Map<String, String> columns){
+    public static String spaceSeparatedKeyValue(Map<String, ?> columns){
 
         StringJoiner columnsSchema = new StringJoiner(",");
-        columns.forEach( (key, value) -> columnsSchema.add(key+" "+value));
+        columns.forEach( (key, value) -> columnsSchema.add(key+" "+String.valueOf(value)));
 
         return columnsSchema.toString();
 

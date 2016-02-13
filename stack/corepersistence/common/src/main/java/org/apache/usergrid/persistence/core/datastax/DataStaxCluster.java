@@ -30,4 +30,6 @@ public interface DataStaxCluster {
 
     Session getApplicationSession();
 
+    void waitForSchemaAgreement();
+
 }

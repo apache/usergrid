@@ -41,7 +41,7 @@ import com.netflix.astyanax.ddl.KeyspaceDefinition;
 
 
 /**
- * Implementation of the migration manager to set up keyspace
+ * Implementation of the migration manager to set up column families / tables
  *
  * @author tnine
  */
@@ -74,8 +74,6 @@ public class MigrationManagerImpl implements MigrationManager {
 
         try {
 
-            createOrUpdateKeyspace();
-
             for ( Migration migration : migrations ) {
 
                 final Collection<MultiTenantColumnFamilyDefinition> columnFamilies = migration.getColumnFamilies();
@@ -107,8 +105,6 @@ public class MigrationManagerImpl implements MigrationManager {
                 }
 
 
-
-
             }
         }
         catch ( Throwable t ) {
@@ -136,77 +132,23 @@ public class MigrationManagerImpl implements MigrationManager {
 
         logger.info( "Created column family {}", columnFamily.getColumnFamily().getName() );
 
-        waitForSchemaAgreement();
+        dataStaxCluster.waitForSchemaAgreement();
     }
 
     private void createTable(TableDefinition tableDefinition ) throws Exception {
 
-        logger.info("Creating, if not exists, table: {}", tableDefinition.getTableName());
         String CQL = CQLUtils.getTableCQL( tableDefinition, CQLUtils.ACTION.CREATE );
-        logger.info( CQL );
         if (logger.isDebugEnabled()){
             logger.debug( CQL );
         }
         dataStaxCluster.getApplicationSession()
             .execute( CQL );
 
-        waitForSchemaAgreement();
+        logger.info("Created table: {}", tableDefinition.getTableName());
+
+        dataStaxCluster.waitForSchemaAgreement();
     }
 
-
-    /**
-     * Execute CQL to create the keyspace if it does not already exists.  Always update the keyspace with the
-     * configured strategy options to allow for real time replication updates.
-     *
-     * @throws Exception
-     */
-    private void createOrUpdateKeyspace() throws Exception {
-
-        Session clusterSession = dataStaxCluster.getClusterSession();
-
-        final String createApplicationKeyspace = String.format(
-            "CREATE KEYSPACE IF NOT EXISTS \"%s\" WITH replication = %s",
-            cassandraFig.getApplicationKeyspace(),
-            CQLUtils.getFormattedReplication( cassandraFig.getStrategy(), cassandraFig.getStrategyOptions() )
-
-        );
-
-        final String updateApplicationKeyspace = String.format(
-            "ALTER KEYSPACE \"%s\" WITH replication = %s",
-            cassandraFig.getApplicationKeyspace(),
-            CQLUtils.getFormattedReplication( cassandraFig.getStrategy(), cassandraFig.getStrategyOptions() )
-        );
-
-        logger.info("Creating application keyspace with the following CQL: {}", createApplicationKeyspace);
-        clusterSession.execute(createApplicationKeyspace);
-        logger.info("Updating application keyspace with the following CQL: {}", updateApplicationKeyspace);
-        clusterSession.executeAsync(updateApplicationKeyspace);
-
-        waitForSchemaAgreement();
-    }
-
-
-    /**
-     * Wait until all Cassandra nodes agree on the schema.  Sleeps 100ms between checks.
-     *
-     */
-    private void waitForSchemaAgreement() {
-
-        while ( true ) {
-
-            if( dataStaxCluster.getCluster().getMetadata().checkSchemaAgreement() ){
-                return;
-            }
-
-            //sleep and try it again
-            try {
-                Thread.sleep( 100 );
-            }
-            catch ( InterruptedException e ) {
-                //swallow
-            }
-        }
-    }
 
 
 }
