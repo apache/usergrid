@@ -221,7 +221,13 @@ public class ReIndexServiceImpl implements ReIndexService {
         }
         //this is intentional.  If
         else if (appId.isPresent()) {
-            return Observable.just(appId.get());
+            return Observable.just(appId.get())
+                .doOnNext(appScope -> {
+                    //make sure index is initialized on rebuild
+                    entityIndexFactory.createEntityIndex(
+                        indexLocationStrategyFactory.getIndexLocationStrategy(appScope)
+                    ).initialize();
+                });
         }
 
         return allApplicationsObservable.getData()
