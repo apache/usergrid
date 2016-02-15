@@ -25,6 +25,7 @@
  */
 
 import Foundation
+import UIKit
 import UsergridSDK
 
 class LoginViewController: UIViewController {

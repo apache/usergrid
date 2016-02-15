@@ -58,10 +58,10 @@ public class UsergridDevice : UsergridEntity {
     /// Property helper method for the `UsergridDevice` objects device operating system version.
     public var osVersion: String { return super[UsergridDeviceProperties.OSVersion.stringValue] as! String }
 
-    // MARK: - Initialization -
-
     /// The shared instance of `UsergridDevice`.
-    public static var sharedDevice: UsergridDevice = UsergridDevice()
+    public static var sharedDevice: UsergridDevice = UsergridDevice.getOrCreateSharedDeviceFromKeychain()
+
+    // MARK: - Initialization -
 
     /**
     Designated Initializer for `UsergridDevice` objects
@@ -71,25 +71,7 @@ public class UsergridDevice : UsergridEntity {
     - returns: A new instance of `UsergridDevice`.
     */
     public init() {
-        var deviceEntityDict: [String:AnyObject] = [:]
-        deviceEntityDict[UsergridEntityProperties.EntityType.stringValue] = UsergridDevice.DEVICE_ENTITY_TYPE
-        deviceEntityDict[UsergridEntityProperties.UUID.stringValue] = UsergridDevice.usergridDeviceUUID()
-
-        #if os(watchOS)
-            deviceEntityDict[UsergridDeviceProperties.Model.stringValue] = WKInterfaceDevice.currentDevice().model
-            deviceEntityDict[UsergridDeviceProperties.Platform.stringValue] = WKInterfaceDevice.currentDevice().systemName
-            deviceEntityDict[UsergridDeviceProperties.OSVersion.stringValue] = WKInterfaceDevice.currentDevice().systemVersion
-        #elseif os(iOS) || os(tvOS)
-            deviceEntityDict[UsergridDeviceProperties.Model.stringValue] = UIDevice.currentDevice().model
-            deviceEntityDict[UsergridDeviceProperties.Platform.stringValue] = UIDevice.currentDevice().systemName
-            deviceEntityDict[UsergridDeviceProperties.OSVersion.stringValue] = UIDevice.currentDevice().systemVersion
-        #elseif os(OSX)
-            deviceEntityDict[UsergridDeviceProperties.Model.stringValue] = "Mac"
-            deviceEntityDict[UsergridDeviceProperties.Platform.stringValue] = "OSX"
-            deviceEntityDict[UsergridDeviceProperties.OSVersion.stringValue] = NSProcessInfo.processInfo().operatingSystemVersionString
-        #endif
-
-        super.init(type: UsergridDevice.DEVICE_ENTITY_TYPE, propertyDict: deviceEntityDict)
+        super.init(type: UsergridDevice.DEVICE_ENTITY_TYPE, propertyDict: UsergridDevice.commonDevicePropertyDict())
     }
 
     /**
@@ -101,7 +83,7 @@ public class UsergridDevice : UsergridEntity {
 
      - returns: A new `UsergridDevice` object.
      */
-    required public init(type: String, name: String?, propertyDict: [String : AnyObject]?) {
+    required public init(type:String, name:String? = nil, propertyDict:[String:AnyObject]? = nil) {
         super.init(type: type, name: name, propertyDict: propertyDict)
     }
 
@@ -146,6 +128,34 @@ public class UsergridDevice : UsergridEntity {
                 super[propertyName] = propertyValue
             }
         }
+    }
+
+    // MARK: - Class Helper Methods -
+
+    /**
+    Creates a property dictionary that contains the common properties for `UsergridDevice` objects.
+
+    - returns: A property dictionary with the common properties set.
+    */
+    public static func commonDevicePropertyDict() -> [String:AnyObject] {
+        var commonDevicePropertyDict: [String:AnyObject] = [:]
+        commonDevicePropertyDict[UsergridEntityProperties.EntityType.stringValue] = UsergridDevice.DEVICE_ENTITY_TYPE
+
+        #if os(watchOS)
+            commonDevicePropertyDict[UsergridDeviceProperties.Model.stringValue] = WKInterfaceDevice.currentDevice().model
+            commonDevicePropertyDict[UsergridDeviceProperties.Platform.stringValue] = WKInterfaceDevice.currentDevice().systemName
+            commonDevicePropertyDict[UsergridDeviceProperties.OSVersion.stringValue] = WKInterfaceDevice.currentDevice().systemVersion
+        #elseif os(iOS) || os(tvOS)
+            commonDevicePropertyDict[UsergridDeviceProperties.Model.stringValue] = UIDevice.currentDevice().model
+            commonDevicePropertyDict[UsergridDeviceProperties.Platform.stringValue] = UIDevice.currentDevice().systemName
+            commonDevicePropertyDict[UsergridDeviceProperties.OSVersion.stringValue] = UIDevice.currentDevice().systemVersion
+        #elseif os(OSX)
+            commonDevicePropertyDict[UsergridDeviceProperties.Model.stringValue] = "Mac"
+            commonDevicePropertyDict[UsergridDeviceProperties.Platform.stringValue] = "OSX"
+            commonDevicePropertyDict[UsergridDeviceProperties.OSVersion.stringValue] = NSProcessInfo.processInfo().operatingSystemVersionString
+        #endif
+
+        return commonDevicePropertyDict
     }
 
     // MARK: - Push Token Handling -

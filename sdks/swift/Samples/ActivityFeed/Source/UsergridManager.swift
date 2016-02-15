@@ -53,7 +53,7 @@ public class UsergridManager {
     }
 
     static func getFeedMessages(completion:UsergridResponseCompletion) {
-        Usergrid.GET("users/me/feed", query: UsergridQuery().desc(UsergridEntityProperties.Created.stringValue), completion: completion)
+        Usergrid.GET(UsergridQuery("users/me/feed").desc(UsergridEntityProperties.Created.stringValue), queryCompletion: completion)
     }
 
     static func postFeedMessage(text:String,completion:UsergridResponseCompletion) {

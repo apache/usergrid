@@ -81,7 +81,18 @@ public class UsergridQuery : NSObject,NSCopying {
     }
     
     // MARK: - Builder Methods -
-    
+
+    /**
+    Contains. Query: where term contains 'val%'.
+
+    - parameter term:  The term.
+    - parameter value: The value.
+
+    - returns: `Self`
+    */
+    public func contains(term: String, value: String) -> Self { return self.containsWord(term, value: value) }
+
+
     /**
     Contains. Query: where term contains 'val%'.
     
@@ -118,7 +129,7 @@ public class UsergridQuery : NSObject,NSCopying {
      
      - returns: `Self`
      */
-    public func asc(term: String) -> Self { return self.sort(term, sortOrder: UsergridQuerySortOrder.Asc) }
+    public func asc(term: String) -> Self { return self.sort(term, sortOrder: .Asc) }
     
     /**
      Sort descending. Query: order by term desc
@@ -136,7 +147,7 @@ public class UsergridQuery : NSObject,NSCopying {
      
      - returns: `Self`
      */
-    public func desc(term: String) -> Self { return self.sort(term, sortOrder: UsergridQuerySortOrder.Desc) }
+    public func desc(term: String) -> Self { return self.sort(term, sortOrder: .Desc) }
     
     /**
      Filter (or Equal-to). Query: where term = 'value'.
@@ -262,13 +273,26 @@ public class UsergridQuery : NSObject,NSCopying {
     }
     
     /**
-     Joining operation to combine conditional queries.
+     Or operation for conditional queries.
      
      - returns: `Self`
      */
     public func or() -> Self {
         if !self.requirementStrings.first!.isEmpty {
             self.requirementStrings.insert(UsergridQuery.OR, atIndex: 0)
+            self.requirementStrings.insert(UsergridQuery.EMPTY_STRING, atIndex: 0)
+        }
+        return self
+    }
+
+    /**
+     And operation for conditional queries.
+
+     - returns: `Self`
+     */
+    public func and() -> Self {
+        if !self.requirementStrings.first!.isEmpty {
+            self.requirementStrings.insert(UsergridQuery.AND, atIndex: 0)
             self.requirementStrings.insert(UsergridQuery.EMPTY_STRING, atIndex: 0)
         }
         return self
@@ -311,6 +335,18 @@ public class UsergridQuery : NSObject,NSCopying {
         self.collectionName = collectionName
         return self
     }
+
+    /**
+     Sets the collection name.
+
+     - parameter type: The new collection name.
+
+     - returns: `Self`
+     */
+    public func type(type: String) -> Self {
+        self.collectionName = type
+        return self
+    }
     
     /**
      Sets the limit on the query.  Default limit is 10.
@@ -346,7 +382,19 @@ public class UsergridQuery : NSObject,NSCopying {
         self.cursor = value
         return self
     }
-    
+
+    /**
+     A special builder property that allows you to input a pre-defined query string. All builder properties will be ignored when this property is defined.
+
+     - parameter value: The pre-defined query string.
+
+     - returns: `Self`
+     */
+    public func fromString(value: String?) -> Self {
+        self.fromStringValue = value
+        return self
+    }
+
     /**
      Adds a URL term that will be added next to the query string when constructing the URL append.
      
@@ -451,6 +499,17 @@ public class UsergridQuery : NSObject,NSCopying {
     }
     
     private func constructURLAppend(autoURLEncode: Bool = true) -> String {
+
+        if let fromString = self.fromStringValue {
+            var requirementsString = fromString
+            if autoURLEncode {
+                if let encodedRequirementsString = fromString.stringByAddingPercentEncodingWithAllowedCharacters(NSCharacterSet.URLQueryAllowedCharacterSet()) {
+                    requirementsString = encodedRequirementsString
+                }
+            }
+            return "\(UsergridQuery.QUESTION_MARK)\(UsergridQuery.QL)=\(requirementsString)"
+        }
+
         var urlAppend = UsergridQuery.EMPTY_STRING
         if self.limit != UsergridQuery.LIMIT_DEFAULT {
             urlAppend += "\(UsergridQuery.LIMIT)=\(self.limit.description)"
@@ -495,7 +554,8 @@ public class UsergridQuery : NSObject,NSCopying {
     private(set) var collectionName: String? = nil
     private(set) var cursor: String? = nil
     private(set) var limit: Int = UsergridQuery.LIMIT_DEFAULT
-    
+
+    private(set) var fromStringValue: String? = nil
     private(set) var requirementStrings: [String] = [UsergridQuery.EMPTY_STRING]
     private(set) var orderClauses: [String:UsergridQuerySortOrder] = [:]
     private(set) var urlTerms: [String] = []

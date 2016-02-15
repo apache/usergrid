@@ -268,7 +268,7 @@ public class UsergridUser : UsergridEntity {
         if let usernameValue = username {
             query.or().eq(UsergridUserProperties.Username.stringValue, value: usernameValue)
         }
-        client.GET(USER_ENTITY_TYPE, query: query) { (response) -> Void in
+        client.GET(query) { (response) -> Void in
             completion(error: response.error, available: response.entity == nil)
         }
     }
@@ -319,8 +319,8 @@ public class UsergridUser : UsergridEntity {
     */
     public func login(client: UsergridClient, username:String, password:String, completion: UsergridUserAuthCompletionBlock? = nil) {
         let userAuth = UsergridUserAuth(username: username, password: password)
-        client.authenticateUser(userAuth,setAsCurrentUser:false) { [weak self] (auth, user, error) -> Void in
-            self?.auth = userAuth
+        client.authenticateUser(userAuth,setAsCurrentUser:false) { (auth, user, error) -> Void in
+            self.auth = userAuth
             completion?(auth: userAuth, user: user, error: error)
         }
     }
@@ -398,6 +398,62 @@ public class UsergridUser : UsergridEntity {
         } else {
             completion?(response: UsergridResponse(client:client, errorName:"Logout Failed.", errorDescription:"UUID or Access Token not found on UsergridUser object."))
         }
+    }
+
+    /**
+     A special convenience function that connects a `UsergridDevice` to this `UsergridUser` using the shared instance of `UsergridClient`.
+
+     - parameter device:     The device to connect to.  If nil it will use the `UsergridDevice.sharedDevice` instance.
+     - parameter completion: The optional completion block.
+     */
+    public func connectToDevice(device:UsergridDevice? = nil, completion:UsergridResponseCompletion? = nil) {
+        self.connectToDevice(Usergrid.sharedInstance, device: device, completion: completion)
+    }
+
+    /**
+     A special convenience function that connects a `UsergridDevice` to this `UsergridUser`.
+
+     - parameter client:     The `UsergridClient` object to use for connecting.
+     - parameter device:     The device to connect to.  If nil it will use the `UsergridDevice.sharedDevice` instance.
+     - parameter completion: The optional completion block.
+     */
+    public func connectToDevice(client:UsergridClient, device:UsergridDevice? = nil, completion:UsergridResponseCompletion? = nil) {
+        let deviceToConnect = device ?? UsergridDevice.sharedDevice
+        guard let _ = deviceToConnect.uuidOrName
+        else {
+            completion?(response: UsergridResponse(client: client, errorName: "Device cannot be connected to User.", errorDescription: "Device has neither an UUID or name specified."))
+            return
+        }
+
+        self.connect(client, relationship: "devices", toEntity: deviceToConnect, completion: completion)
+    }
+
+    /**
+     A special convenience function that disconnects a `UsergridDevice` from this `UsergridUser` using the shared instance of `UsergridClient`.
+
+     - parameter device:     The device to connect to.  If nil it will use the `UsergridDevice.sharedDevice` instance.
+     - parameter completion: The optional completion block.
+     */
+    public func disconnectFromDevice(device:UsergridDevice? = nil, completion:UsergridResponseCompletion? = nil) {
+        self.disconnectFromDevice(Usergrid.sharedInstance, device: device, completion: completion)
+    }
+
+    /**
+     A special convenience function that disconnects a `UsergridDevice` from this `UsergridUser`.
+
+     - parameter client:     The `UsergridClient` object to use for connecting.
+     - parameter device:     The device to connect to.
+     - parameter completion: The optional completion block.
+     */
+    public func disconnectFromDevice(client:UsergridClient, device:UsergridDevice? = nil, completion:UsergridResponseCompletion? = nil) {
+        let deviceToDisconnectFrom = device ?? UsergridDevice.sharedDevice
+        guard let _ = deviceToDisconnectFrom.uuidOrName
+            else {
+                completion?(response: UsergridResponse(client: client, errorName: "Device cannot be disconnected from User.", errorDescription: "Device has neither an UUID or name specified."))
+                return
+        }
+
+        self.disconnect(client, relationship: "devices", fromEntity: deviceToDisconnectFrom, completion: completion)
     }
 
     private func getUserSpecificProperty(userProperty: UsergridUserProperties) -> AnyObject? {

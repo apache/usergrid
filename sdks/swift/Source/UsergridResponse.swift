@@ -34,7 +34,7 @@ public typealias UsergridResponseCompletion = (response: UsergridResponse) -> Vo
 
 If a request is successful, any entities returned in the response will be automatically parsed into `UsergridEntity` objects and pushed to the `entities` property.
 
-If a request fails, the `errorName` and `errorDescription` will contain information about the problem encountered.
+If a request fails, the `UsergridResponseError.error` property will contain information about the problem encountered.
 */
 public class UsergridResponse: NSObject {
 
@@ -97,7 +97,7 @@ public class UsergridResponse: NSObject {
     /// The string value.
     public var stringValue : String? {
         if let responseJSON = self.responseJSON {
-            return NSString(data: try! NSJSONSerialization.dataWithJSONObject(responseJSON, options: .PrettyPrinted), encoding: NSASCIIStringEncoding) as? String
+            return NSString(data: try! NSJSONSerialization.dataWithJSONObject(responseJSON, options: .PrettyPrinted), encoding: NSUTF8StringEncoding) as? String
         } else {
             return error?.description
         }
@@ -189,9 +189,9 @@ public class UsergridResponse: NSObject {
     public func loadNextPage(completion: UsergridResponseCompletion) {
         if self.hasNextPage, let type = (self.responseJSON?["path"] as? NSString)?.lastPathComponent {
             if let query = self.query?.copy() as? UsergridQuery {
-                self.client?.GET(type, query: query.cursor(self.cursor), completion:completion)
+                self.client?.GET(query.cursor(self.cursor), queryCompletion:completion)
             } else {
-                self.client?.GET(type, query: UsergridQuery(type).cursor(self.cursor), completion:completion)
+                self.client?.GET(UsergridQuery(type).cursor(self.cursor), queryCompletion:completion)
             }
         } else {
             completion(response: UsergridResponse(client: self.client, errorName: "No next page.", errorDescription: "No next page was found."))

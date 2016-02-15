@@ -31,7 +31,7 @@ import UIKit
 #endif
 
 private let USERGRID_KEYCHAIN_NAME = "Usergrid"
-private let USERGRID_DEVICE_KEYCHAIN_SERVICE = "DeviceUUID"
+private let USERGRID_DEVICE_KEYCHAIN_SERVICE = "SharedDevice"
 private let USERGRID_CURRENT_USER_KEYCHAIN_SERVICE = "CurrentUser"
 
 private func usergridGenericKeychainItem() -> [String:AnyObject] {
@@ -50,7 +50,7 @@ internal extension UsergridDevice {
         return keychainItem
     }
 
-    static func createNewUsergridKeychainUUID() -> String {
+    static func createNewDeviceKeychainUUID() -> String {
 
         #if os(watchOS) || os(OSX)
             let usergridUUID = NSUUID().UUIDString
@@ -58,13 +58,17 @@ internal extension UsergridDevice {
             let usergridUUID = UIDevice.currentDevice().identifierForVendor?.UUIDString ?? NSUUID().UUIDString
         #endif
 
-        var keychainItem = UsergridDevice.deviceKeychainItem()
-        keychainItem[kSecValueData as String] = (usergridUUID as NSString).dataUsingEncoding(NSUTF8StringEncoding)
-        SecItemAdd(keychainItem, nil)
         return usergridUUID
     }
 
-    static func usergridDeviceUUID() -> String {
+    private static func createNewSharedDevice() -> UsergridDevice {
+        var deviceEntityDict = UsergridDevice.commonDevicePropertyDict()
+        deviceEntityDict[UsergridEntityProperties.UUID.stringValue] = UsergridDevice.createNewDeviceKeychainUUID()
+        let sharedDevice = UsergridDevice(type: UsergridDevice.DEVICE_ENTITY_TYPE, name: nil, propertyDict: deviceEntityDict)
+        return sharedDevice
+    }
+
+    static func getOrCreateSharedDeviceFromKeychain() -> UsergridDevice {
         var queryAttributes = UsergridDevice.deviceKeychainItem()
         queryAttributes[kSecReturnData as String] = kCFBooleanTrue as Bool
         queryAttributes[kSecReturnAttributes as String] = kCFBooleanTrue as Bool
@@ -73,13 +77,57 @@ internal extension UsergridDevice {
         if status == errSecSuccess {
             if let resultDictionary = result as? NSDictionary {
                 if let resultData = resultDictionary[kSecValueData as String] as? NSData {
-                    if let keychainUUID = String(data: resultData, encoding: NSUTF8StringEncoding) {
-                        return keychainUUID
+                    if let sharedDevice = NSKeyedUnarchiver.unarchiveObjectWithData(resultData) as? UsergridDevice {
+                        return sharedDevice
+                    } else {
+                        UsergridDevice.deleteSharedDeviceKeychainItem()
                     }
                 }
             }
         }
-        return UsergridDevice.createNewUsergridKeychainUUID()
+
+        let sharedDevice = UsergridDevice.createNewSharedDevice()
+        UsergridDevice.saveSharedDeviceKeychainItem(sharedDevice)
+        return sharedDevice
+    }
+
+
+    static func saveSharedDeviceKeychainItem(device:UsergridDevice) {
+        var queryAttributes = UsergridDevice.deviceKeychainItem()
+        queryAttributes[kSecReturnData as String] = kCFBooleanTrue as Bool
+        queryAttributes[kSecReturnAttributes as String] = kCFBooleanTrue as Bool
+
+        let sharedDeviceData = NSKeyedArchiver.archivedDataWithRootObject(device);
+
+        if SecItemCopyMatching(queryAttributes,nil) == errSecSuccess // Do we need to update keychain item or add a new one.
+        {
+            let attributesToUpdate = [kSecValueData as String:sharedDeviceData]
+            let updateStatus = SecItemUpdate(UsergridDevice.deviceKeychainItem(), attributesToUpdate)
+            if updateStatus != errSecSuccess {
+                print("Error updating shared device data to keychain!")
+            }
+        }
+        else
+        {
+            var keychainItem = UsergridDevice.deviceKeychainItem()
+            keychainItem[kSecValueData as String] = sharedDeviceData
+            let status = SecItemAdd(keychainItem, nil)
+            if status != errSecSuccess {
+                print("Error adding shared device data to keychain!")
+            }
+        }
+    }
+
+    static func deleteSharedDeviceKeychainItem() {
+        var queryAttributes = UsergridDevice.deviceKeychainItem()
+        queryAttributes[kSecReturnData as String] = kCFBooleanFalse as Bool
+        queryAttributes[kSecReturnAttributes as String] = kCFBooleanFalse as Bool
+        if SecItemCopyMatching(queryAttributes,nil) == errSecSuccess {
+            let deleteStatus = SecItemDelete(queryAttributes)
+            if deleteStatus != errSecSuccess {
+                print("Error deleting shared device data to keychain!")
+            }
+        }
     }
 }
 
