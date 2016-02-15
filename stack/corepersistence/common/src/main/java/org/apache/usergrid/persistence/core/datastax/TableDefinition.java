@@ -32,22 +32,7 @@ public class TableDefinition {
 
     public enum CacheOption {
 
-        ALL( "ALL" ),
-        KEYS( "KEYS_ONLY" ),
-        ROWS( "ROWS_ONLY" ),
-        NONE( "NONE" );
-
-        private String value;
-
-
-        CacheOption( String value ) {
-            this.value = value;
-        }
-
-
-        public String getValue() {
-            return value;
-        }
+        ALL, KEYS, ROWS, NONE
     }
 
 

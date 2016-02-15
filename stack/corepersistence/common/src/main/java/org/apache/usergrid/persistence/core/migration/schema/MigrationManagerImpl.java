@@ -138,7 +138,7 @@ public class MigrationManagerImpl implements MigrationManager {
 
     private void createTable(TableDefinition tableDefinition ) throws Exception {
 
-        String CQL = CQLUtils.getTableCQL( tableDefinition, CQLUtils.ACTION.CREATE );
+        String CQL = CQLUtils.getTableCQL( cassandraFig, tableDefinition, CQLUtils.ACTION.CREATE );
         if (logger.isDebugEnabled()){
             logger.debug( CQL );
         }
