@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.astyanax;
+package org.apache.usergrid.persistence.core;
 
 
 import org.safehaus.guicyfig.Default;
@@ -67,6 +67,11 @@ public interface CassandraFig extends GuicyFig {
     @Key( "cassandra.hosts" )
     String getHosts();
 
+    /**
+     * Valid options are 1.2, 2.0, 2.1
+     *
+     * @return
+     */
     @Key( "cassandra.version" )
     @Default( "2.1" )
     String getVersion();

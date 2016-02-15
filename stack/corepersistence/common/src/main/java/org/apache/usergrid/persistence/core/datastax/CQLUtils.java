@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.core.datastax;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.util.StringUtils;
 
 import java.nio.ByteBuffer;
@@ -192,6 +192,10 @@ public class CQLUtils {
                 cacheValue.put("keys", "NONE");
                 cacheValue.put("rows_per_partition", "NONE");
                 break;
+            default:
+                cacheValue.put("keys", "NONE");
+                cacheValue.put("rows_per_partition", "NONE");
+                break;
 
         }
 
@@ -201,7 +205,7 @@ public class CQLUtils {
 
     public static String getLegacyCacheValue( TableDefinition.CacheOption cacheOption ){
 
-        String cacheValue = "none"; // default to no caching
+        String cacheValue;
         switch (cacheOption) {
 
             case ALL:
@@ -217,6 +221,9 @@ public class CQLUtils {
                 break;
 
             case NONE:
+                cacheValue = "none";
+                break;
+            default:
                 cacheValue = "none";
                 break;
 

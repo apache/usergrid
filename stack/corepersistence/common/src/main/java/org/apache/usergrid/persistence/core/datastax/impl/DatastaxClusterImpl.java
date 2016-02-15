@@ -23,7 +23,7 @@ import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
 import com.datastax.driver.core.policies.LoadBalancingPolicy;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
 import org.slf4j.Logger;
@@ -179,7 +179,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             .withLoadBalancingPolicy(loadBalancingPolicy)
             .withPoolingOptions(poolingOptions)
             .withQueryOptions(queryOptions)
-            .withProtocolVersion(ProtocolVersion.NEWEST_SUPPORTED);
+            .withProtocolVersion(getProtocolVersion(cassandraFig.getVersion()));
 
         // only add auth credentials if they were provided
         if ( !cassandraFig.getUsername().isEmpty() && !cassandraFig.getPassword().isEmpty() ){
@@ -191,6 +191,31 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
 
         return datastaxCluster.build();
+
+    }
+
+    private ProtocolVersion getProtocolVersion(String versionNumber){
+
+        ProtocolVersion protocolVersion;
+        switch (versionNumber) {
+
+            case "2.1":
+                protocolVersion = ProtocolVersion.V3;
+                break;
+            case "2.0":
+                protocolVersion = ProtocolVersion.V2;
+                break;
+            case "1.2":
+                protocolVersion = ProtocolVersion.V1;
+                break;
+            default:
+                protocolVersion = ProtocolVersion.NEWEST_SUPPORTED;
+                break;
+
+        }
+
+        return protocolVersion;
+
 
     }
 
