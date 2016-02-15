@@ -26,6 +26,7 @@ import java.beans.PropertyChangeListener;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.model.ConsistencyLevel;
+import org.apache.usergrid.persistence.core.CassandraFig;
 
 
 /**

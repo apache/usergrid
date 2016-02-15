@@ -22,8 +22,7 @@ package org.apache.usergrid.persistence.core.migration.schema;
 import java.util.Collection;
 import java.util.Set;
 
-import com.datastax.driver.core.Session;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;

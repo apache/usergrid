@@ -21,11 +21,10 @@ package org.apache.usergrid.persistence.core.datastax;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.google.inject.Inject;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.guice.TestCommonModule;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 

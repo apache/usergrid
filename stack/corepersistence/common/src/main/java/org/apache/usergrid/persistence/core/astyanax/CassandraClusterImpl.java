@@ -35,6 +35,7 @@ import com.netflix.astyanax.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.astyanax.connectionpool.impl.Slf4jConnectionPoolMonitorImpl;
 import com.netflix.astyanax.impl.AstyanaxConfigurationImpl;
 import com.netflix.astyanax.thrift.ThriftFamilyFactory;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
