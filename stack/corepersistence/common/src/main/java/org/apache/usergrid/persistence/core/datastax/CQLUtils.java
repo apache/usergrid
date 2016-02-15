@@ -18,10 +18,10 @@
  */
 package org.apache.usergrid.persistence.core.datastax;
 
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.ProtocolVersion;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.util.StringUtils;
 
 import java.nio.ByteBuffer;
@@ -29,6 +29,8 @@ import java.util.*;
 
 public class CQLUtils {
 
+    private final CassandraFig cassandraFig;
+    private final static ObjectMapper mapper = new ObjectMapper();
 
     public enum ACTION {
         CREATE, UPDATE
@@ -41,6 +43,7 @@ public class CQLUtils {
     static String EQUAL = "=";
     static String COMPRESSION = "compression";
     static String COMPACTION = "compaction";
+    static String CACHING = "caching";
     static String GC_GRACE_SECONDS = "gc_grace_seconds";
     static String PRIMARY_KEY = "PRIMARY KEY";
     static String COMPACT_STORAGE = "COMPACT STORAGE";
@@ -49,8 +52,12 @@ public class CQLUtils {
     static String PAREN_LEFT = "(";
     static String PAREN_RIGHT = ")";
 
+    @Inject
+    public CQLUtils ( final CassandraFig cassandraFig ){
 
-    private final static ObjectMapper mapper = new ObjectMapper();
+        this.cassandraFig = cassandraFig;
+
+    }
 
 
     public static String getFormattedReplication(String strategy, String strategyOptions) throws JsonProcessingException {
@@ -72,7 +79,8 @@ public class CQLUtils {
     }
 
 
-    public static String getTableCQL(TableDefinition tableDefinition, ACTION tableAction) throws Exception {
+    public static String getTableCQL( CassandraFig cassandraFig, TableDefinition tableDefinition,
+                               ACTION tableAction) throws Exception {
 
         StringJoiner cql = new StringJoiner(" ");
 
@@ -120,9 +128,9 @@ public class CQLUtils {
             .add(AND)
             .add(COMPRESSION).add(EQUAL).add( getMapAsCQLString( tableDefinition.getCompression() ) )
             .add(AND)
-            .add(GC_GRACE_SECONDS).add(EQUAL).add( tableDefinition.getGcGraceSeconds() );
-
-
+            .add(GC_GRACE_SECONDS).add(EQUAL).add( tableDefinition.getGcGraceSeconds() )
+            .add(AND)
+            .add(CACHING).add(EQUAL).add( getCachingOptions( cassandraFig, tableDefinition.getCacheOption() ) );
 
         return cql.toString();
 
@@ -140,6 +148,81 @@ public class CQLUtils {
         columns.forEach( (key, value) -> columnsSchema.add(key+" "+String.valueOf(value)));
 
         return columnsSchema.toString();
+
+    }
+
+
+    public static String getCachingOptions(CassandraFig cassandraFig, TableDefinition.CacheOption cacheOption) throws JsonProcessingException {
+
+        // Cassandra 2.0 and below has a different CQL syntax for caching
+        if( Double.parseDouble( cassandraFig.getVersion() ) <= 2.0 ){
+
+            return quote( getLegacyCacheValue( cacheOption ) );
+
+        } else {
+
+            return getCacheValue( cacheOption );
+        }
+
+    }
+
+
+    public static String getCacheValue( TableDefinition.CacheOption cacheOption ) throws JsonProcessingException {
+
+
+        Map<String, Object>  cacheValue = new HashMap<>(2);
+        switch (cacheOption) {
+
+            case ALL:
+                cacheValue.put("keys", "ALL");
+                cacheValue.put("rows_per_partition", "ALL");
+                break;
+
+            case KEYS:
+                cacheValue.put("keys", "ALL");
+                cacheValue.put("rows_per_partition", "NONE");
+                break;
+
+            case ROWS:
+                cacheValue.put("keys", "NONE");
+                cacheValue.put("rows_per_partition", "ALL");
+                break;
+
+            case NONE:
+                cacheValue.put("keys", "NONE");
+                cacheValue.put("rows_per_partition", "NONE");
+                break;
+
+        }
+
+        return getMapAsCQLString( cacheValue );
+
+    }
+
+    public static String getLegacyCacheValue( TableDefinition.CacheOption cacheOption ){
+
+        String cacheValue = "none"; // default to no caching
+        switch (cacheOption) {
+
+            case ALL:
+                cacheValue = "all";
+                break;
+
+            case KEYS:
+                cacheValue = "keys_only";
+                break;
+
+            case ROWS:
+                cacheValue = "rows_only";
+                break;
+
+            case NONE:
+                cacheValue = "none";
+                break;
+
+        }
+
+        return cacheValue;
 
     }
 

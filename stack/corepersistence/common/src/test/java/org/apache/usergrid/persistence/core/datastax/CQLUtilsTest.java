@@ -20,7 +20,14 @@ package org.apache.usergrid.persistence.core.datastax;
 
 
 import com.datastax.driver.core.DataType;
+import com.google.inject.Inject;
+import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.guice.TestCommonModule;
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,12 +35,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+@RunWith( ITRunner.class )
+@UseModules( TestCommonModule.class )
 public class CQLUtilsTest {
 
     private static final Logger logger = LoggerFactory.getLogger( CQLUtilsTest.class );
+
+    @Inject
+    CassandraFig cassandraFig;
+
 
     @Test
     public void testTableCQL() throws Exception {
@@ -64,8 +80,8 @@ public class CQLUtilsTest {
             clusteringOrder
             );
 
-        String createCQL = CQLUtils.getTableCQL(table1, CQLUtils.ACTION.CREATE);
-        String updateCQL = CQLUtils.getTableCQL(table1, CQLUtils.ACTION.UPDATE);
+        String createCQL = CQLUtils.getTableCQL(cassandraFig, table1, CQLUtils.ACTION.CREATE);
+        String updateCQL = CQLUtils.getTableCQL(cassandraFig, table1, CQLUtils.ACTION.UPDATE);
 
         assertTrue(
             createCQL.contains(CQLUtils.CREATE_TABLE ) &&
@@ -82,6 +98,91 @@ public class CQLUtilsTest {
         );
         logger.info(createCQL);
         logger.info(updateCQL);
+
+    }
+
+    @Test
+    public void testLegacyCachingOptions() throws Exception{
+
+        final CassandraFig cassandraFig = mock(CassandraFig.class);
+        when(cassandraFig.getVersion()).thenReturn("2.0");
+
+        Map<String, DataType.Name> columns = new HashMap<>();
+        columns.put("key", DataType.Name.BLOB);
+        columns.put("column1", DataType.Name.TEXT);
+        columns.put("value", DataType.Name.BLOB);
+
+        List<String> partitionKeys = new ArrayList<>();
+        partitionKeys.add("key");
+
+        List<String> columnKeys = new ArrayList<>();
+        columnKeys.add("column1");
+
+        Map<String, String> clusteringOrder = new HashMap<>();
+        clusteringOrder.put("column1", "DESC");
+
+
+
+        TableDefinition table1 = new TableDefinition(
+            CQLUtils.quote("table1"),
+            partitionKeys,
+            columnKeys,
+            columns,
+            TableDefinition.CacheOption.KEYS,
+            clusteringOrder
+        );
+
+        String createCQL = CQLUtils.getTableCQL(cassandraFig, table1, CQLUtils.ACTION.CREATE);
+        logger.info(createCQL);
+        assertTrue(
+            createCQL.contains( "\"keys_only\"" ) &&
+                !createCQL.contains( "'keys':'ALL'"  )
+
+        );
+
+
+
+    }
+
+    @Test
+    public void testCachingOptions() throws Exception {
+
+        final CassandraFig cassandraFig = mock(CassandraFig.class);
+        when(cassandraFig.getVersion()).thenReturn("2.1");
+
+        Map<String, DataType.Name> columns = new HashMap<>();
+        columns.put("key", DataType.Name.BLOB);
+        columns.put("column1", DataType.Name.TEXT);
+        columns.put("value", DataType.Name.BLOB);
+
+        List<String> partitionKeys = new ArrayList<>();
+        partitionKeys.add("key");
+
+        List<String> columnKeys = new ArrayList<>();
+        columnKeys.add("column1");
+
+        Map<String, String> clusteringOrder = new HashMap<>();
+        clusteringOrder.put("column1", "DESC");
+
+
+
+        TableDefinition table1 = new TableDefinition(
+            CQLUtils.quote("table1"),
+            partitionKeys,
+            columnKeys,
+            columns,
+            TableDefinition.CacheOption.KEYS,
+            clusteringOrder
+        );
+
+        String createCQL = CQLUtils.getTableCQL(cassandraFig, table1, CQLUtils.ACTION.CREATE);
+        logger.info(createCQL);
+        assertTrue(
+            createCQL.contains( "'keys':'ALL'"  ) &&
+            !createCQL.contains( "\"keys_only\"" )
+
+        );
+
 
     }
 

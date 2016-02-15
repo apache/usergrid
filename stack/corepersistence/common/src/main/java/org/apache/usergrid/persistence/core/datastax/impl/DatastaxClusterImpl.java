@@ -26,7 +26,6 @@ import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
-import org.safehaus.guicyfig.Overrides;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
