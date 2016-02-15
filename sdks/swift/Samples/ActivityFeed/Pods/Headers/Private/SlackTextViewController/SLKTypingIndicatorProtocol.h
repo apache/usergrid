@@ -1,1 +1,0 @@
-../../../SlackTextViewController/Source/SLKTypingIndicatorProtocol.h

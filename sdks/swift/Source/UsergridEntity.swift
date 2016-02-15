@@ -73,7 +73,7 @@ public class UsergridEntity: NSObject, NSCoding {
     /// Property helper method for the `UsergridEntity` objects `UsergridEntityProperties.Location`.
     public var location: CLLocation? {
         get { return self.getEntitySpecificProperty(.Location) as? CLLocation }
-        set { self[UsergridEntityProperties.Location.stringValue] = newValue }
+        set(newLocation) { self[UsergridEntityProperties.Location.stringValue] = newLocation }
     }
 
     /// Property helper method to get the UUID or name of the `UsergridEntity`.
@@ -89,7 +89,7 @@ public class UsergridEntity: NSObject, NSCoding {
     public var jsonObjectValue : [String:AnyObject] { return self.properties }
 
     /// The string value.
-    public var stringValue : String { return NSString(data: try! NSJSONSerialization.dataWithJSONObject(self.jsonObjectValue, options: .PrettyPrinted), encoding: NSASCIIStringEncoding) as! String }
+    public var stringValue : String { return NSString(data: try! NSJSONSerialization.dataWithJSONObject(self.jsonObjectValue, options: .PrettyPrinted), encoding: NSUTF8StringEncoding) as! String }
 
     /// The description.
     public override var description : String {
@@ -127,11 +127,9 @@ public class UsergridEntity: NSObject, NSCoding {
         }
     }
 
-    private func copyInternalsFromEntity(entity:UsergridEntity) {
+    internal func copyInternalsFromEntity(entity:UsergridEntity) {
         self.properties = entity.properties
-        self.asset = entity.asset ?? self.asset
     }
-
 
     /**
      Used for custom mapping subclasses to a given `Usergrid` type.
@@ -434,7 +432,7 @@ public class UsergridEntity: NSObject, NSCoding {
                 completion?(response: response)
             }
         } else {
-            completion?(response: UsergridResponse(client: client, errorName: "Entity cannot be reloaded.", errorDescription: "Entity has neither an UUID or specified."))
+            completion?(response: UsergridResponse(client: client, errorName: "Entity cannot be reloaded.", errorDescription: "Entity has neither an UUID or name specified."))
         }
     }
 

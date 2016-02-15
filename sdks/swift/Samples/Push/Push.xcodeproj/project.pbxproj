@@ -7,17 +7,91 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		634855231C726A3B005FE016 /* UsergridSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 634855161C726A2D005FE016 /* UsergridSDK.framework */; };
+		634855241C726A3B005FE016 /* UsergridSDK.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 634855161C726A2D005FE016 /* UsergridSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		637A720E1C5BF8160056545A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 637A72061C5BF8160056545A /* AppDelegate.swift */; };
 		637A720F1C5BF8160056545A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 637A72071C5BF8160056545A /* Assets.xcassets */; };
 		637A72101C5BF8160056545A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 637A72081C5BF8160056545A /* LaunchScreen.storyboard */; };
 		637A72111C5BF8160056545A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 637A720A1C5BF8160056545A /* Main.storyboard */; };
 		637A72131C5BF8160056545A /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 637A720D1C5BF8160056545A /* ViewController.swift */; };
 		637A72161C5C06270056545A /* UsergridManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 637A72151C5C06270056545A /* UsergridManager.swift */; };
-		93F1FDA07B9F97BFB25A2B6A /* Pods.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73F3E0733C90D8FB3A70AF1A /* Pods.framework */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		634855151C726A2D005FE016 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6348550B1C726A2D005FE016 /* UsergridSDK.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 63AF0E881BBC38FB009D4196;
+			remoteInfo = "UsergridSDK iOS";
+		};
+		634855171C726A2D005FE016 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6348550B1C726A2D005FE016 /* UsergridSDK.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 639B4BEB1C3DD6CF005E26E7;
+			remoteInfo = "UsergridSDK watchOS";
+		};
+		634855191C726A2D005FE016 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6348550B1C726A2D005FE016 /* UsergridSDK.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 63EE610B1C406E1600AFC2CF;
+			remoteInfo = "UsergridSDK tvOS";
+		};
+		6348551B1C726A2D005FE016 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6348550B1C726A2D005FE016 /* UsergridSDK.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 631920451C48436500F99E86;
+			remoteInfo = "UsergridSDK OSX";
+		};
+		6348551D1C726A2D005FE016 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6348550B1C726A2D005FE016 /* UsergridSDK.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 6319204B1C49BC0700F99E86;
+			remoteInfo = UsergridSDK_TVOS_Tests;
+		};
+		6348551F1C726A2D005FE016 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6348550B1C726A2D005FE016 /* UsergridSDK.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 630A219F1C49BFFC008BE87F;
+			remoteInfo = UsergridSDK_OSX_Tests;
+		};
+		634855211C726A2D005FE016 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6348550B1C726A2D005FE016 /* UsergridSDK.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 630A21B81C49C473008BE87F;
+			remoteInfo = UsergridSDK_iOS_Tests;
+		};
+		634855251C726A3B005FE016 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6348550B1C726A2D005FE016 /* UsergridSDK.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 63AF0E871BBC38FB009D4196;
+			remoteInfo = "UsergridSDK iOS";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		634855271C726A3B005FE016 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				634855241C726A3B005FE016 /* UsergridSDK.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		40784BA539B3C7FC7074887B /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
+		6348550B1C726A2D005FE016 /* UsergridSDK.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = UsergridSDK.xcodeproj; path = ../../UsergridSDK.xcodeproj; sourceTree = "<group>"; };
 		637A71F01C5BF7B10056545A /* Push.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Push.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		637A72061C5BF8160056545A /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		637A72071C5BF8160056545A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -26,8 +100,6 @@
 		637A720C1C5BF8160056545A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		637A720D1C5BF8160056545A /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		637A72151C5C06270056545A /* UsergridManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UsergridManager.swift; sourceTree = "<group>"; };
-		73F3E0733C90D8FB3A70AF1A /* Pods.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		9BB4D667087D6CF002BECEB1 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -35,37 +107,33 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				93F1FDA07B9F97BFB25A2B6A /* Pods.framework in Frameworks */,
+				634855231C726A3B005FE016 /* UsergridSDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		11B1DE4765D09F54EEAA5FB4 /* Pods */ = {
+		6348550C1C726A2D005FE016 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				40784BA539B3C7FC7074887B /* Pods.debug.xcconfig */,
-				9BB4D667087D6CF002BECEB1 /* Pods.release.xcconfig */,
+				634855161C726A2D005FE016 /* UsergridSDK.framework */,
+				634855181C726A2D005FE016 /* UsergridSDK.framework */,
+				6348551A1C726A2D005FE016 /* UsergridSDK.framework */,
+				6348551C1C726A2D005FE016 /* UsergridSDK.framework */,
+				6348551E1C726A2D005FE016 /* UsergridSDK_TVOS_Tests.xctest */,
+				634855201C726A2D005FE016 /* UsergridSDK_OSX_Tests.xctest */,
+				634855221C726A2D005FE016 /* UsergridSDK_iOS_Tests.xctest */,
 			);
-			name = Pods;
-			sourceTree = "<group>";
-		};
-		40B8DB4D5F8684F52D86AD13 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				73F3E0733C90D8FB3A70AF1A /* Pods.framework */,
-			);
-			name = Frameworks;
+			name = Products;
 			sourceTree = "<group>";
 		};
 		637A71E71C5BF7B10056545A = {
 			isa = PBXGroup;
 			children = (
+				6348550B1C726A2D005FE016 /* UsergridSDK.xcodeproj */,
 				637A72051C5BF8160056545A /* Source */,
 				637A71F11C5BF7B10056545A /* Products */,
-				11B1DE4765D09F54EEAA5FB4 /* Pods */,
-				40B8DB4D5F8684F52D86AD13 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -106,16 +174,15 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 637A72021C5BF7B10056545A /* Build configuration list for PBXNativeTarget "Push" */;
 			buildPhases = (
-				07DB92FBF16075B01449F26B /* Check Pods Manifest.lock */,
 				637A71EC1C5BF7B10056545A /* Sources */,
 				637A71ED1C5BF7B10056545A /* Frameworks */,
 				637A71EE1C5BF7B10056545A /* Resources */,
-				9A01B8F77A9D4469391D8826 /* Embed Pods Frameworks */,
-				EA12798F3DFFB01F69B53C53 /* Copy Pods Resources */,
+				634855271C726A3B005FE016 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				634855261C726A3B005FE016 /* PBXTargetDependency */,
 			);
 			name = Push;
 			productName = Push;
@@ -148,12 +215,70 @@
 			mainGroup = 637A71E71C5BF7B10056545A;
 			productRefGroup = 637A71F11C5BF7B10056545A /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 6348550C1C726A2D005FE016 /* Products */;
+					ProjectRef = 6348550B1C726A2D005FE016 /* UsergridSDK.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				637A71EF1C5BF7B10056545A /* Push */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		634855161C726A2D005FE016 /* UsergridSDK.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = UsergridSDK.framework;
+			remoteRef = 634855151C726A2D005FE016 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		634855181C726A2D005FE016 /* UsergridSDK.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = UsergridSDK.framework;
+			remoteRef = 634855171C726A2D005FE016 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6348551A1C726A2D005FE016 /* UsergridSDK.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = UsergridSDK.framework;
+			remoteRef = 634855191C726A2D005FE016 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6348551C1C726A2D005FE016 /* UsergridSDK.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = UsergridSDK.framework;
+			remoteRef = 6348551B1C726A2D005FE016 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6348551E1C726A2D005FE016 /* UsergridSDK_TVOS_Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = UsergridSDK_TVOS_Tests.xctest;
+			remoteRef = 6348551D1C726A2D005FE016 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		634855201C726A2D005FE016 /* UsergridSDK_OSX_Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = UsergridSDK_OSX_Tests.xctest;
+			remoteRef = 6348551F1C726A2D005FE016 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		634855221C726A2D005FE016 /* UsergridSDK_iOS_Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = UsergridSDK_iOS_Tests.xctest;
+			remoteRef = 634855211C726A2D005FE016 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		637A71EE1C5BF7B10056545A /* Resources */ = {
@@ -168,54 +293,6 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		07DB92FBF16075B01449F26B /* Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Check Pods Manifest.lock";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		9A01B8F77A9D4469391D8826 /* Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Embed Pods Frameworks";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods/Pods-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		EA12798F3DFFB01F69B53C53 /* Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods/Pods-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		637A71EC1C5BF7B10056545A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -228,6 +305,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		634855261C726A3B005FE016 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "UsergridSDK iOS";
+			targetProxy = 634855251C726A3B005FE016 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		637A72081C5BF8160056545A /* LaunchScreen.storyboard */ = {
@@ -266,6 +351,7 @@
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -310,6 +396,7 @@
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -332,10 +419,10 @@
 		};
 		637A72031C5BF7B10056545A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 40784BA539B3C7FC7074887B /* Pods.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
 				INFOPLIST_FILE = Source/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.usergrid.usergridpushsample;
@@ -346,11 +433,11 @@
 		};
 		637A72041C5BF7B10056545A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9BB4D667087D6CF002BECEB1 /* Pods.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
 				INFOPLIST_FILE = Source/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.usergrid.usergridpushsample;

@@ -2038,12 +2038,278 @@ let someName = usergridUser[<q>name</q>]</p></li></p>
                     </section>
                   </div>
                 </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK12UsergridUser15connectToDeviceFS0_FTGSqCS_14UsergridDevice_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/connectToDevice(_:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK12UsergridUser15connectToDeviceFS0_FTGSqCS_14UsergridDevice_10completionGSqFT8responseCS_16UsergridResponse_T___T_">connectToDevice(_:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A special convenience function that connects a <code><a href="../Classes/UsergridDevice.html">UsergridDevice</a></code> to this <code><a href="../Classes/UsergridUser.html">UsergridUser</a></code> using the shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">connectToDevice</span><span class="p">(</span><span class="nv">device</span><span class="p">:</span><span class="kt">UsergridDevice</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>device</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The device to connect to.  If nil it will use the <code>UsergridDevice.sharedDevice</code> instance.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The optional completion block.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK12UsergridUser15connectToDeviceFS0_FTCS_14UsergridClient6deviceGSqCS_14UsergridDevice_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/connectToDevice(_:device:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK12UsergridUser15connectToDeviceFS0_FTCS_14UsergridClient6deviceGSqCS_14UsergridDevice_10completionGSqFT8responseCS_16UsergridResponse_T___T_">connectToDevice(_:device:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A special convenience function that connects a <code><a href="../Classes/UsergridDevice.html">UsergridDevice</a></code> to this <code><a href="../Classes/UsergridUser.html">UsergridUser</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">connectToDevice</span><span class="p">(</span><span class="nv">client</span><span class="p">:</span><span class="kt">UsergridClient</span><span class="p">,</span> <span class="nv">device</span><span class="p">:</span><span class="kt">UsergridDevice</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>client</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridClient</code> object to use for connecting.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>device</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The device to connect to.  If nil it will use the <code>UsergridDevice.sharedDevice</code> instance.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The optional completion block.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK12UsergridUser20disconnectFromDeviceFS0_FTGSqCS_14UsergridDevice_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/disconnectFromDevice(_:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK12UsergridUser20disconnectFromDeviceFS0_FTGSqCS_14UsergridDevice_10completionGSqFT8responseCS_16UsergridResponse_T___T_">disconnectFromDevice(_:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A special convenience function that disconnects a <code><a href="../Classes/UsergridDevice.html">UsergridDevice</a></code> from this <code><a href="../Classes/UsergridUser.html">UsergridUser</a></code> using the shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">disconnectFromDevice</span><span class="p">(</span><span class="nv">device</span><span class="p">:</span><span class="kt">UsergridDevice</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>device</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The device to connect to.  If nil it will use the <code>UsergridDevice.sharedDevice</code> instance.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The optional completion block.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK12UsergridUser20disconnectFromDeviceFS0_FTCS_14UsergridClient6deviceGSqCS_14UsergridDevice_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/disconnectFromDevice(_:device:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK12UsergridUser20disconnectFromDeviceFS0_FTCS_14UsergridClient6deviceGSqCS_14UsergridDevice_10completionGSqFT8responseCS_16UsergridResponse_T___T_">disconnectFromDevice(_:device:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A special convenience function that disconnects a <code><a href="../Classes/UsergridDevice.html">UsergridDevice</a></code> from this <code><a href="../Classes/UsergridUser.html">UsergridUser</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">disconnectFromDevice</span><span class="p">(</span><span class="nv">client</span><span class="p">:</span><span class="kt">UsergridClient</span><span class="p">,</span> <span class="nv">device</span><span class="p">:</span><span class="kt">UsergridDevice</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>client</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridClient</code> object to use for connecting.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>device</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The device to connect to.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The optional completion block.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
               </ul>
             </div>
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2016 <a class="link" href="https://github.com/RobertWalsh/UsergridSDK" target="_blank" rel="external">Robert Walsh</a>. All rights reserved. (Last updated: 2016-02-08)</p>
+          <p>&copy; 2016 <a class="link" href="https://github.com/apache/usergrid/tree/master/sdks/swift" target="_blank" rel="external">Robert Walsh</a>. All rights reserved. (Last updated: 2016-02-15)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.5.0</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

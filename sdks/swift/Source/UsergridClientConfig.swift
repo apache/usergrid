@@ -45,9 +45,12 @@ public class UsergridClientConfig : NSObject, NSCoding {
     public var baseUrl: String = UsergridClient.DEFAULT_BASE_URL
 
     /// The `UsergridAuthFallback` value used to determine what type of token will be sent, if any.
-    public var authFallback: UsergridAuthFallback = .App
+    public var authFallback: UsergridAuthFallback = .None
 
-    /** 
+    /// Whether or not the `UsergridClient` current user will be saved and restored from the keychain.
+    public var persistCurrentUserInKeychain: Bool = true
+
+    /**
     The application level `UsergridAppAuth` object.
     
     Note that you still need to call the authentication methods within `UsergridClient` once it has been initialized.
@@ -86,16 +89,18 @@ public class UsergridClientConfig : NSObject, NSCoding {
     /**
     Convenience initializer for `UsergridClientConfig`.
 
-    - parameter orgId:        The organization identifier.
-    - parameter appId:        The application identifier.
-    - parameter baseUrl:      The base URL that all calls will be made with.
-    - parameter authFallback: The `UsergridAuthFallback` value used to determine what type of token will be sent, if any.
-    - parameter appAuth:      The application level `UsergridAppAuth` object.
+    - parameter orgId:                          The organization identifier.
+    - parameter appId:                          The application identifier.
+    - parameter baseUrl:                        The base URL that all calls will be made with.
+    - parameter authFallback:                   The `UsergridAuthFallback` value used to determine what type of token will be sent, if any.
+    - parameter persistCurrentUserInKeychain:   Whether or not the `UsergridClient` current user will be saved and restored from the keychain.
+    - parameter appAuth:                        The application level `UsergridAppAuth` object.
 
     - returns: A new instance of `UsergridClientConfig`.
     */
-    public convenience init(orgId: String, appId: String, baseUrl:String, authFallback:UsergridAuthFallback, appAuth:UsergridAppAuth? = nil) {
+    public convenience init(orgId: String, appId: String, baseUrl:String, authFallback:UsergridAuthFallback, persistCurrentUserInKeychain: Bool = true, appAuth:UsergridAppAuth? = nil) {
         self.init(orgId:orgId,appId:appId,baseUrl:baseUrl)
+        self.persistCurrentUserInKeychain = persistCurrentUserInKeychain
         self.authFallback = authFallback
         self.appAuth = appAuth
     }
@@ -123,6 +128,7 @@ public class UsergridClientConfig : NSObject, NSCoding {
         self.orgId = orgId
         self.baseUrl = baseUrl
         self.appAuth = aDecoder.decodeObjectForKey("appAuth") as? UsergridAppAuth
+        self.persistCurrentUserInKeychain = aDecoder.decodeBoolForKey("persistCurrentUserInKeychain") ?? true
         self.authFallback = UsergridAuthFallback(rawValue:aDecoder.decodeIntegerForKey("authFallback")) ?? .App
         super.init()
     }
@@ -137,6 +143,7 @@ public class UsergridClientConfig : NSObject, NSCoding {
         aCoder.encodeObject(self.orgId, forKey: "orgId")
         aCoder.encodeObject(self.baseUrl, forKey: "baseUrl")
         aCoder.encodeObject(self.appAuth, forKey: "appAuth")
+        aCoder.encodeBool(self.persistCurrentUserInKeychain, forKey: "persistCurrentUserInKeychain")
         aCoder.encodeInteger(self.authFallback.rawValue, forKey: "authFallback")
     }
 }

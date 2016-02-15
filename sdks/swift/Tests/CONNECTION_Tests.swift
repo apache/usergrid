@@ -36,6 +36,7 @@ class CONNECTION_Tests: XCTestCase {
     func test_CLIENT_AUTH() {
 
         let authExpect = self.expectationWithDescription("\(__FUNCTION__)")
+        testAuthClient.authFallback = .App
         testAuthClient.authenticateApp(clientAuth) { [weak self] (auth,error) in
             XCTAssertNil(error)
             XCTAssertNotNil(self?.testAuthClient.appAuth)

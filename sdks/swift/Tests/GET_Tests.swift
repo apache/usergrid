@@ -34,10 +34,7 @@ class GET_Tests: XCTestCase {
     static let collectionName = "books"
     static let entityUUID = "f4078aca-2fb1-11e5-8eb2-e13f8369aad1"
 
-    let query = UsergridQuery(GET_Tests.collectionName)
-        .eq("title", value: "The Sun Also Rises")
-        .or()
-        .eq("title", value: "The Old Man and the Sea")
+    let query = UsergridQuery(GET_Tests.collectionName).fromString("select * where title = 'The Sun Also Rises' or title = 'The Old Man and the Sea'")
 
 
     func test_GET_WITHOUT_QUERY() {
@@ -56,7 +53,7 @@ class GET_Tests: XCTestCase {
     func test_GET_WITH_QUERY() {
 
         let getExpect = self.expectationWithDescription("\(__FUNCTION__)")
-        usergridClientInstance.GET(GET_Tests.collectionName, query:self.query) { (response) in
+        usergridClientInstance.GET(self.query) { (response) in
             XCTAssertNotNil(response)
             XCTAssertTrue(response.ok)
             XCTAssertEqual(response.count, 3)

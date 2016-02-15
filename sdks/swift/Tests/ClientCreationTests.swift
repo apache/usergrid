@@ -41,7 +41,7 @@ class ClientCreationTests: XCTestCase {
     static let otherConfiguration = UsergridClientConfig(orgId: ClientCreationTests.otherOrgID,
                                                          appId: ClientCreationTests.otherAppID,
                                                          baseUrl: ClientCreationTests.otherBaseURL,
-                                                         authFallback: .None,
+                                                         authFallback: .App,
                                                          appAuth: ClientCreationTests.otherAppAuth)
 
     let otherClient = UsergridClient(configuration: ClientCreationTests.otherConfiguration)
@@ -65,13 +65,13 @@ class ClientCreationTests: XCTestCase {
     func test_CLIENT_PROPERTIES() {
         XCTAssertEqual(Usergrid.sharedInstance.appId, ClientCreationTests.appId)
         XCTAssertEqual(Usergrid.sharedInstance.orgId, ClientCreationTests.orgId)
-        XCTAssertEqual(Usergrid.sharedInstance.authFallback, UsergridAuthFallback.App)
+        XCTAssertEqual(Usergrid.sharedInstance.authFallback, UsergridAuthFallback.None)
         XCTAssertEqual(Usergrid.sharedInstance.baseUrl, UsergridClient.DEFAULT_BASE_URL)
         XCTAssertNil(Usergrid.sharedInstance.currentUser)
 
         XCTAssertEqual(otherClient.appId, ClientCreationTests.otherAppID)
         XCTAssertEqual(otherClient.orgId, ClientCreationTests.otherOrgID)
-        XCTAssertEqual(otherClient.authFallback, UsergridAuthFallback.None)
+        XCTAssertEqual(otherClient.authFallback, UsergridAuthFallback.App)
         XCTAssertEqual(otherClient.baseUrl, ClientCreationTests.otherBaseURL)
         XCTAssertNil(otherClient.currentUser)
     }

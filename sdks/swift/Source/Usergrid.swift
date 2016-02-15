@@ -72,13 +72,25 @@ public class Usergrid: NSObject {
     /// The currently logged in `UsergridUser` of the shared instance of `UsergridClient`.
     public static var currentUser: UsergridUser?  { return Usergrid.sharedInstance.currentUser }
 
+    /// Whether or not the current user will be saved and restored from the keychain using the shared instance of `UsergridClient`.
+    public static var persistCurrentUserInKeychain: Bool {
+        get { return Usergrid.sharedInstance.persistCurrentUserInKeychain }
+        set(persist) { Usergrid.sharedInstance.persistCurrentUserInKeychain = persist }
+    }
+
     /// The `UsergridUserAuth` which consists of the token information from the `currentUser` property of the shared instance of `UsergridClient`.
     public static var userAuth: UsergridUserAuth?  { return Usergrid.sharedInstance.userAuth }
 
     /// The application level `UsergridAppAuth` object of the shared instance of `UsergridClient`.
     public static var appAuth: UsergridAppAuth?  {
-        get{ return Usergrid.sharedInstance.appAuth }
-        set{ Usergrid.sharedInstance.appAuth = newValue }
+        get { return Usergrid.sharedInstance.appAuth }
+        set(auth) { Usergrid.sharedInstance.appAuth = auth }
+    }
+
+    /// The `UsergridAuthFallback` value used to determine what type of token will be sent of the shared instance of `UsergridClient`, if any.
+    public static var authFallback: UsergridAuthFallback {
+        get { return Usergrid.sharedInstance.authFallback }
+        set(authFallback) { Usergrid.sharedInstance.authFallback = authFallback }
     }
 
     // MARK: - Initialization -
@@ -161,12 +173,6 @@ public class Usergrid: NSObject {
 
 
     // MARK: - Authorization -
-
-    /// The `UsergridAuthFallback` value used to determine what type of token will be sent of the shared instance of `UsergridClient`, if any.
-    public static var authFallback: UsergridAuthFallback {
-        get{ return Usergrid.sharedInstance.authFallback }
-        set { Usergrid.sharedInstance.authFallback = newValue }
-    }
 
     /**
      Sets the shared `UsergridClient`'s `tempAuth` property using the passed in `UsergridAuth`.
@@ -305,14 +311,23 @@ public class Usergrid: NSObject {
     }
 
     /**
-    Gets a group of `UsergridEntity` objects of a given type with an optional query using the shared instance of `UsergridCient`.
+     Gets a group of `UsergridEntity` objects of a given type  using the shared instance of `UsergridCient`.
 
-    - parameter type:       The `UsergridEntity` type.
-    - parameter query:      The optional query to use when gathering `UsergridEntity` objects.
-    - parameter completion: The completion block that will be called once the request has completed.
+     - parameter type:       The `UsergridEntity` type.
+     - parameter completion: The optional completion block that will be called once the request has completed.
+     */
+    public static func GET(type: String, completion: UsergridResponseCompletion? = nil) {
+        Usergrid.sharedInstance.GET(type,completion:completion)
+    }
+
+    /**
+    Gets a group of `UsergridEntity` objects with a given query using the shared instance of `UsergridCient`.
+
+    - parameter query:           The query to use when gathering `UsergridEntity` objects.
+    - parameter queryCompletion: The completion block that will be called once the request has completed.
     */
-    public static func GET(type: String, query: UsergridQuery? = nil, completion: UsergridResponseCompletion? = nil) {
-        Usergrid.sharedInstance.GET(type,query:query,completion:completion)
+    public static func GET(query: UsergridQuery, queryCompletion: UsergridResponseCompletion? = nil) {
+        Usergrid.sharedInstance.GET(query,queryCompletion:queryCompletion)
     }
 
     // MARK: - PUT -

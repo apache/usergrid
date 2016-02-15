@@ -277,7 +277,34 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">authFallback</span><span class="p">:</span> <span class="kt">UsergridAuthFallback</span> <span class="o">=</span> <span class="o">.</span><span class="kt">App</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">authFallback</span><span class="p">:</span> <span class="kt">UsergridAuthFallback</span> <span class="o">=</span> <span class="o">.</span><span class="kt">None</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:vC11UsergridSDK20UsergridClientConfig28persistCurrentUserInKeychainSb"></a>
+                    <a name="//apple_ref/swift/Property/persistCurrentUserInKeychain" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC11UsergridSDK20UsergridClientConfig28persistCurrentUserInKeychainSb">persistCurrentUserInKeychain</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Whether or not the <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code> current user will be saved and restored from the keychain.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">persistCurrentUserInKeychain</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">true</span></code></pre>
 
                         </div>
                       </div>
@@ -470,9 +497,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK20UsergridClientConfigcFMS0_FT5orgIdSS5appIdSS7baseUrlSS12authFallbackOS_20UsergridAuthFallback7appAuthGSqCS_15UsergridAppAuth__S0_"></a>
-                    <a name="//apple_ref/swift/Method/init(orgId:appId:baseUrl:authFallback:appAuth:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK20UsergridClientConfigcFMS0_FT5orgIdSS5appIdSS7baseUrlSS12authFallbackOS_20UsergridAuthFallback7appAuthGSqCS_15UsergridAppAuth__S0_">init(orgId:appId:baseUrl:authFallback:appAuth:)</a>
+                    <a name="/s:FC11UsergridSDK20UsergridClientConfigcFMS0_FT5orgIdSS5appIdSS7baseUrlSS12authFallbackOS_20UsergridAuthFallback28persistCurrentUserInKeychainSb7appAuthGSqCS_15UsergridAppAuth__S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(orgId:appId:baseUrl:authFallback:persistCurrentUserInKeychain:appAuth:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK20UsergridClientConfigcFMS0_FT5orgIdSS5appIdSS7baseUrlSS12authFallbackOS_20UsergridAuthFallback28persistCurrentUserInKeychainSb7appAuthGSqCS_15UsergridAppAuth__S0_">init(orgId:appId:baseUrl:authFallback:persistCurrentUserInKeychain:appAuth:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -487,7 +514,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">orgId</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">appId</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">baseUrl</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">authFallback</span><span class="p">:</span><span class="kt">UsergridAuthFallback</span><span class="p">,</span> <span class="nv">appAuth</span><span class="p">:</span><span class="kt">UsergridAppAuth</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">orgId</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">appId</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">baseUrl</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">authFallback</span><span class="p">:</span><span class="kt">UsergridAuthFallback</span><span class="p">,</span> <span class="nv">persistCurrentUserInKeychain</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">true</span><span class="p">,</span> <span class="nv">appAuth</span><span class="p">:</span><span class="kt">UsergridAppAuth</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -543,6 +570,19 @@
                               <td>
                                 <div>
                                   <p>The <code>UsergridAuthFallback</code> value used to determine what type of token will be sent, if any.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>persistCurrentUserInKeychain</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Whether or not the <code>UsergridClient</code> current user will be saved and restored from the keychain.</p>
 
                                 </div>
                               </td>
@@ -686,7 +726,7 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2016 <a class="link" href="https://github.com/RobertWalsh/UsergridSDK" target="_blank" rel="external">Robert Walsh</a>. All rights reserved. (Last updated: 2016-02-08)</p>
+          <p>&copy; 2016 <a class="link" href="https://github.com/apache/usergrid/tree/master/sdks/swift" target="_blank" rel="external">Robert Walsh</a>. All rights reserved. (Last updated: 2016-02-15)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.5.0</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

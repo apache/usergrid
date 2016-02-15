@@ -53,13 +53,21 @@ public class UsergridClient: NSObject, NSCoding {
     /// The constructed URL string based on the `UsergridClient`'s `baseUrl`, `orgId`, and `appId`.
     internal var clientAppURL : String { return "\(baseUrl)/\(orgId)/\(appId)" }
 
+    /// Whether or not the current user will be saved and restored from the keychain.
+    public var persistCurrentUserInKeychain: Bool {
+        get { return config.persistCurrentUserInKeychain }
+        set(persist) { config.persistCurrentUserInKeychain = persist }
+    }
+
     /// The currently logged in `UsergridUser`.
     internal(set) public var currentUser: UsergridUser? = nil {
         didSet {
-            if let newUser = self.currentUser {
-                UsergridUser.saveCurrentUserKeychainItem(self,currentUser:newUser)
-            } else if oldValue != nil {
-                UsergridUser.deleteCurrentUserKeychainItem(self)
+            if persistCurrentUserInKeychain {
+                if let newUser = self.currentUser {
+                    UsergridUser.saveCurrentUserKeychainItem(self,currentUser:newUser)
+                } else if oldValue != nil {
+                    UsergridUser.deleteCurrentUserKeychainItem(self)
+                }
             }
         }
     }
@@ -72,14 +80,14 @@ public class UsergridClient: NSObject, NSCoding {
 
     /// The application level `UsergridAppAuth` object.  Can be set manually but must call `authenticateApp` to retrive token.
     public var appAuth: UsergridAppAuth? {
-        set { config.appAuth = newValue }
         get { return config.appAuth }
+        set(auth) { config.appAuth = auth }
     }
 
     /// The `UsergridAuthFallback` value used to determine what type of token will be sent, if any.
     public var authFallback: UsergridAuthFallback {
-        set { config.authFallback = newValue }
         get { return config.authFallback }
+        set(fallback) { config.authFallback = fallback }
     }
 
     // MARK: - Initialization -
@@ -119,7 +127,10 @@ public class UsergridClient: NSObject, NSCoding {
     public init(configuration:UsergridClientConfig) {
         self.config = configuration
         super.init()
-        self.currentUser = UsergridUser.getCurrentUserFromKeychain(self) // Attempt to get the current user from the saved keychain data.
+        if persistCurrentUserInKeychain {
+            self.currentUser = UsergridUser.getCurrentUserFromKeychain(self) // Attempt to get the current user from the saved keychain data.
+        }
+        UsergridDevice.sharedDevice.save(self)
     }
 
     // MARK: - NSCoding -
@@ -145,9 +156,11 @@ public class UsergridClient: NSObject, NSCoding {
         if let currentUser = aDecoder.decodeObjectForKey("currentUser") as? UsergridUser {
             self.currentUser = currentUser
         } else {
-            // If we didn't decode a current user, attempt to get the current user from the saved keychain data.
-            self.currentUser = UsergridUser.getCurrentUserFromKeychain(self)
+            if persistCurrentUserInKeychain {
+                self.currentUser = UsergridUser.getCurrentUserFromKeychain(self)
+            }
         }
+        UsergridDevice.sharedDevice.save(self)
     }
 
     /**
@@ -183,7 +196,7 @@ public class UsergridClient: NSObject, NSCoding {
     */
     public func applyPushToken(device: UsergridDevice, pushToken: NSData, notifierID: String, completion: UsergridResponseCompletion? = nil) {
         device.applyPushToken(pushToken, notifierID: notifierID)
-        PUT(UsergridDevice.DEVICE_ENTITY_TYPE, jsonBody: device.jsonObjectValue, completion: completion)
+        device.save(self, completion: completion)
     }
 
     // MARK: - Authorization and User Management -
@@ -415,15 +428,31 @@ public class UsergridClient: NSObject, NSCoding {
     }
 
     /**
-    Gets a group of `UsergridEntity` objects of a given type with an optional query.
+     Gets a group of `UsergridEntity` objects of a given type.
 
-    - parameter type:       The `UsergridEntity` type.
-    - parameter query:      The optional query to use when gathering `UsergridEntity` objects.
-    - parameter completion: The optional completion block that will be called once the request has completed.
-    */
-    public func GET(type: String, query: UsergridQuery? = nil, completion: UsergridResponseCompletion? = nil) {
-        let request = UsergridRequest(method: .Get, baseUrl: self.clientAppURL, paths: [type], query: query, auth: self.authForRequests())
+     - parameter type:       The `UsergridEntity` type.
+     - parameter completion: The optional completion block that will be called once the request has completed.
+     */
+    public func GET(type: String, completion: UsergridResponseCompletion? = nil) {
+        let request = UsergridRequest(method: .Get, baseUrl: self.clientAppURL, paths: [type], query: nil, auth: self.authForRequests())
         self.sendRequest(request, completion: completion)
+    }
+
+    /**
+    Gets a group of `UsergridEntity` objects using a given query.
+
+    - parameter query:           The query to use when gathering `UsergridEntity` objects.
+    - parameter queryCompletion: The optional completion block that will be called once the request has completed.
+    */
+    public func GET(query: UsergridQuery, queryCompletion: UsergridResponseCompletion? = nil) {
+        guard let type = query.collectionName
+            else {
+                queryCompletion?(response: UsergridResponse(client:self, errorName: "Query collection name missing.", errorDescription: "Query collection name is missing."))
+                return
+        }
+
+        let request = UsergridRequest(method: .Get, baseUrl: self.clientAppURL, paths: [type], query: query, auth: self.authForRequests())
+        self.sendRequest(request, completion: queryCompletion)
     }
 
     // MARK: - PUT -

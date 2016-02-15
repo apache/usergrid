@@ -1,5 +1,0 @@
-use_frameworks!
-inhibit_all_warnings!
-
-platform :ios, '9.0'
-pod 'UsergridSDK', '>= 2.1.0-RC.2'
