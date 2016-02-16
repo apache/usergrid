@@ -1,13 +1,18 @@
-# Usergrid
+# Apache Usergrid
+
 A highly-scalable data platform for mobile applications.
 
 * **Documentation**: http://usergrid.apache.org/docs/
 * **Homepage**: http://http://usergrid.apache.org/
 
+
 ## Requirements
 
-* JDK 1.6 (http://www.oracle.com/technetwork/java/javase/downloads/index.html)
+* JDK 1.8 (http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 * 3.0.0 <= Maven (http://maven.apache.org/)
+* Cassandra 1.2.1+
+* ElasticSearch 1.4.4+
+
 
 ## Building
 
@@ -15,32 +20,23 @@ From the command line, go to the usergrid directory and type the following:
 
     mvn clean install -DskipTests=true
 
+If you want to run tests you will need to have Cassandra and ElasticSearch running on your computer and on the default ports. The following command will do the build and run all JUnit tests:
+
+    mvn clean install
+
+
 ## Running
 
-Usergrid-core contains the persistence layer and shared utilities for powering the Usergrid service. The services layer is contained in usergrid-services and exposes a higher-level API that's used by the usergrid-rest web services tier.
+The build process will package the Usergrid Stack into one file `stack/rest/target/ROOT.war`
 
-You can run Usergrid from the command-line from the
-jar in the usergrid/standalone project:
+To run Usergrid Stack you will need to deploy it to Tomcat. You can find instructions for
+doing that in the [Usergrid Deployment Guide](http://usergrid.apache.org/docs/installation/deployment-guide.html).
 
-    cd launcher; java -jar target/usergrid-launcher-*.jar
-
-After startup, your instance will be available on localhost, port 8080.
-To check it’s running properly, you can try loading our status page:
-
-    curl http://localhost:8080/status
-
-You can also run it as a webapp in Tomcat, by deploying the ROOT.war file generated in the usergrid/rest project.
 
 ## Upgrading from Previous Versions
 
-If you built and used a previous version of Usergrid, that may be using a different schema, we have an easy built-in tool to audit your Cassandra column family structure and upgrade the dataset as necessary. Once you have pulled, built and launched the new version of Usergrid, just hit [http://localhost:8080/system/database/setup](http://localhost:8080/system/database/setup) to run the upgrade tool.
+There is currently no upgrade path for a Usergrid 1 database to Usergrid 2.x.
 
-## Getting Started with the Admin Portal
-
-By default, the [Usergrid admin portal](https://github.com/apigee/usergrid-portal) points to production servers at `api.usergrid.com`. However, by specifying an api_url argument in the query string, you can have it point to your local instance instead. For example, you could reuse the version of the admin portal we host on github and have that point to your local cluster by opening the following URL in your browser:
-[http://apigee.github.com/usergrid-portal/?api_url=http://localhost:8080](http://apigee.github.com/usergrid-portal/?api_url=http://localhost:8080)
-
-The same trick would work if you used a local copy of the portal code served from your own machine or servers.
 
 ## Getting Started with the HTTP API
 
@@ -82,7 +78,8 @@ Let’s use it to create a collection with some data in it:
 
 ## Contributing
 
-We welcome all contributions, including via pull requests on GitHub! If you want to submit code, please read more about our [contribution workflow](https://cwiki.apache.org/confluence/display/usergrid/GitHub+Based+Contribution+Workflow)
+We welcome all contributions, including via pull requests on GitHub! For more information see [How to Contribute Code & Docs](http://usergrid.apache.org/docs/reference/contribute-code.html).
+
 
 ## Licenses
 
