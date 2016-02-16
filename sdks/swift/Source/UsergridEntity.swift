@@ -608,4 +608,22 @@ public class UsergridEntity: NSObject, NSCoding {
     public func getConnections(client:UsergridClient, direction:UsergridDirection, relationship:String, query:UsergridQuery? = nil, completion:UsergridResponseCompletion? = nil) {
         client.getConnections(direction, entity: self, relationship: relationship, query:query, completion: completion)
     }
+
+    // MARK: - Helper methods -
+
+    /**
+     Determines if the two `UsergridEntity` objects are equal.  i.e. they have the same non nil uuidOrName.
+
+     - parameter entity: The entity to check.
+
+     - returns: If the two `UsergridEntity` objects are equal.  i.e. they have the same non nil uuidOrName.
+     */
+    public func isEqualToEntity(entity: UsergridEntity?) -> Bool {
+        guard let selfUUID = self.uuidOrName,
+              let entityUUID = entity?.uuidOrName
+            else {
+                return false
+        }
+        return selfUUID == entityUUID
+    }
 }

@@ -35,10 +35,10 @@ import MobileCoreServices
 public typealias UsergridAssetRequestProgress = (bytesFinished:Int64, bytesExpected: Int64) -> Void
 
 /// The completion block used in `UsergridAsset` are finished uploading.
-public typealias UsergridAssetUploadCompletion = (response:UsergridResponse,asset:UsergridAsset?, error: String?) -> Void
+public typealias UsergridAssetUploadCompletion = (asset:UsergridAsset?, response: UsergridResponse) -> Void
 
 /// The completion block used in `UsergridAsset` are finished downloading.
-public typealias UsergridAssetDownloadCompletion = (asset:UsergridAsset?, error: String?) -> Void
+public typealias UsergridAssetDownloadCompletion = (asset:UsergridAsset?, error: UsergridResponseError?) -> Void
 
 /**
 As Usergrid supports storing binary assets, the SDKs are designed to make uploading assets easier and more robust. Attaching, uploading, and downloading assets is handled by the `UsergridEntity` class.
