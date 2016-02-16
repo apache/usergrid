@@ -463,7 +463,7 @@
       <!-- Testing and Logging Dependencies -->
     <dependency>
       <!--
-      Do not remove this slf4j-api dependency remove even though pulled 
+      Do not remove this slf4j-api dependency remove even though pulled
       in transitively. If not present IntelliJ IDEA wigs out.
       -->
       <groupId>org.slf4j</groupId>
@@ -565,6 +565,25 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- needed for central ssso in TokenServiceImpl -->
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-client</artifactId>
+    </dependency>
+
+    <!-- needed for central ssso in TokenServiceImpl -->
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+      <version>3.1</version>
+    </dependency>
+
+    <!-- needed for central ssso in TokenServiceImpl -->
+    <dependency>
+      <groupId>com.sun.jersey.contribs</groupId>
+      <artifactId>jersey-apache-client</artifactId>
+      <version>1.19</version>
+    </dependency>
 
   </dependencies>
 </project>

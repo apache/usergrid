@@ -676,37 +676,19 @@ public class ManagementResourceIT extends AbstractRestIT {
                 .type( MediaType.APPLICATION_JSON_TYPE )
                 .post( props );
 
-        // attempt to validate the token, must be valid
+        // TODO: how do we unit test SSO now that we have no external token end-point?
 
-        JsonNode validatedNode = resource().path( "/management/externaltoken" )
-            .queryParam( "access_token", suToken ) // as superuser
-            .queryParam( "ext_access_token", accessToken )
-            .queryParam( "ttl", "1000" )
-            .get( JsonNode.class );
-        String validatedAccessToken = validatedNode.get( "access_token" ).getTextValue();
-        assertEquals( accessToken, validatedAccessToken );
+        Map<String, String> payload = hashMap( "access_token", accessToken );
 
-        // attempt to validate an invalid token, must fail
+        JsonNode node = resource().path( "/management/me" ).accept( MediaType.APPLICATION_JSON )
+                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
 
-        try {
-            resource().path( "/management/externaltoken" )
-                .queryParam( "access_token", suToken ) // as superuser
-                .queryParam( "ext_access_token", "rubbish_token")
-                .queryParam( "ttl", "1000" )
-                .get( JsonNode.class );
-            fail("Validation should have failed");
-        } catch ( UniformInterfaceException actual ) {
-            assertEquals( 404, actual.getResponse().getStatus() );
-            String errorMsg = actual.getResponse().getEntity( JsonNode.class ).get( "error_description" ).toString();
-            logger.error( "ERROR: " + errorMsg );
-            assertTrue( errorMsg.contains( "Cannot find Admin User" ) );
-        }
+        logNode( node );
+        String token = node.get( "access_token" ).getTextValue();
 
-
+        assertNotNull( token );
 
         // TODO: how do we test the create new user and organization case?
-
-
 
         // unset the Usergrid Central SSO URL so it does not interfere with other tests
 
@@ -716,7 +698,6 @@ public class ManagementResourceIT extends AbstractRestIT {
                 .accept( MediaType.APPLICATION_JSON )
                 .type( MediaType.APPLICATION_JSON_TYPE )
                 .post( props );
-
     }
 
 
