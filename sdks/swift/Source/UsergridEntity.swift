@@ -149,15 +149,13 @@ public class UsergridEntity: NSObject, NSCoding {
     - returns: A `UsergridEntity` object provided that the `type` key within the dictionay exists. Otherwise nil.
     */
     public class func entity(jsonDict jsonDict: [String:AnyObject]) -> UsergridEntity? {
-        if let type = jsonDict[UsergridEntityProperties.EntityType.stringValue] as? String {
-            if let mapping = UsergridEntity.subclassMappings[type] {
-                return mapping.init(type: type,propertyDict:jsonDict)
-            } else {
-                return UsergridEntity(type:type, propertyDict:jsonDict)
-            }
-        } else {
-            return nil
+        guard let type = jsonDict[UsergridEntityProperties.EntityType.stringValue] as? String
+            else {
+                return nil
         }
+
+        let mapping = UsergridEntity.subclassMappings[type] ?? UsergridEntity.self
+        return mapping.init(type: type, propertyDict: jsonDict)
     }
 
     /**
@@ -392,17 +390,17 @@ public class UsergridEntity: NSObject, NSCoding {
     private func getEntitySpecificProperty(entityProperty: UsergridEntityProperties) -> AnyObject? {
         var propertyValue: AnyObject? = nil
         switch entityProperty {
-        case .UUID,.EntityType,.Name :
-            propertyValue = self.properties[entityProperty.stringValue]
-        case .Created,.Modified :
-            if let utcTimeStamp = self.properties[entityProperty.stringValue] as? Int {
-                propertyValue = NSDate(utcTimeStamp: utcTimeStamp.description)
+            case .UUID,.EntityType,.Name :
+                propertyValue = self.properties[entityProperty.stringValue]
+            case .Created,.Modified :
+                if let utcTimeStamp = self.properties[entityProperty.stringValue] as? Int {
+                    propertyValue = NSDate(utcTimeStamp: utcTimeStamp.description)
+                }
+            case .Location :
+                if let locationDict = self.properties[entityProperty.stringValue] as? [String:Double], lat = locationDict[ENTITY_LATITUDE], long = locationDict[ENTITY_LONGITUDE] {
+                    propertyValue = CLLocation(latitude: lat, longitude: long)
+                }
             }
-        case .Location :
-            if let locationDict = self.properties[entityProperty.stringValue] as? [String:Double], lat = locationDict[ENTITY_LATITUDE], long = locationDict[ENTITY_LONGITUDE] {
-                propertyValue = CLLocation(latitude: lat, longitude: long)
-            }
-        }
         return propertyValue
     }
 
@@ -424,15 +422,17 @@ public class UsergridEntity: NSObject, NSCoding {
     - parameter completion: An optional completion block that, if successful, will contain the reloaded `UsergridEntity` object.
     */
     public func reload(client:UsergridClient, completion: UsergridResponseCompletion? = nil) {
-        if let uuidOrName = self.uuidOrName {
-            client.GET(self.type, uuidOrName: uuidOrName) { (response) -> Void in
-                if let responseEntity = response.entity {
-                    self.copyInternalsFromEntity(responseEntity)
-                }
-                completion?(response: response)
+        guard let uuidOrName = self.uuidOrName
+            else {
+                completion?(response: UsergridResponse(client: client, errorName: "Entity cannot be reloaded.", errorDescription: "Entity has neither an UUID or name specified."))
+                return
+        }
+
+        client.GET(self.type, uuidOrName: uuidOrName) { response in
+            if let responseEntity = response.entity {
+                self.copyInternalsFromEntity(responseEntity)
             }
-        } else {
-            completion?(response: UsergridResponse(client: client, errorName: "Entity cannot be reloaded.", errorDescription: "Entity has neither an UUID or name specified."))
+            completion?(response: response)
         }
     }
 
@@ -453,19 +453,19 @@ public class UsergridEntity: NSObject, NSCoding {
     */
     public func save(client:UsergridClient, completion: UsergridResponseCompletion? = nil) {
         if let _ = self.uuid { // If UUID exists we PUT otherwise POST
-            client.PUT(self, completion: { (response) -> Void in
+            client.PUT(self) { response in
                 if let responseEntity = response.entity {
                     self.copyInternalsFromEntity(responseEntity)
                 }
                 completion?(response: response)
-            })
+            }
         } else {
-            client.POST(self, completion: { (response) -> Void in
+            client.POST(self) { response in
                 if let responseEntity = response.entity {
                     self.copyInternalsFromEntity(responseEntity)
                 }
                 completion?(response: response)
-            })
+            }
         }
     }
 
@@ -475,7 +475,7 @@ public class UsergridEntity: NSObject, NSCoding {
     - parameter completion: An optional completion block.
     */
     public func remove(completion: UsergridResponseCompletion? = nil) {
-        Usergrid.sharedInstance.DELETE(self, completion: completion)
+        self.remove(Usergrid.sharedInstance, completion: completion)
     }
 
     /**
@@ -498,7 +498,7 @@ public class UsergridEntity: NSObject, NSCoding {
     - parameter completion: An optional completion block.
     */
     public func uploadAsset(asset:UsergridAsset, progress:UsergridAssetRequestProgress? = nil, completion:UsergridAssetUploadCompletion? = nil) {
-        Usergrid.sharedInstance.uploadAsset(self, asset: asset, progress:progress, completion:completion)
+        self.uploadAsset(Usergrid.sharedInstance, asset: asset, progress: progress, completion: completion)
     }
 
     /**
@@ -521,7 +521,7 @@ public class UsergridEntity: NSObject, NSCoding {
     - parameter completion:  An optional completion block.
     */
     public func downloadAsset(contentType:String, progress:UsergridAssetRequestProgress? = nil, completion:UsergridAssetDownloadCompletion? = nil) {
-        Usergrid.sharedInstance.downloadAsset(self, contentType: contentType, progress:progress, completion: completion)
+        self.downloadAsset(Usergrid.sharedInstance, contentType: contentType, progress: progress, completion: completion)
     }
 
     /**
@@ -546,7 +546,7 @@ public class UsergridEntity: NSObject, NSCoding {
     - parameter completion:   An optional completion block.
     */
     public func connect(relationship:String, toEntity:UsergridEntity, completion: UsergridResponseCompletion? = nil) {
-        Usergrid.sharedInstance.connect(self, relationship: relationship, to: toEntity, completion: completion)
+        self.connect(Usergrid.sharedInstance, relationship: relationship, toEntity: toEntity, completion: completion)
     }
 
     /**
@@ -569,7 +569,7 @@ public class UsergridEntity: NSObject, NSCoding {
     - parameter completion:   An optional completion block.
     */
     public func disconnect(relationship:String, fromEntity:UsergridEntity, completion: UsergridResponseCompletion? = nil) {
-        Usergrid.sharedInstance.disconnect(self, relationship: relationship, from: fromEntity, completion: completion)
+        self.disconnect(Usergrid.sharedInstance, relationship: relationship, fromEntity: fromEntity, completion: completion)
     }
 
     /**
@@ -592,8 +592,8 @@ public class UsergridEntity: NSObject, NSCoding {
     - parameter query:          The optional query.
     - parameter completion:     An optional completion block.
     */
-    public func getConnections(direction:UsergridDirection, relationship:String, query:UsergridQuery?, completion:UsergridResponseCompletion? = nil) {
-        Usergrid.sharedInstance.getConnections(direction, entity: self, relationship: relationship, query:query, completion: completion)
+    public func getConnections(direction:UsergridDirection, relationship:String, query:UsergridQuery? = nil, completion:UsergridResponseCompletion? = nil) {
+        self.getConnections(Usergrid.sharedInstance, direction: direction, relationship: relationship, query: query, completion: completion)
     }
 
     /**
@@ -605,7 +605,7 @@ public class UsergridEntity: NSObject, NSCoding {
     - parameter query:        The optional query.
     - parameter completion:   An optional completion block.
     */
-    public func getConnections(client:UsergridClient, direction:UsergridDirection, relationship:String, query:UsergridQuery?, completion:UsergridResponseCompletion? = nil) {
+    public func getConnections(client:UsergridClient, direction:UsergridDirection, relationship:String, query:UsergridQuery? = nil, completion:UsergridResponseCompletion? = nil) {
         client.getConnections(direction, entity: self, relationship: relationship, query:query, completion: completion)
     }
 }

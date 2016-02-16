@@ -291,7 +291,12 @@ public class UsergridUser : UsergridEntity {
     - parameter completion: The optional completion block.
     */
     public func create(client: UsergridClient, completion: UsergridResponseCompletion? = nil) {
-        client.POST(self,completion:completion)
+        client.POST(self) { (response) -> Void in
+            if response.ok, let createdUser = response.user {
+                self.copyInternalsFromEntity(createdUser)
+            }
+            completion?(response: response)
+        }
     }
 
     /**
@@ -364,12 +369,13 @@ public class UsergridUser : UsergridEntity {
      - parameter completion: The optional completion block.
      */
     public func reauthenticate(client: UsergridClient, completion: UsergridUserAuthCompletionBlock? = nil) {
-        if let userAuth = self.auth {
-            client.authenticateUser(userAuth, completion: completion)
-        } else {
-            let error = UsergridResponseError(errorName: "Invalid UsergridUserAuth.", errorDescription: "No UsergridUserAuth found on the UsergridUser.")
-            completion?(auth: nil, user: self, error: error)
+        guard let userAuth = self.auth
+            else {
+                completion?(auth: nil, user: self, error: UsergridResponseError(errorName: "Invalid UsergridUserAuth.", errorDescription: "No UsergridUserAuth found on the UsergridUser."))
+                return
         }
+
+        client.authenticateUser(userAuth, setAsCurrentUser:(self == client.currentUser), completion: completion)
     }
 
     /**
@@ -388,15 +394,16 @@ public class UsergridUser : UsergridEntity {
     - parameter completion: The optional completion block.
     */
     public func logout(client: UsergridClient, completion:UsergridResponseCompletion? = nil) {
-        if self === client.currentUser {
-            client.logoutCurrentUser(completion)
-        } else if let uuidOrUsername = self.uuidOrUsername, accessToken = self.auth?.accessToken {
-            client.logoutUser(uuidOrUsername, token: accessToken) { (response) in
-                self.auth = nil
-                completion?(response: response)
-            }
-        } else {
-            completion?(response: UsergridResponse(client:client, errorName:"Logout Failed.", errorDescription:"UUID or Access Token not found on UsergridUser object."))
+        guard let uuidOrUsername = self.uuidOrUsername,
+              let accessToken = self.auth?.accessToken
+            else {
+                completion?(response: UsergridResponse(client:client, errorName:"Logout Failed.", errorDescription:"UUID or Access Token not found on UsergridUser object."))
+                return
+        }
+        
+        client.logoutUser(uuidOrUsername, token: accessToken) { (response) in
+            self.auth = nil
+            completion?(response: response)
         }
     }
 
@@ -420,12 +427,31 @@ public class UsergridUser : UsergridEntity {
     public func connectToDevice(client:UsergridClient, device:UsergridDevice? = nil, completion:UsergridResponseCompletion? = nil) {
         let deviceToConnect = device ?? UsergridDevice.sharedDevice
         guard let _ = deviceToConnect.uuidOrName
-        else {
+            else {
             completion?(response: UsergridResponse(client: client, errorName: "Device cannot be connected to User.", errorDescription: "Device has neither an UUID or name specified."))
             return
         }
 
-        self.connect(client, relationship: "devices", toEntity: deviceToConnect, completion: completion)
+        self.connect(client, relationship: "", toEntity: deviceToConnect, completion: completion)
+    }
+
+    /**
+     Gets the connected device using the shared instance of `UsergridClient`.
+
+     - parameter completion: The optional completion block.
+     */
+    public func getConnectedDevice(completion:UsergridResponseCompletion? = nil) {
+        self.getConnectedDevice(Usergrid.sharedInstance, completion: completion)
+    }
+
+    /**
+     Gets the connected device.
+
+     - parameter client:     The `UsergridClient` object to use for connecting.
+     - parameter completion: The optional completion block.
+     */
+    public func getConnectedDevice(client:UsergridClient, completion:UsergridResponseCompletion? = nil) {
+        client.getConnections(.Out, entity: self, relationship: "device", completion: completion)
     }
 
     /**
@@ -453,7 +479,7 @@ public class UsergridUser : UsergridEntity {
                 return
         }
 
-        self.disconnect(client, relationship: "devices", fromEntity: deviceToDisconnectFrom, completion: completion)
+        self.disconnect(client, relationship: "", fromEntity: deviceToDisconnectFrom, completion: completion)
     }
 
     private func getUserSpecificProperty(userProperty: UsergridUserProperties) -> AnyObject? {

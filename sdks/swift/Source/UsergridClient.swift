@@ -357,13 +357,7 @@ public class UsergridClient: NSObject, NSCoding {
             return
         }
 
-        self.logoutUser(uuidOrUsername, token: token) { (response) -> Void in
-            if response.ok || response.error?.errorName == "auth_bad_access_token" {
-                self.currentUser?.auth = nil
-                self.currentUser = nil
-            }
-            completion?(response: response)
-        }
+        self.logoutUser(uuidOrUsername, token: token)
     }
 
     /**
@@ -396,7 +390,16 @@ public class UsergridClient: NSObject, NSCoding {
                                       paths: paths,
                                       auth: self.authForRequests(),
                                       queryParams: queryParams)
-        self.sendRequest(request, completion: completion)
+
+        self.sendRequest(request) { response in
+            if uuidOrUsername == self.currentUser?.uuidOrUsername { // Check to see if this user is the currentUser
+                if response.ok || response.error?.errorName == "auth_bad_access_token" { // If the logout was successful or if we have a bad token reset things.
+                    self.currentUser?.auth = nil
+                    self.currentUser = nil
+                }
+            }
+            completion?(response: response)
+        }
     }
 
     // MARK: - Generic Request Methods -
@@ -807,7 +810,7 @@ public class UsergridClient: NSObject, NSCoding {
     - parameter query:        The optional query.
     - parameter completion:   The optional completion block that will be called once the request has completed.
     */
-    public func getConnections(direction:UsergridDirection, entity:UsergridEntity, relationship:String, query:UsergridQuery?, completion:UsergridResponseCompletion? = nil) {
+    public func getConnections(direction:UsergridDirection, entity:UsergridEntity, relationship:String, query:UsergridQuery? = nil, completion:UsergridResponseCompletion? = nil) {
         guard let uuidOrName = entity.uuidOrName
         else {
             completion?(response: UsergridResponse(client: self, errorName: "Invalid Entity Get Connections Attempt.", errorDescription: "The entity must have a `uuid` or `name` assigned."))
@@ -826,7 +829,7 @@ public class UsergridClient: NSObject, NSCoding {
      - parameter query:            The optional query.
      - parameter completion:       The optional completion block that will be called once the request has completed.
      */
-    public func getConnections(direction:UsergridDirection, type:String, uuidOrName:String, relationship:String, query:UsergridQuery?, completion:UsergridResponseCompletion? = nil) {
+    public func getConnections(direction:UsergridDirection, type:String, uuidOrName:String, relationship:String, query:UsergridQuery? = nil, completion:UsergridResponseCompletion? = nil) {
         let request = UsergridRequest(method: .Get,
                                       baseUrl: self.clientAppURL,
                                       paths: [type, uuidOrName, direction.connectionValue, relationship],
@@ -844,7 +847,7 @@ public class UsergridClient: NSObject, NSCoding {
      - parameter query:        The optional query.
      - parameter completion:   The optional completion block that will be called once the request has completed.
      */
-    public func getConnections(direction:UsergridDirection, uuid:String, relationship:String, query:UsergridQuery?, completion:UsergridResponseCompletion? = nil) {
+    public func getConnections(direction:UsergridDirection, uuid:String, relationship:String, query:UsergridQuery? = nil, completion:UsergridResponseCompletion? = nil) {
         let request = UsergridRequest(method: .Get,
             baseUrl: self.clientAppURL,
             paths: [uuid, direction.connectionValue, relationship],

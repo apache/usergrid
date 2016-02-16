@@ -46,9 +46,6 @@ public class UsergridDevice : UsergridEntity {
 
     // MARK: - Instance Properties -
 
-    /// Property helper method for the `UsergridDevice` objects `uuid`.
-    override public var uuid: String! { return super[UsergridEntityProperties.UUID.stringValue] as! String }
-
     /// Property helper method for the `UsergridDevice` objects device model.
     public var model: String { return super[UsergridDeviceProperties.Model.stringValue] as! String }
 

@@ -29,12 +29,20 @@ import XCTest
 
 class ASSET_Tests: XCTestCase {
 
-    let sharedClient = Usergrid.initSharedInstance(orgId:ClientCreationTests.orgId, appId: ClientCreationTests.appId)
-
     static let collectionName = "books"
     static let entityUUID = "f4078aca-2fb1-11e5-8eb2-e13f8369aad1"
     static let imageLocation = "TestAssets/test.png"
     static let imageName = "test"
+
+    override func setUp() {
+        super.setUp()
+        Usergrid.initSharedInstance(orgId:ClientCreationTests.orgId, appId: ClientCreationTests.appId)
+    }
+
+    override func tearDown() {
+        Usergrid._sharedClient = nil
+        super.tearDown()
+    }
 
     func getFullPathOfFile(fileLocation:String) -> String {
         return (NSBundle(forClass: object_getClass(self)).resourcePath! as NSString).stringByAppendingPathComponent(fileLocation)
@@ -52,6 +60,7 @@ class ASSET_Tests: XCTestCase {
         Usergrid.GET(ASSET_Tests.collectionName, uuidOrName:ASSET_Tests.entityUUID) { (response) in
             let entity = response.first!
             XCTAssertNotNil(entity)
+            XCTAssertFalse(entity.isUser)
 
             let imagePath = self.getFullPathOfFile(ASSET_Tests.imageLocation)
             XCTAssertNotNil(imagePath)
@@ -62,7 +71,7 @@ class ASSET_Tests: XCTestCase {
             let asset = UsergridAsset(fileName:ASSET_Tests.imageName,image: localImage!)
             XCTAssertNotNil(asset)
 
-            entity.uploadAsset(self.sharedClient, asset:asset!, progress:uploadProgress) { (response, uploadedAsset, error) -> Void in
+            entity.uploadAsset(asset!, progress:uploadProgress) { (response, uploadedAsset, error) -> Void in
                 XCTAssertNotNil(asset)
                 XCTAssertNil(error)
                 XCTAssertTrue(response.ok)
