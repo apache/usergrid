@@ -375,7 +375,7 @@ public class UsergridUser : UsergridEntity {
                 return
         }
 
-        client.authenticateUser(userAuth, setAsCurrentUser:(self == client.currentUser), completion: completion)
+        client.authenticateUser(userAuth, setAsCurrentUser:self.isEqualToEntity(client.currentUser), completion: completion)
     }
 
     /**

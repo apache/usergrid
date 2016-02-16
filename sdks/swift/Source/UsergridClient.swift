@@ -872,9 +872,9 @@ public class UsergridClient: NSObject, NSCoding {
                                                       auth: self.authForRequests(),
                                                       asset: asset)
 
-        _requestManager.performAssetUpload(assetRequest, progress: progress) { [weak entity] (response, asset, error) -> Void in
-            entity?.asset = asset
-            completion?(response: response, asset: asset, error: error)
+        _requestManager.performAssetUpload(assetRequest, progress: progress) { asset, response in
+            entity.asset = asset
+            completion?(asset: asset, response: response)
         }
     }
 
@@ -889,7 +889,7 @@ public class UsergridClient: NSObject, NSCoding {
     public func downloadAsset(entity:UsergridEntity, contentType:String, progress:UsergridAssetRequestProgress? = nil, completion:UsergridAssetDownloadCompletion? = nil) {
         guard entity.hasAsset
         else {
-            completion?(asset: nil, error: "Entity does not have an asset attached.")
+            completion?(asset: nil, error: UsergridResponseError(errorName: "Download asset failed.", errorDescription: "Entity does not have an asset attached."))
             return
         }
 
