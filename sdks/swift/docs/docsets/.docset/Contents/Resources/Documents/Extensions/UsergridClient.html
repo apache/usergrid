@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>UsergridClient Extension Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Extension/UsergridClient" class="dashAnchor"></a>
+    <a title="UsergridClient Extension Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html"> Docs</a> (88% documented)</p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html"> Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        UsergridClient Extension Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+          <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/Usergrid.html">Usergrid</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridAppAuth.html">UsergridAppAuth</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridAsset.html">UsergridAsset</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridAuth.html">UsergridAuth</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridClient.html">UsergridClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridClientConfig.html">UsergridClientConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridEntity.html">UsergridEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridFileMetaData.html">UsergridFileMetaData</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridQuery.html">UsergridQuery</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridResponse.html">UsergridResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridUser.html">UsergridUser</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridUserAuth.html">UsergridUserAuth</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+          <a href="../Enums.html">Enums</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridAuthFallback.html">UsergridAuthFallback</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridEntityProperties.html">UsergridEntityProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridImageContentType.html">UsergridImageContentType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridQueryOperator.html">UsergridQueryOperator</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridQuerySortOrder.html">UsergridQuerySortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridUserProperties.html">UsergridUserProperties</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+          <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/UsergridClient.html">UsergridClient</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+          <a href="../Typealiases.html">Typealiases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK30UsergridAppAuthCompletionBlock">UsergridAppAuthCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK31UsergridAssetDownloadCompletion">UsergridAssetDownloadCompletion</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK28UsergridAssetRequestProgress">UsergridAssetRequestProgress</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK29UsergridAssetUploadCompletion">UsergridAssetUploadCompletion</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK26UsergridResponseCompletion">UsergridResponseCompletion</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK31UsergridUserAuthCompletionBlock">UsergridUserAuthCompletionBlock</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>UsergridClient</h1>
+              <div class="declaration">
+                <div class="Swift">
+                  <pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">UsergridClient</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
+
+                </div>
+              </div>
+            <p>The <code>UsergridClient</code> class is the base handler for making client connections to and managing relationships with Usergrid&rsquo;s API.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+                <div class="task-name-container">
+                  <a name="/Authorization"></a>
+                  <a name="//apple_ref/swift/Section/Authorization" class="dashAnchor"></a>
+                  <a href="#/Authorization">
+                    <h3 class="section-name">Authorization</h3>
+                  </a>
+                </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient15authForRequestsFS0_FT_GSqCS_12UsergridAuth_"></a>
+                    <a name="//apple_ref/swift/Method/authForRequests()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient15authForRequestsFS0_FT_GSqCS_12UsergridAuth_">authForRequests()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Determines the <code>UsergridAuth</code> object that will be used for all outgoing requests made.</p>
+
+<p>If there is a <code>UsergridUser</code> logged in and the token of that user is valid then it will return that.</p>
+
+<p>Otherwise, if the <code>authFallback</code> is <code>.App</code>, and the <code>UsergridAppAuth</code> of the client is set and the token is valid it will return that.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">authForRequests</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UsergridAuth</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The <code>UsergridAuth</code> if one is found or nil if not.</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient15authenticateAppFS0_FGSqFT4authGSqCS_15UsergridAppAuth_5errorGSqSS__T__T_"></a>
+                    <a name="//apple_ref/swift/Method/authenticateApp(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient15authenticateAppFS0_FGSqFT4authGSqCS_15UsergridAppAuth_5errorGSqSS__T__T_">authenticateApp(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Authenticates with the <code>UsergridAppAuth</code> that is contained this instance of <code>UsergridCient</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">authenticateApp</span><span class="p">(</span><span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridAppAuthCompletionBlock</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called after authentication has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient15authenticateAppFS0_FTCS_15UsergridAppAuth10completionGSqFT4authGSqS1__5errorGSqSS__T___T_"></a>
+                    <a name="//apple_ref/swift/Method/authenticateApp(_:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient15authenticateAppFS0_FTCS_15UsergridAppAuth10completionGSqFT4authGSqS1__5errorGSqSS__T___T_">authenticateApp(_:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Authenticates with the <code>UsergridAppAuth</code> that is passed in.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">authenticateApp</span><span class="p">(</span><span class="nv">appAuth</span><span class="p">:</span> <span class="kt">UsergridAppAuth</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridAppAuthCompletionBlock</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>auth</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridAppAuth</code> that will be authenticated.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called after authentication has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient16authenticateUserFS0_FTCS_16UsergridUserAuth10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqSS__T___T_"></a>
+                    <a name="//apple_ref/swift/Method/authenticateUser(_:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient16authenticateUserFS0_FTCS_16UsergridUserAuth10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqSS__T___T_">authenticateUser(_:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Authenticates with the <code>UsergridUserAuth</code> that is passed in.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">authenticateUser</span><span class="p">(</span><span class="nv">userAuth</span><span class="p">:</span> <span class="kt">UsergridUserAuth</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridUserAuthCompletionBlock</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>auth</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridUserAuth</code> that will be authenticated.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called after authentication has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient16authenticateUserFS0_FTCS_16UsergridUserAuth16setAsCurrentUserSb10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqSS__T___T_"></a>
+                    <a name="//apple_ref/swift/Method/authenticateUser(_:setAsCurrentUser:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient16authenticateUserFS0_FTCS_16UsergridUserAuth16setAsCurrentUserSb10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqSS__T___T_">authenticateUser(_:setAsCurrentUser:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Authenticates with the <code>UsergridUserAuth</code> that is passed in.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">authenticateUser</span><span class="p">(</span><span class="nv">userAuth</span><span class="p">:</span> <span class="kt">UsergridUserAuth</span><span class="p">,</span> <span class="nv">setAsCurrentUser</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridUserAuthCompletionBlock</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>auth</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridUserAuth</code> that will be authenticated.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>setAsCurrentUser</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>If the authenticated user should be set as the <code>UsergridClient.currentUser</code>.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called after authentication has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient17logoutCurrentUserFS0_FGSqFT8responseCS_16UsergridResponse_T__T_"></a>
+                    <a name="//apple_ref/swift/Method/logoutCurrentUser(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient17logoutCurrentUserFS0_FGSqFT8responseCS_16UsergridResponse_T__T_">logoutCurrentUser(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">UsergridClient</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient19logoutUserAllTokensFS0_FTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/logoutUserAllTokens(_:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient19logoutUserAllTokensFS0_FTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">logoutUserAllTokens(_:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">UsergridClient</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient10logoutUserFS0_FTSS5tokenGSqSS_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/logoutUser(_:token:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient10logoutUserFS0_FTSS5tokenGSqSS_10completionGSqFT8responseCS_16UsergridResponse_T___T_">logoutUser(_:token:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">UsergridClient</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+                <div class="task-name-container">
+                  <a name="/GET"></a>
+                  <a name="//apple_ref/swift/Section/GET" class="dashAnchor"></a>
+                  <a href="#/GET">
+                    <h3 class="section-name">GET</h3>
+                  </a>
+                </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient3GETFS0_FTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/GET(_:uuidOrName:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3GETFS0_FTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">GET(_:uuidOrName:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Gets a single <code>UsergridEntity</code> of a given type with a specific UUID/name.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">GET</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">uuidOrName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>type</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> type.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>uuidOrName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The UUID or name of the <code>UsergridEntity</code>.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient3GETFS0_FTSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/GET(_:query:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3GETFS0_FTSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_">GET(_:query:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Gets a group of <code>UsergridEntity</code> objects of a given type with an optional query.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">GET</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">query</span><span class="p">:</span> <span class="kt">UsergridQuery</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>type</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> type.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>query</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The optional query to use when gathering <code>UsergridEntity</code> objects.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+                <div class="task-name-container">
+                  <a name="/PUT"></a>
+                  <a name="//apple_ref/swift/Section/PUT" class="dashAnchor"></a>
+                  <a href="#/PUT">
+                    <h3 class="section-name">PUT</h3>
+                  </a>
+                </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTSS10uuidOrNameSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/PUT(_:uuidOrName:jsonBody:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTSS10uuidOrNameSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:uuidOrName:jsonBody:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Updates an <code>UsergridEntity</code> with the given type and UUID/name specified using the passed in jsonBody.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">PUT</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">uuidOrName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">jsonBody</span><span class="p">:[</span><span class="kt">String</span><span class="p">:</span><span class="kt">AnyObject</span><span class="p">],</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>type</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> type.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>uuidOrName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The UUID or name of the <code>UsergridEntity</code>.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>jsonBody</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The valid JSON body dictionary to update the <code>UsergridEntity</code> with.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/PUT(_:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Updates the passed in <code>UsergridEntity</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">PUT</span><span class="p">(</span><span class="nv">entity</span><span class="p">:</span> <span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>entity</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> to update.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/PUT(_:jsonBody:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:jsonBody:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Updates an <code>UsergridEntity</code> with the given type using the jsonBody where the UUID/name is specified inside of the jsonBody.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">PUT</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">jsonBody</span><span class="p">:[</span><span class="kt">String</span><span class="p">:</span><span class="kt">AnyObject</span><span class="p">],</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>type</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> type.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>jsonBody</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The valid JSON body dictionary to update the <code>UsergridEntity</code> with.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The optional completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTCS_13UsergridQuery8jsonBodyGVSs10DictionarySSPSs9AnyObject__15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/PUT(_:jsonBody:queryCompletion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTCS_13UsergridQuery8jsonBodyGVSs10DictionarySSPSs9AnyObject__15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:jsonBody:queryCompletion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Updates the entities that fit the given query using the passed in jsonBody.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">PUT</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="kt">UsergridQuery</span><span class="p">,</span> <span class="nv">jsonBody</span><span class="p">:[</span><span class="kt">String</span><span class="p">:</span><span class="kt">AnyObject</span><span class="p">],</span> <span class="nv">queryCompletion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>query</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The query to use when filtering what entities to update.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>jsonBody</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The valid JSON body dictionary to update with.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>queryCompletion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+                <div class="task-name-container">
+                  <a name="/POST"></a>
+                  <a name="//apple_ref/swift/Section/POST" class="dashAnchor"></a>
+                  <a href="#/POST">
+                    <h3 class="section-name">POST</h3>
+                  </a>
+                </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/POST(_:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates and posts creates an <code>UsergridEntity</code>.
+- parameter entity: The <code>UsergridEntity</code> to create.
+- parameter completion: The completion block that will be called once the request has completed.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">POST</span><span class="p">(</span><span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>entity</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> to create.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTGSaCS_14UsergridEntity_18entitiesCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/POST(_:entitiesCompletion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTGSaCS_14UsergridEntity_18entitiesCompletionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:entitiesCompletion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates and posts an array of <code>UsergridEntity</code> objects.</p>
+
+<p>Each <code>UsergridEntity</code> in the array much already have a type assigned and must be the same.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">POST</span><span class="p">(</span><span class="nv">entities</span><span class="p">:[</span><span class="kt">UsergridEntity</span><span class="p">],</span> <span class="nv">entitiesCompletion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>entities</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> objects to create.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>entitiesCompletion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/POST(_:jsonBody:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:jsonBody:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates and posts an <code>UsergridEntity</code> of the given type with the given jsonBody.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">POST</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">jsonBody</span><span class="p">:[</span><span class="kt">String</span><span class="p">:</span><span class="kt">AnyObject</span><span class="p">],</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>type</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> type.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>jsonBody</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The valid JSON body dictionary to use when creating the <code>UsergridEntity</code>.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTSS10jsonBodiesGSaGVSs10DictionarySSPSs9AnyObject___10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/POST(_:jsonBodies:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTSS10jsonBodiesGSaGVSs10DictionarySSPSs9AnyObject___10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:jsonBodies:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates and posts an array of <code>Entity</code> objects while assigning the given type to them.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">POST</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">jsonBodies</span><span class="p">:[[</span><span class="kt">String</span><span class="p">:</span><span class="kt">AnyObject</span><span class="p">]],</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>type</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> type.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>jsonBody</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The valid JSON body dictionaries to use when creating the <code>UsergridEntity</code> objects.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTSS4nameSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/POST(_:name:jsonBody:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTSS4nameSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:name:jsonBody:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates and posts an <code>UsergridEntity</code> of the given type with a given name and the given jsonBody.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">POST</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">jsonBody</span><span class="p">:[</span><span class="kt">String</span><span class="p">:</span><span class="kt">AnyObject</span><span class="p">],</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>type</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> type.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>name</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of the <code>UsergridEntity</code>.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>jsonBody</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The valid JSON body dictionary to use when creating the <code>UsergridEntity</code>.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+                <div class="task-name-container">
+                  <a name="/DELETE"></a>
+                  <a name="//apple_ref/swift/Section/DELETE" class="dashAnchor"></a>
+                  <a href="#/DELETE">
+                    <h3 class="section-name">DELETE</h3>
+                  </a>
+                </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient6DELETEFS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/DELETE(_:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient6DELETEFS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Destroys the passed <code>UsergridEntity</code>.
+- parameter entity: The <code>UsergridEntity</code> to delete.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">DELETE</span><span class="p">(</span><span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>entity</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> to delete.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient6DELETEFS0_FTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/DELETE(_:queryCompletion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient6DELETEFS0_FTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:queryCompletion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Destroys the <code>UsergridEntity</code> objects that fit the given <code>UsergridQuery</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">DELETE</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span><span class="kt">UsergridQuery</span><span class="p">,</span> <span class="nv">queryCompletion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>query</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The query to use when filtering what entities to delete.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>queryCompletion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient6DELETEFS0_FTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/DELETE(_:uuidOrName:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient6DELETEFS0_FTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:uuidOrName:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Destroys the <code>UsergridEntity</code> of a given type with a specific UUID/name.
+- parameter type: The <code>UsergridEntity</code> type.
+- parameter uuidOrName: The UUID or name of the <code>UsergridEntity</code>.
+- parameter completion: The completion block that will be called once the request has completed.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">DELETE</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">uuidOrName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>type</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> type.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>uuidOrName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The UUID or name of the <code>UsergridEntity</code>.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+                <div class="task-name-container">
+                  <a name="/Entity%20Connections"></a>
+                  <a name="//apple_ref/swift/Section/Entity Connections" class="dashAnchor"></a>
+                  <a href="#/Entity%20Connections">
+                    <h3 class="section-name">Entity Connections</h3>
+                  </a>
+                </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient7CONNECTFS0_FTCS_14UsergridEntity12relationshipSS16connectingEntityS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/CONNECT(_:relationship:connectingEntity:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient7CONNECTFS0_FTCS_14UsergridEntity12relationshipSS16connectingEntityS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_">CONNECT(_:relationship:connectingEntity:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Connects the <code>UsergridEntity</code> objects via the relationship.
+- parameter entity: The <code>UsergridEntity</code> that will contain the connection.
+- parameter relationship: The relationship of the two entities.
+- parameter connectingEntity: The <code>UsergridEntity</code> which is connected.
+- parameter completion: The completion block that will be called once the request has completed.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">CONNECT</span><span class="p">(</span><span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">connectingEntity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>entity</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> that will contain the connection.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>relationship</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The relationship of the two entities.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>connectingEntity</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> which is connected.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient10DISCONNECTFS0_FTCS_14UsergridEntity12relationshipSS16connectingEntityS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/DISCONNECT(_:relationship:connectingEntity:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient10DISCONNECTFS0_FTCS_14UsergridEntity12relationshipSS16connectingEntityS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_">DISCONNECT(_:relationship:connectingEntity:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Disconnects the <code>UsergridEntity</code> objects via the relationship.
+- parameter entity: The <code>UsergridEntity</code> that contains the connection.
+- parameter relationship: The relationship of the two entities.
+- parameter connectingEntity: The <code>UsergridEntity</code> which is connected.
+- parameter completion: The completion block that will be called once the request has completed.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="kt">DISCONNECT</span><span class="p">(</span><span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">connectingEntity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>entity</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> that contains the connection.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>relationship</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The relationship of the two entities.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>connectingEntity</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> which is connected.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient20getConnectedEntitiesFS0_FTCS_14UsergridEntity12relationshipSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/getConnectedEntities(_:relationship:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient20getConnectedEntitiesFS0_FTCS_14UsergridEntity12relationshipSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">getConnectedEntities(_:relationship:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">UsergridClient</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+                <div class="task-name-container">
+                  <a name="/Asset%20Management"></a>
+                  <a name="//apple_ref/swift/Section/Asset Management" class="dashAnchor"></a>
+                  <a href="#/Asset%20Management">
+                    <h3 class="section-name">Asset Management</h3>
+                  </a>
+                </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient11uploadAssetFS0_FTCS_14UsergridEntity5assetCS_13UsergridAsset8progressGSqFT13bytesFinishedVSs5Int6413bytesExpectedS3__T__10completionGSqFT8responseCS_16UsergridResponse5assetGSqS2__5errorGSqSS__T___T_"></a>
+                    <a name="//apple_ref/swift/Method/uploadAsset(_:asset:progress:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient11uploadAssetFS0_FTCS_14UsergridEntity5assetCS_13UsergridAsset8progressGSqFT13bytesFinishedVSs5Int6413bytesExpectedS3__T__10completionGSqFT8responseCS_16UsergridResponse5assetGSqS2__5errorGSqSS__T___T_">uploadAsset(_:asset:progress:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Uploads the asset and connects the data to the given <code>UsergridEntity</code>.
+- parameter entity: The <code>UsergridEntity</code> to connect the asset to.
+- parameter asset: The <code>UsergridAsset</code> to upload.
+- parameter progress: The progress block that will be called to update the progress of the upload.
+- parameter completion: The completion block that will be called once the request has completed.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">uploadAsset</span><span class="p">(</span><span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="k">as</span><span class="nv">set</span><span class="p">:</span><span class="kt">UsergridAsset</span><span class="p">,</span> <span class="nv">progress</span><span class="p">:</span><span class="kt">UsergridAssetRequestProgress</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridAssetUploadCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>entity</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> to connect the asset to.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>asset</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridAsset</code> to upload.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>progress</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The progress block that will be called to update the progress of the upload.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient13downloadAssetFS0_FTCS_14UsergridEntity11contentTypeSS8progressGSqFT13bytesFinishedVSs5Int6413bytesExpectedS2__T__10completionGSqFT5assetGSqCS_13UsergridAsset_5errorGSqSS__T___T_"></a>
+                    <a name="//apple_ref/swift/Method/downloadAsset(_:contentType:progress:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient13downloadAssetFS0_FTCS_14UsergridEntity11contentTypeSS8progressGSqFT13bytesFinishedVSs5Int6413bytesExpectedS2__T__10completionGSqFT5assetGSqCS_13UsergridAsset_5errorGSqSS__T___T_">downloadAsset(_:contentType:progress:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Downloads the asset from the given <code>UsergridEntity</code>.
+- parameter entity: The <code>UsergridEntity</code> to which the asset to.
+- parameter contentType: The content type of the asset&rsquo;s data.
+- parameter progress: The optional progress block that will be called to update the progress of the download.
+- parameter completion: The optional completion block that will be called once the request has completed.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="Swift">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">downloadAsset</span><span class="p">(</span><span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">contentType</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">progress</span><span class="p">:</span><span class="kt">UsergridAssetRequestProgress</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridAssetDownloadCompletion</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>entity</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridEntity</code> to which the asset to.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>contentType</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The content type of the asset&rsquo;s data.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>progress</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The optional progress block that will be called to update the progress of the download.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The optional completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2015 <a class="link" href="" target="_blank" rel="external"></a>. All rights reserved. (Last updated: 2015-10-21)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.3.2</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>
