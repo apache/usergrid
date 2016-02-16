@@ -1416,21 +1416,13 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public String getAccessTokenForAdminUser( UUID userId, long duration ) throws Exception {
-
         return getTokenForPrincipal( ACCESS, null, MANAGEMENT_APPLICATION_ID, ADMIN_USER, userId, duration );
     }
 
 
-    @Override
-    public void importTokenForAdminUser(UUID userId, String token, long ttl) throws Exception {
-        tokens.importToken( token, TokenCategory.ACCESS, null,
-                new AuthPrincipalInfo( ADMIN_USER, userId, MANAGEMENT_APPLICATION_ID ), null, ttl );
-    }
-
-
-    /*
+  /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.usergrid.management.ManagementService#revokeAccessTokensForAdminUser
    * (java.util.UUID)
@@ -1606,10 +1598,10 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public void removeAdminUserFromOrganization( UUID userId, UUID organizationId ) throws Exception {
-        removeAdminUserFromOrganization( userId, organizationId, false );     
+        removeAdminUserFromOrganization( userId, organizationId, false );
     }
 
-    
+
     @Override
     public void removeAdminUserFromOrganization( UUID userId, UUID organizationId, boolean force ) throws Exception {
 
@@ -1620,10 +1612,10 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
 
         try {
-            int size = em.getCollection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ), 
+            int size = em.getCollection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ),
                     "users", null, 2, Level.IDS, false ).size();
-            
-            if ( !force && size <= 1 ) { 
+
+            if ( !force && size <= 1 ) {
                 throw new Exception();
             }
         }
@@ -1772,7 +1764,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     /**
-     * Remove application from an organization. 
+     * Remove application from an organization.
      */
     @Override
     public void removeOrganizationApplication( UUID organizationId, UUID applicationId ) throws Exception {
@@ -1781,9 +1773,9 @@ public class ManagementServiceImpl implements ManagementService {
         }
 
         EntityManager em = emf.getEntityManager( MANAGEMENT_APPLICATION_ID );
-        em.deleteConnection( new ConnectionRefImpl(  
-            "group",          // String connectingEntityType 
-            organizationId,   // UUID connectingEntityId 
+        em.deleteConnection( new ConnectionRefImpl(
+            "group",          // String connectingEntityType
+            organizationId,   // UUID connectingEntityId
             "owns",           // String connectionType
             APPLICATION_INFO, // String connectedEntityType
             applicationId     // UUID connectedEntityId
@@ -2446,7 +2438,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.usergrid.management.ManagementService#revokeAccessTokensForAappUser
    * (java.util.UUID, java.util.UUID)
@@ -2823,7 +2815,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.usergrid.management.ManagementService#setOrganizationProps(java.util
    * .UUID, java.util.Map)
@@ -2846,7 +2838,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.usergrid.management.ManagementService#getOrganizationProps(java.util
    * .UUID)
