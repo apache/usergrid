@@ -129,7 +129,7 @@ public class UsergridClientConfig : NSObject, NSCoding {
         self.baseUrl = baseUrl
         self.appAuth = aDecoder.decodeObjectForKey("appAuth") as? UsergridAppAuth
         self.persistCurrentUserInKeychain = aDecoder.decodeBoolForKey("persistCurrentUserInKeychain") ?? true
-        self.authFallback = UsergridAuthFallback(rawValue:aDecoder.decodeIntegerForKey("authFallback")) ?? .App
+        self.authFallback = UsergridAuthFallback(rawValue:aDecoder.decodeIntegerForKey("authFallback")) ?? .None
         super.init()
     }
 

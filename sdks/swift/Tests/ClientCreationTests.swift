@@ -42,6 +42,7 @@ class ClientCreationTests: XCTestCase {
                                                          appId: ClientCreationTests.otherAppID,
                                                          baseUrl: ClientCreationTests.otherBaseURL,
                                                          authFallback: .App,
+                                                         persistCurrentUserInKeychain: true,
                                                          appAuth: ClientCreationTests.otherAppAuth)
 
     let otherClient = UsergridClient(configuration: ClientCreationTests.otherConfiguration)
@@ -49,6 +50,7 @@ class ClientCreationTests: XCTestCase {
     override func setUp() {
         super.setUp()
         Usergrid.initSharedInstance(orgId:ClientCreationTests.orgId, appId: ClientCreationTests.appId)
+        Usergrid.persistCurrentUserInKeychain = false
     }
 
     override func tearDown() {
@@ -63,11 +65,14 @@ class ClientCreationTests: XCTestCase {
     }
 
     func test_CLIENT_PROPERTIES() {
-        XCTAssertEqual(Usergrid.sharedInstance.appId, ClientCreationTests.appId)
-        XCTAssertEqual(Usergrid.sharedInstance.orgId, ClientCreationTests.orgId)
-        XCTAssertEqual(Usergrid.sharedInstance.authFallback, UsergridAuthFallback.None)
-        XCTAssertEqual(Usergrid.sharedInstance.baseUrl, UsergridClient.DEFAULT_BASE_URL)
-        XCTAssertNil(Usergrid.sharedInstance.currentUser)
+        XCTAssertEqual(Usergrid.appId, ClientCreationTests.appId)
+        XCTAssertEqual(Usergrid.orgId, ClientCreationTests.orgId)
+        XCTAssertEqual(Usergrid.authFallback, UsergridAuthFallback.None)
+        XCTAssertEqual(Usergrid.persistCurrentUserInKeychain, false)
+        XCTAssertEqual(Usergrid.baseUrl, UsergridClient.DEFAULT_BASE_URL)
+        XCTAssertEqual(Usergrid.clientAppURL, "\(UsergridClient.DEFAULT_BASE_URL)/\(ClientCreationTests.orgId)/\(ClientCreationTests.appId)" )
+        XCTAssertNil(Usergrid.currentUser)
+        XCTAssertNil(Usergrid.userAuth)
 
         XCTAssertEqual(otherClient.appId, ClientCreationTests.otherAppID)
         XCTAssertEqual(otherClient.orgId, ClientCreationTests.otherOrgID)
@@ -83,10 +88,10 @@ class ClientCreationTests: XCTestCase {
         XCTAssertNotNil(newInstanceFromData)
 
         if let newInstance = newInstanceFromData {
-            XCTAssertEqual(Usergrid.sharedInstance.appId, newInstance.appId)
-            XCTAssertEqual(Usergrid.sharedInstance.orgId, newInstance.orgId)
-            XCTAssertEqual(Usergrid.sharedInstance.authFallback, newInstance.authFallback)
-            XCTAssertEqual(Usergrid.sharedInstance.baseUrl, newInstance.baseUrl)
+            XCTAssertEqual(Usergrid.appId, newInstance.appId)
+            XCTAssertEqual(Usergrid.orgId, newInstance.orgId)
+            XCTAssertEqual(Usergrid.authFallback, newInstance.authFallback)
+            XCTAssertEqual(Usergrid.baseUrl, newInstance.baseUrl)
         }
     }
 }

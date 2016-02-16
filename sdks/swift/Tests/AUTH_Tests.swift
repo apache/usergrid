@@ -29,26 +29,35 @@ import XCTest
 
 class AUTH_Tests: XCTestCase {
 
-    let testAuthClient = UsergridClient(orgId: ClientCreationTests.orgId, appId: "sdk.demo")
     let clientAuth = UsergridAppAuth(clientId: "b3U6THNcevskEeOQZLcUROUUVA", clientSecret: "b3U6RZHYznP28xieBzQPackFPmmnevU")
     private static let collectionName = "publicevent"
     private static let entityUUID = "fa015eaa-fe1c-11e3-b94b-63b29addea01"
 
+    override func setUp() {
+        super.setUp()
+        Usergrid.initSharedInstance(orgId:ClientCreationTests.orgId, appId: "sdk.demo")
+    }
+
+    override func tearDown() {
+        Usergrid._sharedClient = nil
+        super.tearDown()
+    }
+
     func test_CLIENT_AUTH() {
 
         let authExpect = self.expectationWithDescription("\(__FUNCTION__)")
-        testAuthClient.authFallback = .App
-        testAuthClient.authenticateApp(clientAuth) { [weak self] (auth,error) in
+        Usergrid.authFallback = .App
+        Usergrid.authenticateApp(clientAuth) { auth,error in
 
             XCTAssertNil(error)
-            XCTAssertNotNil(self?.testAuthClient.appAuth)
+            XCTAssertNotNil(Usergrid.appAuth)
 
-            if let appAuth = self?.testAuthClient.appAuth {
+            if let appAuth = Usergrid.appAuth {
 
                 XCTAssertNotNil(appAuth.accessToken)
                 XCTAssertNotNil(appAuth.expiry)
 
-                self?.testAuthClient.GET(AUTH_Tests.collectionName) { (response) in
+                Usergrid.GET(AUTH_Tests.collectionName) { (response) in
 
                     XCTAssertNotNil(response)
                     XCTAssertTrue(response.hasNextPage)
