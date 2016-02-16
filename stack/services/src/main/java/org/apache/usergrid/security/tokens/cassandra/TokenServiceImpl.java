@@ -18,7 +18,6 @@ package org.apache.usergrid.security.tokens.cassandra;
 
 
 import com.codahale.metrics.Counter;
-import com.google.inject.Injector;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -298,16 +297,14 @@ public class TokenServiceImpl implements TokenService {
 
         UUID uuid = getUUIDForToken( token );
 
-        long ssoTtl = 1000000L; // TODO: property for this
-
         if ( uuid == null ) {
-            return isSSOEnabled() ? validateExternalToken( token, ssoTtl ) : null;
+            return null;
         }
 
         TokenInfo tokenInfo = getTokenInfo( uuid );
 
         if ( tokenInfo == null ) {
-            return isSSOEnabled() ? validateExternalToken( token, ssoTtl ) : null;
+            return isSSOEnabled() ? validateExternalToken( token, maxPersistenceTokenAge ) : null;
         }
 
         //update the token
