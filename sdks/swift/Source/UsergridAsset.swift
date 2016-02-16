@@ -122,7 +122,7 @@ public class UsergridAsset: NSObject, NSCoding {
     - returns: A new instance of `UsergridAsset` if the data can be gathered from the passed in `NSURL`, otherwise nil.
     */
     public convenience init?(fileName:String? = UsergridAsset.DEFAULT_FILE_NAME, fileURL:NSURL, contentType:String? = nil) {
-        if fileURL.isFileReferenceURL(), let assetData = NSData(contentsOfURL: fileURL) {
+        if fileURL.fileURL, let assetData = NSData(contentsOfURL: fileURL) {
             var fileNameToUse = fileName
             if fileNameToUse != UsergridAsset.DEFAULT_FILE_NAME, let inferredFileName = fileURL.lastPathComponent {
                 fileNameToUse = inferredFileName
