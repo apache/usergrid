@@ -6,23 +6,23 @@ Apache Usergrid Documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Introduction
+   :caption: Getting Started
 
    introduction/overview.md
    introduction/usergrid-features
    introduction/data-model
    introduction/async-vs-sync
    
-.. _getting-started:
+.. _using-usergrid:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Getting Started
+   :caption: Using Usergrid 
 
-   getting-started/creating-account
-   getting-started/creating-a-new-application
-   getting-started/using-a-sandbox-app
-   getting-started/using-the-api.md
+   using-usergrid/creating-account
+   using-usergrid/creating-a-new-application
+   using-usergrid/using-a-sandbox-app
+   using-usergrid/using-the-api.md
      
 .. _data-storage:
 
@@ -161,10 +161,8 @@ Apache Usergrid Documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Installing the Stack
-
-   installation/ug1-deploy-to-tomcat
-   installation/ug1-launcher-quick-start
+   :caption: Installing Usergrid
+   
    installation/deployment-guide
     
 .. _about:
