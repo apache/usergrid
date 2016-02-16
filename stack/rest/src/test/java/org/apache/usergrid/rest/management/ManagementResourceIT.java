@@ -678,10 +678,10 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         // TODO: how do we unit test SSO now that we have no external token end-point?
 
-        Map<String, String> payload = hashMap( "access_token", accessToken );
-
-        JsonNode node = resource().path( "/management/me" ).accept( MediaType.APPLICATION_JSON )
-                .type( MediaType.APPLICATION_JSON_TYPE ).post( JsonNode.class, payload );
+        JsonNode node = resource().path( "/management/me" )
+                .queryParam( "access_token", accessToken )
+                .accept( MediaType.APPLICATION_JSON )
+                .get( JsonNode.class );
 
         logNode( node );
         String token = node.get( "access_token" ).getTextValue();
