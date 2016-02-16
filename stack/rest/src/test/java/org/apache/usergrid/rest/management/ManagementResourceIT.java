@@ -609,6 +609,55 @@ public class ManagementResourceIT extends AbstractRestIT {
 
 
     @Test
+    public void testValidateExternalToken() throws Exception {
+
+        // create a new admin user, get access token
+
+        String rand = RandomStringUtils.randomAlphanumeric(10);
+        final String username = "user_" + rand;
+        management().orgs().post(
+            new Organization( username, username, username+"@example.com", username, "password", null ) );
+
+        Map<String, Object> loginInfo = new HashMap<String, Object>() {{
+            put("username", username );
+            put("password", "password" );
+            put("grant_type", "password");
+        }};
+
+        JsonNode accessInfoNode = management.token()
+            .post( JsonNode.class, loginInfo );
+        String accessToken = accessInfoNode.get( "access_token" ).asText();
+
+        // set the Usergrid Central SSO URL because Tomcat port is dynamically assigned
+
+        String suToken = clientSetup.getSuperuserToken().getAccessToken();
+        Map<String, String> props = new HashMap<String, String>();
+        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm() );
+        pathResource( "testproperties" ).post( props );
+
+
+        // TODO: how do we unit test SSO now that we have no external token end-point?
+
+
+        JsonNode node = pathResource("/management/me").get( JsonNode.class,  new QueryParameters()
+            .addParam( "access_token", accessToken) );
+
+
+        logger.info( "node: {}", node );
+        String token = node.get( "access_token" ).asText();
+
+        assertNotNull( token );
+
+        // TODO: how do we test the create new user and organization case?
+
+        // unset the Usergrid Central SSO URL so it does not interfere with other tests
+
+        props.put( USERGRID_CENTRAL_URL, "" );
+        pathResource( "testproperties" ).post( props );
+    }
+
+
+    @Test
     public void testSuperuserOnlyWhenValidateExternalTokensEnabled() throws Exception {
 
         // create an org and an admin user

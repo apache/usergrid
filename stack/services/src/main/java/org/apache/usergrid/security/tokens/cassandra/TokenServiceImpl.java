@@ -38,12 +38,10 @@ import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.security.tokens.TokenCategory;
 import org.apache.usergrid.security.tokens.TokenInfo;
-import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.security.tokens.exceptions.BadTokenException;
 import org.apache.usergrid.security.tokens.exceptions.ExpiredTokenException;
 import org.apache.usergrid.security.tokens.exceptions.InvalidTokenException;
-import org.apache.usergrid.services.ServiceManager;
 import org.apache.usergrid.utils.ConversionUtils;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -324,16 +322,14 @@ public class TokenServiceImpl implements TokenService {
 
         UUID uuid = getUUIDForToken( token );
 
-        long ssoTtl = 1000000L; // TODO: property for this
-
         if ( uuid == null ) {
-            return isSSOEnabled() ? validateExternalToken( token, ssoTtl ) : null;
+            return null;
         }
 
         TokenInfo tokenInfo = getTokenInfo( uuid );
 
         if ( tokenInfo == null ) {
-            return isSSOEnabled() ? validateExternalToken( token, ssoTtl ) : null;
+            return isSSOEnabled() ? validateExternalToken( token, maxPersistenceTokenAge ) : null;
         }
 
         //update the token
