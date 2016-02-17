@@ -873,7 +873,12 @@ public class UsergridClient: NSObject, NSCoding {
                                                       asset: asset)
 
         _requestManager.performAssetUpload(assetRequest, progress: progress) { asset, response in
-            entity.asset = asset
+            if response.ok {
+                entity.asset = asset
+                if let responseEntityFileMetaData = response.entity?.fileMetaData {
+                    entity.fileMetaData = responseEntityFileMetaData
+                }
+            }
             completion?(asset: asset, response: response)
         }
     }
