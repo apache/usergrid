@@ -265,12 +265,15 @@ The current Git commit ID is ${current_commit_id}
 
 The release is available at:
 ${usergrid_svn_dist_url}/${current_version}/${dist_name}.tar.gz
+${usergrid_svn_dist_url}/${current_version}/${binary_name}.tar.gz
 
 The MD5 checksum of the release can be found at:
 ${usergrid_svn_dist_url}/${current_version}/${dist_name}.tar.gz.md5
+${usergrid_svn_dist_url}/${current_version}/${binary_name}.tar.gz.md5
 
 The signature of the release can be found at:
 ${usergrid_svn_dist_url}/${current_version}/${dist_name}.tar.gz.asc
+${usergrid_svn_dist_url}/${current_version}/${binary_name}.tar.gz.asc
 
 The GPG key used to sign the release are available at:
 ${usergrid_svn_dist_url}/KEYS
