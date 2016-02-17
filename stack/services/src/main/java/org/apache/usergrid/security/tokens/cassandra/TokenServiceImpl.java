@@ -301,10 +301,16 @@ public class TokenServiceImpl implements TokenService {
             return null;
         }
 
-        TokenInfo tokenInfo = getTokenInfo( uuid );
-
-        if ( tokenInfo == null ) {
-            return isSSOEnabled() ? validateExternalToken( token, maxPersistenceTokenAge ) : null;
+        TokenInfo tokenInfo;
+        try {
+            tokenInfo = getTokenInfo( uuid );
+        } catch (InvalidTokenException e){
+            // now try from central sso
+            if ( isSSOEnabled() ){
+                return validateExternalToken( token, maxPersistenceTokenAge );
+            }else{
+                throw e; // re-throw the error
+            }
         }
 
         //update the token
