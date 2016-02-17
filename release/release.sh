@@ -101,8 +101,8 @@ base_dir=$(git rev-parse --show-toplevel)
 if [[ -n "`git status --porcelain`" ]]; then
   echo "ERROR: Please run from a clean $RELEASE_BRANCH"
   exit 1
-elif [[ "`git rev-parse --abbrev-ref HEAD`" == "$RELEASE_BRANCH" ]]; then
-  echo "ERROR: This script must be run from the released branch."
+elif [[ "`git rev-parse --abbrev-ref HEAD`" == $RELEASE_BRANCH ]]; then
+  echo "ERROR: This script must be run from the ${RELEASE_BRANCH} branch."
   exit 1
 fi
 
