@@ -50,10 +50,10 @@ public class UsergridEntity: NSObject, NSCoding {
     }
 
     /// The `UsergridAsset` that contains the asset data.
-    public var asset: UsergridAsset?
+    internal(set) public var asset: UsergridAsset?
 
     /// The `UsergridFileMetaData` of this `UsergridEntity`.
-    private(set) public var fileMetaData : UsergridFileMetaData?
+    internal(set) public var fileMetaData : UsergridFileMetaData?
 
     /// Property helper method for the `UsergridEntity` objects `UsergridEntityProperties.EntityType`.
     public var type: String { return self.getEntitySpecificProperty(.EntityType) as! String }
@@ -115,6 +115,7 @@ public class UsergridEntity: NSObject, NSCoding {
     required public init(type:String, name:String? = nil, propertyDict:[String:AnyObject]? = nil) {
         self.properties = propertyDict ?? [:]
         super.init()
+
         if self is UsergridUser {
             self.properties[UsergridEntityProperties.EntityType.stringValue] = UsergridUser.USER_ENTITY_TYPE
         } else if self is UsergridDevice {
@@ -122,8 +123,13 @@ public class UsergridEntity: NSObject, NSCoding {
         } else {
             self.properties[UsergridEntityProperties.EntityType.stringValue] = type
         }
+
         if let entityName = name {
             self.properties[UsergridEntityProperties.Name.stringValue] = entityName
+        }
+
+        if let fileMetaData = self.properties.removeValueForKey(UsergridFileMetaData.FILE_METADATA) as? [String:AnyObject] {
+            self.fileMetaData = UsergridFileMetaData(fileMetaDataJSON: fileMetaData)
         }
     }
 
