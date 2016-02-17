@@ -825,6 +825,33 @@ public class CpEntityManager implements EntityManager {
         return convertMvccEntityToEntity( fieldSet.getEntity( uniqueLookupRepairField ).getEntity().get() );
     }
 
+    @Override
+    public UUID getUniqueIdFromAlias( String collectionType, String aliasType ){
+
+        String collName = Schema.defaultCollectionName( collectionType );
+        String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
+        StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType);
+
+        Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
+            Inflector.getInstance().singularize( collectionType ), Collections.singletonList(uniqueLookupRepairField));
+
+        if(fieldSetObservable == null){
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Couldn't return the observable based on unique entities.");
+            }
+
+            return null;
+        }
+
+        FieldSet fieldSet = fieldSetObservable.toBlocking().last();
+        if(fieldSet.isEmpty()) {
+            return null;
+        }
+
+        return fieldSet.getEntity( uniqueLookupRepairField ).getEntity().get().getId().getUuid();
+    }
+
 
 
 
