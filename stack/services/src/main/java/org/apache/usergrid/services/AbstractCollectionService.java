@@ -144,14 +144,10 @@ public class AbstractCollectionService extends AbstractService {
     @Override
     public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception {
 
-        String nameProperty = Schema.getDefaultSchema().aliasProperty( getEntityType() );
-        if ( nameProperty == null ) {
-            nameProperty = "name";
-        }
+        // just get the UUID and then getItemById such that same results are being returned in both cases
+        UUID entityId = em.getUniqueIdFromAlias( getEntityType(), name );
 
-        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
-
-        if ( entity == null ) {
+        if ( entityId == null ) {
 
             if (logger.isTraceEnabled()) {
                 logger.trace("miss on entityType: {} with name: {}", getEntityType(), name);
@@ -159,35 +155,11 @@ public class AbstractCollectionService extends AbstractService {
 
             String msg = "Cannot find entity with name: "+name;
             throw new EntityNotFoundException( msg );
+
         }
 
-        // the context of the entity they're trying to load isn't owned by the owner
-        // in the path, don't return it
-        if ( !em.isCollectionMember( context.getOwner(), context.getCollectionName(), entity ) ) {
-            logger.info( "Someone tried to GET entity {} they don't own. Entity name {} with owner {}",
-                    getEntityType(), name, context.getOwner()
-            );
-            throw new ServiceResourceNotFoundException( context );
-        }
+        return getItemById( context, entityId, false);
 
-        if ( !context.moreParameters() ) {
-            entity = importEntity( context, entity );
-        }
-
-        checkPermissionsForEntity( context, entity );
-
-    /*
-     * Level level = Level.REFS; if (isEmpty(parameters)) {
-     * level = Level.ALL_PROPERTIES; }
-     *
-     * Results results = em.searchCollectionForProperty(owner,
-     * getCollectionName(), null, nameProperty, name, null, null, 1, level);
-     * EntityRef entity = results.getRef();
-     */
-
-        List<ServiceRequest> nextRequests = context.getNextServiceRequests( entity );
-
-        return new ServiceResults( this, context, Type.COLLECTION, Results.fromRef( entity ), null, nextRequests );
     }
 
 
