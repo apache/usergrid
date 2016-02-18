@@ -189,10 +189,10 @@ git archive --prefix=${dist_name}/ -o ${release_dir}/${dist_name}.tar.gz HEAD
 #----------------------------------------------------------------------------------
 # Build the binary distribution from the new branch
 
-binary_name="apache-usergrid-${current_version_tag}-binary"
+binary_name="apache-usergrid-${current_version}-binary"
 
 pushd release
-./binary-release.sh ${current_version_tag}
+./binary-release.sh ${current_version}
 cp target/${binary_name}.tar.gz ${dist_dir}
 popd 
 
