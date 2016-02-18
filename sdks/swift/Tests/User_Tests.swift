@@ -30,7 +30,6 @@ import CoreLocation
 
 class User_Tests: XCTestCase {
 
-    let userWithNoName = UsergridUser()
     var user: UsergridUser!
 
     static let name = "Robert Walsh"
@@ -50,7 +49,7 @@ class User_Tests: XCTestCase {
         Usergrid.persistCurrentUserInKeychain = false
 
         user = UsergridUser(name:"a_bogus_name", email:User_Tests.email, username:User_Tests.username, password:User_Tests.password)
-        user["name"] = User_Tests.name
+        user.name = User_Tests.name
         user.age = User_Tests.age
         user.location = CLLocation(latitude: -90, longitude: 100)
         user.picture = User_Tests.picture
@@ -63,6 +62,61 @@ class User_Tests: XCTestCase {
         super.tearDown()
     }
 
+    func test_USER_INIT() {
+        user = UsergridUser(email: User_Tests.email, password: User_Tests.password)
+        XCTAssertNotNil(user)
+        XCTAssertNotNil(user.email)
+        XCTAssertNotNil(user.password)
+        XCTAssertEqual(user.email!, User_Tests.email)
+        XCTAssertEqual(user.usernameOrEmail!, User_Tests.email)
+        XCTAssertEqual(user.password!, User_Tests.password)
+        XCTAssertFalse(user.activated)
+        XCTAssertFalse(user.disabled)
+
+        user = UsergridUser(name: User_Tests.name, propertyDict: ["password":User_Tests.password])
+        XCTAssertNotNil(user)
+        XCTAssertNotNil(user.name)
+        XCTAssertNotNil(user.password)
+        XCTAssertEqual(user.name!, User_Tests.name)
+        XCTAssertEqual(user.password!, User_Tests.password)
+        XCTAssertFalse(user.activated)
+        XCTAssertFalse(user.disabled)
+
+        user = UsergridUser(name:User_Tests.name, email: User_Tests.email, password: User_Tests.password)
+        XCTAssertNotNil(user)
+        XCTAssertNotNil(user.name)
+        XCTAssertNotNil(user.email)
+        XCTAssertNotNil(user.password)
+        XCTAssertEqual(user.name!, User_Tests.name)
+        XCTAssertEqual(user.email!, User_Tests.email)
+        XCTAssertEqual(user.usernameOrEmail!, User_Tests.email)
+        XCTAssertEqual(user.password!, User_Tests.password)
+        XCTAssertFalse(user.activated)
+        XCTAssertFalse(user.disabled)
+
+        user = UsergridUser(username: User_Tests.username, password: User_Tests.password)
+        XCTAssertNotNil(user)
+        XCTAssertNotNil(user.username)
+        XCTAssertNotNil(user.password)
+        XCTAssertEqual(user.username!, User_Tests.username)
+        XCTAssertEqual(user.usernameOrEmail!, User_Tests.username)
+        XCTAssertEqual(user.password!, User_Tests.password)
+        XCTAssertFalse(user.activated)
+        XCTAssertFalse(user.disabled)
+
+        user = UsergridUser(name: User_Tests.name, username: User_Tests.username, password: User_Tests.password)
+        XCTAssertNotNil(user)
+        XCTAssertNotNil(user.name)
+        XCTAssertNotNil(user.username)
+        XCTAssertNotNil(user.password)
+        XCTAssertEqual(user.name!, User_Tests.name)
+        XCTAssertEqual(user.username!, User_Tests.username)
+        XCTAssertEqual(user.usernameOrEmail!, User_Tests.username)
+        XCTAssertEqual(user.password!, User_Tests.password)
+        XCTAssertFalse(user.activated)
+        XCTAssertFalse(user.disabled)
+    }
+
     func test_USERS_AND_PROPERTIES_NOT_NIL() {
         XCTAssertNotNil(user)
         XCTAssertNotNil(user.name)
@@ -73,9 +127,6 @@ class User_Tests: XCTestCase {
         XCTAssertNotNil(user.picture)
         XCTAssertNotNil(user.activated)
         XCTAssertNotNil(user.disabled)
-
-        XCTAssertNotNil(userWithNoName)
-        XCTAssertNil(userWithNoName.name)
     }
 
     func test_USER_PROPERTIES_WITH_HELPERS() {
@@ -104,7 +155,8 @@ class User_Tests: XCTestCase {
     }
 
     func deleteUser(expectation:XCTestExpectation) {
-        self.user.remove() { (removeResponse) in
+        self.user.remove() { removeResponse in
+            XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNotNil(removeResponse)
             XCTAssertTrue(removeResponse.ok)
             XCTAssertNotNil(removeResponse.user)
@@ -118,6 +170,7 @@ class User_Tests: XCTestCase {
         let userExpect = self.expectationWithDescription("\(__FUNCTION__)")
 
         user.save() { (createResponse) in
+            XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNotNil(createResponse)
             XCTAssertTrue(createResponse.ok)
             XCTAssertNotNil(createResponse.user)
@@ -147,12 +200,14 @@ class User_Tests: XCTestCase {
     func test_AUTHENTICATE_USER() {
         let userExpect = self.expectationWithDescription("\(__FUNCTION__)")
 
-        UsergridUser.checkAvailable(user.email!,username: user.username) { error,available in
+        UsergridUser.checkAvailable(user.email, username: user.username) { error,available in
 
+            XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNil(error)
             XCTAssertTrue(available)
 
             self.user.create() { (createResponse) in
+                XCTAssertTrue(NSThread.isMainThread())
                 XCTAssertNotNil(createResponse)
                 XCTAssertTrue(createResponse.ok)
                 XCTAssertNotNil(createResponse.user)
@@ -160,28 +215,33 @@ class User_Tests: XCTestCase {
                 XCTAssertNotNil(self.user.uuid)
 
                 self.user.login(self.user.username!, password:User_Tests.password) { (auth, loggedInUser, error) -> Void in
-
+                    XCTAssertTrue(NSThread.isMainThread())
                     XCTAssertNil(error)
                     XCTAssertNotNil(auth)
                     XCTAssertNotNil(loggedInUser)
                     XCTAssertEqual(auth, self.user.auth!)
 
                     Usergrid.authenticateUser(self.user.auth!) { auth,currentUser,error in
-
+                        XCTAssertTrue(NSThread.isMainThread())
                         XCTAssertNil(error)
                         XCTAssertNotNil(auth)
-                        XCTAssertNotNil(loggedInUser)
                         XCTAssertEqual(auth, self.user.auth!)
-                        XCTAssertNotNil(Usergrid.currentUser)
 
-                        self.user.reauthenticate() { auth, user, error in
+                        XCTAssertNotNil(currentUser)
+                        XCTAssertNotNil(Usergrid.currentUser)
+                        XCTAssertEqual(currentUser, Usergrid.currentUser!)
+
+                        self.user.reauthenticate() { auth, reauthedUser, error in
+                            XCTAssertTrue(NSThread.isMainThread())
                             XCTAssertNil(error)
                             XCTAssertNotNil(auth)
-                            XCTAssertNotNil(loggedInUser)
                             XCTAssertEqual(auth, self.user.auth!)
+
+                            XCTAssertNotNil(reauthedUser)
                             XCTAssertNotNil(Usergrid.currentUser)
 
                             self.user.logout() { response in
+                                XCTAssertTrue(NSThread.isMainThread())
                                 XCTAssertNotNil(response)
                                 XCTAssertTrue(response.ok)
                                 XCTAssertNil(response.error)
@@ -200,6 +260,7 @@ class User_Tests: XCTestCase {
         let userExpect = self.expectationWithDescription("\(__FUNCTION__)")
 
         user.create() { (createResponse) in
+            XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNotNil(createResponse)
             XCTAssertTrue(createResponse.ok)
             XCTAssertNotNil(createResponse.user)
@@ -207,17 +268,19 @@ class User_Tests: XCTestCase {
             XCTAssertNotNil(self.user.uuid)
 
             self.user.login(self.user.username!, password:User_Tests.password) { (auth, loggedInUser, error) -> Void in
-
+                XCTAssertTrue(NSThread.isMainThread())
                 XCTAssertNil(error)
                 XCTAssertNotNil(auth)
                 XCTAssertNotNil(loggedInUser)
                 XCTAssertEqual(auth, self.user.auth!)
 
                 self.user.resetPassword(User_Tests.password, new: User_Tests.resetPassword) { error,didSucceed in
+                    XCTAssertTrue(NSThread.isMainThread())
                     XCTAssertTrue(didSucceed)
                     XCTAssertNil(error)
 
                     self.user.login(self.user.username!, password:User_Tests.resetPassword) { (auth, loggedInUser, error) -> Void in
+                        XCTAssertTrue(NSThread.isMainThread())
                         XCTAssertNil(error)
                         XCTAssertNotNil(auth)
                         XCTAssertNotNil(loggedInUser)
@@ -268,6 +331,45 @@ class User_Tests: XCTestCase {
         }
         self.waitForExpectationsWithTimeout(100, handler: nil)
     }
+
+    func test_DEVICE_CONNECT_FAIL() {
+        let userExpect = self.expectationWithDescription("\(__FUNCTION__)")
+
+        user.create() { createResponse in
+            XCTAssertNotNil(createResponse)
+            XCTAssertTrue(createResponse.ok)
+            XCTAssertNotNil(createResponse.user)
+            XCTAssertNotNil(createResponse.users)
+            XCTAssertNotNil(self.user.uuid)
+
+            self.user.connectToDevice() { connectResponse in
+                XCTAssertNotNil(connectResponse)
+                XCTAssertTrue(connectResponse.ok)
+                XCTAssertNil(connectResponse.error)
+
+                self.user.getConnectedDevice() { getConnectedDeviceResponse in
+                    XCTAssertNotNil(getConnectedDeviceResponse)
+                    XCTAssertTrue(getConnectedDeviceResponse.ok)
+                    XCTAssertNil(getConnectedDeviceResponse.error)
+                    XCTAssertNotNil(getConnectedDeviceResponse.entity)
+
+                    if let responseEntity = getConnectedDeviceResponse.entity {
+                        XCTAssertTrue(responseEntity is UsergridDevice)
+                    }
+
+                    self.user.disconnectFromDevice() { disconnectResponse in
+                        XCTAssertNotNil(disconnectResponse)
+                        XCTAssertTrue(disconnectResponse.ok)
+                        XCTAssertNil(disconnectResponse.error)
+
+                        self.deleteUser(userExpect)
+                    }
+                }
+            }
+        }
+        self.waitForExpectationsWithTimeout(100, handler: nil)
+    }
+
 
     func test_USER_NSCODING() {
         let userData = NSKeyedArchiver.archivedDataWithRootObject(user)

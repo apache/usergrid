@@ -29,18 +29,26 @@ import XCTest
 
 class GET_Tests: XCTestCase {
 
-    let usergridClientInstance = UsergridClient(orgId:ClientCreationTests.orgId, appId: ClientCreationTests.appId)
-
     static let collectionName = "books"
     static let entityUUID = "f4078aca-2fb1-11e5-8eb2-e13f8369aad1"
 
     let query = UsergridQuery(GET_Tests.collectionName).fromString("select * where title = 'The Sun Also Rises' or title = 'The Old Man and the Sea'")
 
+    override func setUp() {
+        super.setUp()
+        Usergrid.initSharedInstance(orgId:ClientCreationTests.orgId, appId: ClientCreationTests.appId)
+    }
+
+    override func tearDown() {
+        Usergrid._sharedClient = nil
+        super.tearDown()
+    }
 
     func test_GET_WITHOUT_QUERY() {
 
         let getExpect = self.expectationWithDescription("\(__FUNCTION__)")
-        usergridClientInstance.GET(GET_Tests.collectionName) { (response) in
+        Usergrid.GET(GET_Tests.collectionName) { (response) in
+            XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNotNil(response)
             XCTAssertTrue(response.ok)
             XCTAssertTrue(response.hasNextPage)
@@ -53,7 +61,8 @@ class GET_Tests: XCTestCase {
     func test_GET_WITH_QUERY() {
 
         let getExpect = self.expectationWithDescription("\(__FUNCTION__)")
-        usergridClientInstance.GET(self.query) { (response) in
+        Usergrid.GET(self.query) { (response) in
+            XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNotNil(response)
             XCTAssertTrue(response.ok)
             XCTAssertEqual(response.count, 3)
@@ -65,7 +74,8 @@ class GET_Tests: XCTestCase {
     func test_GET_WITH_UUID() {
 
         let getExpect = self.expectationWithDescription("\(__FUNCTION__)")
-        usergridClientInstance.GET(GET_Tests.collectionName, uuidOrName:GET_Tests.entityUUID) { (response) in
+        Usergrid.GET(GET_Tests.collectionName, uuidOrName:GET_Tests.entityUUID) { (response) in
+            XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNotNil(response)
             XCTAssertTrue(response.ok)
             let entity = response.first!
@@ -81,13 +91,15 @@ class GET_Tests: XCTestCase {
     func test_GET_NEXT_PAGE_WITH_NO_QUERY() {
 
         let getExpect = self.expectationWithDescription("\(__FUNCTION__)")
-        usergridClientInstance.GET(GET_Tests.collectionName) { (response) in
+        Usergrid.GET(GET_Tests.collectionName) { (response) in
+            XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNotNil(response)
             XCTAssertTrue(response.ok)
             XCTAssertTrue(response.hasNextPage)
             XCTAssertEqual(response.count, 10)
 
             response.loadNextPage() { (nextPageResponse) in
+                XCTAssertTrue(NSThread.isMainThread())
                 XCTAssertTrue(nextPageResponse.ok)
                 XCTAssertNotNil(nextPageResponse)
                 XCTAssertFalse(nextPageResponse.hasNextPage)

@@ -31,7 +31,8 @@ class ASSET_Tests: XCTestCase {
 
     static let collectionName = "books"
     static let entityUUID = "f4078aca-2fb1-11e5-8eb2-e13f8369aad1"
-    static let imageLocation = "TestAssets/test.png"
+    static let pngLocation = "TestAssets/test.png"
+    static let jpgLocation = "TestAssets/UsergridGuy.jpg"
     static let imageName = "test"
 
     override func setUp() {
@@ -48,6 +49,33 @@ class ASSET_Tests: XCTestCase {
         return (NSBundle(forClass: object_getClass(self)).resourcePath! as NSString).stringByAppendingPathComponent(fileLocation)
     }
 
+    func test_ASSET_INIT() {
+        var filePath = self.getFullPathOfFile(ASSET_Tests.pngLocation)
+        var image = UIImage(contentsOfFile: filePath)
+        var asset = UsergridAsset(filename:ASSET_Tests.imageName,image: image!)
+        XCTAssertNotNil(asset)
+        XCTAssertNotNil(asset!.data)
+        XCTAssertNotNil(asset!.filename)
+        XCTAssertEqual(asset!.contentType, UsergridImageContentType.Png.stringValue)
+        XCTAssertTrue(asset!.contentLength > 0)
+
+        asset = UsergridAsset(filename:ASSET_Tests.imageName, fileURL: NSURL(fileURLWithPath: filePath))
+        XCTAssertNotNil(asset)
+        XCTAssertNotNil(asset!.data)
+        XCTAssertNotNil(asset!.filename)
+        XCTAssertEqual(asset!.contentType, UsergridImageContentType.Png.stringValue)
+        XCTAssertTrue(asset!.contentLength > 0)
+
+        filePath = self.getFullPathOfFile(ASSET_Tests.jpgLocation)
+        image = UIImage(contentsOfFile: filePath)
+        asset = UsergridAsset(filename:nil,image: image!, imageContentType:.Jpeg)
+        XCTAssertNotNil(asset)
+        XCTAssertNotNil(asset!.data)
+        XCTAssertEqual(asset!.filename,UsergridAsset.DEFAULT_FILE_NAME)
+        XCTAssertEqual(asset!.contentType, UsergridImageContentType.Jpeg.stringValue)
+        XCTAssertTrue(asset!.contentLength > 0)
+    }
+
     func test_IMAGE_UPLOAD() {
         let getExpect = self.expectationWithDescription("\(__FUNCTION__)")
         let uploadProgress : UsergridAssetRequestProgress = { (bytes,expected) in
@@ -58,25 +86,42 @@ class ASSET_Tests: XCTestCase {
         }
 
         Usergrid.GET(ASSET_Tests.collectionName, uuidOrName:ASSET_Tests.entityUUID) { (response) in
+            XCTAssertTrue(NSThread.isMainThread())
+
             let entity = response.first!
             XCTAssertNotNil(entity)
             XCTAssertFalse(entity.isUser)
 
-            let imagePath = self.getFullPathOfFile(ASSET_Tests.imageLocation)
+            let imagePath = self.getFullPathOfFile(ASSET_Tests.pngLocation)
             XCTAssertNotNil(imagePath)
 
             let localImage = UIImage(contentsOfFile: imagePath)
             XCTAssertNotNil(localImage)
 
-            let asset = UsergridAsset(fileName:ASSET_Tests.imageName,image: localImage!)
+            let asset = UsergridAsset(filename:ASSET_Tests.imageName,image: localImage!)
             XCTAssertNotNil(asset)
 
-            entity.uploadAsset(asset!, progress:uploadProgress) { (response, uploadedAsset, error) -> Void in
-                XCTAssertNotNil(asset)
-                XCTAssertNil(error)
+            entity.uploadAsset(asset!, progress:uploadProgress) { uploadedAsset,response in
+                XCTAssertTrue(NSThread.isMainThread())
                 XCTAssertTrue(response.ok)
+                XCTAssertNil(response.error)
+
+                XCTAssertNotNil(asset)
+                XCTAssertNotNil(uploadedAsset)
+                XCTAssertEqual(uploadedAsset!, asset!)
+
+                XCTAssertTrue(entity.hasAsset)
+                XCTAssertNotNil(entity.fileMetaData)
+                XCTAssertNotNil(entity.fileMetaData!.eTag)
+                XCTAssertNotNil(entity.fileMetaData!.checkSum)
+                XCTAssertNotNil(entity.fileMetaData!.contentType)
+                XCTAssertNotNil(entity.fileMetaData!.lastModifiedDate)
+                XCTAssertEqual(entity.asset!.contentLength, entity.fileMetaData!.contentLength)
+                XCTAssertEqual(entity.asset!.contentType, entity.fileMetaData!.contentType)
+
                 entity.downloadAsset(UsergridImageContentType.Png.stringValue, progress:downloadProgress)
                 { (downloadedAsset, error) -> Void in
+                    XCTAssertTrue(NSThread.isMainThread())
                     XCTAssertNotNil(downloadedAsset)
                     XCTAssertNil(error)
                     let downloadedImage = UIImage(data: downloadedAsset!.data)
@@ -86,6 +131,49 @@ class ASSET_Tests: XCTestCase {
                 }
             }
         }
-        self.waitForExpectationsWithTimeout(10, handler: nil)
+        self.waitForExpectationsWithTimeout(100, handler: nil)
+    }
+
+    func test_FILE_META_DATA_NSCODING() {
+        let fileMetaDataDict = ["content-type":"image/png",
+                                "etag":"dfa7421ea4f35d33e12ba93979a46b7e",
+                                "checkSum":"dfa7421ea4f35d33e12ba93979a46b7e",
+                                "content-length":1417896,
+                                "last-modified":1455728898545]
+        
+        let fileMetaData = UsergridFileMetaData(fileMetaDataJSON:fileMetaDataDict)
+
+        let fileMetaDataCodingData = NSKeyedArchiver.archivedDataWithRootObject(fileMetaData)
+        let newInstanceFromData = NSKeyedUnarchiver.unarchiveObjectWithData(fileMetaDataCodingData) as? UsergridFileMetaData
+        XCTAssertNotNil(newInstanceFromData)
+
+        if let newInstance = newInstanceFromData {
+            XCTAssertEqual(fileMetaData.eTag,newInstance.eTag)
+            XCTAssertEqual(fileMetaData.checkSum,newInstance.checkSum)
+            XCTAssertEqual(fileMetaData.contentType,newInstance.contentType)
+            XCTAssertEqual(fileMetaData.contentLength,newInstance.contentLength)
+            XCTAssertEqual(fileMetaData.lastModifiedDate,newInstance.lastModifiedDate)
+        }
+    }
+
+    func test_ASSET_NSCODING() {
+        let imagePath = self.getFullPathOfFile(ASSET_Tests.pngLocation)
+        let asset = UsergridAsset(filename:ASSET_Tests.imageName,fileURL: NSURL(fileURLWithPath: imagePath))
+        XCTAssertNotNil(asset)
+
+        if let originalAsset = asset {
+            let assetCodingData = NSKeyedArchiver.archivedDataWithRootObject(originalAsset)
+            let newInstanceFromData = NSKeyedUnarchiver.unarchiveObjectWithData(assetCodingData) as? UsergridAsset
+
+            XCTAssertNotNil(newInstanceFromData)
+
+            if let newInstance = newInstanceFromData {
+                XCTAssertEqual(originalAsset.filename,newInstance.filename)
+                XCTAssertEqual(originalAsset.data,newInstance.data)
+                XCTAssertEqual(originalAsset.originalLocation,newInstance.originalLocation)
+                XCTAssertEqual(originalAsset.contentType,newInstance.contentType)
+                XCTAssertEqual(originalAsset.contentLength,newInstance.contentLength)
+            }
+        }
     }
 }
