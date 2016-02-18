@@ -704,6 +704,8 @@ public interface EntityManager {
 
     public Entity getUniqueEntityFromAlias( String aliasType, String aliasValue );
 
+    public UUID getUniqueIdFromAlias( String aliasType, String aliasValue );
+
 
     /**
      * Get the outgoing edge types where the entity ref is the source in the graph
