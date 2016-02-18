@@ -155,7 +155,7 @@ git checkout -b $current_version
 
 # TODO: ensure that the tag has the same date as the last commit made
 
-git tag -s "${current_version}" -m "usergrid-${current_version} release." $current_version
+git tag -s "usergrid-${current_version}" -m "usergrid-${current_version} release." $current_version
 
 if [[ $publish == 1 ]]; then
   git push origin $current_version
@@ -193,7 +193,7 @@ binary_name="apache-usergrid-${current_version}-binary"
 
 pushd release
 ./binary-release.sh ${current_version}
-cp target/${binary_name}.tar.gz ${dist_dir}
+cp target/${binary_name}.tar.gz ${release_dir}
 popd 
 
 
