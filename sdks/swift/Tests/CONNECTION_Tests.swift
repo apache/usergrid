@@ -47,6 +47,7 @@ class CONNECTION_Tests: XCTestCase {
         let authExpect = self.expectationWithDescription("\(__FUNCTION__)")
         Usergrid.authFallback = .App
         Usergrid.authenticateApp(clientAuth) { auth,error in
+            XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNil(error)
             XCTAssertNotNil(Usergrid.appAuth)
 
@@ -56,7 +57,7 @@ class CONNECTION_Tests: XCTestCase {
                 XCTAssertNotNil(appAuth.expiry)
 
                 Usergrid.GET(CONNECTION_Tests.collectionName) { (response) in
-
+                    XCTAssertTrue(NSThread.isMainThread())
                     XCTAssertNotNil(response)
                     XCTAssertTrue(response.ok)
                     XCTAssertTrue(response.hasNextPage)
@@ -67,18 +68,26 @@ class CONNECTION_Tests: XCTestCase {
                     XCTAssertEqual(entity.type, CONNECTION_Tests.collectionName)
 
                     entity.connect("likes", toEntity: entityToConnect) { (response) -> Void in
+                        XCTAssertTrue(NSThread.isMainThread())
                         XCTAssertNotNil(response)
                         XCTAssertTrue(response.ok)
+
                         entity.getConnections(.Out, relationship: "likes", query:nil) { (response) -> Void in
+                            XCTAssertTrue(NSThread.isMainThread())
                             XCTAssertNotNil(response)
                             XCTAssertTrue(response.ok)
+
                             let connectedEntity = response.first!
                             XCTAssertNotNil(connectedEntity)
                             XCTAssertEqual(connectedEntity.uuidOrName, entityToConnect.uuidOrName)
+
                             entity.disconnect("likes", fromEntity: connectedEntity) { (response) -> Void in
+                                XCTAssertTrue(NSThread.isMainThread())
                                 XCTAssertNotNil(response)
                                 XCTAssertTrue(response.ok)
+
                                 entity.getConnections(.Out, relationship: "likes", query:nil) { (response) -> Void in
+                                    XCTAssertTrue(NSThread.isMainThread())
                                     XCTAssertNotNil(response)
                                     XCTAssertTrue(response.ok)
                                     authExpect.fulfill()

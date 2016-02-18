@@ -32,21 +32,6 @@ class ClientCreationTests: XCTestCase {
     static let orgId = "rwalsh"
     static let appId = "sandbox"
 
-    static let otherInstanceID = "otherInstanceID"
-    static let otherAppID = "otherAppID"
-    static let otherOrgID = "otherOrgID"
-    static let otherBaseURL = "http://www.something.com"
-    static let otherAppAuth = UsergridAppAuth(clientId: "alkdjflsdf", clientSecret: "alkdjflsdf")
-
-    static let otherConfiguration = UsergridClientConfig(orgId: ClientCreationTests.otherOrgID,
-                                                         appId: ClientCreationTests.otherAppID,
-                                                         baseUrl: ClientCreationTests.otherBaseURL,
-                                                         authFallback: .App,
-                                                         persistCurrentUserInKeychain: true,
-                                                         appAuth: ClientCreationTests.otherAppAuth)
-
-    let otherClient = UsergridClient(configuration: ClientCreationTests.otherConfiguration)
-
     override func setUp() {
         super.setUp()
         Usergrid.initSharedInstance(orgId:ClientCreationTests.orgId, appId: ClientCreationTests.appId)
@@ -60,8 +45,6 @@ class ClientCreationTests: XCTestCase {
 
     func test_INSTANCE_POINTERS() {
         XCTAssertNotNil(Usergrid.sharedInstance)
-        XCTAssertNotNil(otherClient)
-        XCTAssertFalse(otherClient === Usergrid.sharedInstance)
     }
 
     func test_CLIENT_PROPERTIES() {
@@ -73,12 +56,6 @@ class ClientCreationTests: XCTestCase {
         XCTAssertEqual(Usergrid.clientAppURL, "\(UsergridClient.DEFAULT_BASE_URL)/\(ClientCreationTests.orgId)/\(ClientCreationTests.appId)" )
         XCTAssertNil(Usergrid.currentUser)
         XCTAssertNil(Usergrid.userAuth)
-
-        XCTAssertEqual(otherClient.appId, ClientCreationTests.otherAppID)
-        XCTAssertEqual(otherClient.orgId, ClientCreationTests.otherOrgID)
-        XCTAssertEqual(otherClient.authFallback, UsergridAuthFallback.App)
-        XCTAssertEqual(otherClient.baseUrl, ClientCreationTests.otherBaseURL)
-        XCTAssertNil(otherClient.currentUser)
     }
 
     func test_CLIENT_NSCODING() {
