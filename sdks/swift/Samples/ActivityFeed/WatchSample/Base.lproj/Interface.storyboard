@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder.WatchKit.Storyboard" version="3.0" toolsVersion="9532" systemVersion="15D21" targetRuntime="watchKit" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="AgC-eL-Hgc">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9530"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBWatchKitPlugin" version="9515"/>
+    </dependencies>
+    <scenes>
+        <!--Feed-->
+        <scene sceneID="aou-V4-d1y">
+            <objects>
+                <controller title="Feed" spacing="10" id="AgC-eL-Hgc" customClass="InterfaceController" customModule="WatchSample" customModuleProvider="target">
+                    <items>
+                        <table alignment="left" spacing="0.0" id="gbs-i5-TZT">
+                            <items>
+                                <tableRow identifier="MessageRow" id="s77-Tk-Kwm" customClass="MessageRowController" customModule="WatchSample_Extension">
+                                    <group key="rootItem" width="1" height="0.0" alignment="left" layout="vertical" spacing="6" id="7T9-to-Yec">
+                                        <items>
+                                            <separator alignment="left" id="T88-lA-wzU">
+                                                <color key="color" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                            </separator>
+                                            <label alignment="left" text="Label" numberOfLines="0" id="Moc-hL-RIQ">
+                                                <color key="textColor" red="0.090196078430000007" green="0.33725490200000002" blue="0.50588235290000005" alpha="1" colorSpace="calibratedRGB"/>
+                                            </label>
+                                            <label width="119.5" alignment="left" text="Label" numberOfLines="0" id="uGF-56-y5z"/>
+                                            <separator alignment="left" id="zwp-tp-Qaa">
+                                                <color key="color" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                            </separator>
+                                        </items>
+                                    </group>
+                                    <connections>
+                                        <outlet property="messageLabel" destination="uGF-56-y5z" id="fOS-RF-6Yi"/>
+                                        <outlet property="titleLabel" destination="Moc-hL-RIQ" id="9Hq-0v-bfG"/>
+                                    </connections>
+                                </tableRow>
+                            </items>
+                        </table>
+                    </items>
+                    <connections>
+                        <outlet property="messageTable" destination="gbs-i5-TZT" id="b4D-hF-whq"/>
+                    </connections>
+                </controller>
+            </objects>
+            <point key="canvasLocation" x="281" y="350"/>
+        </scene>
+    </scenes>
+</document>

@@ -1,4 +1,4 @@
-# Usergrid 2.1.0 (unreleased) Deployment Guide
+# Usergrid 2.1.0 Deployment Guide
 
 This document explains how to deploy the Usergrid v2.1.0 Backend-as-a-Service (BaaS), 
 which comprises the Usergrid Stack, a Java web application, and the Usergrid Portal,
