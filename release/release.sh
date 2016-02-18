@@ -146,20 +146,21 @@ fi
 
 echo "Creating release branch and tag for ${current_version}"
 git checkout -b $current_version
-echo $current_version > .usergridversion
-git add .usergridversion
-git commit -m "Updating .usergridversion to ${current_version}."
+
+# don't need this, the usergridversion is already up to date
+#echo $current_version > .usergridversion
+#git add .usergridversion
+#git commit -m "Updating .usergridversion to ${current_version}."
 
 
 # TODO: ensure that the tag has the same date as the last commit made
-# in the release branch
 
 git tag -s "${current_version}" -m "usergrid-${current_version} release." $current_version
 
-#if [[ $publish == 1 ]]; then
-  #git push origin $current_version
-  #git push origin --tags
-#fi
+if [[ $publish == 1 ]]; then
+  git push origin $current_version
+  git push origin --tags
+fi
 
 
 #----------------------------------------------------------------------------------
@@ -172,12 +173,12 @@ release_dir=${dist_dir}/${current_version}
 mkdir -p $release_dir
 cd $dist_dir
 
-#if [[ $publish == 1 ]]; then
-#  echo "Publishing the release"
+if [[ $publish == 1 ]]; then
+  echo "Publishing the release"
   # Make and checkout the release dist directory
-#  svn mkdir ${usergrid_svn_dist_url}/${current_version} -m "usergrid-${current_version} release"
-#  svn co --depth=empty ${usergrid_svn_dist_url}/${current_version} ${release_dir}
-#fi
+  svn mkdir ${usergrid_svn_dist_url}/${current_version} -m "usergrid-${current_version} release"
+  svn co --depth=empty ${usergrid_svn_dist_url}/${current_version} ${release_dir}
+fi
 
 # Now that the .usergridversion has been updated to the release version build 
 # the release source dist from it
@@ -214,6 +215,7 @@ gpg --print-md MD5 ${binary_name}.tar.gz > ${binary_name}.tar.gz.md5
 shasum ${dist_name}.tar.gz > ${dist_name}.tar.gz.sha
 shasum ${binary_name}.tar.gz > ${binary_name}.tar.gz.sha
 
+# do this part by hand for now:
 #if [[ $publish == 1 ]]; then
   # Commit the release
 #  svn add .
