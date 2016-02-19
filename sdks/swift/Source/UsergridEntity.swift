@@ -399,8 +399,8 @@ public class UsergridEntity: NSObject, NSCoding {
             case .UUID,.EntityType,.Name :
                 propertyValue = self.properties[entityProperty.stringValue]
             case .Created,.Modified :
-                if let utcTimeStamp = self.properties[entityProperty.stringValue] as? Int {
-                    propertyValue = NSDate(utcTimeStamp: utcTimeStamp.description)
+                if let milliseconds = self.properties[entityProperty.stringValue] as? Int {
+                    propertyValue = NSDate(milliseconds: milliseconds.description)
                 }
             case .Location :
                 if let locationDict = self.properties[entityProperty.stringValue] as? [String:Double], lat = locationDict[ENTITY_LATITUDE], long = locationDict[ENTITY_LONGITUDE] {
