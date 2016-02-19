@@ -51,7 +51,7 @@ public class UsergridClient: NSObject, NSCoding {
     public var baseUrl : String { return config.baseUrl }
 
     /// The constructed URL string based on the `UsergridClient`'s `baseUrl`, `orgId`, and `appId`.
-    internal var clientAppURL : String { return "\(baseUrl)/\(orgId)/\(appId)" }
+    public var clientAppURL : String { return "\(baseUrl)/\(orgId)/\(appId)" }
 
     /// Whether or not the current user will be saved and restored from the keychain.
     public var persistCurrentUserInKeychain: Bool {
@@ -212,7 +212,7 @@ public class UsergridClient: NSObject, NSCoding {
 
     - returns: The `UsergridAuth` if one is found or nil if not.
     */
-    internal func authForRequests() -> UsergridAuth? {
+    public func authForRequests() -> UsergridAuth? {
         var usergridAuth: UsergridAuth?
         if let tempAuth = self.tempAuth where tempAuth.isValid {
             usergridAuth = tempAuth

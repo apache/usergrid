@@ -74,7 +74,7 @@ final class UsergridRequestManager {
 // MARK: - Authentication -
 extension UsergridRequestManager {
 
-    static func getTokenAndExpiryFromResponseJSON(jsonDict:[String:AnyObject]) -> (String?,NSDate?) {
+    static func getTokenAndExpiryFromResponseJSON(jsonDict:[String:AnyObject]) -> (token:String?,expiry:NSDate?) {
         var token: String? = nil
         var expiry: NSDate? = nil
         if let accessToken = jsonDict["access_token"] as? String {
@@ -82,7 +82,7 @@ extension UsergridRequestManager {
         }
         if let expiresIn = jsonDict["expires_in"] as? Int {
             let expiresInAdjusted = expiresIn - 5000
-            expiry = NSDate(timeIntervalSinceNow: Double(expiresInAdjusted))
+            expiry = NSDate(timeIntervalSinceNow: NSTimeInterval(expiresInAdjusted))
         }
         return (token,expiry)
     }
@@ -96,8 +96,8 @@ extension UsergridRequestManager {
 
             if let jsonDict = dataAsJSON as? [String:AnyObject] {
                 let tokenAndExpiry = UsergridRequestManager.getTokenAndExpiryFromResponseJSON(jsonDict)
-                userAuth.accessToken = tokenAndExpiry.0
-                userAuth.expiry = tokenAndExpiry.1
+                userAuth.accessToken = tokenAndExpiry.token
+                userAuth.expiry = tokenAndExpiry.expiry
 
                 if let userDict = jsonDict[UsergridUser.USER_ENTITY_TYPE] as? [String:AnyObject] {
                     if let newUser = UsergridEntity.entity(jsonDict: userDict) as? UsergridUser {
@@ -126,8 +126,8 @@ extension UsergridRequestManager {
 
             if let jsonDict = dataAsJSON as? [String:AnyObject] {
                 let tokenAndExpiry = UsergridRequestManager.getTokenAndExpiryFromResponseJSON(jsonDict)
-                appAuth.accessToken = tokenAndExpiry.0
-                appAuth.expiry = tokenAndExpiry.1
+                appAuth.accessToken = tokenAndExpiry.token
+                appAuth.expiry = tokenAndExpiry.expiry
             } else {
                 responseError = UsergridResponseError(errorName: "Auth Failed.", errorDescription: "Error Description: \(error?.localizedDescription).")
             }
