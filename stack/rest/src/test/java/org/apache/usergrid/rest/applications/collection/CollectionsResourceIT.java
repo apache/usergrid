@@ -248,8 +248,10 @@ public class CollectionsResourceIT extends AbstractRestIT {
         }
     }
 
+    @Ignore("Ignored because we no longer retain custom collections after deleting the last entity in a collection"
+        + "This test can be used to verify that works when we implement it")
     @Test
-    public void testNewlyCreatedCollectionReturnWhenEmpty(){
+    public void testNewlyCreatedCollectionReturnsWhenEmpty(){
         String collectionName =  "testDefaultCollectionReturnings";
 
         Map<String,Object> payload = new HashMap(  );
@@ -265,6 +267,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         this.refreshIndex();
         this.app().collection( collectionName ).entity( testEntity.getEntity().getUuid() ).delete();
+        this.refreshIndex();
 
 
         //Verify that the collection still exists despite deleting its only entity.)
@@ -272,7 +275,11 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         collectionHashMap = ( LinkedHashMap ) usersDefaultCollection.getEntity().get( "metadata" );
 
-        assertNotSame( null,((LinkedHashMap)(collectionHashMap.get( "collections" ))).get( collectionName ));
+        assertNotSame( null,((LinkedHashMap)(collectionHashMap.get( "collections" ))).get( collectionName.toLowerCase() ));
+
+        Collection createdCollectionResponse = this.app().collection( collectionName ).get();
+
+        assertEquals( 0,createdCollectionResponse.getNumOfEntities() );
     }
 
 
