@@ -36,7 +36,6 @@ import org.apache.usergrid.corepersistence.asyncevents.model.AsyncEvent;
 import org.apache.usergrid.corepersistence.asyncevents.model.EdgeDeleteEvent;
 import org.apache.usergrid.corepersistence.asyncevents.model.ElasticsearchIndexEvent;
 import org.apache.usergrid.corepersistence.asyncevents.model.EntityDeleteEvent;
-import org.apache.usergrid.corepersistence.asyncevents.model.EntityIndexEvent;
 import org.apache.usergrid.corepersistence.asyncevents.model.InitializeApplicationIndexEvent;
 import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
@@ -298,12 +297,12 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
             } catch (ClassCastException cce) {
                 logger.error("Failed to deserialize message body", cce);
-                return new IndexEventResult(Optional.absent(), System.currentTimeMillis());
+                return new IndexEventResult(Optional.absent(), Optional.absent(), System.currentTimeMillis());
             }
 
             if (event == null) {
                 logger.error("AsyncEvent type or event is null!");
-                return new IndexEventResult(Optional.absent(), System.currentTimeMillis());
+                return new IndexEventResult(Optional.absent(), Optional.absent(), System.currentTimeMillis());
             }
 
             final AsyncEvent thisEvent = event;
@@ -312,6 +311,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                 logger.debug("Processing {} event", event);
             }
 
+            IndexOperationMessage indexOperationMessage = null;
             try {
 
                 // deletes are 2-part, actual IO to delete data, then queue up a de-index
@@ -332,7 +332,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                 // this is the main event that pulls the index doc from map persistence and hands to the index producer
                 else if (event instanceof ElasticsearchIndexEvent) {
 
-                    handleIndexOperation((ElasticsearchIndexEvent) event);
+                    indexOperationMessage = handleIndexOperation((ElasticsearchIndexEvent) event);
 
                 } else {
 
@@ -341,20 +341,20 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
 
                 //return type that can be indexed and ack'd later
-                return new IndexEventResult(Optional.of(message), thisEvent.getCreationTime());
+                return new IndexEventResult(Optional.fromNullable(indexOperationMessage), Optional.of(message), thisEvent.getCreationTime());
 
             } catch (IndexDocNotFoundException e){
 
                 // this exception is throw when we wait before trying quorum read on map persistence.
                 // return empty event result so the event's message doesn't get ack'd
                 logger.info(e.getMessage());
-                return new IndexEventResult(Optional.absent(), event.getCreationTime());
+                return new IndexEventResult(Optional.absent(), Optional.absent(), event.getCreationTime());
 
             } catch (Exception e) {
 
                 // if the event fails to process, log the message and return empty event result so it doesn't get ack'd
                 logger.error("Failed to process message: {} {}", message.getMessageId(), message.getStringBody(), e);
-                return new IndexEventResult(Optional.absent(), event.getCreationTime());
+                return new IndexEventResult(Optional.absent(), Optional.absent(), event.getCreationTime());
             }
         });
 
@@ -407,6 +407,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     public void queueDeleteEdge(final ApplicationScope applicationScope,
                                 final Edge edge) {
 
+        // sent in region (not offerTopic) as the delete IO happens in-region, then queues a multi-region de-index op
         offer( new EdgeDeleteEvent( queueFig.getPrimaryRegion(), applicationScope, edge ) );
     }
 
@@ -471,7 +472,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         offerTopic( elasticsearchIndexEvent );
     }
 
-    public void handleIndexOperation(final ElasticsearchIndexEvent elasticsearchIndexEvent){
+    public IndexOperationMessage handleIndexOperation(final ElasticsearchIndexEvent elasticsearchIndexEvent){
          Preconditions.checkNotNull( elasticsearchIndexEvent, "elasticsearchIndexEvent cannot be null" );
 
         final UUID messageId = elasticsearchIndexEvent.getIndexBatchId();
@@ -525,7 +526,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
 
         //now execute it
-        indexProducer.put(indexOperationMessage).toBlocking().last();
+        return indexOperationMessage;
 
     }
 
@@ -568,6 +569,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     @Override
     public void queueEntityDelete(final ApplicationScope applicationScope, final Id entityId) {
 
+        // sent in region (not offerTopic) as the delete IO happens in-region, then queues a multi-region de-index op
         offer( new EntityDeleteEvent(queueFig.getPrimaryRegion(), new EntityIdScope( applicationScope, entityId ) ) );
     }
 
@@ -699,7 +701,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
                                                  try {
                                                      List<IndexEventResult> indexEventResults = callEventHandlers( messages );
-                                                     List<QueueMessage> messagesToAck = ackMessages( indexEventResults );
+                                                     List<QueueMessage> messagesToAck = submitToIndex( indexEventResults );
 
                                                      if ( messagesToAck == null || messagesToAck.size() == 0 ) {
                                                          logger.error(
@@ -738,17 +740,21 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      * @param indexEventResults
      * @return
      */
-    private List<QueueMessage> ackMessages(List<IndexEventResult> indexEventResults) {
+    private List<QueueMessage> submitToIndex(List<IndexEventResult> indexEventResults) {
         //if nothing came back then return null
         if(indexEventResults==null){
             return null;
         }
+        IndexOperationMessage combined = new IndexOperationMessage();
 
         // stream the messages to record the cycle time
-        return indexEventResults.stream()
+        List<QueueMessage> queueMessages = indexEventResults.stream()
             .map(indexEventResult -> {
                 //record the cycle time
                 messageCycle.update(System.currentTimeMillis() - indexEventResult.getCreationTime());
+                if(indexEventResult.getIndexOperationMessage().isPresent()){
+                    combined.ingest(indexEventResult.getIndexOperationMessage().get());
+                }
                 return indexEventResult;
             })
             // filter out messages that are not present, they were not processed and put into the results
@@ -756,34 +762,58 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             .map(result -> result.getQueueMessage().get())
             // collect
             .collect(Collectors.toList());
+
+        // sumbit the requests to Elasticsearch
+        indexProducer.put(combined).toBlocking().last();
+
+        return queueMessages;
     }
 
     public void index(final ApplicationScope applicationScope, final Id id, final long updatedSince) {
-        //change to id scope to avoid serialization issues
-        offer( new EntityIndexEvent(queueFig.getPrimaryRegion(), new EntityIdScope( applicationScope, id ), updatedSince ) );
+
+        EntityIndexOperation entityIndexOperation =
+            new EntityIndexOperation( applicationScope, id, updatedSince);
+
+        queueIndexOperationMessage(eventBuilder.buildEntityIndex( entityIndexOperation ).toBlocking().lastOrDefault(null));
     }
 
     public void indexBatch(final List<EdgeScope> edges, final long updatedSince) {
 
-        List batch = new ArrayList<EdgeScope>();
+        IndexOperationMessage batch = new IndexOperationMessage();
+
         for ( EdgeScope e : edges){
-            //change to id scope to avoid serialization issues
-            batch.add(new EntityIndexEvent(queueFig.getPrimaryRegion(), new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode()), updatedSince));
+
+            EntityIndexOperation entityIndexOperation =
+                new EntityIndexOperation( e.getApplicationScope(), e.getEdge().getTargetNode(), updatedSince);
+
+            IndexOperationMessage indexOperationMessage =
+                eventBuilder.buildEntityIndex( entityIndexOperation ).toBlocking().lastOrDefault(null);
+
+            if (indexOperationMessage != null){
+                batch.ingest(indexOperationMessage);
+            }
+
         }
-        offerBatch( batch );
+
+        queueIndexOperationMessage(batch);
     }
 
 
     public class IndexEventResult{
+        private final Optional<IndexOperationMessage> indexOperationMessage;
         private final Optional<QueueMessage> queueMessage;
         private final long creationTime;
 
-        public IndexEventResult(Optional<QueueMessage> queueMessage, long creationTime){
+        public IndexEventResult(Optional<IndexOperationMessage> indexOperationMessage, Optional<QueueMessage> queueMessage, long creationTime){
 
             this.queueMessage = queueMessage;
             this.creationTime = creationTime;
+            this.indexOperationMessage = indexOperationMessage;
         }
 
+        public Optional<IndexOperationMessage> getIndexOperationMessage() {
+            return indexOperationMessage;
+        }
 
         public Optional<QueueMessage> getQueueMessage() {
             return queueMessage;
