@@ -340,7 +340,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                 }
 
 
-                //return type that can be indexed and ack'd later
+                // returning indexOperationMessage will send that indexOperationMessage to the index producer
+                // if no exception happens and the QueueMessage is returned in these results, it will get ack'd
                 return new IndexEventResult(Optional.fromNullable(indexOperationMessage), Optional.of(message), thisEvent.getCreationTime());
 
             } catch (IndexDocNotFoundException e){
@@ -352,7 +353,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
             } catch (Exception e) {
 
-                // if the event fails to process, log the message and return empty event result so it doesn't get ack'd
+                // if the event fails to process, log and return empty message result so it doesn't get ack'd
                 logger.error("Failed to process message: {} {}", message.getMessageId(), message.getStringBody(), e);
                 return new IndexEventResult(Optional.absent(), Optional.absent(), event.getCreationTime());
             }
