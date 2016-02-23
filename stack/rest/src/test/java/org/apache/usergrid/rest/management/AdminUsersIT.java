@@ -408,6 +408,41 @@ public class AdminUsersIT extends AbstractRestIT {
 
     }
 
+    @Test
+    public void updateManagementUserWrongAdminToken() throws Exception {
+
+        Organization newOrg = createOrgPayload( "updateManagementUserWrongAdminToken", null );
+        Organization orgReturned = clientSetup.getRestClient().management().orgs().post( newOrg );
+        assertNotNull( orgReturned.getOwner() );
+
+        // add a new management user to the org for the purpose of a 'wrong' user trying update others
+        Entity adminUserPayload = new Entity();
+        String wrongAdminUsername = "wrongAdminUser"+UUIDUtils.newTimeUUID();
+        adminUserPayload.put( "username", wrongAdminUsername );
+        adminUserPayload.put( "name", wrongAdminUsername );
+        adminUserPayload.put( "email", wrongAdminUsername+"@usergrid.com" );
+        adminUserPayload.put( "password", wrongAdminUsername );
+        management().orgs().org( clientSetup.getOrganizationName() ).users().post(User.class ,adminUserPayload );
+
+
+        // get token of the newly added wrongAdminUser
+        Token wrongAdminToken = management.token().get(wrongAdminUsername, wrongAdminUsername);
+        assertNotNull(wrongAdminToken);
+        management.token().setToken( wrongAdminToken );
+
+        try{
+            //Add a property to management user
+            Entity userProperty = new Entity(  ).chainPut( "company","usergrid" );
+            management().users().user( newOrg.getUsername() ).put( userProperty );
+
+        } catch( UniformInterfaceException e ){
+
+            int status = e.getResponse().getStatus();
+            assertEquals(401, status);
+        }
+
+    }
+
 
 
 
