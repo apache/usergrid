@@ -144,8 +144,13 @@ public class EsProvider {
 
         TransportClient transportClient = new TransportClient( settings.build() );
 
+        String finalHosts = indexFig.getPfcHosts();
+        if( finalHosts == null || finalHosts.isEmpty() || finalHosts.equalsIgnoreCase(IndexFig.VALIDATION_DEFAULT_VALUE)){
+            finalHosts = indexFig.getHosts();
+        }
+        logger.info("Elasticsearch hosts used: {}", finalHosts);
         // we will connect to ES on all configured hosts
-        for ( String host : indexFig.getHosts().split( "," ) ) {
+        for ( String host : finalHosts.split( "," ) ) {
             transportClient.addTransportAddress( new InetSocketTransportAddress( host, port ) );
         }
 
@@ -171,7 +176,13 @@ public class EsProvider {
          */
         final StringBuffer hosts = new StringBuffer();
 
-        for ( String host : indexFig.getHosts().split( "," ) ) {
+        String finalHosts = indexFig.getPfcHosts();
+        if( finalHosts == null || finalHosts.isEmpty() || finalHosts.equalsIgnoreCase(IndexFig.VALIDATION_DEFAULT_VALUE)){
+            finalHosts = indexFig.getHosts();
+        }
+
+        logger.info("Elasticsearch hosts used: {}", finalHosts);
+        for ( String host : finalHosts.split( "," ) ) {
             hosts.append( host ).append( ":" ).append( port ).append( "," );
         }
 
