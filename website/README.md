@@ -22,7 +22,7 @@ Install Pygments (Python-basd syntax coloring library):
 
 Install Nanoc and other Ruby Gems needed:
 
-    $ sudo gem install nanoc pygments.rb htmlentities pandoc-ruby nokogiri rack mime-types
+    $ sudo gem install nanoc pygments.rb htmlentities pandoc-ruby nokogiri rack mime-types adsf
 
 ## How to change/update the website 
 
@@ -38,7 +38,7 @@ If you need to change the layout or styling of the site, then you will probably 
 
 To test locally, you can use the autocompiler (will build changes on every request) and check the website at [http://0.0.0.0:3000](http://0.0.0.0:3000)
 
-    $ nanoc autocompile
+    $ nanoc view
     
 ## 3. Publish your changes to the site    
 

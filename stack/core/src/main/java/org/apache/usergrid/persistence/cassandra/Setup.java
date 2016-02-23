@@ -18,10 +18,6 @@ package org.apache.usergrid.persistence.cassandra;
 
 import java.util.UUID;
 
-/**
- *
- * @author ApigeeCorporation
- */
 public interface Setup {
 
     /**

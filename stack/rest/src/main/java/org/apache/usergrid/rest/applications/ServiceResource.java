@@ -187,8 +187,8 @@ public class ServiceResource extends AbstractContextResource {
     @Path("file")
     public AbstractContextResource getFileResource( @Context UriInfo ui ) throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "ServiceResource.getFileResource" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.getFileResource" );
         }
 
         ServiceParameter.addParameter( getServiceParameters(), "assets" );
@@ -206,8 +206,8 @@ public class ServiceResource extends AbstractContextResource {
     public AbstractContextResource addIdParameter( @Context UriInfo ui, @PathParam("entityId") PathSegment entityId )
             throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "ServiceResource.addIdParameter" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.addIdParameter" );
         }
 
         UUID itemId = UUID.fromString( entityId.getPath() );
@@ -223,9 +223,9 @@ public class ServiceResource extends AbstractContextResource {
     @Path("{itemName}")
     public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )
             throws Exception {
-        if(logger.isDebugEnabled()){
-            logger.debug( "ServiceResource.addNameParameter" );
-            logger.debug( "Current segment is {}", itemName.getPath() );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.addNameParameter" );
+            logger.trace( "Current segment is {}", itemName.getPath() );
         }
 
 
@@ -247,8 +247,8 @@ public class ServiceResource extends AbstractContextResource {
 
     public ServiceResults executeServiceRequest( UriInfo ui, ApiResponse response, ServiceAction action,
                                                  ServicePayload payload ) throws Exception {
-        if(logger.isDebugEnabled()){
-            logger.debug( "ServiceResource.executeServiceRequest" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeServiceRequest" );
         }
 
 
@@ -338,8 +338,8 @@ public class ServiceResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "ServiceResource.executeGet" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeGet" );
         }
 
         ApiResponse response = createApiResponse();
@@ -389,8 +389,8 @@ public class ServiceResource extends AbstractContextResource {
     public ApiResponse executePostWithObject( @Context UriInfo ui, Object json,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "ServiceResource.executePostWithMap" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executePostWithMap" );
         }
 
         ApiResponse response = createApiResponse();
@@ -438,8 +438,8 @@ public class ServiceResource extends AbstractContextResource {
     public ApiResponse executePost( @Context UriInfo ui, String body,
             @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "ServiceResource.executePost: body = " + body );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executePost: body = {}", body );
         }
 
         Object json;
@@ -474,8 +474,8 @@ public class ServiceResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "ServiceResource.executePut" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executePut" );
         }
 
         ObjectMapper mapper = new ObjectMapper();
@@ -495,8 +495,8 @@ public class ServiceResource extends AbstractContextResource {
         @QueryParam("app_delete_confirm") String confirmAppDelete )
         throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "ServiceResource.executeDelete" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeDelete" );
         }
 
         ApiResponse response = createApiResponse();
@@ -614,8 +614,8 @@ public class ServiceResource extends AbstractContextResource {
                                                  @QueryParam("callback") @DefaultValue("callback") String callback,
                                                  FormDataMultiPart multiPart ) throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "ServiceResource.executeMultiPartPost" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeMultiPartPost" );
         }
         return executeMultiPart( ui, callback, multiPart, ServiceAction.POST );
     }
@@ -630,8 +630,8 @@ public class ServiceResource extends AbstractContextResource {
                                                 @QueryParam("callback") @DefaultValue("callback") String callback,
                                                 FormDataMultiPart multiPart ) throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "ServiceResource.executeMultiPartPut" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeMultiPartPut" );
         }
         return executeMultiPart( ui, callback, multiPart, ServiceAction.PUT );
     }
@@ -659,7 +659,9 @@ public class ServiceResource extends AbstractContextResource {
                 data.put( bodyPart.getName(), bodyPart.getValue() );
             }
             else {
-                logger.info( "skipping bodyPart {} of media type {}", bodyPart.getName(), bodyPart.getMediaType() );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("skipping bodyPart {} of media type {}", bodyPart.getName(), bodyPart.getMediaType());
+                }
             }
         }
 
@@ -758,8 +760,8 @@ public class ServiceResource extends AbstractContextResource {
                                       @HeaderParam("range") String rangeHeader,
                                       @HeaderParam("if-modified-since") String modifiedSince ) throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "ServiceResource.executeStreamGet" );
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeStreamGet" );
         }
 
         //Needed for testing
@@ -777,9 +779,9 @@ public class ServiceResource extends AbstractContextResource {
         ServiceResults serviceResults = executeServiceRequest( ui, response, ServiceAction.GET, null );
         Entity entity = serviceResults.getEntity();
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "In ServiceResource.executeStreamGet with id: {}, range: {}, modifiedSince: {}",
-                new Object[] { entityId, rangeHeader, modifiedSince } );
+        if(logger.isTraceEnabled()){
+            logger.trace( "In ServiceResource.executeStreamGet with id: {}, range: {}, modifiedSince: {}",
+                entityId, rangeHeader, modifiedSince );
         }
 
         Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );

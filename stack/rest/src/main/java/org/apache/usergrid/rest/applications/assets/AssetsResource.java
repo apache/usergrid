@@ -71,9 +71,13 @@ public class AssetsResource extends ServiceResource {
     @Path("{itemName}")
     public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )
             throws Exception {
-        logger.info( "in AssetsResource.addNameParameter" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("in AssetsResource.addNameParameter");
+        }
         super.addNameParameter( ui, itemName );
-        logger.info( "serviceParamters now has: {}", getServiceParameters() );
+        if (logger.isTraceEnabled()) {
+            logger.trace("serviceParamters now has: {}", getServiceParameters());
+        }
         // HTF to work w/ the ../data endpoint when we are looking up by path?
         return getSubResource( AssetsResource.class );
     }
@@ -87,7 +91,9 @@ public class AssetsResource extends ServiceResource {
     public ApiResponse executeGet( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
-        logger.info( "In AssetsResource.executeGet with ui: {} and callback: {}", ui, callback );
+        if (logger.isTraceEnabled()) {
+            logger.trace("In AssetsResource.executeGet with ui: {} and callback: {}", ui, callback);
+        }
         return super.executeGet( ui, callback );
     }
 
@@ -164,12 +170,16 @@ public class AssetsResource extends ServiceResource {
         }
 
         UUID assetId = UUID.fromString( entityId.getPath() );
-        logger.info( "In AssetsResource.uploadDataStream with id: {}", assetId );
+        if (logger.isTraceEnabled()) {
+            logger.trace("In AssetsResource.uploadDataStream with id: {}", assetId);
+        }
         EntityManager em = emf.getEntityManager( getApplicationId() );
         Asset asset = em.get( assetId, Asset.class );
 
         binaryStore.write( getApplicationId(), asset, uploadedInputStream );
-        logger.info( "uploadDataStream written, returning response" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("uploadDataStream written, returning response");
+        }
         em.update( asset );
         return Response.status( 200 ).build();
     }
@@ -189,8 +199,10 @@ public class AssetsResource extends ServiceResource {
         }
 
         UUID assetId = UUID.fromString( entityId.getPath() );
-        logger.info( "In AssetsResource.findAsset with id: {}, range: {}, modifiedSince: {}",
-                new Object[] { assetId, range, modifiedSince } );
+        if (logger.isTraceEnabled()) {
+            logger.trace("In AssetsResource.findAsset with id: {}, range: {}, modifiedSince: {}",
+                    assetId, range, modifiedSince);
+        }
         EntityManager em = emf.getEntityManager( getApplicationId() );
 
         Asset asset = em.get( assetId, Asset.class );
@@ -217,7 +229,9 @@ public class AssetsResource extends ServiceResource {
             return Response.status( Response.Status.NOT_FOUND ).build();
         }
 
-        logger.info( "AssetResource.findAsset read inputStream, composing response" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("AssetResource.findAsset read inputStream, composing response");
+        }
         Response.ResponseBuilder responseBuilder =
                 Response.ok( is ).type( fileMetadata.get( "content-type" ).toString() )
                         .lastModified( new Date( asset.getModified() ) );
@@ -225,7 +239,9 @@ public class AssetsResource extends ServiceResource {
             responseBuilder.tag( ( String ) fileMetadata.get( AssetUtils.E_TAG ) );
         }
         if ( StringUtils.isNotBlank( range ) ) {
-            logger.info( "Range header was not blank, sending back Content-Range" );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Range header was not blank, sending back Content-Range");
+            }
             // TODO build content range header if needed
             //responseBuilder.header("Content-Range", );
         }

@@ -224,15 +224,15 @@ public class CounterUtils {
                                                  UUID queueId, String category, String name, long value,
                                                  long counterTimestamp, long cassandraTimestamp ) {
         for ( CounterResolution resolution : CounterResolution.values() ) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("BIAC for resolution {}", resolution);
+            if (logger.isTraceEnabled()) {
+                logger.trace("BIAC for resolution {}", resolution);
             }
 
             batchIncrementAggregateCounters( m, userId, groupId, queueId, category, resolution, name, value,
                     counterTimestamp, applicationId );
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("DONE BIAC for resolution {}", resolution);
+            if (logger.isTraceEnabled()) {
+                logger.trace("DONE BIAC for resolution {}", resolution);
             }
         }
         batchIncrementEntityCounter( m, applicationId, name, value, cassandraTimestamp, applicationId );
@@ -296,9 +296,9 @@ public class CounterUtils {
 
     private void handleAggregateCounterRow( Mutator<ByteBuffer> m, String key, long column, long value,
                                             UUID applicationId ) {
-        if ( logger.isDebugEnabled() ) {
-            logger.info( "HACR: aggregateRow for app {} with key {} column {} and value {}",
-                    new Object[] { applicationId, key, column, value } );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "HACR: aggregateRow for app {} with key {} column {} and value {}",
+                    applicationId, key, column, value );
         }
         if ( "o".equals( counterType ) || "p".equals( counterType ) ) {
             if ( m != null ) {
@@ -340,9 +340,9 @@ public class CounterUtils {
 
     private Mutator<ByteBuffer> batchIncrementEntityCounter( Mutator<ByteBuffer> m, UUID entityId, String name,
                                                              Long value, long timestamp, UUID applicationId ) {
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "BIEC: Incrementing property {} of entity {} by value {}",
-                    new Object[] { name, entityId, value } );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "BIEC: Incrementing property {} of entity {} by value {}",
+                    name, entityId, value );
         }
         addInsertToMutator( m, ENTITY_DICTIONARIES, key( entityId, DICTIONARY_COUNTERS ), name, null, timestamp );
         if ( "o".equals( counterType ) || "p".equals( counterType ) ) {
@@ -359,9 +359,9 @@ public class CounterUtils {
 
     public Mutator<ByteBuffer> batchIncrementQueueCounter( Mutator<ByteBuffer> m, UUID queueId, String name, long value,
                                                            long timestamp, UUID applicationId ) {
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "BIQC: Incrementing property {} of queue {} by value {}",
-                    new Object[] { name, queueId, value } );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "BIQC: Incrementing property {} of queue {} by value {}",
+                    name, queueId, value );
         }
         m.addInsertion( bytebuffer( key( queueId, DICTIONARY_COUNTERS ).toString() ),
                 QueuesCF.QUEUE_DICTIONARIES.toString(),

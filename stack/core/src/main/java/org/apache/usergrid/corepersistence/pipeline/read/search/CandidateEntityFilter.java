@@ -211,8 +211,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             //doesn't exist warn and drop
             if ( entity == null ) {
                 logger.warn(
-                    "Searched and received candidate with entityId {} and version {}, yet was not found in cassandra."
-                        + "  Ignoring since this could be a region sync issue",
+                    "Searched and received candidate with entityId {} and version {}, yet was not found in cassandra.  Ignoring since this could be a region sync issue",
                     candidateId, candidateVersion );
 
 
@@ -234,7 +233,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             if ( UUIDComparator.staticCompare( entityVersion, candidateVersion ) > 0 || !entity.getEntity().isPresent()) {
 
                 logger.warn( "Deindexing stale entity on edge {} for entityId {} and version {}",
-                    new Object[] { searchEdge, entityId, entityVersion } );
+                        searchEdge, entityId, entityVersion);
                 batch.deindex( searchEdge, entityId, candidateVersion );
                 return;
             }
@@ -244,8 +243,8 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             if ( UUIDComparator.staticCompare( candidateVersion, entityVersion ) > 0 ) {
 
                 logger.warn(
-                    "Found a newer version in ES over cassandra for edge {} for entityId {} and version {}.  Repair "
-                        + "should be run", new Object[] { searchEdge, entityId, entityVersion } );
+                    "Found a newer version in ES over cassandra for edge {} for entityId {} and version {}.  Repair should be run",
+                        searchEdge, entityId, entityVersion);
 
                   //TODO trigger an audit after a fail count where we explicitly try to repair from other regions
 

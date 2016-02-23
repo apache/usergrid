@@ -93,7 +93,9 @@ public class IndexResource extends AbstractContextResource {
 
 
         throws Exception {
-        logger.info("Getting status for index jobs");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Getting status for index jobs");
+        }
 
         Preconditions
             .checkNotNull(jobId, "query param jobId must not be null" );

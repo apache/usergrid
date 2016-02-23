@@ -80,7 +80,7 @@ public class ShiroCacheManager implements CacheManager {
                     getCacheTtl());
 
             } else {
-                logger.error("Unknown Shiro Cache name: " + name);
+                logger.error("Unknown Shiro Cache name: {}", name);
                 throw new RuntimeException("Unknown Shiro Cache name: " + name);
             }
 

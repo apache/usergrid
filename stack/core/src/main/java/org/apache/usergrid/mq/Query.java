@@ -158,7 +158,7 @@ public class Query {
             return q;
         }
         catch ( Exception e ) {
-            logger.error( "Unable to parse \"" + ql + "\"", e );
+            logger.error( "Unable to parse \"{}\"", ql, e );
         }
         return null;
     }
@@ -584,7 +584,7 @@ public class Query {
         for ( SortPredicate s : sortPredicates ) {
             if ( s.getPropertyName().equals( propertyName ) ) {
                 logger.error(
-                        "Attempted to set sort order for " + s.getPropertyName() + " more than once, discardng..." );
+                        "Attempted to set sort order for {} more than once, discarding...", s.getPropertyName() );
                 return this;
             }
         }
@@ -600,7 +600,7 @@ public class Query {
         for ( SortPredicate s : sortPredicates ) {
             if ( s.getPropertyName().equals( sort.getPropertyName() ) ) {
                 logger.error(
-                        "Attempted to set sort order for " + s.getPropertyName() + " more than once, discardng..." );
+                        "Attempted to set sort order for {} more than once, discarding...", s.getPropertyName() );
                 return this;
             }
         }
@@ -642,8 +642,7 @@ public class Query {
             for ( FilterPredicate f : filterPredicates ) {
                 if ( f.getPropertyName().equals( propertyName ) && f.getValue().equals( value ) && "*"
                         .equals( value ) ) {
-                    logger.error( "Attempted to set wildcard wilder for " + f.getPropertyName()
-                            + " more than once, discardng..." );
+                    logger.error( "Attempted to set wildcard wilder for {} more than once, discarding...", f.getPropertyName());
                     return this;
                 }
             }
@@ -676,8 +675,7 @@ public class Query {
                     if ( f.getPropertyName().equals( filter.getPropertyName() ) && f.getValue()
                                                                                     .equals( filter.getValue() ) && "*"
                             .equals( filter.getValue() ) ) {
-                        logger.error( "Attempted to set wildcard wilder for " + f.getPropertyName()
-                                + " more than once, discardng..." );
+                        logger.error( "Attempted to set wildcard wilder for {} more than once, discarding...", f.getPropertyName());
                         return this;
                     }
                 }
@@ -685,7 +683,7 @@ public class Query {
             }
         }
         else {
-            logger.error( "Unable to add filter to query: " + filterStr );
+            logger.error( "Unable to add filter to query: {}", filterStr );
         }
         return this;
     }
@@ -1518,7 +1516,7 @@ public class Query {
                 return normalize( filter );
             }
             catch ( Exception e ) {
-                logger.error( "Unable to parse \"" + str + "\"", e );
+                logger.error( "Unable to parse \"{}\"", str, e );
             }
             return null;
         }

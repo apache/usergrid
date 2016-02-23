@@ -135,12 +135,11 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
                 V value = MAPPER.readValue(result.getByteArrayValue(), typeRef);
 
                 logger.debug("Read cache item from scope {}\n   key/value types {}/{}\n   key:value: {}:{}",
-                    new Object[]{
                         scope.getApplication().getUuid(),
                         key.getClass().getSimpleName(),
                         value.getClass().getSimpleName(),
                         key,
-                        value});
+                        value);
 
                 return value;
 
@@ -196,12 +195,11 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
         executeBatch(batch);
 
         logger.debug("Wrote cache item to scope {}\n   key/value types {}/{}\n   key:value: {}:{}",
-            new Object[] {
                 scope.getApplication().getUuid(),
                 key.getClass().getSimpleName(),
                 value.getClass().getSimpleName(),
                 key,
-                value});
+                value);
 
         return value;
     }

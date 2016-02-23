@@ -127,9 +127,7 @@ public class ReIndexServiceImpl implements ReIndexService {
             .buffer( indexProcessorFig.getReindexBufferSize())
             .doOnNext(edges -> {
 
-                if(logger.isInfoEnabled()) {
-                    logger.info("Sending batch of {} to be indexed.", edges.size());
-                }
+                logger.info("Sending batch of {} to be indexed.", edges.size());
                 indexService.indexBatch(edges, modifiedSince);
 
             });
@@ -285,7 +283,7 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         if(logger.isDebugEnabled()) {
             logger.debug( "Flushing state for jobId {}, status {}, processedCount {}, lastUpdated {}",
-                new Object[] { jobId, status, processedCount, lastUpdated } );
+                    jobId, status, processedCount, lastUpdated);
         }
 
         mapManager.putString( jobId + MAP_STATUS_KEY, status.name() );

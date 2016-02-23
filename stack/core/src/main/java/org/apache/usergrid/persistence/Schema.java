@@ -559,7 +559,7 @@ public class Schema implements SchemaManager {
             return schemaNode;
         }
         catch ( Exception e ) {
-            logger.error( "Unable to get schema for entity type " + entityType, e );
+            logger.error( "Unable to get schema for entity type {}", entityType, e );
         }
         return null;
     }
@@ -1480,7 +1480,7 @@ public class Schema implements SchemaManager {
                         return;
                     }
                     catch ( Exception e ) {
-                        logger.error( "Unable to set entity property " + property, e );
+                        logger.error( "Unable to set entity property {}", property, e );
                     }
                 }
                 try {
@@ -1488,7 +1488,7 @@ public class Schema implements SchemaManager {
                     return;
                 }
                 catch ( Exception e ) {
-                    logger.error( "Unable to set entity property " + property, e );
+                    logger.error( "Unable to set entity property {}", property, e );
                 }
             }
         }
@@ -1503,7 +1503,7 @@ public class Schema implements SchemaManager {
                 return descriptor.getReadMethod().invoke( entity );
             }
             catch ( Exception e ) {
-                logger.error( "Unable to get entity property " + property, e );
+                logger.error( "Unable to get entity property {}", property, e );
             }
             return null;
         }
@@ -1535,7 +1535,7 @@ public class Schema implements SchemaManager {
                     }
                 }
                 catch ( Exception e ) {
-                    logger.error( "Unable to get entity property " + property, e );
+                    logger.error( "Unable to get entity property {}", property, e );
                 }
             }
         }
@@ -1607,7 +1607,7 @@ public class Schema implements SchemaManager {
                 for ( String property_name : required_properties ) {
 
                     if ( !columns.containsKey( property_name ) ) {
-                        logger.error( "Entity (" + entityType + ") missing required property: " + property_name,
+                        logger.error( "Entity ({}) missing required property: {}", entityType, property_name,
                                 new Throwable() );
                         return null;
                     }

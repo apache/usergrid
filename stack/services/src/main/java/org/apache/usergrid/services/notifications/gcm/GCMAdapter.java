@@ -16,7 +16,6 @@
  */
 package org.apache.usergrid.services.notifications.gcm;
 
-import com.clearspring.analytics.hash.MurmurHash;
 import com.google.android.gcm.server.*;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
@@ -39,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class GCMAdapter implements ProviderAdapter {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GCMAdapter.class);
+    private static final Logger logger = LoggerFactory.getLogger(GCMAdapter.class);
     private static final int SEND_RETRIES = 3;
     private static int BATCH_SIZE = 1000;
     private final Notifier notifier;
@@ -61,14 +60,18 @@ public class GCMAdapter implements ProviderAdapter {
     public void testConnection() throws Exception {
         Sender sender = new Sender(notifier.getApiKey());
         Message message = new Message.Builder().addData("registration_id", "").build();
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
         ids.add("device_token");
         try {
             MulticastResult result = sender.send(message, ids, 1);
-            LOG.debug("testConnection result: {}", result);
+            if (logger.isTraceEnabled()) {
+                logger.trace("testConnection result: {}", result);
+            }
         } catch (InvalidRequestException e){
             // do nothing, we don't have a valid device token to test with
-            LOG.debug("here for testing only");
+            if (logger.isTraceEnabled()) {
+                logger.trace("no valid device token");
+            }
         }
         catch (IOException e) {
             if(isInvalidRequestException(e)){
@@ -99,11 +102,14 @@ public class GCMAdapter implements ProviderAdapter {
 
     private Batch getBatch( Map<String, Object> payload) {
         synchronized (this) {
-            long hash = MurmurHash.hash64(payload);
-            Batch batch = batches.get(hash);
-            if (batch == null && payload != null) {
-                batch = new Batch(notifier, payload);
-                batches.put(hash, batch);
+            Batch batch = new Batch(notifier,null);
+            if( payload != null ) {
+                long hash = payload.hashCode(); // assume there won't be collisions in our amount of concurrency
+                batch = batches.get(hash);
+                if (batch == null) {
+                    batch = new Batch(notifier, payload);
+                    batches.put(hash, batch);
+                }
             }
             return batch;
         }
@@ -164,7 +170,7 @@ public class GCMAdapter implements ProviderAdapter {
                 }
             }
         }catch (Exception e){
-            LOG.error("error while trying to send on stop",e);
+            logger.error("error while trying to send on stop",e);
         }
     }
 
@@ -184,13 +190,13 @@ public class GCMAdapter implements ProviderAdapter {
         private Map payload;
         private List<String> ids;
         private List<TaskTracker> trackers;
-        private Map<String, Date> inactiveDevices = new HashMap<String, Date>();
+        private Map<String, Date> inactiveDevices = new HashMap<>();
 
         Batch(Notifier notifier, Map<String,Object> payload) {
             this.notifier = notifier;
             this.payload = payload;
-            this.ids = new ArrayList<String>();
-            this.trackers = new ArrayList<TaskTracker>();
+            this.ids = new ArrayList<>();
+            this.trackers = new ArrayList<>();
         }
 
         synchronized Map<String, Date> getAndClearInactiveDevices() {
@@ -258,14 +264,16 @@ public class GCMAdapter implements ProviderAdapter {
                         this.trackers.clear();
 
                         return;
-                        
+
                     }else {
                         throw new ConnectionException(e.getMessage(), e);
                     }
                 }
 
 
-                LOG.debug("sendNotification result: {}", multicastResult);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("sendNotification result: {}", multicastResult);
+                }
 
                 for (int i = 0; i < multicastResult.getResults().size(); i++) {
                     Result result = multicastResult.getResults().get(i);

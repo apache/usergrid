@@ -112,7 +112,7 @@ public class FacebookProvider extends AbstractProvider {
         String fb_user_email = ( String ) fb_user.get( "email" );
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( JsonUtils.mapToFormattedJsonString( fb_user ) );
+            logger.debug( "FacebookProvider.createOrAuthenticate: {}", JsonUtils.mapToFormattedJsonString( fb_user ) );
         }
 
         User user = null;
@@ -128,7 +128,7 @@ public class FacebookProvider extends AbstractProvider {
                 throw new BadTokenException( "Could not lookup user for that Facebook ID", ex );
             }
             if ( r.size() > 1 ) {
-                logger.error( "Multiple users for FB ID: " + fb_user_id );
+                logger.error( "Multiple users for FB ID: {}", fb_user_id );
                 throw new BadTokenException( "multiple users with same Facebook ID" );
             }
 

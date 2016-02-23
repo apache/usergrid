@@ -225,12 +225,11 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
             ScopedRowKey.fromKey( applicationId, entityKey ) ) );
 
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Writing unique value version={} name={} value={} ",
-                new Object[] {
+        if ( log.isTraceEnabled() ) {
+            log.trace( "Writing unique value version={} name={} value={} ",
                     uniqueValue.getEntityVersion(), uniqueValue.getField().getName(),
                     uniqueValue.getField().getValue()
-                } );
+                );
         }
 
 

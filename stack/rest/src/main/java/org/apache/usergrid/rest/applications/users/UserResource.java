@@ -132,7 +132,9 @@ public class UserResource extends ServiceResource {
                                                @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "UserResource.setUserPassword" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("UserResource.setUserPassword");
+        }
 
         if ( json == null ) {
             return null;
@@ -175,7 +177,9 @@ public class UserResource extends ServiceResource {
     public ApiResponse getUserCredentials(@QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "UserResource.getUserCredentials" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("UserResource.getUserCredentials");
+        }
 
 
         final ApiResponse response = createApiResponse();
@@ -212,7 +216,9 @@ public class UserResource extends ServiceResource {
                                                @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "UserResource.setUserCredentials" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("UserResource.setUserCredentials");
+        }
 
         if ( json == null ) {
             return null;
@@ -284,7 +290,9 @@ public class UserResource extends ServiceResource {
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "UserResource.sendPin" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("UserResource.sendPin");
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "retrieve user pin" );
@@ -320,7 +328,9 @@ public class UserResource extends ServiceResource {
                                    @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "UserResource.setPin" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("UserResource.setPin");
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "set user pin" );
@@ -346,7 +356,9 @@ public class UserResource extends ServiceResource {
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "UserResource.postPin" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("UserResource.postPin");
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "set user pin" );
@@ -372,7 +384,9 @@ public class UserResource extends ServiceResource {
                                     @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "UserResource.jsonPin" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("UserResource.jsonPin");
+        }
         ApiResponse response = createApiResponse();
         response.setAction( "set user pin" );
 
@@ -393,7 +407,9 @@ public class UserResource extends ServiceResource {
     @Produces(MediaType.TEXT_HTML)
     public Viewable showPasswordResetForm( @Context UriInfo ui, @QueryParam("token") String token ) {
 
-        logger.info( "UserResource.showPasswordResetForm" );
+        if (logger.isTraceEnabled()) {
+            logger.trace( "UserResource.showPasswordResetForm" );
+        }
 
         this.token = token;
         try {
@@ -424,7 +440,9 @@ public class UserResource extends ServiceResource {
                                              @FormParam("recaptcha_response_field") String uresponse ) {
 
         try {
-            logger.info( "UserResource.handlePasswordResetForm" );
+            if (logger.isTraceEnabled()) {
+                logger.trace("UserResource.handlePasswordResetForm");
+            }
 
             this.token = token;
 
@@ -562,7 +580,9 @@ public class UserResource extends ServiceResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "Send activation email for user: {}",  getUserUuid() );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Send activation email for user: {}", getUserUuid());
+        }
 
         ApiResponse response = createApiResponse();
 
@@ -581,7 +601,9 @@ public class UserResource extends ServiceResource {
                                              @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "Revoking user tokens for {}" , getUserUuid() );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Revoking user tokens for {}", getUserUuid());
+        }
 
         ApiResponse response = createApiResponse();
 
@@ -611,7 +633,9 @@ public class UserResource extends ServiceResource {
                                             @QueryParam("callback") @DefaultValue("callback") String callback,
                                             @QueryParam("token") String token ) throws Exception {
 
-        logger.info( "Revoking user token for {}",  getUserUuid() );
+        if (logger.isTraceEnabled()) {
+            logger.trace( "Revoking user token for {}",  getUserUuid() );
+        }
 
         ApiResponse response = createApiResponse();
 
@@ -639,8 +663,8 @@ public class UserResource extends ServiceResource {
     public Response getAccessToken( @Context UriInfo ui, @QueryParam("ttl") long ttl,
                                     @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("UserResource.getAccessToken");
+        if (logger.isTraceEnabled()) {
+            logger.trace("UserResource.getAccessToken");
         }
 
         try {

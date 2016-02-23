@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TaskExecutorFactory {
 
-    private static final Logger log = LoggerFactory.getLogger( TaskExecutorFactory.class );
+    private static final Logger logger = LoggerFactory.getLogger( TaskExecutorFactory.class );
 
 
     public enum RejectionAction {
@@ -168,7 +168,7 @@ public class TaskExecutorFactory {
 
         @Override
         public void rejectedExecution( final Runnable r, final ThreadPoolExecutor executor ) {
-            log.warn( "{} task queue full, rejecting task {} and running in thread {}", poolName, r,
+            logger.warn( "{} task queue full, rejecting task {} and running in thread {}", poolName, r,
                 Thread.currentThread().getName() );
 
             //We've decided we want to have a "caller runs" policy, to just invoke the task when rejected
@@ -191,7 +191,7 @@ public class TaskExecutorFactory {
 
         @Override
         public void rejectedExecution( final Runnable r, final ThreadPoolExecutor executor ) {
-            log.warn( "{} task queue full, dropping task {}", poolName, r );
+            logger.warn( "{} task queue full, dropping task {}", poolName, r );
         }
     }
 }

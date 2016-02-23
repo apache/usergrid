@@ -92,7 +92,9 @@ public class QueueListener  {
 //        boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run", "false"));
 
 
-            logger.info("QueueListener: starting.");
+            if (logger.isDebugEnabled()) {
+                logger.debug("QueueListener: starting.");
+            }
             int threadCount = 0;
 
             try {
@@ -112,7 +114,9 @@ public class QueueListener  {
                 pool = Executors.newFixedThreadPool(maxThreads);
 
                 while (threadCount++ < maxThreads) {
-                    logger.info("QueueListener: Starting thread {}.", threadCount);
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("QueueListener: Starting thread {}.", threadCount);
+                    }
                     final int threadNumber = threadCount;
                     Runnable task = new Runnable() {
                         @Override
@@ -134,7 +138,9 @@ public class QueueListener  {
             } catch (Exception e) {
                 logger.error("QueueListener: failed to start:", e);
             }
-            logger.info("QueueListener: done starting.");
+            if (logger.isTraceEnabled()) {
+                logger.trace("QueueListener: done starting.");
+            }
     }
 
     private void execute(int threadNumber){
@@ -144,11 +150,15 @@ public class QueueListener  {
         Thread.currentThread().setName(getClass().getSimpleName()+"_PushNotifications-"+threadNumber);
 
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
-        logger.info("QueueListener: Starting execute process.");
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueListener: Starting execute process.");
+        }
         Meter meter = metricsService.getMeter(QueueListener.class, "execute.commit");
         com.codahale.metrics.Timer timer = metricsService.getTimer(QueueListener.class, "execute.dequeue");
         svcMgr = smf.getServiceManager(smf.getManagementAppId());
-        logger.info("getting from queue {} ", queueName);
+        if (logger.isTraceEnabled()) {
+            logger.trace("getting from queue {} ", queueName);
+        }
         QueueScope queueScope = new QueueScopeImpl( queueName, QueueScope.RegionImplementation.LOCAL);
         QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
         // run until there are no more active jobs
@@ -164,7 +174,9 @@ public class QueueListener  {
                     .doOnNext(messages -> {
 
                         try {
-                            logger.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);
+                            if (logger.isTraceEnabled()) {
+                                logger.trace("retrieved batch of {} messages from queue {}", messages.size(), queueName);
+                            }
 
                             if (messages.size() > 0) {
                                 HashMap<UUID, List<QueueMessage>> messageMap = new HashMap<>(messages.size());
@@ -193,7 +205,9 @@ public class QueueListener  {
                                 for (Map.Entry<UUID, List<QueueMessage>> entry : messageMap.entrySet()) {
                                     UUID applicationId = entry.getKey();
                                     ApplicationQueueManager manager = queueManagerMap.get(applicationId);
-                                    logger.info("send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
+                                    if (logger.isTraceEnabled()) {
+                                        logger.trace("send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
+                                    }
                                     Observable current = manager.sendBatchToProviders(entry.getValue(),queueName);
 
                                     if(merge == null)
@@ -209,10 +223,14 @@ public class QueueListener  {
                                 queueManager.commitMessages(messages);
 
                                 meter.mark(messages.size());
-                                logger.info("sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
+                                if (logger.isTraceEnabled()) {
+                                    logger.trace("sent batch {} messages duration {} ms", messages.size(), System.currentTimeMillis() - now);
+                                }
 
                                 if(sleepBetweenRuns > 0) {
-                                    logger.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
+                                    if (logger.isTraceEnabled()) {
+                                        logger.trace("sleep between rounds...sleep...{}", sleepBetweenRuns);
+                                    }
                                     Thread.sleep(sleepBetweenRuns);
                                 }
 
@@ -230,7 +248,9 @@ public class QueueListener  {
                             }
 
                             else{
-                                logger.info("no messages...sleep...{}", sleepWhenNoneFound);
+                                if (logger.isTraceEnabled()) {
+                                    logger.trace("no messages...sleep...{}", sleepWhenNoneFound);
+                                }
                                 Thread.sleep(sleepWhenNoneFound);
                             }
                             timerContext.stop();
@@ -245,7 +265,9 @@ public class QueueListener  {
                                 logger.info("sleeping due to failures {} ms", sleeptime);
                                 Thread.sleep(sleeptime);
                             }catch (InterruptedException ie){
-                                logger.info("sleep interrupted");
+                                if (logger.isTraceEnabled()) {
+                                    logger.info("sleep interrupted");
+                                }
                             }
                         }
                     })
@@ -293,7 +315,9 @@ public class QueueListener  {
     }
 
     public void stop(){
-        logger.info("stop processes");
+        if (logger.isDebugEnabled()) {
+            logger.debug("stop processes");
+        }
 
         if(futures == null){
             return;

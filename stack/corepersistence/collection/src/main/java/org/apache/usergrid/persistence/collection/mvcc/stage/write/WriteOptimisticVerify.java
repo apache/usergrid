@@ -45,7 +45,7 @@ import rx.functions.Action1;
 @Singleton
 public class WriteOptimisticVerify implements Action1<CollectionIoEvent<MvccEntity>> {
 
-    private static final Logger log = LoggerFactory.getLogger( WriteOptimisticVerify.class );
+    private static final Logger logger = LoggerFactory.getLogger( WriteOptimisticVerify.class );
 
     private final MvccLogEntrySerializationStrategy logEntryStrat;
 
@@ -81,7 +81,7 @@ public class WriteOptimisticVerify implements Action1<CollectionIoEvent<MvccEnti
         // Previous log entry must be committed, otherwise somebody is already writing
         if ( versions.size() > 1 && versions.get( 1 ).getStage().ordinal() < Stage.COMMITTED.ordinal() ) {
 
-            log.debug( "Conflict writing entity id {} version {}", entity.getId().toString(),
+            logger.debug( "Conflict writing entity id {} version {}", entity.getId().toString(),
                     entity.getVersion().toString() );
 
             throw new WriteOptimisticVerifyException( mvccEntity, applicationScope,

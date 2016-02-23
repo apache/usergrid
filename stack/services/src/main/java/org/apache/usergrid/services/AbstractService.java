@@ -560,7 +560,7 @@ public abstract class AbstractService implements Service {
             entity.addProperties( payload.getProperties() );
             return entity;
         }
-        logger.error("Attempted update of entity reference rather than full entity, currently unsupport - MUSTFIX");
+        logger.error("Attempted update of entity reference rather than full entity, currently unsupported");
         throw new NotImplementedException();
     }
 
@@ -1365,7 +1365,7 @@ public abstract class AbstractService implements Service {
         boolean permitted = currentUser.isPermitted( perm );
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( PATH_MSG, new Object[] { path, context.getAction(), perm, permitted } );
+            logger.debug( PATH_MSG, path, context.getAction(), perm, permitted );
         }
 
         SubjectUtils.checkPermission( perm );

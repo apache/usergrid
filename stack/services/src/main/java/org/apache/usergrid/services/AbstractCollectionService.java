@@ -94,8 +94,8 @@ public class AbstractCollectionService extends AbstractService {
         }
 
         if ( entity == null ) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("miss on entityType: {} with uuid: {}", getEntityType(), id);
+            if (logger.isTraceEnabled()) {
+                logger.trace("miss on entityType: {} with uuid: {}", getEntityType(), id);
             }
             String msg = "Cannot find entity associated with uuid: " + id;
             throw new EntityNotFoundException( msg );
@@ -120,9 +120,9 @@ public class AbstractCollectionService extends AbstractService {
         // the context of the entity they're trying to load isn't owned by the owner
         // in the path, don't return it
         if ( !em.isCollectionMember( context.getOwner(), context.getCollectionName(), entity ) ) {
-            logger.info( "Someone tried to GET entity {} they don't own. Entity id {} with owner {}", new Object[] {
+            logger.info( "Someone tried to GET entity {} they don't own. Entity id {} with owner {}",
                     getEntityType(), id, context.getOwner()
-            } );
+            );
             throw new ServiceResourceNotFoundException( context );
         }
 
@@ -144,50 +144,22 @@ public class AbstractCollectionService extends AbstractService {
     @Override
     public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception {
 
-        String nameProperty = Schema.getDefaultSchema().aliasProperty( getEntityType() );
-        if ( nameProperty == null ) {
-            nameProperty = "name";
-        }
+        // just get the UUID and then getItemById such that same results are being returned in both cases
+        UUID entityId = em.getUniqueIdFromAlias( getEntityType(), name );
 
-        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
+        if ( entityId == null ) {
 
-        if ( entity == null ) {
-
-            if (logger.isDebugEnabled()) {
-                logger.debug("miss on entityType: {} with name: {}", getEntityType(), name);
+            if (logger.isTraceEnabled()) {
+                logger.trace("miss on entityType: {} with name: {}", getEntityType(), name);
             }
 
             String msg = "Cannot find entity with name: "+name;
             throw new EntityNotFoundException( msg );
+
         }
 
-        // the context of the entity they're trying to load isn't owned by the owner
-        // in the path, don't return it
-        if ( !em.isCollectionMember( context.getOwner(), context.getCollectionName(), entity ) ) {
-            logger.info( "Someone tried to GET entity {} they don't own. Entity name {} with owner {}", new Object[] {
-                    getEntityType(), name, context.getOwner()
-            } );
-            throw new ServiceResourceNotFoundException( context );
-        }
+        return getItemById( context, entityId, false);
 
-        if ( !context.moreParameters() ) {
-            entity = importEntity( context, entity );
-        }
-
-        checkPermissionsForEntity( context, entity );
-
-    /*
-     * Level level = Level.REFS; if (isEmpty(parameters)) {
-     * level = Level.ALL_PROPERTIES; }
-     *
-     * Results results = em.searchCollectionForProperty(owner,
-     * getCollectionName(), null, nameProperty, name, null, null, 1, level);
-     * EntityRef entity = results.getRef();
-     */
-
-        List<ServiceRequest> nextRequests = context.getNextServiceRequests( entity );
-
-        return new ServiceResults( this, context, Type.COLLECTION, Results.fromRef( entity ), null, nextRequests );
     }
 
 
@@ -246,8 +218,8 @@ public class AbstractCollectionService extends AbstractService {
             return getItemsByQuery( context, new Query() );
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Limiting collection to " + Query.DEFAULT_LIMIT);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Limiting collection to {}", Query.DEFAULT_LIMIT);
         }
 
         int count = Query.DEFAULT_LIMIT;
@@ -356,16 +328,16 @@ public class AbstractCollectionService extends AbstractService {
             List<Entity> entities = new ArrayList<Entity>();
             List<Map<String, Object>> batch = context.getPayload().getBatchProperties();
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("Attempting to batch create " + batch.size() + " entities in collection " + context
-                    .getCollectionName());
+            if (logger.isTraceEnabled()) {
+                logger.trace("Attempting to batch create {} entities in collection {}",
+                        batch.size(), context.getCollectionName());
             }
 
             int i = 1;
 
             for ( Map<String, Object> p : batch ) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Creating entity " + i + " in collection " + context.getCollectionName());
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Creating entity {} in collection {}", i, context.getCollectionName());
                 }
 
                 Entity item = null;
@@ -377,17 +349,16 @@ public class AbstractCollectionService extends AbstractService {
                 catch ( Exception e ) {
                     // TODO should we not log this as error?
                     if (logger.isDebugEnabled()) {
-                        logger.debug("Entity " + i + " unable to be created in collection " + context.getCollectionName(),
+                        logger.debug("Entity {} unable to be created in collection {}", i, context.getCollectionName(),
                             e);
                     }
 
                     i++;
                     continue;
                 }
-                if (logger.isDebugEnabled()) {
-                    logger.debug(
-                        "Entity " + i + " created in collection " + context.getCollectionName() + " with UUID " + item
-                            .getUuid());
+                if (logger.isTraceEnabled()) {
+                    logger.trace(
+                        "Entity {} created in collection {} with UUID {}", i, context.getCollectionName(), item.getUuid());
                 }
 
                 item = importEntity( context, item );

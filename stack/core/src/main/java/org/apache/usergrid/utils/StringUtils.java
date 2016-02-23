@@ -29,7 +29,7 @@ import static org.apache.usergrid.utils.ConversionUtils.string;
 
 public class StringUtils extends org.apache.commons.lang.StringUtils {
 
-    private static final Logger LOG = LoggerFactory.getLogger( StringUtils.class );
+    private static final Logger logger = LoggerFactory.getLogger( StringUtils.class );
 
 
     public static Object lower( Object obj ) {
@@ -165,7 +165,7 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
             return IOUtils.toString( StringUtils.class.getResourceAsStream( filePath ) );
         }
         catch ( Exception e ) {
-            LOG.error( "Error getting file from classpath: " + filePath, e );
+            logger.error( "Error getting file from classpath: {}", filePath, e );
         }
         return null;
     }

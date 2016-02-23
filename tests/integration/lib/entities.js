@@ -19,29 +19,20 @@
 
 var config = require("../config");
 var urls = require("./urls");
-var random = require("./random");
 var responseLib = require("./response");
 var async = require('async');
 var request = require("request");
 
 module.exports = {
-    create: function(collection, numberOfEntities, cb) {
+    create: function(collection, entity, numberOfEntities, cb) {
         var url = urls.appendOrgCredentials(urls.getAppUrl() + collection);
-        var requestArray = []
+        var requestArray = [];
         for (var i = 0; i < numberOfEntities; i++) {
             requestArray.push({
                 url: url,
-                json: {
-                    firstProperty: "somethingConsistent",
-                    secondProperty: "somethingRandom: " + random.randomString(10),
-                    thirdPropertyTypeInt: random.randomNumber(5),
-                    location: {  // Apigee San Jose
-                        latitude: 37.3338716,
-                        longitude: -121.894249
-                    }
-                }
-            });
-        }
+                json: entity
+                })
+            }
         async.each(requestArray, function(options, cb) {
             request.post(options, function(e, r, body) {
                 cb(e);
@@ -126,7 +117,7 @@ function deleteAllEntities(collection, cb) {
                     deleteAllEntities(collection, function(e) {
                         cb(e);
                     });
-                }, 600); // Mandatory, since it seems to not retrieve entities if you make a request in < 600ms
+                }, 100); // add some delay
             });
         } else {
             cb();

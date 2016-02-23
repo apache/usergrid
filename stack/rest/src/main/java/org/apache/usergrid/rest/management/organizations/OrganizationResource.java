@@ -73,16 +73,16 @@ public class OrganizationResource extends AbstractContextResource {
 
 
     public OrganizationResource() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("OrganizationResource created");
+        if (logger.isTraceEnabled()) {
+            logger.trace("OrganizationResource created");
         }
     }
 
 
     public OrganizationResource init( OrganizationInfo organization ) {
         this.organization = organization;
-        if (logger.isDebugEnabled()) {
-            logger.debug("OrganizationResource initialized for org {}", organization.getName());
+        if (logger.isTraceEnabled()) {
+            logger.trace("OrganizationResource initialized for org {}", organization.getName());
         }
         return this;
     }
@@ -114,7 +114,9 @@ public class OrganizationResource extends AbstractContextResource {
                                                    @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "Get details for organization: " + organization.getUuid() );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Get details for organization: {}", organization.getUuid());
+        }
 
         ApiResponse response = createApiResponse();
         response.setProperty( "organization", management.getOrganizationData( organization ) );
@@ -176,7 +178,7 @@ public class OrganizationResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "Send activation email for organization: " + organization.getUuid() );
+        logger.info("Send activation email for organization: {}", organization.getUuid());
 
         ApiResponse response = createApiResponse();
 
@@ -263,8 +265,8 @@ public class OrganizationResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("executePut");
+        if (logger.isTraceEnabled()) {
+            logger.trace("executePut");
         }
 
         ApiResponse response = createApiResponse();
@@ -287,8 +289,8 @@ public class OrganizationResource extends AbstractContextResource {
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("executePostJson");
+        if (logger.isTraceEnabled()) {
+            logger.trace("executePostJson");
         }
 
         Map<String, String> uuidRet = new HashMap<>();
@@ -404,7 +406,9 @@ public class OrganizationResource extends AbstractContextResource {
                                   @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "Get configuration for organization: " + organization.getUuid() );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Get configuration for organization: {}", organization.getUuid());
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "get organization configuration" );
@@ -436,8 +440,8 @@ public class OrganizationResource extends AbstractContextResource {
                                   @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Put configuration for organization: " + organization.getUuid());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Put configuration for organization: {}", organization.getUuid());
         }
 
         ApiResponse response = createApiResponse();

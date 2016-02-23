@@ -71,11 +71,11 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
 
         if ( status >= 500 ) {
             // only log real errors as errors
-            logger.error( e.getClass().getCanonicalName() + " 5XX Uncaught Exception (" + status + ")", e );
+            logger.error( "{} 5XX Uncaught Exception ({})", e.getClass().getCanonicalName(), status, e );
 
         } else {
             if (logger.isDebugEnabled()) {
-                logger.debug(e.getClass().getCanonicalName() + " Following Exception Thrown (" + status + ")", e);
+                logger.debug( "{} Following Exception Thrown ({})", e.getClass().getCanonicalName(), status, e );
             }
         }
 
@@ -105,9 +105,9 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
     private Response toResponse( int status, String jsonResponse ) {
         if ( status >= 500 ) {
             // only log real errors as errors
-            logger.error( "Server Error (" + status + "):\n" + jsonResponse );
+            logger.error( "Server Error ({}):\n{}", status, jsonResponse );
         } else if ( logger.isDebugEnabled() ) {
-            logger.debug( "Client Error (" + status + "):\n" + jsonResponse );
+            logger.debug( "Client Error ({}):\n{}", status, jsonResponse );
         }
 
         String callback = httpServletRequest.getParameter( "callback" );

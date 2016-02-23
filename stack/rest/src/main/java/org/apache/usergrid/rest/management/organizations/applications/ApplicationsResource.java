@@ -111,8 +111,8 @@ public class ApplicationsResource extends AbstractContextResource {
                                                                   @FormParam( "name" ) String applicationName )
             throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("newApplicationForOrganizationFromForm");
+        if (logger.isTraceEnabled()) {
+            logger.trace("newApplicationForOrganizationFromForm");
         }
 
         Preconditions.checkArgument( !isEmpty( applicationName ),

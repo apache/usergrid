@@ -46,7 +46,7 @@ import com.google.inject.Singleton;
 @Singleton
 public class EsProvider {
 
-    private static final Logger log = LoggerFactory.getLogger( EsProvider.class );
+    private static final Logger logger = LoggerFactory.getLogger( EsProvider.class );
 
     private final IndexFig indexFig;
     private static Client client;
@@ -135,7 +135,7 @@ public class EsProvider {
             }
             catch ( UnknownHostException ex ) {
                 nodeName = "client-" + RandomStringUtils.randomAlphabetic( 8 );
-                log.warn( "Couldn't get hostname to use as ES node name, using " + nodeName );
+                logger.warn( "Couldn't get hostname to use as ES node name, using {}", nodeName );
             }
         }
 
@@ -196,7 +196,9 @@ public class EsProvider {
 
                 .build();
 
-        log.debug( "Creating ElasticSearch client with settings: {}",  settings.getAsMap() );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Creating ElasticSearch client with settings: {}", settings.getAsMap());
+        }
 
         Node node = NodeBuilder.nodeBuilder().settings( settings ).client( true ).data( false ).node();
 

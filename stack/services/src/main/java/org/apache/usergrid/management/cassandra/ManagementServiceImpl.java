@@ -365,9 +365,7 @@ public class ManagementServiceImpl implements ManagementService {
             try {
                 createAdminUser( null, username, "Super User", email, password, true, false );
             }catch(Exception e){
-                if (logger.isInfoEnabled()) {
-                    logger.info("resetSuperUser: auto creation of superuser failed: {}", e.getMessage());
-                }
+                logger.info("resetSuperUser: auto creation of superuser failed: {}", e.getMessage());
             }
         }
         else {
@@ -450,8 +448,8 @@ public class ManagementServiceImpl implements ManagementService {
     public OrganizationOwnerInfo createOwnerAndOrganization( String organizationName, String username, String name,
                                                              String email, String password ) throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug("createOwnerAndOrganization1");
+        if(logger.isTraceEnabled()){
+            logger.trace("createOwnerAndOrganization(1)");
         }
         boolean activated = !newAdminUsersNeedSysAdminApproval() && !newOrganizationsNeedSysAdminApproval();
         boolean disabled = newAdminUsersRequireConfirmation();
@@ -466,8 +464,8 @@ public class ManagementServiceImpl implements ManagementService {
     public OrganizationOwnerInfo createOwnerAndOrganization( String organizationName, String username, String name,
                                                              String email, String password, boolean activated,
                                                              boolean disabled ) throws Exception {
-        if(logger.isDebugEnabled()){
-            logger.debug("createOwnerAndOrganization2");
+        if(logger.isTraceEnabled()){
+            logger.trace("createOwnerAndOrganization(2)");
         }
         return createOwnerAndOrganization( organizationName, username, name, email, password,
                 activated, disabled, null, null );
@@ -481,9 +479,7 @@ public class ManagementServiceImpl implements ManagementService {
                                                              Map<String, Object> organizationProperties )
             throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug("createOwnerAndOrganization3");
-        }
+        logger.info("createOwnerAndOrganization: {} {}", organizationName, email);
 
         /**
          * Only lock on the target values. We don't want lock contention if another
@@ -518,8 +514,8 @@ public class ManagementServiceImpl implements ManagementService {
                 user = createAdminUserInternal( null, username, name, email, password, activated, disabled, userProperties );
             }
 
-            if(logger.isDebugEnabled()){
-                logger.debug("User created");
+            if(logger.isTraceEnabled()){
+                logger.debug("createOwnerAndOrganization: User created");
             }
             organization = createOrganizationInternal( null, organizationName, user, true, organizationProperties );
         }
@@ -535,8 +531,8 @@ public class ManagementServiceImpl implements ManagementService {
 
     private OrganizationInfo createOrganizationInternal(
         UUID orgUuid, String organizationName, UserInfo user, boolean activated ) throws Exception {
-        if(logger.isDebugEnabled()){
-            logger.debug("createOrganizationInternal1");
+        if(logger.isTraceEnabled()){
+            logger.trace("createOrganizationInternal(1): {}", organizationName);
         }
         return createOrganizationInternal( orgUuid, organizationName, user, activated, null );
     }
@@ -545,8 +541,8 @@ public class ManagementServiceImpl implements ManagementService {
     private OrganizationInfo createOrganizationInternal( UUID orgUuid, String organizationName, UserInfo user, boolean activated,
                                                          Map<String, Object> properties ) throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "createOrganizationInternal2: {}", organizationName );
+        if(logger.isTraceEnabled()){
+            logger.trace( "createOrganizationInternal(2): {}", organizationName );
         }
 
         if (  organizationName == null ) {
@@ -557,7 +553,7 @@ public class ManagementServiceImpl implements ManagementService {
         }
         if ( user == null ) {
             if(logger.isDebugEnabled()){
-                logger.debug("user = null");
+                logger.debug("user = null (organizationName = {})", organizationName);
             }
             return null;
         }
@@ -613,11 +609,15 @@ public class ManagementServiceImpl implements ManagementService {
             throws Exception {
 
         if (  organizationName == null ) {
-            logger.debug("organizationName = null");
+            if (logger.isTraceEnabled()) {
+                logger.trace("organizationName = null");
+            }
             return null;
         }
         if ( user == null ) {
-            logger.debug("user = null");
+            if (logger.isTraceEnabled()) {
+                logger.trace("user = null");
+            }
             return null;
         }
 
@@ -1142,11 +1142,15 @@ public class ManagementServiceImpl implements ManagementService {
                         Identifier.fromUUID( UUID.fromString( identifierString ) ) );
                 if ( entity != null ) {
                     user = ( User ) entity.toTypedEntity();
-                    logger.info( "Found user {} as a UUID", identifierString );
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Found user {} as a UUID", identifierString);
+                    }
                 }
             }
             catch ( Exception e ) {
-                logger.warn( "Unable to get user " + identifierString + " as a UUID, trying username..." );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Unable to get user {} as a UUID, trying username...", identifierString);
+                }
             }
             return user;
         }
@@ -1157,12 +1161,13 @@ public class ManagementServiceImpl implements ManagementService {
             Entity entity = getUserEntityByIdentifier( applicationId, identifier );
             if ( entity != null ) {
                 user = ( User ) entity.toTypedEntity();
-                logger.info( "Found user {} as an {}", identifierString, identifier.getType() );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Found user {} as an {}", identifierString, identifier.getType());
+                }
             }
         }
         catch ( Exception e ) {
-            logger.warn( "Unable to get user {} as a {}", identifierString, identifier.getType());
-            logger.warn( "Exception", e);
+            logger.warn( "Unable to get user {} as a {}", identifierString, identifier.getType(), e);
         }
         if ( user != null ) {
             return user;
@@ -1257,8 +1262,8 @@ public class ManagementServiceImpl implements ManagementService {
 
     public int calculatePasswordHistorySizeForUser( UUID userId ) throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug( "calculatePasswordHistorySizeForUser " + userId.toString() );
+        if(logger.isTraceEnabled()){
+            logger.trace( "calculatePasswordHistorySizeForUser {}", userId.toString() );
         }
 
         int size = 0;
@@ -1267,8 +1272,8 @@ public class ManagementServiceImpl implements ManagementService {
         Results orgResults = em.getCollection( new SimpleEntityRef( User.ENTITY_TYPE, userId ),
                 Schema.COLLECTION_GROUPS, null, 10000, Level.REFS, false );
 
-        if(logger.isDebugEnabled()){
-            logger.debug("    orgResults.size() = " + orgResults.size());
+        if(logger.isTraceEnabled()){
+            logger.trace("    orgResults.size() = {}", orgResults.size());
         }
 
         for ( EntityRef orgRef : orgResults.getRefs() ) {
@@ -1277,8 +1282,8 @@ public class ManagementServiceImpl implements ManagementService {
             if ( properties != null ) {
                 OrganizationInfo orgInfo = new OrganizationInfo( null, null, properties );
 
-                if(logger.isDebugEnabled()){
-                    logger.debug( "    orgInfo.getPasswordHistorySize() = " +  orgInfo.getPasswordHistorySize() );
+                if(logger.isTraceEnabled()){
+                    logger.trace( "    orgInfo.getPasswordHistorySize() = {}", orgInfo.getPasswordHistorySize() );
                 }
 
                 size = Math.max( orgInfo.getPasswordHistorySize(), size );
@@ -1303,8 +1308,8 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo verifyAdminUserPasswordCredentials( String name, String password ) throws Exception {
 
-        if(logger.isDebugEnabled()){
-            logger.debug("verifyAdminUserPasswordCredentials for {}/{}", name, password);
+        if(logger.isTraceEnabled()){
+            logger.trace("verifyAdminUserPasswordCredentials for {}", name);
         }
 
         User user = findUserEntity( smf.getManagementAppId(), name );
@@ -1549,7 +1554,7 @@ public class ManagementServiceImpl implements ManagementService {
                 try {
                     organizations.put( entity.getUuid(), path );
                 } catch (IllegalArgumentException e) {
-                    logger.warn("Error adding " + entity.getUuid() + ":" + path + " to BiMap: " + e.getMessage() );
+                    logger.warn("Error adding {}:{} to BiMap: {}", entity.getUuid(), path, e.getMessage() );
                 }
             }
 
@@ -1655,7 +1660,7 @@ public class ManagementServiceImpl implements ManagementService {
 
         if(em.getCollection(organization.getUuid() ,"users",Query.fromQL( "select * where uuid ="+user.getUuid() ),Level.IDS ).size() >0){
             if(logger.isDebugEnabled()) {
-                logger.debug( "Found value: {} already in collection", user.getName() );
+                logger.debug( "addAdminUserToOrganization - Found value: {} already in collection", user.getName() );
             }
             return;
         }
@@ -2409,7 +2414,7 @@ public class ManagementServiceImpl implements ManagementService {
             }
         }
         catch ( Exception e ) {
-            logger.error( "Unable to send activation emails to " + organization.getName(), e );
+            logger.error( "Unable to send activation emails to {}", organization.getName(), e );
         }
     }
 

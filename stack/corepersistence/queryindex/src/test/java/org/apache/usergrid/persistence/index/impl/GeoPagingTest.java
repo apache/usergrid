@@ -58,7 +58,6 @@ import static org.junit.Assert.fail;
 /**
  * // TODO: Document this
  *
- * @author ApigeeCorporation
  * @since 4.0
  */
 

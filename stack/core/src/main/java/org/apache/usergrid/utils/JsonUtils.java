@@ -47,7 +47,7 @@ import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst
 
 public class JsonUtils {
 
-    private static final Logger LOG = LoggerFactory.getLogger( JsonUtils.class );
+    private static final Logger logger = LoggerFactory.getLogger( JsonUtils.class );
 
     static ObjectMapper mapper = new ObjectMapper();
 
@@ -72,8 +72,8 @@ public class JsonUtils {
             return mapper.writeValueAsString( obj );
         }
         catch ( Throwable t ) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Error generating JSON", t);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Error generating JSON", t);
             }
             throw new JsonWriteException( "Error generating JSON", t );
         }
@@ -86,8 +86,8 @@ public class JsonUtils {
             return indentObjectMapper.writeValueAsString( obj );
         }
         catch ( Throwable t ) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Error generating JSON", t);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Error generating JSON", t);
             }
             throw new JsonWriteException( "Error generating JSON", t );
         }
@@ -100,8 +100,8 @@ public class JsonUtils {
             return mapper.readValue( json, Object.class );
         }
         catch ( Throwable t ) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Error parsing JSON", t);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Error parsing JSON", t);
             }
             throw new JsonReadException( "Error parsing JSON", t );
         }
@@ -124,7 +124,7 @@ public class JsonUtils {
             bytes = smileMapper.writeValueAsBytes( obj );
         }
         catch ( Exception e ) {
-            LOG.error( "Error getting SMILE bytes", e );
+            logger.error( "Error getting SMILE bytes", e );
         }
         if ( bytes != null ) {
             return ByteBuffer.wrap( bytes );
@@ -152,7 +152,7 @@ public class JsonUtils {
                     byteBuffer.remaining(), clazz );
         }
         catch ( Exception e ) {
-            LOG.error( "Error parsing SMILE bytes", e );
+            logger.error( "Error parsing SMILE bytes", e );
         }
         return obj;
     }
@@ -184,7 +184,7 @@ public class JsonUtils {
                     return UUID.fromString( s );
                 }
                 catch ( IllegalArgumentException e ) {
-                    LOG.warn( "Argument to UUID.fromString({}) was invalid.", s, e );
+                    logger.warn( "Argument to UUID.fromString({}) was invalid.", s, e );
                 }
             }
         }
@@ -333,7 +333,7 @@ public class JsonUtils {
             json = mapper.readValue( file, Object.class );
         }
         catch ( Exception e ) {
-            LOG.error( "Error loading JSON", e );
+            logger.error( "Error loading JSON", e );
         }
         return json;
     }

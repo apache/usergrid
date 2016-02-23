@@ -168,9 +168,9 @@ public class ImportsResource extends AbstractContextResource {
         final UUID importId = UUID.fromString( entityId.getPath() );
         final Import importEntity = importService.getImport( application.getId(), importId );
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Loaded import entity {}:{} with state {}",
-                new Object[]{importEntity.getType(), importEntity.getUuid(), importEntity.getState()});
+        if (logger.isTraceEnabled()) {
+            logger.trace("Loaded import entity {}:{} with state {}",
+                importEntity.getType(), importEntity.getUuid(), importEntity.getState());
         }
 
         if ( importEntity == null ) {

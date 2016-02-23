@@ -226,7 +226,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         if (logger.isDebugEnabled()) {
             logger.debug("New application orgName {} orgAppName {} id {} ",
-                new Object[]{orgName, name, applicationId.toString()});
+                orgName, name, applicationId.toString());
         }
 
         return initializeApplicationV2( orgName, applicationId, appName, properties, forMigration);
@@ -481,7 +481,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         if (logger.isDebugEnabled()) {
             logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}",
-                new Object[]{edgeType, managementId.getType(), managementId.getUuid()});
+                edgeType, managementId.getType(), managementId.getUuid());
         }
 
         Observable<MarkedEdge> edges = gm.loadEdgesFromSource(
@@ -621,7 +621,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             results = em.searchCollection( em.getApplicationRef(), "propertymaps", q);
 
         } catch (Exception ex) {
-            logger.error("Error getting service property for delete of property: " + name, ex);
+            logger.error("Error getting service property for delete of property: {}", name, ex);
             return false;
         }
 
@@ -639,7 +639,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             em.update( propsEntity );
 
         } catch (Exception ex) {
-            logger.error("Error deleting service property orgAppName: " + name, ex);
+            logger.error("Error deleting service property orgAppName: {}", name, ex);
             return false;
         }
 

@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "E28DB29D4B8B9FB468FB340D2257B16682332D89",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "E28DB29D4B8B9FB468FB340D2257B16682332D89" : 0,
+    "AD57BFF635DD66DF5DF78257082332592EB51D31" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "F8EC72FE-9B21-4617-8470-0D30DC16A66E",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "E28DB29D4B8B9FB468FB340D2257B16682332D89" : "swift\/",
+    "AD57BFF635DD66DF5DF78257082332592EB51D31" : ".."
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "ActivityFeed",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "Samples\/ActivityFeed\/ActivityFeed.xcworkspace",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:RobertWalsh\/usergrid.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "AD57BFF635DD66DF5DF78257082332592EB51D31"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:RobertWalsh\/UsergridSDK.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "E28DB29D4B8B9FB468FB340D2257B16682332D89"
+    }
+  ]
+}
