@@ -55,6 +55,11 @@ public class OrgResource  extends NamedResource {
         return new OrganizationResource( orgname,context,this );
     }
 
+    public OrganizationResource org( final String orgname ){
+        return new OrganizationResource( orgname,context,this );
+    }
+
+
     /**
      * This post is for the POST params case, where the entire call is made using queryParameters.
      */

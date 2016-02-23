@@ -158,6 +158,7 @@ public class AdminUsersIT extends AbstractRestIT {
      * Get the management user feed and check that it has the correct title.
      * @throws Exception
      */
+    @Ignore
     @Test
     public void mgmtUserFeed() throws Exception {
 
@@ -332,16 +333,11 @@ public class AdminUsersIT extends AbstractRestIT {
         }
     }
 
-    /**
-     * Update the current management user and make sure the change persists
-     * @throws Exception
-     */
-    @Ignore("Fails because we cannot GET a management user with a super user token - only with an Admin level token."
-        + "But, we can PUT with a superuser token. This test will work once that issue has been resolved.")
     @Test
-    public void updateManagementUser() throws Exception {
+    public void updateManagementUserNoToken() throws Exception {
 
-        Organization newOrg = createOrgPayload( "updateManagementUser", null );
+
+        Organization newOrg = createOrgPayload( "updateManagementUserNoToken", null );
 
 
         Organization orgReturned = clientSetup.getRestClient().management().orgs().post( newOrg );
@@ -350,24 +346,93 @@ public class AdminUsersIT extends AbstractRestIT {
 
         //Add a property to management user
         Entity userProperty = new Entity(  ).chainPut( "company","usergrid" );
-        management().users().user( newOrg.getUsername() ).put( userProperty );
 
-        Entity userUpdated = updateAdminUser( userProperty, orgReturned );
+        try{
+            management().users().user( newOrg.getUsername() ).put( userProperty );
+        } catch( UniformInterfaceException e ){
 
-        assertEquals( "usergrid",userUpdated.getAsString( "company" ) );
+            int status = e.getResponse().getStatus();
+            assertEquals(401, status);
+        }
 
-        //Update property with new management value.
-        userProperty = new Entity(  ).chainPut( "company","Apigee" );
-
-        userUpdated = updateAdminUser( userProperty, orgReturned);
-
-        assertEquals( "Apigee",userUpdated.getAsString( "company" ) );
     }
 
-    private Entity updateAdminUser(Entity userProperty, Organization organization){
-        management().users().user( organization.getUsername() ).put( userProperty );
+    @Test
+    public void updateManagementUserSuperuserToken() throws Exception {
 
-        return management().users().user( organization.getUsername() ).get();
+
+        Organization newOrg = createOrgPayload( "updateManagementUserSuperuserToken", null );
+
+
+        Organization orgReturned = clientSetup.getRestClient().management().orgs().post( newOrg );
+
+        assertNotNull( orgReturned.getOwner() );
+
+        //Add a property to management user
+        Entity userProperty = new Entity(  ).chainPut( "company","usergrid" );
+
+        management.token().setToken( clientSetup.getSuperuserToken());
+        management().users().user( newOrg.getUsername() ).put( userProperty );
+
+
+    }
+
+    @Test
+    public void updateManagementUserAdminToken() throws Exception {
+
+        Organization newOrg = createOrgPayload( "updateManagementUserAdminToken", null );
+
+
+        Organization orgReturned = clientSetup.getRestClient().management().orgs().post( newOrg );
+
+        assertNotNull( orgReturned.getOwner() );
+
+        String orgName = orgReturned.getName();
+
+        //Add a property to management user
+        Entity userProperty = new Entity(  ).chainPut( "company","usergrid" );
+
+        User adminUser = orgReturned.getOwner();
+
+        Token adminToken = management.token().get(adminUser.getUsername(), orgName);
+        assertNotNull(adminToken);
+        management.token().setToken( adminToken );
+        management().users().user( newOrg.getUsername() ).put( userProperty );
+
+    }
+
+    @Test
+    public void updateManagementUserWrongAdminToken() throws Exception {
+
+        Organization newOrg = createOrgPayload( "updateManagementUserWrongAdminToken", null );
+        Organization orgReturned = clientSetup.getRestClient().management().orgs().post( newOrg );
+        assertNotNull( orgReturned.getOwner() );
+
+        // add a new management user to the org for the purpose of a 'wrong' user trying update others
+        Entity adminUserPayload = new Entity();
+        String wrongAdminUsername = "wrongAdminUser"+UUIDUtils.newTimeUUID();
+        adminUserPayload.put( "username", wrongAdminUsername );
+        adminUserPayload.put( "name", wrongAdminUsername );
+        adminUserPayload.put( "email", wrongAdminUsername+"@usergrid.com" );
+        adminUserPayload.put( "password", wrongAdminUsername );
+        management().orgs().org( clientSetup.getOrganizationName() ).users().post(User.class ,adminUserPayload );
+
+
+        // get token of the newly added wrongAdminUser
+        Token wrongAdminToken = management.token().get(wrongAdminUsername, wrongAdminUsername);
+        assertNotNull(wrongAdminToken);
+        management.token().setToken( wrongAdminToken );
+
+        try{
+            //Add a property to management user
+            Entity userProperty = new Entity(  ).chainPut( "company","usergrid" );
+            management().users().user( newOrg.getUsername() ).put( userProperty );
+
+        } catch( UniformInterfaceException e ){
+
+            int status = e.getResponse().getStatus();
+            assertEquals(401, status);
+        }
 
     }
 
