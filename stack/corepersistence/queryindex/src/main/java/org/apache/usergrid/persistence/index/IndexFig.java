@@ -28,7 +28,11 @@ import org.safehaus.guicyfig.Key;
 @FigSingleton
 public interface IndexFig extends GuicyFig {
 
+    String VALIDATION_DEFAULT_VALUE = "default-property";
+
     String ELASTICSEARCH_HOSTS = "elasticsearch.hosts";
+
+    String PFC_ELASTICSEARCH_HOSTS = "pcf_elasticsearch_hosts";
 
     String ELASTICSEARCH_PORT = "elasticsearch.port";
 
@@ -69,6 +73,10 @@ public interface IndexFig extends GuicyFig {
     @Default( "127.0.0.1" )
     @Key( ELASTICSEARCH_HOSTS )
     String getHosts();
+
+    @Default( VALIDATION_DEFAULT_VALUE )
+    @Key( PFC_ELASTICSEARCH_HOSTS )
+    String getPfcHosts();
 
     /**
      * The port used when connecting to Elasticsearch.

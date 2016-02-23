@@ -89,6 +89,12 @@ public class GuiceFactory implements FactoryBean<Injector> {
             logger.info( "Loading Core Persistence properties" );
 
             String hostsString = "";
+
+            String pcf_hosts = systemProperties.getProperty("pcf_cassandra_hosts");
+            if(pcf_hosts != null && !pcf_hosts.isEmpty()){
+                chc.setHosts(pcf_hosts);
+            }
+
             CassandraHost[] hosts = chc.buildCassandraHosts();
             if ( hosts.length == 0 ) {
                 throw new RuntimeException( "Fatal error: no Cassandra hosts configured" );

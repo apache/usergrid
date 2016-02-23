@@ -51,7 +51,10 @@
     </bean>
 
 	<bean id="cassandraHostConfigurator" class="me.prettyprint.cassandra.service.CassandraHostConfigurator">
-		<constructor-arg value="${cassandra.url}" />
+		<constructor-arg value="#{(systemProperties['pcf_cassandra_hosts'] == ''
+		|| systemProperties['pcf_cassandra_hosts'] == null ) ?
+		'${cassandra.url}' : systemProperties['pcf_cassandra_hosts'] }" />
+
         <!-- set the pool size if it's available.  If not go with 50 -->
         <property name="maxActive" value="${cassandra.connections:15}"/>
         <property name="cassandraThriftSocketTimeout" value="${cassandra.thriftSocketTimeout:5000}" />
