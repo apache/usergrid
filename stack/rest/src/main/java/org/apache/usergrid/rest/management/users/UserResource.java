@@ -100,7 +100,7 @@ public class UserResource extends AbstractContextResource {
         return getSubResource( OrganizationsResource.class ).init( user );
     }
 
-
+    @RequireAdminUserAccess
     @PUT
     public JSONWithPadding setUserInfo( @Context UriInfo ui, Map<String, Object> json,
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
