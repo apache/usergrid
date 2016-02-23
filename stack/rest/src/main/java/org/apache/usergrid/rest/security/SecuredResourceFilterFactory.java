@@ -316,7 +316,7 @@ public class SecuredResourceFilterFactory implements ResourceFilterFactory {
         @Override
         public void authorize( ContainerRequest request ) {
             logger.debug( "AdminUserFilter.authorize" );
-            if ( !isUser( getUserIdentifier() ) ) {
+            if ( !isUser( getUserIdentifier() ) && !isServiceAdmin() ) {
                 throw mappableSecurityException( "unauthorized", "No admin user access authorized" );
             }
         }
