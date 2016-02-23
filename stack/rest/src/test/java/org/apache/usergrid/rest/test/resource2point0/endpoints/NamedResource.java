@@ -17,12 +17,16 @@
 package org.apache.usergrid.rest.test.resource2point0.endpoints;
 
 
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import org.apache.usergrid.rest.test.resource2point0.model.Entity;
 import org.apache.usergrid.rest.test.resource2point0.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource2point0.model.Token;
 import org.apache.usergrid.rest.test.resource2point0.state.ClientContext;
 
 import com.sun.jersey.api.client.WebResource;
 
+import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -103,6 +107,34 @@ public abstract class NamedResource implements UrlResource {
             }
         }
         return resource;
+    }
+
+    public <T> T post(Class<T> type, Entity requestEntity) {
+        return post(true,type,requestEntity,null,false);
+
+    }
+
+    //Used for empty posts
+    public <T> T post( boolean useToken, Class<T> type, Map entity, final QueryParameters queryParameters, boolean useBasicAuthentication ) {
+        WebResource resource = getResource(useToken);
+        resource = addParametersToResource(resource, queryParameters);
+        WebResource.Builder builder = resource
+            .type(MediaType.APPLICATION_JSON_TYPE)
+            .accept( MediaType.APPLICATION_JSON );
+
+        if(entity!=null){
+            builder.entity(entity);
+        }
+
+        if(useBasicAuthentication){
+            //added httpBasicauth filter to all setup calls because they all do verification this way.
+            HTTPBasicAuthFilter httpBasicAuthFilter = new HTTPBasicAuthFilter( "superuser","superpassword" );
+            resource.addFilter(httpBasicAuthFilter);
+        }
+
+        GenericType<T> gt = new GenericType<>((Class) type);
+        return builder.post(gt.getRawClass());
+
     }
 
 
