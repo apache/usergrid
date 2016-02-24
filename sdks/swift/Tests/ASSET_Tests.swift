@@ -38,6 +38,7 @@ class ASSET_Tests: XCTestCase {
     override func setUp() {
         super.setUp()
         Usergrid.initSharedInstance(orgId:ClientCreationTests.orgId, appId: ClientCreationTests.appId)
+        Usergrid.persistCurrentUserInKeychain = false
     }
 
     override func tearDown() {
@@ -133,6 +134,106 @@ class ASSET_Tests: XCTestCase {
         }
         self.waitForExpectationsWithTimeout(100, handler: nil)
     }
+
+    func deleteUser(user:UsergridUser,expectation:XCTestExpectation) {
+        user.remove() { removeResponse in
+            XCTAssertTrue(NSThread.isMainThread())
+            XCTAssertNotNil(removeResponse)
+            XCTAssertTrue(removeResponse.ok)
+            XCTAssertNotNil(removeResponse.user)
+            XCTAssertNotNil(removeResponse.users)
+            print(removeResponse.error)
+            expectation.fulfill()
+        }
+    }
+
+    func test_ATTACH_ASSET_TO_CURRENT_USER() {
+        let userAssetExpect = self.expectationWithDescription("\(__FUNCTION__)")
+
+        let user = UsergridUser(name:User_Tests.name, email:User_Tests.email, username:User_Tests.username, password:User_Tests.password)
+        let uploadProgress : UsergridAssetRequestProgress = { (bytes,expected) in
+            print("UPLOAD PROGRESS BLOCK: BYTES:\(bytes) --- EXPECTED:\(expected)")
+        }
+        let downloadProgress : UsergridAssetRequestProgress = { (bytes,expected) in
+            print("DOWNLOAD PROGRESS BLOCK: BYTES:\(bytes) --- EXPECTED:\(expected)")
+        }
+
+        UsergridUser.checkAvailable(user.email, username: user.username) { error,available in
+
+            XCTAssertTrue(NSThread.isMainThread())
+            XCTAssertNil(error)
+            XCTAssertTrue(available)
+
+            user.create() { (createResponse) in
+                XCTAssertTrue(NSThread.isMainThread())
+                XCTAssertNotNil(createResponse)
+                XCTAssertTrue(createResponse.ok)
+                XCTAssertNotNil(createResponse.user)
+                XCTAssertNotNil(createResponse.users)
+                XCTAssertNotNil(user.uuid)
+
+                user.login(user.username!, password:User_Tests.password) { (auth, loggedInUser, error) -> Void in
+                    XCTAssertTrue(NSThread.isMainThread())
+                    XCTAssertNil(error)
+                    XCTAssertNotNil(auth)
+                    XCTAssertNotNil(loggedInUser)
+                    XCTAssertEqual(auth, user.auth!)
+
+                    Usergrid.authenticateUser(user.auth!) { auth,currentUser,error in
+                        XCTAssertTrue(NSThread.isMainThread())
+                        XCTAssertNil(error)
+                        XCTAssertNotNil(auth)
+                        XCTAssertEqual(auth, user.auth!)
+
+                        XCTAssertNotNil(currentUser)
+                        XCTAssertNotNil(Usergrid.currentUser)
+                        XCTAssertEqual(currentUser, Usergrid.currentUser!)
+
+                        let imagePath = self.getFullPathOfFile(ASSET_Tests.pngLocation)
+                        XCTAssertNotNil(imagePath)
+
+                        let localImage = UIImage(contentsOfFile: imagePath)
+                        XCTAssertNotNil(localImage)
+
+                        let asset = UsergridAsset(filename:ASSET_Tests.imageName,image: localImage!)
+                        XCTAssertNotNil(asset)
+
+                        Usergrid.currentUser!.uploadAsset(asset!, progress:uploadProgress) { uploadedAsset,response in
+                            XCTAssertTrue(NSThread.isMainThread())
+                            XCTAssertTrue(response.ok)
+                            XCTAssertNil(response.error)
+
+                            XCTAssertNotNil(asset)
+                            XCTAssertNotNil(uploadedAsset)
+                            XCTAssertEqual(uploadedAsset!, asset!)
+
+                            XCTAssertTrue(Usergrid.currentUser!.hasAsset)
+                            XCTAssertNotNil(Usergrid.currentUser!.fileMetaData)
+                            XCTAssertNotNil(Usergrid.currentUser!.fileMetaData!.eTag)
+                            XCTAssertNotNil(Usergrid.currentUser!.fileMetaData!.checkSum)
+                            XCTAssertNotNil(Usergrid.currentUser!.fileMetaData!.contentType)
+                            XCTAssertNotNil(Usergrid.currentUser!.fileMetaData!.lastModifiedDate)
+                            XCTAssertEqual(Usergrid.currentUser!.asset!.contentLength, Usergrid.currentUser!.fileMetaData!.contentLength)
+                            XCTAssertEqual(Usergrid.currentUser!.asset!.contentType, Usergrid.currentUser!.fileMetaData!.contentType)
+
+                            Usergrid.currentUser!.downloadAsset(UsergridImageContentType.Png.stringValue, progress:downloadProgress)
+                                { (downloadedAsset, error) -> Void in
+                                    XCTAssertTrue(NSThread.isMainThread())
+                                    XCTAssertNotNil(downloadedAsset)
+                                    XCTAssertNil(error)
+                                    let downloadedImage = UIImage(data: downloadedAsset!.data)
+                                    XCTAssertEqual(UIImagePNGRepresentation(localImage!), UIImagePNGRepresentation(downloadedImage!))
+                                    XCTAssertNotNil(downloadedImage)
+                                    self.deleteUser(Usergrid.currentUser!,expectation:userAssetExpect)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        self.waitForExpectationsWithTimeout(100, handler: nil)
+    }
+
 
     func test_FILE_META_DATA_NSCODING() {
         let fileMetaDataDict = ["content-type":"image/png",
