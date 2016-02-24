@@ -32,8 +32,6 @@ public interface IndexFig extends GuicyFig {
 
     String ELASTICSEARCH_HOSTS = "elasticsearch.hosts";
 
-    String PFC_ELASTICSEARCH_HOSTS = "pcf_elasticsearch_hosts";
-
     String ELASTICSEARCH_PORT = "elasticsearch.port";
 
     String ELASTICSEARCH_CLUSTER_NAME = "elasticsearch.cluster_name";
@@ -74,9 +72,6 @@ public interface IndexFig extends GuicyFig {
     @Key( ELASTICSEARCH_HOSTS )
     String getHosts();
 
-    @Default( VALIDATION_DEFAULT_VALUE )
-    @Key( PFC_ELASTICSEARCH_HOSTS )
-    String getPfcHosts();
 
     /**
      * The port used when connecting to Elasticsearch.
