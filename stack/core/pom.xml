@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>2.1.1-SNAPSHOT</version>
+    <version>2.2.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -358,7 +358,7 @@
        <dependency>
         <groupId>org.apache.usergrid</groupId>
         <artifactId>common</artifactId>
-        <version>2.1.1-SNAPSHOT</version>
+        <version>2.2.0-SNAPSHOT</version>
         <type>test-jar</type>
            <scope>test</scope>
        </dependency>
@@ -368,7 +368,7 @@
     <dependency>
 	    <groupId>org.apache.usergrid</groupId>
 	    <artifactId>collection</artifactId>
-	    <version>2.1.1-SNAPSHOT</version>
+	    <version>2.2.0-SNAPSHOT</version>
 	    <type>jar</type>
       <exclusions>
         <exclusion>
@@ -386,34 +386,34 @@
     <dependency>
 	    <groupId>org.apache.usergrid</groupId>
 	    <artifactId>queryindex</artifactId>
-	    <version>2.1.1-SNAPSHOT</version>
+	    <version>2.2.0-SNAPSHOT</version>
 	    <type>jar</type>
     </dependency>
 
     <dependency>
 	    <groupId>org.apache.usergrid</groupId>
 	    <artifactId>graph</artifactId>
-	    <version>2.1.1-SNAPSHOT</version>
+	    <version>2.2.0-SNAPSHOT</version>
 	    <type>jar</type>
     </dependency>
 
     <dependency>
       <groupId>org.apache.usergrid</groupId>
       <artifactId>map</artifactId>
-      <version>2.1.1-SNAPSHOT</version>
+      <version>2.2.0-SNAPSHOT</version>
       <type>jar</type>
     </dependency>
 
       <dependency>
           <groupId>org.apache.usergrid</groupId>
           <artifactId>cache</artifactId>
-          <version>2.1.1-SNAPSHOT</version>
+          <version>2.2.0-SNAPSHOT</version>
       </dependency>
 
       <dependency>
       <groupId>org.apache.usergrid</groupId>
       <artifactId>queue</artifactId>
-      <version>2.1.1-SNAPSHOT</version>
+      <version>2.2.0-SNAPSHOT</version>
       <type>jar</type>
     </dependency>
 
