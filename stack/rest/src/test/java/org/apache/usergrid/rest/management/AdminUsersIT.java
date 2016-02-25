@@ -35,6 +35,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -356,7 +357,7 @@ public class AdminUsersIT extends AbstractRestIT {
 
         try{
             management().users().user( newOrg.getUsername() ).put( userProperty );
-        } catch( UniformInterfaceException e ){
+        } catch( NotAuthorizedException e ){
 
             int status = e.getResponse().getStatus();
             assertEquals(401, status);
@@ -435,7 +436,7 @@ public class AdminUsersIT extends AbstractRestIT {
             Entity userProperty = new Entity(  ).chainPut( "company","usergrid" );
             management().users().user( newOrg.getUsername() ).put( userProperty );
 
-        } catch( UniformInterfaceException e ){
+        } catch( NotAuthorizedException e ){
 
             int status = e.getResponse().getStatus();
             assertEquals(401, status);
