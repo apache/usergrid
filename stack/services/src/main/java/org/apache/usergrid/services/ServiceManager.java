@@ -292,7 +292,10 @@ public class ServiceManager {
             }
         }
         catch ( ClassNotFoundException e1 ) {
-            logger.error("Could not load class", e1);
+            if(logger.isTraceEnabled()){
+                logger.trace("Could not find class", e1);
+            }
+
         }
         return null;
     }
