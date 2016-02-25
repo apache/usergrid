@@ -590,7 +590,7 @@ public class CpEntityManager implements EntityManager {
 
         // update in all containing collections and connection indexes
 
-        indexService.queueEntityIndexUpdate( applicationScope, cpEntity );
+        indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0);
     }
 
 
@@ -745,7 +745,32 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Set<String> getApplicationCollections() throws Exception {
 
-        return getRelationManager( getApplication() ).getCollections();
+        Set<String> existingCollections = getRelationManager( getApplication() ).getCollections();
+
+        //Handles reading custom collections.
+//        Set<String> dynamic_collections = cast( getDictionaryAsSet( getApplicationRef(), Schema.DICTIONARY_COLLECTIONS ) );
+//        if ( dynamic_collections != null ) {
+//            for ( String collection : dynamic_collections ) {
+//                if ( !Schema.isAssociatedEntityType( collection ) ) {
+//                    if(!existingCollections.contains( collection )) {
+//                        existingCollections.add( collection );
+//                    }
+//                }
+//            }
+//        }
+        Set<String> system_collections = Schema.getDefaultSchema().getCollectionNames( Application.ENTITY_TYPE );
+        if ( system_collections != null ) {
+            for ( String collection : system_collections ) {
+                if ( !Schema.isAssociatedEntityType( collection ) ) {
+                    if(!existingCollections.contains( collection )) {
+                        existingCollections.add( collection );
+                    }
+                }
+            }
+        }
+
+        return existingCollections;
+
     }
 
 
@@ -1107,7 +1132,7 @@ public class CpEntityManager implements EntityManager {
 
         //Adding graphite metrics
 
-        indexService.queueEntityIndexUpdate(applicationScope, cpEntity);
+        indexService.queueEntityIndexUpdate(applicationScope, cpEntity, 0);
     }
 
 

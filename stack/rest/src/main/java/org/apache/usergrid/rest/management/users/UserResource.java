@@ -89,7 +89,7 @@ public class UserResource extends AbstractContextResource {
         return getSubResource( OrganizationsResource.class ).init( user );
     }
 
-
+    @RequireAdminUserAccess
     @PUT
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})

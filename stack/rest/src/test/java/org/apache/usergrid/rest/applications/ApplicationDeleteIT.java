@@ -84,7 +84,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         clientSetup.getRestClient().management().orgs()
             .org(orgName).apps().app(appToDeleteId.toString() ).getTarget()
             .queryParam("access_token", orgAdminToken.getAccessToken() )
-            .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
+            .queryParam("application_identifier", appToDeleteId)
             .request()
             .delete();
 
@@ -175,7 +175,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         final Response response1 = clientSetup.getRestClient().management()
             .orgs().org( orgName ).apps().app( appToDeleteId.toString() )
             .getTarget().queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
+            .queryParam( "application_identifier", appToDeleteId )
             .request()
             .delete();
         Assert.assertEquals( "Error must be 404", 404, response1.getStatus() );
@@ -223,7 +223,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         clientSetup.getRestClient().management().orgs()
             .org( orgName ).apps().app( appToDeleteName ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
+            .queryParam("application_identifier", appToDeleteName)
             .request()
             .delete();
 
@@ -303,7 +303,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         clientSetup.getRestClient().management().orgs()
             .org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
+            .queryParam("application_identifier", appToDeleteId)
             .request()
             .delete();
 
@@ -345,7 +345,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         clientSetup.getRestClient().management()
             .orgs().org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
+            .queryParam( "application_identifier", appToDeleteId )
             .request()
             .delete();
 
@@ -358,7 +358,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         final Response response = clientSetup.getRestClient().management()
             .orgs().org( orgName ).apps().app( newAppId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
+            .queryParam( "application_identifier", newAppId )
             .request()
             .delete();
 
