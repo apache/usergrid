@@ -55,7 +55,6 @@ import com.google.inject.Inject;
 import net.jcip.annotations.NotThreadSafe;
 
 import rx.Observable;
-import rx.schedulers.Schedulers;
 
 import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
@@ -145,7 +144,7 @@ public abstract class AsyncIndexServiceTest {
 
 
         //queue up processing
-        asyncEventService.queueEntityIndexUpdate( applicationScope, testEntity );
+        asyncEventService.queueEntityIndexUpdate( applicationScope, testEntity, 0);
 
 
         final EntityIndex EntityIndex =

@@ -590,7 +590,7 @@ public class CpEntityManager implements EntityManager {
 
         // update in all containing collections and connection indexes
 
-        indexService.queueEntityIndexUpdate( applicationScope, cpEntity );
+        indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0);
     }
 
 
@@ -1132,7 +1132,7 @@ public class CpEntityManager implements EntityManager {
 
         //Adding graphite metrics
 
-        indexService.queueEntityIndexUpdate(applicationScope, cpEntity);
+        indexService.queueEntityIndexUpdate(applicationScope, cpEntity, 0);
     }
 
 
