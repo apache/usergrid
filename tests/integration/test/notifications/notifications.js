@@ -239,52 +239,50 @@ module.exports = {
 
         // SEND NOTIFICATIONS HERE AND VALIDATE THE NUMBER OF NOTIFICATIONS SENT ARE ACCURATE FOR QUERY
 
-        // temporarily disable these tests until test infrastructure is upgraded
-        
-        //describe("notification -> user - direct path", function () {
-        //    it("should send a single notification to a user", function (done) {
-        //        this.timeout(5000)
-        //        this.slow(5000);
-        //        setTimeout(function () {
-        //
-        //            notifications.send("users/" + usersArray[1].username, gcmNotification,
-        //                function (err, notification) {
-        //                    should(err).be.null;
-        //                    notification.should.not.be.null;
-        //                    notification.expectedCount.should.be.equal(1);
-        //                    done();
-        //
-        //            });
-        //
-        //        }, 1000)
-        //
-        //
-        //    })
-        //
-        //});
+        describe("notification -> user - direct path", function () {
+            it("should send a single notification to a user", function (done) {
+                this.timeout(5000)
+                this.slow(5000);
+                setTimeout(function () {
 
-        //describe("notification -> user - via matrix query", function () {
-        //    it("should send a single notification to a user", function (done) {
-        //        this.timeout(5000)
-        //        this.slow(5000);
-        //
-        //        setTimeout(function () {
-        //
-        //            notifications.send("users;ql=select * where username = 'notificationuser-0'", gcmNotification,
-        //                function (err, notification) {
-        //                    should(err).be.null;
-        //                    notification.should.not.be.null;
-        //                    notification.expectedCount.should.be.equal(1);
-        //                    done();
-        //
-        //            });
-        //
-        //        }, 1000);
-        //
-        //
-        //    })
-        //
-        //});
+                    notifications.send("users/" + usersArray[1].username, gcmNotification,
+                        function (err, notification) {
+                            should(err).be.null;
+                            notification.should.not.be.null;
+                            notification.expectedCount.should.be.equal(1);
+                            done();
+
+                    });
+
+                }, 1000)
+
+
+            })
+
+        });
+
+        describe("notification -> user - via matrix query", function () {
+            it("should send a single notification to a user", function (done) {
+                this.timeout(5000)
+                this.slow(5000);
+
+                setTimeout(function () {
+
+                    notifications.send("users;ql=select * where username = 'notificationuser-0'", gcmNotification,
+                        function (err, notification) {
+                            should(err).be.null;
+                            notification.should.not.be.null;
+                            notification.expectedCount.should.be.equal(1);
+                            done();
+
+                    });
+
+                }, 1000);
+
+
+            })
+
+        });
 
         describe("notification -> groups - via matrix query", function () {
             it("should send a single notification to groups with the same users", function (done) {
