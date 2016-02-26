@@ -496,14 +496,6 @@ public class ApplicationResource extends AbstractContextResource {
                 "Cannot delete application without supplying correct application name");
         }
 
-//        Properties props = management.getProperties();
-//
-//         //for now, only works in test mode
-//        String testProp = ( String ) props.get( "usergrid.test" );
-//        if ( testProp == null || !Boolean.parseBoolean( testProp ) ) {
-//            throw new UnsupportedRestOperationException("Test props not not functioning correctly.");
-//        }
-
         if ( applicationId == null ) {
             throw new IllegalArgumentException("Application ID not specified in request");
         }
