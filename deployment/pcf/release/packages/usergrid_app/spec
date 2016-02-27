@@ -1,0 +1,9 @@
+---
+name: usergrid_app
+
+dependencies: []
+
+files:
+- templates/all_open.json
+- usergrid_app/ROOT.war
+- usergrid_app/manifest.yml

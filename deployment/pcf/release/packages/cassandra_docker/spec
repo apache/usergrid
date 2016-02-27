@@ -1,0 +1,8 @@
+---
+name: cassandra_docker
+
+dependencies: []
+
+files:
+- templates/all_open.json
+- cassandra_docker/cassandra-2.1.tgz

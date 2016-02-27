@@ -1,0 +1,20 @@
+---
+product: apache-usergrid
+installation_version: '1.5'
+to_version: 0.0.4
+migrations:
+- from_version: 0.0.1
+  rules:
+  - type: update
+    selector: product_version
+    to: 0.0.4
+- from_version: 0.0.2
+  rules:
+  - type: update
+    selector: product_version
+    to: 0.0.4
+- from_version: 0.0.3
+  rules:
+  - type: update
+    selector: product_version
+    to: 0.0.4

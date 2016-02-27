@@ -1,0 +1,4 @@
+blobs
+.blobs
+*.pivotal
+.final_builds

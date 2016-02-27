@@ -1,0 +1,68 @@
+Getting env variables for app usergrid_app-0.0.3 in org apache-usergrid-org / space apache-usergrid-space as admin...
+OK
+
+System-Provided:
+
+
+{
+ "VCAP_APPLICATION": {
+  "application_id": "42e3e4e1-5aba-4d05-b9c2-887d124c2ae3",
+  "application_name": "usergrid_app-0.0.3",
+  "application_uris": [
+   "usergrid_app.cfapps-01.haas-26.pez.pivotal.io"
+  ],
+  "application_version": "15f1ddae-1577-47ac-92ae-52ce91f9c5af",
+  "limits": {
+   "disk": 1024,
+   "fds": 16384,
+   "mem": 2048
+  },
+  "name": "usergrid_app-0.0.3",
+  "space_id": "04083e5d-8b2d-4589-9119-7bcfa8ce9ad6",
+  "space_name": "apache-usergrid-space",
+  "uris": [
+   "usergrid_app.cfapps-01.haas-26.pez.pivotal.io"
+  ],
+  "users": null,
+  "version": "15f1ddae-1577-47ac-92ae-52ce91f9c5af"
+ }
+}
+
+User-Provided:
+CC_HOST: https://api.run-01.haas-26.pez.pivotal.io
+CF_ORG: apache-usergrid-org
+CF_SPACE: apache-usergrid-space
+CF_TARGET: https://api.run-01.haas-26.pez.pivotal.io
+JBP_CONFIG_TOMCAT: { tomcat: { version: 7.0.62 }}
+LOGIN_HOST: https://login.run-01.haas-26.pez.pivotal.io
+ROOT: $HOME
+SCHEME: https
+SECURITY_USER_NAME: beccf11a2a89194e
+SECURITY_USER_PASSWORD: 5af0e11889f7c2a8
+UAA_HOST: https://uaa.run-01.haas-26.pez.pivotal.io
+VERIFY_SSL: true
+cassandra.url: 10.65.178.86
+cassandra.url:: 10.65.178.86
+elasticsearch.client.type: TRANSPORT
+elasticsearch.hosts: 10.65.178.85
+elasticsearch.hosts:: 10.65.178.85
+pcf_cassandra_hosts: 10.65.178.86
+pcf_elasticsearch_hosts: 10.65.178.85
+usergrid.cluster_name: pcf_usergrid
+usergrid.setup-test-account: true
+usergrid.sysadmin.approve.organizations: false
+usergrid.sysadmin.approve.users: false
+usergrid.sysadmin.login.allowed: true
+usergrid.sysadmin.login.email: mrusso@apigee.com
+usergrid.sysadmin.login.name: superuser
+usergrid.sysadmin.login.password: superuser
+usergrid.test-account.admin-user.email: baasadmins+pcf@apigee.com
+usergrid.test-account.admin-user.password: test
+usergrid.test-account.admin-user.username: test
+usergrid.test-account.app: test-app
+usergrid.test-account.organization: test-organization
+
+No running env variables have been set
+
+No staging env variables have been set
+

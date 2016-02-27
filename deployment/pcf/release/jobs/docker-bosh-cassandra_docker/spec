@@ -1,0 +1,8 @@
+---
+name: docker-bosh-cassandra_docker
+templates:
+  docker-bosh-cassandra_docker.sh.erb: bin/docker-bosh-cassandra_docker_ctl
+packages:
+- cassandra_docker
+- common
+properties: {}

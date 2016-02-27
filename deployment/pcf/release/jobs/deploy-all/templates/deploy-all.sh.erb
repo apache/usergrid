@@ -1,0 +1,317 @@
+#!/bin/bash
+
+export PATH="/var/vcap/packages/cf_cli/bin:$PATH"
+export CF=`which cf`
+
+function cf() {
+	echo cf "$@"
+	output=$($CF "$@" 2>&1)
+	result="$?"
+	if [ "$result" -ne "0" ]; then
+		echo "$output"
+		exit $result
+	fi
+}
+
+function is_true() {
+	equals_ignore_case "$1" "true"
+}
+
+function equals_ignore_case() {
+	echo "$1" | grep -i "^$2\$" >/dev/null
+}
+
+function import_opsmgr_variables() {
+	export SCHEME=https
+	export ADMIN_USER=<%= properties.cf.admin_user %>
+	export ADMIN_PASSWORD=<%= properties.cf.admin_password %>
+	export DOMAIN=<%= properties.domain %>
+	export APP_DOMAIN=<%= properties.app_domains[0] %>
+	export CF_ORG=<%= properties.org %>
+	export CF_ORG_QUOTA=<%= properties.org_quota %>
+	export CF_SPACE=<%= properties.space %>
+	export CF_TARGET=$SCHEME://api.${DOMAIN}
+	export CF_SKIP_SSL=<%= properties.ssl.skip_cert_verify %>
+	export SECURITY_USER_NAME=<%= properties.security.user %>
+	export SECURITY_USER_PASSWORD=<%= properties.security.password %>
+	export APPLY_OPEN_SECURITY_GROUP=<%= properties.apply_open_security_group %>
+}
+
+function prepare_cf_cli {
+	export PATH="/var/vcap/packages/cf_cli/bin:$PATH"
+	export CF_HOME=`pwd`/home/cf
+	mkdir -p $CF_HOME
+}
+
+function authenticate() {
+	$CF --version
+	if is_true "$CF_SKIP_SSL"; then
+		cf api $CF_TARGET --skip-ssl-validation
+	else
+		cf api $CF_TARGET
+	fi
+	cf auth $ADMIN_USER $ADMIN_PASSWORD
+}
+
+function setup_target_org() {
+	if [ -z "$CF_ORG" ]; then
+		CF_ORG=apache-usergrid-org
+	fi
+	if ! $CF org $CF_ORG >/dev/null; then
+		cf create-org $CF_ORG
+	fi
+	cf target -o $CF_ORG
+}
+
+function setup_org_quota() {
+	if [ -n "$CF_ORG_QUOTA" ]; then
+		export CF_QUOTA=${CF_ORG}-quota
+		if ! $CF quota $CF_QUOTA >/dev/null; then
+			cf create-quota $CF_QUOTA -m ${CF_ORG_QUOTA}m -r 10 -s 10
+		fi
+		cf update-quota $CF_QUOTA -m ${CF_ORG_QUOTA}m -r 10 -s 10 --disallow-paid-service-plans
+		cf set-quota $CF_ORG $CF_QUOTA
+	fi
+}
+
+function setup_target_space() {
+	if [ -z "$CF_SPACE" ]; then
+		CF_SPACE=apache-usergrid-space
+	fi
+	if ! $CF space $CF_SPACE >/dev/null; then
+		cf create-space $CF_SPACE
+	fi
+	cf target -s $CF_SPACE
+}
+
+function setup_package_path() {
+	if [ -z "$PACKAGE_PATH" ]; then
+		export PACKAGE_PATH=/var/vcap/packages
+	fi
+}
+
+function apply_open_security_group() {
+	if ! is_true "$1"; then
+		return
+	fi
+	if ! $CF security-group all_open >/dev/null; then
+		cf create-security-group all_open $PACKAGE_PATH/templates/all_open.json
+	fi
+	cf bind-running-security-group all_open
+}
+
+function add_env_vars() {
+	cf set-env $1 UAA_HOST "$SCHEME://uaa.$DOMAIN"
+	cf set-env $1 CC_HOST "$CF_TARGET"
+	cf set-env $1 LOGIN_HOST "$SCHEME://login.$DOMAIN"
+	cf set-env $1 ROOT "\$HOME"
+	cf set-env $1 SCHEME "$SCHEME"
+	cf set-env $1 VERIFY_SSL "$CF_SKIP_SSL"
+
+	# Adding additional properties that most spring based apps or internal apps seem to be expecting
+	cf set-env $1 CF_ORG "$CF_ORG"
+	cf set-env $1 CF_SPACE "$CF_SPACE"
+	cf set-env $1 CF_TARGET "$CF_TARGET"
+	cf set-env $1 SECURITY_USER_NAME "$SECURITY_USER_NAME"
+	cf set-env $1 SECURITY_USER_PASSWORD "$SECURITY_USER_PASSWORD"
+  cf set-env $1 JBP_CONFIG_TOMCAT "{ tomcat: { version: 7.0.62 }}"
+
+	es_hosts_json="<%= properties.elasticsearch.hosts %>"
+	ca_hosts_json="<%= properties.cassandra.hosts%>"
+
+  export ES_HOSTS=`echo $es_hosts_json | sed -e 's#\[##;s#\]##'`
+  export CA_HOSTS=`echo $ca_hosts_json | sed -e 's#\[##;s#\]##'`
+
+	cf set-env $1 elasticsearch.hosts "$ES_HOSTS"
+	cf set-env $1 cassandra.url "$CA_HOSTS"
+
+	cf set-env $1 usergrid.cluster_name "<%= properties.usergrid.cluster_name%>"
+  cf set-env $1 usergrid.sysadmin.approve.users  "<%= properties.usergrid.sysadmin.approve.users%>"
+  cf set-env $1 usergrid.sysadmin.approve.organizations  "<%= properties.usergrid.sysadmin.approve.organizations%>"
+  cf set-env $1 usergrid.sysadmin.login.name  "<%= properties.usergrid.sysadmin.login.name%>"
+  cf set-env $1 usergrid.sysadmin.login.email  "<%= properties.usergrid.sysadmin.login.email%>"
+  cf set-env $1 usergrid.sysadmin.login.password  "<%= properties.usergrid.sysadmin.login.password%>"
+  cf set-env $1 usergrid.sysadmin.login.allowed  "<%= properties.usergrid.sysadmin.login.allowed%>"
+  cf set-env $1 usergrid.setup-test-account  "<%= properties.usergrid.setup_test_account%>"
+  cf set-env $1 usergrid.test-account.app  "<%= properties.usergrid.test_account.app%>"
+  cf set-env $1 usergrid.test-account.organization  "<%= properties.usergrid.test_account.organization%>"
+  cf set-env $1 usergrid.test-account.admin-user.username  "<%= properties.usergrid.test_account.admin_user.username%>"
+  cf set-env $1 usergrid.test-account.admin-user.name  "<%= properties.usergrid.test_account.admin_user.name%>"
+  cf set-env $1 usergrid.test-account.admin-user.email  "<%= properties.usergrid.test_account.admin_user.email%>"
+  cf set-env $1 usergrid.test-account.admin-user.password  "<%= properties.usergrid.test_account.admin_user.password%>"
+
+  cf set-env $1 elasticsearch.client.type  "<%= properties.elasticsearch.client.type%>"
+
+  cf set-env $1 mail.smtps.host "<%= properties.mail.smtps.host%>"
+  cf set-env $1 mail.smtps.port "<%= properties.mail.smtps.port%>"
+  cf set-env $1 mail.smtps.auth "<%= properties.mail.smtps.auth%>"
+  cf set-env $1 mail.smtps.username "<%= properties.mail.smtps.username%>"
+  cf set-env $1 mail.smtps.password "<%= properties.mail.smtps.password%>"
+
+
+	# Dynamic plans (if defined)
+
+	# Custom variables from tile.yml
+}
+
+function add_cf_credentials() {
+	cf set-env $1 CF_ADMIN_USER "$ADMIN_USER"
+	cf set-env $1 CF_ADMIN_USERNAME "$ADMIN_USER"
+	cf set-env $1 CF_ADMIN_PASSWORD "$ADMIN_PASSWORD"
+}
+
+function delete_older_versions() {
+	PKG_NAME="$1"
+	APP_NAME="$2"
+	$CF apps | grep "$PKG_NAME" | grep -v "$APP_NAME" | while read app rest; do
+		cf delete -f $app
+	done
+}
+
+function wait_till_running() {
+	for i in `seq 1  6`; do
+		CF_TRACE=true $CF app "$1" | grep RUNNING | grep "$1" >/dev/null
+		if [ "$?" -ne "0" ]; then
+			sleep 10
+			echo "cf app $1   # waiting for running state"
+		else
+			break
+		fi
+	done
+}
+
+function deploy_app() {
+	PKG_NAME="$1"
+	APP_NAME="$2"
+	APP_HOST="$3"
+	DOCKER_IMAGE="$4"
+	NEEDS_CF_CREDS="$5"
+	HEALTH_CHECK="$6"
+	AUTO_SERVICES="$7"
+	cf push ${APP_NAME} -n ${APP_HOST} -d ${APP_DOMAIN} \
+		${DOCKER_IMAGE} -f $PACKAGE_PATH/${PKG_NAME}/manifest.yml -b https://github.com/cloudfoundry/java-buildpack \
+		--no-start
+	add_env_vars ${APP_NAME}
+	if is_true "$NEEDS_CF_CREDS"; then
+		add_cf_credentials ${APP_NAME}
+	fi
+	if [ -n "$HEALTH_CHECK" ]; then
+		cf set-health-check ${APP_NAME} "$HEALTH_CHECK"
+	fi
+	provision_auto_services ${PKG_NAME} ${APP_NAME} ${AUTO_SERVICES}
+	cf start ${APP_NAME}
+	wait_till_running ${APP_NAME}
+	delete_older_versions ${PKG_NAME} ${APP_NAME}
+}
+
+function provision_auto_services() {
+	PKG_NAME="$1"
+	APP_NAME="$2"
+	shift; shift
+	for service in $*; do
+		if equals_ignore_case "$service" "none"; then
+			continue
+		fi
+		$CF services | grep ${PKG_NAME}-$service >/dev/null
+		if [ "$?" -ne "0" ]; then
+			plan=`$CF marketplace | grep $service | awk '{ print $2 }' | sed 's/,//g'`
+			if [ -n "$plan" ]; then
+				cf create-service $service $plan ${PKG_NAME}-$service
+			else
+				echo "no service matching" $service "in marketplace"
+				exit 1
+			fi
+		fi
+		cf bind-service ${APP_NAME} ${PKG_NAME}-$service
+	done
+}
+
+function register_broker() {
+	BROKER_NAME="$1"
+	BROKER_USER="$2"
+	BROKER_PASS="$3"
+	BROKER_URL="$4"
+	GLOBAL_ACCESS="$5"
+	BROKER_SERVICES="$6"
+	$CF service-brokers | grep $BROKER_NAME >/dev/null
+	if [ "$?" -ne "0" ]; then
+		cf create-service-broker "$BROKER_NAME" "$BROKER_USER" "$BROKER_PASS" "$BROKER_URL"
+	else
+		cf update-service-broker "$BROKER_NAME" "$BROKER_USER" "$BROKER_PASS" "$BROKER_URL"
+	fi
+	if is_true "$GLOBAL_ACCESS"; then
+		publicize_services "$BROKER_NAME" "$BROKER_SERVICES"
+	fi
+}
+
+function publicize_services() {
+	BROKER_NAME="$1"
+	BROKER_SERVICES="$2"
+	services_url=`$CF curl /v2/services?q=label:$BROKER_NAME | grep service_plans_url | awk '{ print $2 }' | sed 's/[",]//g'`
+	if [ -n "$services_url" ]; then
+		services=`$CF curl $services_url | grep "\"url\"" | awk '{ print $2 }' | sed 's/[",]//g'`
+		for service in $services; do
+			cf curl $service -X PUT -d '{"public": true}'
+		done
+	elif [ -n "$BROKER_SERVICES" ] && [ "$BROKER_SERVICES" != "INTERNAL_SERVICE_NAME" ]; then
+		# Rely on the internal plan names if we cannot get it from the /v2/services on the broker
+		for service_name in `echo "$BROKER_SERVICES" | sed -e 's/,/ /g;s/;/ /g'`
+		do
+			cf enable-service-access $service_name
+		done
+	else
+		services=`$CF service-access | awk "/broker: ${BROKER_NAME}/{flag=1;next}/broker: /{flag=0}flag" | egrep -v "access *orgs" | grep "."  | awk '{print $1}' | uniq `
+		for service_name in $services; do
+			cf enable-service-access $service_name
+		done
+	fi
+}
+
+function push_buildpack() {
+	BUILDPACK_NAME="$1"
+	BUILDPACK_ORDER="$2"
+	BUILDPACK_FILE="$3"
+	$CF buildpacks | grep ${BUILDPACK_NAME} >/dev/null
+	if [ "$?" -eq "0" ]; then
+		cf update-buildpack $BUILDPACK_NAME -p $BUILDPACK_FILE --enable
+	else
+		cf create-buildpack $BUILDPACK_NAME $BUILDPACK_FILE $BUILDPACK_ORDER --enable
+	fi
+}
+
+import_opsmgr_variables
+prepare_cf_cli
+authenticate
+setup_target_org
+setup_org_quota
+setup_target_space
+setup_package_path
+apply_open_security_group "$APPLY_OPEN_SECURITY_GROUP"
+
+# Deploy package elasticsearch_docker
+#
+
+
+
+
+# Deploy package cassandra_docker
+#
+
+
+
+
+# Deploy package usergrid_app
+#
+
+export PKG_NAME=usergrid_app
+export APP_NAME=usergrid_app-0.0.3
+export APP_HOST=usergrid_app
+export DOCKER_IMAGE=""
+export NEEDS_CF_CREDS=""
+export HEALTH_CHECK=""
+export AUTO_SERVICES=""
+export AUTO_SERVICES="${AUTO_SERVICES} <%= properties.usergrid_app.persistence_store_type %>"
+deploy_app "$PKG_NAME" "$APP_NAME" "$APP_HOST" "$DOCKER_IMAGE" "$NEEDS_CF_CREDS" "$HEALTH_CHECK" "$AUTO_SERVICES"
+
+
+

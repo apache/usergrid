@@ -1,0 +1,5 @@
+check process docker-bosh-cassandra_docker
+  with pidfile /var/vcap/sys/run/docker-bosh-cassandra_docker/docker-bosh-cassandra_docker.pid
+  start program "/var/vcap/jobs/docker-bosh-cassandra_docker/bin/docker-bosh-cassandra_docker_ctl start"
+  stop program "/var/vcap/jobs/docker-bosh-cassandra_docker/bin/docker-bosh-cassandra_docker_ctl stop"
+  group vcap

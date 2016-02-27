@@ -1,0 +1,8 @@
+---
+name: docker-bosh-elasticsearch_docker
+templates:
+  docker-bosh-elasticsearch_docker.sh.erb: bin/docker-bosh-elasticsearch_docker_ctl
+packages:
+- elasticsearch_docker
+- common
+properties: {}

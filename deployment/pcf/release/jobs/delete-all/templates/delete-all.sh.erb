@@ -1,0 +1,113 @@
+#!/bin/bash
+
+export PATH="/var/vcap/packages/cf_cli/bin:$PATH"
+export CF=`which cf`
+
+function cf() {
+	echo cf "$@"
+	output=$($CF "$@" 2>&1)
+	result="$?"
+	if [ "$result" -ne "0" ]; then
+		echo "$output"
+		# No exit here - best effort continuation on failure for the delete script
+	fi
+}
+
+function is_true() {
+	equals_ignore_case "$1" "true"
+}
+
+function equals_ignore_case() {
+	echo "$1" | grep -i "^$2\$" >/dev/null
+}
+
+function import_opsmgr_variables() {
+	export SCHEME=https
+	export ADMIN_USER=<%= properties.cf.admin_user %>
+	export ADMIN_PASSWORD=<%= properties.cf.admin_password %>
+	export DOMAIN=<%= properties.domain %>
+	export APP_DOMAIN=<%= properties.app_domains[0] %>
+	export CF_ORG=<%= properties.org %>
+	export CF_SPACE=<%= properties.space %>
+	export CF_TARGET=$SCHEME://api.${DOMAIN}
+	export CF_SKIP_SSL=<%= properties.ssl.skip_cert_verify %>
+}
+
+function prepare_cf_cli {
+	export PATH="/var/vcap/packages/cf_cli/bin:$PATH"
+	export CF_HOME=`pwd`/home/cf
+	mkdir -p $CF_HOME
+}
+
+function authenticate() {
+	$CF --version
+	if is_true "$CF_SKIP_SSL"; then
+		cf api $CF_TARGET --skip-ssl-validation
+	else
+		cf api $CF_TARGET
+	fi
+	cf auth $ADMIN_USER $ADMIN_PASSWORD
+}
+
+function target_org() {
+	if [ -z "$CF_ORG" ]; then
+		CF_ORG=apache-usergrid-org
+	fi
+	cf target -o $CF_ORG >/dev/null
+}
+
+function target_space() {
+	if [ -z "$CF_SPACE" ]; then
+		CF_SPACE=apache-usergrid-space
+	fi
+	cf target -s $CF_SPACE >/dev/null
+}
+
+function delete_empty_space() {
+	output=`$CF apps | tail -1`
+	if [ "$output" == "No apps found" ]; then
+		cf delete-space -f $CF_SPACE
+	fi
+}
+
+function delete_empty_org() {
+	output=`$CF spaces | tail -1`
+	if [ "$output" == "No spaces found" ]; then
+		cf delete-org -f $CF_ORG
+	fi
+}
+
+function delete_all_versions() {
+	$CF apps | grep "$1-" | while read app rest; do
+		cf delete -f $app
+	done
+}
+
+function delete_service_broker() {
+    services=`$CF service-access | awk "/broker: $1/{flag=1;next}/broker: /{flag=0}flag" | egrep -v "access *orgs" | grep "."  | awk '{print $1}' | uniq`
+    for service in $services; do
+      cf purge-service-offering -f "$service"
+    done
+    cf delete-service-broker -f $1
+}
+
+import_opsmgr_variables
+prepare_cf_cli
+authenticate
+if target_org; then
+	if target_space; then
+
+		# Delete package usergrid_app
+		#
+		delete_all_versions usergrid_app
+
+		# Delete package cassandra_docker
+		#
+
+		# Delete package elasticsearch_docker
+		#
+
+		delete_empty_space
+	fi
+	delete_empty_org
+fi

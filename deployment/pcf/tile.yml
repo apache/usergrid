@@ -1,0 +1,256 @@
+---
+# The high-level description of your tile.
+# Replace these properties with real values.
+#
+name: apache-usergrid # By convention lowercase with dashes
+icon_file: resources/usergrid.png
+label: Apache Usergrid - Open Source mBaaS
+description: Apache's only mBaaS project
+
+# Global defaults (all optional)
+#
+# org: test-org                         # Name of org to create for your apps
+# org_quota: 4096                       # Memory quota for that org in MB
+# space: test-space                     # Name of space to create for your apps
+apply_open_security_group: true         # Apply open security group, default: false
+
+# Specify the packages to be included in your tile.
+# The format of the section to include depends on the type
+# of package you are describing. For fragments of each type
+# that you can copy & paste, see:
+#
+# https://github.com/cf-platform-eng/tile-generator/blob/master/README.md
+#
+packages:
+- name: elasticsearch-docker
+  type: docker-bosh
+  files:
+  - path: resources/elasticsearch-1.7.tgz
+  #  docker_images:
+  #    - elasticsearch:1.7
+  cpu: 2
+  memory: 4096
+  ephemeral_disk: 4096
+  persistent_disk: 2048
+  instances: 1
+
+  manifest: |
+    containers:
+      - name: usergrid_elasticsearch
+        image: elasticsearch:1.7
+
+- name: cassandra-docker
+  type: docker-bosh
+  files:
+  - path: resources/cassandra-2.1.tgz
+#  docker_images:
+#    - cassandra:2.1
+  cpu: 4
+  memory: 4096
+  ephemeral_disk: 4096
+  persistent_disk: 4096
+  instances: (( .properties.cassandra_instances))
+
+  manifest: |
+    containers:
+      - name: usergrid_cassandra
+        image: cassandra:2.1
+
+- name: usergrid-app
+  type: app
+  memory: 2048M
+  instances: (( .properties.tomcat_instances ))
+  env:
+    pcf_cassandra_hosts: ((.cassandra-docker.ips))
+    pcf_elasticsearch_hosts: ((.elasticsearch-docker.ips))
+
+    elasticsearch.hosts: ((.elasticsearch-docker.ips))
+    elasticsearch.client.type:  TRANSPORT
+
+    cassandra.url: ((.cassandra-docker.ips))
+
+    usergrid.cluster_name: ((.properties.usergrid_cluster))
+
+    usergrid.sysadmin.approve.users: false
+    usergrid.sysadmin.approve.organizations: false
+
+    usergrid.sysadmin.login.name: ((.properties.sysadmin_name))
+    usergrid.sysadmin.login.email: ((.properties.sysadmin_email))
+    usergrid.sysadmin.login.password: ((.properties.sysadmin_password))
+    usergrid.sysadmin.login.allowed: true
+
+    usergrid.setup-test-account: true
+    usergrid.test-account.app: test-app
+    usergrid.test-account.organization: test-organization
+    usergrid.test-account.admin-user.username: test
+    usergrid.test-account.admin-user.name: Test User
+    usergrid.test-account.admin-user.email: baasadmins+pcf@apigee.com
+    usergrid.test-account.admin-user.password: test
+
+  manifest:
+    path: resources/ROOT.war
+
+
+#   command: python app.py
+#   memory: 256M
+
+# Include stemcell criteria if you don't want to accept the default.
+# Since this stemcell is only used to run pre and post errands, we
+# strongly recommend you leave this alone so that your tile always
+# runs with the latest stemcell.
+#
+# stemcell_criteria:
+#   os: ubuntu-trusty
+#   requires_cpi: false
+#   version: '3062'
+
+# Add properties you want to pass to your applications.
+# Properties specified here will not be configurable by the user.
+#
+# properties:
+# - name: example_property
+#   type: string
+#   default: specify a value
+#   label: Label for the field on the GUI
+#   description: Longer description of the field's purpose
+
+# Uncomment this section if you want to display forms with configurable
+# properties in Ops Manager. These properties will be passed to your
+# applications as environment variables. You can also refer to them
+# elsewhere in this template by using:
+#     (( .properties.<property-name> ))
+# 
+# forms:
+# - name: buildpack_properties
+#   label: Buildpack
+#   description: Buildpack_properties
+#   properties:
+#   - name: buildpack_rank
+#     type: integer
+#     default: 0
+#     label: Buildpack rank for this buildpack_rank
+#     description: Ranking of this buildpack relative to others
+
+#
+#AS_ADMIN=
+#AS_ADMIN_EMAIL=
+#AS_PASSWD=
+
+#SMTPHOST=
+#SMTPPORT=
+#SMTPSSL=
+#SMTPUSER=
+#SMTPPASSWORD=
+
+#CASS_HOSTS=
+#CASS_USERNAME=
+#CASS_PASSWORD=
+
+#ES_HOSTS=
+
+#BAAS_USERGRID_CLUSTERNAME=
+#BAAS_USERGRID_URL=
+#BAAS_CASS_LOCALDC=
+#BAAS_CASS_REPLICATION=
+#BAAS_PORTAL_URL=
+#BAAS_PORTAL_LISTEN_PORT=```
+#
+
+forms:
+- name: usergrid-form-1
+  label: Test Tile
+  description: Custom Properties for Usergrid
+  properties:
+  - name: usergrid_org_name
+    type: string
+    label: Usergrid Org Name
+    description: The name of the org created when the tile is deployed
+
+  - name: usergrid_cluster
+    type: string
+    default: 'usergrid_rox'
+    label: Usergrid Cluster Name
+    description: Used for multi-region blah foo bar
+
+  - name: sysadmin_name
+    type: string
+    label: Sys Admin User Name
+    description: Sys Admin User Name
+
+  - name: sysadmin_email
+    type: string
+    default: 'pcf@usergrid.com'
+    label: Sys Admin Email
+    description: Email Address of System Administrator
+
+  - name: sysadmin_password
+    type: string
+    label: Sys Admin Password
+    description: Password for System Administrator login
+
+  - name: smtp_host
+    type: string
+    label: SMTP Host
+    description: Hostname for SMTP
+
+  - name: smtp_user
+    type: string
+    label: SMTP Username
+    description: User for SMTP
+
+  - name: smtp_password
+    type: string
+    label: SMTP Password
+    description: Password for User for SMTP
+
+  - name: smtp_port
+    type: int
+    label: SMTP Port
+    description: Port for SMTP
+
+  - name: tomcat_instances
+    type: dropdown_select
+    options:
+    - name: 1
+      label: 1
+      default: true
+    - name: 2
+      label: 2
+
+  - name: cassandra_replication
+    type: int
+    label: Cassandra Replication
+    description: Cassandra Replication
+
+  - name: cassandra_username
+    type: string
+    label: Cassandra Username
+    description: Cassandra Username
+
+  - name: cassandra_password
+    type: string
+    label: Cassandra Password
+    description: Cassandra Password
+
+  - name: cassandra_instances
+    type: dropdown_select
+    options:
+    - name: 1
+      label: 1
+      default: true
+    - name: 3
+      label: 3
+    - name: 6
+      label: 6
+
+  - name: elasticsearch_instances
+    type: dropdown_select
+    options:
+    - name: 1
+      label: 1
+      default: true
+    - name: 3
+      label: 3
+    - name: 6
+      label: 6
+

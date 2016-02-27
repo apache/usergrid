@@ -1,0 +1,21 @@
+---
+cassandra_docker/cassandra-2.1.tgz:
+  object_id: 30edf25b-705a-4fe5-aa51-c10e958672f2
+  sha: ac7b9a9140badd542e8ddef228d3e6a63798c6b2
+  size: 378960896
+cf_cli/cf-linux-amd64.tgz:
+  object_id: 969684aa-8365-4b4c-81f9-a1791e0b80f0
+  sha: ea9477a5336baef3b554c2c8767dcb4224b22226
+  size: 5644552
+elasticsearch_docker/elasticsearch-1.7.tgz:
+  object_id: 0345f798-8506-4a72-a939-f8377f06f986
+  sha: 68b0b69970262f0a2631aa11f8b0e6c98d067284
+  size: 352664576
+usergrid_app/manifest.yml:
+  object_id: b29ed9b6-fce6-4daf-a545-4b6fbba0718d
+  sha: 3b077df15d1312892c88541c5c81f518a77a9621
+  size: 19
+usergrid_app/ROOT.war:
+  object_id: 9a2e3576-0c0f-449c-8ab5-038d6e3c68ac
+  sha: 0d09c0020df0bd7efadf8a94b5f64667e6268f41
+  size: 65491334
