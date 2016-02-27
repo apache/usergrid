@@ -61,7 +61,7 @@ module.exports = {
                             email: id + "@uge2e.com"
                         });
                     }
-                    async.each(
+                    async.eachSeries(
                         userArr,
                         function(user, cb) {
                             users.add(user, function(err, user) {
@@ -86,7 +86,7 @@ module.exports = {
                             longitude: -121.894249
                         }
                     };
-                    async.parallel([
+                    async.series([
                             function(cb) {
 
                                 entities.create('dogs', entity, numberOfRecords, function(err, body) {

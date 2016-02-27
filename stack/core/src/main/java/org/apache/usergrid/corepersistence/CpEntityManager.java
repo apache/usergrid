@@ -747,17 +747,6 @@ public class CpEntityManager implements EntityManager {
 
         Set<String> existingCollections = getRelationManager( getApplication() ).getCollections();
 
-        //Handles reading custom collections.
-//        Set<String> dynamic_collections = cast( getDictionaryAsSet( getApplicationRef(), Schema.DICTIONARY_COLLECTIONS ) );
-//        if ( dynamic_collections != null ) {
-//            for ( String collection : dynamic_collections ) {
-//                if ( !Schema.isAssociatedEntityType( collection ) ) {
-//                    if(!existingCollections.contains( collection )) {
-//                        existingCollections.add( collection );
-//                    }
-//                }
-//            }
-//        }
         Set<String> system_collections = Schema.getDefaultSchema().getCollectionNames( Application.ENTITY_TYPE );
         if ( system_collections != null ) {
             for ( String collection : system_collections ) {
