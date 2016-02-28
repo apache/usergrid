@@ -88,6 +88,13 @@ public interface AsyncEventService extends ReIndexAction {
      */
     long getQueueDepth();
 
+    /**
+     * name of current queue manager implemented
+     * @return
+     */
+    String getQueueManagerClass();
+
+
 
 
 }
