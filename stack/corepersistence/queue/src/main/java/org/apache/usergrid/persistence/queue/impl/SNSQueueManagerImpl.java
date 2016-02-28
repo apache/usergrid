@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
+import com.amazonaws.ClientConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,6 +88,7 @@ public class SNSQueueManagerImpl implements QueueManager {
     private final QueueFig fig;
     private final ClusterFig clusterFig;
     private final CassandraFig cassandraFig;
+    private final ClientConfiguration clientConfiguration;
     private final AmazonSQSClient sqs;
     private final AmazonSNSClient sns;
     private final AmazonSNSAsyncClient snsAsync;
@@ -164,6 +166,11 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
         final Region region = getRegion();
+
+        this.clientConfiguration = new ClientConfiguration()
+            .withConnectionTimeout(queueFig.getQueueClientConnectionTimeout())
+            .withSocketTimeout(queueFig.getQueueClientSocketTimeout())
+            .withGzip(true);
 
         try {
             sqs = createSQSClient( region );
@@ -329,10 +336,10 @@ public class SNSQueueManagerImpl implements QueueManager {
      */
 
     private AmazonSNSAsyncClient createAsyncSNSClient( final Region region, final ExecutorService executor ) {
+
         final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
-
-
-        final AmazonSNSAsyncClient sns = new AmazonSNSAsyncClient( ugProvider.getCredentials(), executor );
+        final AmazonSNSAsyncClient sns =
+            new AmazonSNSAsyncClient( ugProvider.getCredentials(), clientConfiguration, executor );
 
         sns.setRegion( region );
 
@@ -344,9 +351,10 @@ public class SNSQueueManagerImpl implements QueueManager {
      * Create the async sqs client
      */
     private AmazonSQSAsyncClient createAsyncSQSClient( final Region region, final ExecutorService executor ) {
-        final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
 
-        final AmazonSQSAsyncClient sqs = new AmazonSQSAsyncClient( ugProvider.getCredentials(), executor );
+        final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
+        final AmazonSQSAsyncClient sqs =
+            new AmazonSQSAsyncClient( ugProvider.getCredentials(),clientConfiguration,  executor );
 
         sqs.setRegion( region );
 
@@ -358,9 +366,10 @@ public class SNSQueueManagerImpl implements QueueManager {
      * The Synchronous SNS client is used for creating topics and subscribing queues.
      */
     private AmazonSNSClient createSNSClient( final Region region ) {
-        final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
 
-        final AmazonSNSClient sns = new AmazonSNSClient( ugProvider.getCredentials() );
+        final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
+        final AmazonSNSClient sns =
+            new AmazonSNSClient( ugProvider.getCredentials(), clientConfiguration );
 
         sns.setRegion( region );
 
@@ -663,8 +672,10 @@ public class SNSQueueManagerImpl implements QueueManager {
      * Create the SQS client for the specified settings
      */
     private AmazonSQSClient createSQSClient( final Region region ) {
+
         final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
-        final AmazonSQSClient sqs = new AmazonSQSClient( ugProvider.getCredentials() );
+        final AmazonSQSClient sqs =
+            new AmazonSQSClient( ugProvider.getCredentials(), clientConfiguration );
 
         sqs.setRegion( region );
 

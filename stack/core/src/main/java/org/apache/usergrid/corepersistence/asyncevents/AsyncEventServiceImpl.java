@@ -825,5 +825,11 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         }
     }
 
+    public String getQueueManagerClass() {
+
+        return queue.getClass().getSimpleName();
+
+    }
+
 
 }
