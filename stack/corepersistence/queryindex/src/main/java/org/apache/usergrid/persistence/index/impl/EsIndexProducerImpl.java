@@ -132,7 +132,7 @@ public class EsIndexProducerImpl implements IndexProducer {
 
         //buffer into the max size we can send ES and fire them all off until we're completed
         final Observable<BulkRequestBuilder> requests = batchOps
-            .buffer(indexFig.getIndexBatchSize(), 1000, TimeUnit.MILLISECONDS)
+            .buffer(250, TimeUnit.MILLISECONDS, indexFig.getIndexBatchSize())
 
             //flatten the buffer into a single batch execution
             .flatMap(individualOps -> Observable.from(individualOps)
