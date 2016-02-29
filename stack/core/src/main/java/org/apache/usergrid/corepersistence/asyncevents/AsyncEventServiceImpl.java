@@ -244,7 +244,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         try {
             return queue.getMessages(MAX_TAKE,
                     indexProcessorFig.getIndexQueueVisibilityTimeout(),
-                    queueFig.getQueueClientSocketTimeout() - 1000, // 1 second less than socket timeout
+                    Math.max(1000, queueFig.getQueueClientSocketTimeout() - 1000), // 1 sec less than socket timeout
                     AsyncEvent.class);
         }
         //stop our timer
