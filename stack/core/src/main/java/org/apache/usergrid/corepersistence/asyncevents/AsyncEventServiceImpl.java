@@ -242,13 +242,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         final Timer.Context timer = this.readTimer.time();
 
         try {
-            return queue.getMessages(MAX_TAKE,
-                    indexProcessorFig.getIndexQueueVisibilityTimeout(),
-                    Math.max(1000, queueFig.getQueueClientSocketTimeout() - 1000), // 1 sec less than socket timeout
-                    AsyncEvent.class);
+            return queue.getMessages(MAX_TAKE, AsyncEvent.class);
         }
-        //stop our timer
         finally {
+            //stop our timer
             timer.stop();
         }
     }
