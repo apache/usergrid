@@ -169,7 +169,7 @@ public class QueueListener  {
         while ( true ) {
 
                 Timer.Context timerContext = timer.time();
-                rx.Observable.from(queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 10000, ApplicationQueueMessage.class))
+                rx.Observable.from(queueManager.getMessages(getBatchSize(), ApplicationQueueMessage.class))
                     .buffer(getBatchSize())
                     .doOnNext(messages -> {
 
