@@ -1,0 +1,8 @@
+---
+name: elasticsearch_docker
+
+dependencies: []
+
+files:
+- templates/all_open.json
+- elasticsearch_docker/elasticsearch-1.7.tgz

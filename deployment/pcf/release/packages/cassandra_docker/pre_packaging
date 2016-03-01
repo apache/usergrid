@@ -1,0 +1,2 @@
+# abort script on any command that exits with a non zero value
+set -e

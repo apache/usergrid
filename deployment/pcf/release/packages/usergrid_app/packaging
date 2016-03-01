@@ -1,0 +1,7 @@
+# abort script on any command that exit with a non zero value
+set -e
+
+cp -r templates ${BOSH_INSTALL_TARGET}
+
+cp usergrid_app/ROOT.war ${BOSH_INSTALL_TARGET}
+cp usergrid_app/manifest.yml ${BOSH_INSTALL_TARGET}

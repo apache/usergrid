@@ -1,0 +1,127 @@
+---
+name: deploy-all
+templates:
+  deploy-all.sh.erb: bin/run
+packages:
+  - cf_cli
+  - elasticsearch_docker
+  - cassandra_docker
+  - usergrid_app
+properties:
+  domain:
+    description: 'CloudFoundry system domain'
+  app_domains:
+    description: 'CloudFoundry application domains'
+  org:
+    description: 'Org for the Application'
+    default: ''
+  space:
+    description: 'Space for the Application'
+    default: ''
+  ssl.skip_cert_verify:
+    description: 'Whether to verify SSL certs when making web requests'
+  cf.admin_user:
+    description: 'Username of the CF admin user'
+  cf.admin_password:
+    description: 'Password of the CF admin user'
+  org_quota:
+    description: 'Org Memory Quota for the Application'
+    default: 1024
+  apply_open_security_group:
+    description: 'Open security group for the app to access outside'
+    default: true
+  security.user:
+    description: 'Basic auth user'
+  security.password:
+    description: 'Basic auth password'
+
+  elasticsearch.client.type:
+    description: 'The NODE or TRANSPORT type of client for connecting to ES'
+    default: 'TRANSPORT'
+
+  elasticsearch.hosts:
+    description: 'test'
+
+  cassandra.hosts:
+    description: 'test'
+
+  usergrid_app.name:
+    description: 'Name of package'
+
+  usergrid.cluster_name:
+    description: 'test'
+    default: 'usergrid'
+
+  usergrid.tomcat_instances:
+    description: number of instances
+    default: 1
+
+  usergrid.sysadmin.approve.users:
+    description: 'test'
+    default: false
+
+  usergrid.sysadmin.approve.organizations:
+    description: 'test'
+    default: false
+
+  usergrid.sysadmin.login.name:
+    description: 'test'
+
+  usergrid.sysadmin.login.email:
+    description: 'test'
+    default: 'superuser@usergrid.com'
+
+  usergrid.sysadmin.login.password:
+    description: 'test'
+
+  usergrid.sysadmin.login.allowed:
+    description: 'true'
+    default: true
+
+  usergrid.setup_test_account:
+    description: 'test'
+    default: true
+
+  usergrid.test_account.app:
+    description: 'test'
+    default: test-app
+
+  usergrid.test_account.organization:
+    description: 'test'
+    default: test-organization
+
+  usergrid.test_account.admin_user.username:
+    description: 'test'
+    default: 'test'
+
+  usergrid.test_account.admin_user.name:
+    description: 'test'
+    default: 'Test User'
+
+  usergrid.test_account.admin_user.email:
+    description: 'test'
+    default: 'user@usergrid.com'
+
+  usergrid.test_account.admin_user.password:
+    description: 'test'
+    default: 'test'
+
+  mail.smtps.host:
+    description: 'test'
+    default: 'test'
+
+  mail.smtps.port:
+    description: 'test'
+    default: 'test'
+
+  mail.smtps.auth:
+    description: 'test'
+    default: false
+
+  mail.smtps.username:
+    description: 'test'
+    default: 'test'
+
+  mail.smtps.password:
+    description: 'test'
+    default: 'test'

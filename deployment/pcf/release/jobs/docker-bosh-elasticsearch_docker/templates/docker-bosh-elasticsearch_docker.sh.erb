@@ -1,0 +1,51 @@
+#!/bin/bash
+
+set -e # exit immediately if a simple command exits with a non-zero status
+set -u # report the usage of uninitialized variables
+
+# Setup env vars and folders
+RUN_DIR=/var/vcap/sys/run/docker-bosh-elasticsearch_docker
+LOG_DIR=/var/vcap/sys/log/docker-bosh-elasticsearch_docker
+PACKAGES_DIR=/var/vcap/packages/elasticsearch_docker
+
+PIDFILE=$RUN_DIR/docker-bosh-elasticsearch_docker.pid
+
+source /var/vcap/packages/common/utils.sh
+
+case $1 in
+
+  start)
+    pid_guard $PIDFILE docker-bosh-elasticsearch_docker
+
+    mkdir -p $RUN_DIR
+    mkdir -p $LOG_DIR
+
+    chown vcap:vcap $RUN_DIR
+    chown -R vcap:vcap $LOG_DIR
+
+    echo $$ > $PIDFILE
+    chown vcap:vcap $PIDFILE
+
+    for image in $PACKAGES_DIR/*.tgz; do
+      /var/vcap/packages/docker/bin/docker \
+        --host unix:///var/vcap/sys/run/docker/docker.sock \
+        load -i $image \
+        >>$LOG_DIR/docker-bosh-elasticsearch_docker.stdout.log \
+        2>>$LOG_DIR/docker-bosh-elasticsearch_docker.stderr.log
+    done
+
+    # do nothing forever
+    exec tail -f /dev/null
+    ;;
+
+  stop)
+    kill_and_wait $PIDFILE
+
+    ;;
+  *)
+    echo "Usage: docker-bosh-elasticsearch_docker_ctl {start|stop}"
+
+    ;;
+
+esac
+exit 0

@@ -1,0 +1,5 @@
+check process docker-bosh-elasticsearch_docker
+  with pidfile /var/vcap/sys/run/docker-bosh-elasticsearch_docker/docker-bosh-elasticsearch_docker.pid
+  start program "/var/vcap/jobs/docker-bosh-elasticsearch_docker/bin/docker-bosh-elasticsearch_docker_ctl start"
+  stop program "/var/vcap/jobs/docker-bosh-elasticsearch_docker/bin/docker-bosh-elasticsearch_docker_ctl stop"
+  group vcap

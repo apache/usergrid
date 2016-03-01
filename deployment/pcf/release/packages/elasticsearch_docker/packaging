@@ -1,0 +1,6 @@
+# abort script on any command that exit with a non zero value
+set -e
+
+cp -r templates ${BOSH_INSTALL_TARGET}
+
+cp elasticsearch_docker/elasticsearch-1.7.tgz ${BOSH_INSTALL_TARGET}

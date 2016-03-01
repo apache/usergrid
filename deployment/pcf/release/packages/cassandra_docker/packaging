@@ -1,0 +1,6 @@
+# abort script on any command that exit with a non zero value
+set -e
+
+cp -r templates ${BOSH_INSTALL_TARGET}
+
+cp cassandra_docker/cassandra-2.1.tgz ${BOSH_INSTALL_TARGET}

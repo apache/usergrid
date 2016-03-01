@@ -1,0 +1,6 @@
+---
+blobstore:
+  provider: local
+  options:
+    blobstore_path: /tmp/apache-usergrid-blobs
+final_name: apache-usergrid

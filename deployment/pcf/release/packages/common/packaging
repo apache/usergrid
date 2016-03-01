@@ -1,0 +1,3 @@
+set -e -x
+
+cp -a common/* ${BOSH_INSTALL_TARGET}
