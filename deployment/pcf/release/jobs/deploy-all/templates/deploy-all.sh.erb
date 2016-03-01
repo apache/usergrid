@@ -125,26 +125,26 @@ function add_env_vars() {
 	cf set-env $1 elasticsearch.hosts "$ES_HOSTS"
 	cf set-env $1 cassandra.url "$CA_HOSTS"
 
-  elasticsearch_client_type="<%= properties.elasticsearch.client.type%>"
-  cluster_name="<%= properties.usergrid.cluster_name%>"
-  approve_users="<%= properties.usergrid.sysadmin.approve.users%>"
-  approve_organizations="<%= properties.usergrid.sysadmin.approve.organizations%>"
-  login_name="<%= properties.usergrid.sysadmin.login.name%>"
-  login_email="<%= properties.usergrid.sysadmin.login.email%>"
-  login_password="<%= properties.usergrid.sysadmin.login.password%>"
-  login_allowed="<%= properties.usergrid.sysadmin.login.allowed%>"
-  setup_test_account="<%= properties.usergrid.setup_test_account%>"
-  test_account_app="<%= properties.usergrid.test_account.app%>"
-  test_account_organization="<%= properties.usergrid.test_account.organization%>"
-  test_account_admin_user_username="<%= properties.usergrid.test_account.admin_user.username%>"
-  test_account_admin_user_name="<%= properties.usergrid.test_account.admin_user.name%>"
-  test_account_admin_user_email="<%= properties.usergrid.test_account.admin_user.email%>"
-  test_account_admin_user_password="<%= properties.usergrid.test_account.admin_user.password%>"
-  smtps_host="<%= properties.mail.smtps.host%>"
-  smtps_port="<%= properties.mail.smtps.port%>"
-  smtps_auth="<%= properties.mail.smtps.auth%>"
-  smtps_username="<%= properties.mail.smtps.username%>"
-  smtps_password="<%= properties.mail.smtps.password%>"
+  export elasticsearch_client_type="<%= properties.elasticsearch.client.type%>"
+  export cluster_name="<%= properties.usergrid.cluster_name%>"
+  export approve_users="<%= properties.usergrid.sysadmin.approve.users%>"
+  export approve_organizations="<%= properties.usergrid.sysadmin.approve.organizations%>"
+  export login_name="<%= properties.usergrid.sysadmin.login.name%>"
+  export login_email="<%= properties.usergrid.sysadmin.login.email%>"
+  export login_password="<%= properties.usergrid.sysadmin.login.password%>"
+  export login_allowed="<%= properties.usergrid.sysadmin.login.allowed%>"
+  export setup_test_account="<%= properties.usergrid.setup_test_account%>"
+  export test_account_app="<%= properties.usergrid.test_account.app%>"
+  export test_account_organization="<%= properties.usergrid.test_account.organization%>"
+  export test_account_admin_user_username="<%= properties.usergrid.test_account.admin_user.username%>"
+  export test_account_admin_user_name="<%= properties.usergrid.test_account.admin_user.name%>"
+  export test_account_admin_user_email="<%= properties.usergrid.test_account.admin_user.email%>"
+  export test_account_admin_user_password="<%= properties.usergrid.test_account.admin_user.password%>"
+  export smtps_host="<%= properties.mail.smtps.host%>"
+  export smtps_port="<%= properties.mail.smtps.port%>"
+  export smtps_auth="<%= properties.mail.smtps.auth%>"
+  export smtps_username="<%= properties.mail.smtps.username%>"
+  export smtps_password="<%= properties.mail.smtps.password%>"
 
 
   cf set-env $ JAVA_OPTS " -Dcassandra.url=$CA_HOSTS -Delasticsearch.hosts=$ES_HOSTS \
@@ -179,15 +179,33 @@ function delete_older_versions() {
 }
 
 function wait_till_running() {
-	for i in `seq 1  6`; do
+
+	for i in `seq 1  10`; do
 		CF_TRACE=true $CF app "$1" | grep RUNNING | grep "$1" >/dev/null
 		if [ "$?" -ne "0" ]; then
-			sleep 10
+			sleep 30
 			echo "cf app $1   # waiting for running state"
 		else
 			break
 		fi
 	done
+}
+
+function bootstrap_usergrid() {
+
+  echo "App is running, attempting Usergrid /system/database/setup"
+  echo " These calls do the following"
+  echo "1) Create the cassandra keyspace"
+  echo "2) Initialize the ElasticSearch indexes"
+
+  ug_db_setup=`curl -k -X PUT https://${APP_HOST}.${APP_DOMAIN}/system/database/setup -u ${login_name}:${login_password}`
+  echo $ug_db_setup
+
+  echo "App is running, Usergrid /system/database/setup finished, attempting Usergrid /system/database/bootstrap"
+  ug_db_bootstrap=`curl -k -X PUT https://${APP_HOST}.${APP_DOMAIN}/system/database/bootstrap -u ${login_name}:${login_password}`
+  echo $ug_db_bootstrap
+
+  echo "Usergrid Bootstrap complete!"
 }
 
 function deploy_app() {
@@ -215,6 +233,7 @@ function deploy_app() {
 	provision_auto_services ${PKG_NAME} ${APP_NAME} ${AUTO_SERVICES}
 	cf start ${APP_NAME}
 	wait_till_running ${APP_NAME}
+	bootstrap_usergrid
 	delete_older_versions ${PKG_NAME} ${APP_NAME}
 }
 
