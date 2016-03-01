@@ -82,14 +82,14 @@ public class QueueManagerTest {
     public void send() throws Exception{
         String value = "bodytest";
         qm.sendMessage(value);
-        List<QueueMessage> messageList = qm.getMessages(1,5000,5000,String.class);
+        List<QueueMessage> messageList = qm.getMessages(1, String.class);
         assertTrue(messageList.size() >= 1);
         for(QueueMessage message : messageList){
             assertTrue(message.getBody().equals(value));
             qm.commitMessage(message);
         }
 
-        messageList = qm.getMessages(1,5000,5000,String.class);
+        messageList = qm.getMessages(1, String.class);
         assertTrue(messageList.size() <= 0);
 
     }
@@ -102,14 +102,14 @@ public class QueueManagerTest {
         List<Map<String,String>> bodies = new ArrayList<>();
         bodies.add(values);
         qm.sendMessages(bodies);
-        List<QueueMessage> messageList = qm.getMessages(1,5000,5000,values.getClass());
+        List<QueueMessage> messageList = qm.getMessages(1, values.getClass());
         assertTrue(messageList.size() >= 1);
         for(QueueMessage message : messageList){
             assertTrue(message.getBody().equals(values));
         }
         qm.commitMessages(messageList);
 
-        messageList = qm.getMessages(1,5000,5000,values.getClass());
+        messageList = qm.getMessages(1, values.getClass());
         assertTrue(messageList.size() <= 0);
 
     }
@@ -133,7 +133,7 @@ public class QueueManagerTest {
         }
         assertTrue(depth>0);
 
-        List<QueueMessage> messageList = qm.getMessages(10,5000,5000,values.getClass());
+        List<QueueMessage> messageList = qm.getMessages(10, values.getClass());
         assertTrue(messageList.size() <= 500);
         for(QueueMessage message : messageList){
             assertTrue(message.getBody().equals(values));
