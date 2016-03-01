@@ -52,6 +52,10 @@ properties:
     description: 'test'
     default: 'usergrid'
 
+  usergrid.tomcat_instances:
+    description: number of instances
+    default: 1
+
   usergrid.sysadmin.approve.users:
     description: 'test'
     default: false

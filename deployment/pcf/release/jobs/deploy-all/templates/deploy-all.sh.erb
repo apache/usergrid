@@ -198,9 +198,13 @@ function deploy_app() {
 	NEEDS_CF_CREDS="$5"
 	HEALTH_CHECK="$6"
 	AUTO_SERVICES="$7"
+
+  TOMCAT_INSTANCES="<%= properties.usergrid.tomcat_instances%>"
+
 	cf push ${APP_NAME} -n ${APP_HOST} -d ${APP_DOMAIN} \
 		${DOCKER_IMAGE} -f $PACKAGE_PATH/${PKG_NAME}/manifest.yml -b https://github.com/cloudfoundry/java-buildpack \
-		--no-start
+		-i $TOMCAT_INSTANCES --no-start
+
 	add_env_vars ${APP_NAME}
 	if is_true "$NEEDS_CF_CREDS"; then
 		add_cf_credentials ${APP_NAME}

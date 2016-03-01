@@ -382,6 +382,7 @@ job_types:
 
     usergrid:
       cluster_name: (( .properties.usergrid_cluster.value ))
+      instances: (( .properties.tomcat_instances.value ))
 
       sysadmin:
         approve:
