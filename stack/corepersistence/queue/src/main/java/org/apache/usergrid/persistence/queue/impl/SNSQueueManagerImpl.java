@@ -169,7 +169,8 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         this.clientConfiguration = new ClientConfiguration()
             .withConnectionTimeout(queueFig.getQueueClientConnectionTimeout())
-            .withSocketTimeout(queueFig.getQueueClientSocketTimeout())
+            // don't let the socket timeout be configured less than 5 sec (network delays do happen)
+            .withSocketTimeout(Math.max(5000, queueFig.getQueueClientSocketTimeout()))
             .withGzip(true);
 
         try {
@@ -411,8 +412,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
     @Override
-    public List<QueueMessage> getMessages( final int limit, final int transactionTimeout, final int waitTime,
-                                                    final Class klass ) {
+    public List<QueueMessage> getMessages(final int limit, final Class klass) {
 
         if ( sqs == null ) {
             logger.error( "SQS is null - was not initialized properly" );
@@ -427,8 +427,10 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest( url );
         receiveMessageRequest.setMaxNumberOfMessages( limit );
-        receiveMessageRequest.setVisibilityTimeout( Math.max( 1, transactionTimeout / 1000 ) );
-        receiveMessageRequest.setWaitTimeSeconds( waitTime / 1000 );
+        receiveMessageRequest.setVisibilityTimeout( Math.max( 1, fig.getVisibilityTimeout() / 1000 ) );
+
+        // set SQS long polling to 3 secs < the client socket timeout (network delays) with min of 0 (no long poll)
+        receiveMessageRequest.setWaitTimeSeconds( Math.max(0, ( fig.getQueueClientSocketTimeout() - 3000) / 1000 ) );
 
         try {
             ReceiveMessageResult result = sqs.receiveMessage( receiveMessageRequest );
