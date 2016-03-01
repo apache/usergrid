@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import com.netflix.astyanax.model.ConsistencyLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -446,9 +447,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     StringSerializer.get() );
 
             OperationResult<CqlResult<String, String>> result =
-                keyspace.prepareQuery( CF_SYSTEM_LOCAL ).withCql( "SELECT now() FROM system.local;" ).execute();
+                keyspace.prepareQuery( CF_SYSTEM_LOCAL )
+                    .setConsistencyLevel(ConsistencyLevel.CL_ONE)
+                    .withCql( "SELECT now() FROM system.local;" )
+                    .execute();
 
-            if ( result.getResult().getRows().size() == 1 ) {
+            if ( result.getResult().getRows().size() > 0 ) {
                 return Health.GREEN;
             }
         }
