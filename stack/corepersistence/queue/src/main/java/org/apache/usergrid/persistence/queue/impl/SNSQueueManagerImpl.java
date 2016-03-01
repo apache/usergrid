@@ -97,6 +97,8 @@ public class SNSQueueManagerImpl implements QueueManager {
 
     private static final JsonFactory JSON_FACTORY = new JsonFactory();
     private static final ObjectMapper mapper = new ObjectMapper( JSON_FACTORY );
+    private static final int MIN_CLIENT_SOCKET_TIMEOUT = 5000; // millis
+    private static final int MIN_VISIBILITY_TIMEOUT = 1; //seconds
 
     static {
 
@@ -170,7 +172,7 @@ public class SNSQueueManagerImpl implements QueueManager {
         this.clientConfiguration = new ClientConfiguration()
             .withConnectionTimeout(queueFig.getQueueClientConnectionTimeout())
             // don't let the socket timeout be configured less than 5 sec (network delays do happen)
-            .withSocketTimeout(Math.max(5000, queueFig.getQueueClientSocketTimeout()))
+            .withSocketTimeout(Math.max(MIN_CLIENT_SOCKET_TIMEOUT, queueFig.getQueueClientSocketTimeout()))
             .withGzip(true);
 
         try {
@@ -427,10 +429,12 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest( url );
         receiveMessageRequest.setMaxNumberOfMessages( limit );
-        receiveMessageRequest.setVisibilityTimeout( Math.max( 1, fig.getVisibilityTimeout() / 1000 ) );
+        receiveMessageRequest.setVisibilityTimeout(
+            Math.max( MIN_VISIBILITY_TIMEOUT, fig.getVisibilityTimeout() / 1000 ) );
 
         // set SQS long polling to 3 secs < the client socket timeout (network delays) with min of 0 (no long poll)
-        receiveMessageRequest.setWaitTimeSeconds( Math.max(0, ( fig.getQueueClientSocketTimeout() - 3000) / 1000 ) );
+        receiveMessageRequest.setWaitTimeSeconds(
+            Math.max(0, ( fig.getQueueClientSocketTimeout() - fig.getQueuePollTimeshift() ) / 1000 ) );
 
         try {
             ReceiveMessageResult result = sqs.receiveMessage( receiveMessageRequest );
