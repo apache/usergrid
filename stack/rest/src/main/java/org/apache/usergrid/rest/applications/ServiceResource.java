@@ -353,6 +353,38 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
+    /**
+     * THE BEGINNINGS OF AN ENDPOINT THAT WILL ALLOW TO DEFINE WHAT TO
+     * STORE IN ELASTICSEARCH.
+     * @param ui
+     * @param callback
+     * @return
+     * @throws Exception
+     */
+    @POST
+    @Path("_indexes")
+    @Produces({MediaType.APPLICATION_JSON,"application/javascript"})
+    @RequireApplicationAccess
+    @JSONP
+    public ApiResponse executePostOnIndexes( @Context UriInfo ui,
+                                   @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
+
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executePostOnIndexes" );
+        }
+
+        ApiResponse response = createApiResponse();
+
+        response.setAction( "post" );
+        response.setApplication( services.getApplication() );
+        response.setParams( ui.getQueryParameters() );
+
+        executeServiceRequest( ui, response, ServiceAction.POST, null );
+
+        return response;
+    }
+
     @SuppressWarnings({ "unchecked" })
     public ServicePayload getPayload( Object json ) {
         ServicePayload payload = null;
