@@ -38,6 +38,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.ArrayList;
+
 
 import static org.junit.Assert.*;
 
@@ -112,33 +114,68 @@ public class CollectionsResourceIT extends AbstractRestIT {
     }
 
 
+    /**
+     * Create test collection
+     * Give collection an indexing schema
+     * Give collection a new entity and ensure it only indexes wht is in the schema
+     * Reindex and make sure old entity with full text indexing is reindexed with the schema.
+     *
+     * @throws Exception
+     */
     @Test
     public void postToReservedField() throws Exception {
+
+        //Create test collection with test entity that is full text indexed.
+        Entity testEntity = new Entity();
+        testEntity.put( "one", "12/31/9999" );
+        //this field shouldn't persist after reindexing.
+        testEntity.put( "two","2015-04-20T17:41:38.035Z" );
+
+        //TODO: add arrays to the indexing test
+        //testEntity.put("array","array stuff here");
+
+        Entity returnedEntity = this.app().collection( "testCollection" ).post( testEntity );
+
+        //Creating schema.
+        //this could be changed to a hashmap.
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "one" );
+
+        //TODO: add indexing array to the backend/test once you finish the regular selective indexing.
+        //indexingArray.add( "field.three.index.array" );
+
+        //field "fields" is required.
         Entity payload = new Entity();
-        payload.put( "term_date", "12/31/9999" );
-        payload.put( "effective_date","2015-04-20T17:41:38.035Z" );
-        payload.put("junk","TEST");
+        payload.put( "fields", indexingArray);
 
-        this.app().collection( "testCollection" ).post( payload );
+        //Post index to the collection metadata
+        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
         refreshIndex();
-        Thread.sleep( 1000 );
 
-        Collection collection = this.app().collection( "testCollection" ).get();
+        //Below is what needs to be implemented along with the index call above
 
-        assertNotEquals(0, collection.getNumOfEntities() );
+        //Get the collection schema and verify that it contains the same schema as posted above.
+        Collection collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
 
-        payload = new Entity();
-        payload.put( "term_date","1991-17-10" );
-        payload.put( "effective_date","HELLO WORLD!" );
-        payload.put("junk","TEST");
+        Entity testCollectionSchema = (Entity)collection.getResponse().getEntity();
+        //the below will have to be replaced by the values that I deem correct.
+        assertEquals( "lastUpdated", testCollectionSchema.get( "lastUpdated" ));
+        assertEquals( "lastUpdatedBy",testCollectionSchema.get( "lastUpdatedBy" ) );
+        assertEquals( "lastReindex",testCollectionSchema.get( "lastReindex" ) );
 
-        this.app().collection( "testCollection" ).post( payload );
+
+        ArrayList<String> schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
+        assertEquals( "one",schema.get( 0 ) );
+
+        //Reindex and verify that the entity only has field one index.
+        this.app().collection( "testCollection" ).collection( "_reindex" ).post();
+
         refreshIndex();
-        Thread.sleep( 1000 );
 
-        collection = this.app().collection( "testCollection" ).get();
-
-        assertEquals( 2, collection.getNumOfEntities() );
+        Entity reindexedEntity = this.app().collection( "testCollection" ).entity( returnedEntity.getUuid() ).get();
+        assertEquals( "12/31/9999",reindexedEntity.get( "one" ) );
+        assertNull( reindexedEntity.get( "two" ) );
+        //not sure if this should have some kind of sleep here because this reindex will be heavily throttled.
 
     }
 
