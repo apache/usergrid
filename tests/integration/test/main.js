@@ -27,6 +27,7 @@ var colors = require('colors');
 
 describe("** Usergrid REST Integration Tests **", function() {
     before(function(done) {
+        this.timeout(30000);
         console.log("    setup");
         setup.do(function(err) {
             should(err).be.null;
