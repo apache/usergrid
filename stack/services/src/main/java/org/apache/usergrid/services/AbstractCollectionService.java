@@ -25,6 +25,9 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.shiro.subject.Subject;
+
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
@@ -34,6 +37,8 @@ import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.persistence.Query.Level;
+import org.apache.usergrid.security.shiro.principals.AdminUserPrincipal;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
@@ -316,6 +321,20 @@ public class AbstractCollectionService extends AbstractService {
         updateEntities( context, r );
 
         return new ServiceResults( this, context, Type.COLLECTION, r, null, null );
+    }
+
+    @Override
+    public ServiceResults postCollectionSchema( ServiceContext context ) throws Exception {
+        context.setAction( ServiceAction.POST );
+        checkPermissionsForCollection( context );
+        Subject currentUser = SubjectUtils.getSubject();
+        Object currentUser2 =currentUser.getPrincipal();
+
+        Map collectionSchema = em.createCollectionSchema(context.getCollectionName(),
+            ( ( AdminUserPrincipal ) currentUser2 ).getUser().getEmail(),context.getProperties());
+
+        return new ServiceResults( this, context, Type.COLLECTION, Results.fromData( collectionSchema ), null, null );
+
     }
 
 

@@ -34,6 +34,7 @@ import org.apache.usergrid.services.ServiceParameter.QueryParameter;
 import org.apache.usergrid.services.ServicePayload;
 import org.apache.usergrid.services.ServiceResults;
 import org.apache.usergrid.services.ServiceResults.Type;
+import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationException;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -90,6 +91,12 @@ public class ApplicationsService extends AbstractService {
     @Override
     public ServiceResults putItemById( ServiceContext context, UUID id ) throws Exception {
         return updateApplicationEntity( context, context.getPayload() );
+    }
+
+
+    @Override
+    public ServiceResults postCollectionSchema( final ServiceContext context ) throws Exception {
+        throw new UnsupportedServiceOperationException( context );
     }
 
 

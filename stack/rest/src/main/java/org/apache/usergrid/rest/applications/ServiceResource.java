@@ -244,6 +244,55 @@ public class ServiceResource extends AbstractContextResource {
         return getSubResource( ServiceResource.class );
     }
 
+    public ServiceResults executeServiceRequestForSchema(UriInfo ui, ApiResponse response, ServiceAction action,
+                                                         ServicePayload payload) throws Exception {
+
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeServiceRequest" );
+        }
+
+
+        boolean tree = "true".equalsIgnoreCase( ui.getQueryParameters().getFirst( "tree" ) );
+
+        String connectionQueryParm = ui.getQueryParameters().getFirst("connections");
+        boolean returnInboundConnections = true;
+        boolean returnOutboundConnections = true;
+
+        addQueryParams( getServiceParameters(), ui );
+
+        ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
+            returnInboundConnections, returnOutboundConnections );
+
+        response.setServiceRequest( r );
+        ServiceResults results = r.execute();
+        if ( results != null ) {
+            if ( results.hasData() ) {
+                response.setData( results.getData() );
+            }
+            if ( results.getServiceMetadata() != null ) {
+                response.setMetadata( results.getServiceMetadata() );
+            }
+            Query query = r.getLastQuery();
+            if ( query != null ) {
+                if ( query.hasSelectSubjects() ) {
+                    response.setList( QueryUtils.getSelectionResults( query, results ) );
+                    response.setCount( response.getList().size() );
+                    response.setNext( results.getNextResult() );
+                    response.setPath( results.getPath() );
+                    return results;
+                }
+            }
+
+            response.setResults( results );
+        }
+
+        httpServletRequest.setAttribute( "applicationId", services.getApplicationId() );
+
+        return results;
+
+
+    }
+
 
     public ServiceResults executeServiceRequest( UriInfo ui, ApiResponse response, ServiceAction action,
                                                  ServicePayload payload ) throws Exception {
@@ -366,12 +415,19 @@ public class ServiceResource extends AbstractContextResource {
     @Produces({MediaType.APPLICATION_JSON,"application/javascript"})
     @RequireApplicationAccess
     @JSONP
-    public ApiResponse executePostOnIndexes( @Context UriInfo ui,
+    public ApiResponse executePostOnIndexes( @Context UriInfo ui, String body,
                                    @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.executePostOnIndexes" );
+        }
+
+        Object json;
+        if ( StringUtils.isEmpty( body ) ) {
+            json = null;
+        } else {
+            json = readJsonToObject( body );
         }
 
         ApiResponse response = createApiResponse();
@@ -380,10 +436,48 @@ public class ServiceResource extends AbstractContextResource {
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
 
-        executeServiceRequest( ui, response, ServiceAction.POST, null );
+        ServicePayload payload = getPayload( json );
+
+        executeServiceRequestForSchema( ui,response,ServiceAction.SCHEMA,payload );
 
         return response;
     }
+
+    @GET
+    @Path("_index")
+    @Produces({MediaType.APPLICATION_JSON,"application/javascript"})
+    @RequireApplicationAccess
+    @JSONP
+    public ApiResponse executeGetOnIndex( @Context UriInfo ui, String body,
+                                             @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
+
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executePostOnIndexes" );
+        }
+
+        Object json;
+        if ( StringUtils.isEmpty( body ) ) {
+            json = null;
+        } else {
+            json = readJsonToObject( body );
+        }
+
+        ApiResponse response = createApiResponse();
+
+
+
+        response.setAction( "get" );
+        response.setApplication( services.getApplication() );
+        response.setParams( ui.getQueryParameters() );
+
+        ServicePayload payload = getPayload( json );
+
+        executeServiceRequest( ui, response, ServiceAction.GET, payload );
+
+        return response;
+    }
+
 
     @SuppressWarnings({ "unchecked" })
     public ServicePayload getPayload( Object json ) {

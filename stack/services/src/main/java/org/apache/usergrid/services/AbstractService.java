@@ -55,6 +55,7 @@ import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ServiceInvocationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationException;
+import org.apache.usergrid.services.generic.RootCollectionService;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -827,6 +828,9 @@ public abstract class AbstractService implements Service {
 
             case HEAD:
                 return headCollection( context );
+
+            case SCHEMA:
+                return postCollectionSchema( context );
         }
 
         throw new ServiceInvocationException( context, "Request action unhandled " + context.getAction() );
@@ -886,6 +890,9 @@ public abstract class AbstractService implements Service {
     public ServiceResults postItemsByQuery( ServiceContext context, Query query ) throws Exception {
         return getItemsByQuery( context, query );
     }
+
+
+    public abstract ServiceResults postCollectionSchema( ServiceContext context ) throws Exception;
 
 
     public ServiceResults postCollection( ServiceContext context ) throws Exception {

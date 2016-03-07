@@ -46,11 +46,6 @@ public enum ApplicationCF implements CFEnum {
     /** Entity counters */
     ENTITY_COUNTERS( "Entity_Counters", "BytesType", COUNTERTYPE.getClassName() );
 
-    /**
-     * Collection Schema
-     */
-    COL_SCHEMA( "")
-
     private final String cf;
     private final String comparator;
     private final String validator;

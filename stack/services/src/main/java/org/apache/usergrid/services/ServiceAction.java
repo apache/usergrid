@@ -18,5 +18,5 @@ package org.apache.usergrid.services;
 
 
 public enum ServiceAction {
-    POST, GET, PUT, DELETE, HEAD, OPTIONS;
+    POST, GET, PUT, DELETE, HEAD, OPTIONS, SCHEMA;
 }
