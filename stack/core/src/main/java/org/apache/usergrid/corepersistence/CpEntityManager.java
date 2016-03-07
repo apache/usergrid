@@ -17,11 +17,15 @@ package org.apache.usergrid.corepersistence;
 
 
 import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1730,8 +1734,49 @@ public class CpEntityManager implements EntityManager {
         return get( id, Role.class );
     }
 
+    @Override
+    public Map createCollectionSchema( String collectionName, String owner ,Map<String, Object> properties ){
+
+
+        //haven't decided which one I should base off of which, maybe from epoch to utc
+        Instant timeInstance = Instant.now();
+
+        Date date = Date.from(timeInstance);
+        Long epoch = timeInstance.toEpochMilli();
+
+        Map<String,Object> schemaMap = new HashMap<>(  );
+
+
+        schemaMap.put("lastUpdated",epoch);
+        //this needs the method that can extract the user from the token no matter the token.
+        //Possible values are app credentials, org credentials, or the user email(Admin tokens).
+        schemaMap.put("lastUpdateBy",owner);
+        schemaMap.put("lastReindexed",0);
+        schemaMap.putAll( properties );
+
+        //Map<String,Object> fields = properties.get( "properties" );
+
+        //for(Object)
+
+        MapManager mm = getMapManagerForTypes();
+        mm.putString( collectionName,schemaMap.toString() );
+
+        return schemaMap;
+
+    }
 
     @Override
+    public Entity createCollectionSchema( String collectionName ){
+        MapManager mm = getMapManagerForTypes();
+        String jsonMap = mm.getString( collectionName );
+
+        Object obj = JsonUtils.parse( jsonMap );
+
+        return null;
+    }
+
+
+        @Override
     public void grantRolePermission( String roleName, String permission ) throws Exception {
         roleName = roleName.toLowerCase();
         permission = permission.toLowerCase();
@@ -2663,6 +2708,7 @@ public class CpEntityManager implements EntityManager {
                     cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() );
             }
 
+            //this does the write so before adding to a collection everything already exists already.
             cpEntity = ecm.write( cpEntity ).toBlocking().last();
             entity.setSize(cpEntity.getSize());
 
@@ -2683,6 +2729,8 @@ public class CpEntityManager implements EntityManager {
         // add to and index in collection of the application
         if ( !is_application ) {
 
+            //maybe a check here to see if it exists in the column family and if it doesn't then SEND IT ON THROUGHH
+
             String collectionName = Schema.defaultCollectionName( eType );
             CpRelationManager cpr = ( CpRelationManager ) getRelationManager( getApplication() );
             cpr.addToCollection( collectionName, entity );
@@ -2694,7 +2742,6 @@ public class CpEntityManager implements EntityManager {
         //write to our types map
         MapManager mm = getMapManagerForTypes();
         mm.putString( itemId.toString(), entity.getType() );
-
 
         return entity;
     }

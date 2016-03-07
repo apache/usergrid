@@ -38,6 +38,7 @@ import org.apache.usergrid.services.ServiceParameter.NameParameter;
 import org.apache.usergrid.services.ServiceParameter.QueryParameter;
 import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
+import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationException;
 
 import rx.Observable;
 import rx.schedulers.Schedulers;
@@ -387,6 +388,12 @@ public class AbstractConnectionsService extends AbstractService {
         }
 
         return getItemsByQuery( context, query );
+    }
+
+
+    @Override
+    public ServiceResults postCollectionSchema( final ServiceContext context ) throws Exception {
+        throw new UnsupportedServiceOperationException( context );
     }
 
 

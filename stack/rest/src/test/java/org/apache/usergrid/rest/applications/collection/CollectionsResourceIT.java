@@ -149,7 +149,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        Object thing = this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
         refreshIndex();
 
         //Below is what needs to be implemented along with the index call above
