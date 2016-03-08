@@ -482,15 +482,22 @@ public class ApplicationResource extends AbstractContextResource {
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executeDelete(  @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback,
-        @QueryParam("app_delete_confirm") String confirmDelete) throws Exception {
+        @QueryParam("application_identifier") String applicationConfirmedDelete) throws Exception {
+
+        //If the path uses name then expect name, otherwise if they use uuid then expect uuid.
+        if(application==null){
+            if(!applicationId.toString().equals( applicationConfirmedDelete )){
+                throw new IllegalArgumentException(
+                    "Cannot delete application without supplying correct application id.");
+            }
+        }
+        else if (!application.getName().equals( applicationConfirmedDelete ) ) {
+            throw new IllegalArgumentException(
+                "Cannot delete application without supplying correct application name");
+        }
 
         if ( applicationId == null ) {
             throw new IllegalArgumentException("Application ID not specified in request");
-        }
-
-        if (!"confirm_delete_of_application_and_data".equals( confirmDelete ) ) {
-            throw new IllegalArgumentException(
-                "Cannot delete application without app_delete_confirm parameter");
         }
 
         management.deleteApplication( applicationId );
