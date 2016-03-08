@@ -76,35 +76,11 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         final Response response = clientSetup.getRestClient().management().orgs()
             .org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .request()
-            .delete();
-
-        Assert.assertEquals("Error must be 400", 400, response.getStatus() );
-
-        clientSetup.getRestClient().management().orgs()
-            .org(orgName).apps().app(appToDeleteId.toString() ).getTarget()
-            .queryParam("access_token", orgAdminToken.getAccessToken() )
-            .queryParam("application_identifier", appToDeleteId)
+            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
             .request()
             .delete();
 
         // test that we can no longer get the app
-
-        try {
-            clientSetup.getRestClient().management().orgs()
-                .org(orgName).apps().app(appToDeleteName).getTarget()
-                .queryParam("access_token", orgAdminToken.getAccessToken())
-                .request()
-                .get(ApiResponse.class);
-
-            fail("Must not be able to get deleted app");
-
-        } catch ( ClientErrorException expected ) {
-            Assert.assertEquals("Error must be 404", 404, expected.getResponse().getStatus() );
-            JsonNode node = mapper.readTree( expected.getResponse().readEntity( String.class ));
-            Assert.assertEquals("entity_not_found", node.get("error").textValue());
-        }
-
 
         try {
             clientSetup.getRestClient().org( orgName ).app( appToDeleteName ).getTarget()
@@ -118,7 +94,6 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             JsonNode node = mapper.readTree( expected.getResponse().readEntity( String.class ) );
             Assert.assertEquals( "organization_application_not_found", node.get( "error" ).textValue() );
         }
-
 
         // test that we can no longer get deleted app's collection
 
@@ -176,6 +151,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .orgs().org( orgName ).apps().app( appToDeleteId.toString() )
             .getTarget().queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam( "application_identifier", appToDeleteId )
+            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
             .request()
             .delete();
         Assert.assertEquals( "Error must be 404", 404, response1.getStatus() );
@@ -191,6 +167,31 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         Assert.assertEquals("Must be able to create app with same name as deleted app",
             (orgName + "/" + appToDeleteName).toLowerCase(),
             appCreateAgainResponse.getEntities().get(0).get( "name" ));
+    }
+
+
+    @Test
+    public void testDeleteProtection() throws Exception {
+
+        // create app with a collection of "things"
+
+        String orgName = clientSetup.getOrganization().getName();
+        String appToDeleteName = clientSetup.getAppName() + "_appToDelete";
+        Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername() );
+
+        List<Entity> entities = new ArrayList<>();
+
+        UUID appToDeleteId = createAppWithCollection( orgName, appToDeleteName, orgAdminToken, entities );
+
+        // delete the app without confirm parameter, should fail
+
+        clientSetup.getRestClient().management().orgs()
+            .org( orgName ).apps().app( appToDeleteName ).getTarget()
+            .queryParam( "access_token", orgAdminToken.getAccessToken() )
+            .queryParam( "application_identifier", appToDeleteName )
+            .request()
+            .delete();
+
     }
 
 
@@ -224,6 +225,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .org( orgName ).apps().app( appToDeleteName ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam("application_identifier", appToDeleteName)
+            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
             .request()
             .delete();
 
@@ -304,6 +306,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam("application_identifier", appToDeleteId)
+            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
             .request()
             .delete();
 
@@ -346,6 +349,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .orgs().org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam( "application_identifier", appToDeleteId )
+            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
             .request()
             .delete();
 
@@ -359,6 +363,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .orgs().org( orgName ).apps().app( newAppId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
             .queryParam( "application_identifier", newAppId )
+            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
             .request()
             .delete();
 
