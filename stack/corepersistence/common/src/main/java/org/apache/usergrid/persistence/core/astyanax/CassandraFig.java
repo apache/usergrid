@@ -38,6 +38,8 @@ public interface CassandraFig extends GuicyFig {
     String WRITE_CL = "usergrid.write.cl";
     String SHARD_VALUES = "cassandra.shardvalues";
     String THRIFT_TRANSPORT_SIZE = "cassandra.thrift.transport.frame";
+    String USERNAME = "cassandra.username";
+    String PASSWORD = "cassandra.password";
 
     // locks cassandra properties
     String LOCKS_KEYSPACE_NAME = "cassandra.lock.keyspace";
@@ -77,6 +79,12 @@ public interface CassandraFig extends GuicyFig {
 
     @Key( "cassandra.datacenter.local" )
     String getLocalDataCenter();
+
+    @Key( USERNAME )
+    String getUsername();
+
+    @Key( PASSWORD )
+    String getPassword();
 
     @Key( "cassandra.connections" )
     @Default( DEFAULT_CONNECTION_POOLSIZE )
