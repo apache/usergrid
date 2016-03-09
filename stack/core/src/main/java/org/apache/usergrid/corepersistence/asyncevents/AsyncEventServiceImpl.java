@@ -285,7 +285,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             logger.debug("callEventHandlers with {} message", messages.size());
         }
 
-        Stream<IndexEventResult> indexEventResults = messages.parallelStream().map(message ->
+        Stream<IndexEventResult> indexEventResults = messages.stream().map(message ->
 
         {
             AsyncEvent event = null;
