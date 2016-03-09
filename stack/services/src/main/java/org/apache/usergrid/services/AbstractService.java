@@ -656,6 +656,7 @@ public abstract class AbstractService implements Service {
      * the queue. Remaining parameters are left for next service request to allow for request chaining.
      */
 
+    @Override
     public ServiceContext getContext( ServiceAction action, ServiceRequest request, ServiceResults previousResults,
                                       ServicePayload payload ) throws Exception {
 
@@ -828,9 +829,6 @@ public abstract class AbstractService implements Service {
 
             case HEAD:
                 return headCollection( context );
-
-            case SCHEMA:
-                return postCollectionSchema( context );
         }
 
         throw new ServiceInvocationException( context, "Request action unhandled " + context.getAction() );
@@ -891,8 +889,10 @@ public abstract class AbstractService implements Service {
         return getItemsByQuery( context, query );
     }
 
+    public abstract ServiceResults postCollectionSchema( ServiceRequest serviceRequest ) throws Exception;
 
-    public abstract ServiceResults postCollectionSchema( ServiceContext context ) throws Exception;
+
+    public abstract ServiceResults getCollectionSchema( ServiceRequest serviceRequest ) throws Exception;
 
 
     public ServiceResults postCollection( ServiceContext context ) throws Exception {
@@ -1366,8 +1366,8 @@ public abstract class AbstractService implements Service {
         if ( currentUser == null ) {
             return;
         }
-        String perm =
-                getPermissionFromPath( em.getApplicationRef().getUuid(), context.getAction().toString().toLowerCase(),
+        //this is breaking because there is no entity manager there.
+        String perm = getPermissionFromPath( em.getApplicationRef().getUuid(), context.getAction().toString().toLowerCase(),
                         path );
         boolean permitted = currentUser.isPermitted( perm );
 

@@ -236,6 +236,11 @@ public class ServiceRequest {
         return sb.toString();
     }
 
+    public ServiceContext getAppContext() throws Exception {
+        Service s = services.getService( serviceName );
+
+        return s.getContext( action,this,null,payload );
+    }
 
     public ServiceResults execute( ServiceResults previousResults ) throws Exception {
 
