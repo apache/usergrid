@@ -149,7 +149,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        Object thing = this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        Entity thing = this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
         refreshIndex();
 
         //Below is what needs to be implemented along with the index call above
@@ -157,12 +157,11 @@ public class CollectionsResourceIT extends AbstractRestIT {
         //Get the collection schema and verify that it contains the same schema as posted above.
         Collection collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
 
-        Entity testCollectionSchema = (Entity)collection.getResponse().getEntity();
-        //the below will have to be replaced by the values that I deem correct.
-        assertEquals( "lastUpdated", testCollectionSchema.get( "lastUpdated" ));
-        assertEquals( "lastUpdatedBy",testCollectionSchema.get( "lastUpdatedBy" ) );
-        assertEquals( "lastReindex",testCollectionSchema.get( "lastReindex" ) );
-
+        LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
+        //TODO: the below will have to be replaced by the values that I deem correct.
+        assertEquals( ( thing ).get( "lastUpdated" ), testCollectionSchema.get( "lastUpdated" ));
+        assertEquals( ( thing ).get( "lastUpdateBy" ),testCollectionSchema.get( "lastUpdateBy" ) );
+        assertEquals( ( thing ).get( "lastReindexed" ),testCollectionSchema.get( "lastReindexed" ) );
 
         ArrayList<String> schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
         assertEquals( "one",schema.get( 0 ) );

@@ -55,6 +55,11 @@ public class AbstractCollectionService extends AbstractService {
         declareMetadataType( "indexes" );
     }
 
+    public AbstractCollectionService(ServiceRequest serviceRequest){
+        setServiceManager( serviceRequest.getServices() );
+    }
+
+
     @Override
     public Entity getEntity( ServiceRequest request, UUID uuid ) throws Exception {
         if ( !isRootService() ) {
@@ -324,7 +329,10 @@ public class AbstractCollectionService extends AbstractService {
     }
 
     @Override
-    public ServiceResults postCollectionSchema( ServiceContext context ) throws Exception {
+    public ServiceResults postCollectionSchema( ServiceRequest serviceRequest ) throws Exception {
+        setServiceManager( serviceRequest.getServices() );
+        ServiceContext context = serviceRequest.getAppContext();
+
         context.setAction( ServiceAction.POST );
         checkPermissionsForCollection( context );
         Subject currentUser = SubjectUtils.getSubject();
@@ -332,6 +340,19 @@ public class AbstractCollectionService extends AbstractService {
 
         Map collectionSchema = em.createCollectionSchema(context.getCollectionName(),
             ( ( AdminUserPrincipal ) currentUser2 ).getUser().getEmail(),context.getProperties());
+
+        return new ServiceResults( this, context, Type.COLLECTION, Results.fromData( collectionSchema ), null, null );
+
+    }
+
+    @Override
+    public ServiceResults getCollectionSchema( ServiceRequest serviceRequest ) throws Exception {
+        setServiceManager( serviceRequest.getServices() );
+        ServiceContext context = serviceRequest.getAppContext();
+        context.setAction( ServiceAction.GET );
+        checkPermissionsForCollection( context );
+
+        Object collectionSchema = em.getCollectionSchema( context.getCollectionName() );
 
         return new ServiceResults( this, context, Type.COLLECTION, Results.fromData( collectionSchema ), null, null );
 

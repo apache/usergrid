@@ -392,8 +392,14 @@ public class AbstractConnectionsService extends AbstractService {
 
 
     @Override
-    public ServiceResults postCollectionSchema( final ServiceContext context ) throws Exception {
-        throw new UnsupportedServiceOperationException( context );
+    public ServiceResults postCollectionSchema( final ServiceRequest request ) throws Exception {
+        throw new UnsupportedServiceOperationException( request );
+    }
+
+
+    @Override
+    public ServiceResults getCollectionSchema( final ServiceRequest serviceRequest ) throws Exception {
+        throw new UnsupportedServiceOperationException( serviceRequest );
     }
 
 

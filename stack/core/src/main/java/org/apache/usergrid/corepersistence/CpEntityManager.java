@@ -1754,26 +1754,31 @@ public class CpEntityManager implements EntityManager {
         schemaMap.put("lastReindexed",0);
         schemaMap.putAll( properties );
 
-        //Map<String,Object> fields = properties.get( "properties" );
-
-        //for(Object)
-
         MapManager mm = getMapManagerForTypes();
-        mm.putString( collectionName,schemaMap.toString() );
+        mm.putString( collectionName,JsonUtils.mapToJsonString( schemaMap ) );
 
         return schemaMap;
 
     }
 
     @Override
-    public Entity createCollectionSchema( String collectionName ){
+    public Object getCollectionSchema( String collectionName ){
         MapManager mm = getMapManagerForTypes();
         String jsonMap = mm.getString( collectionName );
 
         Object obj = JsonUtils.parse( jsonMap );
-
-        return null;
+        return obj;
     }
+
+//    @Override
+//    public Entity createCollectionSchema( String collectionName ){
+//        MapManager mm = getMapManagerForTypes();
+//        String jsonMap = mm.getString( collectionName );
+//
+//        Object obj = JsonUtils.parse( jsonMap );
+//
+//        return null;
+//    }
 
 
         @Override

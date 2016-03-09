@@ -244,7 +244,64 @@ public class ServiceResource extends AbstractContextResource {
         return getSubResource( ServiceResource.class );
     }
 
-    public ServiceResults executeServiceRequestForSchema(UriInfo ui, ApiResponse response, ServiceAction action,
+
+    public ServiceResults executeServiceGetRequestForSchema(UriInfo ui, ApiResponse response, ServiceAction action,
+                                                             ServicePayload payload) throws Exception {
+
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeServiceRequest" );
+        }
+
+
+        boolean tree = "true".equalsIgnoreCase( ui.getQueryParameters().getFirst( "tree" ) );
+
+        String connectionQueryParm = ui.getQueryParameters().getFirst("connections");
+        boolean returnInboundConnections = true;
+        boolean returnOutboundConnections = true;
+
+        addQueryParams( getServiceParameters(), ui );
+
+        ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
+            returnInboundConnections, returnOutboundConnections );
+
+        response.setServiceRequest( r );
+
+
+        AbstractCollectionService abstractCollectionService = new AbstractCollectionService();
+
+       // abstractCollectionService
+        ServiceResults results = abstractCollectionService.getCollectionSchema( r );
+
+        //        ServiceResults results = r.execute();
+        if ( results != null ) {
+            if ( results.hasData() ) {
+                response.setData( results.getData() );
+            }
+            if ( results.getServiceMetadata() != null ) {
+                response.setMetadata( results.getServiceMetadata() );
+            }
+            Query query = r.getLastQuery();
+            if ( query != null ) {
+                if ( query.hasSelectSubjects() ) {
+                    response.setList( QueryUtils.getSelectionResults( query, results ) );
+                    response.setCount( response.getList().size() );
+                    response.setNext( results.getNextResult() );
+                    response.setPath( results.getPath() );
+                    return results;
+                }
+            }
+
+            response.setResults( results );
+        }
+
+        httpServletRequest.setAttribute( "applicationId", services.getApplicationId() );
+
+        return results;
+
+
+    }
+
+    public ServiceResults executeServicePostRequestForSchema(UriInfo ui, ApiResponse response, ServiceAction action,
                                                          ServicePayload payload) throws Exception {
 
         if(logger.isTraceEnabled()){
@@ -264,7 +321,13 @@ public class ServiceResource extends AbstractContextResource {
             returnInboundConnections, returnOutboundConnections );
 
         response.setServiceRequest( r );
-        ServiceResults results = r.execute();
+
+
+        AbstractCollectionService abstractCollectionService = new AbstractCollectionService();
+
+        ServiceResults results = abstractCollectionService.postCollectionSchema( r );
+
+//        ServiceResults results = r.execute();
         if ( results != null ) {
             if ( results.hasData() ) {
                 response.setData( results.getData() );
@@ -402,81 +465,6 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
-    /**
-     * THE BEGINNINGS OF AN ENDPOINT THAT WILL ALLOW TO DEFINE WHAT TO
-     * STORE IN ELASTICSEARCH.
-     * @param ui
-     * @param callback
-     * @return
-     * @throws Exception
-     */
-    @POST
-    @Path("_indexes")
-    @Produces({MediaType.APPLICATION_JSON,"application/javascript"})
-    @RequireApplicationAccess
-    @JSONP
-    public ApiResponse executePostOnIndexes( @Context UriInfo ui, String body,
-                                   @QueryParam("callback") @DefaultValue("callback") String callback )
-        throws Exception {
-
-        if(logger.isTraceEnabled()){
-            logger.trace( "ServiceResource.executePostOnIndexes" );
-        }
-
-        Object json;
-        if ( StringUtils.isEmpty( body ) ) {
-            json = null;
-        } else {
-            json = readJsonToObject( body );
-        }
-
-        ApiResponse response = createApiResponse();
-
-        response.setAction( "post" );
-        response.setApplication( services.getApplication() );
-        response.setParams( ui.getQueryParameters() );
-
-        ServicePayload payload = getPayload( json );
-
-        executeServiceRequestForSchema( ui,response,ServiceAction.SCHEMA,payload );
-
-        return response;
-    }
-
-    @GET
-    @Path("_index")
-    @Produces({MediaType.APPLICATION_JSON,"application/javascript"})
-    @RequireApplicationAccess
-    @JSONP
-    public ApiResponse executeGetOnIndex( @Context UriInfo ui, String body,
-                                             @QueryParam("callback") @DefaultValue("callback") String callback )
-        throws Exception {
-
-        if(logger.isTraceEnabled()){
-            logger.trace( "ServiceResource.executePostOnIndexes" );
-        }
-
-        Object json;
-        if ( StringUtils.isEmpty( body ) ) {
-            json = null;
-        } else {
-            json = readJsonToObject( body );
-        }
-
-        ApiResponse response = createApiResponse();
-
-
-
-        response.setAction( "get" );
-        response.setApplication( services.getApplication() );
-        response.setParams( ui.getQueryParameters() );
-
-        ServicePayload payload = getPayload( json );
-
-        executeServiceRequest( ui, response, ServiceAction.GET, payload );
-
-        return response;
-    }
 
 
     @SuppressWarnings({ "unchecked" })
