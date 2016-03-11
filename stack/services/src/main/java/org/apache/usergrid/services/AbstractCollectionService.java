@@ -333,7 +333,6 @@ public class AbstractCollectionService extends AbstractService {
         setServiceManager( serviceRequest.getServices() );
         ServiceContext context = serviceRequest.getAppContext();
 
-        context.setAction( ServiceAction.POST );
         checkPermissionsForCollection( context );
         Subject currentUser = SubjectUtils.getSubject();
         Object currentUser2 =currentUser.getPrincipal();
