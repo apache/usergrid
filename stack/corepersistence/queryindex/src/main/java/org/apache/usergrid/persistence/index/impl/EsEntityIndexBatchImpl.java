@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
+import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -68,10 +69,10 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         final String writeAlias = alias.getWriteAlias();
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Indexing to alias {} with scope {} on edge {} with entity data {}",
-                    writeAlias, applicationScope, indexEdge, entity );
-        }
+        //if ( logger.isDebugEnabled() ) {
+            logger.info( "Indexing to alias {} with scope {} on edge {} with entity data {}",
+                    writeAlias, applicationScope, indexEdge, entity.getFieldMap().keySet() );
+        //}
 
         //add app id for indexing
         container.addIndexRequest(new IndexOperation(writeAlias, applicationScope, indexEdge, entity));

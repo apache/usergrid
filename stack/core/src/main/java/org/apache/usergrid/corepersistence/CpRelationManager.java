@@ -18,6 +18,7 @@ package org.apache.usergrid.corepersistence;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -69,10 +70,15 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexBatch;
 import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.map.MapManager;
+import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.persistence.model.field.NullField;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.InflectionUtils;
+import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.MapUtils;
 
 import com.google.common.base.Optional;
@@ -90,6 +96,7 @@ import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_TITLE;
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
 import static org.apache.usergrid.persistence.Schema.TYPE_ROLE;
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
@@ -349,6 +356,15 @@ public class CpRelationManager implements RelationManager {
     @Override
     public Entity addToCollection( String collectionName, EntityRef itemRef ) throws Exception {
 
+        /**
+         * Get the map manager for uuid mapping
+         */
+        Id mapOwner = new SimpleId( applicationId, TYPE_APPLICATION );
+
+        final MapScope ms = CpNamingUtils.getEntityTypeMapScope(mapOwner );
+
+        MapManager mm = managerCache.getMapManager( ms );
+
         Preconditions.checkNotNull( itemRef, "itemref is null" );
         CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collectionName );
         if ( ( collection != null && collection.getType() != null ) && !collection.getType()
@@ -391,6 +407,44 @@ public class CpRelationManager implements RelationManager {
         final String linkedCollection = collection.getLinkedCollection();
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
+
+//        //do logic here
+//        String jsonMap = mm.getString( collectionName );
+//
+//        Set<String> defaultProperties = null;
+//
+//        if(jsonMap != null) {
+//
+//            Map jsonMapData = ( Map ) JsonUtils.parse( jsonMap );
+//            Schema schema = Schema.getDefaultSchema();
+//            defaultProperties = schema.getRequiredProperties( collectionName );
+//            //TODO: additional logic to
+//            ArrayList fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
+//            defaultProperties.addAll( fieldsToKeep );
+//
+//        }
+//
+//        Collection<String> trimmedFields = null;
+//        if(defaultProperties!=null){
+//           // if(cpHeadEntity.getFields())
+//            final Set<String> finalDefaultProperties = defaultProperties;
+//            trimmedFields = memberEntity.getFieldMap().keySet();
+//            Iterator collectionIterator = trimmedFields.iterator();
+//            while(collectionIterator.hasNext()){
+//                if(!finalDefaultProperties.contains( collectionIterator.next() )){
+//                    collectionIterator.remove();
+//                }
+//            }
+
+
+//            trimmedFields.forEach( element -> {
+//                if(!finalDefaultProperties.contains( element )){
+//                    memberEntity.removeField( element );
+//                }
+//            });
+
+//        }
+
 
         gm.writeEdge( edge ).doOnNext( writtenEdge -> {
             if ( logger.isDebugEnabled() ) {

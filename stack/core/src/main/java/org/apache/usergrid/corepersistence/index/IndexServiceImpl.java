@@ -20,11 +20,22 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.map.MapManager;
+import org.apache.usergrid.persistence.map.MapManagerFactory;
+import org.apache.usergrid.persistence.map.MapScope;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +63,7 @@ import rx.Observable;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createSearchEdgeFromSource;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromTarget;
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 
 
@@ -66,6 +78,7 @@ public class IndexServiceImpl implements IndexService {
 
     private final GraphManagerFactory graphManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
+    private final MapManagerFactory mapManagerFactory;
     private final EdgesObservable edgesObservable;
     private final IndexFig indexFig;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
@@ -75,9 +88,13 @@ public class IndexServiceImpl implements IndexService {
 
     @Inject
     public IndexServiceImpl( final GraphManagerFactory graphManagerFactory, final EntityIndexFactory entityIndexFactory,
-                             final EdgesObservable edgesObservable, final IndexFig indexFig, final IndexLocationStrategyFactory indexLocationStrategyFactory, final MetricsFactory metricsFactory ) {
+                             final MapManagerFactory mapManagerFactory,
+                             final EdgesObservable edgesObservable, final IndexFig indexFig,
+                             final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                             final MetricsFactory metricsFactory ) {
         this.graphManagerFactory = graphManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
+        this.mapManagerFactory = mapManagerFactory;
         this.edgesObservable = edgesObservable;
         this.indexFig = indexFig;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
@@ -92,7 +109,6 @@ public class IndexServiceImpl implements IndexService {
         //bootstrap the lower modules from their caches
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
         final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope));
-
 
         final Id entityId = entity.getId();
 
@@ -142,11 +158,58 @@ public class IndexServiceImpl implements IndexService {
 
             final EntityIndexBatch batch = ei.createBatch();
 
-            if (logger.isDebugEnabled()) {
+           // if (logger.isDebugEnabled()) {
                 logger.debug("adding edge {} to batch for entity {}", indexEdge, entity);
-            }
+           // }
 
-            batch.index( indexEdge, entity );
+
+                indexEdge.getNodeId().getUuid();
+
+                //System.out.println("hello");
+
+                Id mapOwner = new SimpleId( indexEdge.getNodeId().getUuid(), TYPE_APPLICATION );
+
+                final MapScope ms = CpNamingUtils.getEntityTypeMapScope(mapOwner );
+
+                MapManager mm = mapManagerFactory.createMapManager( ms );
+
+
+
+                String jsonMap = mm.getString( indexEdge.getEdgeName().split( "\\|" )[1] );
+
+                Set<String> defaultProperties = null;
+
+                if(jsonMap != null) {
+
+                    Map jsonMapData = ( Map ) JsonUtils.parse( jsonMap );
+                    Schema schema = Schema.getDefaultSchema();
+                    defaultProperties = schema.getRequiredProperties( indexEdge.getEdgeName().split( "\\|" )[1]);
+                    //TODO: additional logic to
+                    ArrayList fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
+                    defaultProperties.addAll( fieldsToKeep );
+
+                }
+
+            Entity filteredEntity = new Entity( entity.getId(),entity.getVersion() );
+            filteredEntity.setFieldMap( entity.getFieldMap() );
+
+                Collection<String> trimmedFields = null;
+                if(defaultProperties!=null) {
+                    // if(cpHeadEntity.getFields())
+                    final Set<String> finalDefaultProperties = defaultProperties;
+                    trimmedFields = entity.getFieldMap().keySet();
+                    Iterator collectionIterator = trimmedFields.iterator();
+                    while ( collectionIterator.hasNext() ) {
+                        String fieldName = ( String ) collectionIterator.next();
+                        if ( !finalDefaultProperties.contains( fieldName ) ) {
+                            //collectionIterator.remove();
+                            filteredEntity.removeField( fieldName );
+                        }
+                    }
+                }
+
+
+            batch.index( indexEdge, filteredEntity );
 
             return batch.build();
         } );
