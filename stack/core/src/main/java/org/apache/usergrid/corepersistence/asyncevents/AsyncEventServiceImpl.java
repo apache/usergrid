@@ -282,12 +282,18 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     private List<IndexEventResult> callEventHandlers(final List<QueueMessage> messages) {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("callEventHandlers with {} message", messages.size());
+            logger.debug("callEventHandlers with {} message(s)", messages.size());
         }
 
         Stream<IndexEventResult> indexEventResults = messages.stream().map(message ->
 
         {
+            if(logger.isDebugEnabled()){
+                logger.debug("Queue message with ID {} has been received {} time(s)",
+                    message.getMessageId(),
+                    message.getReceiveCount() );
+            }
+
             AsyncEvent event = null;
             try {
                 event = (AsyncEvent) message.getBody();
@@ -305,7 +311,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             final AsyncEvent thisEvent = event;
 
             if (logger.isDebugEnabled()) {
-                logger.debug("Processing {} event", event);
+                logger.debug("Processing event with type {}", event.getClass().getSimpleName());
             }
 
             IndexOperationMessage indexOperationMessage = null;
@@ -333,7 +339,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
                 } else {
 
-                    throw new Exception("Unknown EventType for message: "+ message.getStringBody());
+                    throw new Exception("Unknown EventType for message: "+ message.getStringBody().trim());
                 }
 
 
@@ -345,13 +351,15 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
                 // this exception is throw when we wait before trying quorum read on map persistence.
                 // return empty event result so the event's message doesn't get ack'd
-                logger.info(e.getMessage());
+                if(logger.isDebugEnabled()){
+                    logger.debug(e.getMessage());
+                }
                 return new IndexEventResult(Optional.absent(), Optional.absent(), event.getCreationTime());
 
             } catch (Exception e) {
 
                 // if the event fails to process, log and return empty message result so it doesn't get ack'd
-                logger.error("Failed to process message: {} {}", message.getMessageId(), message.getStringBody(), e);
+                logger.error("{}. Failed to process message: {}", e.getMessage(), message.getStringBody().trim() );
                 return new IndexEventResult(Optional.absent(), Optional.absent(), event.getCreationTime());
             }
         });
@@ -471,59 +479,49 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     }
 
     public IndexOperationMessage handleIndexOperation(final ElasticsearchIndexEvent elasticsearchIndexEvent){
-         Preconditions.checkNotNull( elasticsearchIndexEvent, "elasticsearchIndexEvent cannot be null" );
+
+        Preconditions.checkNotNull( elasticsearchIndexEvent, "elasticsearchIndexEvent cannot be null" );
 
         final UUID messageId = elasticsearchIndexEvent.getIndexBatchId();
-
         Preconditions.checkNotNull( messageId, "messageId must not be null" );
 
 
-        //load the entity
-
         final String message = esMapPersistence.getString( messageId.toString() );
 
-        final IndexOperationMessage indexOperationMessage;
 
+        final IndexOperationMessage indexOperationMessage;
         if(message == null) {
 
-           if ( System.currentTimeMillis() > elasticsearchIndexEvent.getCreationTime() + queueFig.getLocalQuorumTimeout() ) {
+            // provide some time back pressure before performing a quorum read
+            if ( System.currentTimeMillis() > elasticsearchIndexEvent.getCreationTime() + queueFig.getLocalQuorumTimeout() ) {
 
-               logger.warn("Received message with id {} to process, unable to find it, reading with higher consistency level",
-                   messageId);
+                if(logger.isDebugEnabled()){
+                    logger.debug("ES batch with id {} not found, reading with strong consistency", messageId);
+                }
 
-               final String highConsistency = esMapPersistence.getStringHighConsistency(messageId.toString());
+                final String highConsistency = esMapPersistence.getStringHighConsistency(messageId.toString());
+                if (highConsistency == null) {
 
-               if (highConsistency == null) {
-                   logger.error("Unable to find the ES batch with id {} to process at a higher consistency level",
-                       messageId);
-
-                   throw new RuntimeException("Unable to find the ES batch to process with message id " + messageId);
+                   throw new RuntimeException("ES batch with id "+messageId+" not found when reading with strong consistency");
                }
 
                indexOperationMessage = ObjectJsonSerializer.INSTANCE.fromString(highConsistency, IndexOperationMessage.class);
 
-           } else{
+           } else {
 
                throw new IndexDocNotFoundException(elasticsearchIndexEvent.getIndexBatchId());
 
            }
 
-        } else{
+        } else {
+
             indexOperationMessage = ObjectJsonSerializer.INSTANCE.fromString( message, IndexOperationMessage.class );
         }
 
+
+        // always do a check to ensure the indexes are initialized for the index requests
         initializeEntityIndexes(indexOperationMessage);
 
-        //NOTE that we intentionally do NOT delete from the map.  We can't know when all regions have consumed the message
-        //so we'll let compaction on column expiration handle deletion
-
-        //read the value from the string
-
-        Preconditions.checkNotNull( indexOperationMessage, "indexOperationMessage cannot be null" );
-        Preconditions.checkArgument( !indexOperationMessage.isEmpty() , "queued indexOperationMessage messages should not be empty" );
-
-
-        //now execute it
         return indexOperationMessage;
 
     }
@@ -694,30 +692,31 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
                                              .map( messages -> {
                                                  if ( messages == null || messages.size() == 0 ) {
+                                                     // no messages came from the queue, move on
                                                      return null;
                                                  }
 
                                                  try {
+                                                     // process the messages
                                                      List<IndexEventResult> indexEventResults = callEventHandlers( messages );
+
+                                                     // submit the processed messages to index producer
                                                      List<QueueMessage> messagesToAck = submitToIndex( indexEventResults );
 
-                                                     if ( messagesToAck == null || messagesToAck.size() == 0 ) {
-                                                         logger.error(
-                                                             "No messages came back from the queue operation, should have seen {} messages",
-                                                                 messages.size() );
-                                                         return messagesToAck;
+                                                     if ( messagesToAck.size() < messages.size() ) {
+                                                         logger.warn( "Missing {} message(s) from index processing",
+                                                            messages.size() - messagesToAck.size() );
                                                      }
 
-                                                     if ( messagesToAck.size() < messages.size() ) {
-                                                         logger.error( "Missing messages from queue post operation",
-                                                             messages, messagesToAck );
+                                                     // ack each message if making it to this point
+                                                     if( messagesToAck.size() > 0 ){
+                                                         ack( messagesToAck );
                                                      }
-                                                     //ack each message, but only if we didn't error.
-                                                     ack( messagesToAck );
+
                                                      return messagesToAck;
                                                  }
                                                  catch ( Exception e ) {
-                                                     logger.error( "failed to ack messages to sqs", e );
+                                                     logger.error( "Failed to ack messages", e );
                                                      return null;
                                                      //do not rethrow so we can process all of them
                                                  }
@@ -739,26 +738,30 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      * @return
      */
     private List<QueueMessage> submitToIndex(List<IndexEventResult> indexEventResults) {
-        //if nothing came back then return null
+
+        // if nothing came back then return null
         if(indexEventResults==null){
             return null;
         }
-        IndexOperationMessage combined = new IndexOperationMessage();
 
-        // stream the messages to record the cycle time
+        IndexOperationMessage combined = new IndexOperationMessage();
         List<QueueMessage> queueMessages = indexEventResults.stream()
+
+            // filter out messages that are not present, they were not processed and put into the results
+            .filter( result -> result.getQueueMessage().isPresent() )
             .map(indexEventResult -> {
+
                 //record the cycle time
                 messageCycle.update(System.currentTimeMillis() - indexEventResult.getCreationTime());
+
+                // ingest each index op into our combined, single index op for the index producer
                 if(indexEventResult.getIndexOperationMessage().isPresent()){
                     combined.ingest(indexEventResult.getIndexOperationMessage().get());
                 }
-                return indexEventResult;
+
+                return indexEventResult.getQueueMessage().get();
             })
-            // filter out messages that are not present, they were not processed and put into the results
-            .filter( result -> result.getQueueMessage().isPresent() )
-            .map(result -> result.getQueueMessage().get())
-            // collect
+            // collect into a list of QueueMessages that can be ack'd later
             .collect(Collectors.toList());
 
         // sumbit the requests to Elasticsearch
