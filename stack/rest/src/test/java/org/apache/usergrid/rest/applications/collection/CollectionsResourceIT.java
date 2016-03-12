@@ -192,73 +192,41 @@ public class CollectionsResourceIT extends AbstractRestIT {
     @Test
     public void postToCollectionSchemaWithSchemaFirst() throws Exception {
 
-
-
-        //Creating schema.
-        //this could be changed to a hashmap.
+        //Include the property labeled two to be index.
         ArrayList<String> indexingArray = new ArrayList<>(  );
-        indexingArray.add( "one" );
-        indexingArray.add( "name" );
-
-        //TODO: add indexing array to the backend/test once you finish the regular selective indexing.
-        //indexingArray.add( "field.three.index.array" );
+        indexingArray.add( "two" );
 
         //field "fields" is required.
         Entity payload = new Entity();
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-       // Entity thing = this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
         refreshIndex();
 
-        //Create test collection with test entity that is full text indexed.
+        //Create test collection with a test entity that is partially indexed.
         Entity testEntity = new Entity();
-        //testEntity.put( "name", "tester");
         testEntity.put( "one", "helper" );
-        //this field shouldn't persist after reindexing.
         testEntity.put( "two","query" );
 
-        //TODO: add arrays to the indexing test
-        //testEntity.put("array","array stuff here");
-
-        Entity returnedEntity = this.app().collection( "testCollection" ).post( testEntity );
+        //Post entity.
+        this.app().collection( "testCollection" ).post( testEntity );
         refreshIndex();
-        //testEntity.put( "three","notthree" );
-        //ApiResponse updatedEntity = this.app().collection( "testCollection" ).put( null,testEntity );
 
-        //Below is what needs to be implemented along with the index call above
-
-//        //Get the collection schema and verify that it contains the same schema as posted above.
-//        Collection collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
-//
-//        LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
-//        //TODO: the below will have to be replaced by the values that I deem correct.
-//        assertEquals( ( thing ).get( "lastUpdated" ), testCollectionSchema.get( "lastUpdated" ));
-//        assertEquals( ( thing ).get( "lastUpdateBy" ),testCollectionSchema.get( "lastUpdateBy" ) );
-//        assertEquals( ( thing ).get( "lastReindexed" ),testCollectionSchema.get( "lastReindexed" ) );
-
-//        //TODO: this test doesn't check to see if create checks the schema. Only that the reindex removes whats already there.
-//        ArrayList<String> schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
-//        assertEquals( "one",schema.get( 0 ) );
-
-        //Reindex and verify that the entity only has field one index.
-//        this.app().collection( "testCollection" ).collection( "_reindex" ).post();
-//
-//        refreshIndex();
-
-        //this needs to be a query. not a graph. This should still return the full entity.
-
+        //Do a query to see if you can find the indexed query.
         String query = "two ='query'";
         QueryParameters queryParameters = new QueryParameters().setQuery(query);
 
-//having a name breaks it. Need to get rid of the stack trace and also
+        //having a name breaks it. Need to get rid of the stack trace and also
         Collection tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
-
-
-        Entity reindexedEntity = tempEntity.getResponse().getEntity(); //this.app().collection( "testCollection" ).entity( returnedEntity.getUuid() ).get();
+        Entity reindexedEntity = tempEntity.getResponse().getEntity();
         assertEquals( "helper",reindexedEntity.get( "one" ) );
-        assertNull( reindexedEntity.get( "two" ) );
-        //not sure if this should have some kind of sleep here because this reindex will be heavily throttled.
+
+        //Verify if you can query on an entity that was not indexed and that no entities are returned.
+        query = "one = 'helper'";
+        queryParameters = new QueryParameters().setQuery(query);
+        tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
+        assertEquals(0,tempEntity.getResponse().getEntities().size());
 
     }
 
