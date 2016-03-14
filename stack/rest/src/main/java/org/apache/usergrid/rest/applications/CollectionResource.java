@@ -113,7 +113,7 @@ public class CollectionResource extends ServiceResource {
     @Produces({MediaType.APPLICATION_JSON,"application/javascript"})
     @RequireApplicationAccess
     @JSONP
-    public ApiResponse executeGetOnIndex( @Context UriInfo ui, String body,
+    public ApiResponse executeGetOnIndex( @Context UriInfo ui,
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
@@ -121,28 +121,12 @@ public class CollectionResource extends ServiceResource {
             logger.trace( "CollectionResource.executeGetOnIndex" );
         }
 
-        Object json;
-        if ( StringUtils.isEmpty( body ) ) {
-            json = null;
-        } else {
-            json = readJsonToObject( body );
-        }
-
         ApiResponse response = createApiResponse();
-
-
-
         response.setAction( "get" );
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
 
         executeServiceGetRequestForSchema( ui,response,ServiceAction.GET,null );
-
-        ///ServicePayload payload = getPayload( json );
-
-        ///emf.getEntityManager( getApplicationId() ).get
-
-        //executeServiceRequest( ui, response, ServiceAction.GET, payload );
 
         return response;
     }
