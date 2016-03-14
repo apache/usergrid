@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.avro.generic.GenericData;
 import org.apache.usergrid.persistence.index.impl.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -519,6 +520,13 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         }
 
 
+        // don't let this continue if there's nothing to index
+        if (indexOperationMessage == null ||  indexOperationMessage.isEmpty()){
+            throw new RuntimeException(
+                "IndexOperationMessage cannot be null or empty after retrieving from map persistence");
+        }
+
+
         // always do a check to ensure the indexes are initialized for the index requests
         initializeEntityIndexes(indexOperationMessage);
 
@@ -739,9 +747,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      */
     private List<QueueMessage> submitToIndex(List<IndexEventResult> indexEventResults) {
 
-        // if nothing came back then return null
+        // if nothing came back then return empty list
         if(indexEventResults==null){
-            return null;
+            return new ArrayList<>(0);
         }
 
         IndexOperationMessage combined = new IndexOperationMessage();

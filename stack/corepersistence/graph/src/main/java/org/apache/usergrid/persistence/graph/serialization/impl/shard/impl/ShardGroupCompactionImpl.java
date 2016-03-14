@@ -36,6 +36,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Optional;
+import org.apache.usergrid.persistence.graph.Edge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -169,6 +171,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
         final MutationBatch newRowBatch = keyspace.prepareMutationBatch();
         final MutationBatch deleteRowBatch = keyspace.prepareMutationBatch();
+        final MutationBatch updateShardMetaBatch = keyspace.prepareMutationBatch();
 
         /**
          * As we move edges, we want to keep track of it
@@ -181,10 +184,13 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                 .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, Collections.singleton( sourceShard ),
                     Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING );
 
+            MarkedEdge shardEnd = null;
+
             while ( edges.hasNext() ) {
                 final MarkedEdge edge = edges.next();
 
                 final long edgeTimestamp = edge.getTimestamp();
+                shardEnd = edge;
 
                 /**
                  * The edge is within a different shard, break
@@ -202,6 +208,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                         .deleteEdge( shardedEdgeSerialization, edgeColumnFamilies, scope, sourceShard, edge,
                             timestamp ) );
 
+
                 edgeCount++;
 
                 //if we're at our count, execute the mutation of writing the edges to the new row, then remove them
@@ -217,12 +224,21 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                     }
                 }
             }
+
+            Shard updatedShard = new Shard( sourceShard.getShardIndex(), sourceShard.getCreatedTime(), sourceShard.isCompacted() );
+            updatedShard.setShardEnd(Optional.fromNullable(shardEnd));
+            logger.info("updating with shard end: {}", shardEnd );
+            updateShardMetaBatch.mergeShallow( edgeShardSerialization.writeShardMeta(scope, updatedShard, edgeMeta));
+
         }
+
+
 
 
         try {
             newRowBatch.execute();
             deleteRowBatch.execute();
+            updateShardMetaBatch.execute();
         }
         catch ( Throwable t ) {
             logger.error( "Unable to move edges to target shard {}", targetShard );
@@ -232,6 +248,8 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         if (logger.isTraceEnabled()) {
             logger.trace("Finished compacting {} shards and moved {} edges", sourceShards, edgeCount);
         }
+        logger.info("Finished compacting {} shards and moved {} edges", sourceShards, edgeCount);
+
 
         resultBuilder.withCopiedEdges( edgeCount ).withSourceShards( sourceShards ).withTargetShard( targetShard );
 
@@ -276,6 +294,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
             //Overwrite our shard index with a newly created one that has been marked as compacted
             Shard compactedShard = new Shard( targetShard.getShardIndex(), timeService.getCurrentTime(), true );
+
             final MutationBatch updateMark = edgeShardSerialization.writeShardMeta( scope, compactedShard, edgeMeta );
             try {
                 updateMark.execute();

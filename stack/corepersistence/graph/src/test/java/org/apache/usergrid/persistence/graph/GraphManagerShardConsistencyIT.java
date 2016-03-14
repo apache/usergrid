@@ -203,7 +203,10 @@ public class GraphManagerShardConsistencyIT {
         // power for writes
         final int numProcessors = Runtime.getRuntime().availableProcessors() / 2;
 
-        final int numWorkersPerInjector = numProcessors / numInjectors;
+        //final int numWorkersPerInjector = numProcessors / numInjectors;
+
+        final int numWorkersPerInjector = 1;
+
 
 
         /**
@@ -268,7 +271,9 @@ public class GraphManagerShardConsistencyIT {
 
         final List<Throwable> failures = new ArrayList<>();
 
-        for(int i = 0; i < 2; i ++) {
+        Thread.sleep(5000);
+
+        for(int i = 0; i < 1; i ++) {
 
 
             /**
@@ -656,7 +661,7 @@ public class GraphManagerShardConsistencyIT {
             final long startTime = System.currentTimeMillis();
 
 
-            for ( long i = 0; i < writeLimit || System.currentTimeMillis() - startTime < minExecutionTime; i++ ) {
+            for ( long i = 1; i < writeLimit +1 && System.currentTimeMillis() - startTime < minExecutionTime; i++ ) {
 
                 Edge edge = generator.newEdge();
 
@@ -671,8 +676,8 @@ public class GraphManagerShardConsistencyIT {
                 writeCounter.incrementAndGet();
 
 
-                if ( i % 1000 == 0 ) {
-                    logger.info( "   Wrote: " + i );
+                if ( i % 100 == 0 ) {
+                    logger.info( Thread.currentThread().getName()+" wrote: " + i );
                 }
             }
 
@@ -718,7 +723,7 @@ public class GraphManagerShardConsistencyIT {
                 logger.info( "Completed reading {} edges", returnedEdgeCount );
 
                 if ( writeCount != returnedEdgeCount ) {
-                    logger.warn( "Unexpected edge count returned!!!  Expected {} but was {}", writeCount,
+                    logger.warn( Thread.currentThread().getName()+" - Unexpected edge count returned!!!  Expected {} but was {}", writeCount,
                         returnedEdgeCount );
                 }
 

@@ -98,13 +98,14 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         else {
             existingShards = edgeShardSerialization.getShardMetaData( scope, maxShardId, directedEdgeMeta );
+            //logger.info("existing shards has something: {}", existingShards.hasNext());
 
             /**
              * We didn't get anything out of cassandra, so we need to create the minumum shard
              */
             if ( existingShards == null || !existingShards.hasNext() ) {
 
-
+                //logger.info("writing min shard");
                 final MutationBatch batch = edgeShardSerialization.writeShardMeta( scope, Shard.MIN_SHARD, directedEdgeMeta );
                 try {
                     batch.execute();
@@ -117,6 +118,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             }
         }
 
+        //logger.info("getShards existing shards: {}", existingShards);
 
         return new ShardEntryGroupIterator( existingShards, graphFig.getShardMinDelta(), shardGroupCompaction, scope,
             directedEdgeMeta );
