@@ -1,35 +1,29 @@
 /*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *  * Licensed to the Apache Software Foundation (ASF) under one
- *  * or more contributor license agreements.  See the NOTICE file
- *  * distributed with this work for additional information
- *  * regarding copyright ownership.  The ASF licenses this file
- *  * to you under the Apache License, Version 2.0 (the
- *  * "License"); you may not use this file except in compliance
- *  * with the License.  You may obtain a copy of the License at
- *  *
- *  *    http://www.apache.org/licenses/LICENSE-2.0
- *  *
- *  * Unless required by applicable law or agreed to in writing,
- *  * software distributed under the License is distributed on an
- *  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *  * KIND, either express or implied.  See the License for the
- *  * specific language governing permissions and limitations
- *  * under the License.
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
 package org.apache.usergrid.persistence.core.astyanax;
 
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
+import org.apache.avro.generic.GenericData;
+import org.apache.usergrid.persistence.core.shard.SmartShard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,6 +73,14 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
     private Iterator<T> currentColumnIterator;
 
+    private Iterator<SmartShard> currentShardIterator;
+
+    private List<SmartShard> rowKeysWithShardEnd;
+
+    private SmartShard currentShard;
+
+    private List<T> resultsTracking;
+
 
     /**
      * Remove after finding bug
@@ -110,6 +112,28 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         this.keyspace = keyspace;
         this.consistencyLevel = consistencyLevel;
         this.moreToReturn = true;
+        this.resultsTracking = new ArrayList<>();
+
+        //        seenResults = new HashMap<>( pageSize * 10 );
+    }
+
+    public MultiRowColumnIterator( final Keyspace keyspace, final ColumnFamily<R, C> cf,
+                                   final ConsistencyLevel consistencyLevel, final ColumnParser<C, T> columnParser,
+                                   final ColumnSearch<T> columnSearch, final Comparator<T> comparator,
+                                   final Collection<R> rowKeys, final int pageSize,
+                                   final List<SmartShard> rowKeysWithShardEnd) {
+        this.cf = cf;
+        this.pageSize = pageSize;
+        this.columnParser = columnParser;
+        this.columnSearch = columnSearch;
+        this.comparator = comparator;
+        this.rowKeys = rowKeys;
+        this.keyspace = keyspace;
+        this.consistencyLevel = consistencyLevel;
+        this.moreToReturn = true;
+        this.rowKeysWithShardEnd = rowKeysWithShardEnd;
+        this.resultsTracking = new ArrayList<>();
+
 
         //        seenResults = new HashMap<>( pageSize * 10 );
     }
@@ -117,12 +141,34 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
     @Override
     public boolean hasNext() {
+        //logger.info(Thread.currentThread().getName()+" - calling hasNext()");
+        if( currentColumnIterator != null && !currentColumnIterator.hasNext() && !moreToReturn){
+            if(currentShardIterator.hasNext()) {
+                logger.info(Thread.currentThread().getName()+" - advancing shard iterator");
+                //logger.info(Thread.currentThread().getName()+" - currentColumnIterator.hasNext()={}", currentColumnIterator.hasNext());
+                logger.info(Thread.currentThread().getName()+" - shards: {}",rowKeysWithShardEnd);
+                //Collections.reverse(rowKeysWithShardEnd);
+                logger.info(Thread.currentThread().getName()+" - shards: {}",rowKeysWithShardEnd);
 
-        if ( currentColumnIterator == null || ( !currentColumnIterator.hasNext() && moreToReturn ) ) {
-            advance();
+                logger.info(Thread.currentThread().getName()+" - current shard: {}", currentShard);
+                currentShard = currentShardIterator.next();
+                logger.info(Thread.currentThread().getName()+" - current shard: {}", currentShard);
+                startColumn = null;
+
+                advance();
+            }
         }
 
+        if ( currentColumnIterator == null || ( !currentColumnIterator.hasNext() && moreToReturn ) ) {
+            if(currentColumnIterator != null) {
+                logger.info(Thread.currentThread().getName() + " - currentColumnIterator.hasNext()={}", currentColumnIterator.hasNext());
+            }
+            logger.info(Thread.currentThread().getName()+" - moreToReturn={}", moreToReturn);
 
+            logger.info(Thread.currentThread().getName()+" - going into advance()");
+
+            advance();
+        }
         return currentColumnIterator.hasNext();
     }
 
@@ -148,7 +194,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
     public void advance() {
 
-
+        logger.info( "Advancing multi row column iterator" );
         if (logger.isTraceEnabled()) logger.trace( "Advancing multi row column iterator" );
 
         /**
@@ -161,11 +207,33 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
         final int selectSize = skipFirstColumn ? pageSize + 1 : pageSize;
 
+        //final int selectSize = pageSize;
+
         final RangeBuilder rangeBuilder = new RangeBuilder();
 
 
-        //set the range into the search
 
+
+        if(currentShardIterator == null){
+            currentShardIterator = rowKeysWithShardEnd.iterator();
+
+        }
+
+        if(currentShard == null){
+            Collections.reverse(rowKeysWithShardEnd); // ranges are ascending
+            logger.info(Thread.currentThread().getName()+" - currentShard: {}", currentShard);
+            currentShard = currentShardIterator.next();
+            logger.info(Thread.currentThread().getName()+" - all shards when starting: {}", rowKeysWithShardEnd);
+            logger.info(Thread.currentThread().getName()+" - initializing iterator with shard: {}", currentShard);
+
+        }
+
+
+
+
+
+        //set the range into the search
+        logger.info(Thread.currentThread().getName()+" - startColumn={}", startColumn);
         if ( startColumn == null ) {
             columnSearch.buildRange( rangeBuilder );
         }
@@ -181,9 +249,10 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         /**
          * Get our list of slices
          */
+        //logger.info("shard: {}, end: {}",currentShard.getRowKey().getKey(), currentShard.getShardEnd());
         final RowSliceQuery<R, C> query =
-                keyspace.prepareQuery( cf ).setConsistencyLevel( consistencyLevel ).getKeySlice( rowKeys )
-                        .withColumnRange( rangeBuilder.build() );
+            keyspace.prepareQuery( cf ).setConsistencyLevel( consistencyLevel ).getKeySlice( (R) currentShard.getRowKey() )
+                .withColumnRange( rangeBuilder.build() );
 
         final Rows<R, C> result;
         try {
@@ -194,6 +263,33 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         }
 
 
+
+//        List<RowSliceQuery<R, C>> queries = new ArrayList<>();
+//
+//        rowKeys.forEach( rowkey -> {
+//
+//            queries.add(keyspace.prepareQuery( cf ).setConsistencyLevel( consistencyLevel ).getKeySlice( rowKeys )
+//                .withColumnRange( rangeBuilder.build() ));
+//
+//        });
+//
+//
+//        final List<Rows<R,C>> combinedResults = new ArrayList<>();
+//
+//        queries.forEach(query ->{
+//
+//            try {
+//                combinedResults.add(query.execute().getResult());
+//            }
+//            catch ( ConnectionException e ) {
+//                throw new RuntimeException( "Unable to connect to casandra", e );
+//            }
+//
+//        });
+
+
+
+
         //now aggregate them together
 
         //this is an optimization.  It's faster to see if we only have values for one row,
@@ -201,14 +297,34 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         //do a merge if only one row has data.
 
 
+
         final List<T> mergedResults;
 
-        if ( containsSingleRowOnly( result ) ) {
-            mergedResults = singleRowResult( result );
-        }
-        else {
-            mergedResults = mergeResults( result, selectSize );
-        }
+        mergedResults = mergeResults( result, selectSize );
+
+//        if ( containsSingleRowOnly( result ) ) {
+//            mergedResults = singleRowResult( result );
+//        }
+//        else {
+//            mergedResults = mergeResults( result, selectSize );
+//        }
+
+
+
+//        final List<T> mergedResults = new ArrayList<>();
+//
+//        combinedResults.forEach(rows -> {
+//
+//            if ( containsSingleRowOnly( rows ) ) {
+//                mergedResults.addAll(singleRowResult( rows ));
+//            }
+//            else {
+//                mergedResults.addAll(mergeResults( rows, selectSize ));
+//            }
+//
+//        });
+
+
 
 
 
@@ -223,7 +339,19 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
         final int size = mergedResults.size();
 
+
+
+        if(logger.isTraceEnabled()){
+            logger.trace(Thread.currentThread().getName()+" - current shard: {}, retrieved size: {}", currentShard, size);
+
+        }
+
+        logger.info(Thread.currentThread().getName()+" - selectSize={}, size={}, ", selectSize, size);
         moreToReturn = size == selectSize;
+
+//        if(selectSize == 1001 && mergedResults.size() == 1000){
+//            moreToReturn = true;
+//        }
 
         //we have a first column to to check
         if( size > 0) {
@@ -232,6 +360,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
             //The search has either told us to skip the first element, or it matches our last, therefore we disregard it
             if(columnSearch.skipFirst( firstResult ) || (skipFirstColumn && comparator.compare( startColumn, firstResult ) == 0)){
+                logger.info("removing an entry");
                 mergedResults.remove( 0 );
             }
 
@@ -240,10 +369,25 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
         if(moreToReturn && mergedResults.size() > 0){
             startColumn = mergedResults.get( mergedResults.size()  - 1 );
+
         }
+
+        logger.info(Thread.currentThread().getName()+" - current shard: {}", currentShard);
+        logger.info(Thread.currentThread().getName()+" - selectSize={}, size={}, ", selectSize, size);
+
+
+//        if(mergedResults.size() == 0 && currentShardIterator.hasNext()){
+//                //currentShard = currentShardIterator.next();
+//
+//        }
 
 
         currentColumnIterator = mergedResults.iterator();
+        //logger.info(Thread.currentThread().getName()+" - shards: {}",rowKeysWithShardEnd);
+        logger.info(
+            Thread.currentThread().getName()+" - currentColumnIterator.hasNext()={}, " +
+                "moreToReturn={}, currentShardIterator.hasNext()={}",
+            currentColumnIterator.hasNext(), moreToReturn, currentShardIterator.hasNext());
 
         if (logger.isTraceEnabled()) logger.trace( "Finished parsing {} rows for results", rowKeys.size() );
     }
@@ -328,7 +472,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
                 final T returnedValue = columnParser.parseColumn( column );
 
                 //Use an O(log n) search, same as a tree, but with fast access to indexes for later operations
-                int searchIndex = Collections.binarySearch( mergedResults, returnedValue, comparator );
+                int searchIndex = Collections.binarySearch( resultsTracking, returnedValue, comparator );
 
                 /**
                  * DO NOT remove this section of code. If you're seeing inconsistent results during shard transition,
@@ -350,29 +494,37 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
                 //we've already seen it, no-op
                 if(searchIndex > -1){
+                    logger.info("skipping column as it was already retrieved before");
                     continue;
                 }
 
-                final int insertIndex = (searchIndex+1)*-1;
+//                final int insertIndex = (searchIndex+1)*-1;
+//
+//                //it's at the end of the list, don't bother inserting just to remove it
+//                if(insertIndex >= maxSize){
+//                    logger.info("skipping column as it was at the end of the list");
+//                    continue;
+//                }
 
-                //it's at the end of the list, don't bother inserting just to remove it
-                if(insertIndex >= maxSize){
-                    continue;
-                }
+                resultsTracking.add(returnedValue);
 
-                if (logger.isTraceEnabled()) logger.trace( "Adding value {} to merged set at index {}", returnedValue, insertIndex );
+                //if (logger.isTraceEnabled()) logger.trace( "Adding value {} to merged set at index {}", returnedValue, insertIndex );
 
-                mergedResults.add( insertIndex, returnedValue );
+                //mergedResults.add( insertIndex, returnedValue );
+                mergedResults.add(returnedValue );
+
 
 
                 //prune the mergedResults
-                while ( mergedResults.size() > maxSize ) {
-
-                    if (logger.isTraceEnabled()) logger.trace( "Trimming results to size {}", maxSize );
-
-                    //just remove from our tail until the size falls to the correct value
-                    mergedResults.remove(mergedResults.size()-1);
-                }
+//                while ( mergedResults.size() > maxSize ) {
+//
+//                    if (logger.isTraceEnabled()) logger.trace( "Trimming results to size {}", maxSize );
+//
+//                    //just remove from our tail until the size falls to the correct value
+//                    mergedResults.remove(mergedResults.size()-1);
+//                    resultsTracking.remove(resultsTracking.size()-1);
+//
+//                }
             }
 
             if (logger.isTraceEnabled()) logger.trace( "Candidate result set size is {}", mergedResults.size() );
@@ -380,7 +532,6 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         }
         return mergedResults;
     }
-
 
 }
 

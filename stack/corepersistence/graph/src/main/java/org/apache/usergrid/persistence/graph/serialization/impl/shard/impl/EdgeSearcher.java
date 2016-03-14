@@ -1,16 +1,34 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
+import org.apache.http.cookie.SM;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
 import org.apache.usergrid.persistence.core.astyanax.ColumnSearch;
+import org.apache.usergrid.persistence.core.astyanax.MultiRowColumnIterator;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.core.shard.SmartShard;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
@@ -22,6 +40,10 @@ import com.google.common.base.Preconditions;
 import com.netflix.astyanax.Serializer;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.util.RangeBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.apache.usergrid.persistence.core.astyanax.MultiRowColumnIterator.*;
 
 
 /**
@@ -33,6 +55,9 @@ import com.netflix.astyanax.util.RangeBuilder;
  * @param <T> The parsed return type
  */
 public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, ColumnSearch<T>{
+
+    private static final Logger logger = LoggerFactory.getLogger( EdgeSearcher.class );
+
 
     protected final Optional<T> last;
     protected final long maxTimestamp;
@@ -52,6 +77,8 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
         this.shards = shards;
         this.last = last;
         this.comparator = comparator;
+
+        //logger.info("initializing with shards: {}", shards);
     }
 
 
@@ -59,6 +86,7 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
     public List<ScopedRowKey<R>> getRowKeys() {
 
         List<ScopedRowKey<R>> rowKeys = new ArrayList<>(shards.size());
+        //logger.info("shards: {}", shards);
 
         for(Shard shard : shards){
 
@@ -70,6 +98,33 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
 
 
         return rowKeys;
+    }
+
+    public List<SmartShard> getRowKeysWithShardEnd(){
+
+
+        final List<SmartShard> rowKeysWithShardEnd = new ArrayList<>(shards.size());
+
+        for(Shard shard : shards){
+
+            final ScopedRowKey< R> rowKey = ScopedRowKey
+                .fromKey( scope.getApplication(), generateRowKey(shard.getShardIndex() ) );
+
+            final C shardEnd;
+            if(shard.getShardEnd().isPresent()){
+                shardEnd = createColumn((T) shard.getShardEnd().get());
+
+            }else{
+                shardEnd = null;
+            }
+
+
+
+            rowKeysWithShardEnd.add(new SmartShard(rowKey, shardEnd));
+        }
+
+        return rowKeysWithShardEnd;
+
     }
 
 
@@ -126,6 +181,29 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
         rangeBuilder.setReversed( reversed );
 
     }
+
+//    public class SmartShard {
+//
+//        final ScopedRowKey<R> rowKey;
+//        final C shardEnd;
+//
+//
+//        public SmartShard(final ScopedRowKey<R> rowKey, final C shardEnd){
+//
+//            this.rowKey = rowKey;
+//            this.shardEnd = shardEnd;
+//        }
+//
+//
+//        public ScopedRowKey<R> getRowKey(){
+//            return rowKey;
+//        }
+//
+//        public C getShardEnd(){
+//            return shardEnd;
+//        }
+//
+//    }
 
 
     /**
