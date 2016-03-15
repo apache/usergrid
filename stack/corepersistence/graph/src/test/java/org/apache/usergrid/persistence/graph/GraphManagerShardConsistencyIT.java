@@ -114,7 +114,7 @@ public class GraphManagerShardConsistencyIT {
         originalShardDelta = ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_MIN_DELTA );
 
 
-        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_SIZE, 500 );
+        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_SIZE, 10000 );
 
 
         final long cacheTimeout = 2000;
@@ -203,9 +203,9 @@ public class GraphManagerShardConsistencyIT {
         // power for writes
         final int numProcessors = Runtime.getRuntime().availableProcessors() / 2;
 
-        //final int numWorkersPerInjector = numProcessors / numInjectors;
+        final int numWorkersPerInjector = numProcessors / numInjectors;
 
-        final int numWorkersPerInjector = 1;
+        //final int numWorkersPerInjector = 1;
 
 
 
