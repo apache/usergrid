@@ -21,6 +21,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.utils.CertificateUtils;
 import org.apache.usergrid.services.ServiceAction;
@@ -55,8 +56,8 @@ public class NotifierResource extends ServiceResource {
     }
 
     /* Multipart PUT update with uploaded p12Certificate */
+    @CheckPermissionsForPath
     @PUT
-    @RequireApplicationAccess
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
