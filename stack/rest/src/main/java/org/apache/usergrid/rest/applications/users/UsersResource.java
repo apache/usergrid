@@ -30,6 +30,7 @@ import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
@@ -203,9 +204,9 @@ public class UsersResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @POST
     @Override
-    @RequireApplicationAccess
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executePost( @Context UriInfo ui, String body,

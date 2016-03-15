@@ -193,7 +193,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
     }
 
     @Test
-    public void getNonExistantEntityReturns404() throws Exception {
+    public void getNonExistentEntityReturns404() throws Exception {
 
         // Call a get on a existing entity with no access token and check if we get a 401
         try {
@@ -409,7 +409,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
                 "get,put,post:/reviews/**" );
         // allow access to all user's connections excluding delete
         addPermission( "reviewer",
-                "get,put,post:/users/${user}/**" );
+                "get,put,post:/users/me/**" );
         // allow access to the review relationship excluding delete
         addPermission( "reviewer",
                 "get,put,post:/books/*/review/*" );
