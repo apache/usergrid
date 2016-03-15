@@ -36,6 +36,7 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,8 +104,8 @@ public class UserResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @PUT
-    @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
@@ -123,7 +124,7 @@ public class UserResource extends ServiceResource {
         return super.executePutWithMap( ui, json, callback );
     }
 
-
+    // no access token needed
     @PUT
     @Path("password")
     @JSONP
@@ -253,6 +254,7 @@ public class UserResource extends ServiceResource {
     }
 
 
+    // no access token needed
     @POST
     @Path("password")
     @JSONP
@@ -264,6 +266,7 @@ public class UserResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @POST
     @Path("deactivate")
     @JSONP
@@ -282,6 +285,7 @@ public class UserResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @GET
     @Path("sendpin")
     @JSONP
@@ -308,6 +312,7 @@ public class UserResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @POST
     @Path("sendpin")
     @JSONP
@@ -319,9 +324,9 @@ public class UserResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @GET
     @Path("setpin")
-    @RequireApplicationAccess
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse setPin( @Context UriInfo ui, @QueryParam("pin") String pin,
@@ -346,10 +351,10 @@ public class UserResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @POST
     @Path("setpin")
     @Consumes("application/x-www-form-urlencoded")
-    @RequireApplicationAccess
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse postPin( @Context UriInfo ui, @FormParam("pin") String pin,
@@ -374,10 +379,10 @@ public class UserResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @POST
     @Path("setpin")
     @Consumes(MediaType.APPLICATION_JSON)
-    @RequireApplicationAccess
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse jsonPin( @Context UriInfo ui, JsonNode json,
@@ -402,6 +407,7 @@ public class UserResource extends ServiceResource {
     }
 
 
+    // no access token needed
     @GET
     @Path("resetpw")
     @Produces(MediaType.TEXT_HTML)
@@ -429,6 +435,7 @@ public class UserResource extends ServiceResource {
     }
 
 
+    // no access token needed, reset token required
     @POST
     @Path("resetpw")
     @Consumes("application/x-www-form-urlencoded")
@@ -526,6 +533,7 @@ public class UserResource extends ServiceResource {
     }
 
 
+    // no access token needed, activation token required
     @GET
     @Path("activate")
     @Produces(MediaType.TEXT_HTML)
@@ -547,6 +555,7 @@ public class UserResource extends ServiceResource {
     }
 
 
+    // no access token needed, confirmation token required
     @GET
     @Path("confirm")
     @Produces(MediaType.TEXT_HTML)
@@ -614,6 +623,7 @@ public class UserResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @PUT
     @Path("revoketokens")
     @JSONP
@@ -625,6 +635,7 @@ public class UserResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @POST
     @Path("revoketoken")
     @JSONP
@@ -646,6 +657,7 @@ public class UserResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @PUT
     @Path("revoketoken")
     @JSONP
@@ -657,6 +669,7 @@ public class UserResource extends ServiceResource {
     }
 
 
+    @CheckPermissionsForPath
     @GET
     @Path("token")
     @RequireApplicationAccess
@@ -669,7 +682,8 @@ public class UserResource extends ServiceResource {
 
         try {
 
-            if ( isApplicationUser() && !getUserUuid().equals( getSubjectUserId() ) ) {
+            // don't allow application user tokens to be exchanged for new tokens (possibly increasing ttl)
+            if ( isApplicationUser() ) {
                 OAuthResponse res = OAuthResponse.errorResponse( SC_FORBIDDEN ).buildJSONMessage();
                 return Response.status( res.getResponseStatus() ).type( jsonMediaType( callback ) )
                                .entity( wrapWithCallback( res.getBody(), callback ) ).build();
