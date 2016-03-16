@@ -56,9 +56,6 @@ import static org.apache.usergrid.persistence.core.astyanax.MultiRowColumnIterat
  */
 public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, ColumnSearch<T>{
 
-    private static final Logger logger = LoggerFactory.getLogger( EdgeSearcher.class );
-
-
     protected final Optional<T> last;
     protected final long maxTimestamp;
     protected final ApplicationScope scope;
@@ -78,7 +75,6 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
         this.last = last;
         this.comparator = comparator;
 
-        //logger.info("initializing with shards: {}", shards);
     }
 
 
@@ -86,7 +82,6 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
     public List<ScopedRowKey<R>> getRowKeys() {
 
         List<ScopedRowKey<R>> rowKeys = new ArrayList<>(shards.size());
-        //logger.info("shards: {}", shards);
 
         for(Shard shard : shards){
 
@@ -175,36 +170,13 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
     }
 
     private void setRangeOptions(final RangeBuilder rangeBuilder){
-            //if we're ascending, this is opposite what cassandra sorts, so set the reversed flag
+
+        //if we're ascending, this is opposite what cassandra sorts, so set the reversed flag
         final boolean reversed = order == SearchByEdgeType.Order.ASCENDING;
 
         rangeBuilder.setReversed( reversed );
 
     }
-
-//    public class SmartShard {
-//
-//        final ScopedRowKey<R> rowKey;
-//        final C shardEnd;
-//
-//
-//        public SmartShard(final ScopedRowKey<R> rowKey, final C shardEnd){
-//
-//            this.rowKey = rowKey;
-//            this.shardEnd = shardEnd;
-//        }
-//
-//
-//        public ScopedRowKey<R> getRowKey(){
-//            return rowKey;
-//        }
-//
-//        public C getShardEnd(){
-//            return shardEnd;
-//        }
-//
-//    }
-
 
     /**
      * Get the comparator
@@ -212,6 +184,10 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
      */
     public Comparator<T> getComparator() {
         return comparator;
+    }
+
+    public SearchByEdgeType.Order getOrder(){
+        return order;
     }
 
 
