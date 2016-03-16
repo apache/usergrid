@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.index.*;
@@ -31,6 +32,7 @@ import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
@@ -69,13 +71,32 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         final String writeAlias = alias.getWriteAlias();
 
-        //if ( logger.isDebugEnabled() ) {
-            logger.info( "Indexing to alias {} with scope {} on edge {} with entity data {}",
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Indexing to alias {} with scope {} on edge {} with entity data {}",
                     writeAlias, applicationScope, indexEdge, entity.getFieldMap().keySet() );
-        //}
+        }
 
         //add app id for indexing
         container.addIndexRequest(new IndexOperation(writeAlias, applicationScope, indexEdge, entity));
+        return this;
+    }
+
+    @Override
+    public EntityIndexBatch index ( final IndexEdge indexEdge, final Entity entity ,final Map flattenedEntityMap){
+        IndexValidationUtils.validateIndexEdge(indexEdge);
+        ValidationUtils.verifyEntityWrite(entity);
+        ValidationUtils.verifyVersion( entity.getVersion() );
+
+        final String writeAlias = alias.getWriteAlias();
+
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Indexing to alias {} with scope {} on edge {} with entity data {}",
+                writeAlias, applicationScope, indexEdge, flattenedEntityMap );
+        }
+
+        //add app id for indexing
+        container.addIndexRequest(new IndexOperation(writeAlias, applicationScope,
+            indexEdge,entity.getId(),entity.getVersion(),flattenedEntityMap) );
         return this;
     }
 

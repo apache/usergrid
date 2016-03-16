@@ -17,16 +17,22 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexEdge;
+import org.apache.usergrid.persistence.map.MapManager;
+import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.EntityMap;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.APPLICATION_ID_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.EDGE_NAME_FIELDNAME;
@@ -43,6 +49,7 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.applicati
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.entityId;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.getType;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.nodeId;
+
 
 
 /**

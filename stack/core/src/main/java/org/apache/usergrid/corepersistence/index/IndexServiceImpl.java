@@ -22,6 +22,7 @@ package org.apache.usergrid.corepersistence.index;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.index.impl.EntityField;
+import org.apache.usergrid.persistence.index.impl.IndexOperation;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
@@ -158,58 +161,19 @@ public class IndexServiceImpl implements IndexService {
 
             final EntityIndexBatch batch = ei.createBatch();
 
-           // if (logger.isDebugEnabled()) {
+            if (logger.isDebugEnabled()) {
                 logger.debug("adding edge {} to batch for entity {}", indexEdge, entity);
-           // }
+            }
 
+            Map<String, Object> map = getFilteredStringObjectMap( applicationScope, entity, indexEdge );
 
-                indexEdge.getNodeId().getUuid();
+            if(map!=null){
+                batch.index( indexEdge, entity ,map);
+            }
+            else{
+                batch.index( indexEdge,entity );
+            }
 
-                //System.out.println("hello");
-
-                Id mapOwner = new SimpleId( indexEdge.getNodeId().getUuid(), TYPE_APPLICATION );
-
-                final MapScope ms = CpNamingUtils.getEntityTypeMapScope(mapOwner );
-
-                MapManager mm = mapManagerFactory.createMapManager( ms );
-
-
-
-                String jsonMap = mm.getString( indexEdge.getEdgeName().split( "\\|" )[1] );
-
-                Set<String> defaultProperties = null;
-
-                if(jsonMap != null) {
-
-                    Map jsonMapData = ( Map ) JsonUtils.parse( jsonMap );
-                    Schema schema = Schema.getDefaultSchema();
-                    defaultProperties = schema.getRequiredProperties( indexEdge.getEdgeName().split( "\\|" )[1]);
-                    //TODO: additional logic to
-                    ArrayList fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
-                    defaultProperties.addAll( fieldsToKeep );
-
-                }
-
-            Entity filteredEntity = new Entity( entity.getId(),entity.getVersion() );
-            filteredEntity.setFieldMap( entity.getFieldMap() );
-
-                Collection<String> trimmedFields = null;
-                if(defaultProperties!=null) {
-                    // if(cpHeadEntity.getFields())
-                    final Set<String> finalDefaultProperties = defaultProperties;
-                    trimmedFields = entity.getFieldMap().keySet();
-                    Iterator collectionIterator = trimmedFields.iterator();
-                    while ( collectionIterator.hasNext() ) {
-                        String fieldName = ( String ) collectionIterator.next();
-                        if ( !finalDefaultProperties.contains( fieldName ) ) {
-                            //collectionIterator.remove();
-                            filteredEntity.removeField( fieldName );
-                        }
-                    }
-                }
-
-
-            batch.index( indexEdge, filteredEntity );
 
             return batch.build();
         } );
@@ -217,6 +181,63 @@ public class IndexServiceImpl implements IndexService {
         return ObservableTimer.time( batches, addTimer  );
 
 
+    }
+
+
+    private Map<String, Object> getFilteredStringObjectMap( final ApplicationScope applicationScope, final Entity entity,
+                                                    final IndexEdge indexEdge ) {IndexOperation indexOperation = new IndexOperation(  );
+
+
+        indexEdge.getNodeId().getUuid();
+
+        Id mapOwner = new SimpleId( indexEdge.getNodeId().getUuid(), TYPE_APPLICATION );
+
+        final MapScope ms = CpNamingUtils.getEntityTypeMapScope(mapOwner );
+
+        MapManager mm = mapManagerFactory.createMapManager( ms );
+
+        String jsonMap = mm.getString( indexEdge.getEdgeName().split( "\\|" )[1] );
+
+        Set<String> defaultProperties = null;
+
+        if(jsonMap != null) {
+
+            Map jsonMapData = ( Map ) JsonUtils.parse( jsonMap );
+            Schema schema = Schema.getDefaultSchema();
+            defaultProperties = schema.getRequiredProperties( indexEdge.getEdgeName().split( "\\|" )[1]);
+            //TODO: additional logic to
+            ArrayList fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
+            defaultProperties.addAll( fieldsToKeep );
+        }
+        else
+            return null;
+
+        Map<String, Object> map = indexOperation.convertedEntityToBeIndexed( applicationScope,indexEdge,entity );
+        HashSet mapFields = ( HashSet ) map.get( "fields" );
+
+        if(defaultProperties!=null) {
+            final Set<String> finalDefaultProperties = defaultProperties;
+            Iterator collectionIterator = mapFields.iterator();
+            while ( collectionIterator.hasNext() ) {
+                EntityField testedField = ( EntityField ) collectionIterator.next();
+                String fieldName = ( String ) (testedField).get( "name" );
+                //TODO: need to change the logic here such that default properties does a check against each every field.
+                //it is very likely that the below does O(n) comparisons anyways so doing it for each value in a loop
+                //would be the right equivalent here. Even if it isn't very efficient.
+                //maybe if it was a hashmap, and if the hashmap didn't contain the value then we remove the field.
+                //but now for each hash value we have to do a check to see it doesn't start with a certain value.
+                //making this an O(n) operation anyways.
+
+                //so for each value in the finalDefaultProperties check to see if it matches the current property
+                //then if it doesn't do a split of the properties and see if any of them match for the split
+                //if they do match then allow in, otherwise don't allow.
+
+                if ( !finalDefaultProperties.contains( fieldName ) ) {
+                    mapFields.remove( testedField );
+                }
+            }
+        }
+        return map;
     }
 
 

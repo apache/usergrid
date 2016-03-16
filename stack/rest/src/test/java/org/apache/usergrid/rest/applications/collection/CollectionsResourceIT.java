@@ -42,7 +42,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.ArrayList;
 
-
 import static org.junit.Assert.*;
 
 
@@ -229,6 +228,106 @@ public class CollectionsResourceIT extends AbstractRestIT {
         assertEquals(0,tempEntity.getResponse().getEntities().size());
 
     }
+
+    @Test
+    public void postToCollectionArraySchemaWithSchemaFirst() throws Exception {
+
+        //Include the property labeled two to be index.
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "two" );
+        indexingArray.add( "one.key" );
+
+        //field "fields" is required.
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+
+        //Post index to the collection metadata
+        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        refreshIndex();
+
+        Map<String,Object> arrayFieldsForTesting = new HashMap<>();
+
+        arrayFieldsForTesting.put( "key","value" );
+        arrayFieldsForTesting.put( "anotherKey","value2");
+
+        //Create test collection with a test entity that is partially indexed.
+        Entity testEntity = new Entity();
+        testEntity.put( "one", arrayFieldsForTesting );
+        testEntity.put( "two","query" );
+
+        //Post entity.
+        this.app().collection( "testCollection" ).post( testEntity );
+        refreshIndex();
+
+        //Do a query to see if you can find the indexed query.
+        String query = "one.key = 'value'";
+        QueryParameters queryParameters = new QueryParameters().setQuery(query);
+
+        //having a name breaks it. Need to get rid of the stack trace and also
+        Collection tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
+        Entity reindexedEntity = tempEntity.getResponse().getEntity();
+        assertEquals( "value2",((Map)reindexedEntity.get( "one" )).get( "anotherKey" ) );
+
+        //Verify if you can query on an entity that was not indexed and that no entities are returned.
+        query = "one.anotherKey = 'value2'";
+        queryParameters = new QueryParameters().setQuery(query);
+        tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
+        assertEquals(0,tempEntity.getResponse().getEntities().size());
+
+    }
+
+    //test to reflect if one would index whatever is prefixed with that. Will
+    //need to do extensive testing to ensure that it will work with different instances.
+    @Test
+    public void postToCollectionSchemaArrayWithTopLevelIndexing() throws Exception {
+
+        //Include the property labeled two to be index.
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "two" );
+        //this should work such that one.key and one.anotherKey should work.
+        indexingArray.add( "one" );
+
+        //field "fields" is required.
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+
+        //Post index to the collection metadata
+        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        refreshIndex();
+
+        Map<String,Object> arrayFieldsForTesting = new HashMap<>();
+
+        arrayFieldsForTesting.put( "key","value" );
+        arrayFieldsForTesting.put( "anotherKey","value2");
+
+        //Create test collection with a test entity that is partially indexed.
+        Entity testEntity = new Entity();
+        testEntity.put( "one", arrayFieldsForTesting );
+        testEntity.put( "two","query" );
+
+        //Post entity.
+        this.app().collection( "testCollection" ).post( testEntity );
+        refreshIndex();
+
+        //Do a query to see if you can find the indexed query.
+        String query = "one.key = 'value'";
+        QueryParameters queryParameters = new QueryParameters().setQuery(query);
+
+        //having a name breaks it. Need to get rid of the stack trace and also
+        Collection tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
+        Entity reindexedEntity = tempEntity.getResponse().getEntity();
+        assertEquals( "value2",((Map)reindexedEntity.get( "one" )).get( "anotherKey" ) );
+
+        //Verify if you can query on an entity that was not indexed and that no entities are returned.
+        //TODO: check that the below gets indexed as well. although the above should prove that at least one thing is getting indexed.
+//        query = "one.anotherKey = 'value2'";
+//        queryParameters = new QueryParameters().setQuery(query);
+//        tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
+//        assertEquals(0,tempEntity.getResponse().getEntities().size());
+
+    }
+
+
 
 
     /**
