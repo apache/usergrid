@@ -199,6 +199,7 @@ public class IndexServiceImpl implements IndexService {
         String jsonMap = mm.getString( indexEdge.getEdgeName().split( "\\|" )[1] );
 
         Set<String> defaultProperties = null;
+        ArrayList fieldsToKeep = null;
 
         if(jsonMap != null) {
 
@@ -206,7 +207,7 @@ public class IndexServiceImpl implements IndexService {
             Schema schema = Schema.getDefaultSchema();
             defaultProperties = schema.getRequiredProperties( indexEdge.getEdgeName().split( "\\|" )[1]);
             //TODO: additional logic to
-            ArrayList fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
+            fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
             defaultProperties.addAll( fieldsToKeep );
         }
         else
@@ -221,6 +222,7 @@ public class IndexServiceImpl implements IndexService {
             while ( collectionIterator.hasNext() ) {
                 EntityField testedField = ( EntityField ) collectionIterator.next();
                 String fieldName = ( String ) (testedField).get( "name" );
+
                 //TODO: need to change the logic here such that default properties does a check against each every field.
                 //it is very likely that the below does O(n) comparisons anyways so doing it for each value in a loop
                 //would be the right equivalent here. Even if it isn't very efficient.
@@ -232,9 +234,81 @@ public class IndexServiceImpl implements IndexService {
                 //then if it doesn't do a split of the properties and see if any of them match for the split
                 //if they do match then allow in, otherwise don't allow.
 
+                //will only enter the loop for properties that aren't default properties so we only need to check
+                //the properties that the user imposed.
                 if ( !finalDefaultProperties.contains( fieldName ) ) {
-                    mapFields.remove( testedField );
+
+                    //loop through and string split it all and if they still dont' match after that loop then remove them.
+                    boolean toRemoveFlag = true;
+                    String[] flattedStringArray = fieldName.split( "\\." );
+                    Iterator fieldIterator = fieldsToKeep.iterator();
+                    while(fieldIterator.hasNext()) {
+                        String requiredInclusionString = ( String ) fieldIterator.next();
+                        String[] flattedRequirementString = new String[0];
+
+                        if(!requiredInclusionString.contains( "." )){
+                            flattedRequirementString = new String[]{requiredInclusionString};
+                        }
+                        else {
+                             flattedRequirementString= requiredInclusionString.split( "\\." );
+                        }
+
+                        //what we're aiming to do here is check the entire length of the string against
+                        //
+                        for ( int index = 0; index < flattedRequirementString.length;index++){
+                            //if the array contains a string that it is equals to then set the remove flag to true
+                            //otherwise remain false.
+
+                            //TODO: document that whatever comes first in the index will be filtered out in the way specified
+                            //so if the filtering spec had to filter one and one.two.three. and there is a value of
+                            // one.three. Then it will be filtered out because the rule one.two.three is applied
+                            //without a reference or care that one exists.
+                            if(flattedStringArray.length <= index){
+                                toRemoveFlag = true;
+                                break;
+                            }
+                            //this has a condition issue where if we evaluate that it passes on the first pass, we dont' want to continue the while lo
+                            if(flattedRequirementString[index].equals( flattedStringArray[index] )){
+                                toRemoveFlag=false;
+                            }
+                            else{
+                                toRemoveFlag=true;
+                            }
+                        }
+                        if(toRemoveFlag==false){
+                            break;
+                        }
+                    }
+
+                    if(toRemoveFlag){
+                        mapFields.remove( testedField );
+                    }
+
                 }
+
+
+//                Iterator iterator = finalDefaultProperties.iterator();
+//                while(iterator.hasNext()){
+//                    String includedFieldName = ( String ) iterator.next();
+//                    //if the field name
+//                    if(!includedFieldName.equals( fieldName )){
+//
+//                    }
+//
+//                }
+
+//                for(int index = 0; index < finalDefaultProperties.size();index++){
+//                    finalDefaultProperties.
+//
+//                }
+
+//
+//                if ( !finalDefaultProperties.contains( fieldName ) ) {
+//                    mapFields.remove( testedField );
+//                }
+//                else{
+//
+//                }
             }
         }
         return map;
