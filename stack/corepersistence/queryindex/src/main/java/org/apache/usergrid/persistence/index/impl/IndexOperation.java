@@ -21,10 +21,12 @@ package org.apache.usergrid.persistence.index.impl;
 
 
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
@@ -48,8 +50,19 @@ public class IndexOperation implements BatchOperation {
 
     public IndexOperation( final String writeAlias, final ApplicationScope applicationScope, IndexEdge indexEdge,
                            Entity entity ) {
-        this(writeAlias,IndexingUtils.createIndexDocId(applicationScope, entity,indexEdge), EntityToMapConverter.convert(applicationScope,indexEdge, entity));
 
+
+        this(writeAlias,IndexingUtils.createIndexDocId(applicationScope, entity,indexEdge)
+            ,EntityToMapConverter.convert(applicationScope,indexEdge, entity));
+
+
+    }
+
+    public IndexOperation( final String writeAlias, final ApplicationScope applicationScope, IndexEdge indexEdge,
+                           Id entityId, UUID version, Map<String,Object> data ) {
+
+        this(writeAlias,IndexingUtils.createIndexDocId(applicationScope, entityId,version,indexEdge)
+            ,data);
     }
 
     public IndexOperation( final String writeAlias, String documentId, Map<String, Object> data ) {
@@ -106,5 +119,9 @@ public class IndexOperation implements BatchOperation {
         result = 31 * result + documentId.hashCode();
         result = 31 * result + data.hashCode();
         return result;
+    }
+
+    public Map convertedEntityToBeIndexed(ApplicationScope applicationScope,IndexEdge indexEdge,Entity entity){
+        return EntityToMapConverter.convert(applicationScope,indexEdge, entity);
     }
 }

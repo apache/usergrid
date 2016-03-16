@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence.index;/*
 
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
@@ -52,6 +53,8 @@ public interface EntityIndexBatch {
      * @param result CandidateResult to be removed from index.
      */
     EntityIndexBatch deindex( final SearchEdge searchEdge, final CandidateResult result );
+
+    EntityIndexBatch index( IndexEdge indexEdge, Entity entity, Map flattenedEntityMap );
 
     /**
      * Remove index of entity.
