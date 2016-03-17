@@ -169,9 +169,6 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
                 }
 
-                // reset the start column as we'll be seeking a new row, any duplicates will be filtered out
-                startColumn = null;
-
                 advance();
 
         }
@@ -312,8 +309,9 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         }
 
 
-        // if a whole page is skipped, this is likely during a shard transition and we should assume there is more to read
-        if( skipSize == selectSize || skipSize == selectSize - 1){
+        // if a whole page is skipped OR the result size equals the the difference of what's skipped,
+        // it is likely during a shard transition and we should assume there is more to read
+        if( skipSize == selectSize || skipSize == selectSize - 1 || size == selectSize - skipSize ){
             moreToReturn = true;
         }
 
