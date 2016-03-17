@@ -23,20 +23,17 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
 import java.nio.charset.Charset;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
+import com.netflix.astyanax.connectionpool.OperationResult;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +69,8 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import rx.Observable;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -199,7 +198,6 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                     break;
                 }
 
-
                 newRowBatch.mergeShallow( edgeMeta
                         .writeEdge( shardedEdgeSerialization, edgeColumnFamilies, scope, targetShard, edge,
                             timestamp ) );
@@ -216,8 +214,35 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                 if ( edgeCount % maxWorkSize == 0 ) {
 
                     try {
-                        newRowBatch.execute();
-                        deleteRowBatch.execute();
+
+                        // write the edges into the new shard atomically so we know they all succeed
+                        newRowBatch.withAtomicBatch(true).execute();
+
+                        List<MutationBatch> deleteMutations = new ArrayList<MutationBatch>(1)
+                        {{
+                            add(deleteRowBatch);
+                        }};
+
+                        // fire the mutation in the background after 1 second delay
+                        if(logger.isTraceEnabled()){
+                            logger.trace("scheduling shard compaction delete");
+
+                        }
+
+                        // perform the deletes after some delay, but we need to block before marking this shard as 'compacted'
+                        Observable.from(deleteMutations)
+                            .delay(1000, TimeUnit.MILLISECONDS)
+                            .map(deleteRowBatchSingle -> {
+                                try {
+                                    return deleteRowBatchSingle.execute();
+                                } catch (ConnectionException e) {
+                                    logger.error("Unable to remove edges from old shards");
+                                    throw new RuntimeException("Unable to remove edges from old shards");
+                                }
+                            })
+                            .subscribeOn(Schedulers.io())
+                            .toBlocking().last();
+
                     }
                     catch ( Throwable t ) {
                         logger.error( "Unable to move edges from shard {} to shard {}", sourceShard, targetShard );
@@ -236,9 +261,35 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
 
         try {
-            newRowBatch.execute();
-            deleteRowBatch.execute();
-            updateShardMetaBatch.execute();
+
+            // write the edges into the new shard atomically so we know they all succeed
+            newRowBatch.withAtomicBatch(true).execute();
+
+            List<MutationBatch> deleteMutations = new ArrayList<MutationBatch>(1)
+            {{
+                add(deleteRowBatch);
+            }};
+
+
+            if(logger.isTraceEnabled()) {
+                logger.trace("scheduling shard compaction delete");
+            }
+
+            // perform the deletes after some delay, but we need to block before marking this shard as 'compacted'
+            Observable.from(deleteMutations)
+                .delay(1000, TimeUnit.MILLISECONDS)
+                .map(deleteRowBatchSingle -> {
+                    try {
+                        return deleteRowBatchSingle.execute();
+                    } catch (ConnectionException e) {
+                        logger.error("Unable to remove edges from old shards");
+                        throw new RuntimeException("Unable to remove edges from old shards");
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .toBlocking().last();
+
+            //updateShardMetaBatch.execute();
         }
         catch ( Throwable t ) {
             logger.error( "Unable to move edges to target shard {}", targetShard );
@@ -286,7 +337,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                 shardRemovalRollup.execute();
             }
             catch ( ConnectionException e ) {
-                throw new RuntimeException( "Unable to connect to casandra", e );
+                throw new RuntimeException( "Unable to connect to cassandra", e );
             }
 
 
@@ -300,7 +351,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                 updateMark.execute();
             }
             catch ( ConnectionException e ) {
-                throw new RuntimeException( "Unable to connect to casandra", e );
+                throw new RuntimeException( "Unable to connect to cassandra", e );
             }
 
             resultBuilder.withCompactedShard( compactedShard );
