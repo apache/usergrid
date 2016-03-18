@@ -21,7 +21,6 @@ package org.apache.usergrid.corepersistence.index;
 
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -37,7 +36,6 @@ import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
@@ -67,7 +65,6 @@ import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createSearc
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromTarget;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 
 
 /**
@@ -165,7 +162,7 @@ public class IndexServiceImpl implements IndexService {
                 logger.debug("adding edge {} to batch for entity {}", indexEdge, entity);
             }
 
-            Map<String, Object> map = getFilteredStringObjectMap( applicationScope, entity, indexEdge );
+            Map map = getFilteredStringObjectMap( applicationScope, entity, indexEdge );
 
             if(map!=null){
                 batch.index( indexEdge, entity ,map);
@@ -180,173 +177,156 @@ public class IndexServiceImpl implements IndexService {
 
         return ObservableTimer.time( batches, addTimer  );
 
-
     }
 
 
-    private Map<String, Object> getFilteredStringObjectMap( final ApplicationScope applicationScope, final Entity entity,
-                                                    final IndexEdge indexEdge ) {IndexOperation indexOperation = new IndexOperation(  );
+    /**
+     * This method takes in an entity and flattens it out then begins the process to filter out
+     * properties that we do not want to index. Once flatted we parse through each property
+     * and verify that we want it to be indexed on. The set of default properties that will always be indexed are as follows.
+     * UUID - TYPE - MODIFIED - CREATED. Depending on the schema this may change. For instance, users will always require
+     * NAME, but the above four will always be taken in.
+     * @param applicationScope
+     * @param entity
+     * @param indexEdge
+     * @return This returns a filtered map that contains the flatted properties of the entity. If there isn't a schema
+     * associated with the collection then return null ( and index the entity in its entirety )
+     */
+    private Map getFilteredStringObjectMap( final ApplicationScope applicationScope,
+                                            final Entity entity, final IndexEdge indexEdge ) {
+        IndexOperation indexOperation = new IndexOperation();
 
 
         indexEdge.getNodeId().getUuid();
 
         Id mapOwner = new SimpleId( indexEdge.getNodeId().getUuid(), TYPE_APPLICATION );
 
-        final MapScope ms = CpNamingUtils.getEntityTypeMapScope(mapOwner );
+        //TODO: this needs to be cached
+        final MapScope ms = CpNamingUtils.getEntityTypeMapScope( mapOwner );
 
         MapManager mm = mapManagerFactory.createMapManager( ms );
 
-        //determines is the map manager has a collection schema associated with it.
+        Set<String> defaultProperties;
+        ArrayList fieldsToKeep;
+
         String jsonSchemaMap = mm.getString( indexEdge.getEdgeName().split( "\\|" )[1] );
 
-        Set<String> defaultProperties = null;
-        ArrayList fieldsToKeep = null;
-
         //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
-        if(jsonSchemaMap != null) {
+        if ( jsonSchemaMap != null ) {
 
             Map jsonMapData = ( Map ) JsonUtils.parse( jsonSchemaMap );
             Schema schema = Schema.getDefaultSchema();
-            defaultProperties = schema.getRequiredProperties( indexEdge.getEdgeName().split( "\\|" )[1]);
-            //TODO: additional logic to
+            defaultProperties = schema.getRequiredProperties( indexEdge.getEdgeName().split( "\\|" )[1] );
             fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
             defaultProperties.addAll( fieldsToKeep );
         }
-        else
+        else {
             return null;
+        }
 
+        //Returns the flattened map of the entity.
+        Map map = indexOperation.convertedEntityToBeIndexed( applicationScope, indexEdge, entity );
 
-        Map<String, Object> map = indexOperation.convertedEntityToBeIndexed( applicationScope,indexEdge,entity );
         HashSet mapFields = ( HashSet ) map.get( "fields" );
+        Iterator collectionIterator = mapFields.iterator();
 
-        if(defaultProperties!=null) {
-            final Set<String> finalDefaultProperties = defaultProperties;
-            Iterator collectionIterator = mapFields.iterator();
+        //Loop through all of the fields of the flatted entity and check to see if they should be filtered out.
+        while ( collectionIterator.hasNext() ) {
+            EntityField testedField = ( EntityField ) collectionIterator.next();
+            String fieldName = ( String ) ( testedField ).get( "name" );
 
-            //TODO:I think there is a bug when we modify it and continue iterating then it fails
-            //Loop that goes through all the fields that the passed in entity contains
-            while ( collectionIterator.hasNext() ) {
-                EntityField testedField = ( EntityField ) collectionIterator.next();
-                String fieldName = ( String ) (testedField).get( "name" );
-
-                //will only enter the loop for properties that aren't default properties so we only need to check
-                //the properties that the user imposed.
-                if ( !finalDefaultProperties.contains( fieldName ) ) {
-                    boolean toRemoveFlag = true;
-                    String[] flattedStringArray = getStrings( fieldName );
-
-                    Iterator fieldIterator = fieldsToKeep.iterator();
-
-                    //goes through a loop of all the fields ( excluding default ) that we want to keep.
-                    //if the toRemoveFlag is set to false then we want to keep the property, otherwise we set it to false
-                    while(fieldIterator.hasNext()) {
-                        String requiredInclusionString = ( String ) fieldIterator.next();
-                        String[] flattedRequirementString = getStrings( requiredInclusionString );
-
-
-                        //loop each split array value to see if it matches an equivalent value
-                        //in the field.
-                        for ( int index = 0; index < flattedRequirementString.length;index++){
-                            //if the array contains a string that it is equals to then set the remove flag to true
-                            //otherwise remain false.
-
-                            if(flattedStringArray.length <= index){
-                                toRemoveFlag = true;
-                                break;
-                            }
-                            //this has a condition issue where if we evaluate that it passes on the first pass, we dont' want to continue the while lo
-                            if(flattedRequirementString[index].equals( flattedStringArray[index] )){
-                                toRemoveFlag=false;
-                            }
-                            else{
-                                toRemoveFlag=true;
-                            }
-                        }
-                        if(toRemoveFlag==false){
-                            break;
-                        }
-                    }
-
-                    if(toRemoveFlag){
-                        collectionIterator.remove();
-                        //mapFields.remove( testedField );
-                    }
-                }
+            //Checks to see if the fieldname is a default property. If it is then keep it, otherwise send it to
+            //be verified the aptly named method
+            if ( !defaultProperties.contains( fieldName ) ) {
+                iterateThroughMapForFieldsToBeIndexed( fieldsToKeep, collectionIterator, fieldName );
             }
         }
+
         return map;
     }
-    
 
+
+    /**
+     * This method is crucial for selective top level indexing. Here we check to see if the flatted properties
+     * are in fact a top level exclusion e.g one.two.three and one.three.two can be allowed for querying by
+     * specifying one in the schema. If they are not a top level exclusion then they are removed from the iterator and
+     * the map.
+     *
+     * @param fieldsToKeep - contains a list of fields that the user defined in their schema.
+     * @param collectionIterator - contains the iterator with the reference to the map where we want to remove the field.
+     * @param fieldName - contains the name of the field that we want to keep.
+     */
+    private void iterateThroughMapForFieldsToBeIndexed( final ArrayList fieldsToKeep, final Iterator collectionIterator,
+                                                        final String fieldName ) {
+        boolean toRemoveFlag = true;
+        String[] flattedStringArray = getStrings( fieldName );
+
+        Iterator fieldIterator = fieldsToKeep.iterator();
+
+        //goes through a loop of all the fields ( excluding default ) that we want to keep.
+        //if the toRemoveFlag is set to false then we want to keep the property, otherwise we set it to true and remove
+        //the property.
+        while ( fieldIterator.hasNext() ) {
+            String requiredInclusionString = ( String ) fieldIterator.next();
+            String[] flattedRequirementString = getStrings( requiredInclusionString );
+
+
+            //loop each split array value to see if it matches the equivalent value
+            //in the field. e.g in the example one.two.three and one.two.four we need to check that the schema
+            //matches in both one and two above. If instead it says to exclude one.twor then we would still exclude the above
+            //since it is required to be a hard match.
+
+            //The way the below works if we see that the current field isn't as fine grained as the schema rule
+            //( aka the array is shorter than the current index of the schema rule then there is no way the rule could apply
+            // to the index.
+
+            //Then if that check passes we go to check that both parts are equal. If they are ever not equal
+            // e.g one.two.three and one.three.two then it shouldn't be included
+            for ( int index = 0; index < flattedRequirementString.length; index++ ) {
+                //if the array contains a string that it is equals to then set the remove flag to true
+                //otherwise remain false.
+
+                if ( flattedStringArray.length <= index ) {
+                    toRemoveFlag = true;
+                    break;
+                }
+
+                if ( flattedRequirementString[index].equals( flattedStringArray[index] ) ) {
+                    toRemoveFlag = false;
+                }
+                else {
+                    toRemoveFlag = true;
+                    break;
+                }
+            }
+            if ( toRemoveFlag == false ) {
+                break;
+            }
+        }
+
+        if ( toRemoveFlag ) {
+            collectionIterator.remove();
+        }
+    }
+
+
+    /**
+     * Splits the string on the flattened period "." seperated values.
+     * @param fieldName
+     * @return
+     */
     private String[] getStrings( final String fieldName ) {
         final String[] flattedStringArray;
-        if(!fieldName.contains( "." )){
+        if ( !fieldName.contains( "." ) ) {
             //create a single array that is made of a the single value.
-            flattedStringArray = new String[]{fieldName};
+            flattedStringArray = new String[] { fieldName };
         }
         else {
-            flattedStringArray= fieldName.split( "\\." );
+            flattedStringArray = fieldName.split( "\\." );
         }
         return flattedStringArray;
     }
 
-
-    //    private void innerLoop( final ArrayList fieldsToKeep, final HashSet mapFields, final EntityField testedField,
-//                            final String fieldName ) {//loop through and string split it all and if they still dont' match after that loop then remove them.
-//        boolean toRemoveFlag = true;
-//        String[] flattedStringArray = null;
-//
-//        if(!fieldName.contains( "." )){
-//            //create a single array that is made of a the single value.
-//            flattedStringArray = new String[]{fieldName};
-//        }
-//        else {
-//            flattedStringArray= fieldName.split( "\\." );
-//        }
-//
-//        Iterator fieldIterator = fieldsToKeep.iterator();
-//
-//        //goes through a loop of all the fields ( excluding default ) that we want to query on
-//        while(fieldIterator.hasNext()) {
-//            String requiredInclusionString = ( String ) fieldIterator.next();
-//            String[] flattedRequirementString;
-//
-//            //in the case you only have a filter that is a single field.Otherwise split it.
-//            if(!requiredInclusionString.contains( "." )){
-//                flattedRequirementString = new String[]{requiredInclusionString};
-//            }
-//            else {
-//                 flattedRequirementString= requiredInclusionString.split( "\\." );
-//            }
-//
-//
-//            //loop each split array value to see if it matches an equivalent value
-//            //in the field.
-//            for ( int index = 0; index < flattedRequirementString.length;index++){
-//                //if the array contains a string that it is equals to then set the remove flag to true
-//                //otherwise remain false.
-//
-//                if(flattedStringArray.length <= index){
-//                    toRemoveFlag = true;
-//                    break;
-//                }
-//                //this has a condition issue where if we evaluate that it passes on the first pass, we dont' want to continue the while lo
-//                if(flattedRequirementString[index].equals( flattedStringArray[index] )){
-//                    toRemoveFlag=false;
-//                }
-//                else{
-//                    toRemoveFlag=true;
-//                }
-//            }
-//            if(toRemoveFlag==false){
-//                break;
-//            }
-//        }
-//
-//        if(toRemoveFlag){
-//            mapFields.remove( testedField );
-//        }
-//    }
 
 
     //Steps to delete an IndexEdge.
