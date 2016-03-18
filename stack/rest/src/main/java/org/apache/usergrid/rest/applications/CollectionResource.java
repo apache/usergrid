@@ -38,7 +38,11 @@ import org.springframework.stereotype.Component;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
+import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilderImpl;
+import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
@@ -131,6 +135,30 @@ public class CollectionResource extends ServiceResource {
         return response;
     }
 
+    @POST
+    @Path("_reindex")
+    @Produces({ MediaType.APPLICATION_JSON,"application/javascript"})
+    @RequireApplicationAccess
+    @JSONP
+    public ApiResponse executePostForReindexing( @Context UriInfo ui, String body,
+                                             @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
+
+        System.out.println();
+//        logger.info( "Rebuilding collection {} in  application {}", collectionName, applicationIdStr );
+//
+//
+//
+//        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
+//
+        //TODO: check to see how all of this runs with service and query params. Ideally none should be passed in.
+        final ReIndexRequestBuilder request =
+            createRequest().withApplicationId( services.getApplicationId() ).withCollection(
+                String.valueOf( getServiceParameters().get( 0 ) ) );
+//
+        return executeAndCreateResponse( request, callback );
+    }
+
     @Override
     @Path( RootResource.ENTITY_ID_PATH)
     public AbstractContextResource addIdParameter( @Context UriInfo ui, @PathParam("entityId") PathSegment entityId )
@@ -175,9 +203,33 @@ public class CollectionResource extends ServiceResource {
         return getSubResource( CollectionResource.class );
     }
 
-//    @
-//    public ServiceResource doLogicInServiceResource() throws Exception{
-//        return getSubResource( ServiceResource.class );
-//    }
+    private ReIndexService getReIndexService() {
+        return injector.getInstance( ReIndexService.class );
+    }
+
+    private ReIndexRequestBuilder createRequest() {
+        //TODO: wire this up through spring, and in the future guice.
+        return new ReIndexRequestBuilderImpl();
+    }
+
+    /**
+     * Execute the request and return the response.
+     */
+    private ApiResponse executeAndCreateResponse( final ReIndexRequestBuilder request, final String callback ) {
+
+
+        final ReIndexService.ReIndexStatus status = getReIndexService().rebuildIndex( request );
+
+        final ApiResponse response = createApiResponse();
+
+        response.setAction( "rebuild indexes" );
+        response.setProperty( "jobId", status.getJobId() );
+        response.setProperty( "status", status.getStatus() );
+        response.setProperty( "lastUpdatedEpoch", status.getLastUpdated() );
+        response.setProperty( "numberQueued", status.getNumberProcessed() );
+        response.setSuccess();
+
+        return response;
+    }
 
 }

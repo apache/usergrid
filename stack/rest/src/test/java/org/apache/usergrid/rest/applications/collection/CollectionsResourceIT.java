@@ -123,14 +123,14 @@ public class CollectionsResourceIT extends AbstractRestIT {
      *
      * @throws Exception
      */
-    @Ignore("The reindexing isn't currently supported yet.")
+    @Test
     public void postToCollectionSchemaUpdateExistingCollection() throws Exception {
 
         //Create test collection with test entity that is full text indexed.
         Entity testEntity = new Entity();
-        testEntity.put( "one", "12/31/9999" );
+        testEntity.put( "one", "value" );
         //this field shouldn't persist after reindexing.
-        testEntity.put( "two","2015-04-20T17:41:38.035Z" );
+        testEntity.put( "two","valuetwo" );
 
         //TODO: add arrays to the indexing test
         //testEntity.put("array","array stuff here");
@@ -156,26 +156,39 @@ public class CollectionsResourceIT extends AbstractRestIT {
         //Below is what needs to be implemented along with the index call above
 
         //Get the collection schema and verify that it contains the same schema as posted above.
-        Collection collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
-
-        LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
-        //TODO: the below will have to be replaced by the values that I deem correct.
-        assertEquals( ( thing ).get( "lastUpdated" ), testCollectionSchema.get( "lastUpdated" ));
-        assertEquals( ( thing ).get( "lastUpdateBy" ),testCollectionSchema.get( "lastUpdateBy" ) );
-        assertEquals( ( thing ).get( "lastReindexed" ),testCollectionSchema.get( "lastReindexed" ) );
-
-        //TODO: this test doesn't check to see if create checks the schema. Only that the reindex removes whats already there.
-        ArrayList<String> schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
-        assertEquals( "one",schema.get( 0 ) );
+//        Collection collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
+//
+//        LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
+//        //TODO: the below will have to be replaced by the values that I deem correct.
+//        assertEquals( ( thing ).get( "lastUpdated" ), testCollectionSchema.get( "lastUpdated" ));
+//        assertEquals( ( thing ).get( "lastUpdateBy" ),testCollectionSchema.get( "lastUpdateBy" ) );
+//        assertEquals( ( thing ).get( "lastReindexed" ),testCollectionSchema.get( "lastReindexed" ) );
+//
+//        //TODO: this test doesn't check to see if create checks the schema. Only that the reindex removes whats already there.
+//        ArrayList<String> schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
+//        assertEquals( "one",schema.get( 0 ) );
 
         //Reindex and verify that the entity only has field one index.
         this.app().collection( "testCollection" ).collection( "_reindex" ).post();
 
-        refreshIndex();
+        String query = "one ='value'";
+        QueryParameters queryParameters = new QueryParameters().setQuery(query);
 
-        Entity reindexedEntity = this.app().collection( "testCollection" ).entity( returnedEntity.getUuid() ).get();
-        assertEquals( "12/31/9999",reindexedEntity.get( "one" ) );
-        assertNull( reindexedEntity.get( "two" ) );
+        //having a name breaks it. Need to get rid of the stack trace and also
+        Collection tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
+        Entity reindexedEntity = tempEntity.getResponse().getEntity();
+        assertEquals( "value",reindexedEntity.get( "one" ) );
+
+        //Verify if you can query on an entity that was not indexed and that no entities are returned.
+        query = "two = 'valuetwo'";
+        queryParameters = new QueryParameters().setQuery(query);
+        tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
+        assertEquals(0,tempEntity.getResponse().getEntities().size());
+
+//        refreshIndex();
+//
+//        Entity reindexedEntity = this.app().collection( "testCollection" ).entity( returnedEntity.getUuid() ).get();
+//        assertEquals( "12/31/9999",reindexedEntity.get( "one" ) );
         //not sure if this should have some kind of sleep here because this reindex will be heavily throttled.
 
     }
@@ -318,12 +331,6 @@ public class CollectionsResourceIT extends AbstractRestIT {
         Entity reindexedEntity = tempEntity.getResponse().getEntity();
         assertEquals( "value2",((Map)reindexedEntity.get( "one" )).get( "anotherKey" ) );
 
-        //Verify if you can query on an entity that was not indexed and that no entities are returned.
-        //TODO: check that the below gets indexed as well. although the above should prove that at least one thing is getting indexed.
-//        query = "one.anotherKey = 'value2'";
-//        queryParameters = new QueryParameters().setQuery(query);
-//        tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
-//        assertEquals(0,tempEntity.getResponse().getEntities().size());
 
     }
 
@@ -373,8 +380,107 @@ public class CollectionsResourceIT extends AbstractRestIT {
         assertEquals( "value2",((Map)reindexedEntity.get( "one" )).get( "anotherKey" ) );
 
         //Verify if you can query on an entity that was not indexed and that no entities are returned.
-        //TODO: check that the below gets indexed as well. although the above should prove that at least one thing is getting indexed.
         query = "one.anotherKey = 'value2'";
+        queryParameters = new QueryParameters().setQuery(query);
+        tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
+        assertEquals(0,tempEntity.getResponse().getEntities().size());
+
+    }
+
+
+    @Test
+    public void postToCollectionSchemaArrayWithSelectiveTopLevelIndexingAddingDefaultPropertyNames() throws Exception {
+
+        //Include the property labeled two to be index.
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "two" );
+        //this should work such that one.key and one.anotherKey should work.
+        indexingArray.add( "one.key" );
+        indexingArray.add( "name" );
+
+        //field "fields" is required.
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+
+        //Post index to the collection metadata
+        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        refreshIndex();
+
+        Map<String,Object> arrayFieldsForTestingSelectiveIndexing = new HashMap<>();
+
+        arrayFieldsForTestingSelectiveIndexing.put( "wowMoreKeys","value" );
+        arrayFieldsForTestingSelectiveIndexing.put( "thisShouldBeQueryableToo","value2");
+
+        Map<String,Object> arrayFieldsForTesting = new HashMap<>();
+
+        arrayFieldsForTesting.put( "key",arrayFieldsForTestingSelectiveIndexing );
+        arrayFieldsForTesting.put( "anotherKey","value2");
+
+        //Create test collection with a test entity that is partially indexed.
+        Entity testEntity = new Entity();
+        testEntity.put( "one", arrayFieldsForTesting );
+        testEntity.put( "two","query" );
+        testEntity.put( "name","howdy");
+
+        //Post entity.
+        this.app().collection( "testCollection" ).post( testEntity );
+        refreshIndex();
+
+        //Do a query to see if you can find the indexed query.
+        String query = "name = 'howdy'";
+        QueryParameters queryParameters = new QueryParameters().setQuery(query);
+
+        //having a name breaks it. Need to get rid of the stack trace and also
+        Collection tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
+        Entity reindexedEntity = tempEntity.getResponse().getEntity();
+        assertEquals( "howdy",(reindexedEntity.get( "name" )) );
+
+    }
+
+
+    /**
+     * Verify that doing a put goes through and still applies the existing schema.
+     * @throws Exception
+     */
+    @Test
+    public void putToCollectionSchema() throws Exception {
+
+        //Include the property labeled two to be index.
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "one" );
+
+        //field "fields" is required.
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+
+        //Post index to the collection metadata
+        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        refreshIndex();
+
+        //Create test collection with a test entity that is partially indexed.
+        Entity testEntity = new Entity();
+        testEntity.put( "one", "two");
+        testEntity.put( "test", "anotherTest");
+
+        //Post entity.
+        Entity postedEntity = this.app().collection( "testCollection" ).post( testEntity );
+        refreshIndex();
+
+        testEntity.put( "one","three" );
+        this.app().collection( "testCollection" ).entity( postedEntity.getUuid() ).put( testEntity );
+        refreshIndex();
+
+        //Do a query to see if you can find the indexed query.
+        String query = "one = 'three'";
+        QueryParameters queryParameters = new QueryParameters().setQuery(query);
+
+        //having a name breaks it. Need to get rid of the stack trace and also
+        Collection tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
+        Entity reindexedEntity = tempEntity.getResponse().getEntity();
+        assertEquals( "three",(reindexedEntity.get( "one" )) );
+
+        //check that the old value no longer exists in elasticsearch
+        query = "one = 'two'";
         queryParameters = new QueryParameters().setQuery(query);
         tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
         assertEquals(0,tempEntity.getResponse().getEntities().size());
