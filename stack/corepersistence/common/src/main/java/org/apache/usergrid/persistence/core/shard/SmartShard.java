@@ -20,13 +20,13 @@ package org.apache.usergrid.persistence.core.shard;
 
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 
-public class SmartShard<R, C> {
+public class SmartShard<R, T> {
 
     final ScopedRowKey<R> rowKey;
-    final C shardEnd;
+    final T shardEnd;
 
 
-    public SmartShard(final ScopedRowKey<R> rowKey, final C shardEnd){
+    public SmartShard(final ScopedRowKey<R> rowKey, final T shardEnd){
 
         this.rowKey = rowKey;
         this.shardEnd = shardEnd;
@@ -37,7 +37,7 @@ public class SmartShard<R, C> {
         return rowKey;
     }
 
-    public C getShardEnd(){
+    public T getShardEnd(){
         return shardEnd;
     }
 

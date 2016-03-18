@@ -105,7 +105,6 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
              */
             if ( existingShards == null || !existingShards.hasNext() ) {
 
-                //logger.info("writing min shard");
                 final MutationBatch batch = edgeShardSerialization.writeShardMeta( scope, Shard.MIN_SHARD, directedEdgeMeta );
                 try {
                     batch.execute();
@@ -160,7 +159,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
         if ( shard.getCreatedTime() >= minTime ) {
-            if (logger.isTraceEnabled()) logger.trace( "Shard entry group {}  and shard {} is before the minimum created time of {}.  Not allocating.does not have 1 entry, not allocating", shardEntryGroup, shard, minTime );
+            if (logger.isTraceEnabled()) logger.trace( "Shard entry group {}  and shard {} is before the minimum created time of {}.  Not allocating", shardEntryGroup, shard, minTime );
             return false;
         }
 
@@ -196,7 +195,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          */
 
         final Iterator<MarkedEdge> edges = directedEdgeMeta
-            .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, shardEntryGroup.getReadShards(), 0,
+            .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, Collections.singletonList(shard),0,
                 SearchByEdgeType.Order.ASCENDING );
 
 
@@ -217,7 +216,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * element will suffice.
          */
 
-
+        long edgeCount = 0;
         for ( long i = 1; edges.hasNext(); i++ ) {
             //we hit a pivot shard, set it since it could be the last one we encounter
             if ( i % shardSize == 0 ) {
@@ -226,6 +225,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             else {
                 edges.next();
             }
+            edgeCount++;
         }
 
 
@@ -233,7 +233,10 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * Sanity check in case we audit before we have a full shard
          */
         if ( marked == null ) {
-            if (logger.isTraceEnabled()) logger.trace( "Shard {} in shard group {} not full, not splitting",  shard, shardEntryGroup );
+            if (logger.isTraceEnabled()){
+                logger.trace( "Shard {} in shard group {} not full, " +
+                    "not splitting. Edge count: {}",  shard, shardEntryGroup, edgeCount );
+            }
             return false;
         }
 

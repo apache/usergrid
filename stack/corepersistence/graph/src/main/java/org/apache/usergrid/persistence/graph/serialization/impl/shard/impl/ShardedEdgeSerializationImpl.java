@@ -407,7 +407,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
         GraphValidation.validateSearchByEdgeType( search );
 
         if(logger.isTraceEnabled()){
-            logger.info("getEdgesFromSource shards: {}", shards);
+            logger.trace("getEdgesFromSource shards: {}", shards);
         }
 
         final Id sourceId = search.getNode();

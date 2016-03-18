@@ -33,7 +33,7 @@ public class Shard implements Comparable<Shard> {
     private final long shardIndex;
     private final long createdTime;
     private final boolean compacted;
-    private Optional<Edge> shardEnd;
+    private Optional<DirectedEdge> shardEnd;
 
 
     public Shard( final long shardIndex, final long createdTime, final boolean compacted ) {
@@ -76,11 +76,11 @@ public class Shard implements Comparable<Shard> {
         return shardIndex == MIN_SHARD.shardIndex;
     }
 
-    public void setShardEnd(final Optional<Edge> shardEnd) {
+    public void setShardEnd(final Optional<DirectedEdge> shardEnd) {
         this.shardEnd = shardEnd;
     }
 
-    public Optional<Edge> getShardEnd() {
+    public Optional<DirectedEdge> getShardEnd() {
         return shardEnd;
     }
 
@@ -170,7 +170,7 @@ public class Shard implements Comparable<Shard> {
         string.append(", compacted=").append(compacted);
         string.append(", shardEndTimestamp=");
         if(shardEnd.isPresent()){
-            string.append(shardEnd.get().getTimestamp());
+            string.append(shardEnd.get().timestamp);
         }else{
             string.append("null");
         }
