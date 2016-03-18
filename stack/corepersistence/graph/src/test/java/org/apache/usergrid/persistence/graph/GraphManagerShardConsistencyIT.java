@@ -102,6 +102,8 @@ public class GraphManagerShardConsistencyIT {
 
     protected ListeningExecutorService deleteExecutor;
 
+    protected int TARGET_NUM_SHARDS = 6;
+
 
 
     @Before
@@ -172,15 +174,15 @@ public class GraphManagerShardConsistencyIT {
     public void writeThousandsSingleSource()
         throws InterruptedException, ExecutionException, MigrationException, UnsupportedEncodingException {
 
-        final Id sourceId = IdGenerator.createId( "sourceWrite" );
-        final String edgeType = "testWrite_"+ UUIDGenerator.newTimeUUID().toString();
+        final Id sourceId = IdGenerator.createId( "sourceWrite_"+ UUIDGenerator.newTimeUUID().toString() );
+        final String edgeType = "testWrite";
 
         final EdgeGenerator generator = new EdgeGenerator() {
 
 
             @Override
             public Edge newEdge() {
-                Edge edge = createEdge( sourceId, edgeType, IdGenerator.createId( "targetWrite" ) );
+                Edge edge = createEdge( sourceId, edgeType, IdGenerator.createId( "targetWrite_"+ UUIDGenerator.newTimeUUID().toString() ) );
 
 
                 return edge;
@@ -196,7 +198,7 @@ public class GraphManagerShardConsistencyIT {
         };
 
 
-        final int numInjectors = 2;
+        final int numInjectors = 1;
 
         /**
          * create injectors.  This way all the caches are independent of one another.  This is the same as
@@ -218,10 +220,7 @@ public class GraphManagerShardConsistencyIT {
 
 
 
-        /**
-         * Do 4x shard size so we should have approximately 4 shards
-         */
-        final long numberOfEdges = shardSize * 4;
+        final long numberOfEdges = shardSize * TARGET_NUM_SHARDS;
 
 
         final long workerWriteLimit = numberOfEdges / numWorkersPerInjector / numInjectors;
@@ -233,7 +232,7 @@ public class GraphManagerShardConsistencyIT {
 
 
         //min stop time the min delta + 1 cache cycle timeout
-        final long minExecutionTime = graphFig.getShardMinDelta() + graphFig.getShardCacheTimeout() + 60000;
+        final long minExecutionTime = graphFig.getShardMinDelta() + graphFig.getShardCacheTimeout() + 120000;
 
 
         logger.info( "Writing {} edges per worker on {} workers in {} injectors", workerWriteLimit, numWorkersPerInjector,
@@ -279,7 +278,7 @@ public class GraphManagerShardConsistencyIT {
         final List<Throwable> failures = new ArrayList<>();
         Thread.sleep(3000); // let's make sure everything is written
 
-        for(int i = 0; i < 2; i ++) {
+        for(int i = 0; i < 1; i ++) {
 
 
             /**
@@ -452,11 +451,7 @@ public class GraphManagerShardConsistencyIT {
 
         final int numWorkersPerInjector = numProcessors / numInjectors;
 
-
-        /**
-         * Do 4x shard size so we should have approximately 4 shards
-         */
-        final long numberOfEdges = shardSize * 4;
+        final long numberOfEdges = shardSize * TARGET_NUM_SHARDS;
 
 
         final long workerWriteLimit = numberOfEdges / numWorkersPerInjector / numInjectors;
