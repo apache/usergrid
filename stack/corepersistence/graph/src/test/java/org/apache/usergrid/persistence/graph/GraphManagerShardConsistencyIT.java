@@ -115,10 +115,10 @@ public class GraphManagerShardConsistencyIT {
         originalShardDelta = ConfigurationManager.getConfigInstance().getProperty( GraphFig.SHARD_MIN_DELTA );
 
 
-        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_SIZE, 5000 );
+        ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_SIZE, 10000 );
 
 
-        final long cacheTimeout = 2000;
+        final long cacheTimeout = 1000;
         //set our cache timeout to the above value
         ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_CACHE_TIMEOUT, cacheTimeout );
 
@@ -128,7 +128,7 @@ public class GraphManagerShardConsistencyIT {
         ConfigurationManager.getConfigInstance().setProperty( GraphFig.SHARD_MIN_DELTA, minDelta );
 
 
-        //get the system property of the UUID to use.  If one is not set, use the defualt
+        // get the system property of the UUID to use.  If one is not set, use the defualt
         String uuidString = System.getProperty( "org.id", "80a42760-b699-11e3-a5e2-0800200c9a66" );
 
         scope = new ApplicationScopeImpl( IdGenerator.createId( UUID.fromString( uuidString ), "test" ) );
@@ -196,8 +196,7 @@ public class GraphManagerShardConsistencyIT {
         };
 
 
-        //final int numInjectors = 2;
-        final int numInjectors = 1;
+        final int numInjectors = 2;
 
         /**
          * create injectors.  This way all the caches are independent of one another.  This is the same as
@@ -280,7 +279,7 @@ public class GraphManagerShardConsistencyIT {
         final List<Throwable> failures = new ArrayList<>();
         Thread.sleep(3000); // let's make sure everything is written
 
-        for(int i = 0; i < 1; i ++) {
+        for(int i = 0; i < 2; i ++) {
 
 
             /**
@@ -312,7 +311,7 @@ public class GraphManagerShardConsistencyIT {
         int compactedCount;
 
 
-        //now start our readers
+        // now start the compaction watcher
 
         while ( true ) {
 
@@ -336,10 +335,10 @@ public class GraphManagerShardConsistencyIT {
                 fail( builder.toString() );
             }
 
-            //reset our count.  Ultimately we'll have 4 groups once our compaction completes
+            // reset our count.  Ultimately we'll have 4 groups once our compaction completes
             compactedCount = 0;
 
-            //we have to get it from the cache, because this will trigger the compaction process
+            // we have to get it from the cache, because this will trigger the compaction process
             final Iterator<ShardEntryGroup> groups = cache.getReadShardGroup( scope, Long.MAX_VALUE, directedEdgeMeta );
             final Set<ShardEntryGroup> shardEntryGroups = new HashSet<>();
 
@@ -433,7 +432,7 @@ public class GraphManagerShardConsistencyIT {
         };
 
 
-        final int numInjectors = 1;
+        final int numInjectors = 2;
 
         /**
          * create injectors.  This way all the caches are independent of one another.  This is the same as
@@ -498,12 +497,11 @@ public class GraphManagerShardConsistencyIT {
             future.get();
         }
 
-        //now get all our shards
+        // now get all our shards
         final NodeShardCache cache = getInstance( injectors, NodeShardCache.class );
 
         final DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( sourceId, deleteEdgeType );
 
-        //now submit the readers.
         final GraphManagerFactory gmf = getInstance( injectors, GraphManagerFactory.class );
 
 
@@ -527,7 +525,7 @@ public class GraphManagerShardConsistencyIT {
         }
 
 
-        logger.info( "found {} shard groups", shardCount );
+        logger.info( "Found {} shard groups", shardCount );
 
 
         //now mark and delete all the edges
@@ -543,6 +541,7 @@ public class GraphManagerShardConsistencyIT {
 
         long totalDeleted = 0;
 
+        // now do the deletes
         while(count != 0) {
 
             logger.info("total deleted: {}", totalDeleted);
@@ -565,7 +564,7 @@ public class GraphManagerShardConsistencyIT {
         }
 
 
-        //now loop until with a reader until our shards are gone
+        // loop with a reader until our shards are gone
 
 
         /**
@@ -582,7 +581,7 @@ public class GraphManagerShardConsistencyIT {
             @Override
             public void onSuccess( @Nullable final Long result ) {
                 logger.info( "Successfully ran the read, re-running" );
-                deleteExecutor.submit( new ReadWorker( gmf, generator, writeCount, readMeter ) );
+                deleteExecutor.submit( new ReadWorker( gmf, generator, 0, readMeter ) );
             }
 
 
@@ -593,9 +592,9 @@ public class GraphManagerShardConsistencyIT {
             }
         } );
 
+        Thread.sleep(3000); //  let the edge readers start
 
-        //now start our readers
-
+        // now loop check the shard count
         while ( true ) {
 
             if ( !failures.isEmpty() ) {
@@ -647,9 +646,12 @@ public class GraphManagerShardConsistencyIT {
             Thread.sleep( 2000 );
         }
 
-        //now that we have finished expanding s
+        future.cancel(true); // stop the read future
 
+        //now that we have finished deleting and shards are removed, shutdown
         deleteExecutor.shutdownNow();
+
+        Thread.sleep( 3000 ); // sleep before the next test
     }
 
 
@@ -695,7 +697,7 @@ public class GraphManagerShardConsistencyIT {
 
 
                 if ( i % 100 == 0 ) {
-                    logger.info( Thread.currentThread().getName()+" wrote: " + i );
+                    logger.info( "wrote: " + i );
                 }
             }
 
@@ -741,7 +743,7 @@ public class GraphManagerShardConsistencyIT {
                 logger.info( "Completed reading {} edges", returnedEdgeCount );
 
                 if ( writeCount != returnedEdgeCount ) {
-                    logger.warn( Thread.currentThread().getName()+" - Unexpected edge count returned!!!  Expected {} but was {}", writeCount,
+                    logger.warn( "Unexpected edge count returned!!!  Expected {} but was {}", writeCount,
                         returnedEdgeCount );
                 }
 

@@ -227,14 +227,14 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         if(currentShard == null){
 
             if(logger.isTraceEnabled()){
-                logger.trace(Thread.currentThread().getName()+" - currentShard: {}", currentShard);
+                logger.trace("currentShard: {}", currentShard);
             }
 
             currentShard = currentShardIterator.next();
 
             if(logger.isTraceEnabled()){
-                logger.trace(Thread.currentThread().getName()+" - all shards when starting: {}", rowKeysWithShardEnd);
-                logger.trace(Thread.currentThread().getName()+" - initializing iterator with shard: {}", currentShard);
+                logger.trace("all shards when starting: {}", rowKeysWithShardEnd);
+                logger.trace("initializing iterator with shard: {}", currentShard);
             }
 
 
@@ -242,20 +242,84 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
 
 
+        // initial request, build the range with no start and no end
+        if ( startColumn == null && currentShard.getShardEnd() == null ){
 
-
-        //set the range into the search
-        if(logger.isTraceEnabled()){
-            logger.trace(Thread.currentThread().getName()+" - startColumn={}", startColumn);
-        }
-
-        if ( startColumn == null ) {
             columnSearch.buildRange( rangeBuilder );
-        }
-        else {
-            columnSearch.buildRange( rangeBuilder, startColumn );
-        }
 
+            if(logger.isTraceEnabled()){
+                logger.trace("initial search (no start or shard end)");
+            }
+
+        }
+        // if there's only a startColumn set the range start startColumn always
+        else if ( startColumn != null && currentShard.getShardEnd() == null ){
+
+            columnSearch.buildRange( rangeBuilder, startColumn, null );
+
+            if(logger.isTraceEnabled()){
+                logger.trace("search (no shard end) with start: {}", startColumn);
+            }
+
+        }
+        // if there's only a shardEnd, set the start/end according based on the search order
+        else if ( startColumn == null && currentShard.getShardEnd() != null ){
+
+            T shardEnd = (T) currentShard.getShardEnd();
+
+            // if we have a shardEnd and it's not an ascending search, use the shardEnd as a start
+            if(!ascending) {
+
+                columnSearch.buildRange(rangeBuilder, shardEnd, null);
+
+                if(logger.isTraceEnabled()){
+                    logger.trace("search descending with start: {}", shardEnd);
+                }
+
+            }
+            // if we have a shardEnd and it is an ascending search, use the shardEnd as the end
+            else{
+
+                columnSearch.buildRange( rangeBuilder, null, shardEnd );
+
+                if(logger.isTraceEnabled()){
+                    logger.trace("search ascending with end: {}", shardEnd);
+                }
+
+            }
+
+        }
+        // if there's both a startColumn and a shardEnd, decide which should be used as start/end based on search order
+        else if ( startColumn != null && currentShard.getShardEnd() != null) {
+
+            T shardEnd = (T) currentShard.getShardEnd();
+
+
+            // if the search is not ascending, set the start to be the older edge
+            if(!ascending){
+
+                T searchStart = comparator.compare(shardEnd, startColumn) > 0 ? shardEnd : startColumn;
+                columnSearch.buildRange( rangeBuilder, searchStart, null);
+
+                if(logger.isTraceEnabled()){
+                    logger.trace("search descending with start: {} in shard", searchStart, currentShard);
+                }
+
+            }
+            // if the search is ascending, then always use the startColumn for the start and shardEnd for the range end
+            else{
+
+                columnSearch.buildRange( rangeBuilder, startColumn , shardEnd);
+
+                if(logger.isTraceEnabled()){
+                    logger.trace("search with start: {}, end: {}", startColumn, shardEnd);
+                }
+
+
+
+            }
+
+        }
 
         rangeBuilder.setLimit( selectSize );
 
@@ -296,8 +360,8 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
 
         if(logger.isTraceEnabled()){
-            logger.trace(Thread.currentThread().getName()+" - current shard: {}, retrieved size: {}", currentShard, size);
-            logger.trace(Thread.currentThread().getName()+" - selectSize={}, size={}, ", selectSize, size);
+            logger.trace("current shard: {}, retrieved size: {}", currentShard, size);
+            logger.trace("selectSize={}, size={}, ", selectSize, size);
 
 
         }
@@ -348,68 +412,12 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         }
 
        if(logger.isTraceEnabled()){
-           logger.trace(
-               Thread.currentThread().getName()+" - currentColumnIterator.hasNext()={}, " +
+           logger.trace("currentColumnIterator.hasNext()={}, " +
                    "moreToReturn={}, currentShardIterator.hasNext()={}",
                currentColumnIterator.hasNext(), moreToReturn, currentShardIterator.hasNext());
        }
 
 
-    }
-
-
-    /**
-     * Return true if we have < 2 rows with columns, false otherwise
-     */
-    private boolean containsSingleRowOnly( final Rows<R, C> result ) {
-
-        int count = 0;
-
-        for ( R key : result.getKeys() ) {
-            if ( result.getRow( key ).getColumns().size() > 0 ) {
-                count++;
-
-                //we have more than 1 row with values, return them
-                if ( count > 1 ) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-
-    /**
-     * A single row is present, only parse the single row
-     * @param result
-     * @return
-     */
-    private List<T> singleRowResult( final Rows<R, C> result ) {
-
-        if (logger.isTraceEnabled()) logger.trace( "Only a single row has columns.  Parsing directly" );
-
-        for ( R key : result.getKeys() ) {
-            final ColumnList<C> columnList = result.getRow( key ).getColumns();
-
-            final int size = columnList.size();
-
-            if ( size > 0 ) {
-
-                final List<T> results = new ArrayList<>(size);
-
-                for(Column<C> column: columnList){
-                    results.add(columnParser.parseColumn( column ));
-                }
-
-                return results;
-
-
-            }
-        }
-
-        //we didn't have any results, just return nothing
-        return Collections.<T>emptyList();
     }
 
 

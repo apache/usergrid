@@ -19,20 +19,14 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
-import java.nio.ByteBuffer;
 import java.util.*;
 
-import org.apache.http.cookie.SM;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
 import org.apache.usergrid.persistence.core.astyanax.ColumnSearch;
-import org.apache.usergrid.persistence.core.astyanax.MultiRowColumnIterator;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.shard.SmartShard;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdge;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 
 import com.google.common.base.Optional;
@@ -42,8 +36,6 @@ import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.util.RangeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.usergrid.persistence.core.astyanax.MultiRowColumnIterator.*;
 
 
 /**
@@ -55,6 +47,9 @@ import static org.apache.usergrid.persistence.core.astyanax.MultiRowColumnIterat
  * @param <T> The parsed return type
  */
 public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, ColumnSearch<T>{
+
+    private static final Logger logger = LoggerFactory.getLogger( EdgeSearcher.class );
+
 
     protected final Optional<T> last;
     protected final long maxTimestamp;
@@ -84,7 +79,6 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
         List<ScopedRowKey<R>> rowKeys = new ArrayList<>(shards.size());
 
         for(Shard shard : shards){
-
             final ScopedRowKey< R> rowKey = ScopedRowKey
                     .fromKey( scope.getApplication(), generateRowKey(shard.getShardIndex() ) );
 
@@ -105,15 +99,13 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
             final ScopedRowKey< R> rowKey = ScopedRowKey
                 .fromKey( scope.getApplication(), generateRowKey(shard.getShardIndex() ) );
 
-            final C shardEnd;
-            if(shard.getShardEnd().isPresent()){
-                shardEnd = createColumn((T) shard.getShardEnd().get());
 
+            final T shardEnd;
+            if(shard.getShardEnd().isPresent()){
+                shardEnd = createEdge((C) shard.getShardEnd().get(), false); // convert DirectedEdge to Edge
             }else{
                 shardEnd = null;
             }
-
-
 
             rowKeysWithShardEnd.add(new SmartShard(rowKey, shardEnd));
         }
@@ -142,11 +134,23 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
 
 
     @Override
-    public void buildRange( final RangeBuilder rangeBuilder, final T value ) {
+    public void buildRange(final RangeBuilder rangeBuilder, final T start, T end) {
 
-        C edge = createColumn( value );
+        if ( start != null){
 
-        rangeBuilder.setStart( edge, getSerializer() );
+            C startEdge = createColumn( start );
+            rangeBuilder.setStart( startEdge, getSerializer() );
+        }else{
+
+            setTimeScan( rangeBuilder );
+        }
+
+        if( end != null){
+
+            C endEdge = createColumn( end );
+            rangeBuilder.setEnd( endEdge, getSerializer() );
+
+        }
 
         setRangeOptions( rangeBuilder );
     }
