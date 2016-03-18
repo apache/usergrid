@@ -221,7 +221,6 @@ public class IndexServiceImpl implements IndexService {
 
         if(defaultProperties!=null) {
             final Set<String> finalDefaultProperties = defaultProperties;
-            //the iterator is based off of this valu
             Iterator collectionIterator = mapFields.iterator();
 
             //TODO:I think there is a bug when we modify it and continue iterating then it fails
@@ -233,19 +232,54 @@ public class IndexServiceImpl implements IndexService {
                 //will only enter the loop for properties that aren't default properties so we only need to check
                 //the properties that the user imposed.
                 if ( !finalDefaultProperties.contains( fieldName ) ) {
-                    innerLoop( fieldsToKeep, mapFields, testedField, fieldName );
+                    boolean toRemoveFlag = true;
+                    String[] flattedStringArray = getStrings( fieldName );
+
+                    Iterator fieldIterator = fieldsToKeep.iterator();
+
+                    //goes through a loop of all the fields ( excluding default ) that we want to keep.
+                    //if the toRemoveFlag is set to false then we want to keep the property, otherwise we set it to false
+                    while(fieldIterator.hasNext()) {
+                        String requiredInclusionString = ( String ) fieldIterator.next();
+                        String[] flattedRequirementString = getStrings( requiredInclusionString );
+
+
+                        //loop each split array value to see if it matches an equivalent value
+                        //in the field.
+                        for ( int index = 0; index < flattedRequirementString.length;index++){
+                            //if the array contains a string that it is equals to then set the remove flag to true
+                            //otherwise remain false.
+
+                            if(flattedStringArray.length <= index){
+                                toRemoveFlag = true;
+                                break;
+                            }
+                            //this has a condition issue where if we evaluate that it passes on the first pass, we dont' want to continue the while lo
+                            if(flattedRequirementString[index].equals( flattedStringArray[index] )){
+                                toRemoveFlag=false;
+                            }
+                            else{
+                                toRemoveFlag=true;
+                            }
+                        }
+                        if(toRemoveFlag==false){
+                            break;
+                        }
+                    }
+
+                    if(toRemoveFlag){
+                        collectionIterator.remove();
+                        //mapFields.remove( testedField );
+                    }
                 }
             }
         }
         return map;
     }
+    
 
-
-    private void innerLoop( final ArrayList fieldsToKeep, final HashSet mapFields, final EntityField testedField,
-                            final String fieldName ) {//loop through and string split it all and if they still dont' match after that loop then remove them.
-        boolean toRemoveFlag = true;
-        String[] flattedStringArray = null;
-
+    private String[] getStrings( final String fieldName ) {
+        final String[] flattedStringArray;
         if(!fieldName.contains( "." )){
             //create a single array that is made of a the single value.
             flattedStringArray = new String[]{fieldName};
@@ -253,50 +287,66 @@ public class IndexServiceImpl implements IndexService {
         else {
             flattedStringArray= fieldName.split( "\\." );
         }
-
-        Iterator fieldIterator = fieldsToKeep.iterator();
-
-        //goes through a loop of all the fields ( excluding default ) that we want to query on
-        while(fieldIterator.hasNext()) {
-            String requiredInclusionString = ( String ) fieldIterator.next();
-            String[] flattedRequirementString;
-
-            //in the case you only have a filter that is a single field.Otherwise split it.
-            if(!requiredInclusionString.contains( "." )){
-                flattedRequirementString = new String[]{requiredInclusionString};
-            }
-            else {
-                 flattedRequirementString= requiredInclusionString.split( "\\." );
-            }
-
-
-            //loop each split array value to see if it matches an equivalent value
-            //in the field.
-            for ( int index = 0; index < flattedRequirementString.length;index++){
-                //if the array contains a string that it is equals to then set the remove flag to true
-                //otherwise remain false.
-
-                if(flattedStringArray.length <= index){
-                    toRemoveFlag = true;
-                    break;
-                }
-                //this has a condition issue where if we evaluate that it passes on the first pass, we dont' want to continue the while lo
-                if(flattedRequirementString[index].equals( flattedStringArray[index] )){
-                    toRemoveFlag=false;
-                }
-                else{
-                    toRemoveFlag=true;
-                }
-            }
-            if(toRemoveFlag==false){
-                break;
-            }
-        }
-
-        if(toRemoveFlag){
-            mapFields.remove( testedField );
-        }
+        return flattedStringArray;
     }
+
+
+    //    private void innerLoop( final ArrayList fieldsToKeep, final HashSet mapFields, final EntityField testedField,
+//                            final String fieldName ) {//loop through and string split it all and if they still dont' match after that loop then remove them.
+//        boolean toRemoveFlag = true;
+//        String[] flattedStringArray = null;
+//
+//        if(!fieldName.contains( "." )){
+//            //create a single array that is made of a the single value.
+//            flattedStringArray = new String[]{fieldName};
+//        }
+//        else {
+//            flattedStringArray= fieldName.split( "\\." );
+//        }
+//
+//        Iterator fieldIterator = fieldsToKeep.iterator();
+//
+//        //goes through a loop of all the fields ( excluding default ) that we want to query on
+//        while(fieldIterator.hasNext()) {
+//            String requiredInclusionString = ( String ) fieldIterator.next();
+//            String[] flattedRequirementString;
+//
+//            //in the case you only have a filter that is a single field.Otherwise split it.
+//            if(!requiredInclusionString.contains( "." )){
+//                flattedRequirementString = new String[]{requiredInclusionString};
+//            }
+//            else {
+//                 flattedRequirementString= requiredInclusionString.split( "\\." );
+//            }
+//
+//
+//            //loop each split array value to see if it matches an equivalent value
+//            //in the field.
+//            for ( int index = 0; index < flattedRequirementString.length;index++){
+//                //if the array contains a string that it is equals to then set the remove flag to true
+//                //otherwise remain false.
+//
+//                if(flattedStringArray.length <= index){
+//                    toRemoveFlag = true;
+//                    break;
+//                }
+//                //this has a condition issue where if we evaluate that it passes on the first pass, we dont' want to continue the while lo
+//                if(flattedRequirementString[index].equals( flattedStringArray[index] )){
+//                    toRemoveFlag=false;
+//                }
+//                else{
+//                    toRemoveFlag=true;
+//                }
+//            }
+//            if(toRemoveFlag==false){
+//                break;
+//            }
+//        }
+//
+//        if(toRemoveFlag){
+//            mapFields.remove( testedField );
+//        }
+//    }
 
 
     //Steps to delete an IndexEdge.
