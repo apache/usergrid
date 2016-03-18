@@ -375,7 +375,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
         // if a whole page is skipped OR the result size equals the the difference of what's skipped,
         // it is likely during a shard transition and we should assume there is more to read
-        if( skipSize == selectSize || skipSize == selectSize - 1 || size == selectSize - skipSize ){
+        if( skipSize == selectSize || skipSize == selectSize - 1 || size == selectSize - skipSize || size == (selectSize -1) - skipSize ){
             moreToReturn = true;
         }
 

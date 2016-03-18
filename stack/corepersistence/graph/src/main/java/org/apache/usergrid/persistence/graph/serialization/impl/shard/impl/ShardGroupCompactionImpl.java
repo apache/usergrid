@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
 import com.netflix.astyanax.connectionpool.OperationResult;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.*;
 import org.slf4j.Logger;
@@ -200,37 +201,61 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
 
                 edgeCount++;
-                shardEnd = edge;
+
 
                 // if we're at our count, execute the mutation of writing the edges to the new row, then remove them
                 // from the old rows
                 if ( edgeCount % maxWorkSize == 0 ) {
+
+
 
                     try {
 
                         // write the edges into the new shard atomically so we know they all succeed
                         newRowBatch.withAtomicBatch(true).execute();
 
+                        // set the shardEnd after the write is known to be successful
+                        shardEnd = edge;
+
+                        // Update the shard end after each batch so any reads during transition stay as close to current
+                        sourceShard.setShardEnd(
+                            Optional.of(new DirectedEdge(shardEnd.getTargetNode(), shardEnd.getTimestamp()))
+                        );
+
+                        logger.info("Updating shard {} for nodes {} with shardEnd {}", sourceShard, edgeMeta.getNodes(), shardEnd );
+                        updateShardMetaBatch.mergeShallow(
+                            edgeShardSerialization.writeShardMeta(scope, sourceShard, edgeMeta));
+
+
+
                         // on purpose block this thread before deleting the old edges to be sure there are no gaps
                         // duplicates are filtered on graph seeking so this is OK
                         Thread.sleep(1000);
+                        logger.info("Deleting batch of {} from old shard", maxWorkSize);
                         deleteRowBatch.execute();
+
 
                     }
                     catch ( Throwable t ) {
                         logger.error( "Unable to move edges from shard {} to shard {}", sourceShard, targetShard );
                     }
+                }else {
+
+                    shardEnd = edge;
+
                 }
+
+
+
             }
 
-            if (shardEnd != null){
+            if (shardEnd != null && edgeCount > 0){
 
                 sourceShard.setShardEnd(
                     Optional.of(new DirectedEdge(shardEnd.getTargetNode(), shardEnd.getTimestamp()))
                 );
 
-
-                logger.info("Updating shard {} with shardEnd: {}", sourceShard, shardEnd );
+                logger.info("Updating shard {} for nodes {} with shardEnd {}", sourceShard, shardEnd );
                 updateShardMetaBatch.mergeShallow( edgeShardSerialization.writeShardMeta(scope, sourceShard, edgeMeta));
             }
 
@@ -247,9 +272,13 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             // on purpose block this thread before deleting the old edges to be sure there are no gaps
             // duplicates are filtered on graph seeking so this is OK
             Thread.sleep(1000);
+
+            logger.info("Deleting remaining edges from old shard");
             deleteRowBatch.execute();
 
+            // now update with our shard end
             updateShardMetaBatch.execute();
+
         }
         catch ( Throwable t ) {
             logger.error( "Unable to move edges to target shard {}", targetShard );
@@ -438,6 +467,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                  * It's already compacting, don't do anything
                  */
                 if ( !shardCompactionTaskTracker.canStartTask( scope, edgeMeta, group ) ) {
+                    logger.info("the group is already compacting");
                     return AuditResult.COMPACTING;
                 }
 
@@ -477,8 +507,9 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         public boolean canStartTask( final ApplicationScope scope, final DirectedEdgeMeta edgeMeta,
                                      ShardEntryGroup group ) {
             final Long hash = doHash( scope, edgeMeta, group ).hash().asLong();
-
             final Boolean returned = runningTasks.putIfAbsent( hash, TRUE );
+            //logger.info("hash components are app: {}, edgeMeta: {}, group: {}", scope.getApplication(), edgeMeta, group);
+            //logger.info("checking hash value of: {}, already started: {}", hash, returned );
 
             /**
              * Someone already put the value
@@ -509,12 +540,13 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         /**
          * Hash our data into a consistent long
          */
+        @Override
         protected Hasher doHash( final ApplicationScope scope, final DirectedEdgeMeta directedEdgeMeta,
                                  final ShardEntryGroup shardEntryGroup ) {
 
             final Hasher hasher = super.doHash( scope, directedEdgeMeta, shardEntryGroup );
 
-            //add our compaction target to the hash
+            // add the compaction target to the hash
             final Shard compactionTarget = shardEntryGroup.getCompactionTarget();
 
             hasher.putLong( compactionTarget.getShardIndex() );
@@ -541,13 +573,15 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
             addToHash( hasher, scope.getApplication() );
 
-            /**
-             * add our edge meta data
-             */
+
+            /** Commenting the full meta from the hash so we allocate/compact shards in a more controlled fashion
+
             for ( DirectedEdgeMeta.NodeMeta nodeMeta : directedEdgeMeta.getNodes() ) {
                 addToHash( hasher, nodeMeta.getId() );
                 hasher.putInt( nodeMeta.getNodeType().getStorageValue() );
             }
+
+            **/
 
 
             /**
@@ -556,8 +590,6 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             for ( String type : directedEdgeMeta.getTypes() ) {
                 hasher.putString( type, CHARSET );
             }
-
-            //add our compaction target to the hash
 
 
             return hasher;
