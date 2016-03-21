@@ -161,17 +161,22 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         final int maxWorkSize = graphFig.getScanPageSize();
 
 
-        final MutationBatch newRowBatch = keyspace.prepareMutationBatch();
-        final MutationBatch deleteRowBatch = keyspace.prepareMutationBatch();
-        final MutationBatch updateShardMetaBatch = keyspace.prepareMutationBatch();
+
 
         /**
          * As we move edges, we want to keep track of it
          */
-        long edgeCount = 0;
+        long totalEdgeCount = 0;
 
 
         for ( Shard sourceShard : sourceShards ) {
+
+            final MutationBatch newRowBatch = keyspace.prepareMutationBatch();
+            final MutationBatch deleteRowBatch = keyspace.prepareMutationBatch();
+            final MutationBatch updateShardMetaBatch = keyspace.prepareMutationBatch();
+
+            long edgeCount = 0;
+
             Iterator<MarkedEdge> edges = edgeMeta
                 .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, Collections.singleton( sourceShard ),
                     Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING );
@@ -183,6 +188,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
                 final long edgeTimestamp = edge.getTimestamp();
 
+                shardEnd = edge;
 
                 /**
                  * The edge is within a different shard, break
@@ -203,6 +209,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                 edgeCount++;
 
 
+
                 // if we're at our count, execute the mutation of writing the edges to the new row, then remove them
                 // from the old rows
                 if ( edgeCount % maxWorkSize == 0 ) {
@@ -214,15 +221,15 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                         // write the edges into the new shard atomically so we know they all succeed
                         newRowBatch.withAtomicBatch(true).execute();
 
-                        // set the shardEnd after the write is known to be successful
-                        shardEnd = edge;
 
                         // Update the shard end after each batch so any reads during transition stay as close to current
                         sourceShard.setShardEnd(
                             Optional.of(new DirectedEdge(shardEnd.getTargetNode(), shardEnd.getTimestamp()))
                         );
 
-                        logger.info("Updating shard {} for nodes {} with shardEnd {}", sourceShard, edgeMeta.getNodes(), shardEnd );
+                        if(logger.isTraceEnabled()) {
+                            logger.trace("Updating shard {} during batch removal with shardEnd {}", sourceShard, shardEnd);
+                        }
                         updateShardMetaBatch.mergeShallow(
                             edgeShardSerialization.writeShardMeta(scope, sourceShard, edgeMeta));
 
@@ -231,74 +238,85 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                         // on purpose block this thread before deleting the old edges to be sure there are no gaps
                         // duplicates are filtered on graph seeking so this is OK
                         Thread.sleep(1000);
-                        logger.info("Deleting batch of {} from old shard", maxWorkSize);
-                        deleteRowBatch.execute();
+
+                        if(logger.isTraceEnabled()) {
+                            logger.trace("Deleting batch of {} from old shard", maxWorkSize);
+                        }
+                        deleteRowBatch.withAtomicBatch(true).execute();
+
+                        updateShardMetaBatch.execute();
 
 
                     }
                     catch ( Throwable t ) {
                         logger.error( "Unable to move edges from shard {} to shard {}", sourceShard, targetShard );
                     }
-                }else {
 
-                    shardEnd = edge;
-
+                    totalEdgeCount += edgeCount;
+                    edgeCount = 0;
                 }
 
 
 
             }
 
-            if (shardEnd != null && edgeCount > 0){
+            totalEdgeCount += edgeCount;
 
-                sourceShard.setShardEnd(
-                    Optional.of(new DirectedEdge(shardEnd.getTargetNode(), shardEnd.getTimestamp()))
-                );
+            try {
 
-                logger.info("Updating shard {} for nodes {} with shardEnd {}", sourceShard, shardEnd );
-                updateShardMetaBatch.mergeShallow( edgeShardSerialization.writeShardMeta(scope, sourceShard, edgeMeta));
+                // write the edges into the new shard atomically so we know they all succeed
+                newRowBatch.withAtomicBatch(true).execute();
+
+                // on purpose block this thread before deleting the old edges to be sure there are no gaps
+                // duplicates are filtered on graph seeking so this is OK
+                Thread.sleep(1000);
+
+                if(logger.isTraceEnabled()) {
+                    logger.trace("Deleting remaining {} edges from old shard", edgeCount);
+                }
+                deleteRowBatch.withAtomicBatch(true).execute();
+
+                if (shardEnd != null){
+
+                    sourceShard.setShardEnd(
+                        Optional.of(new DirectedEdge(shardEnd.getTargetNode(), shardEnd.getTimestamp()))
+                    );
+
+                    if(logger.isTraceEnabled()) {
+                        logger.trace("Updating for last time shard {} with shardEnd {}", sourceShard, shardEnd);
+                    }
+                    updateShardMetaBatch.mergeShallow( edgeShardSerialization.writeShardMeta(scope, sourceShard, edgeMeta));
+                    updateShardMetaBatch.execute();
+                }
+
+
+            }
+            catch ( Throwable t ) {
+                logger.error( "Unable to move edges to target shard {}", targetShard );
             }
 
+
+
         }
 
 
-
-
-        try {
-
-            // write the edges into the new shard atomically so we know they all succeed
-            newRowBatch.withAtomicBatch(true).execute();
-
-            // on purpose block this thread before deleting the old edges to be sure there are no gaps
-            // duplicates are filtered on graph seeking so this is OK
-            Thread.sleep(1000);
-
-            logger.info("Deleting remaining edges from old shard");
-            deleteRowBatch.execute();
-
-            // now update with our shard end
-            updateShardMetaBatch.execute();
-
-        }
-        catch ( Throwable t ) {
-            logger.error( "Unable to move edges to target shard {}", targetShard );
-        }
 
 
         if (logger.isTraceEnabled()) {
-            logger.trace("Finished compacting {} shards and moved {} edges", sourceShards, edgeCount);
+            logger.trace("Finished compacting {} shards and moved {} edges", sourceShards, totalEdgeCount);
         }
-        logger.info("Finished compacting {} shards and moved {} edges", sourceShards, edgeCount);
+
+        logger.info("Finished compacting {} shards and moved {} edges", sourceShards, totalEdgeCount);
 
 
-        resultBuilder.withCopiedEdges( edgeCount ).withSourceShards( sourceShards ).withTargetShard( targetShard );
+        resultBuilder.withCopiedEdges( totalEdgeCount ).withSourceShards( sourceShards ).withTargetShard( targetShard );
 
         /**
          * We didn't move anything this pass, mark the shard as compacted.  If we move something,
          * it means that we missed it on the first pass
          * or someone is still not writing to the target shard only.
          */
-        if ( edgeCount == 0 ) {
+        if ( totalEdgeCount == 0 ) {
 
 
             //now that we've marked our target as compacted, we can successfully remove any shards that are not
@@ -329,11 +347,12 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                 throw new RuntimeException( "Unable to connect to cassandra", e );
             }
 
-
-            logger.info( "Shard has been fully compacted.  Marking shard {} as compacted in Cassandra", targetShard );
-
             //Overwrite our shard index with a newly created one that has been marked as compacted
             Shard compactedShard = new Shard( targetShard.getShardIndex(), timeService.getCurrentTime(), true );
+            compactedShard.setShardEnd(targetShard.getShardEnd());
+
+            logger.info( "Shard has been fully compacted.  Marking shard {} as compacted in Cassandra", compactedShard );
+
 
             final MutationBatch updateMark = edgeShardSerialization.writeShardMeta( scope, compactedShard, edgeMeta );
             try {

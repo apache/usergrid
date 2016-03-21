@@ -107,8 +107,11 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        batch.withTimestamp( shard.getCreatedTime() ).withRow( EDGE_SHARDS, rowKey )
-             .putColumn( shard.getShardIndex(), SHARD_SERIALIZER.toByteBuffer(shard));
+        // write the row with a current timestamp so we can ensure that it's persisted with updated shard meta
+        long batchTimestamp = System.currentTimeMillis();
+
+        batch.withTimestamp( batchTimestamp ).withRow( EDGE_SHARDS, rowKey )
+             .putColumn( shard.getShardIndex(), SHARD_SERIALIZER.toByteBuffer(shard)).setTimestamp(batchTimestamp);
 
         return batch;
     }
@@ -163,8 +166,11 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        batch.withTimestamp(shard.getCreatedTime()).withRow( EDGE_SHARDS, rowKey )
-            .deleteColumn( shard.getShardIndex() );
+        // write the row with a current timestamp so we can ensure that it's persisted with updated shard meta
+        long batchTimestamp = System.currentTimeMillis();
+
+        batch.withTimestamp(batchTimestamp).withRow( EDGE_SHARDS, rowKey )
+            .deleteColumn( shard.getShardIndex() ).setTimestamp(batchTimestamp);
 
         return batch;
     }

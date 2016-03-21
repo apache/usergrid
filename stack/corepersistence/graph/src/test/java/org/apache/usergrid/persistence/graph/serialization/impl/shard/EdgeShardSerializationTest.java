@@ -209,7 +209,7 @@ public class EdgeShardSerializationTest {
     }
 
     @Test
-    public void sameShardIndexRemoval() throws ConnectionException {
+    public void testShardDelete() throws ConnectionException {
 
         final Id now = IdGenerator.createId( "test" );
 
@@ -217,11 +217,15 @@ public class EdgeShardSerializationTest {
 
         final Shard shard1 = new Shard( 1000L, timestamp, false );
         final Shard shard2 = new Shard( shard1.getShardIndex(), timestamp * 2, true );
+        final Shard shard3 = new Shard( shard2.getShardIndex() * 2, timestamp * 3, true );
+
 
 
         final DirectedEdgeMeta sourceEdgeMeta = DirectedEdgeMeta.fromSourceNodeTargetType( now, "edgeType", "subType" );
         MutationBatch batch = edgeShardSerialization.writeShardMeta( scope, shard1, sourceEdgeMeta );
         batch.mergeShallow( edgeShardSerialization.writeShardMeta( scope, shard2, sourceEdgeMeta ) );
+        batch.mergeShallow( edgeShardSerialization.writeShardMeta( scope, shard3, sourceEdgeMeta ) );
+
         batch.execute();
 
 
@@ -229,16 +233,16 @@ public class EdgeShardSerializationTest {
             edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), sourceEdgeMeta );
 
         // Latest timestamp  comes first
-        assertEquals( shard2, results.next() );
+        assertEquals( shard3, results.next() );
 
         // This should now not remove anything
-        edgeShardSerialization.removeShardMeta( scope, shard1, sourceEdgeMeta ).execute();
+        edgeShardSerialization.removeShardMeta( scope, shard3, sourceEdgeMeta ).execute();
 
 
         // Get iterator again
         results = edgeShardSerialization.getShardMetaData( scope, Optional.<Shard>absent(), sourceEdgeMeta );
 
-        // We should still have shard3 stored
+        // We should still have shard2 stored
         assertEquals( shard2, results.next() );
 
 
