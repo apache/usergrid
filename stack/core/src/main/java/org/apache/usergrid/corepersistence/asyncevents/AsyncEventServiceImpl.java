@@ -742,15 +742,6 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     /**
      * Submit results to index and return the queue messages to be ack'd
      *
-     *
-     *
-     *
-       *
-     *
-     *
-     *
-     * @param indexEventResults
-     * @return
      */
     private List<QueueMessage> submitToIndex(List<IndexEventResult> indexEventResults) {
 
