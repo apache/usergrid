@@ -111,34 +111,20 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
             logger.trace("Starting shards column iterator");
         }
 
-
-        /**
-         * If the edge is present, we need to being seeking from this
-         */
-
         final RangeBuilder rangeBuilder = new RangeBuilder().setLimit( pageSize );
 
 
-        //set the range into the search
+        // set the range into the search
         searcher.buildRange( rangeBuilder );
 
 
-
-        /**
-         * Get our list of slices
-         */
-        final List<ScopedRowKey<R>> rowKeys = searcher.getRowKeys();
-
+        // get the rows keys and their corresponding 'shardEnd' that we will seek from
         final List<SmartShard> rowKeysWithShardEnd = searcher.getRowKeysWithShardEnd();
 
         final boolean ascending = searcher.getOrder() == SearchByEdgeType.Order.ASCENDING;
 
-        if (logger.isTraceEnabled()) {
-            logger.trace("Searching with row keys {}", rowKeys);
-        }
-
         currentColumnIterator = new MultiRowShardColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher,
-            searcher.getComparator(), rowKeys, pageSize, rowKeysWithShardEnd, ascending);
+            searcher.getComparator(), pageSize, rowKeysWithShardEnd, ascending);
 
 
     }

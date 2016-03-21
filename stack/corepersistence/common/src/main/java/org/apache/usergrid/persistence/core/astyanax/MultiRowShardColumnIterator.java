@@ -57,18 +57,13 @@ public class MultiRowShardColumnIterator<R, C, T> implements Iterator<T> {
     private final Comparator<T> comparator;
 
 
-    private final Collection<R> rowKeys;
-
     private final Keyspace keyspace;
 
     private final ConsistencyLevel consistencyLevel;
 
-
     private T startColumn;
 
-
     private boolean moreToReturn;
-
 
     private Iterator<T> currentColumnIterator;
 
@@ -78,43 +73,23 @@ public class MultiRowShardColumnIterator<R, C, T> implements Iterator<T> {
 
     private SmartShard currentShard;
 
-    private List<T> resultsTracking;
+    private List<T> resultsTracking; // use for de-duping results that are possible during shard transition
 
     private int skipSize = 0; // used for determining if we've skipped a whole page during shard transition
 
     private boolean ascending = false;
 
 
-    /**
-     * Remove after finding bug
-     */
-
-
-    //    private int advanceCount;
-    //
-    //    private final HashMap<T, SeekPosition> seenResults;
-
-    /**
-     * Complete Remove
-     */
-
-
-    /**
-     * Create the iterator
-     */
-    // temporarily use a new constructor for specific searches until we update each caller of this class
     public MultiRowShardColumnIterator( final Keyspace keyspace, final ColumnFamily<R, C> cf,
-                                   final ConsistencyLevel consistencyLevel, final ColumnParser<C, T> columnParser,
-                                   final ColumnSearch<T> columnSearch, final Comparator<T> comparator,
-                                   final Collection<R> rowKeys, final int pageSize,
-                                   final List<SmartShard> rowKeysWithShardEnd,
-                                   final boolean ascending) {
+                                        final ConsistencyLevel consistencyLevel, final ColumnParser<C, T> columnParser,
+                                        final ColumnSearch<T> columnSearch, final Comparator<T> comparator,
+                                        final int pageSize, final List<SmartShard> rowKeysWithShardEnd,
+                                        final boolean ascending) {
         this.cf = cf;
         this.pageSize = pageSize;
         this.columnParser = columnParser;
         this.columnSearch = columnSearch;
         this.comparator = comparator;
-        this.rowKeys = rowKeys;
         this.keyspace = keyspace;
         this.consistencyLevel = consistencyLevel;
         this.moreToReturn = true;
