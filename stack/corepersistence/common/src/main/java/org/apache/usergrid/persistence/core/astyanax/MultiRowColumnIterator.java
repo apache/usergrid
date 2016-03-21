@@ -20,9 +20,14 @@
 package org.apache.usergrid.persistence.core.astyanax;
 
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 
-import org.apache.usergrid.persistence.core.shard.SmartShard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,18 +77,6 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
     private Iterator<T> currentColumnIterator;
 
-    private Iterator<SmartShard> currentShardIterator;
-
-    private List<SmartShard> rowKeysWithShardEnd;
-
-    private SmartShard currentShard;
-
-    private List<T> resultsTracking;
-
-    private int skipSize = 0; // used for determining if we've skipped a whole page during shard transition
-
-    private boolean ascending = false;
-
 
     /**
      * Remove after finding bug
@@ -115,63 +108,18 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         this.keyspace = keyspace;
         this.consistencyLevel = consistencyLevel;
         this.moreToReturn = true;
-        this.resultsTracking = new ArrayList<>();
 
-    }
-
-    // temporarily use a new constructor for specific searches until we update each caller of this class
-    public MultiRowColumnIterator( final Keyspace keyspace, final ColumnFamily<R, C> cf,
-                                   final ConsistencyLevel consistencyLevel, final ColumnParser<C, T> columnParser,
-                                   final ColumnSearch<T> columnSearch, final Comparator<T> comparator,
-                                   final Collection<R> rowKeys, final int pageSize,
-                                   final List<SmartShard> rowKeysWithShardEnd,
-                                   final boolean ascending) {
-        this.cf = cf;
-        this.pageSize = pageSize;
-        this.columnParser = columnParser;
-        this.columnSearch = columnSearch;
-        this.comparator = comparator;
-        this.rowKeys = rowKeys;
-        this.keyspace = keyspace;
-        this.consistencyLevel = consistencyLevel;
-        this.moreToReturn = true;
-        this.rowKeysWithShardEnd = rowKeysWithShardEnd;
-        this.resultsTracking = new ArrayList<>();
-        this.ascending = ascending;
-
+        //        seenResults = new HashMap<>( pageSize * 10 );
     }
 
 
     @Override
     public boolean hasNext() {
 
-        // if column iterator is null, initialize with first call to advance()
-        // advance if we know there more columns exist in the current shard but we've exhausted this page fetch from c*
         if ( currentColumnIterator == null || ( !currentColumnIterator.hasNext() && moreToReturn ) ) {
             advance();
         }
 
-        // when there are no more columns, nothing reported to return, but more shards available, go to the next shard
-        if( currentColumnIterator != null && !currentColumnIterator.hasNext() &&
-            !moreToReturn && currentShardIterator.hasNext()){
-
-                if(logger.isTraceEnabled()){
-                    logger.trace("Advancing shard iterator");
-                    logger.trace("Shard before advance: {}", currentShard);
-                }
-
-
-                // advance to the next shard
-                currentShard = currentShardIterator.next();
-
-                if(logger.isTraceEnabled()){
-                    logger.trace("Shard after advance: {}", currentShard);
-
-                }
-
-                advance();
-
-        }
 
         return currentColumnIterator.hasNext();
     }
@@ -198,6 +146,7 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
     public void advance() {
 
+
         if (logger.isTraceEnabled()) logger.trace( "Advancing multi row column iterator" );
 
         /**
@@ -206,130 +155,32 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
         final boolean skipFirstColumn = startColumn != null;
 
+
+
         final int selectSize = skipFirstColumn ? pageSize + 1 : pageSize;
 
         final RangeBuilder rangeBuilder = new RangeBuilder();
 
 
+        //set the range into the search
 
-
-        if(currentShardIterator == null){
-
-            // flip the order of our shards if ascending
-            if(ascending){
-                Collections.reverse(rowKeysWithShardEnd);
-            }
-
-            currentShardIterator = rowKeysWithShardEnd.iterator();
-
-        }
-
-        if(currentShard == null){
-
-            if(logger.isTraceEnabled()){
-                logger.trace("currentShard: {}", currentShard);
-            }
-
-            currentShard = currentShardIterator.next();
-
-            if(logger.isTraceEnabled()){
-                logger.trace("all shards when starting: {}", rowKeysWithShardEnd);
-                logger.trace("initializing iterator with shard: {}", currentShard);
-            }
-
-
-        }
-
-
-
-        // initial request, build the range with no start and no end
-        if ( startColumn == null && currentShard.getShardEnd() == null ){
-
+        if ( startColumn == null ) {
             columnSearch.buildRange( rangeBuilder );
-
-            if(logger.isTraceEnabled()){
-                logger.trace("initial search (no start or shard end)");
-            }
-
         }
-        // if there's only a startColumn set the range start startColumn always
-        else if ( startColumn != null && currentShard.getShardEnd() == null ){
-
+        else {
             columnSearch.buildRange( rangeBuilder, startColumn, null );
-
-            if(logger.isTraceEnabled()){
-                logger.trace("search (no shard end) with start: {}", startColumn);
-            }
-
         }
-        // if there's only a shardEnd, set the start/end according based on the search order
-        else if ( startColumn == null && currentShard.getShardEnd() != null ){
 
-            T shardEnd = (T) currentShard.getShardEnd();
-
-            // if we have a shardEnd and it's not an ascending search, use the shardEnd as a start
-            if(!ascending) {
-
-                columnSearch.buildRange(rangeBuilder, shardEnd, null);
-
-                if(logger.isTraceEnabled()){
-                    logger.trace("search descending with start: {}", shardEnd);
-                }
-
-            }
-            // if we have a shardEnd and it is an ascending search, use the shardEnd as the end
-            else{
-
-                columnSearch.buildRange( rangeBuilder, null, shardEnd );
-
-                if(logger.isTraceEnabled()){
-                    logger.trace("search ascending with end: {}", shardEnd);
-                }
-
-            }
-
-        }
-        // if there's both a startColumn and a shardEnd, decide which should be used as start/end based on search order
-        else if ( startColumn != null && currentShard.getShardEnd() != null) {
-
-            T shardEnd = (T) currentShard.getShardEnd();
-
-
-            // if the search is not ascending, set the start to be the older edge
-            if(!ascending){
-
-                T searchStart = comparator.compare(shardEnd, startColumn) > 0 ? shardEnd : startColumn;
-                columnSearch.buildRange( rangeBuilder, searchStart, null);
-
-                if(logger.isTraceEnabled()){
-                    logger.trace("search descending with start: {} in shard", searchStart, currentShard);
-                }
-
-            }
-            // if the search is ascending, then always use the startColumn for the start and shardEnd for the range end
-            else{
-
-                columnSearch.buildRange( rangeBuilder, startColumn , shardEnd);
-
-                if(logger.isTraceEnabled()){
-                    logger.trace("search with start: {}, end: {}", startColumn, shardEnd);
-                }
-
-
-
-            }
-
-        }
 
         rangeBuilder.setLimit( selectSize );
 
-        if (logger.isTraceEnabled()) logger.trace( "Executing cassandra query with shard {}", currentShard );
+        if (logger.isTraceEnabled()) logger.trace( "Executing cassandra query" );
 
         /**
          * Get our list of slices
          */
         final RowSliceQuery<R, C> query =
-            keyspace.prepareQuery( cf ).setConsistencyLevel( consistencyLevel ).getKeySlice( (R) currentShard.getRowKey() )
+            keyspace.prepareQuery( cf ).setConsistencyLevel( consistencyLevel ).getKeySlice( rowKeys )
                 .withColumnRange( rangeBuilder.build() );
 
         final Rows<R, C> result;
@@ -341,43 +192,36 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         }
 
 
+        //now aggregate them together
+
+        //this is an optimization.  It's faster to see if we only have values for one row,
+        // then return the iterator of those columns than
+        //do a merge if only one row has data.
 
 
         final List<T> mergedResults;
 
-        skipSize = 0;
-
-        mergedResults = processResults( result, selectSize );
-
-        if(logger.isTraceEnabled()){
-            logger.trace("skipped amount: {}", skipSize);
+        if ( containsSingleRowOnly( result ) ) {
+            mergedResults = singleRowResult( result );
         }
+        else {
+            mergedResults = mergeResults( result, selectSize );
+        }
+
+
+
+
+
+        //we've parsed everything truncate to the first pageSize, it's all we can ensure is correct without another
+        //trip back to cassandra
+
+        //discard our first element (maybe)
 
 
 
         final int size = mergedResults.size();
 
-
-
-        if(logger.isTraceEnabled()){
-            logger.trace("current shard: {}, retrieved size: {}", currentShard, size);
-            logger.trace("selectSize={}, size={}, ", selectSize, size);
-
-
-        }
-
         moreToReturn = size == selectSize;
-
-        if(selectSize == 1001 && mergedResults.size() == 1000){
-            moreToReturn = true;
-        }
-
-
-        // if a whole page is skipped OR the result size equals the the difference of what's skipped,
-        // it is likely during a shard transition and we should assume there is more to read
-        if( skipSize == selectSize || skipSize == selectSize - 1 || size == selectSize - skipSize || size == (selectSize -1) - skipSize ){
-            moreToReturn = true;
-        }
 
         //we have a first column to to check
         if( size > 0) {
@@ -386,52 +230,92 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
             //The search has either told us to skip the first element, or it matches our last, therefore we disregard it
             if(columnSearch.skipFirst( firstResult ) || (skipFirstColumn && comparator.compare( startColumn, firstResult ) == 0)){
-                if(logger.isTraceEnabled()){
-                    logger.trace("removing an entry");
-
-                }
                 mergedResults.remove( 0 );
             }
 
         }
 
 
-        // set the start column for the enxt query
         if(moreToReturn && mergedResults.size() > 0){
             startColumn = mergedResults.get( mergedResults.size()  - 1 );
-
         }
 
 
         currentColumnIterator = mergedResults.iterator();
 
-
-        //force an advance of this iterator when there are still shards to read but result set on current shard is 0
-        if(size == 0 && currentShardIterator.hasNext()){
-            hasNext();
-        }
-
-       if(logger.isTraceEnabled()){
-           logger.trace("currentColumnIterator.hasNext()={}, " +
-                   "moreToReturn={}, currentShardIterator.hasNext()={}",
-               currentColumnIterator.hasNext(), moreToReturn, currentShardIterator.hasNext());
-       }
-
-
+        if (logger.isTraceEnabled()) logger.trace( "Finished parsing {} rows for results", rowKeys.size() );
     }
 
 
     /**
-     * Process the result set and filter any duplicates that may have already been seen in previous shards.  During
-     * a shard transition, there could be the same columns in multiple shards (rows).  This will also allow for
-     * filtering the startColumn (the seek starting point) when paging a row in Cassandra.
-     *
+     * Return true if we have < 2 rows with columns, false otherwise
+     */
+    private boolean containsSingleRowOnly( final Rows<R, C> result ) {
+
+        int count = 0;
+
+        for ( R key : result.getKeys() ) {
+            if ( result.getRow( key ).getColumns().size() > 0 ) {
+                count++;
+
+                //we have more than 1 row with values, return them
+                if ( count > 1 ) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+
+    /**
+     * A single row is present, only parse the single row
      * @param result
      * @return
      */
-    private List<T> processResults(final Rows<R, C> result, final int maxSize ) {
+    private List<T> singleRowResult( final Rows<R, C> result ) {
+
+        if (logger.isTraceEnabled()) logger.trace( "Only a single row has columns.  Parsing directly" );
+
+        for ( R key : result.getKeys() ) {
+            final ColumnList<C> columnList = result.getRow( key ).getColumns();
+
+            final int size = columnList.size();
+
+            if ( size > 0 ) {
+
+                final List<T> results = new ArrayList<>(size);
+
+                for(Column<C> column: columnList){
+                    results.add(columnParser.parseColumn( column ));
+                }
+
+                return results;
+
+
+            }
+        }
+
+        //we didn't have any results, just return nothing
+        return Collections.<T>emptyList();
+    }
+
+
+    /**
+     * Multiple rows are present, merge them into a single result set
+     * @param result
+     * @return
+     */
+    private List<T> mergeResults( final Rows<R, C> result, final int maxSize ) {
+
+        if (logger.isTraceEnabled()) logger.trace( "Multiple rows have columns.  Merging" );
+
 
         final List<T> mergedResults = new ArrayList<>(maxSize);
+
+
+
 
         for ( final R key : result.getKeys() ) {
             final ColumnList<C> columns = result.getRow( key ).getColumns();
@@ -441,24 +325,52 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
 
                 final T returnedValue = columnParser.parseColumn( column );
 
-                // use an O(log n) search, same as a tree, but with fast access to indexes for later operations
-                int searchIndex = Collections.binarySearch( resultsTracking, returnedValue, comparator );
+                //Use an O(log n) search, same as a tree, but with fast access to indexes for later operations
+                int searchIndex = Collections.binarySearch( mergedResults, returnedValue, comparator );
 
+                /**
+                 * DO NOT remove this section of code. If you're seeing inconsistent results during shard transition,
+                 * you'll
+                 * need to enable this
+                 */
+                //
+                //                if ( previous != null && comparator.compare( previous, returnedValue ) == 0 ) {
+                //                    throw new RuntimeException( String.format(
+                //                            "Cassandra returned 2 unique columns,
+                // but your comparator marked them as equal.  This " +
+                //                                    "indicates a bug in your comparator.  Previous value was %s and
+                // current value is " +
+                //                                    "%s",
+                //                            previous, returnedValue ) );
+                //                }
+                //
+                //                previous = returnedValue;
 
-                //we've already seen the column, filter it out as we might be in a shard transition or our start column
+                //we've already seen it, no-op
                 if(searchIndex > -1){
-                    if(logger.isTraceEnabled()){
-                        logger.trace("skipping column as it was already retrieved before");
-                    }
-                    skipSize++;
                     continue;
                 }
 
+                final int insertIndex = (searchIndex+1)*-1;
 
-                resultsTracking.add(returnedValue);
-                mergedResults.add(returnedValue );
+                //it's at the end of the list, don't bother inserting just to remove it
+                if(insertIndex >= maxSize){
+                    continue;
+                }
+
+                if (logger.isTraceEnabled()) logger.trace( "Adding value {} to merged set at index {}", returnedValue, insertIndex );
+
+                mergedResults.add( insertIndex, returnedValue );
 
 
+                //prune the mergedResults
+                while ( mergedResults.size() > maxSize ) {
+
+                    if (logger.isTraceEnabled()) logger.trace( "Trimming results to size {}", maxSize );
+
+                    //just remove from our tail until the size falls to the correct value
+                    mergedResults.remove(mergedResults.size()-1);
+                }
             }
 
             if (logger.isTraceEnabled()) logger.trace( "Candidate result set size is {}", mergedResults.size() );
@@ -467,6 +379,6 @@ public class MultiRowColumnIterator<R, C, T> implements Iterator<T> {
         return mergedResults;
     }
 
-}
 
+}
 

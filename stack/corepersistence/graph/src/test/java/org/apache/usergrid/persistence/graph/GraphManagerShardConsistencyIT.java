@@ -82,6 +82,7 @@ import static org.junit.Assert.fail;
 public class GraphManagerShardConsistencyIT {
     private static final Logger logger = LoggerFactory.getLogger( GraphManagerShardConsistencyIT.class );
 
+
     private static final MetricRegistry registry = new MetricRegistry();
 
     private static final Meter writeMeter = registry.meter( "writeThroughput" );
@@ -102,7 +103,7 @@ public class GraphManagerShardConsistencyIT {
 
     protected ListeningExecutorService deleteExecutor;
 
-    protected int TARGET_NUM_SHARDS = 6;
+    protected int TARGET_NUM_SHARDS = 5;
 
 
 

@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 import java.util.*;
 
+import org.apache.usergrid.persistence.core.astyanax.MultiRowShardColumnIterator;
 import org.apache.usergrid.persistence.core.shard.SmartShard;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.slf4j.Logger;
@@ -136,7 +137,7 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
             logger.trace("Searching with row keys {}", rowKeys);
         }
 
-        currentColumnIterator = new MultiRowColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher,
+        currentColumnIterator = new MultiRowShardColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher,
             searcher.getComparator(), rowKeys, pageSize, rowKeysWithShardEnd, ascending);
 
 
