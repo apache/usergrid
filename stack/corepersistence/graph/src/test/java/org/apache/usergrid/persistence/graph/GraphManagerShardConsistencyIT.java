@@ -171,7 +171,7 @@ public class GraphManagerShardConsistencyIT {
         deleteExecutor = MoreExecutors.listeningDecorator( Executors.newFixedThreadPool( size ) );
     }
 
-    @Test
+    @Test(timeout=300000) // set a timeout so this doesn't run forever in the event that it is failing
     public void writeThousandsSingleSource()
         throws InterruptedException, ExecutionException, MigrationException, UnsupportedEncodingException {
 
@@ -279,7 +279,7 @@ public class GraphManagerShardConsistencyIT {
         final List<Throwable> failures = new ArrayList<>();
         Thread.sleep(3000); // let's make sure everything is written
 
-        for(int i = 0; i < 1; i ++) {
+        for(int i = 0; i < 2; i ++) {
 
 
             /**
@@ -641,8 +641,6 @@ public class GraphManagerShardConsistencyIT {
 
             Thread.sleep( 2000 );
         }
-
-        future.cancel(true); // stop the read future
 
         //now that we have finished deleting and shards are removed, shutdown
         deleteExecutor.shutdownNow();
