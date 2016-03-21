@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.avro.generic.GenericData;
 import org.apache.usergrid.persistence.index.impl.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

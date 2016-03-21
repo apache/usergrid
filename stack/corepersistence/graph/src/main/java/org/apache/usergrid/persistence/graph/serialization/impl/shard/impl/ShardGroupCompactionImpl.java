@@ -490,7 +490,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                     if(logger.isTraceEnabled()) {
                         logger.trace("Already compacting, won't compact group: {}", group);
                     }
-                    
+
 
                     return AuditResult.COMPACTING;
                 }
