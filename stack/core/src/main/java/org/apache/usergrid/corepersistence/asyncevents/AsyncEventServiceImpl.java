@@ -741,6 +741,14 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     /**
      * Submit results to index and return the queue messages to be ack'd
+     *
+     *
+     *
+     *
+       *
+     *
+     *
+     *
      * @param indexEventResults
      * @return
      */
@@ -756,7 +764,6 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
             // filter out messages that are not present, they were not processed and put into the results
             .filter( result -> result.getQueueMessage().isPresent() )
-            .filter( result -> result.getIndexOperationMessage().isPresent() )
             .map(indexEventResult -> {
 
                 //record the cycle time
