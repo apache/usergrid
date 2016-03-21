@@ -486,7 +486,12 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                  * It's already compacting, don't do anything
                  */
                 if ( !shardCompactionTaskTracker.canStartTask( scope, edgeMeta, group ) ) {
-                    logger.info("the group is already compacting");
+
+                    if(logger.isTraceEnabled()) {
+                        logger.trace("Already compacting, won't compact group: {}", group);
+                    }
+                    
+
                     return AuditResult.COMPACTING;
                 }
 
