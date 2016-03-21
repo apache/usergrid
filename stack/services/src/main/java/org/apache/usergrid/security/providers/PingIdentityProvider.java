@@ -126,6 +126,7 @@ public class PingIdentityProvider extends AbstractProvider {
         formData.add("token", externalToken);
 
         JsonNode node = client.target(apiUrl).request()
+            .accept(MediaType.APPLICATION_JSON)
             .post(Entity.entity(formData, MediaType.APPLICATION_FORM_URLENCODED_TYPE), JsonNode.class);
 
         String rawEmail = node.get("access_token").get("subject").asText();

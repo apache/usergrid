@@ -48,6 +48,7 @@ public class ApplicationsResource extends NamedResource {
         String responseString = this.getTarget()
             .queryParam( "access_token", context.getToken().getAccessToken() )
             .request()
+            .accept(MediaType.APPLICATION_JSON)
             .get(String.class);
 
         logger.info("Response: " + responseString);

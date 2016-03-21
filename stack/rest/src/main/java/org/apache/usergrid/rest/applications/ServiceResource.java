@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.QueryUtils;
+import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
@@ -53,6 +54,8 @@ import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
@@ -335,11 +338,23 @@ public class ServiceResource extends AbstractContextResource {
     @RequireApplicationAccess
     @JSONP
     public ApiResponse executeGet( @Context UriInfo ui,
+                                   @Context HttpHeaders headers,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.executeGet" );
+        }
+
+        // if only text/html (incompatible with application/json or application/javascript), return an error
+        List<MediaType> acceptableMediaTypes = headers.getAcceptableMediaTypes();
+        MediaType applicationJsMediaType = MediaType.valueOf("application/javascript");
+        boolean isCompatible = acceptableMediaTypes.stream()
+                .anyMatch(acceptableType ->
+                        acceptableType.isCompatible(MediaType.APPLICATION_JSON_TYPE) ||
+                        acceptableType.isCompatible(applicationJsMediaType));
+        if (!isCompatible) {
+            throw new NotAcceptableException("Entities cannot be retrieved as HTML.");
         }
 
         ApiResponse response = createApiResponse();
@@ -637,8 +652,6 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
-    @JSONP
-    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     private ApiResponse executeMultiPart( UriInfo ui, String callback, FormDataMultiPart multiPart,
                                               ServiceAction serviceAction ) throws Exception {
 
@@ -655,7 +668,14 @@ public class ServiceResource extends AbstractContextResource {
         HashMap<String, Object> data = new HashMap<>();
         for ( BodyPart bp : bodyParts ) {
             FormDataBodyPart bodyPart = ( FormDataBodyPart ) bp;
-            if ( bodyPart.getMediaType().equals( MediaType.TEXT_PLAIN_TYPE ) ) {
+            MediaType bodyPartMediaType = bodyPart.getMediaType();
+            if (FILE_FIELD_NAME.equals(bodyPart.getName()) && !bodyPartMediaType.equals(MediaType.TEXT_PLAIN_TYPE)) {
+                // skip non-text files -- plain text files are stored in payload
+                if (logger.isTraceEnabled()) {
+                    logger.trace("skipping file bodyPart");
+                }
+            }
+            else if ( bodyPartMediaType.equals( MediaType.TEXT_PLAIN_TYPE ) ) {
                 data.put( bodyPart.getName(), bodyPart.getValue() );
             }
             else {
@@ -675,9 +695,23 @@ public class ServiceResource extends AbstractContextResource {
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
 
-        //Updates entity with fields that are in text/plain as per loop above
-        if(data.get( FILE_FIELD_NAME )==null){
-            data.put( FILE_FIELD_NAME,null );
+
+        if (fileBodyPart != null) {
+            // asset upload allowed if PUT /collection/entity or POST /collection (creating element)
+            // or POST /collection/entity
+            int serviceParametersSize = getServiceParameters().size();
+            boolean allowAssetUpload = (serviceAction == ServiceAction.PUT && serviceParametersSize == 2) ||
+                    (serviceAction == ServiceAction.POST && (serviceParametersSize == 1 || serviceParametersSize == 2));
+            if (!allowAssetUpload) {
+                // URL indicated asset storage shouldn't be allowed
+                response.setError("400", new IllegalArgumentException("Assets only allowed on collection entities."));
+                return response;
+            }
+
+            // ok to load -- clear out file from payload if type not text/plain
+            if (!fileBodyPart.getMediaType().equals(MediaType.TEXT_PLAIN_TYPE)) {
+                data.put(FILE_FIELD_NAME, null);
+            }
         }
         ServicePayload payload = getPayload( data );
         ServiceResults serviceResults = executeServiceRequest( ui, response, serviceAction, payload );
@@ -752,17 +786,29 @@ public class ServiceResource extends AbstractContextResource {
         return Response.status( 200 ).build();
     }
 
-
+    // TODO: allow text/html assets
+    // currently accept headers that match text/html along with application/json or */* return the entity
+    // to maintain backward compatibility
     @GET
     @RequireApplicationAccess
     @Produces(MediaType.WILDCARD)
     public Response executeStreamGet( @Context UriInfo ui, @PathParam("entityId") PathSegment entityId,
                                       @HeaderParam("range") String rangeHeader,
+                                      @Context HttpHeaders headers,
                                       @HeaderParam("if-modified-since") String modifiedSince ) throws Exception {
 
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.executeStreamGet" );
         }
+
+        if (getServiceParameters().size() != 2) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Invalid URL for asset get: {}", ui.getPath());
+            }
+            throw new EntityNotFoundException("Assets can only be attached to collection entities.");
+        }
+
+        List<MediaType> acceptableMediaTypes = headers.getAcceptableMediaTypes();
 
         //Needed for testing
         if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
@@ -776,7 +822,16 @@ public class ServiceResource extends AbstractContextResource {
         response.setAction( "get" );
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
-        ServiceResults serviceResults = executeServiceRequest( ui, response, ServiceAction.GET, null );
+        ServiceResults serviceResults;
+        try {
+            serviceResults = executeServiceRequest( ui, response, ServiceAction.GET, null );
+        }
+        catch (EntityNotFoundException enfe) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Entity not found: {}", ui.getPath());
+            }
+            throw new EntityNotFoundException("Entity not found.");
+        }
         Entity entity = serviceResults.getEntity();
 
         if(logger.isTraceEnabled()){
@@ -784,7 +839,33 @@ public class ServiceResource extends AbstractContextResource {
                 entityId, rangeHeader, modifiedSince );
         }
 
+        if (!AssetUtils.hasFileMetadata(entity)) {
+            // return error
+            logger.info("Attempt to retrieve asset for entity, but no file metadata found.");
+            throw new EntityNotFoundException("No asset attached to entity.");
+        }
+
         Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
+
+        // check for compatible accept header
+        String assetMediaTypeString = (String) fileMetadata.get( AssetUtils.CONTENT_TYPE );
+        MediaType assetMediaType;
+        try {
+            assetMediaType = MediaType.valueOf(assetMediaTypeString);
+            // allow direct match or application/octet-stream (which is "give me any binary file")
+            boolean isCompatible = acceptableMediaTypes.stream()
+                    .anyMatch(acceptableType ->
+                            acceptableType.isCompatible(assetMediaType) ||
+                            acceptableType.isCompatible(MediaType.APPLICATION_OCTET_STREAM_TYPE));
+            if (!isCompatible) {
+                throw new NotAcceptableException("Asset content type not compatible with accept header.");
+            }
+        }
+        catch (IllegalArgumentException e) {
+            // no content-type in file metadata -- match any request for the asset
+            logger.info("asset file-metadata exists, but doesn't contain a content-type field, entity: {}",
+                    entity.getUuid());
+        }
 
         // return a 302 if not modified
         Date modified = AssetUtils.fromIfModifiedSince( modifiedSince );
@@ -824,10 +905,21 @@ public class ServiceResource extends AbstractContextResource {
                 inputStream = binaryStore.read( getApplicationId(), entity, start, end - start );
             }catch(AwsPropertiesNotFoundException apnfe){
                 logger.error( "Amazon Property needed for this operation not found",apnfe );
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-            }catch(RuntimeException re){
-                logger.error(re.getMessage());
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+                throw new InternalServerErrorException("Internal server error.");
+            }
+            catch(FileNotFoundException fnfe) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Local file not found", fnfe);
+                }
+                throw new EntityNotFoundException("Asset not found.");
+            }
+            catch(IOException ioe) {
+                logger.info("I/O exception", ioe);
+                throw new InternalServerErrorException("Internal server error.");
+            }
+            catch(RuntimeException re){
+                logger.error("RuntimeException", re);
+                throw new InternalServerErrorException("Internal server error.");
             }
         }
         else { // no range
@@ -835,21 +927,32 @@ public class ServiceResource extends AbstractContextResource {
                 inputStream = binaryStore.read( getApplicationId(), entity );
             }catch(AwsPropertiesNotFoundException apnfe){
                 logger.error( "Amazon Property needed for this operation not found",apnfe );
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+                throw new InternalServerErrorException("Internal server error.");
             }
             catch(AmazonServiceException ase){
                 logger.error(ase.getMessage());
                 return Response.status(ase.getStatusCode()).build();
             }
+            catch(FileNotFoundException fnfe) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Local file not found", fnfe);
+                }
+                throw new EntityNotFoundException("Asset not found.");
+            }
+            catch(IOException ioe) {
+                logger.info("I/O exception", ioe);
+                throw new InternalServerErrorException("Internal server error.");
+            }
             catch(RuntimeException re){
-                logger.error(re.getMessage());
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+                logger.error("RuntimeException", re);
+                throw new InternalServerErrorException("Internal server error.");
             }
         }
 
         // return 404 if not found
         if ( inputStream == null ) {
-            return Response.status( Response.Status.NOT_FOUND ).build();
+            logger.info("binaryStore.read returned null. url={}", ui.getPath());
+            throw new EntityNotFoundException("Asset not found.");
         }
 
         Long lastModified = ( Long ) fileMetadata.get( AssetUtils.LAST_MODIFIED );

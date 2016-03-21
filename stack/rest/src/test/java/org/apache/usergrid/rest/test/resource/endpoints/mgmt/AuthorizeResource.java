@@ -22,6 +22,7 @@ package org.apache.usergrid.rest.test.resource.endpoints.mgmt;
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource.state.ClientContext;
+import javax.ws.rs.core.MediaType;
 
 /**
  * OAuth authorization resource
@@ -38,7 +39,7 @@ public class AuthorizeResource extends NamedResource {
      * @return
      */
     public Object post(Object requestEntity) {
-        return getTarget().request().post( javax.ws.rs.client.Entity.json(requestEntity), Object.class);
+        return getTarget().request().accept(MediaType.APPLICATION_JSON).post( javax.ws.rs.client.Entity.json(requestEntity), Object.class);
 
     }
 
@@ -50,7 +51,7 @@ public class AuthorizeResource extends NamedResource {
      * @return
      */
     public <T> T post(Class<T> type, Object requestEntity) {
-        return getTarget().request().post( javax.ws.rs.client.Entity.json( requestEntity ), type );
+        return getTarget().request().accept(MediaType.APPLICATION_JSON).post( javax.ws.rs.client.Entity.json( requestEntity ), type );
     }
 
 }

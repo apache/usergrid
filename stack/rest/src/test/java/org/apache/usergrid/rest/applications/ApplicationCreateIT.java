@@ -116,6 +116,7 @@ public class ApplicationCreateIT extends AbstractRestIT {
                 .org( orgName ).app( appName ).collection( "things" ).getTarget()
                 .queryParam( "access_token", orgAdminToken.getAccessToken() )
                 .request()
+                .accept(MediaType.APPLICATION_JSON)
                 .post( javax.ws.rs.client.Entity.entity(entity, MediaType.APPLICATION_JSON_TYPE ), ApiResponse.class);
 
             entities.add( createResponse.getEntities().get(0) );
