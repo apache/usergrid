@@ -354,13 +354,13 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                 if(logger.isDebugEnabled()){
                     logger.debug(e.getMessage());
                 }
-                return new IndexEventResult(Optional.absent(), Optional.absent(), event.getCreationTime());
+                return new IndexEventResult(Optional.absent(), Optional.absent(), thisEvent.getCreationTime());
 
             } catch (Exception e) {
 
                 // if the event fails to process, log and return empty message result so it doesn't get ack'd
                 logger.error("{}. Failed to process message: {}", e.getMessage(), message.getStringBody().trim() );
-                return new IndexEventResult(Optional.absent(), Optional.absent(), event.getCreationTime());
+                return new IndexEventResult(Optional.absent(), Optional.absent(), thisEvent.getCreationTime());
             }
         });
 
