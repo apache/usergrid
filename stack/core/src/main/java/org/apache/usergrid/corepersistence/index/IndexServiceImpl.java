@@ -119,6 +119,9 @@ public class IndexServiceImpl implements IndexService {
         //we may have to index  we're indexing from source->target here
         final Observable<IndexEdge> sourceEdgesToIndex = edgesToTarget.map( edge -> generateScopeFromSource( edge ) );
 
+
+
+
         //do our observable for batching
         //try to send a whole batch if we can
         final Observable<IndexOperationMessage>  batches =  sourceEdgesToIndex
@@ -131,7 +134,15 @@ public class IndexServiceImpl implements IndexService {
                     if (logger.isDebugEnabled()) {
                         logger.debug("adding edge {} to batch for entity {}", indexEdge, entity);
                     }
-                    batch.index( indexEdge, entity );
+
+                    final Map map = getFilteredStringObjectMap( applicationScope, entity, indexEdge );
+
+                    if(map!=null){
+                        batch.index( indexEdge, entity ,map);
+                    }
+                    else{
+                        batch.index( indexEdge,entity );
+                    }
                 } )
                     //return the future from the batch execution
                 .map( batch -> batch.build() ) );
