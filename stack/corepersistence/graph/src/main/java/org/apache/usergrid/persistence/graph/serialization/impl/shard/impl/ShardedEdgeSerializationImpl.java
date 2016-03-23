@@ -67,6 +67,8 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.Serializer;
 import com.netflix.astyanax.util.RangeBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -76,6 +78,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Singleton
 public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
+
+    private static final Logger logger = LoggerFactory.getLogger( ShardedEdgeSerializationImpl.class );
+
 
     protected final Keyspace keyspace;
     protected final CassandraConfig cassandraConfig;
@@ -400,6 +405,10 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateSearchByEdgeType( search );
+
+        if(logger.isTraceEnabled()){
+            logger.trace("getEdgesFromSource shards: {}", shards);
+        }
 
         final Id sourceId = search.getNode();
         final String type = search.getType();

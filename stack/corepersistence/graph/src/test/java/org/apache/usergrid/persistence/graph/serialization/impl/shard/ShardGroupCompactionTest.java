@@ -99,6 +99,8 @@ public class ShardGroupCompactionTest {
 
         final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class );
+
 
         final long delta = 10000;
 
@@ -116,7 +118,7 @@ public class ShardGroupCompactionTest {
 
         ShardGroupCompactionImpl compaction =
             new ShardGroupCompactionImpl( timeService, graphFig, nodeShardAllocation, shardedEdgeSerialization,
-                edgeColumnFamilies, keyspace, edgeShardSerialization, asyncTaskExecutor );
+                edgeColumnFamilies, keyspace, edgeShardSerialization, asyncTaskExecutor, nodeShardCache );
 
         DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( IdGenerator.createId( "source" ), "test" );
 

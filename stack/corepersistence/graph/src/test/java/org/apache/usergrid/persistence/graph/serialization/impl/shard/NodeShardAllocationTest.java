@@ -101,10 +101,12 @@ public class NodeShardAllocationTest {
 
         final TimeService timeService = mock( TimeService.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                         timeService, graphFig, shardGroupCompaction );
+                         timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
 
         final long timeservicetime = System.currentTimeMillis();
@@ -131,10 +133,13 @@ public class NodeShardAllocationTest {
 
         final TimeService timeService = mock( TimeService.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
+
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                      timeService, graphFig, shardGroupCompaction );
+                      timeService, graphFig, shardGroupCompaction, nodeShardCache);
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -172,9 +177,12 @@ public class NodeShardAllocationTest {
 
         final TimeService timeService = mock( TimeService.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
+
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        timeService, graphFig, shardGroupCompaction );
+                        timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -216,9 +224,12 @@ public class NodeShardAllocationTest {
 
         final TimeService timeService = mock( TimeService.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
+
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        timeService, graphFig, shardGroupCompaction );
+                        timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -326,9 +337,12 @@ public class NodeShardAllocationTest {
 
         final TimeService timeService = mock( TimeService.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
+
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                         timeService, graphFig, shardGroupCompaction );
+                         timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -412,9 +426,12 @@ public class NodeShardAllocationTest {
 
         final TimeService timeService = mock( TimeService.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
+
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                       timeService, graphFig, shardGroupCompaction );
+                       timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -475,10 +492,13 @@ public class NodeShardAllocationTest {
 
         final TimeService timeService = mock( TimeService.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
+
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                         timeService, graphFig, shardGroupCompaction );
+                         timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -613,9 +633,12 @@ public class NodeShardAllocationTest {
 
         final MutationBatch batch = mock( MutationBatch.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
+
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                       timeService, graphFig, shardGroupCompaction );
+                       timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -704,9 +727,12 @@ public class NodeShardAllocationTest {
 
         when( graphFig.getShardMinDelta() ).thenReturn( tooSmallDelta );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
+
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                      timeService, graphFig, shardGroupCompaction );
+                      timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
 
         /**

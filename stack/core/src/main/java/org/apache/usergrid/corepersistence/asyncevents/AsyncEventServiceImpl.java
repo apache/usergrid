@@ -354,13 +354,13 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                 if(logger.isDebugEnabled()){
                     logger.debug(e.getMessage());
                 }
-                return new IndexEventResult(Optional.absent(), Optional.absent(), event.getCreationTime());
+                return new IndexEventResult(Optional.absent(), Optional.absent(), thisEvent.getCreationTime());
 
             } catch (Exception e) {
 
                 // if the event fails to process, log and return empty message result so it doesn't get ack'd
                 logger.error("{}. Failed to process message: {}", e.getMessage(), message.getStringBody().trim() );
-                return new IndexEventResult(Optional.absent(), Optional.absent(), event.getCreationTime());
+                return new IndexEventResult(Optional.absent(), Optional.absent(), thisEvent.getCreationTime());
             }
         });
 
@@ -516,6 +516,13 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         } else {
 
             indexOperationMessage = ObjectJsonSerializer.INSTANCE.fromString( message, IndexOperationMessage.class );
+        }
+
+
+        // don't let this continue if there's nothing to index
+        if (indexOperationMessage == null ||  indexOperationMessage.isEmpty()){
+            throw new RuntimeException(
+                "IndexOperationMessage cannot be null or empty after retrieving from map persistence");
         }
 
 
@@ -734,14 +741,13 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     /**
      * Submit results to index and return the queue messages to be ack'd
-     * @param indexEventResults
-     * @return
+     *
      */
     private List<QueueMessage> submitToIndex(List<IndexEventResult> indexEventResults) {
 
-        // if nothing came back then return null
+        // if nothing came back then return empty list
         if(indexEventResults==null){
-            return null;
+            return new ArrayList<>(0);
         }
 
         IndexOperationMessage combined = new IndexOperationMessage();
