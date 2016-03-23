@@ -252,7 +252,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             }
 
             // invalidate the shard cache so we can be sure that all read shards are up to date
-            nodeShardCache.invalidate();
+            nodeShardCache.invalidate(scope, directedEdgeMeta);
         }
         catch ( ConnectionException e ) {
             throw new RuntimeException( "Unable to connect to casandra", e );

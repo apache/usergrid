@@ -341,7 +341,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                 shardRemovalRollup.execute();
 
                 // invalidate the shard cache so we can be sure that all read shards are up to date
-                nodeShardCache.invalidate();
+                nodeShardCache.invalidate(scope, edgeMeta);
             }
             catch ( ConnectionException e ) {
                 throw new RuntimeException( "Unable to connect to cassandra", e );
@@ -359,7 +359,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                 updateMark.execute();
 
                 // invalidate the shard cache so we can be sure that all read shards are up to date
-                nodeShardCache.invalidate();
+                nodeShardCache.invalidate(scope, edgeMeta);
             }
             catch ( ConnectionException e ) {
                 throw new RuntimeException( "Unable to connect to cassandra", e );

@@ -72,8 +72,6 @@ import com.google.inject.Inject;
 @Singleton
 public class NodeShardCacheImpl implements NodeShardCache {
 
-    private static final Logger logger = LoggerFactory.getLogger( NodeShardCacheImpl.class );
-
     /**
      * Only cache shards that have < 10k groups.  This is an arbitrary amount, and may change with profiling and
      * testing
@@ -186,9 +184,10 @@ public class NodeShardCacheImpl implements NodeShardCache {
     }
 
     @Override
-    public void invalidate(){
+    public void invalidate( final ApplicationScope scope, final DirectedEdgeMeta directedEdgeMeta ){
 
-        graphs.invalidateAll();
+        final CacheKey cacheKey = new CacheKey(scope, directedEdgeMeta);
+        graphs.invalidate(cacheKey);
 
     }
 
