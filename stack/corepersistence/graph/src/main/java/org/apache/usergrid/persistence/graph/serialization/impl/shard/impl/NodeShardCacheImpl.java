@@ -164,17 +164,22 @@ public class NodeShardCacheImpl implements NodeShardCache {
         final CacheKey key = new CacheKey( scope, directedEdgeMeta );
         CacheEntry entry;
 
-        try {
-            entry = this.graphs.get( key );
-        }
-        catch ( ExecutionException e ) {
-            throw new GraphRuntimeException( "Unable to load shard key for graph", e );
-        }
+        if( graphFig.getShardReadCacheEnabled() ) {
 
-        // do this if wanting to bypass the cache for getting the read shards
-        //entry = new CacheEntry(nodeShardAllocation.getShards( key.scope, Optional.<Shard>absent(), key.directedEdgeMeta ));
+            try {
+                entry = this.graphs.get(key);
+            } catch (ExecutionException e) {
+                throw new GraphRuntimeException("Unable to load shard key for graph", e);
+            }
+
+        } else {
+
+            entry = new CacheEntry(nodeShardAllocation.getShards( key.scope, Optional.<Shard>absent(), key.directedEdgeMeta ));
+
+        }
 
         Iterator<ShardEntryGroup> iterator = entry.getShards( maxTimestamp );
+
 
         if ( iterator == null ) {
             return Collections.<ShardEntryGroup>emptyList().iterator();
