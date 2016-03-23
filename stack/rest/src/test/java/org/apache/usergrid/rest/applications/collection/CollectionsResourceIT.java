@@ -128,17 +128,13 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Create test collection with test entity that is full text indexed.
         Entity testEntity = new Entity();
-        testEntity.put( "one", "value1" );
-        //this field shouldn't persist after reindexing.
-        testEntity.put( "two","valuetwo1" );
 
-        this.app().collection( "testCollection" ).post( testEntity );
 
-        testEntity.put( "one", "value2" );
-        //this field shouldn't persist after reindexing.
-        testEntity.put( "two","valuetwo2" );
-
-        this.app().collection( "testCollection" ).post( testEntity );
+        for(int i = 0; i < 10; i++){
+            testEntity.put( "one","value"+i );
+            testEntity.put( "two","valuetwo"+i );
+            this.app().collection( "testCollection" ).post( testEntity );
+        }
 
 
         //Creating schema.
@@ -155,25 +151,41 @@ public class CollectionsResourceIT extends AbstractRestIT {
         Entity thing = this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
         refreshIndex();
 
+        //TODO: write a test to verify the data below.
+
+        //        Collection collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
+        //
+        //        LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
+        //        //TODO: the below will have to be replaced by the values that I deem correct.
+        //        assertEquals( ( thing ).get( "lastUpdated" ), testCollectionSchema.get( "lastUpdated" ));
+        //        assertEquals( ( thing ).get( "lastUpdateBy" ),testCollectionSchema.get( "lastUpdateBy" ) );
+        //        assertEquals( ( thing ).get( "lastReindexed" ),testCollectionSchema.get( "lastReindexed" ) );
+        //
+        //        //TODO: this test doesn't check to see if create checks the schema. Only that the reindex removes whats already there.
+        //        ArrayList<String> schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
+        //        assertEquals( "one",schema.get( 0 ) );
+
+
         //Reindex and verify that the entity only has field one index.
         this.app().collection( "testCollection" ).collection( "_reindex" ).post();
-        Thread.sleep( 1000 );
+        Thread.sleep( 10000 );
         refreshIndex();
 
-        String query = "one ='value1'";
-        QueryParameters queryParameters = new QueryParameters().setQuery(query);
+        for(int i = 0; i < 10; i++) {
+            String query = "one ='value"+ i + "'";
+            QueryParameters queryParameters = new QueryParameters().setQuery( query );
 
-        //having a name breaks it. Need to get rid of the stack trace and also
-        Collection tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
-        Entity reindexedEntity = tempEntity.getResponse().getEntity();
-        assertEquals( "value1",reindexedEntity.get( "one" ) );
-        tempEntity=null;
+            //having a name breaks it. Need to get rid of the stack trace and also
+            Collection tempEntity = this.app().collection( "testCollection" ).get( queryParameters, true );
+            Entity reindexedEntity = tempEntity.getResponse().getEntity();
+            assertEquals( "value"+i, reindexedEntity.get( "one" ) );
 
-        //Verify if you can query on an entity that was not indexed and that no entities are returned.
-        query = "two = 'valuetwo1'";
-        queryParameters = new QueryParameters().setQuery(query);
-        tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
-        assertEquals(0,tempEntity.getResponse().getEntities().size());
+            //Verify if you can query on an entity that was not indexed and that no entities are returned.
+            query = "two = 'valuetwo1"+ i + "'";
+            queryParameters = new QueryParameters().setQuery( query );
+            tempEntity = this.app().collection( "testCollection" ).get( queryParameters, true );
+            assertEquals( 0, tempEntity.getResponse().getEntities().size() );
+        }
     }
 
     /**
