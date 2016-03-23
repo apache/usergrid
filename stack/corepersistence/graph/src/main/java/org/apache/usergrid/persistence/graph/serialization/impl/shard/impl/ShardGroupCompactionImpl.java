@@ -27,15 +27,11 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
 import com.google.common.base.Optional;
-import com.netflix.astyanax.connectionpool.OperationResult;
-import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,8 +58,6 @@ import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import rx.Observable;
-import rx.schedulers.Schedulers;
 
 
 /**
@@ -94,6 +88,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
     private final Random random;
     private final ShardCompactionTaskTracker shardCompactionTaskTracker;
     private final ShardAuditTaskTracker shardAuditTaskTracker;
+    private final NodeShardCache nodeShardCache;
 
 
     @Inject
@@ -102,7 +97,8 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                                      final ShardedEdgeSerialization shardedEdgeSerialization,
                                      final EdgeColumnFamilies edgeColumnFamilies, final Keyspace keyspace,
                                      final EdgeShardSerialization edgeShardSerialization,
-                                     final AsyncTaskExecutor asyncTaskExecutor) {
+                                     final AsyncTaskExecutor asyncTaskExecutor,
+                                     final NodeShardCache nodeShardCache ) {
 
         this.timeService = timeService;
         this.countAudits = new AtomicLong();
@@ -119,6 +115,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
 
         this.taskExecutor = asyncTaskExecutor.getExecutorService();
+        this.nodeShardCache = nodeShardCache;
     }
 
 
@@ -319,7 +316,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         if ( totalEdgeCount == 0 ) {
 
 
-            //now that we've marked our target as compacted, we can successfully remove any shards that are not
+            // now that we've marked our target as compacted, we can successfully remove any shards that are not
             // compacted themselves in the sources
 
             final MutationBatch shardRemovalRollup = keyspace.prepareMutationBatch();
@@ -342,6 +339,9 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
             try {
                 shardRemovalRollup.execute();
+
+                // invalidate the shard cache so we can be sure that all read shards are up to date
+                nodeShardCache.invalidate();
             }
             catch ( ConnectionException e ) {
                 throw new RuntimeException( "Unable to connect to cassandra", e );
@@ -357,6 +357,9 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             final MutationBatch updateMark = edgeShardSerialization.writeShardMeta( scope, compactedShard, edgeMeta );
             try {
                 updateMark.execute();
+
+                // invalidate the shard cache so we can be sure that all read shards are up to date
+                nodeShardCache.invalidate();
             }
             catch ( ConnectionException e ) {
                 throw new RuntimeException( "Unable to connect to cassandra", e );
@@ -598,14 +601,10 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             addToHash( hasher, scope.getApplication() );
 
 
-            /** Commenting the full meta from the hash so we allocate/compact shards in a more controlled fashion
-
             for ( DirectedEdgeMeta.NodeMeta nodeMeta : directedEdgeMeta.getNodes() ) {
                 addToHash( hasher, nodeMeta.getId() );
                 hasher.putInt( nodeMeta.getNodeType().getStorageValue() );
             }
-
-            **/
 
 
             /**

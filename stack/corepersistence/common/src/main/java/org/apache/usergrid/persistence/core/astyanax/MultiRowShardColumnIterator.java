@@ -43,7 +43,7 @@ import com.netflix.astyanax.util.RangeBuilder;
  */
 public class MultiRowShardColumnIterator<R, C, T> implements Iterator<T> {
 
-    private static final Logger logger = LoggerFactory.getLogger( MultiRowColumnIterator.class );
+    private static final Logger logger = LoggerFactory.getLogger( MultiRowShardColumnIterator.class );
 
     private final int pageSize;
 

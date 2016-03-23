@@ -105,6 +105,8 @@ public class GraphManagerShardConsistencyIT {
 
     protected int TARGET_NUM_SHARDS = 5;
 
+    protected int POST_WRITE_SLEEP = 2000;
+
 
 
     @Before
@@ -175,7 +177,7 @@ public class GraphManagerShardConsistencyIT {
     public void writeThousandsSingleSource()
         throws InterruptedException, ExecutionException, MigrationException, UnsupportedEncodingException {
 
-        final Id sourceId = IdGenerator.createId( "sourceWrite_"+ UUIDGenerator.newTimeUUID().toString() );
+        final Id sourceId = IdGenerator.createId( "sourceWrite" );
         final String edgeType = "testWrite";
 
         final EdgeGenerator generator = new EdgeGenerator() {
@@ -183,7 +185,7 @@ public class GraphManagerShardConsistencyIT {
 
             @Override
             public Edge newEdge() {
-                Edge edge = createEdge( sourceId, edgeType, IdGenerator.createId( "targetWrite_"+ UUIDGenerator.newTimeUUID().toString() ) );
+                Edge edge = createEdge( sourceId, edgeType, IdGenerator.createId( "targetWrite" ) );
 
 
                 return edge;
@@ -199,7 +201,7 @@ public class GraphManagerShardConsistencyIT {
         };
 
 
-        final int numInjectors = 1;
+        final int numInjectors = 2;
 
         /**
          * create injectors.  This way all the caches are independent of one another.  This is the same as
@@ -277,9 +279,11 @@ public class GraphManagerShardConsistencyIT {
 
 
         final List<Throwable> failures = new ArrayList<>();
-        Thread.sleep(3000); // let's make sure everything is written
 
-        for(int i = 0; i < 2; i ++) {
+        logger.info("Sleeping {}ms before reading to ensure all compactions have completed", POST_WRITE_SLEEP);
+        Thread.sleep(POST_WRITE_SLEEP); // let's make sure everything is written
+
+        for(int i = 0; i < 1; i ++) {
 
 
             /**
@@ -303,6 +307,16 @@ public class GraphManagerShardConsistencyIT {
                 public void onFailure( final Throwable t ) {
                     failures.add( t );
                     logger.error( "Failed test!", t );
+
+                    final Iterator<ShardEntryGroup> groups = cache.getReadShardGroup( scope, Long.MAX_VALUE, directedEdgeMeta );
+
+                    while ( groups.hasNext() ) {
+
+                        logger.info( "Shard entry group: {}", groups.next() );
+
+                    }
+
+
                 }
             } );
         }
@@ -409,7 +423,7 @@ public class GraphManagerShardConsistencyIT {
         throws InterruptedException, ExecutionException, MigrationException, UnsupportedEncodingException {
 
         final Id sourceId = IdGenerator.createId( "sourceDelete" );
-        final String deleteEdgeType = "testDelete_"+ UUIDGenerator.newTimeUUID().toString();
+        final String deleteEdgeType = "testDelete";
 
         final EdgeGenerator generator = new EdgeGenerator() {
 
@@ -432,7 +446,7 @@ public class GraphManagerShardConsistencyIT {
         };
 
 
-        final int numInjectors = 2;
+        final int numInjectors = 3;
 
         /**
          * create injectors.  This way all the caches are independent of one another.  This is the same as
