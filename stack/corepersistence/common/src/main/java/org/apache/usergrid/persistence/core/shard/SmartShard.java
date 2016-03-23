@@ -16,35 +16,37 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.usergrid.persistence.core.shard;
 
-package org.apache.usergrid.persistence.core.astyanax;
+import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+
+public class SmartShard<R, T> {
+
+    final ScopedRowKey<R> rowKey;
+    final T shardEnd;
 
 
-import com.netflix.astyanax.util.RangeBuilder;
+    public SmartShard(final ScopedRowKey<R> rowKey, final T shardEnd){
+
+        this.rowKey = rowKey;
+        this.shardEnd = shardEnd;
+    }
 
 
-/**
- *
- *
- */
-public interface ColumnSearch<T> {
+    public ScopedRowKey<R> getRowKey(){
+        return rowKey;
+    }
 
-    /**
-     * Set the start value supplied and the user supplied end value (if present)
-     *
-     * @param value The value to set in the start
-     * @param end
-     */
-    void buildRange(final RangeBuilder rangeBuilder, final T start, T end);
+    public T getShardEnd(){
+        return shardEnd;
+    }
 
-    /**
-     * Set the range builder with the user supplied start and finish
-     */
-    void buildRange( final RangeBuilder rangeBuilder );
+    @Override
+    public String toString(){
 
-    /**
-     * Return true if we should skip the first result
-     * @return
-     */
-    boolean skipFirst(final T first);
+        return "Shard { rowKey="+rowKey + ", shardEnd="+shardEnd+" }";
+
+
+    }
+
 }

@@ -54,7 +54,7 @@ public class IndexOperationMessage implements Serializable {
 
 
     public void addIndexRequest( final IndexOperation indexRequest ) {
-        indexRequests.add( indexRequest );
+        this.indexRequests.add( indexRequest );
     }
 
 
