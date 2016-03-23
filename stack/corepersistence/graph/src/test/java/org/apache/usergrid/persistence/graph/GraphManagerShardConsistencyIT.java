@@ -283,7 +283,7 @@ public class GraphManagerShardConsistencyIT {
         logger.info("Sleeping {}ms before reading to ensure all compactions have completed", POST_WRITE_SLEEP);
         Thread.sleep(POST_WRITE_SLEEP); // let's make sure everything is written
 
-        for(int i = 0; i < 1; i ++) {
+        for(int i = 0; i < 2; i ++) {
 
 
             /**
