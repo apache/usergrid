@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 import java.util.Collections;
 import java.util.Iterator;
 
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,14 +34,6 @@ import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupCompaction;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 
 import com.google.common.base.Optional;
@@ -65,19 +58,22 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     private final TimeService timeService;
     private final GraphFig graphFig;
     private final ShardGroupCompaction shardGroupCompaction;
+    private final NodeShardCache nodeShardCache;
 
 
     @Inject
     public NodeShardAllocationImpl( final EdgeShardSerialization edgeShardSerialization,
                                     final EdgeColumnFamilies edgeColumnFamilies,
                                     final ShardedEdgeSerialization shardedEdgeSerialization, final TimeService timeService,
-                                    final GraphFig graphFig, final ShardGroupCompaction shardGroupCompaction ) {
+                                    final GraphFig graphFig, final ShardGroupCompaction shardGroupCompaction,
+                                    final NodeShardCache nodeShardCache) {
         this.edgeShardSerialization = edgeShardSerialization;
         this.edgeColumnFamilies = edgeColumnFamilies;
         this.shardedEdgeSerialization = shardedEdgeSerialization;
         this.timeService = timeService;
         this.graphFig = graphFig;
         this.shardGroupCompaction = shardGroupCompaction;
+        this.nodeShardCache = nodeShardCache;
     }
 
 
@@ -101,7 +97,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             //logger.info("existing shards has something: {}", existingShards.hasNext());
 
             /**
-             * We didn't get anything out of cassandra, so we need to create the minumum shard
+             * We didn't get anything out of cassandra, so we need to create the minimum shard
              */
             if ( existingShards == null || !existingShards.hasNext() ) {
 
@@ -250,6 +246,13 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         try {
             batch.execute();
+
+            if(logger.isTraceEnabled()) {
+                logger.trace("Clearing shard cache");
+            }
+
+            // invalidate the shard cache so we can be sure that all read shards are up to date
+            nodeShardCache.invalidate();
         }
         catch ( ConnectionException e ) {
             throw new RuntimeException( "Unable to connect to casandra", e );
