@@ -52,6 +52,6 @@ public interface NodeShardCache {
     Iterator<ShardEntryGroup> getReadShardGroup( final ApplicationScope scope, final long maxTimestamp, final DirectedEdgeMeta directedEdgeMeta  );
 
 
-    void invalidate();
+    void invalidate( final ApplicationScope scope, final DirectedEdgeMeta directedEdgeMeta );
 
 }
