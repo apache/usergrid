@@ -144,14 +144,6 @@ public class CollectionResource extends ServiceResource {
                                              @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
-        System.out.println();
-//        logger.info( "Rebuilding collection {} in  application {}", collectionName, applicationIdStr );
-//
-//
-//
-//        final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
-//
-        //TODO: check to see how all of this runs with service and query params. Ideally none should be passed in.
         final ReIndexRequestBuilder request =
             createRequest().withApplicationId( services.getApplicationId() ).withCollection(
                 String.valueOf( getServiceParameters().get( 0 ) ) );

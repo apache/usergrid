@@ -408,44 +408,6 @@ public class CpRelationManager implements RelationManager {
 
         GraphManager gm = managerCache.getGraphManager( applicationScope );
 
-//        //do logic here
-//        String jsonMap = mm.getString( collectionName );
-//
-//        Set<String> defaultProperties = null;
-//
-//        if(jsonMap != null) {
-//
-//            Map jsonMapData = ( Map ) JsonUtils.parse( jsonMap );
-//            Schema schema = Schema.getDefaultSchema();
-//            defaultProperties = schema.getRequiredProperties( collectionName );
-//            //TODO: additional logic to
-//            ArrayList fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
-//            defaultProperties.addAll( fieldsToKeep );
-//
-//        }
-//
-//        Collection<String> trimmedFields = null;
-//        if(defaultProperties!=null){
-//           // if(cpHeadEntity.getFields())
-//            final Set<String> finalDefaultProperties = defaultProperties;
-//            trimmedFields = memberEntity.getFieldMap().keySet();
-//            Iterator collectionIterator = trimmedFields.iterator();
-//            while(collectionIterator.hasNext()){
-//                if(!finalDefaultProperties.contains( collectionIterator.next() )){
-//                    collectionIterator.remove();
-//                }
-//            }
-
-
-//            trimmedFields.forEach( element -> {
-//                if(!finalDefaultProperties.contains( element )){
-//                    memberEntity.removeField( element );
-//                }
-//            });
-
-//        }
-
-
         gm.writeEdge( edge ).doOnNext( writtenEdge -> {
             if ( logger.isDebugEnabled() ) {
                 logger.debug( "Wrote edge {}", writtenEdge );

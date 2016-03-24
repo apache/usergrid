@@ -297,8 +297,6 @@ public class ServiceResource extends AbstractContextResource {
         httpServletRequest.setAttribute( "applicationId", services.getApplicationId() );
 
         return results;
-
-
     }
 
     public ServiceResults executeServicePostRequestForSchema(UriInfo ui, ApiResponse response, ServiceAction action,
