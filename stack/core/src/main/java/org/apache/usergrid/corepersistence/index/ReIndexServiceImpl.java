@@ -21,6 +21,7 @@ package org.apache.usergrid.corepersistence.index;
 
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -125,6 +126,7 @@ public class ReIndexServiceImpl implements ReIndexService {
         final Observable<List<EdgeScope>> runningReIndex = allEntityIdsObservable.getEdgesToEntities( applicationScopes,
             reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
             .buffer( indexProcessorFig.getReindexBufferSize())
+            //.delay( 50, TimeUnit.MILLISECONDS )
             .doOnNext(edges -> {
 
                 logger.info("Sending batch of {} to be indexed.", edges.size());

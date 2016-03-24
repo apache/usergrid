@@ -119,9 +119,6 @@ public class IndexServiceImpl implements IndexService {
         //we may have to index  we're indexing from source->target here
         final Observable<IndexEdge> sourceEdgesToIndex = edgesToTarget.map( edge -> generateScopeFromSource( edge ) );
 
-
-
-
         //do our observable for batching
         //try to send a whole batch if we can
         final Observable<IndexOperationMessage>  batches =  sourceEdgesToIndex
