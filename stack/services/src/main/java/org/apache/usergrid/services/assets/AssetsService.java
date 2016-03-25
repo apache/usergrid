@@ -22,12 +22,12 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.services.AbstractPathBasedColllectionService;
+import org.apache.usergrid.services.AbstractPathBasedCollectionService;
 import org.apache.usergrid.services.ServiceContext;
 import org.apache.usergrid.services.ServiceResults;
 
 
-public class AssetsService extends AbstractPathBasedColllectionService {
+public class AssetsService extends AbstractPathBasedCollectionService {
 
     private static final Logger logger = LoggerFactory.getLogger( AssetsService.class );
 
