@@ -19,6 +19,7 @@ package org.apache.usergrid.rest.applications;
 
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -47,6 +48,7 @@ import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
+import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.apache.usergrid.services.AbstractCollectionService;
 import org.apache.usergrid.services.ServiceAction;
 import org.apache.usergrid.services.ServiceParameter;
@@ -91,6 +93,9 @@ public class CollectionResource extends ServiceResource {
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.executePostOnIndexes" );
         }
+        /**
+
+         */
 
         Object json;
         if ( StringUtils.isEmpty( body ) ) {
@@ -135,10 +140,12 @@ public class CollectionResource extends ServiceResource {
         return response;
     }
 
+    //TODO: this can't be controlled and until it can be controlled we should allow muggles to do this. So system access only.
+    //TODO: use scheduler here to get around people sending a reindex call 30 times.
     @POST
     @Path("_reindex")
     @Produces({ MediaType.APPLICATION_JSON,"application/javascript"})
-    @RequireApplicationAccess
+    @RequireSystemAccess
     @JSONP
     public ApiResponse executePostForReindexing( @Context UriInfo ui, String body,
                                              @QueryParam("callback") @DefaultValue("callback") String callback )
@@ -146,8 +153,8 @@ public class CollectionResource extends ServiceResource {
 
         final ReIndexRequestBuilder request =
             createRequest().withApplicationId( services.getApplicationId() ).withCollection(
-                String.valueOf( getServiceParameters().get( 0 ) ) );
-//
+                String.valueOf( getServiceParameters().get( 0 ) ) ).withDelay( 1, TimeUnit.SECONDS );
+
         return executeAndCreateResponse( request, callback );
     }
 
@@ -170,6 +177,7 @@ public class CollectionResource extends ServiceResource {
     }
 
 
+    //TODO: change this to {itemName}/_indexes and that should do what we already have. Then we don't have this overriden method.
     @Override
     @Path("{itemName}")
     public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )

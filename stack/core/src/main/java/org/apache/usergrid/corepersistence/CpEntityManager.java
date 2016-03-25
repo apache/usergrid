@@ -1739,9 +1739,11 @@ public class CpEntityManager implements EntityManager {
 
 
         //haven't decided which one I should base off of which, maybe from epoch to utc
+
+        //TODO: change timeservice as below then use timeservice.
+        //TODO: only allow a single reindex in elasticsearch at a time. akka.
         Instant timeInstance = Instant.now();
 
-        Date date = Date.from(timeInstance);
         Long epoch = timeInstance.toEpochMilli();
 
         Map<String,Object> schemaMap = new HashMap<>(  );

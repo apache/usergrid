@@ -99,6 +99,7 @@ public class ReIndexServiceImpl implements ReIndexService {
     }
 
 
+    //TODO: optional delay, param.
     @Override
     public ReIndexStatus rebuildIndex( final ReIndexRequestBuilder reIndexRequestBuilder ) {
 
@@ -110,6 +111,10 @@ public class ReIndexServiceImpl implements ReIndexService {
         final CursorSeek<Edge> cursorSeek = getResumeEdge( cursor );
 
         final Optional<ApplicationScope> appId = reIndexRequestBuilder.getApplicationScope();
+
+        final Optional<Integer> delayTimer = reIndexRequestBuilder.getDelayTimer();
+
+        final Optional<TimeUnit> timeUnitOptional = reIndexRequestBuilder.getTimeUnitOptional();
 
         Preconditions.checkArgument( !(cursor.isPresent() && appId.isPresent()),
             "You cannot specify an app id and a cursor.  When resuming with cursor you must omit the appid" );
@@ -123,16 +128,24 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         // create an observable that loads a batch to be indexed
 
-        final Observable<List<EdgeScope>> runningReIndex = allEntityIdsObservable.getEdgesToEntities( applicationScopes,
+        Observable<List<EdgeScope>> runningReIndex = allEntityIdsObservable.getEdgesToEntities( applicationScopes,
             reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
-            .buffer( indexProcessorFig.getReindexBufferSize())
-            //.delay( 50, TimeUnit.MILLISECONDS )
-            .doOnNext(edges -> {
+            .buffer( indexProcessorFig.getReindexBufferSize());
 
+        if(delayTimer.isPresent()){
+            if(timeUnitOptional.isPresent()){
+                runningReIndex = runningReIndex.delay( delayTimer.get(),timeUnitOptional.get() );
+            }
+            else{
+                runningReIndex = runningReIndex.delay( delayTimer.get(), TimeUnit.MILLISECONDS );
+            }
+        }
+
+        runningReIndex = runningReIndex.doOnNext(edges -> {
                 logger.info("Sending batch of {} to be indexed.", edges.size());
                 indexService.indexBatch(edges, modifiedSince);
 
-            });
+        });
 
 
         //start our sampler and state persistence
