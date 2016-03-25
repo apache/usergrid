@@ -121,8 +121,10 @@ public class IndexServiceImpl implements IndexService {
 
         //do our observable for batching
         //try to send a whole batch if we can
+
+        //TODO: extract the below and call a single method.
         final Observable<IndexOperationMessage>  batches =  sourceEdgesToIndex
-            .buffer(250, TimeUnit.MILLISECONDS, indexFig.getIndexBatchSize() )
+            .buffer(250, TimeUnit.MILLISECONDS, indexFig.getIndexBatchSize() ) //TODO: change to delay. maybe. at least to the before buffer.
 
             //map into batches based on our buffer size
             .flatMap( buffer -> Observable.from( buffer )
@@ -202,10 +204,9 @@ public class IndexServiceImpl implements IndexService {
      */
     private Map getFilteredStringObjectMap( final ApplicationScope applicationScope,
                                             final Entity entity, final IndexEdge indexEdge ) {
+
+        //look into this.
         IndexOperation indexOperation = new IndexOperation();
-
-
-        indexEdge.getNodeId().getUuid();
 
         Id mapOwner = new SimpleId( indexEdge.getNodeId().getUuid(), TYPE_APPLICATION );
 
@@ -217,6 +218,7 @@ public class IndexServiceImpl implements IndexService {
         Set<String> defaultProperties;
         ArrayList fieldsToKeep;
 
+        //TODO: extract collection name using other classes than the split.
         String jsonSchemaMap = mm.getString( indexEdge.getEdgeName().split( "\\|" )[1] );
 
         //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
@@ -226,6 +228,8 @@ public class IndexServiceImpl implements IndexService {
             Schema schema = Schema.getDefaultSchema();
             defaultProperties = schema.getRequiredProperties( indexEdge.getEdgeName().split( "\\|" )[1] );
             fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
+            //TODO: add method here to update the relevant fields in the map manager when it was accessed.
+
             defaultProperties.addAll( fieldsToKeep );
         }
         else {
@@ -233,6 +237,7 @@ public class IndexServiceImpl implements IndexService {
         }
 
         //Returns the flattened map of the entity.
+        //TODO: maybe instead pass the fields to keep to the flattening.
         Map map = indexOperation.convertedEntityToBeIndexed( applicationScope, indexEdge, entity );
 
         HashSet mapFields = ( HashSet ) map.get( "fields" );
@@ -245,6 +250,12 @@ public class IndexServiceImpl implements IndexService {
 
             //Checks to see if the fieldname is a default property. If it is then keep it, otherwise send it to
             //be verified the aptly named method
+
+            //one.two.three
+            //one.two.four
+            //one.two3.five
+            //one.two
+            //fields { one.two }
             if ( !defaultProperties.contains( fieldName ) ) {
                 iterateThroughMapForFieldsToBeIndexed( fieldsToKeep, collectionIterator, fieldName );
             }
@@ -290,10 +301,14 @@ public class IndexServiceImpl implements IndexService {
 
             //Then if that check passes we go to check that both parts are equal. If they are ever not equal
             // e.g one.two.three and one.three.two then it shouldn't be included
+            //TODO: regex.
             for ( int index = 0; index < flattedRequirementString.length; index++ ) {
                 //if the array contains a string that it is equals to then set the remove flag to true
                 //otherwise remain false.
 
+                //one.three
+                //one.two
+                //one
                 if ( flattedStringArray.length <= index ) {
                     toRemoveFlag = true;
                     break;
