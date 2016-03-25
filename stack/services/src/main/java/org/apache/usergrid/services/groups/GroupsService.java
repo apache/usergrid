@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.entities.Role;
-import org.apache.usergrid.services.AbstractPathBasedColllectionService;
+import org.apache.usergrid.services.AbstractPathBasedCollectionService;
 import org.apache.usergrid.services.ServiceContext;
 import org.apache.usergrid.services.ServicePayload;
 import org.apache.usergrid.services.ServiceResults;
@@ -42,7 +42,7 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.services.ServiceResults.genericServiceResults;
 
 
-public class GroupsService extends AbstractPathBasedColllectionService {
+public class GroupsService extends AbstractPathBasedCollectionService {
 
     private static final Logger logger = LoggerFactory.getLogger( GroupsService.class );
 
