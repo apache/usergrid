@@ -24,11 +24,13 @@ public class SmartShard<R, T> {
 
     final ScopedRowKey<R> rowKey;
     final T shardEnd;
+    final long shardIndex;
 
 
-    public SmartShard(final ScopedRowKey<R> rowKey, final T shardEnd){
+    public SmartShard(final ScopedRowKey<R> rowKey, final long shardIndex, final T shardEnd){
 
         this.rowKey = rowKey;
+        this.shardIndex = shardIndex;
         this.shardEnd = shardEnd;
     }
 
@@ -40,6 +42,13 @@ public class SmartShard<R, T> {
     public T getShardEnd(){
         return shardEnd;
     }
+
+    public long getShardIndex(){
+
+        return shardIndex;
+    }
+
+
 
     @Override
     public String toString(){

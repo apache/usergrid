@@ -124,7 +124,7 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
         final boolean ascending = searcher.getOrder() == SearchByEdgeType.Order.ASCENDING;
 
         currentColumnIterator = new MultiRowShardColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher,
-            searcher.getComparator(), pageSize, rowKeysWithShardEnd, ascending);
+            searcher.getComparator(), pageSize, rowKeysWithShardEnd, ascending, searcher.getLastTimestamp() );
 
 
     }

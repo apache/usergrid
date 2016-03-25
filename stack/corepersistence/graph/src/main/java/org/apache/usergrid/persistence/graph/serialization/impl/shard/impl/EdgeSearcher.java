@@ -52,6 +52,7 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
 
 
     protected final Optional<T> last;
+    protected final Optional<Long> lastTimestamp;
     protected final long maxTimestamp;
     protected final ApplicationScope scope;
     protected final Collection<Shard> shards;
@@ -59,7 +60,9 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
     protected final Comparator<T> comparator;
 
 
-    protected EdgeSearcher( final ApplicationScope scope, final Collection<Shard> shards,  final SearchByEdgeType.Order order, final Comparator<T> comparator,  final long maxTimestamp, final Optional<T> last) {
+    protected EdgeSearcher( final ApplicationScope scope, final Collection<Shard> shards,
+                            final SearchByEdgeType.Order order, final Comparator<T> comparator,
+                            final long maxTimestamp, final Optional<T> last, final Optional<Long> lastTimestamp) {
 
         Preconditions.checkArgument(shards.size() > 0 , "Cannot search with no possible shards");
 
@@ -68,6 +71,7 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
         this.order = order;
         this.shards = shards;
         this.last = last;
+        this.lastTimestamp = lastTimestamp;
         this.comparator = comparator;
 
     }
@@ -107,7 +111,7 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
                 shardEnd = null;
             }
 
-            rowKeysWithShardEnd.add(new SmartShard(rowKey, shardEnd));
+            rowKeysWithShardEnd.add(new SmartShard(rowKey, shard.getShardIndex(), shardEnd));
         }
 
         return rowKeysWithShardEnd;
@@ -192,6 +196,10 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
 
     public SearchByEdgeType.Order getOrder(){
         return order;
+    }
+
+    public Optional<Long> getLastTimestamp() {
+        return lastTimestamp;
     }
 
 

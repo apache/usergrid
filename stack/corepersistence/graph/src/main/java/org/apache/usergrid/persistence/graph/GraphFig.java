@@ -114,7 +114,7 @@ public interface GraphFig extends GuicyFig {
     double getShardRepairChance();
 
 
-    @Default( "50000" )
+    @Default( "10000" )
     @Key( SHARD_SIZE )
     long getShardSize();
 
