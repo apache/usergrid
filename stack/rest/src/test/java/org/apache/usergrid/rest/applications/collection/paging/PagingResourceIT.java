@@ -20,6 +20,7 @@ package org.apache.usergrid.rest.applications.collection.paging;
 import java.io.IOException;
 import java.util.*;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -223,6 +224,7 @@ public class PagingResourceIT extends AbstractRestIT {
     }
 
     @Test
+    @Ignore("This is not guaranteed to create multiple shards.  Need to be sure of this for a valid test.")
     public void pagingEntitiesAcrossShardsWithGraph() throws IOException {
 
 
