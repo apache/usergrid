@@ -399,7 +399,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                 };
 
         return new ShardsColumnIterator<>( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 
@@ -470,7 +470,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
         return new ShardsColumnIterator<>( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 
@@ -535,7 +535,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                 };
 
         return new ShardsColumnIterator( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 
@@ -597,7 +597,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
         return new ShardsColumnIterator<>( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 
@@ -660,7 +660,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                 };
 
         return new ShardsColumnIterator<>( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 

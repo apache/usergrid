@@ -140,13 +140,30 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
     @Override
     public void buildRange(final RangeBuilder rangeBuilder, final T start, T end) {
 
+        final boolean ascending = order == SearchByEdgeType.Order.ASCENDING;
+
+
         if ( start != null){
 
-            C startEdge = createColumn( start );
-            rangeBuilder.setStart( startEdge, getSerializer() );
+            C sourceEdge = createColumn( start );
+
+            if(ascending && last.isPresent() && comparator.compare(last.get(), start) < 0){
+
+                sourceEdge = createColumn( last.get() );
+
+            }else if (!ascending && last.isPresent() && comparator.compare(last.get(), start) > 0){
+
+                sourceEdge = createColumn( last.get() );
+            }
+
+            rangeBuilder.setStart( sourceEdge, getSerializer() );
+
+
         }else{
 
             setTimeScan( rangeBuilder );
+
+
         }
 
         if( end != null){
