@@ -57,19 +57,24 @@ module.exports = {
         var query3 = "select * where location within 10000 of 37.3236882,-121.9373442"; //San Jose Airport
         describe("get horses " + query3, function() {
             it('should return a subset of results ' + query3, function() {
-                entities.getWithQuery('horses', query3, 10, function(err, body) {
-                    should(err).be.null;
-                    body.entities.should.be.an.instanceOf(Array);
-                    body.entities.length.should.be.greaterThan(0);
-                    if (body.entities.length > 0) {
-                        body.entities.length.should.be.greaterThan(0).and.lessThan(11);
-                        body.entities.forEach(function(entity) {
-                            // Apigee San Jose
-                            entity.location.latitude.should.be.equal(37.3338716);
-                            entity.location.longitude.should.be.equal(-121.894249);
-                        });
-                    }
-                });
+                //add some delay
+                setTimeout(function(){
+                    entities.getWithQuery('horses', query3, 10, function(err, body) {
+                        should(err).be.null;
+                        body.entities.should.be.an.instanceOf(Array);
+                        body.entities.length.should.be.greaterThan(0);
+                        if (body.entities.length > 0) {
+                            body.entities.length.should.be.greaterThan(0).and.lessThan(11);
+                            body.entities.forEach(function(entity) {
+                                // Apigee San Jose
+                                entity.location.latitude.should.be.equal(37.3338716);
+                                entity.location.longitude.should.be.equal(-121.894249);
+                            });
+                        }
+                    });
+
+                }, 2000);
+
             });
         });
 

@@ -124,7 +124,7 @@ public class EsProvider {
         final int port = indexFig.getPort();
 
         ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder().put( "cluster.name", clusterName )
-                                                              .put( "client.transport.sniff", true );
+            .put( "client.transport.sniff", true );
 
         String nodeName = indexFig.getNodeName();
 
@@ -183,18 +183,18 @@ public class EsProvider {
 
         Settings settings = ImmutableSettings.settingsBuilder()
 
-                .put( "cluster.name", clusterName )
+            .put( "cluster.name", clusterName )
 
-                        // this assumes that we're using zen for host discovery.  Putting an
-                        // explicit set of bootstrap hosts ensures we connect to a valid cluster.
-                .put( "discovery.zen.ping.unicast.hosts", hostString )
-                .put( "discovery.zen.ping.multicast.enabled", "false" ).put( "http.enabled", false )
+            // this assumes that we're using zen for host discovery.  Putting an
+            // explicit set of bootstrap hosts ensures we connect to a valid cluster.
+            .put( "discovery.zen.ping.unicast.hosts", hostString )
+            .put( "discovery.zen.ping.multicast.enabled", "false" ).put( "http.enabled", false )
 
-                .put( "client.transport.ping_timeout", 2000 ) // milliseconds
-                .put( "client.transport.nodes_sampler_interval", 100 ).put( "network.tcp.blocking", true )
-                .put( "node.client", true ).put( "node.name", nodeName )
+            .put( "client.transport.ping_timeout", 2000 ) // milliseconds
+            .put( "client.transport.nodes_sampler_interval", 100 ).put( "network.tcp.blocking", true )
+            .put( "node.client", true ).put( "node.name", nodeName )
 
-                .build();
+            .build();
 
         if (logger.isTraceEnabled()) {
             logger.trace("Creating ElasticSearch client with settings: {}", settings.getAsMap());

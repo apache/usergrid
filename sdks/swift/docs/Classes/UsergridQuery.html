@@ -1,0 +1,2270 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>UsergridQuery Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Class/UsergridQuery" class="dashAnchor"></a>
+    <a title="UsergridQuery Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">UsergridSDK Docs</a> (100% documented)</p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">UsergridSDK Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        UsergridQuery Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/Usergrid.html">Usergrid</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridAppAuth.html">UsergridAppAuth</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridAsset.html">UsergridAsset</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridAssetUploadRequest.html">UsergridAssetUploadRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridAuth.html">UsergridAuth</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridClient.html">UsergridClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridClientConfig.html">UsergridClientConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridDevice.html">UsergridDevice</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridEntity.html">UsergridEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridFileMetaData.html">UsergridFileMetaData</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridQuery.html">UsergridQuery</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridRequest.html">UsergridRequest</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridResponse.html">UsergridResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridResponseError.html">UsergridResponseError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridUser.html">UsergridUser</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridUserAuth.html">UsergridUserAuth</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Global Variables.html">Global Variables</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Global Variables.html#/s:v11UsergridSDK18UsergridSDKVersionSS">UsergridSDKVersion</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enums</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridAuthFallback.html">UsergridAuthFallback</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridDeviceProperties.html">UsergridDeviceProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridDirection.html">UsergridDirection</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridEntityProperties.html">UsergridEntityProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridHttpMethod.html">UsergridHttpMethod</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridImageContentType.html">UsergridImageContentType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridQueryOperator.html">UsergridQueryOperator</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridQuerySortOrder.html">UsergridQuerySortOrder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridUserProperties.html">UsergridUserProperties</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Typealiases.html">Typealiases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK30UsergridAppAuthCompletionBlock">UsergridAppAuthCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK31UsergridAssetDownloadCompletion">UsergridAssetDownloadCompletion</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK28UsergridAssetRequestProgress">UsergridAssetRequestProgress</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK29UsergridAssetUploadCompletion">UsergridAssetUploadCompletion</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK26UsergridResponseCompletion">UsergridResponseCompletion</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK31UsergridUserAuthCompletionBlock">UsergridUserAuthCompletionBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK34UsergridUserAvailabilityCompletion">UsergridUserAvailabilityCompletion</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK35UsergridUserResetPasswordCompletion">UsergridUserResetPasswordCompletion</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>UsergridQuery</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">UsergridQuery</span> <span class="p">:</span> <span class="kt">NSObject</span><span class="p">,</span><span class="kt">NSCopying</span></code></pre>
+
+                </div>
+              </div>
+            <p><code>UsergridQuery</code> is builder class used to construct filtered requests to Usergrid.</p>
+
+<p><code>UsergridQuery</code> objects are then passed to <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code> or <code><a href="../Classes/Usergrid.html">Usergrid</a></code> methods which support <code>UsergridQuery</code> as a parameter are .GET(), .PUT(), and .DELETE().</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Initialization"></a>
+                <a name="//apple_ref/swift/Section/Initialization" class="dashAnchor"></a>
+                <a href="#/Initialization">
+                  <h3 class="section-name">Initialization</h3>
+                </a>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuerycFMS0_FTGSqSS__S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuerycFMS0_FTGSqSS__S0_">init(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Desingated initializer for <code><a href="../Classes/UsergridQuery.html">UsergridQuery</a></code> objects.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">collectionName</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>collectionName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The collection name or <code>type</code> of entities you want to query.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>A new instance of <code><a href="../Classes/UsergridQuery.html">UsergridQuery</a></code>.</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/NSCopying"></a>
+                <a name="//apple_ref/swift/Section/NSCopying" class="dashAnchor"></a>
+                <a href="#/NSCopying">
+                  <h3 class="section-name">NSCopying</h3>
+                </a>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery12copyWithZoneFS0_FV10ObjectiveC6NSZonePSs9AnyObject_"></a>
+                    <a name="//apple_ref/swift/Method/copyWithZone(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery12copyWithZoneFS0_FV10ObjectiveC6NSZonePSs9AnyObject_">copyWithZone(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>See the NSCopying protocol.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">copyWithZone</span><span class="p">(</span><span class="nv">zone</span><span class="p">:</span> <span class="kt">NSZone</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">AnyObject</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>zone</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Ignored</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Returns a new instance that’s a copy of the receiver.</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Building"></a>
+                <a name="//apple_ref/swift/Section/Building" class="dashAnchor"></a>
+                <a href="#/Building">
+                  <h3 class="section-name">Building</h3>
+                </a>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery5buildFS0_FTSb_SS"></a>
+                    <a name="//apple_ref/swift/Method/build(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery5buildFS0_FTSb_SS">build(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Constructs the string that should be appeneded to the end of the URL as a query.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">build</span><span class="p">(</span><span class="nv">autoURLEncode</span><span class="p">:</span> <span class="kt">Bool</span> <span class="o">=</span> <span class="kc">true</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>autoURLEncode</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Automatically encode the constructed string.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The constructed URL query sting.</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Builder%20Methods"></a>
+                <a name="//apple_ref/swift/Section/Builder Methods" class="dashAnchor"></a>
+                <a href="#/Builder%20Methods">
+                  <h3 class="section-name">Builder Methods</h3>
+                </a>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery8containsFS0_FTSS5valueSS_DS0_"></a>
+                    <a name="//apple_ref/swift/Method/contains(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery8containsFS0_FTSS5valueSS_DS0_">contains(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Contains. Query: where term contains &lsquo;val%&rsquo;.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">contains</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">containsWord</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery14containsStringFS0_FTSS5valueSS_DS0_"></a>
+                    <a name="//apple_ref/swift/Method/containsString(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery14containsStringFS0_FTSS5valueSS_DS0_">containsString(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Contains. Query: where term contains &lsquo;val%&rsquo;.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">containsString</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">containsWord</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery12containsWordFS0_FTSS5valueSS_DS0_"></a>
+                    <a name="//apple_ref/swift/Method/containsWord(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery12containsWordFS0_FTSS5valueSS_DS0_">containsWord(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Contains. Query: where term contains &lsquo;val%&rsquo;.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">containsWord</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">addRequirement</span><span class="p">(</span><span class="n">term</span> <span class="o">+</span> <span class="kt">UsergridQuery</span><span class="o">.</span><span class="kt">SPACE</span> <span class="o">+</span> <span class="kt">UsergridQuery</span><span class="o">.</span><span class="kt">CONTAINS</span> <span class="o">+</span> <span class="kt">UsergridQuery</span><span class="o">.</span><span class="kt">SPACE</span> <span class="o">+</span> <span class="p">((</span><span class="n">value</span><span class="o">.</span><span class="nf">isUuid</span><span class="p">())</span> <span class="p">?</span> <span class="kt">UsergridQuery</span><span class="o">.</span><span class="kt">EMPTY_STRING</span> <span class="p">:</span> <span class="kt">UsergridQuery</span><span class="o">.</span><span class="kt">APOSTROPHE</span><span class="p">)</span> <span class="o">+</span> <span class="n">value</span> <span class="o">+</span> <span class="p">((</span><span class="n">value</span><span class="o">.</span><span class="nf">isUuid</span><span class="p">())</span> <span class="p">?</span> <span class="kt">UsergridQuery</span><span class="o">.</span><span class="kt">EMPTY_STRING</span> <span class="p">:</span> <span class="kt">UsergridQuery</span><span class="o">.</span><span class="kt">APOSTROPHE</span><span class="p">))</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery9ascendingFS0_FSSDS0_"></a>
+                    <a name="//apple_ref/swift/Method/ascending(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery9ascendingFS0_FSSDS0_">ascending(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sort ascending. Query:. order by term asc.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">ascending</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">asc</span><span class="p">(</span><span class="n">term</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery3ascFS0_FSSDS0_"></a>
+                    <a name="//apple_ref/swift/Method/asc(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery3ascFS0_FSSDS0_">asc(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sort ascending. Query:. order by term asc.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">asc</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">sort</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">sortOrder</span><span class="p">:</span> <span class="o">.</span><span class="kt">Asc</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery10descendingFS0_FSSDS0_"></a>
+                    <a name="//apple_ref/swift/Method/descending(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery10descendingFS0_FSSDS0_">descending(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sort descending. Query: order by term desc</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">descending</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">desc</span><span class="p">(</span><span class="n">term</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery4descFS0_FSSDS0_"></a>
+                    <a name="//apple_ref/swift/Method/desc(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery4descFS0_FSSDS0_">desc(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sort descending. Query: order by term desc</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">desc</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">sort</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">sortOrder</span><span class="p">:</span> <span class="o">.</span><span class="kt">Desc</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery6filterFS0_FTSS5valuePSs9AnyObject__DS0_"></a>
+                    <a name="//apple_ref/swift/Method/filter(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery6filterFS0_FTSS5valuePSs9AnyObject__DS0_">filter(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Filter (or Equal-to). Query: where term = &lsquo;value&rsquo;.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">filter</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">AnyObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">eq</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery6equalsFS0_FTSS5valuePSs9AnyObject__DS0_"></a>
+                    <a name="//apple_ref/swift/Method/equals(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery6equalsFS0_FTSS5valuePSs9AnyObject__DS0_">equals(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Equal-to. Query: where term = &lsquo;value&rsquo;.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">equals</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">AnyObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">eq</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery2eqFS0_FTSS5valuePSs9AnyObject__DS0_"></a>
+                    <a name="//apple_ref/swift/Method/eq(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery2eqFS0_FTSS5valuePSs9AnyObject__DS0_">eq(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Equal-to. Query: where term = &lsquo;value&rsquo;.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">eq</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">AnyObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">addOperationRequirement</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">operation</span><span class="p">:</span><span class="o">.</span><span class="kt">Equal</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery11greaterThanFS0_FTSS5valuePSs9AnyObject__DS0_"></a>
+                    <a name="//apple_ref/swift/Method/greaterThan(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery11greaterThanFS0_FTSS5valuePSs9AnyObject__DS0_">greaterThan(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Greater-than. Query: where term &gt; &lsquo;value&rsquo;.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">greaterThan</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">AnyObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">gt</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery2gtFS0_FTSS5valuePSs9AnyObject__DS0_"></a>
+                    <a name="//apple_ref/swift/Method/gt(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery2gtFS0_FTSS5valuePSs9AnyObject__DS0_">gt(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Greater-than. Query: where term &gt; &lsquo;value&rsquo;.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">gt</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">AnyObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">addOperationRequirement</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">operation</span><span class="p">:</span><span class="o">.</span><span class="kt">GreaterThan</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery18greaterThanOrEqualFS0_FTSS5valuePSs9AnyObject__DS0_"></a>
+                    <a name="//apple_ref/swift/Method/greaterThanOrEqual(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery18greaterThanOrEqualFS0_FTSS5valuePSs9AnyObject__DS0_">greaterThanOrEqual(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Greater-than-or-equal-to. Query: where term &gt;= &lsquo;value&rsquo;.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">greaterThanOrEqual</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">AnyObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">gte</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery3gteFS0_FTSS5valuePSs9AnyObject__DS0_"></a>
+                    <a name="//apple_ref/swift/Method/gte(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery3gteFS0_FTSS5valuePSs9AnyObject__DS0_">gte(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Greater-than-or-equal-to. Query: where term &gt;= &lsquo;value&rsquo;.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">gte</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">AnyObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">addOperationRequirement</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">operation</span><span class="p">:</span><span class="o">.</span><span class="kt">GreaterThanEqualTo</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery8lessThanFS0_FTSS5valuePSs9AnyObject__DS0_"></a>
+                    <a name="//apple_ref/swift/Method/lessThan(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery8lessThanFS0_FTSS5valuePSs9AnyObject__DS0_">lessThan(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Less-than. Query: where term &lt; &lsquo;value&rsquo;.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">lessThan</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">AnyObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">lt</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery2ltFS0_FTSS5valuePSs9AnyObject__DS0_"></a>
+                    <a name="//apple_ref/swift/Method/lt(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery2ltFS0_FTSS5valuePSs9AnyObject__DS0_">lt(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Less-than. Query: where term &lt; &lsquo;value&rsquo;.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">lt</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">AnyObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">addOperationRequirement</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">operation</span><span class="p">:</span><span class="o">.</span><span class="kt">LessThan</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery15lessThanOrEqualFS0_FTSS5valuePSs9AnyObject__DS0_"></a>
+                    <a name="//apple_ref/swift/Method/lessThanOrEqual(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery15lessThanOrEqualFS0_FTSS5valuePSs9AnyObject__DS0_">lessThanOrEqual(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Less-than-or-equal-to. Query: where term &lt;= &lsquo;value&rsquo;.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">lessThanOrEqual</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">AnyObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">lte</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery3lteFS0_FTSS5valuePSs9AnyObject__DS0_"></a>
+                    <a name="//apple_ref/swift/Method/lte(_:value:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery3lteFS0_FTSS5valuePSs9AnyObject__DS0_">lte(_:value:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Less-than-or-equal-to. Query: where term &lt;= &lsquo;value&rsquo;.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">lte</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">AnyObject</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="nf">addOperationRequirement</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="nv">operation</span><span class="p">:</span><span class="o">.</span><span class="kt">LessThanEqualTo</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery14locationWithinFS0_FTSf8latitudeSf9longitudeSf_DS0_"></a>
+                    <a name="//apple_ref/swift/Method/locationWithin(_:latitude:longitude:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery14locationWithinFS0_FTSf8latitudeSf9longitudeSf_DS0_">locationWithin(_:latitude:longitude:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Contains. Query: location within val of lat, long.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">locationWithin</span><span class="p">(</span><span class="nv">distance</span><span class="p">:</span> <span class="kt">Float</span><span class="p">,</span> <span class="nv">latitude</span><span class="p">:</span> <span class="kt">Float</span><span class="p">,</span> <span class="nv">longitude</span><span class="p">:</span> <span class="kt">Float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>distance</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The distance from the latitude and longitude.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>latitude</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The latitude.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>longitude</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The longitude.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery2orFS0_FT_DS0_"></a>
+                    <a name="//apple_ref/swift/Method/or()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery2orFS0_FT_DS0_">or()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Or operation for conditional queries.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">or</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery3andFS0_FT_DS0_"></a>
+                    <a name="//apple_ref/swift/Method/and()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery3andFS0_FT_DS0_">and()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>And operation for conditional queries.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">and</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery3notFS0_FT_DS0_"></a>
+                    <a name="//apple_ref/swift/Method/not()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery3notFS0_FT_DS0_">not()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Not operation for conditional queries.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">not</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery4sortFS0_FTSS9sortOrderOS_22UsergridQuerySortOrder_DS0_"></a>
+                    <a name="//apple_ref/swift/Method/sort(_:sortOrder:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery4sortFS0_FTSS9sortOrderOS_22UsergridQuerySortOrder_DS0_">sort(_:sortOrder:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sort. Query: order by term <code>sortOrder</code></p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">sort</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">sortOrder</span><span class="p">:</span> <span class="kt">UsergridQuerySortOrder</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>sortOrder</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The order.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery10collectionFS0_FSSDS0_"></a>
+                    <a name="//apple_ref/swift/Method/collection(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery10collectionFS0_FSSDS0_">collection(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets the collection name.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">collection</span><span class="p">(</span><span class="nv">collectionName</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>collectionName</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The new collection name.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery4typeFS0_FSSDS0_"></a>
+                    <a name="//apple_ref/swift/Method/type(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery4typeFS0_FSSDS0_">type(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets the collection name.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">type</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>type</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The new collection name.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery5limitFS0_FSiDS0_"></a>
+                    <a name="//apple_ref/swift/Method/limit(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery5limitFS0_FSiDS0_">limit(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets the limit on the query.  Default limit is 10.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">limit</span><span class="p">(</span><span class="nv">limit</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>limit</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The limit.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery2qlFS0_FSSDS0_"></a>
+                    <a name="//apple_ref/swift/Method/ql(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery2qlFS0_FSSDS0_">ql(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Adds a preconstructed query string as a requirement onto the query.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">ql</span><span class="p">(</span><span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The query string.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery6cursorFS0_FGSqSS_DS0_"></a>
+                    <a name="//apple_ref/swift/Method/cursor(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery6cursorFS0_FGSqSS_DS0_">cursor(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets the cursor of the query used internally by Usergrid&rsquo;s APIs.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">cursor</span><span class="p">(</span><span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The cursor.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery10fromStringFS0_FGSqSS_DS0_"></a>
+                    <a name="//apple_ref/swift/Method/fromString(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery10fromStringFS0_FGSqSS_DS0_">fromString(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A special builder property that allows you to input a pre-defined query string. All builder properties will be ignored when this property is defined.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">fromString</span><span class="p">(</span><span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The pre-defined query string.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery7urlTermFS0_FTSS11equalsValueSS_DS0_"></a>
+                    <a name="//apple_ref/swift/Method/urlTerm(_:equalsValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery7urlTermFS0_FTSS11equalsValueSS_DS0_">urlTerm(_:equalsValue:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Adds a URL term that will be added next to the query string when constructing the URL append.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">urlTerm</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">equalsValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>equalsValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery23addOperationRequirementFS0_FTSS9operationOS_21UsergridQueryOperator11stringValueSS_DS0_"></a>
+                    <a name="//apple_ref/swift/Method/addOperationRequirement(_:operation:stringValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery23addOperationRequirementFS0_FTSS9operationOS_21UsergridQueryOperator11stringValueSS_DS0_">addOperationRequirement(_:operation:stringValue:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Adds a string requirement to the query.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">addOperationRequirement</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">operation</span><span class="p">:</span> <span class="kt">UsergridQueryOperator</span><span class="p">,</span> <span class="nv">stringValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>operation</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The operation.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>stringValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The string value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK13UsergridQuery23addOperationRequirementFS0_FTSS9operationOS_21UsergridQueryOperator8intValueSi_DS0_"></a>
+                    <a name="//apple_ref/swift/Method/addOperationRequirement(_:operation:intValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK13UsergridQuery23addOperationRequirementFS0_FTSS9operationOS_21UsergridQueryOperator8intValueSi_DS0_">addOperationRequirement(_:operation:intValue:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Adds a integer requirement to the query.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">addOperationRequirement</span><span class="p">(</span><span class="nv">term</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">operation</span><span class="p">:</span> <span class="kt">UsergridQueryOperator</span><span class="p">,</span> <span class="nv">intValue</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>term</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The term.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>operation</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The operation.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>intValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The integer value.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><code>Self</code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2016 <a class="link" href="https://github.com/apache/usergrid/tree/master/sdks/swift" target="_blank" rel="external">Robert Walsh</a>. All rights reserved. (Last updated: 2016-02-15)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.5.0</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

@@ -270,7 +270,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 Notification notification = notificationMap.get(message.getNotificationId());
                 if (notification == null) {
                     notification = em.get(message.getNotificationId(), Notification.class);
-                    notificationMap.put(message.getNotificationId(), notification);
+                    notificationMap.putIfAbsent(message.getNotificationId(), notification);
                 }
                 TaskManager taskManager = taskMap.get(message.getNotificationId());
                 if (taskManager == null) {

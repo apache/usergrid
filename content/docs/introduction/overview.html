@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Documentation Overview &mdash; Apache Usergrid 1.0 documentation</title>
+  <title>Getting Started &mdash; Apache Usergrid 1.0 documentation</title>
   
 
   
@@ -80,19 +80,24 @@
         
           
           
-              <p class="caption"><span class="caption-text">Introduction</span></p>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="">Documentation Overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#for-application-developers">For Application Developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#for-deployment-and-operations-folks">For Deployment and Operations folks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#for-open-source-contributoes">For Open Source contributoes</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data-model.html">Usergrid Data model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Getting Started</span></p>
+<p class="caption"><span class="caption-text">Using Usergrid</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/creating-account.html">Creating a Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/using-the-api.html">Using the API</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Data Storage</span></p>
 <ul>
@@ -184,11 +189,9 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<p class="caption"><span class="caption-text">Installing Usergrid</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../installation/deployment-guide.html">Usergrid 2.1.0 (unreleased) Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/deployment-guide.html">Usergrid 2.1.0 Deployment Guide</a></li>
 </ul>
 <p class="caption"><span class="caption-text">More about Usergrid</span></p>
 <ul>
@@ -218,7 +221,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../index.html">Docs</a> &raquo;</li>
       
-    <li>Documentation Overview</li>
+    <li>Getting Started</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -232,35 +235,42 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="documentation-overview">
-<h1>Documentation Overview<a class="headerlink" href="#documentation-overview" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
 <p>The Usergrid documentation is written for a couple of distinctly
-different audiences:</p>
+different audiences.</p>
+<div class="section" id="for-application-developers">
+<h2>For Application Developers<a class="headerlink" href="#for-application-developers" title="Permalink to this headline">¶</a></h2>
+<p>Most of the Usergrid docs are written for you. Browse the left side-bar
+and work your way down the topics list to learn how to get started using
+Usergrid for data storage, user management, authentication, push
+notifications and more.</p>
 <ul class="simple">
-<li><strong>Application Developer</strong>: this is you if you are a Javascript, iOS,
-Android, Java or other developer who wants to build an app that uses
-the Usergrid APIs for data storage, user management, authentication,
-etc. <strong>Most of our docs are written for application developers</strong> so
-browse the left side-bar and work your way down the topics list.</li>
-<li><strong>Deployment/Operations Engineer</strong>: this is for you if you are the
-person who will be installing Usergrid, setting up the required
-Cassandra database and other things that Usergrid needs. Currently,
-we have limited docs for installation, deployment and maintenance of
-Usergrid:<ul>
-<li><a class="reference external" href="../installation/ug1-deploy-to-tomcat">Deploying to Tomcat</a>:
-How to build and deploy Usergrid to Tomcat and Cassandra.</li>
-<li><a class="reference external" href="../installation/ug1-launcher-quick-start">Launcher Quick
-Start</a>: How to build
-and run Usergrid via the Usergrid Launcher.</li>
+<li>A good place to start is <a class="reference external" href="../using-usergrid/creating-account.html">Using
+Usergrid</a></li>
 </ul>
-</li>
-<li><strong>Open Source Contributor</strong>: How to &#8220;give back&#8221; and contribute to
-Usergrid. Usergrid welcomes code and documentation contributions,
-GitHub pull-requests, bug reports and suggestions for improvement.<ul>
-<li><a class="reference external" href="../reference/contribute-code">How to Contribute Code &amp; Docs</a>:</li>
+</div>
+<div class="section" id="for-deployment-and-operations-folks">
+<h2>For Deployment and Operations folks<a class="headerlink" href="#for-deployment-and-operations-folks" title="Permalink to this headline">¶</a></h2>
+<p>If you are the person who will be installing Usergrid, setting up the
+required Cassandra database, ElasticSearch and other things that
+Usergrid needs, then you should probably start here:</p>
+<ul class="simple">
+<li><a class="reference external" href="../installation/deployment-guide.html">Usergrid Deployment Guide</a></li>
 </ul>
-</li>
+</div>
+<div class="section" id="for-open-source-contributoes">
+<h2>For Open Source contributoes<a class="headerlink" href="#for-open-source-contributoes" title="Permalink to this headline">¶</a></h2>
+<p>If you want to build Usergrid from source-code then start at our <a class="reference external" href="http://github.com/apache/usergrid">GitHub
+repo</a>. You will find README files
+there that explain how to build the Stack, the Portal, SDKs and other
+components.</p>
+<p>If you want to contribute new code or documentation to the Usergrid
+project then this is a good place to start:</p>
+<ul class="simple">
+<li><a class="reference external" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
 </ul>
+</div>
 </div>
 
 

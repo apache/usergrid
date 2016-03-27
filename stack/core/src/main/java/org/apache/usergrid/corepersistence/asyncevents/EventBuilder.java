@@ -39,14 +39,6 @@ import rx.Observable;
 public interface EventBuilder {
 
     /**
-     * Return the cold observable of entity index update operations
-     * @param applicationScope
-     * @param entity
-     * @return
-     */
-    Observable<IndexOperationMessage> buildEntityIndexUpdate( ApplicationScope applicationScope, Entity entity );
-
-    /**
      * Return the cold observable of the new edge operation
      * @param applicationScope
      * @param entity
@@ -69,7 +61,9 @@ public interface EventBuilder {
      * @param entityId
      * @return
      */
-    EventBuilderImpl.EntityDeleteResults buildEntityDelete( ApplicationScope applicationScope, Id entityId );
+    EntityDeleteResults buildEntityDelete(ApplicationScope applicationScope, Id entityId );
+
+
 
     /**
      * Re-index an entity in the scope provided
