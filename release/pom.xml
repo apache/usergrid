@@ -28,7 +28,7 @@
 
     <groupId>org.apache.usergrid</groupId>
     <artifactId>apache-usergrid</artifactId>
-    <version>2.1.0</version>
+    <version>${releaseVersion}</version>
     <packaging>pom</packaging>
 
     <name>Apache Usergrid Binary Release</name>

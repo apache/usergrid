@@ -1,6 +1,4 @@
-# Usergrid 2.1.0 (unreleased) Deployment Guide
-
-## DRAFT 
+# Usergrid 2.1.0 Deployment Guide
 
 This document explains how to deploy the Usergrid v2.1.0 Backend-as-a-Service (BaaS), 
 which comprises the Usergrid Stack, a Java web application, and the Usergrid Portal,
@@ -43,15 +41,7 @@ Optional but helpful:
    
 ## Getting Started
 
-Deploying Usergrid starts with downloaded the Apache Usergrid release. There are three ways to go:
-
-1. Clone the Usergrid Git repo, get the `usergrid-2.1.0` tag (not available yet) and build Usergrid yourself.
-2. Download the official Apache Usergrid 2.1.0 source-code release (not available yet) and build Usergrid
-3. Download the Apache Usergrid 2.1.0 binary release (not available).
-
-The easist way to go is option #3 and so that's what we will do in this document. 
-
-__Get started by downloading the Apache Usergrid 2.1.0__ binary release from the Usergrid releases page:
+__Download the Apache Usergrid 2.1.0 binary release__ from the official Usergrid releases page:
 
 * [Apache Usergrid Releases](https://usergrid.apache.org/releases)
 
@@ -166,58 +156,7 @@ You should review the defaults in the above file. To get you started, let's look
 #### Example Usergrid Stack Properties File
 
 Below is an minimal example Usergrid properties file with the parts you need to change indicated like 
-shell variables, e.g. `${USERGRID_CLUSTER_NAME}`. Here's a guide to the things you need to set:
-
-__Table 1: Values to set in Example Properties file:__
-
-<table class="usergrid-table">
-<tr>
-  <th>Value</th>
-  <th>Description</th>
-</tr>
-<tr>
-    <td>__BASEURL__</td>
-    <td>This is the base URL for the Usergrid installation, e.g. `https://api.example.com`. </td>
-</tr>
-<tr>
-    <td>__USERGRID_CLUSTER_NAME__</td>
-    <td>This is your name for your Usergrid installation. </td>
-</tr>
-<tr>
-    <td>__CASSANDRA_CLUSTER_NAME__</td>
-    <td>Name of Cassandra cluster, must match what's in Cassandra configuration. </td>
-</tr>
-<tr>
-    <td>__CASSANDRA_HOSTS__</td>
-    <td>Comma-separated lists of Cassandra hosts, with port numbers if you are not using the default 9120. The default for this property is `localhost:9120` </td>
-</tr>
-<tr>
-    <td>__ELASTICSEARCH_CLUSTER_NAME__</td>
-    <td>Name of ElasticSearch cluster, must match what's in ElasticSearch configuration. </td>
-</tr>
-<tr>
-    <td>__ELASTICSEARCH_HOSTS__</td>
-    <td>Comma-separated lists of ElasticSearch hosts, with port numbers if you are not using the default 9300. The default for this property is `localhost:9300` </td>
-</tr>
-<tr>
-    <td>__SUPER_USER_EMAIL__</td>
-    <td>Email address of person responsible for the superuser account. </td>
-</tr>
-<tr>
-    <td>__SUPER_USER_PASSWORD__</td>
-    <td>Password for the superuser account. </td>
-</tr>
-<tr>
-    <td>__TEST_ADMIN_USER_EMAIL__</td>
-    <td>If `usergrid.setup-test-account=true`, as shown below, Usergrid will create a test account and you should specify a valid email here. </td>
-</tr>
-<tr>
-    <td>__TEST_ADMIN_USER_PASSWORD__</td>
-    <td>Password for the username 'test' account. </td>
-</tr>
-</table>   
-   
-Make sure you set all of the above properties when you edit this example for your installation.   
+shell variables, e.g. `${USERGRID_CLUSTER_NAME}`.  
    
 Example 1: usergrid-deployment.properties file
 
@@ -284,20 +223,74 @@ Example 1: usergrid-deployment.properties file
     usergrid.user.resetpw.url=${BASEURL}/%s/%s/users/%s/resetpw
     
 
+Here's a guide to the things you need to set in the above properties file.
+
+__Table 1: Values to set in Example Properties file:__
+
+<table class="usergrid-table">
+<tr>
+  <th>Value</th>
+  <th>Description</th>
+</tr>
+<tr>
+    <td>__BASEURL__</td>
+    <td>This is the base URL for the Usergrid installation, e.g. `https://api.example.com`. </td>
+</tr>
+<tr>
+    <td>__USERGRID_CLUSTER_NAME__</td>
+    <td>This is your name for your Usergrid installation. </td>
+</tr>
+<tr>
+    <td>__CASSANDRA_CLUSTER_NAME__</td>
+    <td>Name of Cassandra cluster, must match what's in Cassandra configuration. </td>
+</tr>
+<tr>
+    <td>__CASSANDRA_HOSTS__</td>
+    <td>Comma-separated lists of Cassandra hosts, with port numbers if you are not using the default 9160. The default for this property is `localhost:9160` </td>
+</tr>
+<tr>
+    <td>__ELASTICSEARCH_CLUSTER_NAME__</td>
+    <td>Name of ElasticSearch cluster, must match what's in ElasticSearch configuration. </td>
+</tr>
+<tr>
+    <td>__ELASTICSEARCH_HOSTS__</td>
+    <td>Comma-separated lists of ElasticSearch hosts, with port numbers if you are not using the default 9300. The default for this property is `localhost:9300` </td>
+</tr>
+<tr>
+    <td>__SUPER_USER_EMAIL__</td>
+    <td>Email address of person responsible for the superuser account. </td>
+</tr>
+<tr>
+    <td>__SUPER_USER_PASSWORD__</td>
+    <td>Password for the superuser account. </td>
+</tr>
+<tr>
+    <td>__TEST_ADMIN_USER_EMAIL__</td>
+    <td>If `usergrid.setup-test-account=true`, as shown below, Usergrid will create a test account and you should specify a valid email here. </td>
+</tr>
+<tr>
+    <td>__TEST_ADMIN_USER_PASSWORD__</td>
+    <td>Password for the username 'test' account. </td>
+</tr>
+</table>   
+   
+Make sure you set all of the above properties when you edit this example for your installation.  
+
+
 #### Configure Logging
 
 Usegrid includes the Apache Log4j logging system and you can control the levels of logs for each
-Usergrid package and even down to the class level by providing your own __log4j.properties__ file.
+Usergrid package and even down to the class level by providing your own `log4j.properties` file.
 
 To configure logging you need to:
 
-1. Create a __log4j.properties__ file and place it on the computer where Tomcat is running
-2. Add __-D__ system property to Tomcat so that Tomcat can find your Log4j properties file.
+1. Create a `log4j.properties` file and place it on the computer where Tomcat is running
+2. Add `-D` system property to Tomcat so that Tomcat can find your Log4j properties file.
 
 
 ##### Example Logging Configuration
 
-The Log4j properties file below is a good starting point for Usergrid. It configures ERROR level
+The Log4j properties file below is a good starting point for Usergrid. It configures `ERROR` level
 logging for the 3rd party libraries that Usergrid depends on, and INFO level logging for Usergrid.
 Plus, it configures some noisy parts of Usergrid to be quiet.
 
@@ -425,7 +418,7 @@ When you issue each of those curl commands, you should see a success message lik
     }    
 
 If you don't see a success message, then refer to the Tomcat logs for error message and
-seek help from the Usergrid community.
+seek help from the [Usergrid community](http://usergrid.apache.org/community).
 
 Now that you've gotten Usergrid up and running, you're ready to deploy the Usergrid Portal.
 
@@ -457,7 +450,8 @@ this line:
 
 To set the hostname that you will be using for your Usergrid installation. 
 
-Start your web server and Portal should be up and running!
+Start your web server and Portal should be up and running at http://localhost:8080/portal or wherever you deployed it.
+
 
 
 ## Additional Resources
@@ -472,13 +466,3 @@ Resources that might be useful to those deploying Usergrid:
 ## The End
 
 That's all folks.
-
-
-
-
-
-
-
-
-
-

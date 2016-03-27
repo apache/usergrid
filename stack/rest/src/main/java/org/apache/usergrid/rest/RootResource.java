@@ -174,9 +174,6 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
         ApiResponse response = createApiResponse();
 
-        AsyncEventService eventService = injector.getInstance(AsyncEventService.class);
-
-
         if ( !ignoreError ) {
 
             if ( !emf.getEntityStoreHealth().equals( Health.GREEN )) {
@@ -202,7 +199,6 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
         // Core Persistence Query Index module status for Management App Index
         node.put( "managementAppIndexStatus", emf.getIndexHealth().toString() );
-        node.put( "queueDepth", eventService.getQueueDepth() );
 
 
         dumpMetrics(node);
@@ -225,6 +221,33 @@ public class RootResource extends AbstractContextResource implements MetricProce
         }
         return response.build();
     }
+
+    @GET
+    @Path("/status/queue")
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getQueueDepth(){
+
+        ApiResponse response = createApiResponse();
+        AsyncEventService eventService = injector.getInstance(AsyncEventService.class);
+
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+
+        String provider = "LOCAL";
+        String queueManagerClass = eventService.getQueueManagerClass();
+
+        if(queueManagerClass.contains("SNS") || queueManagerClass.contains("SQS")){
+            provider = "AWS";
+        }
+
+        node.put( "provider", provider );
+        node.put( "depth", eventService.getQueueDepth() );
+
+        response.setProperty( "status", node );
+        return response;
+
+    }
+
 
 
     private void dumpMetrics( ObjectNode node ) {
