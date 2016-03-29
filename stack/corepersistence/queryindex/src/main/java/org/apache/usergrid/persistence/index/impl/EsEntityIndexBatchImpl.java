@@ -20,11 +20,15 @@ package org.apache.usergrid.persistence.index.impl;
 
 
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.index.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.cassandra.auth.IAuthenticator;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -65,6 +69,11 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     @Override
     public EntityIndexBatch index( final IndexEdge indexEdge, final Entity entity ) {
+        return index( indexEdge,entity, Optional.empty() );
+    }
+
+    @Override
+    public EntityIndexBatch index( final IndexEdge indexEdge, final Entity entity, final Optional<Set<String>> fieldsToIndex ) {
         IndexValidationUtils.validateIndexEdge(indexEdge);
         ValidationUtils.verifyEntityWrite(entity);
         ValidationUtils.verifyVersion( entity.getVersion() );
@@ -77,29 +86,9 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         }
 
         //add app id for indexing
-        container.addIndexRequest(new IndexOperation(writeAlias, applicationScope, indexEdge, entity));
+        container.addIndexRequest(new IndexOperation(writeAlias, applicationScope, indexEdge, entity,fieldsToIndex));
         return this;
     }
-
-    @Override
-    public EntityIndexBatch index ( final IndexEdge indexEdge, final Entity entity ,final Map flattenedEntityMap){
-        IndexValidationUtils.validateIndexEdge(indexEdge);
-        ValidationUtils.verifyEntityWrite(entity);
-        ValidationUtils.verifyVersion( entity.getVersion() );
-
-        final String writeAlias = alias.getWriteAlias();
-
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Indexing to alias {} with scope {} on edge {} with entity data {}",
-                writeAlias, applicationScope, indexEdge, flattenedEntityMap );
-        }
-
-        //add app id for indexing
-        container.addIndexRequest(new IndexOperation(writeAlias, applicationScope,
-            indexEdge,entity.getId(),entity.getVersion(),flattenedEntityMap) );
-        return this;
-    }
-
 
     @Override
     public EntityIndexBatch deindex( final SearchEdge searchEdge, final Id id, final UUID version ) {

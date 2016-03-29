@@ -28,6 +28,7 @@ import org.apache.usergrid.rest.test.resource.model.Collection;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
+import org.apache.usergrid.services.ServiceParameter;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -167,7 +168,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
 
         //Reindex and verify that the entity only has field one index.
-        this.app().collection( "testCollection" ).collection( "_reindex" ).post();
+        this.app().collection( "testCollection" ).collection( "_reindex" ).post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
        // Thread.sleep( 10000 );
         //refreshIndex();
 
@@ -225,7 +226,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         //TODO: the below will have to be replaced by the values that I deem correct.
         assertEquals( ( thing ).get( "lastUpdated" ), testCollectionSchema.get( "lastUpdated" ));
         assertEquals( ( thing ).get( "lastUpdateBy" ),testCollectionSchema.get( "lastUpdateBy" ) );
-        assertEquals( ( thing ).get( "lastReindexed" ),testCollectionSchema.get( "lastReindexed" ) );
+        assertEquals( 0,testCollectionSchema.get( "lastReindexed" ) );
 
         //TODO: this test doesn't check to see if create checks the schema. Only that the reindex removes whats already there.
         ArrayList<String> schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
@@ -233,14 +234,28 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
 
         //Reindex and verify that the entity only has field one index.
-        this.app().collection( "testCollection" ).collection( "_reindex" ).post();
+        this.app().collection( "testCollection" ).collection( "_reindex" ).post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
+
+
+        indexingArray.add( "one" );
+        indexingArray.add( "two" );
+
+
+        //field "fields" is required.
+        payload = new Entity();
+        payload.put( "fields", indexingArray);
+
+        //Post index to the collection metadata
+        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
 
         collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
 
+
+
         testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
-        assertEquals( ( thing ).get( "lastUpdated" ), testCollectionSchema.get( "lastUpdated" ));
+        assertNotEquals( ( thing ).get( "lastUpdated" ), testCollectionSchema.get( "lastUpdated" ));
         assertEquals( ( thing ).get( "lastUpdateBy" ),testCollectionSchema.get( "lastUpdateBy" ) );
-        assertNotEquals( ( thing ).get( "lastReindexed" ),testCollectionSchema.get( "lastReindexed" ) );
+        assertNotEquals( 0,testCollectionSchema.get( "lastReindexed" ) );
 
         schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
         assertEquals( "one",schema.get( 0 ) );

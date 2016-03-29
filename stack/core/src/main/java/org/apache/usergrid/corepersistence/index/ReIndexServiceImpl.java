@@ -20,7 +20,9 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 
@@ -42,7 +44,10 @@ import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.utils.InflectionUtils;
+import org.apache.usergrid.utils.JsonUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Optional;
@@ -76,6 +81,7 @@ public class ReIndexServiceImpl implements ReIndexService {
     private final AllEntityIdsObservable allEntityIdsObservable;
     private final IndexProcessorFig indexProcessorFig;
     private final MapManager mapManager;
+    private final MapManagerFactory mapManagerFactory;
     private final AsyncEventService indexService;
     private final EntityIndexFactory entityIndexFactory;
 
@@ -94,7 +100,7 @@ public class ReIndexServiceImpl implements ReIndexService {
         this.allApplicationsObservable = allApplicationsObservable;
         this.indexProcessorFig = indexProcessorFig;
         this.indexService = indexService;
-
+        this.mapManagerFactory = mapManagerFactory;
         this.mapManager = mapManagerFactory.createMapManager( RESUME_MAP_SCOPE );
     }
 
@@ -133,12 +139,30 @@ public class ReIndexServiceImpl implements ReIndexService {
             .buffer( indexProcessorFig.getReindexBufferSize());
 
         if(delayTimer.isPresent()){
+
+            if(reIndexRequestBuilder.getCollectionName().isPresent()) {
+                String collectionName =  InflectionUtils.pluralize( CpNamingUtils.getNameFromEdgeType(reIndexRequestBuilder.getCollectionName().get() ));
+                MapManager collectionMapStorage = mapManagerFactory.createMapManager( CpNamingUtils.getEntityTypeMapScope( appId.get().getApplication()  ) );
+                String jsonSchemaMap = collectionMapStorage.getString( collectionName );
+
+
+                //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
+                if ( jsonSchemaMap != null ) {
+
+                    Map jsonMapData = ( Map ) JsonUtils.parse( jsonSchemaMap );
+
+                    jsonMapData.put( "lastReindexed", Instant.now().toEpochMilli() );
+                    collectionMapStorage.putString( collectionName,JsonUtils.mapToJsonString(jsonMapData )  );
+                }
+
+            }
             if(timeUnitOptional.isPresent()){
                 runningReIndex = runningReIndex.delay( delayTimer.get(),timeUnitOptional.get() );
             }
             else{
                 runningReIndex = runningReIndex.delay( delayTimer.get(), TimeUnit.MILLISECONDS );
             }
+
         }
 
         runningReIndex = runningReIndex.doOnNext(edges -> {
