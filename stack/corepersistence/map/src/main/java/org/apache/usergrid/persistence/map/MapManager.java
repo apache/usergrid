@@ -27,8 +27,6 @@ import java.util.UUID;
 /**
  * Generator of a map manager instance
  */
-//TODO: This should be a singleton, otherwise cache could be out of sync and would need to invalidated everywher
-    //TODO: make manager cache injectable everywhere.
 public interface MapManager {
 
 

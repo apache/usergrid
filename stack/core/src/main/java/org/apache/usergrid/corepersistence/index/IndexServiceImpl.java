@@ -123,9 +123,8 @@ public class IndexServiceImpl implements IndexService {
         //do our observable for batching
         //try to send a whole batch if we can
 
-        //TODO: extract the below and call a single method.
         final Observable<IndexOperationMessage>  batches =  sourceEdgesToIndex
-            .buffer(250, TimeUnit.MILLISECONDS, indexFig.getIndexBatchSize() ) //TODO: change to delay. maybe. at least to the before buffer.
+            .buffer(250, TimeUnit.MILLISECONDS, indexFig.getIndexBatchSize() )
 
             //map into batches based on our buffer size
             .flatMap( buffer -> Observable.from( buffer )
@@ -135,7 +134,7 @@ public class IndexServiceImpl implements IndexService {
                         logger.debug("adding edge {} to batch for entity {}", indexEdge, entity);
                     }
 
-                    final Optional<Set<String>> fieldsToIndex = getFilteredStringObjectMap( applicationScope, entity, indexEdge );
+                    final Optional<Set<String>> fieldsToIndex = getFilteredStringObjectMap( indexEdge );
 
                     batch.index( indexEdge, entity ,fieldsToIndex);
                 } )
@@ -168,7 +167,7 @@ public class IndexServiceImpl implements IndexService {
                 logger.debug("adding edge {} to batch for entity {}", indexEdge, entity);
             }
 
-            Optional<Set<String>> fieldsToIndex = getFilteredStringObjectMap( applicationScope, entity, indexEdge );
+            Optional<Set<String>> fieldsToIndex = getFilteredStringObjectMap( indexEdge );
 
             batch.index( indexEdge, entity ,fieldsToIndex);
 
@@ -180,30 +179,21 @@ public class IndexServiceImpl implements IndexService {
 
     }
 
-
     /**
      * This method takes in an entity and flattens it out then begins the process to filter out
      * properties that we do not want to index. Once flatted we parse through each property
      * and verify that we want it to be indexed on. The set of default properties that will always be indexed are as follows.
      * UUID - TYPE - MODIFIED - CREATED. Depending on the schema this may change. For instance, users will always require
      * NAME, but the above four will always be taken in.
-     * @param applicationScope
-     * @param entity
+
      * @param indexEdge
      * @return This returns a filtered map that contains the flatted properties of the entity. If there isn't a schema
      * associated with the collection then return null ( and index the entity in its entirety )
      */
-    private Optional<Set<String>> getFilteredStringObjectMap( final ApplicationScope applicationScope,
-                                            final Entity entity, final IndexEdge indexEdge ) {
-
-
-        //TODO: THIS IS THE FIRST THING TO BE LOOKED AT TOMORROW.
-        //look into this.
-        IndexOperation indexOperation = new IndexOperation();
+    private Optional<Set<String>> getFilteredStringObjectMap( final IndexEdge indexEdge ) {
 
         Id mapOwner = new SimpleId( indexEdge.getNodeId().getUuid(), TYPE_APPLICATION );
 
-        //TODO: this needs to be cached
         final MapScope ms = CpNamingUtils.getEntityTypeMapScope( mapOwner );
 
         MapManager mm = mapManagerFactory.createMapManager( ms );
@@ -211,17 +201,16 @@ public class IndexServiceImpl implements IndexService {
         Set<String> defaultProperties;
         ArrayList fieldsToKeep;
 
-        //TODO: extract collection name using other classes than the split.
-        String jsonSchemaMap = mm.getString( indexEdge.getEdgeName().split( "\\|" )[1] );
+        String collectionName = CpNamingUtils.getCollectionNameFromEdgeName( indexEdge.getEdgeName() );
+        String jsonSchemaMap = mm.getString( collectionName );
 
         //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
         if ( jsonSchemaMap != null ) {
 
             Map jsonMapData = ( Map ) JsonUtils.parse( jsonSchemaMap );
             Schema schema = Schema.getDefaultSchema();
-            defaultProperties = schema.getRequiredProperties( indexEdge.getEdgeName().split( "\\|" )[1] );
+            defaultProperties = schema.getRequiredProperties( collectionName );
             fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
-            //TODO: add method here to update the relevant fields in the map manager when it was accessed.
 
             defaultProperties.addAll( fieldsToKeep );
         }
@@ -231,94 +220,6 @@ public class IndexServiceImpl implements IndexService {
 
         return Optional.of(defaultProperties);
     }
-
-
-    /**
-     * This method is crucial for selective top level indexing. Here we check to see if the flatted properties
-     * are in fact a top level exclusion e.g one.two.three and one.three.two can be allowed for querying by
-     * specifying one in the schema. If they are not a top level exclusion then they are removed from the iterator and
-     * the map.
-     *
-     * @param fieldsToKeep - contains a list of fields that the user defined in their schema.
-     * @param collectionIterator - contains the iterator with the reference to the map where we want to remove the field.
-     * @param fieldName - contains the name of the field that we want to keep.
-     */
-    private void iterateThroughMapForFieldsToBeIndexed( final ArrayList fieldsToKeep, final Iterator collectionIterator,
-                                                        final String fieldName ) {
-        boolean toRemoveFlag = true;
-        String[] flattedStringArray = getStrings( fieldName );
-
-        Iterator fieldIterator = fieldsToKeep.iterator();
-
-        //goes through a loop of all the fields ( excluding default ) that we want to keep.
-        //if the toRemoveFlag is set to false then we want to keep the property, otherwise we set it to true and remove
-        //the property.
-        while ( fieldIterator.hasNext() ) {
-            String requiredInclusionString = ( String ) fieldIterator.next();
-            String[] flattedRequirementString = getStrings( requiredInclusionString );
-
-
-            //loop each split array value to see if it matches the equivalent value
-            //in the field. e.g in the example one.two.three and one.two.four we need to check that the schema
-            //matches in both one and two above. If instead it says to exclude one.twor then we would still exclude the above
-            //since it is required to be a hard match.
-
-            //The way the below works if we see that the current field isn't as fine grained as the schema rule
-            //( aka the array is shorter than the current index of the schema rule then there is no way the rule could apply
-            // to the index.
-
-            //Then if that check passes we go to check that both parts are equal. If they are ever not equal
-            // e.g one.two.three and one.three.two then it shouldn't be included
-            //TODO: regex.
-            for ( int index = 0; index < flattedRequirementString.length; index++ ) {
-                //if the array contains a string that it is equals to then set the remove flag to true
-                //otherwise remain false.
-
-                //one.three
-                //one.two
-                //one
-                if ( flattedStringArray.length <= index ) {
-                    toRemoveFlag = true;
-                    break;
-                }
-
-                if ( flattedRequirementString[index].equals( flattedStringArray[index] ) ) {
-                    toRemoveFlag = false;
-                }
-                else {
-                    toRemoveFlag = true;
-                    break;
-                }
-            }
-            if ( toRemoveFlag == false ) {
-                break;
-            }
-        }
-
-        if ( toRemoveFlag ) {
-            collectionIterator.remove();
-        }
-    }
-
-
-    /**
-     * Splits the string on the flattened period "." seperated values.
-     * @param fieldName
-     * @return
-     */
-    private String[] getStrings( final String fieldName ) {
-        final String[] flattedStringArray;
-        if ( !fieldName.contains( "." ) ) {
-            //create a single array that is made of a the single value.
-            flattedStringArray = new String[] { fieldName };
-        }
-        else {
-            flattedStringArray = fieldName.split( "\\." );
-        }
-        return flattedStringArray;
-    }
-
-
 
     //Steps to delete an IndexEdge.
     //1.Take the search edge given and search for all the edges in elasticsearch matching that search edge

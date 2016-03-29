@@ -141,7 +141,6 @@ public class EventBuilderImpl implements EventBuilder {
         return new EntityDeleteResults( deIndexObservable, ecmDeleteObservable, graphCompactObservable );
     }
 
-    //TODO: have the map manager here and filter out the entities that are going to be loaded.
     @Override
     public Observable<IndexOperationMessage> buildEntityIndex( final EntityIndexOperation entityIndexOperation ) {
 

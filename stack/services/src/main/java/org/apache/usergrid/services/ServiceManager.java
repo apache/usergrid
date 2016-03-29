@@ -290,7 +290,7 @@ public class ServiceManager {
             if ( ( cls != null ) && !Modifier.isAbstract( cls.getModifiers() ) ) {
                 return cls;
             }
-        } //TODO:Find a different way to express this exception. The real exception is returned above. This just needs to be handled some way.
+        }
         catch ( ClassNotFoundException e1 ) {
             if(logger.isTraceEnabled()){
                 logger.trace("Could not find class", e1);

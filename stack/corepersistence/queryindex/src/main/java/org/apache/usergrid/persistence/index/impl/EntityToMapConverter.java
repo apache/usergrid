@@ -108,9 +108,7 @@ public class EntityToMapConverter {
         //now visit our entity
         final FieldParser parser = new EntityMappingParser();
 
-        //TODO: to the parsing in the parse method below, that way we don't iterate twice and we filter things out as we see them.
         final Set<EntityField> fieldsToBeFiltered =   parser.parse( entityMap );
-
 
         //add our fields
         outputEntity.put( ENTITY_FIELDS, fieldsToBeFiltered );
@@ -126,14 +124,6 @@ public class EntityToMapConverter {
                 EntityField testedField = ( EntityField ) collectionIterator.next();
                 String fieldName = ( String ) ( testedField ).get( "name" );
 
-                //Checks to see if the fieldname is a default property. If it is then keep it, otherwise send it to
-                //be verified the aptly named method
-
-                //one.two.three
-                //one.two.four
-                //one.two3.five
-                //one.two
-                //fields { one.two }
                 if ( !defaultProperties.contains( fieldName ) ) {
                     iterateThroughMapForFieldsToBeIndexed( defaultProperties, collectionIterator, fieldName );
                 }

@@ -152,25 +152,9 @@ public class CollectionsResourceIT extends AbstractRestIT {
         Entity thing = this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
         refreshIndex();
 
-        //TODO: write a test to verify the data below.
-
-        //        Collection collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
-        //
-        //        LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
-        //        //TODO: the below will have to be replaced by the values that I deem correct.
-        //        assertEquals( ( thing ).get( "lastUpdated" ), testCollectionSchema.get( "lastUpdated" ));
-        //        assertEquals( ( thing ).get( "lastUpdateBy" ),testCollectionSchema.get( "lastUpdateBy" ) );
-        //        assertEquals( ( thing ).get( "lastReindexed" ),testCollectionSchema.get( "lastReindexed" ) );
-        //
-        //        //TODO: this test doesn't check to see if create checks the schema. Only that the reindex removes whats already there.
-        //        ArrayList<String> schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
-        //        assertEquals( "one",schema.get( 0 ) );
-
 
         //Reindex and verify that the entity only has field one index.
         this.app().collection( "testCollection" ).collection( "_reindex" ).post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
-       // Thread.sleep( 10000 );
-        //refreshIndex();
 
         for(int i = 0; i < 10; i++) {
             String query = "one ='value"+ i + "'";
@@ -218,17 +202,13 @@ public class CollectionsResourceIT extends AbstractRestIT {
         Entity thing = this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
         refreshIndex();
 
-        //TODO: write a test to verify the data below.
-
         Collection collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
 
         LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
-        //TODO: the below will have to be replaced by the values that I deem correct.
         assertEquals( ( thing ).get( "lastUpdated" ), testCollectionSchema.get( "lastUpdated" ));
         assertEquals( ( thing ).get( "lastUpdateBy" ),testCollectionSchema.get( "lastUpdateBy" ) );
         assertEquals( 0,testCollectionSchema.get( "lastReindexed" ) );
 
-        //TODO: this test doesn't check to see if create checks the schema. Only that the reindex removes whats already there.
         ArrayList<String> schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
         assertEquals( "one",schema.get( 0 ) );
 
