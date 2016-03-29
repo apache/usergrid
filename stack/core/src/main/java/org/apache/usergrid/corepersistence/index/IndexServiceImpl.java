@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -134,14 +135,9 @@ public class IndexServiceImpl implements IndexService {
                         logger.debug("adding edge {} to batch for entity {}", indexEdge, entity);
                     }
 
-                    final Map map = getFilteredStringObjectMap( applicationScope, entity, indexEdge );
+                    final Optional<Set<String>> fieldsToIndex = getFilteredStringObjectMap( applicationScope, entity, indexEdge );
 
-                    if(map!=null){
-                        batch.index( indexEdge, entity ,map);
-                    }
-                    else{
-                        batch.index( indexEdge,entity );
-                    }
+                    batch.index( indexEdge, entity ,fieldsToIndex);
                 } )
                     //return the future from the batch execution
                 .map( batch -> batch.build() ) );
@@ -172,14 +168,9 @@ public class IndexServiceImpl implements IndexService {
                 logger.debug("adding edge {} to batch for entity {}", indexEdge, entity);
             }
 
-            Map map = getFilteredStringObjectMap( applicationScope, entity, indexEdge );
+            Optional<Set<String>> fieldsToIndex = getFilteredStringObjectMap( applicationScope, entity, indexEdge );
 
-            if(map!=null){
-                batch.index( indexEdge, entity ,map);
-            }
-            else{
-                batch.index( indexEdge,entity );
-            }
+            batch.index( indexEdge, entity ,fieldsToIndex);
 
 
             return batch.build();
@@ -202,9 +193,11 @@ public class IndexServiceImpl implements IndexService {
      * @return This returns a filtered map that contains the flatted properties of the entity. If there isn't a schema
      * associated with the collection then return null ( and index the entity in its entirety )
      */
-    private Map getFilteredStringObjectMap( final ApplicationScope applicationScope,
+    private Optional<Set<String>> getFilteredStringObjectMap( final ApplicationScope applicationScope,
                                             final Entity entity, final IndexEdge indexEdge ) {
 
+
+        //TODO: THIS IS THE FIRST THING TO BE LOOKED AT TOMORROW.
         //look into this.
         IndexOperation indexOperation = new IndexOperation();
 
@@ -233,35 +226,10 @@ public class IndexServiceImpl implements IndexService {
             defaultProperties.addAll( fieldsToKeep );
         }
         else {
-            return null;
+            return Optional.empty();
         }
 
-        //Returns the flattened map of the entity.
-        //TODO: maybe instead pass the fields to keep to the flattening.
-        Map map = indexOperation.convertedEntityToBeIndexed( applicationScope, indexEdge, entity );
-
-        HashSet mapFields = ( HashSet ) map.get( "fields" );
-        Iterator collectionIterator = mapFields.iterator();
-
-        //Loop through all of the fields of the flatted entity and check to see if they should be filtered out.
-        while ( collectionIterator.hasNext() ) {
-            EntityField testedField = ( EntityField ) collectionIterator.next();
-            String fieldName = ( String ) ( testedField ).get( "name" );
-
-            //Checks to see if the fieldname is a default property. If it is then keep it, otherwise send it to
-            //be verified the aptly named method
-
-            //one.two.three
-            //one.two.four
-            //one.two3.five
-            //one.two
-            //fields { one.two }
-            if ( !defaultProperties.contains( fieldName ) ) {
-                iterateThroughMapForFieldsToBeIndexed( fieldsToKeep, collectionIterator, fieldName );
-            }
-        }
-
-        return map;
+        return Optional.of(defaultProperties);
     }
 
 

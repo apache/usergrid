@@ -1737,7 +1737,6 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Map createCollectionSchema( String collectionName, String owner ,Map<String, Object> properties ){
 
-
         //haven't decided which one I should base off of which, maybe from epoch to utc
 
         //TODO: change timeservice as below then use timeservice.
@@ -1753,10 +1752,23 @@ public class CpEntityManager implements EntityManager {
         //this needs the method that can extract the user from the token no matter the token.
         //Possible values are app credentials, org credentials, or the user email(Admin tokens).
         schemaMap.put("lastUpdateBy",owner);
-        schemaMap.put("lastReindexed",0);
+
+
+        //TODO: please add a check to get the previous reindex time.
+        MapManager mm = getMapManagerForTypes();
+
+        String jsonSchemaMap = mm.getString( collectionName );
+
+        //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
+        if ( jsonSchemaMap != null ) {
+            Map jsonMapData = ( Map ) JsonUtils.parse( jsonSchemaMap );
+            schemaMap.put( "lastReindexed", jsonMapData.get( "lastReindexed" ) );
+        }
+        else {
+            schemaMap.put( "lastReindexed", 0 );
+        }
         schemaMap.putAll( properties );
 
-        MapManager mm = getMapManagerForTypes();
         mm.putString( collectionName,JsonUtils.mapToJsonString( schemaMap ) );
 
         return schemaMap;
