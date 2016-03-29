@@ -520,7 +520,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     @Override
-    public void boostrap() throws Exception {
+    public void bootstrap() throws Exception {
 
         // Always make sure the database schema is initialized
         getSetup().initSchema();
