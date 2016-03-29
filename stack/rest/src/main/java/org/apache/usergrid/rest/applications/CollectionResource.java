@@ -82,12 +82,13 @@ public class CollectionResource extends ServiceResource {
      * @throws Exception
      */
     @POST
-    @Path("_indexes")
+    @Path( "{itemName}/_indexes" )
     @Produces({ MediaType.APPLICATION_JSON,"application/javascript"})
     @RequireApplicationAccess
     @JSONP
-    public ApiResponse executePostOnIndexes( @Context UriInfo ui, String body,
-                                             @QueryParam("callback") @DefaultValue("callback") String callback )
+    public ApiResponse executePostOnIndexesWithCollectionName( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName,
+                                                               String body,
+                                                               @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
         if(logger.isTraceEnabled()){
@@ -96,6 +97,7 @@ public class CollectionResource extends ServiceResource {
         /**
 
          */
+        addItemToServiceContext( ui, itemName );
 
         Object json;
         if ( StringUtils.isEmpty( body ) ) {
@@ -117,77 +119,9 @@ public class CollectionResource extends ServiceResource {
         return response;
     }
 
-    @GET
-    @Path("_index")
-    @Produces({MediaType.APPLICATION_JSON,"application/javascript"})
-    @RequireApplicationAccess
-    @JSONP
-    public ApiResponse executeGetOnIndex( @Context UriInfo ui,
-                                          @QueryParam("callback") @DefaultValue("callback") String callback )
-        throws Exception {
 
-        if(logger.isTraceEnabled()){
-            logger.trace( "CollectionResource.executeGetOnIndex" );
-        }
-
-        ApiResponse response = createApiResponse();
-        response.setAction( "get" );
-        response.setApplication( services.getApplication() );
-        response.setParams( ui.getQueryParameters() );
-
-        executeServiceGetRequestForSchema( ui,response,ServiceAction.GET,null );
-
-        return response;
-    }
-
-    //TODO: this can't be controlled and until it can be controlled we should allow muggles to do this. So system access only.
-    //TODO: use scheduler here to get around people sending a reindex call 30 times.
-    @POST
-    @Path("_reindex")
-    @Produces({ MediaType.APPLICATION_JSON,"application/javascript"})
-    @RequireSystemAccess
-    @JSONP
-    public ApiResponse executePostForReindexing( @Context UriInfo ui, String body,
-                                             @QueryParam("callback") @DefaultValue("callback") String callback )
-        throws Exception {
-
-        final ReIndexRequestBuilder request =
-            createRequest().withApplicationId( services.getApplicationId() ).withCollection(
-                String.valueOf( getServiceParameters().get( 0 ) ) ).withDelay( 1, TimeUnit.SECONDS );
-
-        return executeAndCreateResponse( request, callback );
-    }
-
-    @Override
-    @Path( RootResource.ENTITY_ID_PATH)
-    public AbstractContextResource addIdParameter( @Context UriInfo ui, @PathParam("entityId") PathSegment entityId )
-        throws Exception {
-
-        if(logger.isTraceEnabled()){
-            logger.trace( "ServiceResource.addIdParameter" );
-        }
-
-        UUID itemId = UUID.fromString( entityId.getPath() );
-
-        ServiceParameter.addParameter( getServiceParameters(), itemId );
-
-        addMatrixParams( getServiceParameters(), ui, entityId );
-
-        return getSubResource( CollectionResource.class );
-    }
-
-
-    //TODO: change this to {itemName}/_indexes and that should do what we already have. Then we don't have this overriden method.
-    @Override
-    @Path("{itemName}")
-    public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )
-        throws Exception {
-        if(logger.isTraceEnabled()){
-            logger.trace( "ServiceResource.addNameParameter" );
-            logger.trace( "Current segment is {}", itemName.getPath() );
-        }
-
-
+    private void addItemToServiceContext( final @Context UriInfo ui,
+                                          final @PathParam( "itemName" ) PathSegment itemName ) throws Exception {
         if ( itemName.getPath().startsWith( "{" ) ) {
             Query query = Query.fromJsonString( itemName.getPath() );
             if ( query != null ) {
@@ -199,8 +133,54 @@ public class CollectionResource extends ServiceResource {
         }
 
         addMatrixParams( getServiceParameters(), ui, itemName );
+    }
 
-        return getSubResource( CollectionResource.class );
+
+    @GET
+    @Path( "{itemName}/_index")
+    @Produces({MediaType.APPLICATION_JSON,"application/javascript"})
+    @RequireApplicationAccess
+    @JSONP
+    public ApiResponse executeGetOnIndex( @Context UriInfo ui,@PathParam("itemName") PathSegment itemName,
+                                          @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
+
+        if(logger.isTraceEnabled()){
+            logger.trace( "CollectionResource.executeGetOnIndex" );
+        }
+
+        addItemToServiceContext( ui, itemName );
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "get" );
+        response.setApplication( services.getApplication() );
+        response.setParams( ui.getQueryParameters() );
+
+        executeServiceGetRequestForSchema( ui,response,ServiceAction.GET,null );
+
+        return response;
+    }
+
+
+    //TODO: this can't be controlled and until it can be controlled we should allow muggles to do this. So system access only.
+    //TODO: use scheduler here to get around people sending a reindex call 30 times.
+    @POST
+    @Path("{itemName}/_reindex")
+    @Produces({ MediaType.APPLICATION_JSON,"application/javascript"})
+    @RequireSystemAccess
+    @JSONP
+    public ApiResponse executePostForReindexing( @Context UriInfo ui, String body,
+                                                 @PathParam("itemName") PathSegment itemName,
+                                             @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
+
+        addItemToServiceContext( ui, itemName );
+
+        final ReIndexRequestBuilder request =
+            createRequest().withApplicationId( services.getApplicationId() ).withCollection(
+                String.valueOf( getServiceParameters().get( 0 ) ) ).withDelay( 1, TimeUnit.SECONDS );
+
+        return executeAndCreateResponse( request, callback );
     }
 
     private ReIndexService getReIndexService() {
