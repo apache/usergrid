@@ -144,7 +144,7 @@ public interface EntityManagerFactory {
      * Boostraps system data so that we can operate usergrid
      * @throws Exception
      */
-    void boostrap() throws Exception;
+    void bootstrap() throws Exception;
 
     Map<String, String> getServiceProperties();
 

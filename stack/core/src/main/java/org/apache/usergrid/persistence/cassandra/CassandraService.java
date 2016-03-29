@@ -65,8 +65,6 @@ public class CassandraService {
 
     public static final boolean USE_VIRTUAL_KEYSPACES = true;
 
-    public static final String APPLICATIONS_CF = "Applications";
-    public static final String PROPERTIES_CF = "Properties";
     public static final String TOKENS_CF = "Tokens";
     public static final String PRINCIPAL_TOKEN_CF = "PrincipalTokens";
 
