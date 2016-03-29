@@ -54,9 +54,7 @@ import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
-import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequestBuilder;
+import org.elasticsearch.action.search.*;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
@@ -390,6 +388,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
 
         SearchResponse searchResponse;
+        String esScrollCursor = null;
 
         if ( query.getCursor() == null ) {
             SearchRequestBuilder srb = esProvider.getClient().prepareSearch( alias.getReadAlias() )
@@ -474,7 +473,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             }
 
             //now get the cursor from the map  and validate
-            final String esScrollCursor  = mapManager.getString( userCursorString );
+            esScrollCursor  = mapManager.getString( userCursorString );
 
             Preconditions.checkArgument(esScrollCursor != null, "Could not find a cursor for the value '{}' ",  esScrollCursor);
 
@@ -502,11 +501,11 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
             failureMonitor.success();
         }
 
-        return parseResults(searchResponse, query);
+        return parseResults(searchResponse, query, esScrollCursor );
     }
 
 
-    private CandidateResults parseResults( final SearchResponse searchResponse, final Query query ) {
+    private CandidateResults parseResults(final SearchResponse searchResponse, final Query query, String previousCursor) {
 
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
@@ -546,6 +545,25 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
             candidateResults.setCursor( userCursorString );
             logger.debug(" User cursor = {},  Cursor = {} ", userCursorString, esScrollCursor);
+        }else{
+
+            // just execute this and not care about the response
+            logger.info("Candidate results size {} is less than limit {}, clearing next scroll ID {}",
+                candidateResults.size(), query.getLimit(), searchResponse.getScrollId());
+
+            ClearScrollRequestBuilder builder = esProvider.getClient().prepareClearScroll()
+                .addScrollId(searchResponse.getScrollId());
+
+            if( previousCursor != null){
+
+                logger.info("Candidate results size {} is less than limit {}, clearing previous scroll ID {}",
+                    candidateResults.size(), query.getLimit(), previousCursor);
+
+                builder.addScrollId(previousCursor);
+            }
+            
+            builder.execute().actionGet();
+
         }
 
         return candidateResults;
@@ -632,7 +650,7 @@ public class EsEntityIndexImpl implements AliasedEntityIndex {
 
         failureMonitor.success();
 
-        return parseResults(searchResponse, new Query());
+        return parseResults(searchResponse, new Query(), null);
     }
 
 
