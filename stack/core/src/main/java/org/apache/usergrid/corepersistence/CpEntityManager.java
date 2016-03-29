@@ -2737,8 +2737,6 @@ public class CpEntityManager implements EntityManager {
         // add to and index in collection of the application
         if ( !is_application ) {
 
-            //maybe a check here to see if it exists in the column family and if it doesn't then SEND IT ON THROUGHH
-
             String collectionName = Schema.defaultCollectionName( eType );
             CpRelationManager cpr = ( CpRelationManager ) getRelationManager( getApplication() );
             cpr.addToCollection( collectionName, entity );

@@ -178,7 +178,7 @@ public class CollectionResource extends ServiceResource {
 
         final ReIndexRequestBuilder request =
             createRequest().withApplicationId( services.getApplicationId() ).withCollection(
-                String.valueOf( getServiceParameters().get( 0 ) ) ).withDelay( 1, TimeUnit.SECONDS );
+                String.valueOf( getServiceParameters().get( 0 ) ) ).withDelay( 50, TimeUnit.MILLISECONDS );
 
         return executeAndCreateResponse( request, callback );
     }

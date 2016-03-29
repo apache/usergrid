@@ -138,24 +138,27 @@ public class ReIndexServiceImpl implements ReIndexService {
             reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
             .buffer( indexProcessorFig.getReindexBufferSize());
 
+        //Check to see if we have a selective indexing schema, if we do then update its reindexing time, otherwise
+        //don't update or create anything.
+        if(reIndexRequestBuilder.getCollectionName().isPresent()) {
+            String collectionName =  InflectionUtils.pluralize( CpNamingUtils.getNameFromEdgeType(reIndexRequestBuilder.getCollectionName().get() ));
+            MapManager collectionMapStorage = mapManagerFactory.createMapManager( CpNamingUtils.getEntityTypeMapScope( appId.get().getApplication()  ) );
+            String jsonSchemaMap = collectionMapStorage.getString( collectionName );
+
+
+            //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
+            if ( jsonSchemaMap != null ) {
+
+                Map jsonMapData = ( Map ) JsonUtils.parse( jsonSchemaMap );
+
+                jsonMapData.put( "lastReindexed", Instant.now().toEpochMilli() );
+                collectionMapStorage.putString( collectionName,JsonUtils.mapToJsonString(jsonMapData )  );
+            }
+
+        }
+
         if(delayTimer.isPresent()){
 
-            if(reIndexRequestBuilder.getCollectionName().isPresent()) {
-                String collectionName =  InflectionUtils.pluralize( CpNamingUtils.getNameFromEdgeType(reIndexRequestBuilder.getCollectionName().get() ));
-                MapManager collectionMapStorage = mapManagerFactory.createMapManager( CpNamingUtils.getEntityTypeMapScope( appId.get().getApplication()  ) );
-                String jsonSchemaMap = collectionMapStorage.getString( collectionName );
-
-
-                //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
-                if ( jsonSchemaMap != null ) {
-
-                    Map jsonMapData = ( Map ) JsonUtils.parse( jsonSchemaMap );
-
-                    jsonMapData.put( "lastReindexed", Instant.now().toEpochMilli() );
-                    collectionMapStorage.putString( collectionName,JsonUtils.mapToJsonString(jsonMapData )  );
-                }
-
-            }
             if(timeUnitOptional.isPresent()){
                 runningReIndex = runningReIndex.delay( delayTimer.get(),timeUnitOptional.get() );
             }
