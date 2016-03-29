@@ -462,9 +462,6 @@ public class ServiceResource extends AbstractContextResource {
         return response;
     }
 
-
-
-
     @SuppressWarnings({ "unchecked" })
     public ServicePayload getPayload( Object json ) {
         ServicePayload payload = null;

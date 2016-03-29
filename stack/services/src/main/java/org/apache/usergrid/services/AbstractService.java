@@ -1366,7 +1366,7 @@ public abstract class AbstractService implements Service {
         if ( currentUser == null ) {
             return;
         }
-        //this is breaking because there is no entity manager there.
+
         String perm = getPermissionFromPath( em.getApplicationRef().getUuid(), context.getAction().toString().toLowerCase(),
                         path );
         boolean permitted = currentUser.isPermitted( perm );

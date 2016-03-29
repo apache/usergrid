@@ -356,15 +356,6 @@ public class CpRelationManager implements RelationManager {
     @Override
     public Entity addToCollection( String collectionName, EntityRef itemRef ) throws Exception {
 
-        /**
-         * Get the map manager for uuid mapping
-         */
-        Id mapOwner = new SimpleId( applicationId, TYPE_APPLICATION );
-
-        final MapScope ms = CpNamingUtils.getEntityTypeMapScope(mapOwner );
-
-        MapManager mm = managerCache.getMapManager( ms );
-
         Preconditions.checkNotNull( itemRef, "itemref is null" );
         CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collectionName );
         if ( ( collection != null && collection.getType() != null ) && !collection.getType()
