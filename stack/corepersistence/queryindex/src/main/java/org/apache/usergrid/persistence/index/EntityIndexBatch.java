@@ -32,7 +32,13 @@ import rx.Observable;
 
 public interface EntityIndexBatch {
 
-    EntityIndexBatch index( IndexEdge indexEdge, Entity entity );
+    /**
+     * Create index for Entity
+     *
+     * @param indexEdge  The edge to index the document into
+     * @param entity     Entity to be indexed.
+     * */
+    EntityIndexBatch index(final IndexEdge indexEdge, final Entity entity );
 
     /**
      * Remove index of entity
@@ -51,7 +57,7 @@ public interface EntityIndexBatch {
     EntityIndexBatch deindex( final SearchEdge searchEdge, final CandidateResult result );
 
 
-    EntityIndexBatch index( IndexEdge indexEdge, Entity entity, Optional<Set<String>> fieldsToIndex );
+    EntityIndexBatch index(final IndexEdge indexEdge, final Entity entity, final Optional<Set<String>> fieldsToIndex );
 
     /**
      * Remove index of entity.
