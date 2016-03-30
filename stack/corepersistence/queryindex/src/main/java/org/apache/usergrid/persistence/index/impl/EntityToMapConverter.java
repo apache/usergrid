@@ -17,7 +17,6 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -199,6 +198,7 @@ public class EntityToMapConverter {
         }
 
         if ( toRemoveFlag ) {
+            //Removes the value if it doesn't match anything
             collectionIterator.remove();
         }
     }
