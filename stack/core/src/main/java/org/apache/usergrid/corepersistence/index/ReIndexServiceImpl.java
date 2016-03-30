@@ -125,12 +125,14 @@ public class ReIndexServiceImpl implements ReIndexService {
         final Observable<List<EdgeScope>> runningReIndex = allEntityIdsObservable.getEdgesToEntities( applicationScopes,
             reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
             .buffer( indexProcessorFig.getReindexBufferSize())
-            .doOnNext(edges -> {
+            .flatMap( edgeScopes -> Observable.just(edgeScopes)
+                .doOnNext(edges -> {
 
-                logger.info("Sending batch of {} to be indexed.", edges.size());
-                indexService.indexBatch(edges, modifiedSince);
+                    logger.info("Sending batch of {} to be indexed.", edges.size());
+                    indexService.indexBatch(edges, modifiedSince);
+                })
+                .subscribeOn( Schedulers.io() ), indexProcessorFig.getReindexConcurrencyFactor());
 
-            });
 
 
         //start our sampler and state persistence

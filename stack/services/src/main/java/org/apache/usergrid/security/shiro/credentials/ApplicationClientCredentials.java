@@ -19,6 +19,11 @@ package org.apache.usergrid.security.shiro.credentials;
 
 public class ApplicationClientCredentials extends AbstractClientCredentials implements ApplicationCredentials {
 
+    /**
+     * Needed for Jackson, do not remove
+     */
+    public ApplicationClientCredentials(){}
+
     public ApplicationClientCredentials( String key, String secret ) {
         super( key, secret );
     }
