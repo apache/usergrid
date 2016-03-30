@@ -144,7 +144,9 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
                 return value;
 
             } catch (NotFoundException nfe) {
-                logger.info("Value not found");
+                if(logger.isDebugEnabled()) {
+                    logger.debug("Value not found");
+                }
 
             } catch (IOException ioe) {
                 logger.error("Unable to read cached value", ioe);
@@ -155,7 +157,10 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
             throw new RuntimeException("Unable to connect to cassandra", e);
         }
 
-        logger.info("Cache value not found for key {}", key );
+        if(logger.isDebugEnabled()){
+            logger.debug("Cache value not found for key {}", key );
+
+        }
 
         return null;
     }
