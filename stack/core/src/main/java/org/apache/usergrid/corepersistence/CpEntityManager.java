@@ -38,8 +38,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.google.common.base.Optional;
 
+import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -106,6 +106,7 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import me.prettyprint.hector.api.Keyspace;
@@ -236,7 +237,10 @@ public class CpEntityManager implements EntityManager {
      * @param metricsFactory
      * @param applicationId
      */
-    public CpEntityManager( final CassandraService cass, final CounterUtils counterUtils, final AsyncEventService indexService, final ManagerCache managerCache,
+    public CpEntityManager( final CassandraService cass,
+                            final CounterUtils counterUtils,
+                            final AsyncEventService indexService,
+                            final ManagerCache managerCache,
                             final MetricsFactory metricsFactory,
                             final EntityManagerFig entityManagerFig,
                             final GraphManagerFactory graphManagerFactory,
@@ -1754,9 +1758,9 @@ public class CpEntityManager implements EntityManager {
         schemaMap.put("lastUpdateBy",owner);
 
 
-        //TODO: please add a check to get the previous reindex time.
         MapManager mm = getMapManagerForTypes();
 
+        //TODO: add a cache around
         String jsonSchemaMap = mm.getString( collectionName );
 
         //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
@@ -1778,10 +1782,16 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Object getCollectionSchema( String collectionName ){
         MapManager mm = getMapManagerForTypes();
-        String jsonMap = mm.getString( collectionName );
 
-        Object obj = JsonUtils.parse( jsonMap );
-        return obj;
+
+        java.util.Optional<String> collectionIndexingSchema =  managerCache.getIndexSchema( mm,collectionName );
+
+        if(collectionIndexingSchema.isPresent()){
+            return JsonUtils.parse( collectionIndexingSchema.get() );
+        }
+        else{
+            return null;
+        }
     }
 
         @Override

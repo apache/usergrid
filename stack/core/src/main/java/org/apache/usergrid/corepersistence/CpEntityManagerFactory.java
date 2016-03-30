@@ -31,6 +31,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.apache.commons.lang.StringUtils;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.corepersistence.service.CollectionService;
@@ -110,6 +112,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         });
 
     private final ApplicationIdCache applicationIdCache;
+    //private final IndexSchemaCache indexSchemaCache;
 
     private ManagerCache managerCache;
 
@@ -139,6 +142,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.connectionService = injector.getInstance( ConnectionService.class );
 
         //this line always needs to be last due to the temporary cicular dependency until spring is removed
+
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
 
