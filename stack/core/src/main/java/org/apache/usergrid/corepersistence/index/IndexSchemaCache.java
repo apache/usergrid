@@ -17,6 +17,7 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -27,7 +28,7 @@ public interface IndexSchemaCache {
      * @param collectionName
      * @return
      */
-    public Optional<String> getCollectionSchema(String collectionName);
+    public Optional<Map> getCollectionSchema( String collectionName );
 
     void putCollectionSchema( String collectionName, String collectionSchema );
 

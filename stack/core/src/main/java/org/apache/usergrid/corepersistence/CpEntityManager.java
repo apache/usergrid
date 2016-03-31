@@ -1772,27 +1772,20 @@ public class CpEntityManager implements EntityManager {
 
         IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
 
-        java.util.Optional<String> collectionIndexingSchema = indexSchemaCache.getCollectionSchema( collectionName );
+        java.util.Optional<Map> collectionIndexingSchema = indexSchemaCache.getCollectionSchema( collectionName );
 
-        String jsonSchemaMap = null;
-
-        if(collectionIndexingSchema.isPresent()){
-            jsonSchemaMap = collectionIndexingSchema.get();
-        }
 
         //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
-        if ( jsonSchemaMap != null ) {
-            Map jsonMapData = ( Map ) JsonUtils.parse( jsonSchemaMap );
+        if ( collectionIndexingSchema.isPresent() ) {
+            Map jsonMapData = collectionIndexingSchema.get();
             schemaMap.put( "lastReindexed", jsonMapData.get( "lastReindexed" ) );
         }
         else {
             schemaMap.put( "lastReindexed", 0 );
         }
 
-
         ArrayList<String> fieldProperties = ( ArrayList<String> ) properties.get( "fields" );
 
-        //TODO: do tests for * , and now add put and delete.
         if(fieldProperties.contains( "*" )){
             ArrayList<String> wildCardArrayList = new ArrayList<>(  );
             wildCardArrayList.add( "*" );
@@ -1828,10 +1821,10 @@ public class CpEntityManager implements EntityManager {
 
         IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm ); //managerCache.getIndexSchema( mm );
 
-        java.util.Optional<String> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+        java.util.Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
 
         if(collectionIndexingSchema.isPresent()){
-            return JsonUtils.parse( collectionIndexingSchema.get() );
+            return collectionIndexingSchema.get();
         }
         else{
             return null;
