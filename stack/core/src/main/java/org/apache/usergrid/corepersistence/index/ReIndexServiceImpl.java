@@ -142,19 +142,12 @@ public class ReIndexServiceImpl implements ReIndexService {
             MapManager collectionMapStorage = mapManagerFactory.createMapManager( CpNamingUtils.getEntityTypeMapScope( appId.get().getApplication()  ) );
             IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( collectionMapStorage );
 
-            java.util.Optional<String> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
-
-
-            String jsonSchemaMap =  null;
-
-            if(collectionIndexingSchema.isPresent()){
-                jsonSchemaMap = collectionIndexingSchema.get();
-            }
+            java.util.Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
 
             //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
-            if ( jsonSchemaMap != null ) {
+            if ( collectionIndexingSchema.isPresent() ) {
 
-                Map jsonMapData = ( Map ) JsonUtils.parse( jsonSchemaMap );
+                Map jsonMapData = collectionIndexingSchema.get();
 
                 jsonMapData.put( "lastReindexed", Instant.now().toEpochMilli() );
                 //should probably roll this into the cache.

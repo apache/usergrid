@@ -212,19 +212,12 @@ public class IndexServiceImpl implements IndexService {
 
         IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
 
-        Optional<String> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
-
-
-        String jsonSchemaMap =  null;
-
-        if(collectionIndexingSchema.isPresent()){
-            jsonSchemaMap = collectionIndexingSchema.get();
-        }
+        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
 
         //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
-        if ( jsonSchemaMap != null ) {
+        if ( collectionIndexingSchema.isPresent()) {
 
-            Map jsonMapData = ( Map ) JsonUtils.parse( jsonSchemaMap );
+            Map jsonMapData = collectionIndexingSchema.get();
             Schema schema = Schema.getDefaultSchema();
             defaultProperties = schema.getRequiredProperties( collectionName );
             fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
