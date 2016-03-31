@@ -118,7 +118,12 @@ public class ApiResponse {
     public ApiResponse( ServerEnvironmentProperties serverProperties, ManagementService management ) {
         this.serverEnvironmentProperties = serverProperties;
         this.management = management;
-        this.config = management.getOrganizationConfigDefaultsOnly();
+        if(management!=null) {
+            this.config = management.getOrganizationConfigDefaultsOnly();
+        }
+        else {
+            this.config = null;
+        }
         timestamp = System.currentTimeMillis();
     }
 

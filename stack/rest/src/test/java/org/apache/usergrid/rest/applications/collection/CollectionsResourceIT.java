@@ -279,7 +279,6 @@ public class CollectionsResourceIT extends AbstractRestIT {
             this.app().collection( "testCollection" ).post( testEntity );
         }
 
-
         //Creating schema.
         //this could be changed to a hashmap.
         ArrayList<String> indexingArray = new ArrayList<>(  );

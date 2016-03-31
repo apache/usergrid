@@ -50,6 +50,7 @@ import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
+import org.apache.usergrid.rest.system.IndexResource;
 import org.apache.usergrid.services.AbstractCollectionService;
 import org.apache.usergrid.services.ServiceAction;
 import org.apache.usergrid.services.ServiceParameter;
@@ -120,6 +121,8 @@ public class CollectionResource extends ServiceResource {
 
     private void addItemToServiceContext( final @Context UriInfo ui,
                                           final @PathParam( "itemName" ) PathSegment itemName ) throws Exception {
+        //The below is duplicated because it could change in the future and is probably not all needed but
+        //not determined yet.
         if ( itemName.getPath().startsWith( "{" ) ) {
             Query query = Query.fromJsonString( itemName.getPath() );
             if ( query != null ) {
@@ -203,40 +206,12 @@ public class CollectionResource extends ServiceResource {
 
         addItemToServiceContext( ui, itemName );
 
-        final ReIndexRequestBuilder request =
-            createRequest().withApplicationId( services.getApplicationId() ).withCollection(
-                String.valueOf( getServiceParameters().get( 0 ) ) ).withDelay( 50, TimeUnit.MILLISECONDS );
-
-        return executeAndCreateResponse( request, callback );
-    }
-
-    private ReIndexService getReIndexService() {
-        return injector.getInstance( ReIndexService.class );
-    }
-
-    private ReIndexRequestBuilder createRequest() {
-        //TODO: wire this up through spring, and in the future guice.
-        return new ReIndexRequestBuilderImpl();
-    }
-
-    /**
-     * Execute the request and return the response.
-     */
-    private ApiResponse executeAndCreateResponse( final ReIndexRequestBuilder request, final String callback ) {
-
-
-        final ReIndexService.ReIndexStatus status = getReIndexService().rebuildIndex( request );
-
-        final ApiResponse response = createApiResponse();
-
-        response.setAction( "rebuild indexes" );
-        response.setProperty( "jobId", status.getJobId() );
-        response.setProperty( "status", status.getStatus() );
-        response.setProperty( "lastUpdatedEpoch", status.getLastUpdated() );
-        response.setProperty( "numberQueued", status.getNumberProcessed() );
-        response.setSuccess();
-
-        return response;
+//        final ReIndexRequestBuilder request =
+//            createRequest().withApplicationId( services.getApplicationId() ).withCollection(
+//                String.valueOf( getServiceParameters().get( 0 ) ) ).withDelay( 50, TimeUnit.MILLISECONDS );
+//
+        IndexResource indexResource = new IndexResource(injector);
+        return indexResource.rebuildIndexesPost( services.getApplicationId().toString(),itemName.getPath(),false,callback );
     }
 
 }
