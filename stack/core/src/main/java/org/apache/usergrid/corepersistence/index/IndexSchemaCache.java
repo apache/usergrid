@@ -31,6 +31,8 @@ public interface IndexSchemaCache {
 
     void putCollectionSchema( String collectionName, String collectionSchema );
 
+    void deleteCollectionSchema( String collectionName );
+
     /**
      * Evict the collection schema from the cache.
      * @param collectionName

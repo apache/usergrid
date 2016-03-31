@@ -51,6 +51,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
+import org.apache.avro.generic.GenericData;
+
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -1786,14 +1788,39 @@ public class CpEntityManager implements EntityManager {
         else {
             schemaMap.put( "lastReindexed", 0 );
         }
-        schemaMap.putAll( properties );
 
-        //TODO: we have to update then invalidate previous entry.
+
+        ArrayList<String> fieldProperties = ( ArrayList<String> ) properties.get( "fields" );
+
+        //TODO: do tests for * , and now add put and delete.
+        if(fieldProperties.contains( "*" )){
+            ArrayList<String> wildCardArrayList = new ArrayList<>(  );
+            wildCardArrayList.add( "*" );
+            schemaMap.put( "fields",wildCardArrayList );
+        }
+        else {
+            schemaMap.putAll( properties );
+        }
+
+        //do a check to see if you have a * field. If you do have a * field then ignore all other fields
+        //and only accept the * field. That logic goes below and in the put.
+
         indexSchemaCache.putCollectionSchema( collectionName, JsonUtils.mapToJsonString( schemaMap ) );
-        
+
         return schemaMap;
 
     }
+
+    @Override
+    public void deleteCollectionSchema( String collectionName ){
+        MapManager mm = getMapManagerForTypes();
+
+        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+
+        indexSchemaCache.deleteCollectionSchema( collectionName );
+
+    }
+
 
     @Override
     public Object getCollectionSchema( String collectionName ){
