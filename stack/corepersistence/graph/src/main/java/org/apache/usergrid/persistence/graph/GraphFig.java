@@ -96,6 +96,8 @@ public interface GraphFig extends GuicyFig {
 
     String COUNTER_WRITE_FLUSH_QUEUE_SIZE = "usergrid.graph.shard.counter.queue.size";
 
+    String SMART_SHARD_SEEK_ENABLED = "usergrid.graph.smartshard.seek.enabled";
+
 
 
 
@@ -163,5 +165,11 @@ public interface GraphFig extends GuicyFig {
     @Default("1000")
     @Key(COUNTER_WRITE_FLUSH_QUEUE_SIZE)
     int getCounterFlushQueueSize();
+
+    @Default("true")
+    @Key(SMART_SHARD_SEEK_ENABLED)
+    boolean getSmartShardSeekEnabled();
+
+
 }
 

@@ -14,17 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.security.shiro.credentials;
+
+package org.apache.usergrid.corepersistence.asyncevents.model;
 
 
-public class ApplicationClientCredentials extends AbstractClientCredentials implements ApplicationCredentials {
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
+
+
+/**
+ * An index event de-indexing documents for Entity versions older than the provided Entity
+ */
+public final class DeIndexOldVersionsEvent extends AsyncEvent {
+
+
+    @JsonProperty
+    protected EntityIdScope entityIdScope;
+
+    public DeIndexOldVersionsEvent() {
+    }
+
+    public DeIndexOldVersionsEvent(String sourceRegion, EntityIdScope entityIdScope) {
+        super(sourceRegion);
+        this.entityIdScope = entityIdScope;
+    }
+
 
     /**
-     * Needed for Jackson, do not remove
+     * Get the unique message id of the
+     * @return
      */
-    public ApplicationClientCredentials(){}
-
-    public ApplicationClientCredentials( String key, String secret ) {
-        super( key, secret );
+    public EntityIdScope getEntityIdScope() {
+        return entityIdScope;
     }
 }

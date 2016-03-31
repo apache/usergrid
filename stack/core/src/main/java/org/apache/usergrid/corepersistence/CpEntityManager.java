@@ -596,9 +596,12 @@ public class CpEntityManager implements EntityManager {
             handleWriteUniqueVerifyException( entity, wuve );
         }
 
-        // update in all containing collections and connection indexes
+        // queue an event to update the new entity
+        indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0 );
 
-        indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0);
+
+        // queue up an event to clean-up older versions than this one from the index
+        indexService.queueDeIndexOldVersion( applicationScope, entityId );
     }
 
 

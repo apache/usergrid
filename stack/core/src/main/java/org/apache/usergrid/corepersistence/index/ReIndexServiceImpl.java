@@ -84,6 +84,7 @@ public class ReIndexServiceImpl implements ReIndexService {
     private final MapManagerFactory mapManagerFactory;
     private final AsyncEventService indexService;
     private final EntityIndexFactory entityIndexFactory;
+    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
 
 
     @Inject
@@ -93,6 +94,7 @@ public class ReIndexServiceImpl implements ReIndexService {
                                final MapManagerFactory mapManagerFactory,
                                final AllApplicationsObservable allApplicationsObservable,
                                final IndexProcessorFig indexProcessorFig,
+                               final IndexSchemaCacheFactory indexSchemaCacheFactory,
                                final AsyncEventService indexService ) {
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
@@ -100,6 +102,7 @@ public class ReIndexServiceImpl implements ReIndexService {
         this.allApplicationsObservable = allApplicationsObservable;
         this.indexProcessorFig = indexProcessorFig;
         this.indexService = indexService;
+        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
         this.mapManagerFactory = mapManagerFactory;
         this.mapManager = mapManagerFactory.createMapManager( RESUME_MAP_SCOPE );
     }
@@ -134,17 +137,19 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         // create an observable that loads a batch to be indexed
 
-        Observable<List<EdgeScope>> runningReIndex = allEntityIdsObservable.getEdgesToEntities( applicationScopes,
-            reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
-            .buffer( indexProcessorFig.getReindexBufferSize());
-
-        //Check to see if we have a selective indexing schema, if we do then update its reindexing time, otherwise
-        //don't update or create anything.
         if(reIndexRequestBuilder.getCollectionName().isPresent()) {
             String collectionName =  InflectionUtils.pluralize( CpNamingUtils.getNameFromEdgeType(reIndexRequestBuilder.getCollectionName().get() ));
             MapManager collectionMapStorage = mapManagerFactory.createMapManager( CpNamingUtils.getEntityTypeMapScope( appId.get().getApplication()  ) );
-            String jsonSchemaMap = collectionMapStorage.getString( collectionName );
+            IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( collectionMapStorage );
 
+            java.util.Optional<String> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+
+
+            String jsonSchemaMap =  null;
+
+            if(collectionIndexingSchema.isPresent()){
+                jsonSchemaMap = collectionIndexingSchema.get();
+            }
 
             //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
             if ( jsonSchemaMap != null ) {
@@ -157,22 +162,17 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         }
 
-        if(delayTimer.isPresent()){
+        Observable<List<EdgeScope>> runningReIndex = allEntityIdsObservable.getEdgesToEntities( applicationScopes,
+            reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
 
-            if(timeUnitOptional.isPresent()){
-                runningReIndex = runningReIndex.delay( delayTimer.get(),timeUnitOptional.get() );
-            }
-            else{
-                runningReIndex = runningReIndex.delay( delayTimer.get(), TimeUnit.MILLISECONDS );
-            }
+            .buffer( indexProcessorFig.getReindexBufferSize())
+            .flatMap( edgeScopes -> Observable.just(edgeScopes)
+                .doOnNext(edges -> {
 
-        }
-
-        runningReIndex = runningReIndex.doOnNext(edges -> {
-                logger.info("Sending batch of {} to be indexed.", edges.size());
-                indexService.indexBatch(edges, modifiedSince);
-
-        });
+                    logger.info("Sending batch of {} to be indexed.", edges.size());
+                    indexService.indexBatch(edges, modifiedSince);
+                })
+                .subscribeOn( Schedulers.io() ), indexProcessorFig.getReindexConcurrencyFactor());
 
 
         //start our sampler and state persistence

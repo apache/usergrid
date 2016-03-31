@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.core.astyanax;
 
 import java.util.*;
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.core.shard.SmartShard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,12 +80,14 @@ public class MultiRowShardColumnIterator<R, C, T> implements Iterator<T> {
 
     private boolean ascending = false;
 
+    private Optional<Long> lastTimestamp;
+
 
     public MultiRowShardColumnIterator( final Keyspace keyspace, final ColumnFamily<R, C> cf,
                                         final ConsistencyLevel consistencyLevel, final ColumnParser<C, T> columnParser,
                                         final ColumnSearch<T> columnSearch, final Comparator<T> comparator,
                                         final int pageSize, final List<SmartShard> rowKeysWithShardEnd,
-                                        final boolean ascending) {
+                                        final boolean ascending, final Optional<Long> lastTimestamp) {
         this.cf = cf;
         this.pageSize = pageSize;
         this.columnParser = columnParser;
@@ -96,6 +99,8 @@ public class MultiRowShardColumnIterator<R, C, T> implements Iterator<T> {
         this.rowKeysWithShardEnd = rowKeysWithShardEnd;
         this.resultsTracking = new ArrayList<>();
         this.ascending = ascending;
+        this.lastTimestamp = lastTimestamp;
+
 
     }
 
@@ -130,7 +135,6 @@ public class MultiRowShardColumnIterator<R, C, T> implements Iterator<T> {
             advance();
 
         }
-
         return currentColumnIterator.hasNext();
     }
 
@@ -168,14 +172,35 @@ public class MultiRowShardColumnIterator<R, C, T> implements Iterator<T> {
 
         final RangeBuilder rangeBuilder = new RangeBuilder();
 
+        SmartShard startShard = null;
 
 
 
         if(currentShardIterator == null){
 
+            // create a copy that we use to search for our 'starting shard'
+            final List<SmartShard> shards = new ArrayList<>(rowKeysWithShardEnd);
+
+
             // flip the order of our shards if ascending
             if(ascending){
                 Collections.reverse(rowKeysWithShardEnd);
+            }
+
+
+            if(lastTimestamp.isPresent()) {
+
+                //always seek from 0 to find out where our cursor last should fall
+                Collections.reverse(shards);
+
+                for ( SmartShard shard : shards){
+
+                    if ( lastTimestamp.get().compareTo(shard.getShardIndex()) > 0) {
+                        startShard = shard;
+                    }
+
+                }
+
             }
 
             currentShardIterator = rowKeysWithShardEnd.iterator();
@@ -189,6 +214,13 @@ public class MultiRowShardColumnIterator<R, C, T> implements Iterator<T> {
             }
 
             currentShard = currentShardIterator.next();
+
+            if (startShard != null){
+                while(!currentShard.equals(startShard)){
+                    currentShard = currentShardIterator.next();
+                }
+            }
+
 
             if(logger.isTraceEnabled()){
                 logger.trace("all shards when starting: {}", rowKeysWithShardEnd);
