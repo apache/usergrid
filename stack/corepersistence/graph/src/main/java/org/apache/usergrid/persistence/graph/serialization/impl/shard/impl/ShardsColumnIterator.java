@@ -21,13 +21,13 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 import java.util.*;
 
+import org.apache.usergrid.persistence.core.astyanax.MultiRowColumnIterator;
 import org.apache.usergrid.persistence.core.astyanax.MultiRowShardColumnIterator;
 import org.apache.usergrid.persistence.core.shard.SmartShard;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.astyanax.MultiRowColumnIterator;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 
@@ -60,15 +60,19 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
 
     private final ConsistencyLevel consistencyLevel;
 
+    private final boolean smartShardSeekEnabled;
+
 
     public ShardsColumnIterator(final EdgeSearcher<R, C, T> searcher,
                                 final MultiTenantColumnFamily<ScopedRowKey<R>, C> cf, final Keyspace keyspace,
-                                final ConsistencyLevel consistencyLevel, final int pageSize ) {
+                                final ConsistencyLevel consistencyLevel, final int pageSize,
+                                final boolean smartShardSeekEnabled) {
         this.searcher = searcher;
         this.cf = cf;
         this.keyspace = keyspace;
         this.pageSize = pageSize;
         this.consistencyLevel = consistencyLevel;
+        this.smartShardSeekEnabled = smartShardSeekEnabled;
     }
 
 
@@ -118,13 +122,26 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
         searcher.buildRange( rangeBuilder );
 
 
-        // get the rows keys and their corresponding 'shardEnd' that we will seek from
-        final List<SmartShard> rowKeysWithShardEnd = searcher.getRowKeysWithShardEnd();
+        if(smartShardSeekEnabled){
 
-        final boolean ascending = searcher.getOrder() == SearchByEdgeType.Order.ASCENDING;
+            // get the rows keys and their corresponding 'shardEnd' that we will seek from
+            final List<SmartShard> rowKeysWithShardEnd = searcher.getRowKeysWithShardEnd();
 
-        currentColumnIterator = new MultiRowShardColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher,
-            searcher.getComparator(), pageSize, rowKeysWithShardEnd, ascending);
+            final boolean ascending = searcher.getOrder() == SearchByEdgeType.Order.ASCENDING;
+
+            currentColumnIterator = new MultiRowShardColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher,
+                searcher.getComparator(), pageSize, rowKeysWithShardEnd, ascending, searcher.getLastTimestamp() );
+
+        }else{
+
+
+            final List<ScopedRowKey<R>> rowKeys = searcher.getRowKeys();
+
+            currentColumnIterator = new MultiRowColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher,
+                searcher.getComparator(), rowKeys, pageSize );
+
+
+        }
 
 
     }

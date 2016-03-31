@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
+import com.google.common.util.concurrent.ExecutionError;
 import org.apache.cassandra.db.marshal.BytesType;
 
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
@@ -217,17 +218,15 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
             // every item in the shard. If the legacy value is seen, we return a shard with Long.MIN for index and
             // createdTime so it can be identified later and handled.
 
+            try {
 
-            Shard shard =  column.getValue(SHARD_SERIALIZER);
+                return column.getValue(SHARD_SERIALIZER);
 
-            if (shard.getShardIndex() == Long.MIN_VALUE && shard.getCreatedTime() == Long.MIN_VALUE){
+            } catch ( Exception e) {
 
-                // this was deserialized as a legacy column format, use the column name and timestamp for the shard
-                return new Shard(column.getName(), column.getTimestamp(), shard.isCompacted());
+                // unable to parse the new format so return the old format
+                return new Shard(column.getName(), column.getTimestamp(), column.getBooleanValue());
 
-            } else {
-
-                return shard;
             }
 
         }

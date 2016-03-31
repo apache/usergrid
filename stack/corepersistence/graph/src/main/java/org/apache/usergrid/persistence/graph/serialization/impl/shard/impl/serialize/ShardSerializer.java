@@ -65,34 +65,21 @@ public class ShardSerializer extends AbstractSerializer<Shard> {
 
     @Override
     public Shard fromByteBuffer( final ByteBuffer byteBuffer ) {
+
         DynamicComposite composite = DynamicComposite.fromByteBuffer( byteBuffer );
-
-        Preconditions.checkArgument( composite.size() == 1 || composite.size() == 5,
-            "Composite should have 1 or 5 elements" );
-
-        // this is the legacy column format, return a shard with identifiable values so the column name and timestamp
-        // can be used
-        if( composite.size() == 1){
-
-            final boolean isCompacted = composite.get( 0, BOOLEAN_SERIALIZER);
-            return new Shard(Long.MIN_VALUE, Long.MIN_VALUE, isCompacted);
-
-        }
-        // This is the new format which contains all the information about a Shard.  Include a byte version of 2 if it's
-        // needed later for any reason.
-        else{
-
-            final byte version = composite.get(0, BYTE_SERIALIZER);
-            final long shardIndex = composite.get( 1, LONG_SERIALIZER );
-            final long shardCreated = composite.get( 2, LONG_SERIALIZER );
-            final DirectedEdge shardEnd = composite.get( 3, EDGE_SERIALIZER);
-            final boolean isCompacted = composite.get( 4, BOOLEAN_SERIALIZER);
+        Preconditions.checkArgument( composite.size() == 5, "Composite should 5 elements" );
 
 
-            final Shard shard = new Shard(shardIndex, shardCreated, isCompacted);
-            shard.setShardEnd(Optional.fromNullable(shardEnd));
-            return shard;
-        }
+        final byte version = composite.get(0, BYTE_SERIALIZER);
+        final long shardIndex = composite.get( 1, LONG_SERIALIZER );
+        final long shardCreated = composite.get( 2, LONG_SERIALIZER );
+        final DirectedEdge shardEnd = composite.get( 3, EDGE_SERIALIZER);
+        final boolean isCompacted = composite.get( 4, BOOLEAN_SERIALIZER);
+
+
+        final Shard shard = new Shard(shardIndex, shardCreated, isCompacted);
+        shard.setShardEnd(Optional.fromNullable(shardEnd));
+        return shard;
 
     }
 

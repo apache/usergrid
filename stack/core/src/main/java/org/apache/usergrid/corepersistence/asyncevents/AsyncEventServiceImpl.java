@@ -28,15 +28,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.usergrid.corepersistence.asyncevents.model.*;
 import org.apache.usergrid.persistence.index.impl.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.asyncevents.model.AsyncEvent;
-import org.apache.usergrid.corepersistence.asyncevents.model.EdgeDeleteEvent;
-import org.apache.usergrid.corepersistence.asyncevents.model.ElasticsearchIndexEvent;
-import org.apache.usergrid.corepersistence.asyncevents.model.EntityDeleteEvent;
-import org.apache.usergrid.corepersistence.asyncevents.model.InitializeApplicationIndexEvent;
 import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
@@ -337,6 +333,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
                     indexOperationMessage = handleIndexOperation((ElasticsearchIndexEvent) event);
 
+                } else if (event instanceof DeIndexOldVersionsEvent) {
+
+                    indexOperationMessage = handleDeIndexOldVersionEvent((DeIndexOldVersionsEvent) event);
+
                 } else {
 
                     throw new Exception("Unknown EventType for message: "+ message.getStringBody().trim());
@@ -530,6 +530,29 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         initializeEntityIndexes(indexOperationMessage);
 
         return indexOperationMessage;
+
+    }
+
+
+    @Override
+    public void queueDeIndexOldVersion(final ApplicationScope applicationScope, final Id entityId) {
+
+        // queue the de-index of old versions to the topic so cleanup happens in all regions
+        offerTopic( new DeIndexOldVersionsEvent( queueFig.getPrimaryRegion(),
+            new EntityIdScope( applicationScope, entityId)) );
+
+    }
+
+
+    public IndexOperationMessage handleDeIndexOldVersionEvent ( final DeIndexOldVersionsEvent deIndexOldVersionsEvent){
+
+
+        ApplicationScope applicationScope = deIndexOldVersionsEvent.getEntityIdScope().getApplicationScope();
+        Id entityId = deIndexOldVersionsEvent.getEntityIdScope().getId();
+
+        return eventBuilder.deIndexOlderVersions( applicationScope, entityId )
+            .toBlocking().lastOrDefault(null);
+
 
     }
 
