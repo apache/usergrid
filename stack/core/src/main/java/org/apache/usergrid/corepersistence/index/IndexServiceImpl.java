@@ -229,6 +229,10 @@ public class IndexServiceImpl implements IndexService {
             defaultProperties = schema.getRequiredProperties( collectionName );
             fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
 
+            if(fieldsToKeep.contains( "*" )){
+                return Optional.empty();
+            }
+
             defaultProperties.addAll( fieldsToKeep );
         }
         else {

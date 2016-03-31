@@ -115,6 +115,148 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
     }
 
+    @Test
+    public void deleteCollectionSchema() throws Exception {
+        //Creating schema.
+        //this could be changed to a hashmap.
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+
+
+        //field "fields" is required.
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+
+        //Post index to the collection metadata
+        Entity thing = this.app().collection( "testCollections" ).collection( "_indexes" ).post( payload );
+        refreshIndex();
+
+
+        //The above verifies the test case.
+
+
+        //Create test collection with a test entity that is partially indexed.
+        Entity testEntity = new Entity();
+        testEntity.put( "one", "helper" );
+        testEntity.put( "two","query" );
+
+        //Post entity.
+        Entity postedEntity = this.app().collection( "testCollections" ).post( testEntity );
+        refreshIndex();
+
+        //Do a query to see if you can find the indexed query.
+        String query = "two ='query'";
+        QueryParameters queryParameters = new QueryParameters().setQuery(query);
+
+        //having a name breaks it. Need to get rid of the stack trace and also
+        Collection tempEntity = this.app().collection( "testCollections" ).get(queryParameters,true);
+        assertEquals( 0,tempEntity.getResponse().getEntities().size() );
+
+        //Verify if you can query on an entity that was not indexed and that no entities are returned.
+        query = "one = 'helper'";
+        queryParameters = new QueryParameters().setQuery(query);
+        tempEntity = this.app().collection( "testCollections" ).get(queryParameters,true);
+        assertEquals(0,tempEntity.getResponse().getEntities().size());
+
+        query = "uuid = "+postedEntity.getUuid().toString();
+        queryParameters = new QueryParameters().setQuery(query);
+        tempEntity = this.app().collection( "testCollections" ).get(queryParameters,true);
+        assertEquals(1,tempEntity.getResponse().getEntities().size());
+
+        //since the collection schema doesn't index anything it shouldn't show up except for the default properties
+        //to prove that the entity exists
+
+        //next part is to delete the schema then reindex it and it should work.
+        this.app().collection( "testCollections" ).collection( "_indexes" ).delete();
+        refreshIndex();
+
+        this.app().collection( "testCollections" ).collection( "_reindex" ).post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
+        refreshIndex();
+
+
+        //Do a query to see if you can find the indexed query.
+        query = "two ='query'";
+        queryParameters = new QueryParameters().setQuery(query);
+
+        //having a name breaks it. Need to get rid of the stack trace and also
+        tempEntity = this.app().collection( "testCollections" ).get(queryParameters,true);
+        assertEquals( 1,tempEntity.getResponse().getEntities().size() );
+
+        //Verify if you can query on an entity that was not indexed and that no entities are returned.
+        query = "one = 'helper'";
+        queryParameters = new QueryParameters().setQuery(query);
+        tempEntity = this.app().collection( "testCollections" ).get(queryParameters,true);
+        assertEquals(1,tempEntity.getResponse().getEntities().size());
+
+        query = "uuid = "+postedEntity.getUuid().toString();
+        queryParameters = new QueryParameters().setQuery(query);
+        tempEntity = this.app().collection( "testCollections" ).get(queryParameters,true);
+        assertEquals(1,tempEntity.getResponse().getEntities().size());
+
+    }
+
+    @Test
+    public void putCollectionSchema() throws Exception {
+
+
+    }
+
+
+    @Test
+    public void postCollectionSchemaWithWildcardIndexAll() throws Exception {
+        //Creating schema.
+        //this could be changed to a hashmap.
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "*" );
+        indexingArray.add( "one" );
+        indexingArray.add( "two" );
+
+
+        //field "fields" is required.
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+
+        //Post index to the collection metadata
+        Entity thing = this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        refreshIndex();
+
+
+        Collection collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
+
+        LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
+        ArrayList<String> schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
+        assertTrue( schema.contains( "*" ) );
+        assertFalse( schema.contains( "one" ) );
+        assertFalse( schema.contains( "two" ) );
+
+
+//The above verifies the test case.
+
+
+        //Create test collection with a test entity that is partially indexed.
+        Entity testEntity = new Entity();
+        testEntity.put( "one", "helper" );
+        testEntity.put( "two","query" );
+
+        //Post entity.
+        this.app().collection( "testCollection" ).post( testEntity );
+        refreshIndex();
+
+        //Do a query to see if you can find the indexed query.
+        String query = "two ='query'";
+        QueryParameters queryParameters = new QueryParameters().setQuery(query);
+
+        //having a name breaks it. Need to get rid of the stack trace and also
+        Collection tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
+        Entity reindexedEntity = tempEntity.getResponse().getEntity();
+        assertEquals( "helper",reindexedEntity.get( "one" ) );
+
+        //Verify if you can query on an entity that was not indexed and that no entities are returned.
+        query = "one = 'helper'";
+        queryParameters = new QueryParameters().setQuery(query);
+        tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
+        assertEquals(1,tempEntity.getResponse().getEntities().size());
+    }
+
 
     /**
      * Create test collection

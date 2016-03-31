@@ -514,6 +514,8 @@ public interface EntityManager {
 
     public Map createCollectionSchema( String collectionName, String owner ,Map<String, Object> properties );
 
+    void deleteCollectionSchema( String collectionName );
+
     Object getCollectionSchema( String collectionName );
 
     public void grantRolePermission( String roleName, String permission ) throws Exception;

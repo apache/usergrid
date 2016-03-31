@@ -21,6 +21,7 @@ package org.apache.usergrid.rest.applications;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -94,9 +95,7 @@ public class CollectionResource extends ServiceResource {
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.executePostOnIndexes" );
         }
-        /**
 
-         */
         addItemToServiceContext( ui, itemName );
 
         Object json;
@@ -119,7 +118,6 @@ public class CollectionResource extends ServiceResource {
         return response;
     }
 
-
     private void addItemToServiceContext( final @Context UriInfo ui,
                                           final @PathParam( "itemName" ) PathSegment itemName ) throws Exception {
         if ( itemName.getPath().startsWith( "{" ) ) {
@@ -134,6 +132,35 @@ public class CollectionResource extends ServiceResource {
 
         addMatrixParams( getServiceParameters(), ui, itemName );
     }
+
+    @DELETE
+    @Path( "{itemName}/_indexes" )
+    @Produces({ MediaType.APPLICATION_JSON,"application/javascript"})
+    @RequireApplicationAccess
+    @JSONP
+    public ApiResponse executeDeleteOnIndexesWithCollectionName( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName,
+                                                               String body,
+                                                               @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
+
+        if(logger.isTraceEnabled()){
+            logger.trace( "CollectionResource.executeDeleteOnIndexesWithCollectionName" );
+        }
+
+        addItemToServiceContext( ui, itemName );
+
+        ApiResponse response = createApiResponse();
+
+        response.setAction( "delete" );
+        response.setApplication( services.getApplication() );
+        response.setParams( ui.getQueryParameters() );
+
+
+        emf.getEntityManager( services.getApplicationId() ).deleteCollectionSchema( itemName.getPath().toLowerCase() );
+
+        return response;
+    }
+
 
 
     @GET
@@ -162,7 +189,7 @@ public class CollectionResource extends ServiceResource {
     }
 
 
-    //TODO: this can't be controlled and until it can be controlled we should allow muggles to do this. So system access only.
+    //TODO: this can't be controlled and until it can be controlled we shouldn' allow muggles to do this. So system access only.
     //TODO: use scheduler here to get around people sending a reindex call 30 times.
     @POST
     @Path("{itemName}/_reindex")
