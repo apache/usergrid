@@ -69,8 +69,6 @@ public interface ManagerCache {
      */
     MapManager getMapManager(MapScope mapScope);
 
-    IndexSchemaCache getIndexSchema( MapManager mapManager );
-
     /**
      * gets index producer
      * @return

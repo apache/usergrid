@@ -16,19 +16,12 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.Optional;
-
-import org.safehaus.guicyfig.Overrides;
-
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
-import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
-import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
@@ -50,7 +43,6 @@ public class CpManagerCache implements ManagerCache {
     private final EntityIndexFactory eif;
     private final GraphManagerFactory gmf;
     private final MapManagerFactory mmf;
-    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final IndexProducer indexProducer;
 
@@ -62,7 +54,6 @@ public class CpManagerCache implements ManagerCache {
                            final EntityIndexFactory eif,
                            final GraphManagerFactory gmf,
                            final MapManagerFactory mmf,
-                           final IndexSchemaCacheFactory indexSchemaCacheFactory,
                            final IndexLocationStrategyFactory indexLocationStrategyFactory,
                            final IndexProducer indexProducer
     ) {
@@ -71,7 +62,6 @@ public class CpManagerCache implements ManagerCache {
         this.eif = eif;
         this.gmf = gmf;
         this.mmf = mmf;
-        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.indexProducer = indexProducer;
     }
@@ -102,14 +92,6 @@ public class CpManagerCache implements ManagerCache {
     public MapManager getMapManager( MapScope mapScope ) {
         return mmf.createMapManager( mapScope );
     }
-
-    //could be called an index schema manager.
-
-    @Override
-    public IndexSchemaCache getIndexSchema( MapManager mapManager ) {
-        return indexSchemaCacheFactory.getInstance( mapManager );
-    }
-
 
     @Override
     public IndexProducer getIndexProducer() {

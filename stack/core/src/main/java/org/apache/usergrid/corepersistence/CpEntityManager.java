@@ -40,6 +40,7 @@ import java.util.UUID;
 
 
 import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.persistence.index.EntityIndex;
@@ -185,6 +186,8 @@ public class CpEntityManager implements EntityManager {
 
     private final ManagerCache managerCache;
 
+    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+
     private final ApplicationScope applicationScope;
 
     private final CassandraService cass;
@@ -246,6 +249,7 @@ public class CpEntityManager implements EntityManager {
                             final GraphManagerFactory graphManagerFactory,
                             final CollectionService collectionService,
                             final ConnectionService connectionService,
+                            final IndexSchemaCacheFactory indexSchemaCacheFactory,
                             final UUID applicationId ) {
 
         this.entityManagerFig = entityManagerFig;
@@ -269,6 +273,7 @@ public class CpEntityManager implements EntityManager {
         this.managerCache = managerCache;
         this.applicationId = applicationId;
         this.indexService = indexService;
+        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
 
         applicationScope = CpNamingUtils.getApplicationScope( applicationId );
 
@@ -1763,7 +1768,7 @@ public class CpEntityManager implements EntityManager {
 
         MapManager mm = getMapManagerForTypes();
 
-        IndexSchemaCache indexSchemaCache = managerCache.getIndexSchema( mm );
+        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
 
         java.util.Optional<String> collectionIndexingSchema = indexSchemaCache.getCollectionSchema( collectionName );
 
@@ -1795,7 +1800,7 @@ public class CpEntityManager implements EntityManager {
     public Object getCollectionSchema( String collectionName ){
         MapManager mm = getMapManagerForTypes();
 
-        IndexSchemaCache indexSchemaCache = managerCache.getIndexSchema( mm );
+        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm ); //managerCache.getIndexSchema( mm );
 
         java.util.Optional<String> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
 
