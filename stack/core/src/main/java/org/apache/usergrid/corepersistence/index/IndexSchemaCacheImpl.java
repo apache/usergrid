@@ -18,26 +18,24 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.ManagerCache;
 import org.apache.usergrid.persistence.map.MapManager;
-import org.apache.usergrid.utils.JsonUtils;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.inject.Singleton;
 
 
 /**
  * Cache the calls to update and get the map manager so we don't overload cassandra when we update
  * after each call?
  */
+@Singleton
 public class IndexSchemaCacheImpl implements IndexSchemaCache {
     private static final Logger logger = LoggerFactory.getLogger(IndexSchemaCacheImpl.class );
 
