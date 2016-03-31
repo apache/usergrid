@@ -84,6 +84,7 @@ public class IndexServiceImpl implements IndexService {
     private final GraphManagerFactory graphManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
     private final MapManagerFactory mapManagerFactory;
+    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
     private final EdgesObservable edgesObservable;
     private final IndexFig indexFig;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
@@ -94,6 +95,7 @@ public class IndexServiceImpl implements IndexService {
     @Inject
     public IndexServiceImpl( final GraphManagerFactory graphManagerFactory, final EntityIndexFactory entityIndexFactory,
                              final MapManagerFactory mapManagerFactory,
+                             final IndexSchemaCacheFactory indexSchemaCacheFactory,
                              final EdgesObservable edgesObservable, final IndexFig indexFig,
                              final IndexLocationStrategyFactory indexLocationStrategyFactory,
                              final MetricsFactory metricsFactory ) {
@@ -103,6 +105,7 @@ public class IndexServiceImpl implements IndexService {
         this.edgesObservable = edgesObservable;
         this.indexFig = indexFig;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
+        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
         this.indexTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.update_all");
         this.addTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.add" );
     }
@@ -206,7 +209,17 @@ public class IndexServiceImpl implements IndexService {
         ArrayList fieldsToKeep;
 
         String collectionName = CpNamingUtils.getCollectionNameFromEdgeName( indexEdge.getEdgeName() );
-        String jsonSchemaMap = mm.getString( collectionName );
+
+        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+
+        Optional<String> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+
+
+        String jsonSchemaMap =  null;
+
+        if(collectionIndexingSchema.isPresent()){
+            jsonSchemaMap = collectionIndexingSchema.get();
+        }
 
         //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
         if ( jsonSchemaMap != null ) {

@@ -106,8 +106,8 @@ public class CpManagerCache implements ManagerCache {
     //could be called an index schema manager.
 
     @Override
-    public Optional<String> getIndexSchema( MapManager mapManager, String collectionName ) {
-        return indexSchemaCacheFactory.getInstance( mapManager ).getCollectionSchema( collectionName );
+    public IndexSchemaCache getIndexSchema( MapManager mapManager ) {
+        return indexSchemaCacheFactory.getInstance( mapManager );
     }
 
 

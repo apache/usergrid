@@ -1760,8 +1760,15 @@ public class CpEntityManager implements EntityManager {
 
         MapManager mm = getMapManagerForTypes();
 
-        //TODO: add a cache around
-        String jsonSchemaMap = mm.getString( collectionName );
+        IndexSchemaCache indexSchemaCache = managerCache.getIndexSchema( mm );
+
+        java.util.Optional<String> collectionIndexingSchema = indexSchemaCache.getCollectionSchema( collectionName );
+
+        String jsonSchemaMap = null;
+
+        if(collectionIndexingSchema.isPresent()){
+            jsonSchemaMap = collectionIndexingSchema.get();
+        }
 
         //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
         if ( jsonSchemaMap != null ) {
@@ -1773,7 +1780,9 @@ public class CpEntityManager implements EntityManager {
         }
         schemaMap.putAll( properties );
 
+        //TODO: we have to update then invalidate previous entry.
         mm.putString( collectionName,JsonUtils.mapToJsonString( schemaMap ) );
+        indexSchemaCache.evictCollectionSchema( collectionName );
 
         return schemaMap;
 
@@ -1783,8 +1792,9 @@ public class CpEntityManager implements EntityManager {
     public Object getCollectionSchema( String collectionName ){
         MapManager mm = getMapManagerForTypes();
 
+        IndexSchemaCache indexSchemaCache = managerCache.getIndexSchema( mm );
 
-        java.util.Optional<String> collectionIndexingSchema =  managerCache.getIndexSchema( mm,collectionName );
+        java.util.Optional<String> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
 
         if(collectionIndexingSchema.isPresent()){
             return JsonUtils.parse( collectionIndexingSchema.get() );
