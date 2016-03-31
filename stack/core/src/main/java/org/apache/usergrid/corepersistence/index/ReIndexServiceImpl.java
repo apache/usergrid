@@ -158,8 +158,7 @@ public class ReIndexServiceImpl implements ReIndexService {
 
                 jsonMapData.put( "lastReindexed", Instant.now().toEpochMilli() );
                 //should probably roll this into the cache.
-                collectionMapStorage.putString( collectionName,JsonUtils.mapToJsonString(jsonMapData )  );
-                indexSchemaCache.evictCollectionSchema( collectionName );
+                indexSchemaCache.putCollectionSchema( collectionName, JsonUtils.mapToJsonString(jsonMapData ) );
             }
 
         }

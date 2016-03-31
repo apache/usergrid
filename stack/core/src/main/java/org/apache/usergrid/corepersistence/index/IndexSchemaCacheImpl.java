@@ -79,6 +79,12 @@ public class IndexSchemaCacheImpl implements IndexSchemaCache {
         return null;
     }
 
+    @Override
+    public void putCollectionSchema(final String collectionName ,final String collectionSchema){
+        mapManager.putString( collectionName, collectionSchema );
+        evictCollectionSchema( collectionName );
+    }
+
 
     @Override
     public void evictCollectionSchema( final String collectionName ) {

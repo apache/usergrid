@@ -1789,9 +1789,8 @@ public class CpEntityManager implements EntityManager {
         schemaMap.putAll( properties );
 
         //TODO: we have to update then invalidate previous entry.
-        mm.putString( collectionName,JsonUtils.mapToJsonString( schemaMap ) );
-        indexSchemaCache.evictCollectionSchema( collectionName );
-
+        indexSchemaCache.putCollectionSchema( collectionName, JsonUtils.mapToJsonString( schemaMap ) );
+        
         return schemaMap;
 
     }
