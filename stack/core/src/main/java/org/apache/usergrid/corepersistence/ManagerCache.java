@@ -22,6 +22,7 @@ package org.apache.usergrid.corepersistence;
 
 import java.util.Optional;
 
+import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
@@ -68,7 +69,7 @@ public interface ManagerCache {
      */
     MapManager getMapManager(MapScope mapScope);
 
-    Optional<String> getIndexSchema( MapManager mapManager, String collectionName );
+    IndexSchemaCache getIndexSchema( MapManager mapManager );
 
     /**
      * gets index producer
