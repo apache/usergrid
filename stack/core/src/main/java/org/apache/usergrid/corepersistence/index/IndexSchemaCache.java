@@ -17,7 +17,6 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.Map;
 import java.util.Optional;
 
 
@@ -29,6 +28,8 @@ public interface IndexSchemaCache {
      * @return
      */
     public Optional<String> getCollectionSchema(String collectionName);
+
+    void putCollectionSchema( String collectionName, String collectionSchema );
 
     /**
      * Evict the collection schema from the cache.
