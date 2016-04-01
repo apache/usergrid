@@ -123,8 +123,9 @@ public class EntityToMapConverter {
                 EntityField testedField = ( EntityField ) outputEntityField;
                 String fieldName = ( String ) ( testedField ).get( "name" );
 
+                //could move this down into the method below
                 if ( !defaultProperties.contains( fieldName ) ) {
-                iterateThroughMapForFieldsToBeIndexed( defaultProperties, collectionIterator, fieldName );
+                    iterateThroughMapForFieldsToBeIndexed( defaultProperties, collectionIterator, fieldName );
                 }
             });
 
@@ -142,7 +143,7 @@ public class EntityToMapConverter {
      * the map.
      *
      * @param fieldsToKeep - contains a list of fields that the user defined in their schema.
-     * @param collectionIterator - contains the iterator with the reference to the map where we want to remove the field.
+     * @param collectionIterator - contains the iterator with the reference to the map where we want to remove the field. Once removed here it is removed from the entity so it won't be indexed.
      * @param fieldName - contains the name of the field that we want to keep.
      */
     private static void iterateThroughMapForFieldsToBeIndexed( final Set<String> fieldsToKeep,
