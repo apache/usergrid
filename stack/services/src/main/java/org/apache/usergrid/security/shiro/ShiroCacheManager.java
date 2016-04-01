@@ -24,6 +24,7 @@ import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.usergrid.persistence.cache.CacheFactory;
+import org.apache.usergrid.security.shiro.utils.LocalShiroCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,14 +46,21 @@ public class ShiroCacheManager implements CacheManager {
 
     private Map<String, ShiroCache> caches = new HashMap<>();
 
+    @Autowired
     private Properties properties;
 
     private Integer cacheTtl = null; // specified in seconds
 
     private static final String CACHE_TTL_PROPERTY_NAME = "usergrid.auth.cache.time-to-live";
 
+    private LocalShiroCache localShiroCache;
 
-    public ShiroCacheManager() {}
+    public ShiroCacheManager(Injector injector, Properties properties) {
+
+        this.injector = injector;
+        this.properties = properties;
+        this.localShiroCache = injector.getInstance(LocalShiroCache.class);
+    }
 
 
     @Override
@@ -68,7 +76,7 @@ public class ShiroCacheManager implements CacheManager {
                 shiroCache = new ShiroCache(
                     new TypeReference<UsergridAuthorizationInfo>() {},
                     (CacheFactory)injector.getInstance( Key.get(typeLit) ),
-                    getCacheTtl());
+                    getCacheTtl(), localShiroCache);
 
             } else if ("realm.authenticationCache".equals(name)) {
 
@@ -77,7 +85,7 @@ public class ShiroCacheManager implements CacheManager {
                 shiroCache = new ShiroCache(
                     new TypeReference<UsergridAuthenticationInfo>() {},
                     (CacheFactory)injector.getInstance( Key.get(typeLit) ),
-                    getCacheTtl());
+                    getCacheTtl(), localShiroCache);
 
             } else {
                 logger.error("Unknown Shiro Cache name: {}", name);
@@ -106,7 +114,6 @@ public class ShiroCacheManager implements CacheManager {
         return properties;
     }
 
-    @Autowired
     public void setProperties(Properties properties) {
         this.properties = properties;
     }
