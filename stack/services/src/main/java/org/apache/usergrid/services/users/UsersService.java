@@ -218,6 +218,7 @@ public class UsersService extends AbstractCollectionService {
             em.grantUserPermission( entityRef.getUuid(), permission );
             ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
             scopedCache.invalidate();
+            localShiroCache.invalidateAll();
 
             return genericServiceResults().withData( em.getUserPermissions( entityRef.getUuid() ) );
         }
@@ -288,6 +289,7 @@ public class UsersService extends AbstractCollectionService {
 
             ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
             scopedCache.invalidate();
+            localShiroCache.invalidateAll();
 
             return genericServiceResults().withData( em.getUserPermissions( entityRef.getUuid() ) );
         }

@@ -99,6 +99,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
         em.addGroupToRole( groupId, roleName );
         ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
         scopedCache.invalidate();
+        localShiroCache.invalidateAll();
         return getGroupRoles( groupId );
     }
 
@@ -107,6 +108,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
         em.removeGroupFromRole( groupId, roleName );
         ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
         scopedCache.invalidate();
+        localShiroCache.invalidateAll();
         return getGroupRoles( groupId );
     }
 
@@ -161,6 +163,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
             em.grantGroupPermission( entityRef.getUuid(), permission );
             ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
             scopedCache.invalidate();
+            localShiroCache.invalidateAll();
 
             return genericServiceResults().withData( em.getGroupPermissions( entityRef.getUuid() ) );
         }
@@ -230,6 +233,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
             }
             ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
             scopedCache.invalidate();
+            localShiroCache.invalidateAll();
 
             return genericServiceResults().withData( em.getGroupPermissions( entityRef.getUuid() ) );
         }

@@ -64,6 +64,7 @@ import org.apache.usergrid.security.shiro.credentials.ApplicationClientCredentia
 import org.apache.usergrid.security.shiro.credentials.OrganizationClientCredentials;
 import org.apache.usergrid.security.shiro.principals.ApplicationPrincipal;
 import org.apache.usergrid.security.shiro.principals.OrganizationPrincipal;
+import org.apache.usergrid.security.shiro.utils.LocalShiroCache;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.security.tokens.TokenCategory;
 import org.apache.usergrid.security.tokens.TokenInfo;
@@ -169,6 +170,8 @@ public class ManagementServiceImpl implements ManagementService {
 
     protected ApplicationService service;
 
+    protected LocalShiroCache localShiroCache;
+
 
 
     /** Must be constructed with a CassandraClientPool. */
@@ -179,6 +182,7 @@ public class ManagementServiceImpl implements ManagementService {
         this.cacheFactory = injector.getInstance( CacheFactory.class );
         this.aggregationServiceFactory = injector.getInstance(AggregationServiceFactory.class);
         this.service = injector.getInstance(ApplicationService.class);
+        this.localShiroCache = injector.getInstance(LocalShiroCache.class);
 
     }
 
@@ -1764,6 +1768,7 @@ public class ManagementServiceImpl implements ManagementService {
         ScopedCache scopedCache = cacheFactory.getScopedCache(
             new CacheScope( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" )));
         scopedCache.invalidate();
+        localShiroCache.invalidateAll();
 
         return new ApplicationInfo( applicationId, appInfo.getName() );
     }
@@ -1825,6 +1830,7 @@ public class ManagementServiceImpl implements ManagementService {
         ScopedCache scopedCache = cacheFactory.getScopedCache(
             new CacheScope( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" )));
         scopedCache.invalidate();
+        localShiroCache.invalidateAll();
 
         return new ApplicationInfo( applicationId, appInfo.getName() );
     }

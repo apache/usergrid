@@ -61,9 +61,6 @@ public class AbstractRestIT extends JerseyTest {
     public static TomcatRuntime tomcatRuntime = TomcatRuntime.getInstance();
 
     @Rule
-    public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
-
-    @Rule
     public ClientSetup clientSetup = new ClientSetup( this.getBaseURI().toString() );
 
     protected static final Application descriptor = new Application();
