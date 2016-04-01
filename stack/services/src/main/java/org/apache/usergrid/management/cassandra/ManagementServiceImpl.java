@@ -1437,10 +1437,18 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
+
     public TokenInfo getTokenInfoFromAccessToken(String token, String expected_token_type,
                                                  AuthPrincipalType expected_principal_type) throws Exception {
 
-        TokenInfo tokenInfo = tokens.getTokenInfo( token );
+        return getTokenInfoFromAccessToken(token, expected_token_type, expected_principal_type, true);
+    }
+
+    public TokenInfo getTokenInfoFromAccessToken(String token, String expected_token_type,
+                                                 AuthPrincipalType expected_principal_type,
+                                                 boolean updateAccessTime) throws Exception {
+
+        TokenInfo tokenInfo = tokens.getTokenInfo( token, updateAccessTime );
 
         return validateTokenAndPrincipalTypes(tokenInfo, expected_token_type, expected_principal_type) ?
                 tokenInfo : null;
