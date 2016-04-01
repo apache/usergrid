@@ -33,6 +33,7 @@ import org.apache.usergrid.corepersistence.rx.impl.ResponseImportTasks;
 import org.apache.usergrid.corepersistence.service.ServiceSchedulerFig;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
+import org.apache.usergrid.security.shiro.utils.LocalShiroCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -113,6 +114,7 @@ public abstract class AbstractService implements Service {
     private Timer invokeTimer;
 
     protected CacheFactory cacheFactory;
+    protected LocalShiroCache localShiroCache;
 
     public AbstractService() {
 
@@ -132,6 +134,7 @@ public abstract class AbstractService implements Service {
         this.invokeTimer = metricsFactory.getTimer( this.getClass(),"service.invoke" );
 
         this.cacheFactory = injector.getInstance( CacheFactory.class );
+        this.localShiroCache = injector.getInstance( LocalShiroCache.class );
     }
 
 
