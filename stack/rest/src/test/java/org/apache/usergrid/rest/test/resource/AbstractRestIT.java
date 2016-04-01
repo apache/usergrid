@@ -19,6 +19,7 @@ package org.apache.usergrid.rest.test.resource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.rest.TomcatRuntime;
 import org.apache.usergrid.rest.test.resource.endpoints.ApplicationsResource;
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
@@ -58,6 +59,9 @@ public class AbstractRestIT extends JerseyTest {
     private static ClientConfig clientConfig = new ClientConfig();
 
     public static TomcatRuntime tomcatRuntime = TomcatRuntime.getInstance();
+
+    @Rule
+    public ClearShiroSubject clearShiroSubject = new ClearShiroSubject();
 
     @Rule
     public ClientSetup clientSetup = new ClientSetup( this.getBaseURI().toString() );

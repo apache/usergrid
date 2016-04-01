@@ -20,6 +20,7 @@ package org.apache.usergrid.rest.applications.collection.users;
 import java.util.List;
 import java.util.UUID;
 
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
@@ -38,6 +39,7 @@ import static org.junit.Assert.*;
 /**
  * Tests permissions of adding and removing users from roles as well as groups.
  */
+@NotThreadSafe
 public class PermissionsResourceIT extends AbstractRestIT {
 
     private static final String ROLE = "permtestrole";
