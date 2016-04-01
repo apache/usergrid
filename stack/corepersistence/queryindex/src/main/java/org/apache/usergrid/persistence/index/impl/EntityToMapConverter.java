@@ -149,8 +149,6 @@ public class EntityToMapConverter {
                                                                final Iterator collectionIterator,
                                                                final String fieldName ) {
         boolean toRemoveFlag = true;
-        String[] flattedStringArray = getStrings( fieldName );
-
         Iterator fieldIterator = fieldsToKeep.iterator();
 
 
@@ -161,102 +159,31 @@ public class EntityToMapConverter {
         while ( fieldIterator.hasNext() ) {
             //this is the field that we're
             String requiredInclusionString = ( String ) fieldIterator.next();
-            String[] flattedRequirementString = getStrings( requiredInclusionString );
 
 
-            //loop each split array value to see if it matches the equivalent value
-            //in the field. e.g in the example one.two.three and one.two.four we need to check that the schema
-            //matches in both one and two above. If instead it says to exclude one.twor then we would still exclude the above
-            //since it is required to be a hard match.
+            //Since we know that the fieldName cannot be equal to the requiredInclusion criteria due to the if condition before we enter this method
+            //and we are certain that the indexing criteria is shorter we want to be sure that the inclusion criteria
+            //is contained within the field we're evaluating. i.e that one.two.three contains one.two
 
-            //The way the below works if we see that the current field isn't as fine grained as the schema rule
-            //( aka the array is shorter than the current index of the schema rule then there is no way the rule could apply
-            // to the index.
-
-            //Then if that check passes we go to check that both parts are equal. If they are ever not equal
-            // e.g one.two.three and one.three.two then it shouldn't be included
-            //TODO: regex.
-            //The regex for this will need to be as follows
-            //Check to make sure that the strings match all the way and end with a period.
-
-            //so if the field we're evaluting against  is in the field name
-            //is one.two.three contains one.two
-            //if one.two is following by nothing or a period then it can be indexed.
+            //The second part of the if loop also requires that the fieldName is followed by a period after we check to ensure that the
+            //indexing criteria is included in the string. This is done to weed out values such as one.twoexample.three
+            // when we should only keep one.two.three when comparing the indexing criteria of one.two.
             if(fieldName.length() > requiredInclusionString.length()
                 && fieldName.contains( requiredInclusionString )
                 && fieldName.charAt( requiredInclusionString.length() )=='.' ) {
                 toRemoveFlag = false;
                 break;
-
-                //Since we know that the fieldName cannot be equal to the requiredInclusion criteria due to the if condition before we enter this method
-                //and we are certain that the indexing criteria is shorter we want to be sure that the inclusion criteria
-                //is contained within the field we're evaluating. i.e that one.two.three contains one.two
-
-                //The second part of the if loop also requires that the fieldName is followed by a period after we check to ensure that the
-                //indexing criteria is included in the string. This is done to weed out values such as one.twoexample.three
-                // when we should only keep one.two.three when comparing the indexing criteria of one.two.
-//                if(fieldName.contains( requiredInclusionString ) && fieldName.charAt( requiredInclusionString.length() )=='.'){
-//                    toRemoveFlag = false;
-//                    break;
-//                }
-//                toRemoveFlag = true;
-
             }
             else {
                 //the of the field we're evaluating is shorter than the indexing criteria so it can't match.
                 //Move onto the next field and see if they match.
                 toRemoveFlag = true;
             }
-
-
-//            for ( int index = 0; index < flattedRequirementString.length; index++ ) {
-//                //if the array contains a string that it is equals to then set the remove flag to true
-//                //otherwise remain false.
-//
-//                //one.three
-//                //one.two
-//                //one
-//                if ( flattedStringArray.length <= index ) {
-//                    toRemoveFlag = true;
-//                    break;
-//                }
-//
-//                if ( flattedRequirementString[index].equals( flattedStringArray[index] ) ) {
-//                    toRemoveFlag = false;
-//                }
-//                else {
-//                    toRemoveFlag = true;
-//                    break;
-//                }
-//            }
-//            if ( toRemoveFlag == false ) {
-//                break;
-//            }
         }
 
         if ( toRemoveFlag ) {
-            //Removes the value if it doesn't match anything
             collectionIterator.remove();
         }
     }
-
-
-    /**
-     * Splits the string on the flattened period "." seperated values.
-     * @param fieldName
-     * @return
-     */
-    private static String[] getStrings( final String fieldName ) {
-        final String[] flattedStringArray;
-        if ( !fieldName.contains( "." ) ) {
-            //create a single array that is made of a the single value.
-            flattedStringArray = new String[] { fieldName };
-        }
-        else {
-            flattedStringArray = fieldName.split( "\\." );
-        }
-        return flattedStringArray;
-    }
-
 }
 
