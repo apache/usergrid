@@ -109,7 +109,7 @@ public class EntityToMapConverter {
 
         final Set<EntityField> fieldsToBeFiltered =   parser.parse( entityMap );
 
-        //add our fields
+        //add our fields to output entity
         outputEntity.put( ENTITY_FIELDS, fieldsToBeFiltered );
 
         if(fieldsToIndex.isPresent()){
@@ -119,14 +119,15 @@ public class EntityToMapConverter {
             Iterator collectionIterator = mapFields.iterator();
 
             //Loop through all of the fields of the flatted entity and check to see if they should be filtered out.
-            while ( collectionIterator.hasNext() ) {
-                EntityField testedField = ( EntityField ) collectionIterator.next();
+            collectionIterator.forEachRemaining(outputEntityField -> {
+                EntityField testedField = ( EntityField ) outputEntityField;
                 String fieldName = ( String ) ( testedField ).get( "name" );
 
                 if ( !defaultProperties.contains( fieldName ) ) {
-                    iterateThroughMapForFieldsToBeIndexed( defaultProperties, collectionIterator, fieldName );
+                iterateThroughMapForFieldsToBeIndexed( defaultProperties, collectionIterator, fieldName );
                 }
-            }
+            });
+
         }
 
 
@@ -150,12 +151,15 @@ public class EntityToMapConverter {
         boolean toRemoveFlag = true;
         String[] flattedStringArray = getStrings( fieldName );
 
-        Iterator fieldIterator = fieldsToKeep.iterator(); //fieldsToKeep.iterator();
+        Iterator fieldIterator = fieldsToKeep.iterator();
+
+
 
         //goes through a loop of all the fields ( excluding default ) that we want to keep.
         //if the toRemoveFlag is set to false then we want to keep the property, otherwise we set it to true and remove
         //the property.
         while ( fieldIterator.hasNext() ) {
+            //this is the field that we're
             String requiredInclusionString = ( String ) fieldIterator.next();
             String[] flattedRequirementString = getStrings( requiredInclusionString );
 
@@ -172,29 +176,62 @@ public class EntityToMapConverter {
             //Then if that check passes we go to check that both parts are equal. If they are ever not equal
             // e.g one.two.three and one.three.two then it shouldn't be included
             //TODO: regex.
-            for ( int index = 0; index < flattedRequirementString.length; index++ ) {
-                //if the array contains a string that it is equals to then set the remove flag to true
-                //otherwise remain false.
+            //The regex for this will need to be as follows
+            //Check to make sure that the strings match all the way and end with a period.
 
-                //one.three
-                //one.two
-                //one
-                if ( flattedStringArray.length <= index ) {
-                    toRemoveFlag = true;
-                    break;
-                }
-
-                if ( flattedRequirementString[index].equals( flattedStringArray[index] ) ) {
-                    toRemoveFlag = false;
-                }
-                else {
-                    toRemoveFlag = true;
-                    break;
-                }
-            }
-            if ( toRemoveFlag == false ) {
+            //so if the field we're evaluting against  is in the field name
+            //is one.two.three contains one.two
+            //if one.two is following by nothing or a period then it can be indexed.
+            if(fieldName.length() > requiredInclusionString.length()
+                && fieldName.contains( requiredInclusionString )
+                && fieldName.charAt( requiredInclusionString.length() )=='.' ) {
+                toRemoveFlag = false;
                 break;
+
+                //Since we know that the fieldName cannot be equal to the requiredInclusion criteria due to the if condition before we enter this method
+                //and we are certain that the indexing criteria is shorter we want to be sure that the inclusion criteria
+                //is contained within the field we're evaluating. i.e that one.two.three contains one.two
+
+                //The second part of the if loop also requires that the fieldName is followed by a period after we check to ensure that the
+                //indexing criteria is included in the string. This is done to weed out values such as one.twoexample.three
+                // when we should only keep one.two.three when comparing the indexing criteria of one.two.
+//                if(fieldName.contains( requiredInclusionString ) && fieldName.charAt( requiredInclusionString.length() )=='.'){
+//                    toRemoveFlag = false;
+//                    break;
+//                }
+//                toRemoveFlag = true;
+
             }
+            else {
+                //the of the field we're evaluating is shorter than the indexing criteria so it can't match.
+                //Move onto the next field and see if they match.
+                toRemoveFlag = true;
+            }
+
+
+//            for ( int index = 0; index < flattedRequirementString.length; index++ ) {
+//                //if the array contains a string that it is equals to then set the remove flag to true
+//                //otherwise remain false.
+//
+//                //one.three
+//                //one.two
+//                //one
+//                if ( flattedStringArray.length <= index ) {
+//                    toRemoveFlag = true;
+//                    break;
+//                }
+//
+//                if ( flattedRequirementString[index].equals( flattedStringArray[index] ) ) {
+//                    toRemoveFlag = false;
+//                }
+//                else {
+//                    toRemoveFlag = true;
+//                    break;
+//                }
+//            }
+//            if ( toRemoveFlag == false ) {
+//                break;
+//            }
         }
 
         if ( toRemoveFlag ) {
