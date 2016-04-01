@@ -151,7 +151,7 @@ public class ServiceResource extends AbstractContextResource {
 
         MultivaluedMap<String, String> params = ps.getMatrixParameters();
 
-        if ( params != null ) {
+        if ( params != null && params.size() > 0) {
             Query query = Query.fromQueryParams( params );
             if ( query != null ) {
                 parameters = ServiceParameter.addParameter( parameters, query );
@@ -166,7 +166,7 @@ public class ServiceResource extends AbstractContextResource {
             throws Exception {
 
         MultivaluedMap<String, String> params = ui.getQueryParameters();
-        if ( params != null ) {
+        if ( params != null && params.size() > 0) {
             //TODO TN query parameters are not being correctly decoded here.  The URL encoded strings
             //aren't getting decoded properly
             Query query = Query.fromQueryParams( params );
@@ -526,7 +526,6 @@ public class ServiceResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "put" );
 
-        services.getApplicationRef();
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
 
