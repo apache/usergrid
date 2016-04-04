@@ -18,14 +18,11 @@ package org.apache.usergrid.corepersistence;
 
 import java.nio.ByteBuffer;
 import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -38,22 +35,15 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
-
-import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
-import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
-import org.apache.usergrid.corepersistence.service.CollectionService;
-import org.apache.usergrid.corepersistence.service.ConnectionService;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.utils.*;
-import org.apache.usergrid.utils.ClassUtils;
-import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import org.apache.avro.generic.GenericData;
-
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
+import org.apache.usergrid.corepersistence.service.CollectionService;
+import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AggregateCounter;
@@ -97,6 +87,7 @@ import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.map.MapManager;
@@ -106,6 +97,13 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.utils.ClassUtils;
+import org.apache.usergrid.utils.CompositeUtils;
+import org.apache.usergrid.utils.InflectionUtils;
+import org.apache.usergrid.utils.Inflector;
+import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.utils.StringUtils;
+import org.apache.usergrid.utils.UUIDUtils;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
@@ -1751,16 +1749,13 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Map createCollectionSchema( String collectionName, String owner ,Map<String, Object> properties ){
 
-        //haven't decided which one I should base off of which, maybe from epoch to utc
 
         //TODO: change timeservice as below then use timeservice.
-        //TODO: only allow a single reindex in elasticsearch at a time. akka.
         Instant timeInstance = Instant.now();
 
         Long epoch = timeInstance.toEpochMilli();
 
         Map<String,Object> schemaMap = new HashMap<>(  );
-
 
         schemaMap.put("lastUpdated",epoch);
         //this needs the method that can extract the user from the token no matter the token.
@@ -1775,7 +1770,7 @@ public class CpEntityManager implements EntityManager {
         java.util.Optional<Map> collectionIndexingSchema = indexSchemaCache.getCollectionSchema( collectionName );
 
 
-        //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
+        //If there is an existing schema then take the lastReindexed time and keep it around.Otherwise initialize to 0.
         if ( collectionIndexingSchema.isPresent() ) {
             Map jsonMapData = collectionIndexingSchema.get();
             schemaMap.put( "lastReindexed", jsonMapData.get( "lastReindexed" ) );
@@ -1786,6 +1781,8 @@ public class CpEntityManager implements EntityManager {
 
         ArrayList<String> fieldProperties = ( ArrayList<String> ) properties.get( "fields" );
 
+        //do a check to see if you have a * field. If you do have a * field then ignore all other fields
+        //and only accept the * field.
         if(fieldProperties.contains( "*" )){
             ArrayList<String> wildCardArrayList = new ArrayList<>(  );
             wildCardArrayList.add( "*" );
@@ -1794,9 +1791,6 @@ public class CpEntityManager implements EntityManager {
         else {
             schemaMap.putAll( properties );
         }
-
-        //do a check to see if you have a * field. If you do have a * field then ignore all other fields
-        //and only accept the * field. That logic goes below and in the put.
 
         indexSchemaCache.putCollectionSchema( collectionName, JsonUtils.mapToJsonString( schemaMap ) );
 
