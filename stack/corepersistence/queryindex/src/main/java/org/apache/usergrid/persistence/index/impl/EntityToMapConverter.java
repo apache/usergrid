@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -29,6 +28,8 @@ import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.EntityMap;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.common.base.Optional;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.APPLICATION_ID_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.EDGE_NAME_FIELDNAME;
@@ -56,7 +57,7 @@ public class EntityToMapConverter {
     public static Map<String, Object> convert(ApplicationScope applicationScope, final IndexEdge indexEdge,
                                               final Entity entity) {
 
-        return convert( applicationScope, indexEdge, entity, Optional.empty() );
+        return convert( applicationScope, indexEdge, entity, Optional.absent() );
     }
 
     /**

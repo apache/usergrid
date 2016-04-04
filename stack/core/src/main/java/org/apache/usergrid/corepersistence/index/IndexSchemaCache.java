@@ -18,7 +18,8 @@ package org.apache.usergrid.corepersistence.index;
 
 
 import java.util.Map;
-import java.util.Optional;
+
+import com.google.common.base.Optional;
 
 
 public interface IndexSchemaCache {

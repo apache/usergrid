@@ -1767,7 +1767,7 @@ public class CpEntityManager implements EntityManager {
 
         IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
 
-        java.util.Optional<Map> collectionIndexingSchema = indexSchemaCache.getCollectionSchema( collectionName );
+        Optional<Map> collectionIndexingSchema = indexSchemaCache.getCollectionSchema( collectionName );
 
 
         //If there is an existing schema then take the lastReindexed time and keep it around.Otherwise initialize to 0.
@@ -1815,7 +1815,7 @@ public class CpEntityManager implements EntityManager {
 
         IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm ); //managerCache.getIndexSchema( mm );
 
-        java.util.Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
 
         if(collectionIndexingSchema.isPresent()){
             return collectionIndexingSchema.get();
