@@ -20,7 +20,6 @@
 package org.apache.usergrid.persistence.index;
 
 
-import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.core.CPManager;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -117,9 +116,10 @@ public interface EntityIndex extends CPManager {
      *
      * @param entityId      The entityId to match when searching
      * @param markedVersion The version that has been marked for deletion. All version before this one must be deleted.
+     * @param limitToDelete
      * @return
      */
-    CandidateResults getAllEntityVersionsBeforeMarkedVersion(final Id entityId, final UUID markedVersion);
+    CandidateResults getAllEntityVersionsBeforeMarkedVersion(final Id entityId, final UUID markedVersion, int limitToDelete);
 
     /**
      * delete all application records
