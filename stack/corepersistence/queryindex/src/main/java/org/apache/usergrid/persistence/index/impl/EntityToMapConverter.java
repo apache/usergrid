@@ -65,6 +65,7 @@ public class EntityToMapConverter {
      * @param applicationScope
      * @param entity The entity
      * @param indexEdge The edge this entity is indexed on
+     * @param fieldsToIndex A set of fields that will be indexed should they exist on the entity. Other fields will be filtered out.
      */
     public static Map<String, Object> convert(ApplicationScope applicationScope, final IndexEdge indexEdge,
                                               final Entity entity, Optional<Set<String>> fieldsToIndex) {
@@ -114,7 +115,6 @@ public class EntityToMapConverter {
 
         if(fieldsToIndex.isPresent()){
             Set<String> defaultProperties = fieldsToIndex.get();
-            //copy paste logic here.
             HashSet mapFields = ( HashSet ) outputEntity.get( "fields" );
             Iterator collectionIterator = mapFields.iterator();
 
@@ -137,10 +137,11 @@ public class EntityToMapConverter {
     }
 
     /**
-     * This method is crucial for selective top level indexing. Here we check to see if the flatted properties
-     * are in fact a top level exclusion e.g one.two.three and one.three.two can be allowed for querying by
-     * specifying one in the schema. If they are not a top level exclusion then they are removed from the iterator and
-     * the map.
+     * Handles checking to see if a field is a top level exclusion or just a field that shouldn't be indexed.
+     * This is handled by looping through all the fields we want to be able to query on, and checking to see if a
+     * specific field name is included. If the field name is included then do nothing. If the field name is not included
+     * then we do not want to be able to query on it. Instead we remove it from the collectionIterator which
+     * removes it from the outputEntity above, thus filtering it out.
      *
      * @param fieldsToKeep - contains a list of fields that the user defined in their schema.
      * @param collectionIterator - contains the iterator with the reference to the map where we want to remove the field. Once removed here it is removed from the entity so it won't be indexed.
@@ -154,12 +155,12 @@ public class EntityToMapConverter {
 
 
 
-        //goes through a loop of all the fields ( excluding default ) that we want to keep.
-        //if the toRemoveFlag is set to false then we want to keep the property, otherwise we set it to true and remove
+        //goes through a loop of all the fields that we want to keep.
+        //if the toRemoveFlag is set to false then we want to keep the property and do nothing to it, otherwise we set it to true and remove
         //the property.
         while ( fieldIterator.hasNext() ) {
             //this is the field that we're
-            String requiredInclusionString = ( String ) fieldIterator.next();
+            String fieldToKeep = ( String ) fieldIterator.next();
 
 
             //Since we know that the fieldName cannot be equal to the requiredInclusion criteria due to the if condition before we enter this method
@@ -169,9 +170,9 @@ public class EntityToMapConverter {
             //The second part of the if loop also requires that the fieldName is followed by a period after we check to ensure that the
             //indexing criteria is included in the string. This is done to weed out values such as one.twoexample.three
             // when we should only keep one.two.three when comparing the indexing criteria of one.two.
-            if(fieldName.length() > requiredInclusionString.length()
-                && fieldName.contains( requiredInclusionString )
-                && fieldName.charAt( requiredInclusionString.length() )=='.' ) {
+            if(fieldName.length() > fieldToKeep.length()
+                && fieldName.contains( fieldToKeep )
+                && fieldName.charAt( fieldToKeep.length() )=='.' ) {
                 toRemoveFlag = false;
                 break;
             }
