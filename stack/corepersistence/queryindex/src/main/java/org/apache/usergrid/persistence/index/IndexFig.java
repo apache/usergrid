@@ -62,6 +62,8 @@ public interface IndexFig extends GuicyFig {
 
     String ELASTICSEARCH_VERSION_QUERY_LIMIT = "elasticsearch.version_query_limit";
 
+    String ELASTICSEARCH_OLD_VERSION_QUERY_LIMIT = "elasticsearch.old_version_query_limit";
+
 
     /**
      * Comma-separated list of Elasticsearch hosts.
@@ -205,4 +207,8 @@ public interface IndexFig extends GuicyFig {
     @Default("1000")
     @Key( ELASTICSEARCH_VERSION_QUERY_LIMIT )
     int getVersionQueryLimit();
+
+    @Default("10")
+    @Key( ELASTICSEARCH_OLD_VERSION_QUERY_LIMIT )
+    int getOldVersionQueryLimit();
 }
