@@ -23,7 +23,6 @@ package org.apache.usergrid.corepersistence.index;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -61,6 +60,7 @@ import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.codahale.metrics.Timer;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -223,13 +223,13 @@ public class IndexServiceImpl implements IndexService {
             fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
 
             if(fieldsToKeep.contains( "*" )){
-                return Optional.empty();
+                return Optional.absent();
             }
 
             defaultProperties.addAll( fieldsToKeep );
         }
         else {
-            return Optional.empty();
+            return Optional.absent();
         }
 
         return Optional.of(defaultProperties);

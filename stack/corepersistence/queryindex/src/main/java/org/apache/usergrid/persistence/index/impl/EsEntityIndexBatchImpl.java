@@ -19,7 +19,6 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -38,6 +37,8 @@ import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.common.base.Optional;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
@@ -70,7 +71,7 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     @Override
     public EntityIndexBatch index( final IndexEdge indexEdge, final Entity entity ) {
-        return index( indexEdge,entity, Optional.empty() );
+        return index( indexEdge,entity, Optional.absent() );
     }
 
     @Override

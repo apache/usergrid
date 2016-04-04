@@ -141,7 +141,7 @@ public class ReIndexServiceImpl implements ReIndexService {
             MapManager collectionMapStorage = mapManagerFactory.createMapManager( CpNamingUtils.getEntityTypeMapScope( appId.get().getApplication()  ) );
             IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( collectionMapStorage );
 
-            java.util.Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+            Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
 
             //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
             if ( collectionIndexingSchema.isPresent() ) {

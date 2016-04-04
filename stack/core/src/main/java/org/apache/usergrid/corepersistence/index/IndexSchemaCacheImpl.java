@@ -19,7 +19,6 @@ package org.apache.usergrid.corepersistence.index;
 
 
 import java.util.Map;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.utils.JsonUtils;
 
+import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -53,7 +53,7 @@ public class IndexSchemaCacheImpl implements IndexSchemaCache {
             .build( new CacheLoader<String, Optional<Map>>() {
                 @Override
                 public Optional<Map> load( final String collectionName ) throws Exception {
-                    return Optional.ofNullable( retrieveCollectionSchema( collectionName ) );
+                    return Optional.fromNullable( retrieveCollectionSchema( collectionName ) );
                 }
             } );
     }
@@ -75,7 +75,7 @@ public class IndexSchemaCacheImpl implements IndexSchemaCache {
             Optional<Map> optionalCollectionSchema = indexSchemaCache.get( collectionName );
             if(!optionalCollectionSchema.isPresent()){
                 indexSchemaCache.invalidate( collectionName );
-                return Optional.empty();
+                return Optional.absent();
             }
             return optionalCollectionSchema;
         }catch(Exception e){
