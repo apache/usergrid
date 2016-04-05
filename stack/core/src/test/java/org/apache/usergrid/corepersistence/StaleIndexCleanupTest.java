@@ -243,7 +243,6 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
     /**
      * Test that the AbstractElasticsearchFilter de-indexes old versions when reading candidates
      */
-    @Ignore
     @Test()
     public void testCleanupOnUpdate() throws Exception {
 
