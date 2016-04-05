@@ -37,4 +37,8 @@ public interface EntityManagerFig extends GuicyFig {
     @Key( "usergrid.entityManager_sleep_ms" )
     @Default( "100" )
     int sleep();
+
+    @Key( "usergrid.entityManager.deindex_old_versions" )
+    @Default( "false" )
+    boolean deIndexOldVersions();
 }
