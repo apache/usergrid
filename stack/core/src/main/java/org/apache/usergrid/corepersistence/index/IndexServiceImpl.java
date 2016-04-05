@@ -52,6 +52,7 @@ import rx.Observable;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createSearchEdgeFromSource;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromTarget;
+import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 
 
 /**
@@ -199,19 +200,13 @@ public class IndexServiceImpl implements IndexService {
     //This should look up the entityId and delete any documents with a timestamp that comes before
     //The edges that are connected will be compacted away from the graph.
     @Override
-    public Observable<IndexOperationMessage> deleteEntityIndexes(final ApplicationScope applicationScope,
-                                                                 final Id entityId, final UUID markedVersion, boolean forEntityUpdates) {
+    public Observable<IndexOperationMessage> deleteEntityIndexes( final ApplicationScope applicationScope,
+                                                                  final Id entityId, final UUID markedVersion ) {
 
         //bootstrap the lower modules from their caches
         final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
-        CandidateResults crs;
-        if(forEntityUpdates){
-            crs = ei.getAllEntityVersionsBeforeMarkedVersion( entityId, markedVersion, indexFig.getOldVersionQueryLimit() );
-
-        }else{
-            crs = ei.getAllEntityVersionsBeforeMarkedVersion( entityId, markedVersion, indexFig.getVersionQueryLimit() );
-        }
+        CandidateResults crs = ei.getAllEntityVersionsBeforeMarkedVersion( entityId, markedVersion );
 
         //If we get no search results, its possible that something was already deleted or
         //that it wasn't indexed yet. In either case we can't delete anything and return an empty observable..

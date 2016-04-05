@@ -56,6 +56,7 @@ import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
@@ -532,7 +533,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
 
     @Override
-    public CandidateResults getAllEntityVersionsBeforeMarkedVersion(final Id entityId, final UUID markedVersion, int limitToDelete) {
+    public CandidateResults getAllEntityVersionsBeforeMarkedVersion( final Id entityId, final UUID markedVersion ) {
 
         Preconditions.checkNotNull( entityId, "entityId cannot be null" );
         Preconditions.checkNotNull(markedVersion, "markedVersion cannot be null");
@@ -544,7 +545,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final long markedTimestamp = markedVersion.timestamp();
 
         // never let the limit be less than 2 as there are potential indefinite paging issues
-        final int searchLimit = Math.max(2, limitToDelete);
+        final int searchLimit = Math.max(2, indexFig.getOldVersionQueryLimit());
 
         // this query will find the document for the entity itself
         final QueryBuilder entityQuery = QueryBuilders

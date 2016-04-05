@@ -387,7 +387,7 @@ public class EntityIndexTest extends BaseIT {
      * Tests that we aggregate results only before the halfway version point.
      */
     @Test
-    public void testScrollingDeindex() {
+    public void testScollingDeindex() {
 
         int numberOfEntities = 1000;
         int versionToSearchFor = numberOfEntities / 2;
@@ -419,7 +419,7 @@ public class EntityIndexTest extends BaseIT {
 
         CandidateResults candidateResults = entityIndex
             .getAllEntityVersionsBeforeMarkedVersion( entity[versionToSearchFor].getId(),
-                entity[versionToSearchFor].getVersion(), numberOfEntities );
+                entity[versionToSearchFor].getVersion() );
         assertEquals( 501, candidateResults.size() );
     }
 
