@@ -471,7 +471,9 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final QueryBuilder entityQuery = QueryBuilders
             .termQuery(IndexingUtils.EDGE_NODE_ID_FIELDNAME, IndexingUtils.nodeId(edge.getNodeId()));
 
-        final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder();
+        final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder()
+            .addSort(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME, SortOrder.ASC);
+
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Searching for edges in (read alias): {}\n  nodeId: {},\n   query: {} ",
@@ -496,7 +498,6 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                 searchResponse = srb
                     .setQuery(finalQuery)
                     .setSize(searchLimit)
-                    .addSort(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME, SortOrder.ASC)
                     .execute()
                     .actionGet();
 
@@ -553,7 +554,8 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final QueryBuilder nodeQuery = QueryBuilders
             .termQuery(IndexingUtils.EDGE_NODE_ID_FIELDNAME, IndexingUtils.nodeId(entityId));
 
-        final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder();
+        final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder()
+            .addSort(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME, SortOrder.ASC);
 
         try {
 
@@ -580,7 +582,6 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                 searchResponse = srb
                     .setQuery(finalQuery)
                     .setSize(searchLimit)
-                    .addSort(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME, SortOrder.ASC)
                     .execute()
                     .actionGet();
 
