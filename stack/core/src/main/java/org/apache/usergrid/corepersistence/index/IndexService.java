@@ -24,11 +24,13 @@ import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
+import rx.observables.ConnectableObservable;
 
 
 /**
@@ -76,11 +78,10 @@ public interface IndexService {
      *
      * @param applicationScope
      * @param entityId
-     * @param forEntityUpdates
      * @return
      */
     Observable<IndexOperationMessage> deleteEntityIndexes(final ApplicationScope applicationScope, final Id entityId,
-                                                          final UUID markedVersion, boolean forEntityUpdates);
+                                                         final UUID markedVersion);
 
 
 

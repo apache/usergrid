@@ -128,7 +128,7 @@ public class EventBuilderImpl implements EventBuilder {
 
         if(mostRecentlyMarked != null){
             deIndexObservable =
-                indexService.deleteEntityIndexes( applicationScope, entityId, mostRecentlyMarked.getVersion(), false );
+                indexService.deleteEntityIndexes( applicationScope, entityId, mostRecentlyMarked.getVersion() );
 
             ecmDeleteObservable =
                 ecm.getVersions( entityId )
@@ -194,7 +194,7 @@ public class EventBuilderImpl implements EventBuilder {
             UUID latestVersion = latestVersions.getMaxVersion(entityId).getVersion();
 
             deIndexObservable =
-                indexService.deleteEntityIndexes( applicationScope, entityId, latestVersion, true );
+                indexService.deleteEntityIndexes( applicationScope, entityId, latestVersion);
 
         }
 
