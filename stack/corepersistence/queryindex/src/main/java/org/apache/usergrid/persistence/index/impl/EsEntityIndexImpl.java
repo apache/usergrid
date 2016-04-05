@@ -545,7 +545,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final long markedTimestamp = markedVersion.timestamp();
 
         // never let the limit be less than 2 as there are potential indefinite paging issues
-        final int searchLimit = Math.max(2, indexFig.getOldVersionQueryLimit());
+        final int searchLimit = Math.max(2, indexFig.getVersionQueryLimit());
 
         // this query will find the document for the entity itself
         final QueryBuilder entityQuery = QueryBuilders
