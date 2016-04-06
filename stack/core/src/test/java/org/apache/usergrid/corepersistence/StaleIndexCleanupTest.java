@@ -70,6 +70,7 @@ import static org.junit.Assert.assertTrue;
  * Test on read style clean-up of stale ElasticSearch indexes.
  */
 @NotThreadSafe
+@Ignore
 public class StaleIndexCleanupTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( StaleIndexCleanupTest.class );
     public static final String EVENTS_DISABLED = "corepersistence.events.disabled";
@@ -133,7 +134,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
     }
 
-    
+
     /**
      * Test that the EntityDeleteImpl cleans up stale indexes on delete. Ensures that when an
      * entity is deleted its old indexes are cleared from ElasticSearch.
