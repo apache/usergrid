@@ -50,7 +50,7 @@ class AUTH_Tests: XCTestCase {
     func test_CLIENT_AUTH() {
 
         let authExpect = self.expectationWithDescription("\(__FUNCTION__)")
-        Usergrid.authFallback = .App
+        Usergrid.authMode = .App
         Usergrid.authenticateApp(appAuth) { auth,error in
             XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNil(error)

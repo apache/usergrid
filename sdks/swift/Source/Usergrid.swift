@@ -88,9 +88,9 @@ public class Usergrid: NSObject {
     }
 
     /// The `UsergridAuthFallback` value used to determine what type of token will be sent of the shared instance of `UsergridClient`, if any.
-    public static var authFallback: UsergridAuthFallback {
-        get { return Usergrid.sharedInstance.authFallback }
-        set(authFallback) { Usergrid.sharedInstance.authFallback = authFallback }
+    public static var authMode: UsergridAuthMode {
+        get { return Usergrid.sharedInstance.authMode }
+        set(mode) { Usergrid.sharedInstance.authMode = mode }
     }
 
     // MARK: - Initialization -
