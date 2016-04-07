@@ -49,7 +49,7 @@ class PUT_Tests: XCTestCase {
 
     func test_PUT_BY_SPECIFYING_UUID_AS_PARAMETER() {
 
-        let propertyNameToUpdate = "\(__FUNCTION__)"
+        let propertyNameToUpdate = "\(#function)"
         let propertiesNewValue = "\(propertyNameToUpdate)_VALUE"
         let putExpect = self.expectationWithDescription(propertyNameToUpdate)
 
@@ -73,7 +73,7 @@ class PUT_Tests: XCTestCase {
 
     func test_PUT_BY_SPECIFYING_UUID_WITHIN_JSON_BODY() {
 
-        let propertyNameToUpdate = "\(__FUNCTION__)"
+        let propertyNameToUpdate = "\(#function)"
         let propertiesNewValue = "\(propertyNameToUpdate)_VALUE"
         let putExpect = self.expectationWithDescription(propertyNameToUpdate)
 
@@ -98,7 +98,7 @@ class PUT_Tests: XCTestCase {
     }
 
     func test_PUT_WITH_ENTITY_OBJECT() {
-        let propertyNameToUpdate = "\(__FUNCTION__)"
+        let propertyNameToUpdate = "\(#function)"
         let propertiesNewValue = "\(propertyNameToUpdate)_VALUE"
         let putExpect = self.expectationWithDescription(propertyNameToUpdate)
 
@@ -135,7 +135,7 @@ class PUT_Tests: XCTestCase {
     }
 
     func test_PUT_WITH_QUERY() {
-        let propertyNameToUpdate = "\(__FUNCTION__)"
+        let propertyNameToUpdate = "\(#function)"
         let propertiesNewValue = "\(propertyNameToUpdate)_VALUE"
         let putExpect = self.expectationWithDescription(propertyNameToUpdate)
 

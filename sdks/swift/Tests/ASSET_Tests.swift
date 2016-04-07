@@ -78,7 +78,7 @@ class ASSET_Tests: XCTestCase {
     }
 
     func test_IMAGE_UPLOAD() {
-        let getExpect = self.expectationWithDescription("\(__FUNCTION__)")
+        let getExpect = self.expectationWithDescription("\(#function)")
         let uploadProgress : UsergridAssetRequestProgress = { (bytes,expected) in
             print("UPLOAD PROGRESS BLOCK: BYTES:\(bytes) --- EXPECTED:\(expected)")
         }
@@ -148,7 +148,7 @@ class ASSET_Tests: XCTestCase {
     }
 
     func test_ATTACH_ASSET_TO_CURRENT_USER() {
-        let userAssetExpect = self.expectationWithDescription("\(__FUNCTION__)")
+        let userAssetExpect = self.expectationWithDescription("\(#function)")
 
         let user = UsergridUser(name:User_Tests.name, email:User_Tests.email, username:User_Tests.username, password:User_Tests.password)
         let uploadProgress : UsergridAssetRequestProgress = { (bytes,expected) in

@@ -167,7 +167,7 @@ class User_Tests: XCTestCase {
     }
 
     func test_CREATE_AND_DELETE_USER() {
-        let userExpect = self.expectationWithDescription("\(__FUNCTION__)")
+        let userExpect = self.expectationWithDescription("\(#function)")
 
         user.save() { (createResponse) in
             XCTAssertTrue(NSThread.isMainThread())
@@ -198,7 +198,7 @@ class User_Tests: XCTestCase {
     }
 
     func test_AUTHENTICATE_USER() {
-        let userExpect = self.expectationWithDescription("\(__FUNCTION__)")
+        let userExpect = self.expectationWithDescription("\(#function)")
 
         UsergridUser.checkAvailable(user.email, username: user.username) { error,available in
 
@@ -257,7 +257,7 @@ class User_Tests: XCTestCase {
     }
 
     func test_RESET_USER_PASSWORD() {
-        let userExpect = self.expectationWithDescription("\(__FUNCTION__)")
+        let userExpect = self.expectationWithDescription("\(#function)")
 
         user.create() { (createResponse) in
             XCTAssertTrue(NSThread.isMainThread())
@@ -295,7 +295,7 @@ class User_Tests: XCTestCase {
     }
 
     func test_DEVICE_CONNECTION() {
-        let userExpect = self.expectationWithDescription("\(__FUNCTION__)")
+        let userExpect = self.expectationWithDescription("\(#function)")
 
         user.create() { createResponse in
             XCTAssertNotNil(createResponse)
@@ -333,7 +333,7 @@ class User_Tests: XCTestCase {
     }
 
     func test_DEVICE_CONNECT_FAIL() {
-        let userExpect = self.expectationWithDescription("\(__FUNCTION__)")
+        let userExpect = self.expectationWithDescription("\(#function)")
 
         user.create() { createResponse in
             XCTAssertNotNil(createResponse)

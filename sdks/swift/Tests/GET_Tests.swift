@@ -46,7 +46,7 @@ class GET_Tests: XCTestCase {
 
     func test_GET_WITHOUT_QUERY() {
 
-        let getExpect = self.expectationWithDescription("\(__FUNCTION__)")
+        let getExpect = self.expectationWithDescription("\(#function)")
         Usergrid.GET(GET_Tests.collectionName) { (response) in
             XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNotNil(response)
@@ -60,7 +60,7 @@ class GET_Tests: XCTestCase {
 
     func test_GET_WITH_QUERY() {
 
-        let getExpect = self.expectationWithDescription("\(__FUNCTION__)")
+        let getExpect = self.expectationWithDescription("\(#function)")
         Usergrid.GET(self.query) { (response) in
             XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNotNil(response)
@@ -73,7 +73,7 @@ class GET_Tests: XCTestCase {
 
     func test_GET_WITH_UUID() {
 
-        let getExpect = self.expectationWithDescription("\(__FUNCTION__)")
+        let getExpect = self.expectationWithDescription("\(#function)")
         Usergrid.GET(GET_Tests.collectionName, uuidOrName:GET_Tests.entityUUID) { (response) in
             XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNotNil(response)
@@ -90,9 +90,7 @@ class GET_Tests: XCTestCase {
 
     func test_GET_NEXT_PAGE_WITH_NO_QUERY() {
 
-        let getExpect = self.expectationWithDescription("\(__FUNCTION__)")
-
-
+        let getExpect = self.expectationWithDescription("\(#function)")
         Usergrid.GET(GET_Tests.collectionName) { (response) in
             XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNotNil(response)
@@ -105,7 +103,7 @@ class GET_Tests: XCTestCase {
                 XCTAssertTrue(nextPageResponse.ok)
                 XCTAssertNotNil(nextPageResponse)
                 XCTAssertFalse(nextPageResponse.hasNextPage)
-                XCTAssertEqual(nextPageResponse.entities!.count, 6)
+                XCTAssertEqual(nextPageResponse.entities!.count, 8)
                 getExpect.fulfill()
             }
         }
