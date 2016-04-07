@@ -27,6 +27,8 @@ import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 
@@ -39,6 +41,8 @@ import javax.annotation.PostConstruct;
  */
 @Component("OnlyOnceJob")
 public abstract class OnlyOnceJob implements Job {
+
+    private static final Logger logger = LoggerFactory.getLogger(OnlyOnceJob.class);
 
     private LockManager lockManager;
 
@@ -58,6 +62,11 @@ public abstract class OnlyOnceJob implements Job {
     @PostConstruct
     public void initLockManager() throws Exception {
         this.lockManager = injector.getInstance(LockManager.class);
+        if (lockManager != null) {
+            logger.info("LockManager injection successful");
+        } else {
+            logger.error("LockManager injection unsuccessful");
+        }
     }
 
     /*
@@ -68,6 +77,7 @@ public abstract class OnlyOnceJob implements Job {
     @Override
     public void execute( JobExecution execution ) throws Exception {
 
+        logger.info("Executing one-time job, LockManager is {}" lockManager == null ? "null" : "not null");
         String lockId = execution.getJobId().toString();
 
         Lock lock = lockManager.createLock( emf.getManagementAppId(), String.format( "/jobs/%s", lockId ) );
