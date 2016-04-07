@@ -19,7 +19,7 @@ package org.apache.usergrid.batch.job;
 
 import java.util.concurrent.TimeUnit;
 
-import org.elasticsearch.common.inject.Inject;
+import com.google.inject.Injector;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.apache.usergrid.batch.Job;
@@ -27,6 +27,8 @@ import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.locking.Lock;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
+
+import javax.annotation.PostConstruct;
 
 
 /**
@@ -38,17 +40,24 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 @Component("OnlyOnceJob")
 public abstract class OnlyOnceJob implements Job {
 
-    @Inject
     private LockManager lockManager;
 
     @Autowired
     private EntityManagerFactory emf;
+
+    @Autowired
+    private Injector injector;
 
 
     /**
      *
      */
     public OnlyOnceJob() {
+    }
+
+    @PostConstruct
+    public void initLockManager() throws Exception {
+        this.lockManager = injector.getInstance(LockManager.class);
     }
 
 
