@@ -85,9 +85,9 @@ public class UsergridClient: NSObject, NSCoding {
     }
 
     /// The `UsergridAuthFallback` value used to determine what type of token will be sent, if any.
-    public var authFallback: UsergridAuthFallback {
-        get { return config.authFallback }
-        set(fallback) { config.authFallback = fallback }
+    public var authMode: UsergridAuthMode {
+        get { return config.authMode }
+        set(mode) { config.authMode = mode }
     }
 
     // MARK: - Initialization -
@@ -196,7 +196,12 @@ public class UsergridClient: NSObject, NSCoding {
     */
     public func applyPushToken(device: UsergridDevice, pushToken: NSData, notifierID: String, completion: UsergridResponseCompletion? = nil) {
         device.applyPushToken(pushToken, notifierID: notifierID)
-        device.save(self, completion: completion)
+        self.PUT("devices", jsonBody: device.jsonObjectValue) { (response) in
+            if let responseEntity = response.entity {
+                device.copyInternalsFromEntity(responseEntity)
+            }
+            completion?(response: response)
+        }
     }
 
     // MARK: - Authorization and User Management -
@@ -214,13 +219,27 @@ public class UsergridClient: NSObject, NSCoding {
     */
     public func authForRequests() -> UsergridAuth? {
         var usergridAuth: UsergridAuth?
-        if let tempAuth = self.tempAuth where tempAuth.isValid {
-            usergridAuth = tempAuth
+        if let tempAuth = self.tempAuth {
+            if tempAuth.isValid {
+                usergridAuth = tempAuth
+            }
             self.tempAuth = nil
-        } else if let userAuth = self.userAuth where userAuth.isValid {
-            usergridAuth = userAuth
-        } else if self.authFallback == .App, let appAuth = self.appAuth where appAuth.isValid {
-            usergridAuth = appAuth
+        } else {
+            switch(self.authMode) {
+                case .User:
+                    if let userAuth = self.userAuth where userAuth.isValid {
+                        usergridAuth = userAuth
+                    }
+                    break
+                case .App:
+                    if let appAuth = self.appAuth where appAuth.isValid {
+                        usergridAuth = appAuth
+                    }
+                    break
+                case .None:
+                    usergridAuth = nil
+                    break
+            }
         }
         return usergridAuth
     }

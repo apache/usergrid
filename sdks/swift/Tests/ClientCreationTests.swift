@@ -50,7 +50,7 @@ class ClientCreationTests: XCTestCase {
     func test_CLIENT_PROPERTIES() {
         XCTAssertEqual(Usergrid.appId, ClientCreationTests.appId)
         XCTAssertEqual(Usergrid.orgId, ClientCreationTests.orgId)
-        XCTAssertEqual(Usergrid.authFallback, UsergridAuthFallback.None)
+        XCTAssertEqual(Usergrid.authMode, UsergridAuthMode.User)
         XCTAssertEqual(Usergrid.persistCurrentUserInKeychain, false)
         XCTAssertEqual(Usergrid.baseUrl, UsergridClient.DEFAULT_BASE_URL)
         XCTAssertEqual(Usergrid.clientAppURL, "\(UsergridClient.DEFAULT_BASE_URL)/\(ClientCreationTests.orgId)/\(ClientCreationTests.appId)" )
@@ -67,7 +67,7 @@ class ClientCreationTests: XCTestCase {
         if let newInstance = newInstanceFromData {
             XCTAssertEqual(Usergrid.appId, newInstance.appId)
             XCTAssertEqual(Usergrid.orgId, newInstance.orgId)
-            XCTAssertEqual(Usergrid.authFallback, newInstance.authFallback)
+            XCTAssertEqual(Usergrid.authMode, newInstance.authMode)
             XCTAssertEqual(Usergrid.baseUrl, newInstance.baseUrl)
         }
     }
