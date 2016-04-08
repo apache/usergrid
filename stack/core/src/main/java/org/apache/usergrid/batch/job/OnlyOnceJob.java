@@ -77,8 +77,8 @@ public abstract class OnlyOnceJob implements Job {
     @Override
     public void execute( JobExecution execution ) throws Exception {
 
-        logger.info("Executing one-time job, LockManager is {}", lockManager == null ? "null" : "not null");
         String lockId = execution.getJobId().toString();
+        logger.info("Executing one-time job {}, LockManager is {}", lockId, lockManager == null ? "null" : "not null");
 
         Lock lock = lockManager.createLock( emf.getManagementAppId(), String.format( "/jobs/%s", lockId ) );
 
