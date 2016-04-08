@@ -84,7 +84,7 @@ public interface QueueFig extends GuicyFig {
     int getVisibilityTimeout();
 
     @Key( "usergrid.queue.localquorum.timeout")
-    @Default("3000") // 3 seconds
+    @Default("30000") // 30 seconds
     int getLocalQuorumTimeout();
 
     @Key( "usergrid.queue.client.connection.timeout")

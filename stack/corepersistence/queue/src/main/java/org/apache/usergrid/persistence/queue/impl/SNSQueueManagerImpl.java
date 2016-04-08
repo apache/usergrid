@@ -427,7 +427,12 @@ public class SNSQueueManagerImpl implements QueueManager {
             logger.trace( "Getting up to {} messages from {}", limit, url );
         }
 
+        ArrayList<String> requestMessageAttributeNames = new ArrayList<String>(1);
+        requestMessageAttributeNames.add("ApproximateReceiveCount");
+
+
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest( url );
+        receiveMessageRequest.setAttributeNames(requestMessageAttributeNames);
         receiveMessageRequest.setMaxNumberOfMessages( limit );
         receiveMessageRequest.setVisibilityTimeout(
             Math.max( MIN_VISIBILITY_TIMEOUT, fig.getVisibilityTimeout() / 1000 ) );
@@ -477,6 +482,8 @@ public class SNSQueueManagerImpl implements QueueManager {
                 QueueMessage queueMessage = new QueueMessage( message.getMessageId(), message.getReceiptHandle(), payload,
                     message.getAttributes().get( "type" ) );
                 queueMessage.setStringBody( originalBody );
+                int receiveCount = Integer.valueOf(message.getAttributes().get("ApproximateReceiveCount"));
+                queueMessage.setReceiveCount( receiveCount );
                 queueMessages.add( queueMessage );
             }
 
