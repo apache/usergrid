@@ -56,6 +56,7 @@ import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ServiceInvocationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationException;
+import org.apache.usergrid.services.generic.RootCollectionService;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -658,6 +659,7 @@ public abstract class AbstractService implements Service {
      * the queue. Remaining parameters are left for next service request to allow for request chaining.
      */
 
+    @Override
     public ServiceContext getContext( ServiceAction action, ServiceRequest request, ServiceResults previousResults,
                                       ServicePayload payload ) throws Exception {
 
@@ -889,6 +891,11 @@ public abstract class AbstractService implements Service {
     public ServiceResults postItemsByQuery( ServiceContext context, Query query ) throws Exception {
         return getItemsByQuery( context, query );
     }
+
+    public abstract ServiceResults postCollectionSchema( ServiceRequest serviceRequest ) throws Exception;
+
+
+    public abstract ServiceResults getCollectionSchema( ServiceRequest serviceRequest ) throws Exception;
 
 
     public ServiceResults postCollection( ServiceContext context ) throws Exception {
@@ -1362,8 +1369,8 @@ public abstract class AbstractService implements Service {
         if ( currentUser == null ) {
             return;
         }
-        String perm =
-                getPermissionFromPath( em.getApplicationRef().getUuid(), context.getAction().toString().toLowerCase(),
+
+        String perm = getPermissionFromPath( em.getApplicationRef().getUuid(), context.getAction().toString().toLowerCase(),
                         path );
         boolean permitted = currentUser.isPermitted( perm );
 

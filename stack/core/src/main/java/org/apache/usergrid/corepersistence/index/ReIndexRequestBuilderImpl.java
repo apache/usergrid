@@ -21,6 +21,9 @@ package org.apache.usergrid.corepersistence.index;
 
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.cassandra.auth.IAuthenticator;
 
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -37,6 +40,8 @@ public class ReIndexRequestBuilderImpl implements ReIndexRequestBuilder {
     private Optional<String> withCollectionName = Optional.absent();
     private Optional<String> cursor = Optional.absent();
     private Optional<Long> updateTimestamp = Optional.absent();
+    private Optional<Integer> delayTimer = Optional.absent();
+    private Optional<TimeUnit> timeUnitOptional = Optional.absent();
 
 
     /***
@@ -81,6 +86,22 @@ public class ReIndexRequestBuilderImpl implements ReIndexRequestBuilder {
 
 
     /**
+     * Determines whether we should tack on a delay for reindexing and for how long if we do. Also
+     * allowed to specify how throttled back it should be.
+     * @param delayTimer
+     * @param timeUnit
+     * @return
+     */
+    @Override
+    public ReIndexRequestBuilder withDelay( final int delayTimer, final TimeUnit timeUnit ){
+        this.delayTimer = Optional.fromNullable( delayTimer );
+        this.timeUnitOptional = Optional.fromNullable( timeUnit );
+
+        return this;
+    }
+
+
+    /**
      * Set start timestamp in epoch time.  Only entities updated since this time will be processed for indexing
      * @param timestamp
      * @return
@@ -89,6 +110,17 @@ public class ReIndexRequestBuilderImpl implements ReIndexRequestBuilder {
     public ReIndexRequestBuilder withStartTimestamp( final Long timestamp ) {
         this.updateTimestamp = Optional.fromNullable( timestamp );
         return this;
+    }
+
+
+    @Override
+    public Optional<Integer> getDelayTimer() {
+        return delayTimer;
+    }
+
+    @Override
+    public Optional<TimeUnit> getTimeUnitOptional() {
+        return timeUnitOptional;
     }
 
 

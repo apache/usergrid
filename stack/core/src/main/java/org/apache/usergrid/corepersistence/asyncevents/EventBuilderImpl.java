@@ -144,7 +144,6 @@ public class EventBuilderImpl implements EventBuilder {
         return new EntityDeleteResults( deIndexObservable, ecmDeleteObservable, graphCompactObservable );
     }
 
-
     @Override
     public Observable<IndexOperationMessage> buildEntityIndex( final EntityIndexOperation entityIndexOperation ) {
 

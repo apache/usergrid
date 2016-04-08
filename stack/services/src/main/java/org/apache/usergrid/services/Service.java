@@ -47,4 +47,7 @@ public interface Service {
     public Entity writeEntity( ServiceRequest request, Entity entity ) throws Exception;
 
     public Entity updateEntity( ServiceRequest request, EntityRef ref, ServicePayload payload ) throws Exception;
+
+    ServiceContext getContext( ServiceAction action, ServiceRequest request, ServiceResults previousResults,
+                               ServicePayload payload ) throws Exception;
 }

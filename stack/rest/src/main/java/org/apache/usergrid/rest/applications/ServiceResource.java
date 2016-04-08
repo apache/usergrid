@@ -245,6 +245,116 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
+    public ServiceResults executeServiceGetRequestForSchema(UriInfo ui, ApiResponse response, ServiceAction action,
+                                                             ServicePayload payload) throws Exception {
+
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeServiceRequest" );
+        }
+
+
+        boolean tree = "true".equalsIgnoreCase( ui.getQueryParameters().getFirst( "tree" ) );
+
+        String connectionQueryParm = ui.getQueryParameters().getFirst("connections");
+        boolean returnInboundConnections = true;
+        boolean returnOutboundConnections = true;
+
+        addQueryParams( getServiceParameters(), ui );
+
+        ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
+            returnInboundConnections, returnOutboundConnections );
+
+        response.setServiceRequest( r );
+
+
+        AbstractCollectionService abstractCollectionService = new AbstractCollectionService();
+
+       // abstractCollectionService
+        ServiceResults results = abstractCollectionService.getCollectionSchema( r );
+
+        //        ServiceResults results = r.execute();
+        if ( results != null ) {
+            if ( results.hasData() ) {
+                response.setData( results.getData() );
+            }
+            if ( results.getServiceMetadata() != null ) {
+                response.setMetadata( results.getServiceMetadata() );
+            }
+            Query query = r.getLastQuery();
+            if ( query != null ) {
+                if ( query.hasSelectSubjects() ) {
+                    response.setList( QueryUtils.getSelectionResults( query, results ) );
+                    response.setCount( response.getList().size() );
+                    response.setNext( results.getNextResult() );
+                    response.setPath( results.getPath() );
+                    return results;
+                }
+            }
+
+            response.setResults( results );
+        }
+
+        httpServletRequest.setAttribute( "applicationId", services.getApplicationId() );
+
+        return results;
+    }
+
+    public ServiceResults executeServicePostRequestForSchema(UriInfo ui, ApiResponse response, ServiceAction action,
+                                                         ServicePayload payload) throws Exception {
+
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeServiceRequest" );
+        }
+
+
+        boolean tree = "true".equalsIgnoreCase( ui.getQueryParameters().getFirst( "tree" ) );
+
+        String connectionQueryParm = ui.getQueryParameters().getFirst("connections");
+        boolean returnInboundConnections = true;
+        boolean returnOutboundConnections = true;
+
+        addQueryParams( getServiceParameters(), ui );
+
+        ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
+            returnInboundConnections, returnOutboundConnections );
+
+        response.setServiceRequest( r );
+
+
+        AbstractCollectionService abstractCollectionService = new AbstractCollectionService();
+
+        ServiceResults results = abstractCollectionService.postCollectionSchema( r );
+
+//        ServiceResults results = r.execute();
+        if ( results != null ) {
+            if ( results.hasData() ) {
+                response.setData( results.getData() );
+            }
+            if ( results.getServiceMetadata() != null ) {
+                response.setMetadata( results.getServiceMetadata() );
+            }
+            Query query = r.getLastQuery();
+            if ( query != null ) {
+                if ( query.hasSelectSubjects() ) {
+                    response.setList( QueryUtils.getSelectionResults( query, results ) );
+                    response.setCount( response.getList().size() );
+                    response.setNext( results.getNextResult() );
+                    response.setPath( results.getPath() );
+                    return results;
+                }
+            }
+
+            response.setResults( results );
+        }
+
+        httpServletRequest.setAttribute( "applicationId", services.getApplicationId() );
+
+        return results;
+
+
+    }
+
+
     public ServiceResults executeServiceRequest( UriInfo ui, ApiResponse response, ServiceAction action,
                                                  ServicePayload payload ) throws Exception {
         if(logger.isTraceEnabled()){
@@ -351,7 +461,6 @@ public class ServiceResource extends AbstractContextResource {
 
         return response;
     }
-
 
     @SuppressWarnings({ "unchecked" })
     public ServicePayload getPayload( Object json ) {
