@@ -214,9 +214,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         String appName = buildAppName( orgName, name );
 
-        final Optional<UUID> appId = applicationIdCache.getApplicationId( appName );
+        final UUID appId = applicationIdCache.getApplicationId( appName );
 
-        if ( appId.isPresent()) {
+        if ( appId == null ) {
             throw new ApplicationAlreadyExistsException( name );
         }
 
@@ -254,7 +254,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // check for pre-existing application
 
-        if ( lookupApplication( appName ).isPresent()) {
+        if ( lookupApplication( appName ) == null ) {
             throw new ApplicationAlreadyExistsException( appName );
         }
 
@@ -445,7 +445,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    public Optional<UUID> lookupApplication( String orgAppName ) throws Exception {
+    public UUID lookupApplication(String orgAppName ) throws Exception {
         return applicationIdCache.getApplicationId(orgAppName);
     }
 
