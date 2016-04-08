@@ -17,6 +17,7 @@ package org.apache.usergrid.corepersistence;
 
 
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,19 +35,15 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import com.google.common.base.Optional;
-
-import org.apache.usergrid.corepersistence.service.CollectionService;
-import org.apache.usergrid.corepersistence.service.ConnectionService;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.utils.*;
-import org.apache.usergrid.utils.ClassUtils;
-import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
+import org.apache.usergrid.corepersistence.service.CollectionService;
+import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.AggregateCounter;
@@ -90,6 +87,7 @@ import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.SearchEdgeType;
+import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.map.MapManager;
@@ -99,9 +97,17 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.utils.ClassUtils;
+import org.apache.usergrid.utils.CompositeUtils;
+import org.apache.usergrid.utils.InflectionUtils;
+import org.apache.usergrid.utils.Inflector;
+import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.utils.StringUtils;
+import org.apache.usergrid.utils.UUIDUtils;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import me.prettyprint.hector.api.Keyspace;
@@ -180,6 +186,8 @@ public class CpEntityManager implements EntityManager {
 
     private final ManagerCache managerCache;
 
+    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+
     private final ApplicationScope applicationScope;
 
     private final CassandraService cass;
@@ -232,12 +240,16 @@ public class CpEntityManager implements EntityManager {
      * @param metricsFactory
      * @param applicationId
      */
-    public CpEntityManager( final CassandraService cass, final CounterUtils counterUtils, final AsyncEventService indexService, final ManagerCache managerCache,
+    public CpEntityManager( final CassandraService cass,
+                            final CounterUtils counterUtils,
+                            final AsyncEventService indexService,
+                            final ManagerCache managerCache,
                             final MetricsFactory metricsFactory,
                             final EntityManagerFig entityManagerFig,
                             final GraphManagerFactory graphManagerFactory,
                             final CollectionService collectionService,
                             final ConnectionService connectionService,
+                            final IndexSchemaCacheFactory indexSchemaCacheFactory,
                             final UUID applicationId ) {
 
         this.entityManagerFig = entityManagerFig;
@@ -261,6 +273,7 @@ public class CpEntityManager implements EntityManager {
         this.managerCache = managerCache;
         this.applicationId = applicationId;
         this.indexService = indexService;
+        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
 
         applicationScope = CpNamingUtils.getApplicationScope( applicationId );
 
@@ -1735,8 +1748,86 @@ public class CpEntityManager implements EntityManager {
         return get( id, Role.class );
     }
 
+    @Override
+    public Map createCollectionSchema( String collectionName, String owner ,Map<String, Object> properties ){
+
+
+        //TODO: change timeservice as below then use timeservice.
+        Instant timeInstance = Instant.now();
+
+        Long epoch = timeInstance.toEpochMilli();
+
+        Map<String,Object> schemaMap = new HashMap<>(  );
+
+        schemaMap.put("lastUpdated",epoch);
+        //this needs the method that can extract the user from the token no matter the token.
+        //Possible values are app credentials, org credentials, or the user email(Admin tokens).
+        schemaMap.put("lastUpdateBy",owner);
+
+
+        MapManager mm = getMapManagerForTypes();
+
+        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+
+        Optional<Map> collectionIndexingSchema = indexSchemaCache.getCollectionSchema( collectionName );
+
+
+        //If there is an existing schema then take the lastReindexed time and keep it around.Otherwise initialize to 0.
+        if ( collectionIndexingSchema.isPresent() ) {
+            Map jsonMapData = collectionIndexingSchema.get();
+            schemaMap.put( "lastReindexed", jsonMapData.get( "lastReindexed" ) );
+        }
+        else {
+            schemaMap.put( "lastReindexed", 0 );
+        }
+
+        ArrayList<String> fieldProperties = ( ArrayList<String> ) properties.get( "fields" );
+
+        //do a check to see if you have a * field. If you do have a * field then ignore all other fields
+        //and only accept the * field.
+        if(fieldProperties.contains( "*" )){
+            ArrayList<String> wildCardArrayList = new ArrayList<>(  );
+            wildCardArrayList.add( "*" );
+            schemaMap.put( "fields",wildCardArrayList );
+        }
+        else {
+            schemaMap.putAll( properties );
+        }
+
+        indexSchemaCache.putCollectionSchema( collectionName, JsonUtils.mapToJsonString( schemaMap ) );
+
+        return schemaMap;
+
+    }
 
     @Override
+    public void deleteCollectionSchema( String collectionName ){
+        MapManager mm = getMapManagerForTypes();
+
+        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+
+        indexSchemaCache.deleteCollectionSchema( collectionName );
+
+    }
+
+
+    @Override
+    public Object getCollectionSchema( String collectionName ){
+        MapManager mm = getMapManagerForTypes();
+
+        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm ); //managerCache.getIndexSchema( mm );
+
+        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+
+        if(collectionIndexingSchema.isPresent()){
+            return collectionIndexingSchema.get();
+        }
+        else{
+            return null;
+        }
+    }
+
+        @Override
     public void grantRolePermission( String roleName, String permission ) throws Exception {
         roleName = roleName.toLowerCase();
         permission = permission.toLowerCase();
@@ -2668,6 +2759,7 @@ public class CpEntityManager implements EntityManager {
                     cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() );
             }
 
+            //this does the write so before adding to a collection everything already exists already.
             cpEntity = ecm.write( cpEntity ).toBlocking().last();
             entity.setSize(cpEntity.getSize());
 
@@ -2699,7 +2791,6 @@ public class CpEntityManager implements EntityManager {
         //write to our types map
         MapManager mm = getMapManagerForTypes();
         mm.putString( itemId.toString(), entity.getType() );
-
 
         return entity;
     }

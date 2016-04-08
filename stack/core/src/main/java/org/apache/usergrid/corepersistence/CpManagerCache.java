@@ -23,7 +23,6 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
@@ -37,6 +36,7 @@ import com.google.inject.Inject;
 /**
  * Cache for managing our other managers.  Now just a delegate.  Needs refactored away
  */
+
 public class CpManagerCache implements ManagerCache {
 
     private final EntityCollectionManagerFactory ecmf;

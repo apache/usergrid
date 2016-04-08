@@ -31,6 +31,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.apache.commons.lang.StringUtils;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.corepersistence.service.CollectionService;
@@ -110,6 +112,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         });
 
     private final ApplicationIdCache applicationIdCache;
+    //private final IndexSchemaCache indexSchemaCache;
 
     private ManagerCache managerCache;
 
@@ -122,6 +125,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final CollectionService collectionService;
     private final ConnectionService connectionService;
     private final GraphManagerFactory graphManagerFactory;
+    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
 
     public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
                                    final Injector injector ) {
@@ -137,8 +141,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
         this.collectionService = injector.getInstance( CollectionService.class );
         this.connectionService = injector.getInstance( ConnectionService.class );
+        this.indexSchemaCacheFactory = injector.getInstance( IndexSchemaCacheFactory.class );
 
         //this line always needs to be last due to the temporary cicular dependency until spring is removed
+
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
 
@@ -197,7 +203,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private EntityManager _getEntityManager( UUID applicationId ) {
         EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache,
-            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService, applicationId );
+            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService,indexSchemaCacheFactory, applicationId );
 
         return em;
     }

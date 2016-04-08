@@ -65,9 +65,6 @@ import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -79,10 +76,8 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import rx.Observable;
-import rx.functions.Func1;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createCollectionEdge;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createCollectionSearchEdge;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionEdge;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionSearchByEdge;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getNameFromEdgeType;
