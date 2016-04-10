@@ -34,6 +34,7 @@ import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Func1;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -119,7 +120,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             final UUID appId = em.getApplication().getUuid();
             final Map<String, Object> payloads = notification.getPayloads();
 
-            final Func1<EntityRef, EntityRef> sendMessageFunction = deviceRef -> {
+            final Func1<EntityRef, ApplicationQueueMessage> sendMessageFunction = deviceRef -> {
                 try {
 
                     long now = System.currentTimeMillis();
@@ -143,7 +144,8 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                     }
 
                     if (notifierId == null) {
-                        return deviceRef;
+                        //TODO need to leverage optional here
+                        //return deviceRef;
                     }
 
                     ApplicationQueueMessage message = new ApplicationQueueMessage(appId, notification.getUuid(), deviceRef.getUuid(), notifierKey, notifierId);
@@ -153,16 +155,19 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                         notification.setQueued(System.currentTimeMillis());
 
                     }
-                    qm.sendMessage(message);
                     deviceCount.incrementAndGet();
-                    queueMeter.mark();
+
+                    return message;
 
 
                 } catch (Exception deviceLoopException) {
                     logger.error("Failed to add device", deviceLoopException);
                     errorMessages.add("Failed to add device: " + deviceRef.getUuid() + ", error:" + deviceLoopException);
+
+                    //TODO need an optional here
+                    return new ApplicationQueueMessage(appId, notification.getUuid(), deviceRef.getUuid(), "test", "test");
                 }
-                return deviceRef;
+
             };
 
 
@@ -174,9 +179,28 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 }, 10)
                 .distinct(ref -> ref.getUuid())
                 .map(sendMessageFunction)
+                .buffer(100)
+                .doOnNext( applicationQueueMessages -> {
+
+                    applicationQueueMessages.forEach( message -> {
+
+                        try {
+
+                            qm.sendMessage( message );
+                            queueMeter.mark();
+
+                        } catch (IOException e) {
+                           logger.error("Unable to queue notification for notification UUID {} and device UUID {} ",
+                               message.getNotificationId(), message.getDeviceId());
+                        }
+
+                    });
+
+
+                })
                 .doOnError(throwable -> logger.error("Failed while trying to send notification", throwable));
 
-            processMessagesObservable.toBlocking().lastOrDefault(null);
+            processMessagesObservable.toBlocking(); // let this run and block the async thread, messages are queued
 
         }
 
@@ -487,20 +511,70 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
     private List<EntityRef> getDevices(EntityRef ref) {
 
-        List<EntityRef> devices = Collections.EMPTY_LIST;
+        List<EntityRef> devices = new ArrayList<>();
+
 
         try {
+
             if ("device".equals(ref.getType())) {
+
                 devices = Collections.singletonList(ref);
+
             } else if ("user".equals(ref.getType())) {
-                devices = em.getCollection(ref, "devices", null, Query.MAX_LIMIT,
-                    Query.Level.REFS, false).getRefs();
-            } else if ("group".equals(ref.getType())) {
-                devices = new ArrayList<>();
-                for (EntityRef r : em.getCollection(ref, "users", null,
-                    Query.MAX_LIMIT, Query.Level.REFS, false).getRefs()) {
-                    devices.addAll(getDevices(r));
+
+                UUID start = null;
+                boolean initial = true;
+                int resultSize = 0;
+                while( initial || resultSize >= Query.DEFAULT_LIMIT) {
+
+                    initial = false;
+
+                    final List<EntityRef> mydevices = em.getCollection(ref, "devices", start, Query.DEFAULT_LIMIT,
+                        Query.Level.REFS, true).getRefs();
+
+                    resultSize = mydevices.size();
+                    if(mydevices.size() > 0){
+                        start = mydevices.get(mydevices.size() - 1 ).getUuid();
+                    }
+
+
+                    devices.addAll( mydevices  );
+
+
                 }
+
+            } else if ("group".equals(ref.getType())) {
+
+                //devices = new ArrayList<>();
+                UUID start = null;
+                boolean initial = true;
+                int resultSize = 0;
+
+                while( initial || resultSize >= Query.DEFAULT_LIMIT){
+
+                        initial = false;
+                        final List<EntityRef> myusers =  em.getCollection(ref, "users", start,
+                            Query.DEFAULT_LIMIT, Query.Level.REFS, true).getRefs();
+
+                        resultSize = myusers.size();
+                        if(myusers.size() > 0){
+                            start = myusers.get(myusers.size() - 1 ).getUuid();
+                        }
+
+
+                        // don't allow a single user to have more than 100 devices?
+                        for (EntityRef user : myusers) {
+
+                            devices.addAll( em.getCollection(user, "devices", null, 100,
+                                Query.Level.REFS, true).getRefs() );
+
+
+                        }
+
+                }
+
+
+
             }
         } catch (Exception e) {
 
