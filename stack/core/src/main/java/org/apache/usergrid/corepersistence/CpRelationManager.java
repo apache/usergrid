@@ -17,14 +17,7 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -318,14 +311,31 @@ public class CpRelationManager implements RelationManager {
 
         final String ql;
 
-        if ( startResult != null ) {
-            ql = "select * where created > " + startResult.timestamp();
-        }
-        else {
+
+        if (startResult != null ) {
+
+            // UUID timestamp is a different measure than 'created' field on entities
+            Calendar uuidEpoch = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            uuidEpoch.clear();
+            uuidEpoch.set(1582, 9, 15, 0, 0, 0); // 9 = October
+            long epochMillis = uuidEpoch.getTime().getTime();
+
+            long time = (startResult.timestamp() / 10000L) + epochMillis;
+
+            if ( !reversed ) {
+                ql = "select * where created > " + time;
+            } else {
+                ql = "select * where created < " + time;
+            }
+
+        } else {
             ql = "select *";
         }
 
         Query query = Query.fromQL( ql );
+        if(query == null ){
+            throw new RuntimeException("Unable to get data for collection: "+collectionName);
+        }
         query.setLimit( count );
         query.setReversed( reversed );
 

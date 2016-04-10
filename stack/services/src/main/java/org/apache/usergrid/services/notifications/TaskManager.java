@@ -131,13 +131,14 @@ public class TaskManager {
         }
 
         if ( debug || hasError) {
+
+            List<EntityRef> entities = Arrays.asList(notification, device);
+
             if (receipt.getUuid() == null) {
                 Receipt savedReceipt = em.create(receipt);
-                receipt.setUuid(savedReceipt.getUuid());
-                List<EntityRef> entities = Arrays.asList(notification, device);
                 em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
             } else {
-                em.update(receipt);
+                em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, receipt);
             }
         }
 
