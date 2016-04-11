@@ -129,7 +129,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     public void after() throws Exception {
         if(listener != null) {
             listener.stop();
-            listener = null;
         }
     }
 
@@ -683,8 +682,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         final int NUM_DEVICES = 50;
         // perform push //
-        int oldBatchSize = listener.getBatchSize();
-        listener.setBatchSize(10);
+        int oldBatchSize = QueueListener.MAX_TAKE;
 
         app.clear();
         app.put("name", UUID.randomUUID().toString());
@@ -724,7 +722,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         try {
             notificationWaitForComplete(notification);
         } finally {
-            listener.setBatchSize( oldBatchSize);
+            //noop
         }
 
         // check receipts //
