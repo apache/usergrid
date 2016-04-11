@@ -221,7 +221,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         final UUID appId = applicationIdCache.getApplicationId( appName );
 
-        if ( appId == null ) {
+        if ( appId != null ) {
             throw new ApplicationAlreadyExistsException( name );
         }
 
@@ -259,7 +259,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // check for pre-existing application
 
-        if ( lookupApplication( appName ) == null ) {
+        if ( lookupApplication( appName ) != null ) {
             throw new ApplicationAlreadyExistsException( appName );
         }
 
