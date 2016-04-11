@@ -120,7 +120,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             final UUID appId = em.getApplication().getUuid();
             final Map<String, Object> payloads = notification.getPayloads();
 
-            final Func1<EntityRef, ApplicationQueueMessage> sendMessageFunction = deviceRef -> {
+            final Func1<EntityRef, Optional<ApplicationQueueMessage>> sendMessageFunction = deviceRef -> {
                 try {
 
                     long now = System.currentTimeMillis();
@@ -145,7 +145,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                     if (notifierId == null) {
                         //TODO need to leverage optional here
-                        //return deviceRef;
+                        return Optional.empty();
                     }
 
                     ApplicationQueueMessage message = new ApplicationQueueMessage(appId, notification.getUuid(), deviceRef.getUuid(), notifierKey, notifierId);
@@ -157,15 +157,14 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                     }
                     deviceCount.incrementAndGet();
 
-                    return message;
+                    return Optional.of(message);
 
 
                 } catch (Exception deviceLoopException) {
                     logger.error("Failed to add device", deviceLoopException);
                     errorMessages.add("Failed to add device: " + deviceRef.getUuid() + ", error:" + deviceLoopException);
 
-                    //TODO need an optional here
-                    return new ApplicationQueueMessage(appId, notification.getUuid(), deviceRef.getUuid(), "test", "test");
+                    return Optional.empty();
                 }
 
             };
@@ -185,13 +184,21 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                     applicationQueueMessages.forEach( message -> {
 
                         try {
-
-                            qm.sendMessage( message );
-                            queueMeter.mark();
+                            if(message.isPresent()){
+                                qm.sendMessage( message.get() );
+                                queueMeter.mark();
+                            }
 
                         } catch (IOException e) {
-                           logger.error("Unable to queue notification for notification UUID {} and device UUID {} ",
-                               message.getNotificationId(), message.getDeviceId());
+
+                            if(message.isPresent()){
+                                logger.error("Unable to queue notification for notification UUID {} and device UUID {} ",
+                                    message.get().getNotificationId(), message.get().getDeviceId());
+                            }
+                            else{
+                                logger.error("Unable to queue notification as it's not present when trying to send to queue");
+                            }
+
                         }
 
                     });
@@ -200,7 +207,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 })
                 .doOnError(throwable -> logger.error("Failed while trying to send notification", throwable));
 
-            processMessagesObservable.toBlocking(); // let this run and block the async thread, messages are queued
+            processMessagesObservable.toBlocking().last(); // let this run and block the async thread, messages are queued
 
         }
 
@@ -513,6 +520,8 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
         List<EntityRef> devices = new ArrayList<>();
 
+        final int LIMIT = Query.MID_LIMIT;
+
 
         try {
 
@@ -529,51 +538,47 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                     initial = false;
 
-                    final List<EntityRef> mydevices = em.getCollection(ref, "devices", start, Query.DEFAULT_LIMIT,
+                    final List<EntityRef> mydevices = em.getCollection(ref, "devices", start, LIMIT,
                         Query.Level.REFS, true).getRefs();
 
                     resultSize = mydevices.size();
+
                     if(mydevices.size() > 0){
                         start = mydevices.get(mydevices.size() - 1 ).getUuid();
                     }
 
-
                     devices.addAll( mydevices  );
-
 
                 }
 
             } else if ("group".equals(ref.getType())) {
 
-                //devices = new ArrayList<>();
                 UUID start = null;
                 boolean initial = true;
                 int resultSize = 0;
 
-                while( initial || resultSize >= Query.DEFAULT_LIMIT){
+                while( initial || resultSize >= LIMIT){
 
-                        initial = false;
-                        final List<EntityRef> myusers =  em.getCollection(ref, "users", start,
-                            Query.DEFAULT_LIMIT, Query.Level.REFS, true).getRefs();
+                    initial = false;
+                    final List<EntityRef> myusers =  em.getCollection(ref, "users", start,
+                        LIMIT, Query.Level.REFS, true).getRefs();
 
-                        resultSize = myusers.size();
-                        if(myusers.size() > 0){
-                            start = myusers.get(myusers.size() - 1 ).getUuid();
-                        }
+                    resultSize = myusers.size();
 
-
-                        // don't allow a single user to have more than 100 devices?
-                        for (EntityRef user : myusers) {
-
-                            devices.addAll( em.getCollection(user, "devices", null, 100,
-                                Query.Level.REFS, true).getRefs() );
+                    if(myusers.size() > 0){
+                        start = myusers.get(myusers.size() - 1 ).getUuid();
+                    }
 
 
-                        }
+                    // don't allow a single user to have more than 100 devices?
+                    for (EntityRef user : myusers) {
+
+                        devices.addAll( em.getCollection(user, "devices", null, 100,
+                            Query.Level.REFS, true).getRefs() );
+
+                    }
 
                 }
-
-
 
             }
         } catch (Exception e) {

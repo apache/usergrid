@@ -106,7 +106,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     public void after() {
         if (listener != null) {
             listener.stop();
-            listener = null;
         }
     }
 
