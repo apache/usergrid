@@ -80,7 +80,7 @@ public class ApplicationsResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "get organization application" );
 
-        BiMap<UUID, String> applications = management.getApplicationsForOrganization( organization.getUuid() );
+        BiMap<UUID, String> applications = management.getApplicationsForOrganization( organization.getUuid(), true );
         response.setData( applications.inverse() );
 
         return response;

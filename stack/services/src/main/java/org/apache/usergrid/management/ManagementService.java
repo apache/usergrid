@@ -179,6 +179,8 @@ public interface ManagementService {
 
 	BiMap<UUID, String> getApplicationsForOrganization( UUID organizationId ) throws Exception;
 
+	BiMap<UUID, String> getApplicationsForOrganization( UUID organizationId, boolean bypassCache ) throws Exception;
+
 	BiMap<UUID, String> getApplicationsForOrganizations( Set<UUID> organizationIds ) throws Exception;
 
 	String getClientIdForApplication( UUID applicationId );

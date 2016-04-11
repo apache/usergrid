@@ -330,7 +330,7 @@ public class ExportServiceImpl implements ExportService {
         Export export = getExportEntity( jobExecution );
         String appFileName = null;
 
-        BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organizationUUID );
+        BiMap<UUID, String> applications = managementService.getApplicationsForOrganization( organizationUUID, true);
 
         for ( Map.Entry<UUID, String> application : applications.entrySet() ) {
 

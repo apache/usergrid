@@ -77,6 +77,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import rx.Observable;
 
+import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.Map.Entry;
@@ -143,7 +144,17 @@ public class ManagementServiceImpl implements ManagementService {
     public static final String REGISTRATION_REQUIRES_EMAIL_CONFIRMATION = "registration_requires_email_confirmation";
     public static final String NOTIFY_ADMIN_OF_NEW_USERS = "notify_admin_of_new_users";
 
-    public static final String ORG_CONFIG_CACHE_PROP = "usergrid.orgconfig.cache.timeout";
+    protected static final String ORG_CONFIG_CACHE_TIMEOUT = "usergrid.orgconfig.cache_timeout";
+    protected static final String ORG_CONFIG_CACHE_SIZE = "usergrid.orgconfig.cache_size";
+
+    protected static final String ORG_ENTITY_FOR_APP_CACHE_TIMEOUT = "usergrid.org.cache_timeout";
+    protected static final String ORG_ENTITY_FOR_APP_CACHE_SIZE = "usergrid.org.cache_size";
+
+    protected static final String APPS_FOR_ORG_CACHE_TIMEOUT = "usergrid.apps_for_org.cache_timeout";
+    protected static final String APPS_FOR_ORG_CACHE_SIZE = "usergrid.apps_for_org.cache_size";
+
+    protected static final String MAX_ORGS = "usergrid.orgs.max";
+    protected static final String ORGS_LIST_TIMEOUT_SECS = "usergrid.orgs_list.timeout_secs";
 
     protected ServiceManagerFactory smf;
 
@@ -192,11 +203,134 @@ public class ManagementServiceImpl implements ManagementService {
         this.emf = emf;
     }
 
-
+    private LoadingCache<UUID, OrganizationConfig> orgConfigByUUIDCache = null;
+    private LoadingCache<UUID, Entity> orgEntityForAppCache = null;
+    private LoadingCache<String, List<OrganizationInfo>> allOrgsListCache = null;
+    private LoadingCache<UUID, BiMap<UUID, String>> appsForOrgCache = null;
     @Autowired
     public void setProperties( Properties properties ) {
         this.properties = new AccountCreationPropsImpl( properties );
         this.orgConfigProperties = new OrganizationConfigPropsImpl( properties );
+        orgConfigByUUIDCache = CacheBuilder.newBuilder().maximumSize( Long.valueOf( properties.getProperty(ORG_CONFIG_CACHE_SIZE, "1000")) )
+                .expireAfterWrite( Long.valueOf( properties.getProperty(ORG_CONFIG_CACHE_TIMEOUT, "30000") ), TimeUnit.MILLISECONDS)
+                .build( new CacheLoader<UUID, OrganizationConfig>() {
+                    public OrganizationConfig load(@Nonnull UUID id) {
+
+                        try {
+                            EntityManager em = emf.getEntityManager(smf.getManagementAppId());
+                            Entity entity = em.get(new SimpleEntityRef(Group.ENTITY_TYPE, id));
+                            if (entity == null) {
+                                return getOrganizationConfigDefaultsOnly();
+                            }
+                            Map<Object, Object> entityProperties = em.getDictionaryAsMap(entity, ORGANIZATION_CONFIG_DICTIONARY);
+                            return new OrganizationConfig(orgConfigProperties,
+                                    (UUID) entity.getProperty(PROPERTY_UUID),
+                                    (String) entity.getProperty(PROPERTY_PATH),
+                                    entityProperties, false);
+                        } catch (Exception e) {
+                            return getOrganizationConfigDefaultsOnly();
+                        }
+                    }
+                });
+        orgEntityForAppCache = CacheBuilder.newBuilder().maximumSize( Long.valueOf( properties.getProperty(ORG_ENTITY_FOR_APP_CACHE_SIZE, "1000")) )
+                .expireAfterWrite( Long.valueOf( System.getProperty(ORG_ENTITY_FOR_APP_CACHE_TIMEOUT, "30000") ), TimeUnit.MILLISECONDS)
+                .build( new CacheLoader<UUID, Entity>() {
+                    public Entity load( @Nonnull UUID applicationInfoId ) {
+                        try {
+                            final EntityManager em = emf.getEntityManager(smf.getManagementAppId());
+
+                            Results r = em.getSourceEntities(
+                                    new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
+                                    ORG_APP_RELATIONSHIP, Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
+
+                            return r.getEntity();
+                        }
+                        catch (Exception e) {
+                            return null;
+                        }
+                    }
+                });
+        // singleton cache allows for easy clearing of cache, unlike Guava's Supplier memoization
+        allOrgsListCache = CacheBuilder.newBuilder().maximumSize(1)
+                .expireAfterWrite( Long.valueOf(properties.getProperty(ORGS_LIST_TIMEOUT_SECS, "60")), TimeUnit.SECONDS)
+                .build( new CacheLoader<String, List<OrganizationInfo>>() {
+                    public List<OrganizationInfo> load( @Nonnull String ignoredKey ) {
+                        try {
+                            int numOrgs = Integer.valueOf(properties.getProperty(MAX_ORGS, "10000"));
+                            // still need the bimap to search for existing
+                            BiMap<UUID, String> organizations = HashBiMap.create();
+                            EntityManager em = emf.getEntityManager(smf.getManagementAppId());
+                            Results results = em.getCollection(em.getApplicationRef(),
+                                    Schema.COLLECTION_GROUPS, null, numOrgs, Level.ALL_PROPERTIES, false);
+                            List<OrganizationInfo> orgs = new ArrayList<>(results.size());
+                            OrganizationInfo orgInfo;
+                            for (Entity entity : results.getEntities()) {
+                                // TODO T.N. temporary hack to deal with duplicate orgs. Revert this
+                                // commit after migration
+                                String path = (String) entity.getProperty(PROPERTY_PATH);
+
+                                if (organizations.containsValue(path)) {
+                                    path += "DUPLICATE";
+                                }
+                                orgInfo = new OrganizationInfo(entity.getUuid(), path);
+                                orgs.add(orgInfo);
+                                organizations.put(entity.getUuid(), path);
+                            }
+                            return orgs;
+                        }
+                        catch (Exception e) {
+                            // shouldn't have failed
+                            logger.error("Failed to retrieve list of orgs -- broke orgs list cache");
+                            return new ArrayList<>();
+                        }
+                    }
+                });
+
+        appsForOrgCache = CacheBuilder.newBuilder().maximumSize( Long.valueOf( properties.getProperty(APPS_FOR_ORG_CACHE_SIZE, "1000")) )
+                .expireAfterWrite( Long.valueOf( System.getProperty(APPS_FOR_ORG_CACHE_TIMEOUT, "5000") ), TimeUnit.MILLISECONDS)
+                .build( new CacheLoader<UUID, BiMap<UUID, String>>() {
+                    public BiMap<UUID, String> load( @Nonnull UUID organizationGroupId ) {
+                        try {
+                            final BiMap<UUID, String> applications = HashBiMap.create();
+                            final EntityManager em = emf.getEntityManager(smf.getManagementAppId());
+
+                            // query for application_info entities
+                            final Results results = em.getTargetEntities(
+                                    new SimpleEntityRef(Group.ENTITY_TYPE, organizationGroupId),
+                                    ORG_APP_RELATIONSHIP, CpNamingUtils.APPLICATION_INFO, Level.ALL_PROPERTIES);
+
+                            final PagingResultsIterator itr = new PagingResultsIterator(results);
+
+                            String entityName;
+
+                            while (itr.hasNext()) {
+
+                                final Entity entity = (Entity) itr.next();
+
+                                entityName = entity.getName();
+
+                                if (entityName != null) {
+                                    entityName = entityName.toLowerCase();
+                                }
+
+                                // make sure we return applicationId and not the application_info UUID
+                                UUID applicationId = entity.getUuid();
+
+                                applications.put(applicationId, entityName);
+                            }
+
+
+                            return applications;
+                        }
+                        catch (Exception e) {
+                            // probably shouldn't have failed, log
+                            logger.info("Failed to retrieve list of apps for org {} for cache", organizationGroupId);
+                            // return empty list
+                            return HashBiMap.create();
+                        }
+                    }
+                });
+
     }
 
     String orgSysAdminEmail,defaultSysAdminEmail;
@@ -312,7 +446,7 @@ public class ManagementServiceImpl implements ManagementService {
                 organization = created.getOrganization();
             }
 
-            if ( !getApplicationsForOrganization( organization.getUuid() ).containsValue( test_app_name ) ) {
+            if ( !getApplicationsForOrganization( organization.getUuid(), true ).containsValue( test_app_name ) ) {
                 try {
                     createApplication( organization.getUuid(), test_app_name );
                 }catch(ApplicationAlreadyExistsException aaee){
@@ -602,8 +736,8 @@ public class ManagementServiceImpl implements ManagementService {
             startOrganizationActivationFlow( organization );
         }
 
-
-
+        // reset orgs list cache
+        allOrgsListCache.invalidateAll();
         return organization;
     }
 
@@ -731,26 +865,17 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public List<OrganizationInfo> getOrganizations( UUID startResult, int count ) throws Exception {
-        // still need the bimap to search for existing
-        BiMap<UUID, String> organizations = HashBiMap.create();
-        EntityManager em = emf.getEntityManager(smf.getManagementAppId());
-        Results results = em.getCollection(em.getApplicationRef(),
-            Schema.COLLECTION_GROUPS, startResult, count, Level.ALL_PROPERTIES, false);
-        List<OrganizationInfo> orgs = new ArrayList<>( results.size() );
-        OrganizationInfo orgInfo;
-        for ( Entity entity : results.getEntities() ) {
-            // TODO T.N. temporary hack to deal with duplicate orgs. Revert this
-            // commit after migration
-            String path = ( String ) entity.getProperty( PROPERTY_PATH );
-
-            if ( organizations.containsValue( path ) ) {
-                path += "DUPLICATE";
-            }
-            orgInfo = new OrganizationInfo( entity.getUuid(), path );
-            orgs.add( orgInfo );
-            organizations.put( entity.getUuid(), path );
+        // always use hardcoded value -- singleton cache
+        List<OrganizationInfo> orgs = allOrgsListCache.get("orgs");
+        if (startResult != null) {
+            long startResultTimestamp = startResult.timestamp();
+            orgs.removeIf(o -> o.getUuid().timestamp() <= startResultTimestamp);
         }
-        return orgs;
+        if (count < orgs.size()) {
+            return orgs.subList(0, count);
+        } else {
+            return orgs;
+        }
     }
 
 
@@ -1643,7 +1768,7 @@ public class ManagementServiceImpl implements ManagementService {
         Map<String, Object> jsonOrganization = new HashMap<>();
         jsonOrganization.putAll( JsonUtils.toJsonMap( organization ) );
 
-        BiMap<UUID, String> applications = getApplicationsForOrganization( organization.getUuid() );
+        BiMap<UUID, String> applications = getApplicationsForOrganization( organization.getUuid(), true );
         jsonOrganization.put( "applications", applications.inverse() );
 
         List<UserInfo> users = getAdminUsersForOrganization( organization.getUuid() );
@@ -1867,17 +1992,9 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     protected Entity getOrganizationEntityForApplication( UUID applicationInfoId ) throws Exception {
-        if ( applicationInfoId == null ) {
-            return null;
-        }
 
-        final EntityManager em = emf.getEntityManager(smf.getManagementAppId());
+        return applicationInfoId != null ? orgEntityForAppCache.get(applicationInfoId) : null;
 
-        Results r = em.getSourceEntities(
-                new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
-                ORG_APP_RELATIONSHIP, Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
-
-        return r.getEntity();
     }
 
     @Override
@@ -1900,41 +2017,23 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public BiMap<UUID, String> getApplicationsForOrganization( UUID organizationGroupId ) throws Exception {
+    public BiMap<UUID, String> getApplicationsForOrganization( UUID organizationGroupId )
+            throws Exception {
+        return getApplicationsForOrganization(organizationGroupId, false);
+    }
+
+
+    @Override
+    public BiMap<UUID, String> getApplicationsForOrganization( UUID organizationGroupId, boolean bypassCache )
+            throws Exception {
 
         if ( organizationGroupId == null ) {
             return null;
         }
-        final BiMap<UUID, String> applications = HashBiMap.create();
-        final EntityManager em = emf.getEntityManager(smf.getManagementAppId());
-
-        // query for application_info entities
-        final Results results = em.getTargetEntities(
-            new SimpleEntityRef(Group.ENTITY_TYPE, organizationGroupId),
-            ORG_APP_RELATIONSHIP, CpNamingUtils.APPLICATION_INFO, Level.ALL_PROPERTIES);
-
-        final PagingResultsIterator itr = new PagingResultsIterator( results );
-
-        String entityName;
-
-        while ( itr.hasNext() ) {
-
-            final Entity entity = ( Entity ) itr.next();
-
-            entityName = entity.getName();
-
-            if ( entityName != null ) {
-                entityName = entityName.toLowerCase();
-            }
-
-            // make sure we return applicationId and not the application_info UUID
-            UUID applicationId = entity.getUuid();
-
-            applications.put( applicationId, entityName );
+        if (bypassCache) {
+            appsForOrgCache.invalidate(organizationGroupId);
         }
-
-
-        return applications;
+        return appsForOrgCache.get(organizationGroupId);
     }
 
 
@@ -3344,16 +3443,8 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public OrganizationConfig getOrganizationConfigByUuid( UUID id ) throws Exception {
 
-        EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Entity entity = em.get( new SimpleEntityRef( Group.ENTITY_TYPE, id ) );
-        if ( entity == null ) {
-            return getOrganizationConfigDefaultsOnly();
-        }
-        Map<Object, Object> entityProperties = em.getDictionaryAsMap(entity, ORGANIZATION_CONFIG_DICTIONARY);
-        return new OrganizationConfig( orgConfigProperties,
-                (UUID)entity.getProperty(PROPERTY_UUID),
-                (String)entity.getProperty(PROPERTY_PATH),
-                entityProperties, false);
+        return id != null ? orgConfigByUUIDCache.get(id) : getOrganizationConfigDefaultsOnly();
+
     }
 
 
@@ -3396,8 +3487,8 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public OrganizationConfig getOrganizationConfigForApplication( UUID applicationInfoId ) throws Exception {
 
-        // return from the cache. if the orgconfig cannot be loaded, defaults are loaded and cached
-        return orgConfigByAppCache.get( applicationInfoId );
+        return getOrganizationConfigByUuid( getOrganizationIdForApplication( applicationInfoId ) );
+
     }
 
 
@@ -3418,45 +3509,36 @@ public class ManagementServiceImpl implements ManagementService {
             }
 
             // evict cache for this key if it exists
-            orgConfigByAppCache.invalidate( organizationConfig.getUuid() );
+            orgConfigByUUIDCache.invalidate( organizationConfig.getUuid() );
 
         }
     }
 
 
-    private LoadingCache<UUID, OrganizationConfig> orgConfigByAppCache =
+    // need to invalidate when org config is changed
+/*    private LoadingCache<UUID, OrganizationConfig> orgConfigByUUIDCache =
         CacheBuilder.newBuilder().maximumSize( 1000 )
-            .expireAfterWrite( Long.valueOf( System.getProperty(ORG_CONFIG_CACHE_PROP, "30000") ) , TimeUnit.MILLISECONDS)
+            .expireAfterWrite( Long.valueOf( System.getProperty(ORG_CONFIG_CACHE_TIMEOUT, "30000") ), TimeUnit.MILLISECONDS)
             .build( new CacheLoader<UUID, OrganizationConfig>() {
-                public OrganizationConfig load( UUID applicationInfoId ) {
+                public OrganizationConfig load( @Nonnull UUID id ) {
 
                     try {
-
-                        if (applicationInfoId != null && applicationInfoId != CpNamingUtils.MANAGEMENT_APPLICATION_ID) {
-
-                            final EntityManager em = emf.getEntityManager(smf.getManagementAppId());
-
-                            Results r = em.getSourceEntities(
-                                new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
-                                ORG_APP_RELATIONSHIP, Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
-
-                            Group org = (Group) r.getEntity();
-
-                            if (org != null) {
-                                Map<Object, Object> entityProperties = em.getDictionaryAsMap(org, ORGANIZATION_CONFIG_DICTIONARY);
-                                return new OrganizationConfig(orgConfigProperties, org.getUuid(), org.getPath(), entityProperties, false);
-                            }
-
+                        EntityManager em = emf.getEntityManager(smf.getManagementAppId());
+                        Entity entity = em.get(new SimpleEntityRef(Group.ENTITY_TYPE, id));
+                        if (entity == null) {
+                            return getOrganizationConfigDefaultsOnly();
                         }
-
-                        return new OrganizationConfig(orgConfigProperties);
-
-                    }catch (Exception e){
-
-                        return new OrganizationConfig(orgConfigProperties);
-
+                        Map<Object, Object> entityProperties = em.getDictionaryAsMap(entity, ORGANIZATION_CONFIG_DICTIONARY);
+                        return new OrganizationConfig(orgConfigProperties,
+                                (UUID) entity.getProperty(PROPERTY_UUID),
+                                (String) entity.getProperty(PROPERTY_PATH),
+                                entityProperties, false);
+                    }
+                    catch (Exception e) {
+                        return getOrganizationConfigDefaultsOnly();
                     }
                 }}
-            );
+            );*/
 
+    // need to invalidate if org entity changes
 }

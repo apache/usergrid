@@ -324,13 +324,17 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
             throws Exception {
 
-        UUID applicationId = UUID.fromString( applicationIdStr );
-        UUID organizationId = UUID.fromString( organizationIdStr );
-        if ( applicationId == null || organizationId == null ) {
-            return null;
+        UUID applicationId;
+        UUID organizationId;
+        try {
+            applicationId = UUID.fromString(applicationIdStr);
+            organizationId = UUID.fromString(organizationIdStr);
+            UUID appOrganizationId = management.getOrganizationIdForApplication(applicationId);
+            if ( organizationId != appOrganizationId ) {
+                return null;
+            }
         }
-        BiMap<UUID, String> apps = management.getApplicationsForOrganization( organizationId );
-        if ( apps.get( applicationId ) == null ) {
+        catch (Exception e) {
             return null;
         }
         return appResourceFor( applicationId );

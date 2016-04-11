@@ -101,8 +101,13 @@ public class OrganizationResource extends AbstractContextResource {
         // don't look up app if request is a PUT because a PUT can be used to restore a deleted app
         if ( httpServletRequest.getMethod().equalsIgnoreCase("PUT") ) {
 
-            BiMap<UUID, String> apps = management.getApplicationsForOrganization(organizationId);
-            if (apps.get(applicationId) == null) {
+            try {
+                UUID appOrgId = management.getOrganizationIdForApplication(applicationId);
+                if (organizationId != appOrgId) {
+                    return null;
+                }
+            }
+            catch (Exception e) {
                 return null;
             }
         }

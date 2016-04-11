@@ -86,7 +86,7 @@ public class OrganizationsResource extends AbstractContextResource {
 
 
             Map<String, Object> jsonOrg = new HashMap<>();
-            Map<String, UUID> apps = management.getApplicationsForOrganization(org.getUuid()).inverse();
+            Map<String, UUID> apps = management.getApplicationsForOrganization(org.getUuid(), true).inverse();
 
             jsonOrg.put("name", org.getName());
             jsonOrg.put("uuid", org.getUuid());

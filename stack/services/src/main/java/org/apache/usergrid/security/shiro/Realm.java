@@ -37,7 +37,10 @@ import org.apache.usergrid.security.tokens.TokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+
+import java.util.Properties;
 
 import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED;
 
@@ -54,6 +57,7 @@ public class Realm extends AuthorizingRealm {
     private EntityManagerFactory emf;
     private ManagementService management;
     private TokenService tokens;
+    private Properties properties;
 
 
     @Value( "${" + PROPERTIES_SYSADMIN_LOGIN_ALLOWED + "}" )
@@ -127,6 +131,13 @@ public class Realm extends AuthorizingRealm {
     public void setManagementService( ManagementService management ) {
         this.management = management;
     }
+
+    @Autowired
+    @Qualifier("properties")
+    public void setProperties( Properties properties ) {
+        this.properties = properties;
+    }
+
 
 
     @Autowired
