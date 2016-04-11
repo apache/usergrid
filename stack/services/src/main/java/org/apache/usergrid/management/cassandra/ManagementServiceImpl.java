@@ -1796,7 +1796,7 @@ public class ManagementServiceImpl implements ManagementService {
             throw new EntityNotFoundException("Deleted application ID " + applicationId + " not found");
         }
 
-        if ( emf.lookupApplication( app.getName() ).isPresent()) {
+        if ( emf.lookupApplication( app.getName() ) != null ) {
             throw new ConflictException("Cannot restore application, one with that name already exists.");
         }
 
@@ -1990,11 +1990,11 @@ public class ManagementServiceImpl implements ManagementService {
         if ( applicationName == null ) {
             return null;
         }
-        Optional<UUID> applicationId = emf.lookupApplication(applicationName);
-        if ( !applicationId.isPresent() ) {
+        UUID applicationId = emf.lookupApplication(applicationName);
+        if ( applicationId == null ) {
             return null;
         }
-        return new ApplicationInfo( applicationId.get(), applicationName.toLowerCase() );
+        return new ApplicationInfo( applicationId, applicationName.toLowerCase() );
     }
 
 
