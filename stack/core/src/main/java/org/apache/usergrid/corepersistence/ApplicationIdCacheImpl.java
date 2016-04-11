@@ -16,74 +16,64 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.usergrid.corepersistence;
 
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
-import com.google.common.base.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 
-
 /**
- * Implements the org app cache for faster runtime lookups.  These values are immutable, so this LRU cache can stay
- * full for the duration of the execution
+ * Implements the org app cache for faster runtime lookups.
+ * These values are immutable, so this LRU cache can stay full for the duration of the execution.
  */
 public class ApplicationIdCacheImpl implements ApplicationIdCache {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationIdCacheImpl.class);
 
+    // cache the pointer to our root entity manager for reference
+    private final LoadingCache<String, UUID> appCache;
 
-    /**
-     * Cache the pointer to our root entity manager for reference
-     */
-
-    private final LoadingCache<String, Optional<UUID>> appCache;
     private final EntityManager managementEnityManager;
+
     private final ManagerCache managerCache;
 
 
-    public ApplicationIdCacheImpl(final EntityManager managementEnityManager, ManagerCache managerCache, ApplicationIdCacheFig fig) {
+    public ApplicationIdCacheImpl(
+        final EntityManager managementEnityManager, ManagerCache managerCache, ApplicationIdCacheFig fig) {
+
         this.managementEnityManager = managementEnityManager;
         this.managerCache = managerCache;
+
         appCache = CacheBuilder.newBuilder()
             .maximumSize(fig.getCacheSize())
             .expireAfterWrite(fig.getCacheTimeout(), TimeUnit.MILLISECONDS)
-            .build(new CacheLoader<String, Optional<UUID>>() {
+            .build(new CacheLoader<String, UUID>() {
                 @Override
-                public Optional<UUID> load(final String key) throws Exception {
-                    return Optional.fromNullable(fetchApplicationId(key));
+                public UUID load(final String key) throws Exception {
+                    return fetchApplicationId(key);
                 }
             });
     }
 
     @Override
-    public  Optional<UUID> getApplicationId( final String applicationName ) {
+    public UUID getApplicationId( final String applicationName ) {
         try {
-            Optional<UUID> optionalUuid = appCache.get( applicationName.toLowerCase() );
-            if(!optionalUuid.isPresent()){
-                appCache.invalidate(applicationName.toLowerCase());
-                return Optional.absent();
-            }
-            return optionalUuid;
+            return appCache.get( applicationName.toLowerCase() );
         } catch (Exception e) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Returning for key {} value null", applicationName);
@@ -112,25 +102,21 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
             logger.error("Error looking up management app", e);
         }
 
-        try {
+        // look up application_info ID for application using unique "name" field
+        final Observable<Id> idObs = ecm.getIdField(
+            CpNamingUtils.APPLICATION_INFO, new StringField(Schema.PROPERTY_NAME, applicationName));
+        Id id = idObs.toBlocking().lastOrDefault(null);
 
-            // look up application_info ID for application using unique "name" field
-            final Observable<Id> idObs = ecm.getIdField(
-                CpNamingUtils.APPLICATION_INFO, new StringField(Schema.PROPERTY_NAME, applicationName));
+        if ( id != null ) {
+            value = id.getUuid();
 
-            Id id = idObs.toBlocking().lastOrDefault(null);
-            if(id != null) {
-                value = id.getUuid();
-            }else{
-                if(logger.isDebugEnabled()) {
-                    logger.debug("Could not load value for key {} ", applicationName);
-                }
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug( "Could not load value for key {} ", applicationName );
             }
-            return value;
         }
-        catch ( Exception e ) {
-            throw new RuntimeException( "Unable to retrieve application id", e );
-        }
+
+        return value;
     }
 
 

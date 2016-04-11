@@ -138,9 +138,9 @@ public class OrganizationResource extends AbstractContextResource {
         }
 
         String orgAppName = PathingUtils.assembleAppName( organizationName, applicationName );
-        Optional<UUID> optionalAppId = emf.lookupApplication( orgAppName );
+        UUID optionalAppId = emf.lookupApplication( orgAppName );
 
-        if ( !optionalAppId.isPresent()) {
+        if ( optionalAppId == null ) {
 
             // TODO: fix this hacky work-around for apparent Jersey issue
             UUID applicationId = UUIDUtils.tryExtractUUID( applicationName );
@@ -148,11 +148,11 @@ public class OrganizationResource extends AbstractContextResource {
             if ( applicationId == null ) {
                 throw new OrganizationApplicationNotFoundException( orgAppName, uriInfo, properties, management );
             }else{
-                optionalAppId = Optional.fromNullable(applicationId);
+                optionalAppId = applicationId;
             }
         }
 
-        return appResourceFor( optionalAppId.get() );
+        return appResourceFor( optionalAppId );
     }
 
 
