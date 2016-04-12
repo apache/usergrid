@@ -82,14 +82,25 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
         CacheBuilder.newBuilder().maximumSize( 1000 )
                     .build( new CacheLoader<ApplicationScope, EntityCollectionManager>() {
                         public EntityCollectionManager load( ApplicationScope scope ) {
-                                  //create the target EM that will perform logic
+                            //create the target EM that will perform logic
                             final EntityCollectionManager target = new EntityCollectionManagerImpl(
-                                writeStart, writeVerifyUnique,
-                                writeOptimisticVerify, writeCommit, rollback, markStart, markCommit,  uniqueCleanup, versionCompact,
-                                entitySerializationStrategy, uniqueValueSerializationStrategy,
-                                mvccLogEntrySerializationStrategy, keyspace,
-                                metricsFactory, serializationFig,
-                                rxTaskScheduler, scope );
+                                writeStart,
+                                writeVerifyUnique,
+                                writeOptimisticVerify,
+                                writeCommit,
+                                rollback,
+                                markStart,
+                                markCommit,
+                                uniqueCleanup,
+                                versionCompact,
+                                entitySerializationStrategy,
+                                uniqueValueSerializationStrategy,
+                                mvccLogEntrySerializationStrategy,
+                                keyspace,
+                                metricsFactory,
+                                serializationFig,
+                                rxTaskScheduler,
+                                scope );
 
                             return target;
                         }
@@ -97,17 +108,19 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
 
 
     @Inject
-    public EntityCollectionManagerFactoryImpl( final WriteStart writeStart, final WriteUniqueVerify writeVerifyUnique,
-                                               final WriteOptimisticVerify writeOptimisticVerify,
-                                               final WriteCommit writeCommit, final RollbackAction rollback,
-                                               final MarkStart markStart, final MarkCommit markCommit,
-                                               final UniqueCleanup uniqueCleanup, final VersionCompact versionCompact,
-                                               final SerializationFig serializationFig, final
-                                                   MvccEntitySerializationStrategy entitySerializationStrategy,
-                                               final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                                               final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
-                                               final Keyspace keyspace, final EntityCacheFig entityCacheFig,
-                                               final MetricsFactory metricsFactory, @CollectionExecutorScheduler  final RxTaskScheduler rxTaskScheduler ) {
+    public EntityCollectionManagerFactoryImpl(
+            final WriteStart writeStart, final WriteUniqueVerify writeVerifyUnique,
+            final WriteOptimisticVerify writeOptimisticVerify,
+            final WriteCommit writeCommit, final RollbackAction rollback,
+            final MarkStart markStart, final MarkCommit markCommit,
+            final UniqueCleanup uniqueCleanup, final VersionCompact versionCompact,
+            final SerializationFig serializationFig,
+            final MvccEntitySerializationStrategy entitySerializationStrategy,
+            final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
+            final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
+            final Keyspace keyspace, final EntityCacheFig entityCacheFig,
+            final MetricsFactory metricsFactory, @CollectionExecutorScheduler
+            final RxTaskScheduler rxTaskScheduler ) {
 
         this.writeStart = writeStart;
         this.writeVerifyUnique = writeVerifyUnique;
@@ -126,6 +139,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
         this.metricsFactory = metricsFactory;
         this.rxTaskScheduler = rxTaskScheduler;
     }
+
     @Override
     public EntityCollectionManager createCollectionManager(ApplicationScope applicationScope) {
         Preconditions.checkNotNull(applicationScope);
@@ -141,5 +155,4 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
     public void invalidate() {
         ecmCache.invalidateAll();
     }
-
 }
