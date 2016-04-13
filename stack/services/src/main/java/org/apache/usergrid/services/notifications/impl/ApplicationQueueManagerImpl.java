@@ -20,10 +20,7 @@ import com.codahale.metrics.Meter;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.entities.Device;
-import org.apache.usergrid.persistence.entities.Notification;
-import org.apache.usergrid.persistence.entities.Notifier;
-import org.apache.usergrid.persistence.entities.Receipt;
+import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueMessage;
@@ -33,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import java.io.IOException;
 import java.util.*;
@@ -174,15 +172,18 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             //process up to 10 concurrently
             Observable processMessagesObservable = Observable.create(new IteratorObservable<Entity>(iterator))
                 .flatMap(entity -> {
+
+                    if(entity.getType().equals(Device.ENTITY_TYPE)){
+                        return Observable.from(Collections.singletonList(entity));
+                    }
+
+                    // if it's not a device, drill down and get them
                     return Observable.from(getDevices(entity));
-                }, 10)
+
+                }, 50)
                 .distinct(ref -> ref.getUuid())
                 .map(sendMessageFunction)
-                .buffer(100)
-                .doOnNext( applicationQueueMessages -> {
-
-                    applicationQueueMessages.forEach( message -> {
-
+                .doOnNext( message -> {
                         try {
                             if(message.isPresent()){
                                 qm.sendMessage( message.get() );
@@ -201,13 +202,12 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                         }
 
-                    });
-
 
                 })
                 .doOnError(throwable -> logger.error("Failed while trying to send notification", throwable));
 
-            processMessagesObservable.toBlocking().lastOrDefault(null); // let this run and block the async thread, messages are queued
+            //TODO verify error handling here
+            processMessagesObservable.subscribeOn(Schedulers.io()).subscribe(); // fire the queuing into the background
 
         }
 
@@ -221,7 +221,6 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             }
         }
 
-        notification.setExpectedCount(deviceCount.get());
         notification.addProperties(properties);
         em.update(notification);
 
@@ -491,14 +490,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
 
     private boolean isOkToSend(Notification notification) {
-        Map<String, Long> stats = notification.getStatistics();
-        if (stats != null && notification.getExpectedCount() == (stats.get("sent") + stats.get("errors"))) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("notification {} already processed. not sending.",
-                    notification.getUuid());
-            }
-            return false;
-        }
+
         if (notification.getCanceled() == Boolean.TRUE) {
             if (logger.isDebugEnabled()) {
                 logger.debug("notification {} canceled. not sending.",
@@ -522,14 +514,9 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
         final int LIMIT = Query.MID_LIMIT;
 
-
         try {
 
-            if ("device".equals(ref.getType())) {
-
-                devices = Collections.singletonList(ref);
-
-            } else if ("user".equals(ref.getType())) {
+           if (User.ENTITY_TYPE.equals(ref.getType())) {
 
                 UUID start = null;
                 boolean initial = true;
@@ -551,7 +538,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                 }
 
-            } else if ("group".equals(ref.getType())) {
+            } else if (Group.ENTITY_TYPE.equals(ref.getType())) {
 
                 UUID start = null;
                 boolean initial = true;

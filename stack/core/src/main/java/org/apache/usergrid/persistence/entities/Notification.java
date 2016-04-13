@@ -41,11 +41,6 @@ public class Notification extends TypedEntity {
         NORMAL, HIGH
     }
 
-
-    /** Total count of notifications sent based on the API path/query */
-    @EntityProperty
-    protected int expectedCount;
-
     /** The pathQuery/query that Usergrid used to idenitfy the devices to send the notification to */
     @EntityProperty
     private PathTokens pathQuery;
@@ -105,11 +100,6 @@ public class Notification extends TypedEntity {
     public Notification() {
         pathQuery = new PathTokens();
     }
-
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-    public int getExpectedCount() {  return expectedCount;  }
-
-    public void setExpectedCount(int expectedCount) {  this.expectedCount = expectedCount;  }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public PathTokens getPathQuery(){
