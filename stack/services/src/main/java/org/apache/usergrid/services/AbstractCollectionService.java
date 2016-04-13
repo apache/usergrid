@@ -38,6 +38,8 @@ import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.security.shiro.principals.AdminUserPrincipal;
+import org.apache.usergrid.security.shiro.principals.ApplicationPrincipal;
+import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
@@ -334,11 +336,26 @@ public class AbstractCollectionService extends AbstractService {
         ServiceContext context = serviceRequest.getAppContext();
 
         checkPermissionsForCollection( context );
+        //TODO: write rest test for these line of codes
         Subject currentUser = SubjectUtils.getSubject();
-        Object currentUser2 =currentUser.getPrincipal();
+        Object currentUserPrincipal =currentUser.getPrincipal();
 
-        Map collectionSchema = em.createCollectionSchema(context.getCollectionName(),
-            ( ( AdminUserPrincipal ) currentUser2 ).getUser().getEmail(),context.getProperties());
+        Map collectionSchema = null;
+
+        if(currentUserPrincipal instanceof AdminUserPrincipal) {
+            AdminUserPrincipal adminUserPrincipal = ( AdminUserPrincipal ) currentUserPrincipal;
+
+            collectionSchema = em.createCollectionSchema( context.getCollectionName(),
+                adminUserPrincipal.getUser().getEmail(), context.getProperties() );
+        }
+        else if(currentUserPrincipal instanceof ApplicationPrincipal){
+            collectionSchema = em.createCollectionSchema( context.getCollectionName(),
+                "app credentials", context.getProperties() );
+        }
+        else if ( currentUserPrincipal instanceof PrincipalIdentifier ) {
+            collectionSchema = em.createCollectionSchema( context.getCollectionName(),
+                "generic credentials", context.getProperties() );
+        }
 
         return new ServiceResults( this, context, Type.COLLECTION, Results.fromData( collectionSchema ), null, null );
 
