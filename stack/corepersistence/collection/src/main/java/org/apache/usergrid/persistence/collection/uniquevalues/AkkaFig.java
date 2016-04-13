@@ -27,20 +27,31 @@ import org.safehaus.guicyfig.Key;
 @FigSingleton
 public interface AkkaFig extends GuicyFig {
 
+    String AKKA_ENABLED = "collection.akka.enabled";
+
     String AKKA_HOSTNAME = "collection.akka.hostname";
 
     String AKKA_PORT = "collection.akka.port";
 
     String AKKA_REGION = "collection.akka.region";
 
-    String AKKA_REGIONS = "collection.akka.regions";
-
-    String AKKA_UNIQUE_VALUE_ACTORS = "collection.akka.unique.value.actors";
-
     String AKKA_REGION_SEEDS = "collection.akka.region.seeds";
 
-    String AKKA_REGION_TYPES = "collection.akka.region.types";
+    String AKKA_UNIQUEVALUE_ACTORS = "collection.akka.uniquevalue.actors";
 
+    String AKKA_UNIQUEVALUE_CACHE_TTL = "collection.akka.uniquevalue.cache.ttl";
+
+    String AKKA_UNIQUEVALUE_RESERVATION_TTL= "collection.akka.uniquevalue.reservation.ttl";
+
+    String AKKA_UNIQUEVALUE_REGION_TYPES = "collection.akka.uniquevalue.region.types";
+
+
+    /**
+     * Use Akka or nah
+     */
+    @Key(AKKA_ENABLED)
+    @Default("true")
+    boolean getAkkaEnabled();
 
     /**
      * Hostname to be used in Akka configuration.
@@ -64,16 +75,9 @@ public interface AkkaFig extends GuicyFig {
     String getRegion();
 
     /**
-     * Comma-separated list of all regions to be used in Akka configuration.
-     */
-    @Key(AKKA_REGIONS)
-    @Default("us-east")
-    String getRegions();
-
-    /**
      * Number of UniqueValueActors to be started on each node
      */
-    @Key(AKKA_UNIQUE_VALUE_ACTORS)
+    @Key(AKKA_UNIQUEVALUE_ACTORS)
     @Default("300")
     int getUniqueValueActors();
 
@@ -89,7 +93,21 @@ public interface AkkaFig extends GuicyFig {
      * Comma-separated lists of region types each with format {region}:{type}
      */
     // TODO: allow this to be set via REST API
-    @Key(AKKA_REGION_TYPES)
-    @Default("")
+    @Key(AKKA_UNIQUEVALUE_REGION_TYPES)
+    @Default("us-east:user")
     String getRegionTypes();
+
+    /**
+     * Unique Value cache TTL in seconds.
+     */
+    @Key(AKKA_UNIQUEVALUE_CACHE_TTL)
+    @Default("5")
+    int getUniqueValueCacheTtl();
+
+    /**
+     * Unique Value Reservation TTL in seconds.
+     */
+    @Key(AKKA_UNIQUEVALUE_RESERVATION_TTL)
+    @Default("5")
+    int getUniqueValueReservationTtl();
 }

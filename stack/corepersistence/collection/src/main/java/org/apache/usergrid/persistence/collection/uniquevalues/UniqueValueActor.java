@@ -5,6 +5,9 @@ import akka.actor.UntypedActor;
 import akka.cluster.pubsub.DistributedPubSub;
 import akka.cluster.pubsub.DistributedPubSubMediator;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,21 +21,16 @@ public class UniqueValueActor extends UntypedActor {
 
     //private MetricsService metricsService;
 
-    private UniqueValuesTable table = new UniqueValuesTableImpl();
+    final private UniqueValuesTable table;
 
-    private ActorRef mediator = DistributedPubSub.get(getContext().system()).mediator();
+    final private ActorRef mediator = DistributedPubSub.get(getContext().system()).mediator();
 
     private int count = 0;
 
 
-    public UniqueValueActor( String injectorName ) {
+    public UniqueValueActor( UniqueValuesTable table ) {
+        this.table = table;
 
-//        UniqueValuesService uniqueValuesService =
-//                GuiceModule.getInjector( injectorName ).getInstance( UniqueValuesService.class );
-//
-//        terminateOnError = Boolean.parseBoolean( uniqueValuesService.getProperties()
-//                .getProperty( "akka.unique-value-actor-terminate-on-error", "false" ) );
-//
 //        chaos = Boolean.parseBoolean( uniqueValuesService.getProperties()
 //                .getProperty( "akka.test.chaos", "false" ) );
 
@@ -58,20 +56,20 @@ public class UniqueValueActor extends UntypedActor {
 //            final Timer.Context context = metricsService.getReservationTimer().time();
 
             try {
-                UUID owner = table.lookupOwner( res.getType(), res.getPropertyName(), res.getPropertyValue() );
+                Id owner = table.lookupOwner( res.getApplicationScope(), res.getOwner().getType(), res.getField() );
 
-                if ( owner != null && owner.equals( res.getUuid() )) {
+                if ( owner != null && owner.equals( res.getOwner() )) {
                     // sender already owns this unique value
                     getSender().tell( new Response( Response.Status.IS_UNIQUE ), getSender() );
                     return;
 
-                } else if ( owner != null && !owner.equals( res.getUuid() )) {
+                } else if ( owner != null && !owner.equals( res.getOwner() )) {
                     // tell sender value is not unique
                     getSender().tell( new Response( Response.Status.NOT_UNIQUE ), getSender() );
                     return;
                 }
 
-                table.reserve( res.getUuid(), res.getType(), res.getPropertyName(), res.getPropertyValue() );
+                table.reserve( res.getApplicationScope(), res.getOwner(), res.getOwnerVersion(), res.getField() );
 
                 getSender().tell( new Response( Response.Status.IS_UNIQUE ), getSender() );
 
@@ -89,14 +87,14 @@ public class UniqueValueActor extends UntypedActor {
             }
 
         } else if ( message instanceof Confirmation) {
-            Confirmation commit = (Confirmation) message;
+            Confirmation con = (Confirmation) message;
 
 //            final Timer.Context context = metricsService.getCommitmentTimer().time();
 
             try {
-                UUID owner = table.lookupOwner(  commit.getType(), commit.getPropertyName(), commit.getPropertyValue() );
+                Id owner = table.lookupOwner( con.getApplicationScope(), con.getOwner().getType(), con.getField() );
 
-                if ( owner != null && !owner.equals( commit.getUuid() )) {
+                if ( owner != null && !owner.equals( con.getOwner() )) {
                     // cannot reserve, somebody else owns the unique value
                     getSender().tell( new Response( Response.Status.NOT_UNIQUE ), getSender() );
                     return;
@@ -107,12 +105,12 @@ public class UniqueValueActor extends UntypedActor {
                     return;
                 }
 
-                table.commit( commit.getUuid(), commit.getType(), commit.getPropertyName(), commit.getPropertyValue() );
+                table.confirm( con.getApplicationScope(), con.getOwner(), con.getOwnerVersion(), con.getField() );
 
                 getSender().tell( new Response( Response.Status.IS_UNIQUE ), getSender() );
 
                 mediator.tell( new DistributedPubSubMediator.Publish( "content",
-                        new Reservation( commit ) ), getSelf() );
+                        new Reservation( con ) ), getSelf() );
 
             } catch (Throwable t) {
                 getSender().tell( new Response( Response.Status.ERROR ), getSender() );
@@ -127,9 +125,9 @@ public class UniqueValueActor extends UntypedActor {
             Cancellation can = (Cancellation) message;
 
             try {
-                UUID owner = table.lookupOwner(  can.getType(), can.getPropertyName(), can.getPropertyValue() );
+                Id owner = table.lookupOwner( can.getApplicationScope(), can.getOwner().getType(), can.getField() );
 
-                if ( owner != null && !owner.equals( can.getUuid() )) {
+                if ( owner != null && !owner.equals( can.getOwner() )) {
                     // cannot cancel, somebody else owns the unique value
                     getSender().tell( new Response( Response.Status.NOT_UNIQUE ), getSender() );
                     return;
@@ -140,7 +138,7 @@ public class UniqueValueActor extends UntypedActor {
                     return;
                 }
 
-                table.cancel( can.getType(), can.getPropertyName(), can.getPropertyValue() );
+                table.confirm( can.getApplicationScope(), can.getOwner(), can.getOwnerVersion(), can.getField() );
 
                 getSender().tell( new Response( Response.Status.SUCCESS ), getSender() );
 
@@ -162,41 +160,57 @@ public class UniqueValueActor extends UntypedActor {
      * UniqueValue actor receives and processes Requests.
      */
     public abstract static class Request implements Serializable {
-        final UUID uuid;
-        final String type;
-        final String propertyName;
-        final String propertyValue;
-        final String rowKey;
+        final ApplicationScope applicationScope;
+        final Id owner;
+        final UUID ownerVersion;
+        final Field field;
+        final String consistentHashKey;
 
-        public Request(UUID uuid, String type, String propertyName, String value) {
-            this.uuid = uuid;
-            this.type = type;
-            this.propertyName = propertyName;
-            this.propertyValue = value;
-            this.rowKey = getType() + ":" + getPropertyName() + ":" + getPropertyValue();
+        public Request( ApplicationScope applicationScope, Id owner, UUID ownerVersion, Field field ) {
+            this.applicationScope = applicationScope;
+            this.owner = owner;
+            this.ownerVersion = ownerVersion;
+            this.field = field;
+            StringBuilder sb = new StringBuilder();
+            sb.append( applicationScope.getApplication() );
+            sb.append(":");
+            sb.append( owner.getType() );
+            sb.append(":");
+            sb.append( field.getName() );
+            sb.append(":");
+            sb.append( field.getValue().toString() );
+            this.consistentHashKey = sb.toString();
         }
         public Request( Request req ) {
-            this.uuid = req.uuid;
-            this.type = req.type;
-            this.propertyName = req.propertyName;
-            this.propertyValue = req.propertyValue;
-            this.rowKey = getType() + ":" + getPropertyName() + ":" + getPropertyValue();
+            this.applicationScope = req.applicationScope;
+            this.owner = req.owner;
+            this.ownerVersion = req.ownerVersion;
+            this.field = req.field;
+            StringBuilder sb = new StringBuilder();
+            sb.append( req.applicationScope.getApplication() );
+            sb.append(":");
+            sb.append( req.owner.getType() );
+            sb.append(":");
+            sb.append( req.field.getName() );
+            sb.append(":");
+            sb.append( req.field.getValue().toString() );
+            this.consistentHashKey = sb.toString();
 
         }
-        public String getRowKey() {
-            return rowKey;
+        public ApplicationScope getApplicationScope() {
+            return applicationScope;
         }
-        public UUID getUuid() {
-            return uuid;
+        public Id getOwner() {
+            return owner;
         }
-        public String getType() {
-            return type;
+        public Field getField() {
+            return field;
         }
-        public String getPropertyName() {
-            return propertyName;
+        public String getConsistentHashKey() {
+            return consistentHashKey;
         }
-        public String getPropertyValue() {
-            return propertyValue;
+        public UUID getOwnerVersion() {
+            return ownerVersion;
         }
     }
 
@@ -219,8 +233,8 @@ public class UniqueValueActor extends UntypedActor {
         public Reservation( Request req ) {
             super( req );
         }
-        public Reservation(UUID uuid, String type, String username, String value) {
-            super( uuid, type, username, value );
+        public Reservation( ApplicationScope applicationScope, Id owner, UUID ownerVersion, Field field) {
+            super( applicationScope, owner, ownerVersion, field );
         }
     }
 
@@ -228,8 +242,8 @@ public class UniqueValueActor extends UntypedActor {
         public Cancellation( Request req ) {
             super( req );
         }
-        public Cancellation(UUID uuid, String type, String username, String value) {
-            super( uuid, type, username, value );
+        public Cancellation( ApplicationScope applicationScope, Id owner, UUID ownerVersion, Field field) {
+            super( applicationScope, owner, ownerVersion, field );
         }
     }
 
@@ -237,8 +251,8 @@ public class UniqueValueActor extends UntypedActor {
         public Confirmation(Request req ) {
             super( req );
         }
-        public Confirmation(UUID uuid, String type, String username, String value) {
-            super( uuid, type, username, value );
+        public Confirmation( ApplicationScope applicationScope, Id owner, UUID ownerVersion, Field field) {
+            super( applicationScope, owner, ownerVersion, field );
         }
     }
 

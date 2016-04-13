@@ -20,9 +20,7 @@ package org.apache.usergrid.persistence.collection.guice;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
-import org.apache.usergrid.persistence.collection.uniquevalues.AkkaFig;
-import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
-import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesServiceImpl;
+import org.apache.usergrid.persistence.collection.uniquevalues.*;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -71,6 +69,8 @@ public abstract class CollectionModule extends AbstractModule {
         install( new GuicyFigModule( EntityCacheFig.class ) );
 
         bind( UniqueValuesService.class ).to( UniqueValuesServiceImpl.class );
+
+        bind( UniqueValuesTable.class ).to( UniqueValuesTableImpl.class );
 
         bind( ChangeLogGenerator.class).to( ChangeLogGeneratorImpl.class);
 

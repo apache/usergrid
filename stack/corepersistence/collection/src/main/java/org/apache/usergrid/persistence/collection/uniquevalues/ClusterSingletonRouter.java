@@ -15,9 +15,9 @@ public class ClusterSingletonRouter extends UntypedActor {
     private final ActorRef router;
 
 
-    public ClusterSingletonRouter( String injectorName ) {
+    public ClusterSingletonRouter( UniqueValuesTable table ) {
         router = getContext().actorOf(
-                FromConfig.getInstance().props(Props.create(UniqueValueActor.class, injectorName )), "router");
+                FromConfig.getInstance().props(Props.create(UniqueValueActor.class, table )), "router");
     }
 
     @Override
@@ -27,7 +27,7 @@ public class ClusterSingletonRouter extends UntypedActor {
             UniqueValueActor.Request request = (UniqueValueActor.Request)message;
 
             ConsistentHashingRouter.ConsistentHashableEnvelope envelope =
-                    new ConsistentHashingRouter.ConsistentHashableEnvelope( message, request.getRowKey() );
+                    new ConsistentHashingRouter.ConsistentHashableEnvelope( message, request.getConsistentHashKey() );
             router.tell( envelope, getSender());
 
         } else {

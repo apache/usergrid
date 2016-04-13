@@ -31,9 +31,11 @@ import akka.util.Timeout;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
@@ -45,11 +47,16 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
+@Singleton
 public class UniqueValuesServiceImpl implements UniqueValuesService {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValuesServiceImpl.class );
 
     @Inject
     AkkaFig akkaFig;
+
+    @Inject
+    UniqueValuesTable table;
+
 
     private String hostname;
     private Integer port;
@@ -92,6 +99,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         waitForRequestActors();
     }
 
+
     /**
      * For testing purposes only; does not wait for request actors to start.
      */
@@ -103,9 +111,11 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         initAkka();
     }
 
+
     private Map<String, ActorRef> getRequestActorsByRegion() {
         return requestActorsByRegion;
     }
+
 
     private Map<String, String> getRegionsByType() {
         return regionsByType;
@@ -148,24 +158,13 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             throw new RuntimeException( "No value specified for akka.region");
         }
 
-        String regionsValue = akkaFig.getRegions();
-        if ( StringUtils.isEmpty( regionsValue )) {
-            throw new RuntimeException( "No value specified for akka.regions");
-        }
-
-        String[] regions = regionsValue.split( "," );
-        for ( String region : regions ) {
-
-            akkaFig.getKeyByMethod( "" );
-
-            String typesValue = akkaFig.getRegionTypes();
-            String[] regionTypes = StringUtils.isEmpty( typesValue ) ? new String[0] : typesValue.split(",");
-            for ( String regionType : regionTypes ) {
-                String[] parts = regionType.split(":");
-                String typeRegion = parts[0];
-                String type = parts[1];
-                this.regionsByType.put( type, typeRegion );
-            }
+        String typesValue = akkaFig.getRegionTypes();
+        String[] regionTypes = StringUtils.isEmpty( typesValue ) ? new String[0] : typesValue.split(",");
+        for ( String regionType : regionTypes ) {
+            String[] parts = regionType.split(":");
+            String typeRegion = parts[0];
+            String type = parts[1];
+            this.regionsByType.put( type, typeRegion );
         }
 
         final Map<String, ActorSystem> systemMap = new HashMap<>();
@@ -177,6 +176,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         subscribeToReservations( localSystem, systemMap );
     }
 
+
     private void subscribeToReservations( ActorSystem localSystem, Map<String, ActorSystem> systemMap ) {
 
         for ( String region : systemMap.keySet() ) {
@@ -187,6 +187,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             }
         }
     }
+
 
     /**
      * Create ActorSystem and ClusterSingletonProxy for every region.
@@ -217,7 +218,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
                 ClusterSingletonManagerSettings settings =
                         ClusterSingletonManagerSettings.create( system ).withRole("io");
                 system.actorOf( ClusterSingletonManager.props(
-                        Props.create( ClusterSingletonRouter.class, region ),
+                        Props.create( ClusterSingletonRouter.class, table ),
                         PoisonPill.getInstance(), settings ), "uvRouter");
             }
 
@@ -229,6 +230,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
         return localSystem;
     }
+
 
     /**
      * Create RequestActor for each region.
@@ -249,6 +251,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         }
     }
 
+
     public void waitForRequestActors() {
 
         for ( String region : requestActorsByRegion.keySet() ) {
@@ -256,6 +259,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             waitForRequestActor( ra );
         }
     }
+
 
     private void waitForRequestActor( ActorRef ra ) {
 
@@ -339,7 +343,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
                 }
 
                 if (seedsByRegion.keySet().isEmpty()) {
-                    throw new RuntimeException( "No seeds listed in 'parsing collection.akka.region.seeds' property." );
+                    throw new RuntimeException(
+                        "No seeds listed in 'parsing collection.akka.region.seeds' property." );
                 }
             }
 
@@ -413,14 +418,13 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     }
 
 
-
     @Override
-    public void reserveUniqueValues(Entity entity) throws UniqueValueException {
+    public void reserveUniqueValues( ApplicationScope scope, Entity entity, UUID version) throws UniqueValueException {
 
         try {
             for (Field field : entity.getFields()) {
                 if (field.isUnique()) {
-                    reserveUniqueField( entity, field.getName(), field.getValue().toString() );
+                    reserveUniqueField( scope, entity, version, field );
                 }
             }
 
@@ -428,7 +432,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
             for (Field field : entity.getFields()) {
                 try {
-                    cancelUniqueField( entity, field.getName(), field.getValue().toString() );
+                    cancelUniqueField( scope, entity, version, field );
                 } catch (Throwable ignored) {
                     logger.debug( "Error canceling unique field", ignored );
                 }
@@ -440,12 +444,12 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
 
     @Override
-    public void confirmUniqueValues(Entity entity) throws UniqueValueException {
+    public void confirmUniqueValues( ApplicationScope scope, Entity entity, UUID version ) throws UniqueValueException {
 
         try {
             for (Field field : entity.getFields()) {
                 if (field.isUnique()) {
-                    confirmUniqueField( entity, field.getName(), field.getValue().toString() );
+                    confirmUniqueField( scope, entity, version, field );
                 }
             }
 
@@ -453,7 +457,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
             for (Field field : entity.getFields()) {
                 try {
-                    cancelUniqueField( entity, field.getName(), field.getValue().toString() );
+                    cancelUniqueField( scope, entity, version, field );
                 } catch (Throwable ignored) {
                     logger.debug( "Error canceling unique field", ignored );
                 }
@@ -465,9 +469,9 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
 
     private void reserveUniqueField(
-        Entity entity, String propertyName, String propertyValue ) throws UniqueValueException {
+        ApplicationScope scope, Entity entity, UUID version, Field field ) throws UniqueValueException {
 
-        String region = getRegionsByType().get("user");
+        String region = getRegionsByType().get( entity.getId().getType() );
         ActorRef requestActor = getRequestActorsByRegion().get(region);
 
         if ( requestActor == null ) {
@@ -475,23 +479,24 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         }
 
         UniqueValueActor.Request request = new UniqueValueActor.Reservation(
-            entity.getId().getUuid(), "user",  propertyName, propertyValue );
+            scope, entity.getId(), version, field );
 
-        UniqueValueActor.Reservation res = reservationCache.get( request.getRowKey() );
+        UniqueValueActor.Reservation res = reservationCache.get( request.getConsistentHashKey() );
 //        if ( res != null ) {
 //            getCacheCounter().inc();
 //        }
-        if ( res != null && !res.getUuid().equals( request.getUuid() )) {
-            throw new UniqueValueException( "Error property not unique (cache)" );
+        if ( res != null && !res.getOwner().equals( request.getOwner() )) {
+            throw new UniqueValueException( "Error property not unique (cache)", field);
         }
 
-        sendUniqueValueRequest( entity, requestActor, request );
+        sendUniqueValueRequest( scope, entity, field, requestActor, request );
     }
 
-    private void confirmUniqueField(
-        Entity entity, String propertyName, String propertyValue ) throws UniqueValueException {
 
-        String region = getRegionsByType().get("user");
+    private void confirmUniqueField(
+        ApplicationScope scope, Entity entity, UUID version, Field field ) throws UniqueValueException {
+
+        String region = getRegionsByType().get( entity.getId().getType() );
         ActorRef requestActor = getRequestActorsByRegion().get(region);
 
         if ( requestActor == null ) {
@@ -499,25 +504,26 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         }
 
         UniqueValueActor.Confirmation request = new UniqueValueActor.Confirmation(
-                entity.getId().getUuid(), "user",  propertyName, propertyValue );
+            scope, entity.getId(), version, field );
 
-        sendUniqueValueRequest( entity, requestActor, request );
+        sendUniqueValueRequest( scope, entity, field, requestActor, request );
     }
 
-    private void cancelUniqueField(
-        Entity entity, String propertyName, String propertyValue ) throws UniqueValueException {
 
-        ActorRef requestActor = lookupRequestActorForType( "user" );
+    private void cancelUniqueField( ApplicationScope scope, Entity entity, UUID version, Field field ) throws UniqueValueException {
+
+        ActorRef requestActor = lookupRequestActorForType( entity.getId().getType() );
 
         if ( requestActor == null ) {
             throw new RuntimeException( "No request actor for type, cannot verify unique fields!" );
         }
 
         UniqueValueActor.Confirmation request = new UniqueValueActor.Confirmation(
-                entity.getId().getUuid(), "user",  propertyName, propertyValue );
+            scope, entity.getId(), version, field );
 
         requestActor.tell( request, null );
     }
+
 
     private ActorRef lookupRequestActorForType( String type ) {
         String region = getRegionsByType().get( type );
@@ -531,8 +537,9 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         return requestActor;
     }
 
-    private void sendUniqueValueRequest(
-           Entity entity, ActorRef requestActor, UniqueValueActor.Request request) throws UniqueValueException {
+
+    private void sendUniqueValueRequest( ApplicationScope scope, Entity entity, Field field,
+        ActorRef requestActor, UniqueValueActor.Request request) throws UniqueValueException {
 
         int maxRetries = 5;
         int retries = 0;
@@ -552,27 +559,27 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
                                 || response.getStatus().equals( UniqueValueActor.Response.Status.NOT_UNIQUE ))) {
                     if ( retries > 1 ) {
                         logger.debug("IS_UNIQUE after retrying {} for entity {} rowkey {}",
-                                retries, entity.getId().getUuid(), request.getRowKey());
+                                retries, entity.getId().getUuid(), request.getConsistentHashKey());
                     }
                     break;
 
                 } else if ( response != null  ) {
                     logger.debug("ERROR status retrying {} entity {} rowkey {}",
-                            retries, entity.getId().getUuid(), request.getRowKey());
+                            retries, entity.getId().getUuid(), request.getConsistentHashKey());
                 } else {
                     logger.debug("Timed-out retrying {} entity {} rowkey",
-                            retries, entity.getId().getUuid(), request.getRowKey());
+                            retries, entity.getId().getUuid(), request.getConsistentHashKey());
                 }
 
             } catch ( Exception e ) {
                 logger.debug("{} caused retry {} for entity {} rowkey {}",
-                        e.getClass().getSimpleName(), retries, entity.getId().getUuid(), request.getRowKey());
+                        e.getClass().getSimpleName(), retries, entity.getId().getUuid(), request.getConsistentHashKey());
             }
         }
 
         if ( response == null || response.getStatus().equals( UniqueValueActor.Response.Status.ERROR )) {
             logger.debug("ERROR after retrying {} for entity {} rowkey {}",
-                    retries, entity.getId().getUuid(), request.getRowKey());
+                    retries, entity.getId().getUuid(), request.getConsistentHashKey());
 
             // should result in an HTTP 503
             throw new RuntimeException( "Error verifying unique value after " + retries + " retries");
@@ -581,7 +588,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         if ( response.getStatus().equals( UniqueValueActor.Response.Status.NOT_UNIQUE )) {
 
             // should result in an HTTP 409 (conflict)
-            throw new UniqueValueException( "Error property not unique" );
+            throw new UniqueValueException( "Error property not unique", field );
         }
     }
 }

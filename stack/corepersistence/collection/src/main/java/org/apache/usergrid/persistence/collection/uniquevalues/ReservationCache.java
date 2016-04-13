@@ -35,11 +35,11 @@ public class ReservationCache {
     }
 
     public void cacheReservation( UniqueValueActor.Reservation reservation ) {
-        cache.put( reservation.getRowKey(), reservation );
+        cache.put( reservation.getConsistentHashKey(), reservation );
     }
 
     public void cancelReservation( UniqueValueActor.Cancellation cancellation ) {
-        cache.invalidate( cancellation.getRowKey() );
+        cache.invalidate( cancellation.getConsistentHashKey() );
     }
 
     public CacheStats getStats() {

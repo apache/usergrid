@@ -6,6 +6,7 @@ import com.google.common.collect.Multimaps;
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -44,6 +45,9 @@ public class LocalPreventDupsTest {
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
+    @Inject
+    UniqueValuesService uniqueValuesService;
+
 
     private static final AtomicInteger successCounter = new AtomicInteger( 0 );
     private static final AtomicInteger errorCounter = new AtomicInteger( 0 );
@@ -51,16 +55,8 @@ public class LocalPreventDupsTest {
     @Test
     public void testBasicOperation() throws Exception {
 
-        UniqueValuesService appEast1 =
-            TestCollectionModule.getInjector( "us-east" ).getInstance( UniqueValuesService.class );
-        appEast1.start("127.0.0.1", 2551, "us-east");
-
-        UniqueValuesService appEast2 =
-            TestCollectionModule.getInjector( "us-east" ).getInstance( UniqueValuesService.class );
-        appEast2.start("127.0.0.1", 2552, "us-east");
-
-        appEast1.waitForRequestActors();
-        appEast2.waitForRequestActors();
+        uniqueValuesService.start("127.0.0.1", 2551, "us-east");
+        uniqueValuesService.waitForRequestActors();
 
         int numUsers = 100;
         Multimap<String, Entity> usersCreated = generateDuplicateUsers( numUsers );
@@ -115,7 +111,7 @@ public class LocalPreventDupsTest {
                         logger.debug("Created user {}", username);
 
                     } catch ( Throwable t ) {
-                        if ( t instanceof UniqueValueException ) {
+                        if ( t instanceof WriteUniqueVerifyException) {
                             // we expect lots of these
                         } else {
                             errorCounter.incrementAndGet();
