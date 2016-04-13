@@ -17,39 +17,24 @@
 package org.apache.usergrid.rest.management;
 
 
-import com.codahale.metrics.Counter;
-import com.codahale.metrics.Timer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.inject.Injector;
 import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.shiro.codec.Base64;
-import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.management.ApplicationCreator;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
 import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;
 import org.apache.usergrid.management.exceptions.UnconfirmedAdminUserException;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.management.users.UsersResource;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
-import org.glassfish.jersey.apache.connector.ApacheClientProperties;
-import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,17 +43,12 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.net.URLEncoder;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.UUID;
 
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.*;
@@ -106,25 +86,9 @@ public class ManagementResource extends AbstractContextResource {
     @Autowired
     private ApplicationCreator applicationCreator;
 
-    @Autowired
-    Injector injector;
-
-
-    private static Client jerseyClient = null;
-
-
-    // names for metrics to be collected
-    private static final String SSO_TOKENS_REJECTED = "sso.tokens_rejected";
-    private static final String SSO_TOKENS_VALIDATED = "sso.tokens_validated";
-    private static final String SSO_CREATED_LOCAL_ADMINS = "sso.created_local_admins";
-    private static final String SSO_PROCESSING_TIME = "sso.processing_time";
-
     // usergrid configuration property names needed
     public static final String USERGRID_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
     public static final String USERGRID_CENTRAL_URL =         "usergrid.central.url";
-    public static final String CENTRAL_CONNECTION_POOL_SIZE = "usergrid.central.connection.pool.size";
-    public static final String CENTRAL_CONNECTION_TIMEOUT =   "usergrid.central.connection.timeout";
-    public static final String CENTRAL_READ_TIMEOUT =         "usergrid.central.read.timeout";
 
     MetricsFactory metricsFactory = null;
 
@@ -505,278 +469,6 @@ public class ManagementResource extends AbstractContextResource {
             logger.error("handleAuthorizeForm failed", e);
             return handleViewable( "error", e );
         }
-    }
-
-
-    /**
-     * <p>
-     * Allows call to validateExternalToken() (see below) with a POST of a JSON object.
-     * </p>
-     *
-     * @param ui             Information about calling URI.
-     * @param json           JSON object with fields: ext_access_token, ttl
-     * @param callback       For JSONP support.
-     * @return               Returns JSON object with access_token field.
-     * @throws Exception     Returns 401 if access token cannot be validated
-     */
-    @POST
-    @Path( "/externaltoken" )
-    public Response validateExternalToken(
-            @Context UriInfo ui,
-            Map<String, Object> json,
-            @QueryParam( "callback" ) @DefaultValue( "" ) String callback )  throws Exception {
-
-        if ( StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ))) {
-            throw new NotImplementedException( "External Token Validation Service is not configured" );
-        }
-
-        Object extAccessTokenObj = json.get( "ext_access_token" );
-        if ( extAccessTokenObj == null ) {
-            throw new IllegalArgumentException("ext_access_token must be specified");
-        }
-        String extAccessToken = json.get("ext_access_token").toString();
-
-        Object ttlObj = json.get( "ttl" );
-        if ( ttlObj == null ) {
-            throw new IllegalArgumentException("ttl must be specified");
-        }
-        long ttl;
-        try {
-            ttl = Long.parseLong(ttlObj.toString());
-        } catch ( NumberFormatException e ) {
-            throw new IllegalArgumentException("ttl must be specified as a long");
-        }
-
-        return validateExternalToken( ui, extAccessToken, ttl, callback );
-    }
-
-
-    /**
-     * <p>
-     * Validates access token from other or "external" Usergrid system.
-     * Calls other system's /management/me endpoint to get the User
-     * associated with the access token. If user does not exist locally,
-     * then user and organizations will be created. If no user is returned
-     * from the other cluster, then this endpoint will return 401.
-     * </p>
-     *
-     * <p> Part of Usergrid Central SSO feature.
-     * See <a href="https://issues.apache.org/jira/browse/USERGRID-567">USERGRID-567</a>
-     * for details about Usergrid Central SSO.
-     * </p>
-     *
-     * @param ui             Information about calling URI.
-     * @param extAccessToken Access token from external Usergrid system.
-     * @param ttl            Time to live for token.
-     * @param callback       For JSONP support.
-     * @return               Returns JSON object with access_token field.
-     * @throws Exception     Returns 401 if access token cannot be validated
-     */
-    @GET
-    @Path( "/externaltoken" )
-    public Response validateExternalToken(
-                                @Context UriInfo ui,
-                                @QueryParam( "ext_access_token" ) String extAccessToken,
-                                @QueryParam( "ttl" ) @DefaultValue("-1") long ttl,
-                                @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
-            throws Exception {
-
-
-        if ( StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ))) {
-            throw new NotImplementedException( "External Token Validation Service is not configured" );
-        }
-
-        if ( extAccessToken == null ) {
-            throw new IllegalArgumentException("ext_access_token must be specified");
-        }
-
-        if ( ttl == -1 ) {
-            throw new IllegalArgumentException("ttl must be specified");
-        }
-        AccessInfo accessInfo;
-
-        Timer processingTimer = getMetricsFactory().getTimer(
-            ManagementResource.class, SSO_PROCESSING_TIME );
-
-        Timer.Context timerContext = processingTimer.time();
-
-        try {
-            // look up user via UG Central's /management/me endpoint.
-
-            JsonNode accessInfoNode = getMeFromUgCentral( extAccessToken );
-
-            JsonNode userNode = accessInfoNode.get( "user" );
-            String username = userNode.get( "username" ).textValue();
-
-            // if user does not exist locally then we need to fix that
-
-            UserInfo userInfo = management.getAdminUserByUsername( username );
-            UUID userId = userInfo == null ? null : userInfo.getUuid();
-
-            if ( userId == null ) {
-
-                // create local user and and organizations they have on the central Usergrid instance
-                logger.info("User {} does not exist locally, creating", username );
-
-                String name  = userNode.get( "name" ).textValue();
-                String email = userNode.get( "email" ).textValue();
-                String dummyPassword = RandomStringUtils.randomAlphanumeric( 40 );
-
-                JsonNode orgsNode = userNode.get( "organizations" );
-                Iterator<String> fieldNames = orgsNode.fieldNames();
-
-                if ( !fieldNames.hasNext() ) {
-                    // no organizations for user exist in response from central Usergrid SSO
-                    // so create user's personal organization and use username as organization name
-                    fieldNames = Collections.singletonList( username ).iterator();
-                }
-
-                // create user and any organizations that user is supposed to have
-
-                while ( fieldNames.hasNext() ) {
-
-                    String orgName = fieldNames.next();
-
-                    if ( userId == null ) {
-
-                        // haven't created user yet so do that now
-                        OrganizationOwnerInfo ownerOrgInfo = management.createOwnerAndOrganization(
-                                orgName, username, name, email, dummyPassword, true, false );
-
-                        applicationCreator.createSampleFor( ownerOrgInfo.getOrganization() );
-
-                        userId = ownerOrgInfo.getOwner().getUuid();
-                        userInfo = ownerOrgInfo.getOwner();
-
-                        Counter createdAdminsCounter = getMetricsFactory().getCounter(
-                            ManagementResource.class, SSO_CREATED_LOCAL_ADMINS );
-                        createdAdminsCounter.inc();
-
-                        logger.info( "Created user {} and org {}", username, orgName );
-
-                    } else {
-
-                        // already created user, so just create an org
-                        final OrganizationInfo organization =
-                            management.createOrganization( orgName, userInfo, true );
-
-                        applicationCreator.createSampleFor( organization );
-
-                        logger.info( "Created user {}'s other org {}", username, orgName );
-                    }
-                }
-
-            }
-
-            // store the external access_token as if it were one of our own
-            management.importTokenForAdminUser( userId, extAccessToken, ttl );
-
-            // success! return JSON object with access_token field
-            accessInfo = new AccessInfo()
-                    .withExpiresIn( tokens.getMaxTokenAgeInSeconds( extAccessToken ) )
-                    .withAccessToken( extAccessToken );
-
-        } catch (Exception e) {
-            timerContext.stop();
-            logger.error("Error validating external token", e);
-            throw e;
-        }
-
-        final Response response = Response.status( SC_OK )
-            .type( jsonMediaType( callback ) ).entity( accessInfo ).build();
-
-        timerContext.stop();
-
-        return response;
-    }
-
-    /**
-     * Look up Admin User via UG Central's /management/me endpoint.
-     *
-     * @param extAccessToken Access token issued by UG Central of Admin User
-     * @return JsonNode representation of AccessInfo object for Admin User
-     * @throws EntityNotFoundException if access_token is not valid.
-     */
-    private JsonNode getMeFromUgCentral( String extAccessToken )  throws EntityNotFoundException {
-
-        // prepare to count tokens validated and rejected
-
-        Counter tokensRejectedCounter = getMetricsFactory().getCounter(
-            ManagementResource.class, SSO_TOKENS_REJECTED );
-        Counter tokensValidatedCounter = getMetricsFactory().getCounter(
-            ManagementResource.class, SSO_TOKENS_VALIDATED );
-
-        // create URL of central Usergrid's /management/me endpoint
-
-        String externalUrl = properties.getProperty( USERGRID_CENTRAL_URL ).trim();
-
-        // be lenient about trailing slash
-        externalUrl = !externalUrl.endsWith( "/" ) ? externalUrl + "/" : externalUrl;
-        String me = externalUrl + "management/me?access_token=" + extAccessToken;
-
-        // use our favorite HTTP client to GET /management/me
-
-        Client client = getJerseyClient();
-        final JsonNode accessInfoNode;
-        try {
-            accessInfoNode = client.target( me ).request()
-                    .accept( MediaType.APPLICATION_JSON_TYPE )
-                    .get(JsonNode.class);
-
-            tokensValidatedCounter.inc();
-
-        } catch ( Exception e ) {
-            // user not found 404
-            tokensRejectedCounter.inc();
-            String msg = "Cannot find Admin User associated with " + extAccessToken;
-            throw new EntityNotFoundException( msg, e );
-        }
-
-        return accessInfoNode;
-    }
-
-
-    private Client getJerseyClient() {
-
-        if ( jerseyClient == null ) {
-
-            synchronized ( this ) {
-
-                // create HTTPClient and with configured connection pool
-
-                int poolSize = 100; // connections
-                final String poolSizeStr = properties.getProperty( CENTRAL_CONNECTION_POOL_SIZE );
-                if ( poolSizeStr != null ) {
-                    poolSize = Integer.parseInt( poolSizeStr );
-                }
-
-                PoolingClientConnectionManager connectionManager = new PoolingClientConnectionManager();
-                connectionManager.setMaxTotal(poolSize);
-
-                int timeout = 20000; // ms
-                final String timeoutStr = properties.getProperty( CENTRAL_CONNECTION_TIMEOUT );
-                if ( timeoutStr != null ) {
-                    timeout = Integer.parseInt( timeoutStr );
-                }
-
-                int readTimeout = 20000; // ms
-                final String readTimeoutStr = properties.getProperty( CENTRAL_READ_TIMEOUT );
-                if ( readTimeoutStr != null ) {
-                    readTimeout = Integer.parseInt( readTimeoutStr );
-                }
-
-                ClientConfig clientConfig = new ClientConfig();
-                clientConfig.register( new JacksonFeature() );
-                clientConfig.property( ApacheClientProperties.CONNECTION_MANAGER, connectionManager );
-                clientConfig.connectorProvider( new ApacheConnectorProvider() );
-
-                jerseyClient = ClientBuilder.newClient( clientConfig );
-                jerseyClient.property( ClientProperties.CONNECT_TIMEOUT, timeout );
-                jerseyClient.property( ClientProperties.READ_TIMEOUT, readTimeout );
-            }
-        }
-
-        return jerseyClient;
     }
 
 

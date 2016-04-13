@@ -73,19 +73,6 @@ public class EventBuilderImpl implements EventBuilder {
     }
 
 
-    @Override
-    public Observable<IndexOperationMessage> buildEntityIndexUpdate( final ApplicationScope applicationScope,
-                                                                     final Entity entity ) {
-        //process the entity immediately
-        //only process the same version, otherwise ignore
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("Indexing  in app scope {} entity {}", entity, applicationScope);
-        }
-
-        return indexService.indexEntity( applicationScope, entity );
-    }
-
 
     @Override
     public Observable<IndexOperationMessage> buildNewEdge( final ApplicationScope applicationScope, final Entity entity,
@@ -118,7 +105,7 @@ public class EventBuilderImpl implements EventBuilder {
     //it'll need to be pushed up higher so we can do the marking that isn't async or does it not matter?
 
     @Override
-    public EntityDeleteResults buildEntityDelete( final ApplicationScope applicationScope, final Id entityId ) {
+    public EntityDeleteResults buildEntityDelete(final ApplicationScope applicationScope, final Id entityId ) {
         if (logger.isDebugEnabled()) {
             logger.debug("Deleting entity id from index in app scope {} with entityId {}", applicationScope, entityId);
         }

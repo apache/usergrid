@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.codahale.metrics.Histogram;
@@ -130,7 +131,9 @@ public class EsIndexProducerImpl implements IndexProducer {
         final Observable<BatchOperation> batchOps = Observable.merge(index, deIndex);
 
         //buffer into the max size we can send ES and fire them all off until we're completed
-        final Observable<BulkRequestBuilder> requests = batchOps.buffer(indexFig.getIndexBatchSize())
+        final Observable<BulkRequestBuilder> requests = batchOps
+            .buffer(250, TimeUnit.MILLISECONDS, indexFig.getIndexBatchSize())
+
             //flatten the buffer into a single batch execution
             .flatMap(individualOps -> Observable.from(individualOps)
                 //collect them

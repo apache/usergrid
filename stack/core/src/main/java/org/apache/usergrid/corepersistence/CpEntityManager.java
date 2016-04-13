@@ -590,7 +590,7 @@ public class CpEntityManager implements EntityManager {
 
         // update in all containing collections and connection indexes
 
-        indexService.queueEntityIndexUpdate( applicationScope, cpEntity );
+        indexService.queueEntityIndexUpdate( applicationScope, cpEntity, 0);
     }
 
 
@@ -745,7 +745,21 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Set<String> getApplicationCollections() throws Exception {
 
-        return getRelationManager( getApplication() ).getCollections();
+        Set<String> existingCollections = getRelationManager( getApplication() ).getCollections();
+
+        Set<String> system_collections = Schema.getDefaultSchema().getCollectionNames( Application.ENTITY_TYPE );
+        if ( system_collections != null ) {
+            for ( String collection : system_collections ) {
+                if ( !Schema.isAssociatedEntityType( collection ) ) {
+                    if(!existingCollections.contains( collection )) {
+                        existingCollections.add( collection );
+                    }
+                }
+            }
+        }
+
+        return existingCollections;
+
     }
 
 
@@ -823,6 +837,33 @@ public class CpEntityManager implements EntityManager {
         }
 
         return convertMvccEntityToEntity( fieldSet.getEntity( uniqueLookupRepairField ).getEntity().get() );
+    }
+
+    @Override
+    public UUID getUniqueIdFromAlias( String collectionType, String aliasType ){
+
+        String collName = Schema.defaultCollectionName( collectionType );
+        String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
+        StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType);
+
+        Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
+            Inflector.getInstance().singularize( collectionType ), Collections.singletonList(uniqueLookupRepairField));
+
+        if(fieldSetObservable == null){
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Couldn't return the observable based on unique entities.");
+            }
+
+            return null;
+        }
+
+        FieldSet fieldSet = fieldSetObservable.toBlocking().last();
+        if(fieldSet.isEmpty()) {
+            return null;
+        }
+
+        return fieldSet.getEntity( uniqueLookupRepairField ).getEntity().get().getId().getUuid();
     }
 
 
@@ -1080,7 +1121,7 @@ public class CpEntityManager implements EntityManager {
 
         //Adding graphite metrics
 
-        indexService.queueEntityIndexUpdate(applicationScope, cpEntity);
+        indexService.queueEntityIndexUpdate(applicationScope, cpEntity, 0);
     }
 
 

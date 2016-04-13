@@ -40,8 +40,6 @@ public interface IndexProcessorFig extends GuicyFig {
 
     String ELASTICSEARCH_QUEUE_IMPL = "elasticsearch.queue_impl";
 
-    String INDEX_QUEUE_READ_TIMEOUT = "elasticsearch.queue_read_timeout";
-
     String INDEX_QUEUE_VISIBILITY_TIMEOUT = "elasticsearch.queue_visibility_timeout";
 
     String REINDEX_BUFFER_SIZE = "elasticsearch.reindex.buffer_size";
@@ -55,12 +53,6 @@ public interface IndexProcessorFig extends GuicyFig {
     @Key(FAILURE_REJECTED_RETRY_WAIT_TIME)
     long getFailureRetryTime();
 
-    /**
-     * Set the read timeout for processing messages in the queue. (in milliseconds)
-     */
-    @Default("10000")
-    @Key(INDEX_QUEUE_READ_TIMEOUT)
-    int getIndexQueueTimeout();
 
     /**
      * Set the visibility timeout for messages received from the queue. (in milliseconds).
