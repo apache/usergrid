@@ -49,6 +49,7 @@ public class ClientSetup implements TestRule {
     protected String superuserName = "superuser";
     protected String superuserPassword = "superpassword";
     protected Credentials clientCredentials;
+    protected Credentials appCredentials;
 
     protected Organization organization;
     protected Entity application;
@@ -108,11 +109,16 @@ public class ClientSetup implements TestRule {
         restClient.management().token().get(username, password);
 
         clientCredentials = restClient.management().orgs().org(orgName).credentials().get(Credentials.class);
+        //appCredentials = restClient.management().orgs().org(orgName).app().path//.credentials().get(Credentials.class);
+
 
         ApiResponse appResponse = restClient.management().orgs()
             .org(organization.getName()).app().post(new Application(appName));
         appUuid = (String) appResponse.getEntities().get(0).get("uuid");
         application = new Application(appResponse);
+
+        appCredentials = restClient.pathResource( "management/orgs/"+orgName+"/apps/"+appName+"/credentials" ).get( Credentials.class,true );
+
         refreshIndex();
 
         ApiResponse response = restClient.management().token().post(new Token(username, password));
@@ -161,6 +167,10 @@ public class ClientSetup implements TestRule {
 
     public Credentials getClientCredentials() {
         return clientCredentials;
+    }
+
+    public Credentials getAppCredentials(){
+        return appCredentials;
     }
 
     public void refreshIndex() {
