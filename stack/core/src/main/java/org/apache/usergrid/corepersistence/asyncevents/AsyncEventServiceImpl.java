@@ -493,7 +493,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         if(message == null) {
 
             // provide some time back pressure before performing a quorum read
-            if ( System.currentTimeMillis() > elasticsearchIndexEvent.getCreationTime() + queueFig.getLocalQuorumTimeout() ) {
+            if ( queueFig.getQuorumFallback() && System.currentTimeMillis() > elasticsearchIndexEvent.getCreationTime() + queueFig.getLocalQuorumTimeout() ) {
 
                 if(logger.isDebugEnabled()){
                     logger.debug("ES batch with id {} not found, reading with strong consistency", messageId);
