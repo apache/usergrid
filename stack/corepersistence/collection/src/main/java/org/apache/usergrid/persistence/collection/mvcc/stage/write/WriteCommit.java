@@ -18,8 +18,14 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
+import org.apache.usergrid.persistence.collection.uniquevalues.AkkaFig;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueException;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +66,9 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
 
     private static final Logger logger = LoggerFactory.getLogger( WriteCommit.class );
 
+    AkkaFig akkaFig;
+    UniqueValuesService akkaUvService;
+
     @Inject
     private UniqueValueSerializationStrategy uniqueValueStrat;
 
@@ -71,7 +80,9 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
     @Inject
     public WriteCommit( final MvccLogEntrySerializationStrategy logStrat,
                         final MvccEntitySerializationStrategy entryStrat,
-                        final UniqueValueSerializationStrategy uniqueValueStrat) {
+                        final UniqueValueSerializationStrategy uniqueValueStrat,
+                        final AkkaFig akkaFig,
+                        final UniqueValuesService akkaUvService ) {
 
         Preconditions.checkNotNull( logStrat, "MvccLogEntrySerializationStrategy is required" );
         Preconditions.checkNotNull( entryStrat, "MvccEntitySerializationStrategy is required" );
@@ -80,12 +91,44 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         this.logEntryStrat = logStrat;
         this.entityStrat = entryStrat;
         this.uniqueValueStrat = uniqueValueStrat;
+        this.akkaFig = akkaFig;
+        this.akkaUvService = akkaUvService;
     }
 
 
     @Override
     public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<MvccEntity> ioEvent ) {
+        if ( akkaFig.getAkkaEnabled() ) {
+            return confirmUniqueFieldsAkka( ioEvent );
+        }
+        return confirmUniqueFields( ioEvent );
+    }
 
+    private CollectionIoEvent<MvccEntity> confirmUniqueFieldsAkka(CollectionIoEvent<MvccEntity> ioEvent) {
+
+        final MvccEntity mvccEntity = ioEvent.getEvent();
+        MvccValidationUtils.verifyMvccEntityWithEntity( mvccEntity );
+
+        final Id entityId = mvccEntity.getId();
+        final UUID version = mvccEntity.getVersion();
+        final ApplicationScope applicationScope = ioEvent.getEntityCollection();
+
+        //set the version into the entity
+        final Entity entity = mvccEntity.getEntity().get();
+
+        try {
+            akkaUvService.confirmUniqueValues( applicationScope, entity, mvccEntity.getVersion() );
+
+        } catch (UniqueValueException e) {
+            Map<String, Field> violations = new HashMap<>();
+            violations.put( e.getField().getName(), e.getField() );
+            throw new WriteUniqueVerifyException( mvccEntity, applicationScope, violations  );
+        }
+
+        return ioEvent;
+    }
+
+    private CollectionIoEvent<MvccEntity> confirmUniqueFields(CollectionIoEvent<MvccEntity> ioEvent) {
         final MvccEntity mvccEntity = ioEvent.getEvent();
         MvccValidationUtils.verifyMvccEntityWithEntity( mvccEntity );
 
@@ -101,7 +144,8 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         MvccValidationUtils.verifyMvccEntityWithEntity( ioEvent.getEvent() );
         ValidationUtils.verifyTimeUuid( version ,"version" );
 
-        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.COMMITTED, MvccLogEntry.State.COMPLETE );
+        final MvccLogEntry startEntry =
+            new MvccLogEntryImpl( entityId, version, Stage.COMMITTED, MvccLogEntry.State.COMPLETE );
 
         MutationBatch logMutation = logEntryStrat.write( applicationScope, startEntry );
 
@@ -133,7 +177,6 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
             throw new WriteCommitException( mvccEntity, applicationScope,
                 "Failed to execute write asynchronously ", e );
         }
-
 
         return ioEvent;
     }

@@ -19,7 +19,10 @@
 package org.apache.usergrid.persistence.collection.uniquevalues;
 
 
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
+
+import java.util.UUID;
 
 /**
  * Service that reserves and confirms unique values.
@@ -30,12 +33,12 @@ public interface UniqueValuesService {
      * Check that unique values are unique and reserve them for a limited time.
      * If the reservations are not confirmed, they will expire.
      */
-    void reserveUniqueValues( Entity entity ) throws UniqueValueException;
+    void reserveUniqueValues( ApplicationScope scope, Entity entity, UUID version ) throws UniqueValueException;
 
     /**
      * Confirm unique values that were reserved earlier.
      */
-    void confirmUniqueValues( Entity entity ) throws UniqueValueException;
+    void confirmUniqueValues( ApplicationScope scope, Entity entity, UUID version ) throws UniqueValueException;
 
     /**
      * For test purposes only.

@@ -23,6 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.usergrid.persistence.collection.uniquevalues.AkkaFig;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueException;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,6 +67,9 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
     private static final Logger logger = LoggerFactory.getLogger( WriteUniqueVerify.class );
 
+    AkkaFig akkaFig;
+    UniqueValuesService akkaUvService;
+
     private final UniqueValueSerializationStrategy uniqueValueStrat;
 
     public static int uniqueVerifyPoolSize = 100;
@@ -75,10 +81,17 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
 
     @Inject
-    public WriteUniqueVerify( final UniqueValueSerializationStrategy uniqueValueSerializiationStrategy,
-                              final SerializationFig serializationFig, final Keyspace keyspace, final CassandraConfig cassandraFig ) {
+    public WriteUniqueVerify(final UniqueValueSerializationStrategy uniqueValueSerializiationStrategy,
+                             final SerializationFig serializationFig,
+                             final Keyspace keyspace,
+                             final CassandraConfig cassandraFig,
+                             final AkkaFig akkaFig,
+                             final UniqueValuesService akkaUvService ) {
+
         this.keyspace = keyspace;
         this.cassandraFig = cassandraFig;
+        this.akkaFig = akkaFig;
+        this.akkaUvService = akkaUvService;
 
         Preconditions.checkNotNull( uniqueValueSerializiationStrategy, "uniqueValueSerializationStrategy is required" );
         Preconditions.checkNotNull( serializationFig, "serializationFig is required" );
@@ -92,6 +105,34 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
     @Override
     public void call( final CollectionIoEvent<MvccEntity> ioevent ) {
+        if ( akkaFig.getAkkaEnabled() ) {
+            verifyUniqueFieldsAkka( ioevent );
+        } else {
+            verifyUniqueFields( ioevent );
+        }
+    }
+
+    private void verifyUniqueFieldsAkka(CollectionIoEvent<MvccEntity> ioevent) {
+
+        MvccValidationUtils.verifyMvccEntityWithEntity( ioevent.getEvent() );
+
+        final MvccEntity mvccEntity = ioevent.getEvent();
+
+        final Entity entity = mvccEntity.getEntity().get();
+
+        final ApplicationScope applicationScope = ioevent.getEntityCollection();
+
+        try {
+            akkaUvService.reserveUniqueValues( applicationScope, entity, mvccEntity.getVersion() );
+
+        } catch (UniqueValueException e) {
+            Map<String, Field> violations = new HashMap<>();
+            violations.put( e.getField().getName(), e.getField() );
+            throw new WriteUniqueVerifyException( mvccEntity, applicationScope, violations  );
+        }
+    }
+
+    private void verifyUniqueFields(CollectionIoEvent<MvccEntity> ioevent) {
 
         MvccValidationUtils.verifyMvccEntityWithEntity( ioevent.getEvent() );
 
@@ -139,9 +180,10 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
         }
 
         // use simple thread pool to verify fields in parallel
-        ConsistentReplayCommand cmd = new ConsistentReplayCommand(uniqueValueStrat,cassandraFig,scope, entity.getId().getType(), uniqueFields,entity);
+        ConsistentReplayCommand cmd = new ConsistentReplayCommand(
+            uniqueValueStrat,cassandraFig,scope, entity.getId().getType(), uniqueFields,entity);
 
-        Map<String,Field>  uniquenessViolations = cmd.execute();
+        Map<String,Field> uniquenessViolations = cmd.execute();
 
         //do we want to do this?
 
@@ -150,6 +192,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
             throw new WriteUniqueVerifyException( mvccEntity, ioevent.getEntityCollection(), uniquenessViolations );
         }
     }
+
 
     private static class ConsistentReplayCommand extends HystrixCommand<Map<String,Field>>{
 
