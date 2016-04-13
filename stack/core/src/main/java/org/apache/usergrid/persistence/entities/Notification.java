@@ -57,6 +57,10 @@ public class Notification extends TypedEntity {
     @EntityProperty
     protected Long queued;
 
+    /** Timestamp (ms) when the notification was processed */
+    @EntityProperty
+    protected Long processingFinished;
+
     /** Timestamp (ms) when send notification started */
     @EntityProperty
     protected Long started;
@@ -135,6 +139,15 @@ public class Notification extends TypedEntity {
 
     public void setFinished(Long finished) {
         this.finished = finished;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public Long getProcessingFinished() {
+        return processingFinished;
+    }
+
+    public void setProcessingFinished(Long processingFinished) {
+        this.processingFinished = processingFinished;
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
