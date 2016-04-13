@@ -310,20 +310,33 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                 logger.debug("Processing event with type {}", event.getClass().getSimpleName());
             }
 
-            IndexOperationMessage indexOperationMessage = null;
             try {
 
-                // deletes are 2-part, actual IO to delete data, then queue up a de-index
-                if ( event instanceof EdgeDeleteEvent ) {
+                IndexOperationMessage single = new IndexOperationMessage();
 
-                    handleEdgeDelete( message );
+                // normal indexing event for an entity
+                if ( event instanceof  EntityIndexEvent ){
+
+                     single = handleEntityIndexUpdate( message );
+
+                }
+                // normal indexing event for an edge
+                else if ( event instanceof EdgeIndexEvent ){
+
+                    single = handleEdgeIndex( message );
+
+                }
+                // deletes are 2-part, actual IO to delete data, then queue up a de-index
+                else if ( event instanceof EdgeDeleteEvent ) {
+
+                    single = handleEdgeDelete( message );
                 }
                 // deletes are 2-part, actual IO to delete data, then queue up a de-index
                 else if ( event instanceof EntityDeleteEvent ) {
 
-                    handleEntityDelete( message );
+                    single = handleEntityDelete( message );
                 }
-                // application initialization has special logic, therefore a special event type
+                // initialization has special logic, therefore a special event type and no index operation message
                 else if ( event instanceof InitializeApplicationIndexEvent ) {
 
                     handleInitializeApplicationIndex(event, message);
@@ -331,11 +344,11 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                 // this is the main event that pulls the index doc from map persistence and hands to the index producer
                 else if (event instanceof ElasticsearchIndexEvent) {
 
-                    indexOperationMessage = handleIndexOperation((ElasticsearchIndexEvent) event);
+                    handleIndexOperation((ElasticsearchIndexEvent) event);
 
                 } else if (event instanceof DeIndexOldVersionsEvent) {
 
-                    indexOperationMessage = handleDeIndexOldVersionEvent((DeIndexOldVersionsEvent) event);
+                    single = handleDeIndexOldVersionEvent((DeIndexOldVersionsEvent) event);
 
                 } else {
 
@@ -343,9 +356,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                 }
 
 
-                // returning indexOperationMessage will send that indexOperationMessage to the index producer
                 // if no exception happens and the QueueMessage is returned in these results, it will get ack'd
-                return new IndexEventResult(Optional.fromNullable(indexOperationMessage), Optional.of(message), thisEvent.getCreationTime());
+                return new IndexEventResult(Optional.of(single), Optional.of(message), thisEvent.getCreationTime());
 
             } catch (IndexDocNotFoundException e){
 
@@ -382,6 +394,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                        final Entity entity, long updatedAfter) {
 
 
+        offer(new EntityIndexEvent(queueFig.getPrimaryRegion(),new EntityIdScope(applicationScope, entity.getId()), 0));
+
         final EntityIndexOperation entityIndexOperation =
             new EntityIndexOperation( applicationScope, entity.getId(), updatedAfter);
 
@@ -392,19 +406,56 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     }
 
+    private IndexOperationMessage handleEntityIndexUpdate(final QueueMessage message) {
+
+        Preconditions.checkNotNull( message, "Queue Message cannot be null for handleEntityIndexUpdate" );
+
+        final AsyncEvent event = ( AsyncEvent ) message.getBody();
+
+        Preconditions.checkNotNull(message, "QueueMessage Body cannot be null for handleEntityIndexUpdate");
+        Preconditions.checkArgument(event instanceof EntityIndexEvent, String.format("Event Type for handleEntityIndexUpdate must be ENTITY_INDEX, got %s", event.getClass()));
+
+        final EntityIndexEvent entityIndexEvent = (EntityIndexEvent) event;
+
+
+        //process the entity immediately
+        //only process the same version, otherwise ignore
+        final EntityIdScope entityIdScope = entityIndexEvent.getEntityIdScope();
+        final ApplicationScope applicationScope = entityIdScope.getApplicationScope();
+        final Id entityId = entityIdScope.getId();
+        final long updatedAfter = entityIndexEvent.getUpdatedAfter();
+
+        final EntityIndexOperation entityIndexOperation = new EntityIndexOperation( applicationScope, entityId, updatedAfter);
+
+        return eventBuilder.buildEntityIndex( entityIndexOperation ).toBlocking().lastOrDefault(null);
+    }
+
 
     @Override
     public void queueNewEdge(final ApplicationScope applicationScope,
                              final Entity entity,
                              final Edge newEdge) {
 
-        final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
+        offer( new EdgeIndexEvent( queueFig.getPrimaryRegion(), applicationScope, entity.getId(), newEdge ));
 
-        final IndexOperationMessage indexMessage = ecm.load( entity.getId() )
-            .flatMap( loadedEntity -> eventBuilder.buildNewEdge(applicationScope, entity, newEdge) )
+    }
+
+    private IndexOperationMessage handleEdgeIndex(final QueueMessage message) {
+
+        Preconditions.checkNotNull( message, "Queue Message cannot be null for handleEdgeIndex" );
+
+        final AsyncEvent event = (AsyncEvent) message.getBody();
+
+        Preconditions.checkNotNull( message, "QueueMessage Body cannot be null for handleEdgeIndex" );
+        Preconditions.checkArgument(event instanceof EdgeIndexEvent, String.format("Event Type for handleEdgeIndex must be EDGE_INDEX, got %s", event.getClass()));
+
+        final EdgeIndexEvent edgeIndexEvent = ( EdgeIndexEvent ) event;
+
+        final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( edgeIndexEvent.getApplicationScope() );
+
+        return ecm.load( edgeIndexEvent.getEntityId() )
+            .flatMap( loadedEntity -> eventBuilder.buildNewEdge(edgeIndexEvent.getApplicationScope(), loadedEntity, edgeIndexEvent.getEdge()) )
             .toBlocking().lastOrDefault(null);
-
-        queueIndexOperationMessage( indexMessage );
 
     }
 
@@ -417,7 +468,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         offer( new EdgeDeleteEvent( queueFig.getPrimaryRegion(), applicationScope, edge ) );
     }
 
-    public void handleEdgeDelete(final QueueMessage message) {
+    private IndexOperationMessage  handleEdgeDelete(final QueueMessage message) {
 
         Preconditions.checkNotNull( message, "Queue Message cannot be null for handleEdgeDelete" );
 
@@ -436,10 +487,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             logger.debug("Deleting in app scope {} with edge {}", applicationScope, edge);
         }
 
-        IndexOperationMessage indexMessage =
-            eventBuilder.buildDeleteEdge(applicationScope, edge).toBlocking().lastOrDefault(null);
-
-        queueIndexOperationMessage(indexMessage);
+        return eventBuilder.buildDeleteEdge(applicationScope, edge).toBlocking().lastOrDefault(null);
 
     }
 
@@ -478,7 +526,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         offerTopic( elasticsearchIndexEvent );
     }
 
-    public IndexOperationMessage handleIndexOperation(final ElasticsearchIndexEvent elasticsearchIndexEvent){
+    private void handleIndexOperation(final ElasticsearchIndexEvent elasticsearchIndexEvent) throws IndexDocNotFoundException {
 
         Preconditions.checkNotNull( elasticsearchIndexEvent, "elasticsearchIndexEvent cannot be null" );
 
@@ -529,7 +577,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         // always do a check to ensure the indexes are initialized for the index requests
         initializeEntityIndexes(indexOperationMessage);
 
-        return indexOperationMessage;
+        // send it to to be indexed
+        indexProducer.put(indexOperationMessage).toBlocking().last();
 
     }
 
@@ -599,7 +648,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         offer( new EntityDeleteEvent(queueFig.getPrimaryRegion(), new EntityIdScope( applicationScope, entityId ) ) );
     }
 
-    public void handleEntityDelete(final QueueMessage message) {
+    private IndexOperationMessage handleEntityDelete(final QueueMessage message) {
 
         Preconditions.checkNotNull(message, "Queue Message cannot be null for handleEntityDelete");
 
@@ -625,14 +674,12 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         entityDeleteResults.getCompactedNode().toBlocking().lastOrDefault(null);
 
-        IndexOperationMessage indexMessage = entityDeleteResults.getIndexObservable().toBlocking().lastOrDefault(null);
-
-        queueIndexOperationMessage(indexMessage);
+        return entityDeleteResults.getIndexObservable().toBlocking().lastOrDefault(null);
 
     }
 
 
-    public void handleInitializeApplicationIndex(final AsyncEvent event, final QueueMessage message) {
+    private void handleInitializeApplicationIndex(final AsyncEvent event, final QueueMessage message) {
         Preconditions.checkNotNull(message, "Queue Message cannot be null for handleInitializeApplicationIndex");
         Preconditions.checkArgument(event instanceof InitializeApplicationIndexEvent, String.format("Event Type for handleInitializeApplicationIndex must be APPLICATION_INDEX, got %s", event.getClass()));
 
@@ -793,8 +840,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             // collect into a list of QueueMessages that can be ack'd later
             .collect(Collectors.toList());
 
-        // sumbit the requests to Elasticsearch
-        indexProducer.put(combined).toBlocking().last();
+       queueIndexOperationMessage(combined);
 
         return queueMessages;
     }
