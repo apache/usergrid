@@ -204,6 +204,16 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
 
                 })
+                .doOnCompleted( () -> {
+
+                    try {
+                        notification.setProcessingFinished(System.currentTimeMillis());
+                        em.update(notification);
+                    } catch (Exception e) {
+                        logger.error("Unable to set processing finished timestamp for notification");
+                    }
+
+                })
                 .doOnError(throwable -> logger.error("Failed while trying to send notification", throwable));
 
             //TODO verify error handling here
