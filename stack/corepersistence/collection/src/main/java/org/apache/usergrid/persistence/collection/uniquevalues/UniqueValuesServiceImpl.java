@@ -471,8 +471,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     private void reserveUniqueField(
         ApplicationScope scope, Entity entity, UUID version, Field field ) throws UniqueValueException {
 
-        String region = getRegionsByType().get( entity.getId().getType() );
-        ActorRef requestActor = getRequestActorsByRegion().get(region);
+        ActorRef requestActor = lookupRequestActorForType( entity.getId().getType() );
 
         if ( requestActor == null ) {
             throw new RuntimeException( "No request actor for type, cannot verify unique fields!" );
@@ -489,15 +488,14 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             throw new UniqueValueException( "Error property not unique (cache)", field);
         }
 
-        sendUniqueValueRequest( scope, entity, field, requestActor, request );
+        sendUniqueValueRequest(  entity, requestActor, request );
     }
 
 
     private void confirmUniqueField(
         ApplicationScope scope, Entity entity, UUID version, Field field ) throws UniqueValueException {
 
-        String region = getRegionsByType().get( entity.getId().getType() );
-        ActorRef requestActor = getRequestActorsByRegion().get(region);
+        ActorRef requestActor = lookupRequestActorForType( entity.getId().getType() );
 
         if ( requestActor == null ) {
             throw new RuntimeException( "No request actor for type, cannot verify unique fields!" );
@@ -506,11 +504,12 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         UniqueValueActor.Confirmation request = new UniqueValueActor.Confirmation(
             scope, entity.getId(), version, field );
 
-        sendUniqueValueRequest( scope, entity, field, requestActor, request );
+        sendUniqueValueRequest( entity, requestActor, request );
     }
 
 
-    private void cancelUniqueField( ApplicationScope scope, Entity entity, UUID version, Field field ) throws UniqueValueException {
+    private void cancelUniqueField(
+        ApplicationScope scope, Entity entity, UUID version, Field field ) throws UniqueValueException {
 
         ActorRef requestActor = lookupRequestActorForType( entity.getId().getType() );
 
@@ -528,7 +527,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     private ActorRef lookupRequestActorForType( String type ) {
         String region = getRegionsByType().get( type );
         if ( region == null ) {
-            throw new RuntimeException( "No region specified for type: " + type );
+            region = currentRegion;
         }
         ActorRef requestActor = getRequestActorsByRegion().get(region);
         if ( requestActor == null ) {
@@ -538,8 +537,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     }
 
 
-    private void sendUniqueValueRequest( ApplicationScope scope, Entity entity, Field field,
-        ActorRef requestActor, UniqueValueActor.Request request) throws UniqueValueException {
+    private void sendUniqueValueRequest(
+        Entity entity, ActorRef requestActor, UniqueValueActor.Request request) throws UniqueValueException {
 
         int maxRetries = 5;
         int retries = 0;
@@ -588,7 +587,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         if ( response.getStatus().equals( UniqueValueActor.Response.Status.NOT_UNIQUE )) {
 
             // should result in an HTTP 409 (conflict)
-            throw new UniqueValueException( "Error property not unique", field );
+            throw new UniqueValueException( "Error property not unique", request.getField() );
         }
     }
 }
