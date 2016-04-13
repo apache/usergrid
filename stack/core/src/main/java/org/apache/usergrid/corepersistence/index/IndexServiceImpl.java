@@ -131,7 +131,7 @@ public class IndexServiceImpl implements IndexService {
         //try to send a whole batch if we can
 
         final Observable<IndexOperationMessage>  batches =  sourceEdgesToIndex
-            .buffer(250, TimeUnit.MILLISECONDS, indexFig.getIndexBatchSize() )
+            .buffer(indexFig.getIndexBatchSize() )
 
             //map into batches based on our buffer size
             .flatMap( buffer -> Observable.from( buffer )
