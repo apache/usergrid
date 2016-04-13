@@ -143,7 +143,7 @@ class PUT_Tests: XCTestCase {
             XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNotNil(putResponse)
             XCTAssertTrue(putResponse.ok)
-            XCTAssertEqual(putResponse.entities!.count, 3)
+            XCTAssertEqual(putResponse.entities!.count, 1)
 
             let responseEntity = putResponse.first!
             XCTAssertNotNil(responseEntity)

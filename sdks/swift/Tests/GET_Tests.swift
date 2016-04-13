@@ -65,7 +65,7 @@ class GET_Tests: XCTestCase {
             XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNotNil(response)
             XCTAssertTrue(response.ok)
-            XCTAssertEqual(response.count, 3)
+            XCTAssertEqual(response.count, 1)
             getExpect.fulfill()
         }
         self.waitForExpectationsWithTimeout(10, handler: nil)
@@ -103,7 +103,7 @@ class GET_Tests: XCTestCase {
                 XCTAssertTrue(nextPageResponse.ok)
                 XCTAssertNotNil(nextPageResponse)
                 XCTAssertFalse(nextPageResponse.hasNextPage)
-                XCTAssertEqual(nextPageResponse.entities!.count, 8)
+                XCTAssertEqual(nextPageResponse.entities!.count, 7)
                 getExpect.fulfill()
             }
         }
