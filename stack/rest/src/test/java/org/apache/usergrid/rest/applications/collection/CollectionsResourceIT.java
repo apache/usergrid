@@ -25,6 +25,7 @@ import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.apache.usergrid.rest.test.resource.model.Credentials;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
@@ -37,6 +38,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.MediaType;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -116,6 +120,42 @@ public class CollectionsResourceIT extends AbstractRestIT {
             assertEquals( "organization_application_not_found", node.get( "error" ).textValue() );
         }
 
+    }
+
+    @Test
+    public void postToCollectionSchemaUsingOrgAppCreds(){
+        //Creating schema.
+        //this could be changed to a hashmap.
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+
+
+        //field "fields" is required.
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+
+
+        Credentials appCredentials = clientSetup.getAppCredentials();
+
+
+        try {
+
+            this.pathResource( getOrgAppPath( "testcollections/_indexes" ) ).post( false, payload,
+                new QueryParameters().addParam( "grant_type", "client_credentials" ).addParam( "client_id",
+                    String.valueOf( ( ( Map ) appCredentials.get( "credentials" ) ).get( "client_id" ) ) )
+                                     .addParam( "client_secret", String.valueOf(
+                                         ( ( Map ) appCredentials.get( "credentials" ) ).get( "client_secret" ) ) ) );
+        }catch(Exception e){
+            fail("This should return a success.");
+        }
+
+        refreshIndex();
+
+
+        Collection collection = this.app().collection( "testCollections" ).collection( "_index" ).get();
+
+        LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
+        assertEquals( "app credentials",testCollectionSchema.get( "lastUpdateBy" ) );
+        assertEquals( 0,testCollectionSchema.get( "lastReindexed" ) );
     }
 
     @Test
