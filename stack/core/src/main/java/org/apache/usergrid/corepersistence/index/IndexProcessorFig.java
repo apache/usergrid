@@ -77,7 +77,7 @@ public interface IndexProcessorFig extends GuicyFig {
     /**
      * The number of worker threads used to read index write requests from the queue.
      */
-    @Default("16")
+    @Default("8")
     @Key(ELASTICSEARCH_WORKER_COUNT)
     int getWorkerCount();
 
