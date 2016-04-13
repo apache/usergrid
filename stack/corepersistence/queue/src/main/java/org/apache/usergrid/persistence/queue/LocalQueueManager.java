@@ -22,17 +22,13 @@ package org.apache.usergrid.persistence.queue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Observable;
 
 import java.io.IOException;
-import java.util.AbstractQueue;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -45,7 +41,7 @@ public class LocalQueueManager implements QueueManager {
     public ArrayBlockingQueue<QueueMessage> queue = new ArrayBlockingQueue<>(10000);
 
     @Override
-    public    List<QueueMessage> getMessages(int limit, int transactionTimeout, int waitTime, Class klass) {
+    public    List<QueueMessage> getMessages(int limit, Class klass) {
         List<QueueMessage> returnQueue = new ArrayList<>();
         try {
             QueueMessage message=null;

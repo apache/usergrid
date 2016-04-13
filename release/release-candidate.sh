@@ -28,7 +28,6 @@
 # candidate which will need to be sent to the dev@ and private@ mailing lists.
 #
 
-# for the 2.1.0 release, we will release from 'release' instead of the usual 'master'
 export RELEASE_BRANCH=release
 
 set -o errexit
@@ -37,6 +36,10 @@ set -o nounset
 rc_tag_version=0
 usergrid_git_web_url='https://git-wip-us.apache.org/repos/asf?p=usergrid.git'
 usergrid_svn_dist_url='https://dist.apache.org/repos/dist/dev/usergrid'
+
+
+#----------------------------------------------------------------------------------
+# Process command line arguments
 
 function print_help_and_exit {
 cat <<EOF
@@ -89,6 +92,10 @@ if [[ "${1:-dry-run}" == "publish" ]]; then
   publish=1
 fi
 
+
+#----------------------------------------------------------------------------------
+# Make sure repo is latest and clean
+
 # Update local repository
 git fetch --all -q
 git fetch --tags -q
@@ -110,7 +117,10 @@ if [[ "$base_dir" != "$PWD" ]]; then
   cd $base_dir
 fi
 
+
+#----------------------------------------------------------------------------------
 # Calculate the new version string
+
 current_version=$(cat .usergridversion | tr '[a-z]' '[A-Z]')
 if ! [[ $current_version =~ .*-SNAPSHOT ]]; then
   echo "ERROR: .usergridversion is required to contain 'SNAPSHOT', it is ${current_version}"
@@ -136,7 +146,10 @@ else
   new_snapshot_version="${new_master_version}-SNAPSHOT"
 fi
 
+
+#----------------------------------------------------------------------------------
 # Add the rc tag to the current version
+
 current_version_tag="${current_version}-rc${rc_tag_version}"
 
 # Make sure the branch does not exist
@@ -157,6 +170,10 @@ To roll back your local repo you will need to run:
 EOF
 }
 
+
+#----------------------------------------------------------------------------------
+# Make sure repo is clean, then branch
+
 # If anything goes wrong from here then print roll back instructions before exiting.
 function print_rollback_instructions {
   echo "ERROR: Looks like something has failed while creating the release candidate."
@@ -175,7 +192,10 @@ git clean -fdxq
 echo "Creating ${current_version_tag} branch"
 git branch $current_version_tag $(git rev-parse HEAD)
 
+
+#----------------------------------------------------------------------------------
 # Build the source distribution from the new branch
+
 echo "Checking out ${current_version_tag} branch and updating .usergridversion"
 git checkout $current_version_tag
 # Increment the version and create a branch
@@ -190,22 +210,46 @@ dist_name="apache-usergrid-${current_version_tag}"
 mkdir -p ${dist_dir}
 git archive --prefix=${dist_name}/ -o ${dist_dir}/${dist_name}.tar.gz HEAD
 
+
+#----------------------------------------------------------------------------------
+# Create the binary release
+
+binary_name="apache-usergrid-${current_version_tag}-binary"
+
+pushd release
+./binary-release.sh ${current_version_tag}
+cp target/${binary_name}.tar.gz ${dist_dir}
+popd 
+
+
+#----------------------------------------------------------------------------------
+# Sign the tarballs
+
 cd ${dist_dir}
-# Sign the tarball.
+
 echo "Signing the distribution"
+
 gpg --armor --output ${dist_dir}/${dist_name}.tar.gz.asc --detach-sig ${dist_dir}/${dist_name}.tar.gz
+gpg --armor --output ${dist_dir}/${binary_name}.tar.gz.asc --detach-sig ${dist_dir}/${binary_name}.tar.gz
 
-# Create the checksums
 echo "Creating checksums"
-gpg --print-md MD5 ${dist_name}.tar.gz > ${dist_name}.tar.gz.md5
-shasum ${dist_name}.tar.gz > ${dist_name}.tar.gz.sha
 
+gpg --print-md MD5 ${dist_name}.tar.gz > ${dist_name}.tar.gz.md5
+gpg --print-md MD5 ${binary_name}.tar.gz > ${binary_name}.tar.gz.md5
+
+shasum ${dist_name}.tar.gz > ${dist_name}.tar.gz.sha
+shasum ${binary_name}.tar.gz > ${binary_name}.tar.gz.sha
+
+
+#----------------------------------------------------------------------------------
 # Publish release candidate to svn and commit and push the new git branch
+
 if [[ $publish == 1 ]]; then
   echo "Publishing release candidate to ${usergrid_svn_dist_url}/${current_version_tag}"
   svn mkdir ${usergrid_svn_dist_url}/${current_version_tag} -m "usergrid-${current_version} release candidate ${rc_tag_version}"
   svn co --depth=empty ${usergrid_svn_dist_url}/${current_version_tag} ${dist_dir}
   svn add ${dist_name}*
+  svn add ${binary_name}*
   svn ci -m "usergrid-${current_version} release candidate ${rc_tag_version}"
 
   echo "Pushing new branch ${current_version_tag} to origin"
@@ -220,11 +264,14 @@ cd ${base_dir}
 
 current_commit_id=`git rev-parse HEAD`
 
+
+#----------------------------------------------------------------------------------
+# Create the email for the release candidate to be sent to the mailing lists.
+
 echo "Done creating the release candidate. The following draft email has been created"
 echo "to send to the dev@usergrid.apache.org mailing list"
 echo
 
-# Create the email template for the release candidate to be sent to the mailing lists.
 if [[ $(uname) == Darwin ]]; then
   vote_end=$(date -v+3d)
 else
@@ -253,12 +300,15 @@ The current Git commit ID is ${current_commit_id}
 
 The release candidate is available at:
 ${usergrid_svn_dist_url}/${current_version_tag}/${dist_name}.tar.gz
+${usergrid_svn_dist_url}/${current_version_tag}/${binary_name}.tar.gz
 
 The MD5 checksum of the release candidate can be found at:
 ${usergrid_svn_dist_url}/${current_version_tag}/${dist_name}.tar.gz.md5
+${usergrid_svn_dist_url}/${current_version_tag}/${binary_name}.tar.gz.md5
 
 The signature of the release candidate can be found at:
 ${usergrid_svn_dist_url}/${current_version_tag}/${dist_name}.tar.gz.asc
+${usergrid_svn_dist_url}/${current_version_tag}/${binary_name}.tar.gz.asc
 
 The GPG key used to sign the release are available at:
 ${usergrid_svn_dist_url}/KEYS
@@ -274,11 +324,11 @@ The vote will close on ${vote_end}
 __EOF__
 )
 
-echo "--------------------------------------------------------------------------------"
+echo "-----------------------------------------------------------------------------"
 echo
 echo "${MESSAGE}"
 echo
-echo "--------------------------------------------------------------------------------"
+echo "-----------------------------------------------------------------------------"
 echo
 
 # Print reset instructions if this was a dry-run
