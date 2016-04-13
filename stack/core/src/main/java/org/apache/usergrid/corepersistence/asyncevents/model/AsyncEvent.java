@@ -38,6 +38,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonIgnoreProperties( ignoreUnknown = true )
 @JsonTypeInfo( use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT, property = "type" )
 @JsonSubTypes( {
+    @JsonSubTypes.Type( value = EntityIndexEvent.class, name = "entityIndexEvent" ),
+    @JsonSubTypes.Type( value = EdgeIndexEvent.class, name = "edgeIndexEvent" ),
     @JsonSubTypes.Type( value = EdgeDeleteEvent.class, name = "edgeDeleteEvent" ),
     @JsonSubTypes.Type( value = EntityDeleteEvent.class, name = "entityDeleteEvent" ),
     @JsonSubTypes.Type( value = InitializeApplicationIndexEvent.class, name = "initializeApplicationIndexEvent" ),
