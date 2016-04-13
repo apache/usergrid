@@ -207,7 +207,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 })
                 .doOnError(throwable -> logger.error("Failed while trying to send notification", throwable));
 
-            processMessagesObservable.toBlocking().last(); // let this run and block the async thread, messages are queued
+            processMessagesObservable.toBlocking().lastOrDefault(null); // let this run and block the async thread, messages are queued
 
         }
 
