@@ -329,33 +329,21 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                     String notifierName = message.getNotifierKey().toLowerCase();
                     ProviderAdapter providerAdapter = notifierMap.get(notifierName.toLowerCase());
                     Object payload = translatedPayloads.get(notifierName);
-                    Map dynamicNotificationProperties =notification.getDynamicProperties();
-                    //do additional error checking to make sure other values will work.
-                    Boolean receiptsField = true;
-
-                    Object typelessReceiptsField = dynamicNotificationProperties.getOrDefault( "receipts",true );
-                    if(typelessReceiptsField instanceof Boolean) {
-                        receiptsField = ( boolean ) typelessReceiptsField;
-                    }
-                    else if(typelessReceiptsField instanceof String){
-                        String booleanString = ( String ) typelessReceiptsField;
-                        if(booleanString.toLowerCase().equals( "false" )){
-                            receiptsField=false;
-                        }
-                    }
 
                     TaskTracker tracker = null;
-                    if(receiptsField==false){
-//                        Receipt receipt =
-//                            new Receipt( notification.getUuid(), message.getNotifierId(), payload, deviceUUID );
-                        tracker =
-                            new TaskTracker( providerAdapter.getNotifier(), taskManager, null, deviceUUID );
-                    }
-                    else {
-                        Receipt receipt =
+
+                    if(notification.getSaveReceipts()){
+
+                        final Receipt receipt =
                             new Receipt( notification.getUuid(), message.getNotifierId(), payload, deviceUUID );
                         tracker =
                             new TaskTracker( providerAdapter.getNotifier(), taskManager, receipt, deviceUUID );
+
+                    }
+                    else {
+
+                        tracker =
+                            new TaskTracker( providerAdapter.getNotifier(), taskManager, null, deviceUUID );
                     }
                     if (!isOkToSend(notification)) {
                         tracker.failed(0, "Notification is duplicate/expired/cancelled.");
