@@ -45,7 +45,7 @@ public class EventsResourceIT extends AbstractRestIT {
 
 
     @Test
-    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1118. Events not working yet")
+    //@Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1118. Events not working yet")
     public void testEventPostandGet() throws IOException {
 
         Map<String, Object> payload = new LinkedHashMap<String, Object>();
