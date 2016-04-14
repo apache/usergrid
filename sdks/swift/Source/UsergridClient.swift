@@ -338,7 +338,7 @@ public class UsergridClient: NSObject, NSCoding {
     }
 
     /**
-     Changes the give `UsergridUser`'s current password with the shared instance of `UsergridClient`.
+     Changes the given `UsergridUser`'s current password.
 
      - parameter user:       The user.
      - parameter old:        The old password.

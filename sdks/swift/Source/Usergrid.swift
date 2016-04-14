@@ -27,7 +27,7 @@
 import Foundation
 
 /// The version number for the Usergrid Swift SDK.
-public let UsergridSDKVersion = "2.1.0"
+public let UsergridSDKVersion = "2.1.1"
 
 /**
  The `Usergrid` class acts as a static shared instance manager for the `UsergridClient` class.
@@ -255,7 +255,19 @@ public class Usergrid: NSObject {
     }
 
     /**
-    Logs out the current user of the shared instance locally and remotely.
+     Changes the given `UsergridUser`'s current password with the shared instance of `UsergridClient`.
+
+     - parameter user:       The user.
+     - parameter old:        The old password.
+     - parameter new:        The new password.
+     - parameter completion: The optional completion block.
+     */
+    public static func resetPassword(user: UsergridUser, old:String, new:String, completion:UsergridUserResetPasswordCompletion? = nil) {
+        Usergrid.sharedInstance.resetPassword(user, old: old, new: new, completion: completion)
+    }
+
+    /**
+    Logs out the current user of the shared instance locally and remotely using the shared instance of `UsergridClient`.
 
     - parameter completion: The completion block that will be called after logout has completed.
     */
