@@ -104,14 +104,16 @@ public class TaskManager {
             }
 
             failures.incrementAndGet();
-            if (receipt.getUuid() != null) {
-                successes.decrementAndGet();
-            }
-            receipt.setErrorCode(code);
-            receipt.setErrorMessage(message);
-            this.saveReceipt(notification, new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID), receipt,true);
-            if (logger.isDebugEnabled()) {
-                logger.debug("notification {} receipt saved for device {}", notification.getUuid(), deviceUUID);
+            if(receipt!=null) {
+                if ( receipt.getUuid() != null ) {
+                    successes.decrementAndGet();
+                }
+                receipt.setErrorCode( code );
+                receipt.setErrorMessage( message );
+                this.saveReceipt( notification, new SimpleEntityRef( Device.ENTITY_TYPE, deviceUUID ), receipt, true );
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug( "notification {} receipt saved for device {}", notification.getUuid(), deviceUUID );
+                }
             }
         } finally {
             completed(notifier, deviceUUID);
