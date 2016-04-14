@@ -30,13 +30,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+
 /**
- * Prevent dups test that uses UserManager and not REST.
+ * Test the unique values service.
  */
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class LocalPreventDupsTest {
-    private static final Logger logger = LoggerFactory.getLogger( LocalPreventDupsTest.class );
+public class UniqueValuesServiceTest {
+    private static final Logger logger = LoggerFactory.getLogger( UniqueValuesServiceTest.class );
 
     @Inject
     private EntityCollectionManagerFactory factory;
@@ -46,20 +47,32 @@ public class LocalPreventDupsTest {
     public MigrationManagerRule migrationManagerRule;
 
     @Inject
+    AkkaFig akkaFig;
+
+    @Inject
     UniqueValuesService uniqueValuesService;
 
 
-    private static final AtomicInteger successCounter = new AtomicInteger( 0 );
-    private static final AtomicInteger errorCounter = new AtomicInteger( 0 );
 
+    /**
+     * Use multiple threads to attempt to create entities with duplicate usernames.
+     */
     @Test
-    public void testBasicOperation() throws Exception {
+    public void testDuplicatePrevention() throws Exception {
 
+        if ( !akkaFig.getAkkaEnabled() ) {
+            logger.warn("Skipping test because Akka is not enabled");
+            return;
+        }
         uniqueValuesService.start("127.0.0.1", 2551, "us-east");
         uniqueValuesService.waitForRequestActors();
 
+        final AtomicInteger successCounter = new AtomicInteger( 0 );
+        final AtomicInteger errorCounter = new AtomicInteger( 0 );
+
         int numUsers = 100;
-        Multimap<String, Entity> usersCreated = generateDuplicateUsers( numUsers );
+        Multimap<String, Entity> usersCreated =
+            generateDuplicateUsers( numUsers, successCounter, errorCounter );
 
         int userCount = 0;
         int usernamesWithDuplicates = 0;
@@ -72,13 +85,16 @@ public class LocalPreventDupsTest {
         }
 
         Assert.assertEquals( 0, usernamesWithDuplicates );
+
         Assert.assertEquals( numUsers, successCounter.get() );
         Assert.assertEquals( 0, errorCounter.get() );
         Assert.assertEquals( numUsers, usersCreated.size() );
         Assert.assertEquals( numUsers, userCount );
     }
 
-    private Multimap<String, Entity> generateDuplicateUsers(int numUsers ) {
+
+    private Multimap<String, Entity> generateDuplicateUsers(
+        int numUsers, AtomicInteger successCounter, AtomicInteger errorCounter ) {
 
         ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
@@ -98,6 +114,8 @@ public class LocalPreventDupsTest {
                 execService.submit( () -> {
 
                     try {
+
+                        // give entity two unqiue fields username and email
                         Entity newEntity = new Entity( new SimpleId( "user" ) );
                         newEntity.setField( new StringField( "username", username, true ) );
                         newEntity.setField( new StringField( "email", username + "@example.org", true ) );

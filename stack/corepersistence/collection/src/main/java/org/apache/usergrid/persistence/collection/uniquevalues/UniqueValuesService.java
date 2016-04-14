@@ -41,6 +41,11 @@ public interface UniqueValuesService {
     void confirmUniqueValues( ApplicationScope scope, Entity entity, UUID version ) throws UniqueValueException;
 
     /**
+     * Initialize and wait for Akka actors to start.
+     */
+    void start();
+
+    /**
      * For test purposes only.
      */
     void start( String hostname, Integer port, String region );
