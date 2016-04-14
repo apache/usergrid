@@ -34,7 +34,7 @@ import static org.apache.usergrid.java.client.utils.ObjectUtils.isEmpty;
 
 public class UsergridRequestManager {
 
-    @NotNull public static final String USERGRID_USER_AGENT = "usergrid-java/v" + Usergrid.UsergridSDKVersion;
+    @NotNull public static String USERGRID_USER_AGENT = "usergrid-java/v" + Usergrid.UsergridSDKVersion;
 
     @NotNull private final UsergridClient usergridClient;
     @NotNull private final OkHttpClient httpClient;
