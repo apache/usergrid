@@ -14,23 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.java.client.utils;
+package org.apache.usergrid.java.client.exception;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 @SuppressWarnings("unused")
-public final class MapUtils {
+public class UsergridException extends RuntimeException {
 
-    @NotNull
-    public static <T> Map<String, T> newMapWithoutKeys(@NotNull  final Map<String, T> map, @NotNull final List<String> keys) {
-        Map<String, T> newMap = new HashMap<>();
-        for (String key : keys) {
-            newMap.remove(key);
-        }
-        return newMap;
+    private int responseCode;
+
+    public int getResponseCode() {
+        return responseCode;
+    }
+    public void setResponseCode(final int responseCode) { this.responseCode = responseCode; }
+
+    public UsergridException(@NotNull final String message) {
+        super(message);
+    }
+
+    public UsergridException(@NotNull final String message, @NotNull final Throwable cause) {
+        super(message, cause);
+    }
+
+    public UsergridException(@NotNull final String message, final int responseCode) {
+        super(message);
+        this.responseCode = responseCode;
+    }
+
+    public UsergridException(@NotNull final String message, @NotNull final Throwable cause, final int responseCode) {
+        super(message, cause);
+        this.responseCode = responseCode;
     }
 }
