@@ -17,10 +17,13 @@
 package org.apache.usergrid.persistence;
 
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.Query.Level;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.utils.InflectionUtils;
 
 
 public class PathQuery<E> {
@@ -85,6 +88,7 @@ public class PathQuery<E> {
 
     public Iterator<E> iterator( EntityManager em ) {
         try {
+
             if ( uuid != null && type != null ) {
                 return new PagingResultsIterator( getHeadResults( em ), query.getResultsLevel() );
             }
@@ -99,7 +103,20 @@ public class PathQuery<E> {
 
 
     protected Results getHeadResults( EntityManager em ) throws Exception {
+
         EntityRef ref = new SimpleEntityRef(type,uuid);
+
+        // if it's a single name identifier, just directly fetch that
+        if ( !query.getQl().isPresent() && query.getSingleNameOrEmailIdentifier() != null){
+
+            String name = query.getSingleNameOrEmailIdentifier();
+            String entityType = InflectionUtils.singularize(query.getCollection());
+
+            UUID entityId = em.getUniqueIdFromAlias( entityType, name );
+
+            return em.getEntities(Collections.singletonList(entityId), entityType);
+        }
+
         return ( query.getCollection() != null ) ?
                em.searchCollection( ref, query.getCollection(), query ) :
                em.searchTargetEntities(ref, query);
@@ -107,6 +124,13 @@ public class PathQuery<E> {
 
 
     protected Iterator refIterator( EntityManager em ) throws Exception {
+
+        if ( query.getQl() == null && query.getSingleNameOrEmailIdentifier() != null){
+
+            return new PagingResultsIterator( getHeadResults( em ), Level.REFS );
+
+        }
+
         if ( type != null  && uuid != null) {
             return new PagingResultsIterator( getHeadResults( em ), Level.REFS );
         }
