@@ -65,7 +65,7 @@ public class UsergridEntity {
         }
     }
 
-    public UsergridEntity(@NotNull final String type, @Nullable final String name, @NotNull final Map<String, JsonNode> properties) {
+    public UsergridEntity(@NotNull final String type, @Nullable final String name, @NotNull final Map<String, ?> properties) {
         this(type,name);
         this.updatePropertiesWithMap(properties);
     }
@@ -81,7 +81,7 @@ public class UsergridEntity {
         } catch( IllegalArgumentException e ) { System.out.print("Usergrid Error: Unable to update properties from entity - " + fromEntity.toString()); }
     }
 
-    public void updatePropertiesWithMap(@NotNull final Map<String,JsonNode> properties) {
+    public void updatePropertiesWithMap(@NotNull final Map<String,?> properties) {
         try {
             this.updatePropertiesWithJsonNode(entityUpdateMapper.valueToTree(properties));
         } catch( IllegalArgumentException e ) { System.out.print("Usergrid Error: Unable to update properties from map - " + properties.toString()); }
