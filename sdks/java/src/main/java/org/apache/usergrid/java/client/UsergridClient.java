@@ -198,7 +198,14 @@ public class UsergridClient {
             pathSegments[len-1] = "revoketokens";
         }
         UsergridRequest request = new UsergridRequest(UsergridHttpMethod.PUT, UsergridRequest.APPLICATION_JSON_MEDIA_TYPE, this.clientAppUrl(), param, null, this.authForRequests() , pathSegments);
-        return this.sendRequest(request);
+        UsergridResponse response = this.sendRequest(request);
+        UsergridUser currentUser = this.getCurrentUser();
+        if( currentUser != null && response.ok() ) {
+            if( uuidOrUsername.equalsIgnoreCase(currentUser.uuidOrUsername()) ) {
+                this.setCurrentUser(null);
+            }
+        }
+        return response;
     }
 
     @NotNull
@@ -231,14 +238,14 @@ public class UsergridClient {
     }
 
     @NotNull
-    public UsergridResponse PUT(@NotNull final String type, @NotNull final String uuidOrName, @NotNull final Map<String, Object> jsonBody) {
+    public UsergridResponse PUT(@NotNull final String type, @NotNull final String uuidOrName, @NotNull final Map<String, ?> jsonBody) {
         String[] pathSegments = { type, uuidOrName };
         UsergridRequest request = new UsergridRequest(UsergridHttpMethod.PUT, UsergridRequest.APPLICATION_JSON_MEDIA_TYPE, this.clientAppUrl(), null, jsonBody, this.authForRequests() , pathSegments);
         return this.sendRequest(request);
     }
 
     @NotNull
-    public UsergridResponse PUT(@NotNull final String type, @NotNull final Map<String, Object> jsonBody) {
+    public UsergridResponse PUT(@NotNull final String type, @NotNull final Map<String, ?> jsonBody) {
         String uuidOrName = null;
         Object uuid = jsonBody.get(UsergridEntityProperties.UUID.toString());
         if( uuid != null ) {
@@ -269,7 +276,7 @@ public class UsergridClient {
     }
 
     @NotNull
-    public UsergridResponse PUT(@NotNull final UsergridQuery query, @NotNull final Map<String, Object> jsonBody) {
+    public UsergridResponse PUT(@NotNull final UsergridQuery query, @NotNull final Map<String, ?> jsonBody) {
         String collectionName = query.getCollection();
         if( collectionName == null ) {
             return UsergridResponse.fromError(this,  "Query collection name missing.", "Query collection name is missing.");
@@ -296,20 +303,20 @@ public class UsergridClient {
     }
 
     @NotNull
-    public UsergridResponse POST(@NotNull final String type, @NotNull final String uuidOrName, @NotNull final Map<String, Object> jsonBody) {
+    public UsergridResponse POST(@NotNull final String type, @NotNull final String uuidOrName, @NotNull final Map<String, ?> jsonBody) {
         String[] pathSegments = {type, uuidOrName};
         UsergridRequest request = new UsergridRequest(UsergridHttpMethod.POST, UsergridRequest.APPLICATION_JSON_MEDIA_TYPE, this.clientAppUrl(), null, jsonBody, this.authForRequests() , pathSegments);
         return this.sendRequest(request);
     }
 
     @NotNull
-    public UsergridResponse POST(@NotNull final String type, @NotNull final Map<String, Object> jsonBody) {
+    public UsergridResponse POST(@NotNull final String type, @NotNull final Map<String, ?> jsonBody) {
         UsergridRequest request = new UsergridRequest(UsergridHttpMethod.POST, UsergridRequest.APPLICATION_JSON_MEDIA_TYPE, this.clientAppUrl(), null, jsonBody, this.authForRequests() , type);
         return this.sendRequest(request);
     }
 
     @NotNull
-    public UsergridResponse POST(@NotNull final String type, @NotNull final List<Map<String, Object>> jsonBodies) {
+    public UsergridResponse POST(@NotNull final String type, @NotNull final List<Map<String, ?>> jsonBodies) {
         UsergridRequest request = new UsergridRequest(UsergridHttpMethod.POST, UsergridRequest.APPLICATION_JSON_MEDIA_TYPE, this.clientAppUrl(), null, jsonBodies, this.authForRequests() , type);
         return this.sendRequest(request);
     }

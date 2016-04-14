@@ -174,12 +174,12 @@ public final class Usergrid {
     }
 
     @NotNull
-    public static UsergridResponse PUT(@NotNull final String type, @NotNull final String uuidOrName, @NotNull final Map<String, Object> jsonBody) {
+    public static UsergridResponse PUT(@NotNull final String type, @NotNull final String uuidOrName, @NotNull final Map<String, ?> jsonBody) {
         return Usergrid.getInstance().PUT(type, uuidOrName, jsonBody);
     }
 
     @NotNull
-    public static UsergridResponse PUT(@NotNull final String type, @NotNull final Map<String, Object> jsonBody) {
+    public static UsergridResponse PUT(@NotNull final String type, @NotNull final Map<String, ?> jsonBody) {
         return Usergrid.getInstance().PUT(type, jsonBody);
     }
 
@@ -189,7 +189,7 @@ public final class Usergrid {
     }
 
     @NotNull
-    public static UsergridResponse PUT(@NotNull final UsergridQuery query, @NotNull final Map<String, Object> jsonBody) {
+    public static UsergridResponse PUT(@NotNull final UsergridQuery query, @NotNull final Map<String, ?> jsonBody) {
         return Usergrid.getInstance().PUT(query, jsonBody);
     }
 
@@ -199,12 +199,12 @@ public final class Usergrid {
     }
 
     @NotNull
-    public static UsergridResponse POST(@NotNull final String type, @NotNull final Map<String, Object> jsonBody) {
+    public static UsergridResponse POST(@NotNull final String type, @NotNull final Map<String, ?> jsonBody) {
         return Usergrid.getInstance().POST(type, jsonBody);
     }
 
     @NotNull
-    public static UsergridResponse POST(@NotNull final String type, @NotNull final List<Map<String, Object>> jsonBodies) {
+    public static UsergridResponse POST(@NotNull final String type, @NotNull final List<Map<String, ?>> jsonBodies) {
         return Usergrid.getInstance().POST(type, jsonBodies);
     }
 
