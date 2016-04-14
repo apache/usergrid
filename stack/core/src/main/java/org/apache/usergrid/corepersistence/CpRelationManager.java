@@ -945,6 +945,13 @@ public class CpRelationManager implements RelationManager {
 
                 query.setQl( newQuery );
             }
+            // groups have a special unique identifier
+            else if ( query.getEntityType().equals( Group.ENTITY_TYPE ) ){
+
+                final String newQuery = "select * where path='" + query.getSingleNameOrEmailIdentifier() + "'";
+
+                query.setQl( newQuery );
+            }
 
             // use the ident with the default alias. could be an email
             else {
