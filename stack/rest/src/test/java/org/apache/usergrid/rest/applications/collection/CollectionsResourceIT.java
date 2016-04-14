@@ -19,6 +19,7 @@ package org.apache.usergrid.rest.applications.collection;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.entities.Application;
 
@@ -42,11 +43,7 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.MediaType;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.ArrayList;
+import java.util.*;
 
 import org.apache.commons.lang.NullArgumentException;
 
@@ -942,5 +939,54 @@ public class CollectionsResourceIT extends AbstractRestIT {
         int secondFred = s.indexOf( "fred", firstFred + 4 );
         Assert.assertEquals( "Should not be more than one name property", -1, secondFred );
   */
+    }
+
+
+    /**
+     * Test that when schema is "!" entity gets saved but does not get indexed
+     */
+    @Test
+    public void postCollectionSchemaWithWildcardIndexNone() throws Exception {
+
+        // creating schema with no index wildcard and other fields that should be ignored
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "!" );
+        indexingArray.add( "one" );
+        indexingArray.add( "two" );
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+
+        String randomizer = RandomStringUtils.randomAlphanumeric(10);
+        String collectionName = "col_" + randomizer;
+        app().collection( collectionName ).collection( "_indexes" ).post( payload );
+        refreshIndex();
+
+        // was the no-index wildcard saved and others ignored?
+        Collection collection = app().collection( collectionName ).collection( "_index" ).get();
+        LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
+        ArrayList<String> schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
+        assertTrue( schema.contains( "!" ) );
+        assertFalse( schema.contains( "one" ) );
+        assertFalse( schema.contains( "two" ) );
+
+        // post an entity with a name and a color
+        String entityName = "name_" + randomizer;
+        Entity postedEntity = this.app().collection( collectionName )
+            .post( new Entity().withProp("name", entityName).withProp( "color", "magenta" ) );
+
+        // should be able to get entity by ID
+        Entity getByIdEntity = app().collection( collectionName ).entity( postedEntity.getUuid() ).get();
+        assertNotNull( getByIdEntity );
+        assertEquals( postedEntity.getUuid(), getByIdEntity.getUuid() );
+
+        // should be able to get entity by name
+        Entity getByNameEntity = app().collection( collectionName ).entity( entityName ).get();
+        assertNotNull( getByNameEntity );
+        assertEquals( postedEntity.getUuid(), getByNameEntity.getUuid() );
+
+        // should NOT be able to get entity by query
+        Iterator<Entity> getByQuery = app().collection( collectionName )
+            .get( new QueryParameters().setQuery( "select * where color='magenta'" ) ).iterator();
+        assertFalse( getByQuery.hasNext() );
     }
 }
