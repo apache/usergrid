@@ -87,7 +87,7 @@ public class Usergrid: NSObject {
         set(auth) { Usergrid.sharedInstance.appAuth = auth }
     }
 
-    /// The `UsergridAuthFallback` value used to determine what type of token will be sent of the shared instance of `UsergridClient`, if any.
+    /// The `UsergridAuthMode` value used to determine what type of token will be sent of the shared instance of `UsergridClient`, if any.
     public static var authMode: UsergridAuthMode {
         get { return Usergrid.sharedInstance.authMode }
         set(mode) { Usergrid.sharedInstance.authMode = mode }
@@ -206,7 +206,7 @@ public class Usergrid: NSObject {
 
     If there is a `UsergridUser` logged in and the token of that user is valid then it will return that.
 
-    Otherwise, if the `authFallback` is `.App`, and the `UsergridAppAuth` of the client is set and the token is valid it will return that.
+    Otherwise, if the `authMode` is `.App`, and the `UsergridAppAuth` of the client is set and the token is valid it will return that.
 
     - returns: The `UsergridAuth` if one is found or nil if not.
     */

@@ -78,13 +78,13 @@ public class UsergridClient: NSObject, NSCoding {
     /// The temporary `UsergridAuth` object that is set when calling the `UsergridClient.usingAuth()` method.
     private var tempAuth: UsergridAuth? = nil
 
-    /// The application level `UsergridAppAuth` object.  Can be set manually but must call `authenticateApp` to retrive token.
+    /// The application level `UsergridAppAuth` object.  Can be set manually but must call `authenticateApp` to retrieve token.
     public var appAuth: UsergridAppAuth? {
         get { return config.appAuth }
         set(auth) { config.appAuth = auth }
     }
 
-    /// The `UsergridAuthFallback` value used to determine what type of token will be sent, if any.
+    /// The `UsergridAuthMode` value used to determine what type of token will be sent, if any.
     public var authMode: UsergridAuthMode {
         get { return config.authMode }
         set(mode) { config.authMode = mode }
@@ -213,7 +213,7 @@ public class UsergridClient: NSObject, NSCoding {
 
     If there is a `UsergridUser` logged in and the token of that user is valid then it will return that.
 
-    Otherwise, if the `authFallback` is `.App`, and the `UsergridAppAuth` of the client is set and the token is valid it will return that.
+    Otherwise, if the `authMode` is `.App`, and the `UsergridAppAuth` of the client is set and the token is valid it will return that.
 
     - returns: The `UsergridAuth` if one is found or nil if not.
     */
