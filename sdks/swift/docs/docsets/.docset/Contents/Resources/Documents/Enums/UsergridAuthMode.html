@@ -188,9 +188,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>If a non-expired user auth token exists in <code><a href="../Classes/UsergridClient.html#/s:vC11UsergridSDK14UsergridClient11currentUserGSqCS_12UsergridUser_">UsergridClient.currentUser</a></code>, this token is used to authenticate all API calls.</p>
-
-<p>If the API call fails, the activity is treated as a failure with an appropriate HTTP status code.</p>
+                        <p>If the API call fails, the activity is treated as a failure with an appropriate HTTP status code.</p>
 
                       </div>
                       <div class="declaration">
@@ -221,7 +219,9 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>If the API call fails, the activity is treated as a failure with an appropriate HTTP status code (This behavior is identical to authFallback=.None).</p>
+                        <p>If a non-expired <code><a href="../Classes/UsergridUserAuth.html">UsergridUserAuth</a></code> exists in <code><a href="../Classes/UsergridClient.html#/s:vC11UsergridSDK14UsergridClient11currentUserGSqCS_12UsergridUser_">UsergridClient.currentUser</a></code>, this token is used to authenticate all API calls.</p>
+
+<p>If the API call fails, the activity is treated as a failure with an appropriate HTTP status code (This behavior is identical to authMode=.None).</p>
 
                       </div>
                       <div class="declaration">
@@ -252,7 +252,9 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>If the API call fails, the activity is treated as a failure with an appropriate HTTP status code (This behavior is identical to authFallback=.None).</p>
+                        <p>If a non-expired <code><a href="../Classes/UsergridAppAuth.html">UsergridAppAuth</a></code> exists in <code><a href="../Classes/UsergridClient.html#/s:vC11UsergridSDK14UsergridClient7appAuthGSqCS_15UsergridAppAuth_">UsergridClient.appAuth</a></code>, this token is used to authenticate all API calls.</p>
+
+<p>If the API call fails, the activity is treated as a failure with an appropriate HTTP status code (This behavior is identical to authMode=.None).</p>
 
                       </div>
                       <div class="declaration">

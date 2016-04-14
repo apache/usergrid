@@ -438,7 +438,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The <code>UsergridAuthFallback</code> value used to determine what type of token will be sent, if any.</p>
+                        <p>The <code><a href="../Enums/UsergridAuthMode.html">UsergridAuthMode</a></code> value used to determine what type of token will be sent, if any.</p>
 
                       </div>
                       <div class="declaration">
@@ -968,7 +968,7 @@
 
 <p>If there is a <code><a href="../Classes/UsergridUser.html">UsergridUser</a></code> logged in and the token of that user is valid then it will return that.</p>
 
-<p>Otherwise, if the <code>authFallback</code> is <code>.App</code>, and the <code><a href="../Classes/UsergridAppAuth.html">UsergridAppAuth</a></code> of the client is set and the token is valid it will return that.</p>
+<p>Otherwise, if the <code><a href="../Classes/UsergridClient.html#/s:vC11UsergridSDK14UsergridClient8authModeOS_16UsergridAuthMode">authMode</a></code> is <code>.App</code>, and the <code><a href="../Classes/UsergridAppAuth.html">UsergridAppAuth</a></code> of the client is set and the token is valid it will return that.</p>
 
                       </div>
                       <div class="declaration">
@@ -1348,7 +1348,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Changes the give <code><a href="../Classes/UsergridUser.html">UsergridUser</a></code>&rsquo;s current password with the shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
+                        <p>Changes the given <code><a href="../Classes/UsergridUser.html">UsergridUser</a></code>&rsquo;s current password.</p>
 
                       </div>
                       <div class="declaration">
