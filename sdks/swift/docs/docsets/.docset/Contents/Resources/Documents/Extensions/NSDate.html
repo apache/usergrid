@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>UsergridHttpMethod Enum Reference</title>
+    <title>NSDate Extension Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -10,8 +10,8 @@
     
   </head>
   <body>
-    <a name="//apple_ref/swift/Enum/UsergridHttpMethod" class="dashAnchor"></a>
-    <a title="UsergridHttpMethod Enum Reference"></a>
+    <a name="//apple_ref/swift/Extension/NSDate" class="dashAnchor"></a>
+    <a title="NSDate Extension Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../index.html"> Docs</a> (100% documented)</p>
@@ -21,7 +21,7 @@
       <p id="breadcrumbs">
         <a href="../index.html"> Reference</a>
         <img id="carat" src="../img/carat.png" />
-        UsergridHttpMethod Enum Reference
+        NSDate Extension Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -162,14 +162,8 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>UsergridHttpMethod</h1>
-              <div class="declaration">
-                <div class="language">
-                  <pre class="highlight"><code><span class="kd">@objc</span> <span class="kd">public</span> <span class="kd">enum</span> <span class="kt">UsergridHttpMethod</span> <span class="p">:</span> <span class="kt">Int</span></code></pre>
-
-                </div>
-              </div>
-            <p>An enumeration for defining the HTTP methods used by Usergrid.</p>
+            <h1>NSDate</h1>
+            <p>Undocumented</p>
 
           </section>
           <section class="section task-group-section">
@@ -178,9 +172,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FO11UsergridSDK18UsergridHttpMethod3GetFMS0_S0_"></a>
-                    <a name="//apple_ref/swift/Element/Get" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FO11UsergridSDK18UsergridHttpMethod3GetFMS0_S0_">Get</a>
+                    <a name="/s:FE11UsergridSDKCSo6NSDatecFT12millisecondsSS_S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(milliseconds:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FE11UsergridSDKCSo6NSDatecFT12millisecondsSS_S0_">init(milliseconds:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -188,30 +182,51 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>GET</p>
+                        <p>Creates a new <code><a href="../Extensions/NSDate.html">NSDate</a></code> object with the given milliseconds.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="k">case</span> <span class="kt">Get</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="n">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">milliseconds</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>milliseconds</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the milliseconds</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>A new <code><a href="../Extensions/NSDate.html">NSDate</a></code> object.</p>
+
                       </div>
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FO11UsergridSDK18UsergridHttpMethod3PutFMS0_S0_"></a>
-                    <a name="//apple_ref/swift/Element/Put" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FO11UsergridSDK18UsergridHttpMethod3PutFMS0_S0_">Put</a>
+                    <a name="/s:FE11UsergridSDKCSo6NSDate18dateAsMillisecondsFT_Si"></a>
+                    <a name="//apple_ref/swift/Method/dateAsMilliseconds()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FE11UsergridSDKCSo6NSDate18dateAsMillisecondsFT_Si">dateAsMilliseconds()</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -219,30 +234,31 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>PUT</p>
+                        <p>Converts the <code><a href="../Extensions/NSDate.html">NSDate</a></code> object to milliseconds.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="k">case</span> <span class="kt">Put</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">dateAsMilliseconds</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Int</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The number of milliseconds corresponding to the date.</p>
+
                       </div>
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FO11UsergridSDK18UsergridHttpMethod4PostFMS0_S0_"></a>
-                    <a name="//apple_ref/swift/Element/Post" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FO11UsergridSDK18UsergridHttpMethod4PostFMS0_S0_">Post</a>
+                    <a name="/s:FE11UsergridSDKCSo6NSDate24dateAsMillisecondsStringFT_SS"></a>
+                    <a name="//apple_ref/swift/Method/dateAsMillisecondsString()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FE11UsergridSDKCSo6NSDate24dateAsMillisecondsStringFT_SS">dateAsMillisecondsString()</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -250,30 +266,31 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>POST</p>
+                        <p>Converts the <code><a href="../Extensions/NSDate.html">NSDate</a></code> object to milliseconds and returns the value as a string.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="k">case</span> <span class="kt">Post</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">dateAsMillisecondsString</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">String</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The number of milliseconds corresponding to the date as a string.</p>
+
                       </div>
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FO11UsergridSDK18UsergridHttpMethod6DeleteFMS0_S0_"></a>
-                    <a name="//apple_ref/swift/Element/Delete" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FO11UsergridSDK18UsergridHttpMethod6DeleteFMS0_S0_">Delete</a>
+                    <a name="/s:ZFE11UsergridSDKCSo6NSDate22stringFromMillesecondsFSiSS"></a>
+                    <a name="//apple_ref/swift/Method/stringFromMilleseconds(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFE11UsergridSDKCSo6NSDate22stringFromMillesecondsFSiSS">stringFromMilleseconds(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -281,30 +298,51 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>DELETE</p>
+                        <p>Converts the number of milliseconds to a string.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="k">case</span> <span class="kt">Delete</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">stringFromMilleseconds</span><span class="p">(</span><span class="nv">milliseconds</span><span class="p">:</span><span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>milliseconds</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the milliseconds to convert</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The milliseconds as a string.</p>
+
                       </div>
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:vO11UsergridSDK18UsergridHttpMethod11stringValueSS"></a>
-                    <a name="//apple_ref/swift/Property/stringValue" class="dashAnchor"></a>
-                    <a class="token" href="#/s:vO11UsergridSDK18UsergridHttpMethod11stringValueSS">stringValue</a>
+                    <a name="/s:ZFE11UsergridSDKCSo6NSDate19unixTimeStampStringFT_SS"></a>
+                    <a name="//apple_ref/swift/Method/unixTimeStampString()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFE11UsergridSDKCSo6NSDate19unixTimeStampStringFT_SS">unixTimeStampString()</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -312,16 +350,85 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Returns the string value.</p>
+                        <p>Converts the <code><a href="../Extensions/NSDate.html">NSDate</a></code> object to the corresponding UNIX time stamp as a string.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">stringValue</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">unixTimeStampString</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">String</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The UNIX time stamp as a string.</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFE11UsergridSDKCSo6NSDate13unixTimeStampFT_Si"></a>
+                    <a name="//apple_ref/swift/Method/unixTimeStamp()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFE11UsergridSDKCSo6NSDate13unixTimeStampFT_Si">unixTimeStamp()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Converts the <code><a href="../Extensions/NSDate.html">NSDate</a></code> object to the corresponding UNIX time stamp.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">unixTimeStamp</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The UNIX time stamp.</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFE11UsergridSDKCSo6NSDate17nowAsMillisecondsFT_Si"></a>
+                    <a name="//apple_ref/swift/Method/nowAsMilliseconds()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFE11UsergridSDKCSo6NSDate17nowAsMillisecondsFT_Si">nowAsMilliseconds()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Converts the current date to milliseconds.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">nowAsMilliseconds</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The milliseconds of the current date.</p>
+
                       </div>
                     </section>
                   </div>
