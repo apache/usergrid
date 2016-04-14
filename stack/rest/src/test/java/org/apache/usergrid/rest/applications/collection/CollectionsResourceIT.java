@@ -209,7 +209,8 @@ public class CollectionsResourceIT extends AbstractRestIT {
         this.app().collection( "testCollections" ).collection( "_indexes" ).delete();
         refreshIndex();
 
-        this.app().collection( "testCollections" ).collection( "_reindex" ).post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
+        this.app().collection( "testCollections" ).collection( "_reindex" )
+            .post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
         refreshIndex();
 
 
@@ -370,7 +371,8 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
 
         //Reindex and verify that the entity only has field one index.
-        this.app().collection( "testCollection" ).collection( "_reindex" ).post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
+        this.app().collection( "testCollection" ).collection( "_reindex" )
+            .post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
 
         for(int i = 0; i < 10; i++) {
             String query = "one ='value"+ i + "'";
@@ -430,7 +432,8 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
 
         //Reindex and verify that the entity only has field one index.
-        this.app().collection( "testCollection" ).collection( "_reindex" ).post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
+        this.app().collection( "testCollection" ).collection( "_reindex" )
+            .post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
 
 
         indexingArray.add( "one" );
@@ -989,4 +992,108 @@ public class CollectionsResourceIT extends AbstractRestIT {
             .get( new QueryParameters().setQuery( "select * where color='magenta'" ) ).iterator();
         assertFalse( getByQuery.hasNext() );
     }
+
+
+    /**
+     * Test that indexed entities can be connected to un-indexed Entities and connections still work.
+     */
+    @Test
+    public void testIndexedEntityToUnindexedEntityConnections() {
+
+        // create entities in an un-indexed collection
+
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "!" );
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+
+        String randomizer = RandomStringUtils.randomAlphanumeric(10);
+        String unIndexedCollectionName = "col_" + randomizer;
+        app().collection( unIndexedCollectionName ).collection( "_indexes" ).post( payload );
+        refreshIndex();
+
+        String entityName1 = "unindexed1";
+        Entity unindexed1 = this.app().collection( unIndexedCollectionName )
+            .post( new Entity().withProp("name", entityName1).withProp( "color", "violet" ) );
+
+        String entityName2 = "unindexed2";
+        Entity unindexed2 = this.app().collection( unIndexedCollectionName )
+            .post( new Entity().withProp("name", entityName2).withProp( "color", "violet" ) );
+
+        // create an indexed entity
+
+        String indexedCollection = "col_" + randomizer;
+        String indexedEntityName = "indexedEntity";
+        Entity indexedEntity = this.app().collection( indexedCollection )
+            .post( new Entity().withProp("name", indexedEntityName).withProp( "color", "orange" ) );
+
+        // create connections from indexed entity to un-indexed entities
+
+        app().collection(indexedCollection).entity(indexedEntity).connection("likes").entity(unindexed1).post();
+        app().collection(indexedCollection).entity(indexedEntity).connection("likes").entity(unindexed2).post();
+
+        Collection connectionsByGraph = app().collection( indexedCollection )
+            .entity(indexedEntity).connection( "likes" ).get();
+        assertEquals( 2, connectionsByGraph.getNumOfEntities() );
+
+        Collection connectionsByQuery = app().collection( indexedCollection )
+            .entity(indexedEntity).connection( "likes" )
+            .get( new QueryParameters().setQuery( "select * where color='violet'" ));
+        assertEquals( 0, connectionsByQuery.getNumOfEntities() );
+
+    }
+
+
+    /**
+     * Test that index entities can be connected to un-indexed Entities and connections still work.
+     */
+    @Test
+    public void testUnindexedEntityToIndexedEntityConnections() {
+
+        // create two entities in an indexed collection
+
+        String randomizer = RandomStringUtils.randomAlphanumeric(10);
+        String indexedCollection = "col_" + randomizer;
+        String indexedEntityName = "indexedEntity";
+
+        Entity indexedEntity1 = this.app().collection( indexedCollection )
+            .post( new Entity().withProp("name", indexedEntityName + "_1").withProp( "color", "orange" ) );
+
+        Entity indexedEntity2 = this.app().collection( indexedCollection )
+            .post( new Entity().withProp("name", indexedEntityName + "_2").withProp( "color", "orange" ) );
+
+        // create an un-indexed entity
+
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "!" );
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+
+        String unIndexedCollectionName = "col_" + randomizer;
+        app().collection( unIndexedCollectionName ).collection( "_indexes" ).post( payload );
+        refreshIndex();
+
+        String entityName1 = "unindexed1";
+        Entity unindexed1 = this.app().collection( unIndexedCollectionName )
+            .post( new Entity().withProp("name", entityName1).withProp( "color", "violet" ) );
+
+        // create connections from un-indexed entity to indexed entities
+
+        app().collection(unIndexedCollectionName).entity(unindexed1).connection("likes").entity(indexedEntity1).post();
+        app().collection(unIndexedCollectionName).entity(unindexed1).connection("likes").entity(indexedEntity2).post();
+
+        // should be able to get connections via graph from un-indexed to index
+
+        Collection connectionsByGraph = app().collection( indexedCollection )
+            .entity(unindexed1).connection( "likes" ).get();
+        assertEquals( 2, connectionsByGraph.getNumOfEntities() );
+
+        // should not be able to get connections via query from unindexed to indexed
+
+        Collection connectionsByQuery = app().collection( indexedCollection )
+            .entity(unindexed1).connection( "likes" )
+            .get( new QueryParameters().setQuery( "select * where color='orange'" ));
+        assertEquals( 0, connectionsByQuery.getNumOfEntities() );
+    }
+
 }
