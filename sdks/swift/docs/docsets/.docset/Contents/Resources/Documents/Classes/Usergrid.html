@@ -7,13 +7,14 @@
     <meta charset='utf-8'>
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
+    
   </head>
   <body>
     <a name="//apple_ref/swift/Class/Usergrid" class="dashAnchor"></a>
     <a title="Usergrid Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (97% documented)</p>
+        <p><a href="../index.html"> Docs</a> (100% documented)</p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -27,7 +28,7 @@
       <nav class="sidebar">
         <ul class="nav-groups">
           <li class="nav-group-name">
-          <a href="../Classes.html">Classes</a>
+            <a href="../Classes.html">Classes</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a href="../Classes/Usergrid.html">Usergrid</a>
@@ -37,6 +38,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/UsergridAsset.html">UsergridAsset</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridAssetUploadRequest.html">UsergridAssetUploadRequest</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/UsergridAuth.html">UsergridAuth</a>
@@ -60,7 +64,13 @@
                 <a href="../Classes/UsergridQuery.html">UsergridQuery</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/UsergridRequest.html">UsergridRequest</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/UsergridResponse.html">UsergridResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridResponseError.html">UsergridResponseError</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/UsergridUser.html">UsergridUser</a>
@@ -71,10 +81,18 @@
             </ul>
           </li>
           <li class="nav-group-name">
-          <a href="../Enums.html">Enums</a>
+            <a href="../Global Variables.html">Global Variables</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Enums/UsergridAuthFallback.html">UsergridAuthFallback</a>
+                <a href="../Global Variables.html#/s:v11UsergridSDK18UsergridSDKVersionSS">UsergridSDKVersion</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enums</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridAuthMode.html">UsergridAuthMode</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/UsergridDeviceProperties.html">UsergridDeviceProperties</a>
@@ -84,6 +102,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/UsergridEntityProperties.html">UsergridEntityProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridHttpMethod.html">UsergridHttpMethod</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/UsergridImageContentType.html">UsergridImageContentType</a>
@@ -100,7 +121,15 @@
             </ul>
           </li>
           <li class="nav-group-name">
-          <a href="../Typealiases.html">Typealiases</a>
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/NSDate.html">NSDate</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Typealiases.html">Typealiases</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a href="../Typealiases.html#/s:11UsergridSDK30UsergridAppAuthCompletionBlock">UsergridAppAuthCompletionBlock</a>
@@ -120,6 +149,12 @@
               <li class="nav-group-task">
                 <a href="../Typealiases.html#/s:11UsergridSDK31UsergridUserAuthCompletionBlock">UsergridUserAuthCompletionBlock</a>
               </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK34UsergridUserAvailabilityCompletion">UsergridUserAvailabilityCompletion</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK35UsergridUserResetPasswordCompletion">UsergridUserResetPasswordCompletion</a>
+              </li>
             </ul>
           </li>
         </ul>
@@ -129,28 +164,28 @@
           <section class="section">
             <h1>Usergrid</h1>
               <div class="declaration">
-                <div class="Swift">
+                <div class="language">
                   <pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Usergrid</span><span class="p">:</span> <span class="kt">NSObject</span></code></pre>
 
                 </div>
               </div>
-            <p>The <code>Usergrid</code> class acts as a static shared instance manager for the <code>UsergridClient</code> class.</p>
+            <p>The <code>Usergrid</code> class acts as a static shared instance manager for the <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code> class.</p>
 
 <p>The methods and variables in this class are all static and therefore you will never need or want to initialize an instance of the <code>Usergrid</code> class.</p>
 
-<p>Use of this class depends on initialization of the shared instance of the <code>UsergridClient</code> object.  Because of this, before using any of the static methods
+<p>Use of this class depends on initialization of the shared instance of the <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code> object.  Because of this, before using any of the static methods
 provided you will need to call one of the shared instance initialization methods.  Failure to do so will result in failure from all methods.</p>
 
           </section>
           <section class="section task-group-section">
             <div class="task-group">
-                <div class="task-name-container">
-                  <a name="/Static%20Variables"></a>
-                  <a name="//apple_ref/swift/Section/Static Variables" class="dashAnchor"></a>
-                  <a href="#/Static%20Variables">
-                    <h3 class="section-name">Static Variables</h3>
-                  </a>
-                </div>
+              <div class="task-name-container">
+                <a name="/Static%20Variables"></a>
+                <a name="//apple_ref/swift/Section/Static Variables" class="dashAnchor"></a>
+                <a href="#/Static%20Variables">
+                  <h3 class="section-name">Static Variables</h3>
+                </a>
+              </div>
               <ul>
                 <li class="item">
                   <div>
@@ -165,12 +200,12 @@ provided you will need to call one of the shared instance initialization methods
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Used to determine if the shared instance of the <code>UsergridClient</code> has been initialized.</p>
+                        <p>Used to determine if the shared instance of the <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code> has been initialized.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">isInitialized</span> <span class="p">:</span> <span class="kt">Bool</span>  <span class="p">{</span> <span class="k">return</span> <span class="kt">Usergrid</span><span class="o">.</span><span class="n">_sharedClient</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">}</span></code></pre>
 
@@ -192,13 +227,19 @@ provided you will need to call one of the shared instance initialization methods
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>A shared instance of <code>UsergridClient</code>, used by the <code>Usergrid</code> static methods and acts as the default <code>UsergridClient</code>
+                        <p>A shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>, used by the <code><a href="../Classes/Usergrid.html">Usergrid</a></code> static methods and acts as the default <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>
 within the UsergridSDK library.</p>
+
+<div class="aside aside-warning">
+    <p class="aside-title">Warning</p>
+    You must call one of the <code>Usergrid.initSharedInstance</code> methods before this or any other <code><a href="../Classes/Usergrid.html">Usergrid</a></code> static methods are valid.
+
+</div>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">sharedInstance</span> <span class="p">:</span> <span class="kt">UsergridClient</span></code></pre>
 
@@ -210,9 +251,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZvC11UsergridSDK8Usergrid5appIDSS"></a>
-                    <a name="//apple_ref/swift/Variable/appID" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZvC11UsergridSDK8Usergrid5appIDSS">appID</a>
+                    <a name="/s:ZvC11UsergridSDK8Usergrid5appIdSS"></a>
+                    <a name="//apple_ref/swift/Variable/appId" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZvC11UsergridSDK8Usergrid5appIdSS">appId</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -220,14 +261,14 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The application identifier the shared instance of <code>UsergridClient</code>.</p>
+                        <p>The application identifier the shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">appID</span> <span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">return</span> <span class="kt">Usergrid</span><span class="o">.</span><span class="n">sharedInstance</span><span class="o">.</span><span class="n">appID</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">appId</span> <span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">return</span> <span class="kt">Usergrid</span><span class="o">.</span><span class="n">sharedInstance</span><span class="o">.</span><span class="n">appId</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -237,9 +278,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZvC11UsergridSDK8Usergrid5orgIDSS"></a>
-                    <a name="//apple_ref/swift/Variable/orgID" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZvC11UsergridSDK8Usergrid5orgIDSS">orgID</a>
+                    <a name="/s:ZvC11UsergridSDK8Usergrid5orgIdSS"></a>
+                    <a name="//apple_ref/swift/Variable/orgId" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZvC11UsergridSDK8Usergrid5orgIdSS">orgId</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -247,14 +288,14 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The organization identifier of the shared instance of <code>UsergridClient</code>.</p>
+                        <p>The organization identifier of the shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">orgID</span> <span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">return</span> <span class="kt">Usergrid</span><span class="o">.</span><span class="n">sharedInstance</span><span class="o">.</span><span class="n">orgID</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">orgId</span> <span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">return</span> <span class="kt">Usergrid</span><span class="o">.</span><span class="n">sharedInstance</span><span class="o">.</span><span class="n">orgId</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -264,9 +305,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZvC11UsergridSDK8Usergrid7baseURLSS"></a>
-                    <a name="//apple_ref/swift/Variable/baseURL" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZvC11UsergridSDK8Usergrid7baseURLSS">baseURL</a>
+                    <a name="/s:ZvC11UsergridSDK8Usergrid7baseUrlSS"></a>
+                    <a name="//apple_ref/swift/Variable/baseUrl" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZvC11UsergridSDK8Usergrid7baseUrlSS">baseUrl</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -274,14 +315,14 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The base URL that all calls will be made with of the shared instance of <code>UsergridClient</code>.</p>
+                        <p>The base URL that all calls will be made with of the shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">baseURL</span> <span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">return</span> <span class="kt">Usergrid</span><span class="o">.</span><span class="n">sharedInstance</span><span class="o">.</span><span class="n">baseURL</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">baseUrl</span> <span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">return</span> <span class="kt">Usergrid</span><span class="o">.</span><span class="n">sharedInstance</span><span class="o">.</span><span class="n">baseUrl</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -301,12 +342,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The constructed URL string based on the <code>UsergridClient</code>&rsquo;s baseURL, orgID, and appID of the shared instance of <code>UsergridClient</code>.</p>
+                        <p>The constructed URL string based on the <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>&rsquo;s baseUrl, orgId, and appId of the shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">clientAppURL</span> <span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">return</span> <span class="kt">Usergrid</span><span class="o">.</span><span class="n">sharedInstance</span><span class="o">.</span><span class="n">clientAppURL</span> <span class="p">}</span></code></pre>
 
@@ -328,14 +369,41 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The currently logged in <code>UsergridUser</code> of the shared instance of <code>UsergridClient</code>.</p>
+                        <p>The currently logged in <code><a href="../Classes/UsergridUser.html">UsergridUser</a></code> of the shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">currentUser</span><span class="p">:</span> <span class="kt">UsergridUser</span><span class="p">?</span>  <span class="p">{</span> <span class="k">return</span> <span class="kt">Usergrid</span><span class="o">.</span><span class="n">sharedInstance</span><span class="o">.</span><span class="n">currentUser</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZvC11UsergridSDK8Usergrid28persistCurrentUserInKeychainSb"></a>
+                    <a name="//apple_ref/swift/Variable/persistCurrentUserInKeychain" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZvC11UsergridSDK8Usergrid28persistCurrentUserInKeychainSb">persistCurrentUserInKeychain</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Whether or not the current user will be saved and restored from the keychain using the shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">persistCurrentUserInKeychain</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -355,12 +423,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The <code>UsergridUserAuth</code> which consists of the token information from the <code>currentUser</code> property of the shared instance of <code>UsergridClient</code>.</p>
+                        <p>The <code><a href="../Classes/UsergridUserAuth.html">UsergridUserAuth</a></code> which consists of the token information from the <code><a href="../Classes/Usergrid.html#/s:ZvC11UsergridSDK8Usergrid11currentUserGSqCS_12UsergridUser_">currentUser</a></code> property of the shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">userAuth</span><span class="p">:</span> <span class="kt">UsergridUserAuth</span><span class="p">?</span>  <span class="p">{</span> <span class="k">return</span> <span class="kt">Usergrid</span><span class="o">.</span><span class="n">sharedInstance</span><span class="o">.</span><span class="n">userAuth</span> <span class="p">}</span></code></pre>
 
@@ -382,14 +450,41 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The application level <code>UsergridAppAuth</code> object of the shared instance of <code>UsergridClient</code>.</p>
+                        <p>The application level <code><a href="../Classes/UsergridAppAuth.html">UsergridAppAuth</a></code> object of the shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">appAuth</span><span class="p">:</span> <span class="kt">UsergridAppAuth</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZvC11UsergridSDK8Usergrid8authModeOS_16UsergridAuthMode"></a>
+                    <a name="//apple_ref/swift/Variable/authMode" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZvC11UsergridSDK8Usergrid8authModeOS_16UsergridAuthMode">authMode</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The <code>UsergridAuthFallback</code> value used to determine what type of token will be sent of the shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>, if any.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">authMode</span><span class="p">:</span> <span class="kt">UsergridAuthMode</span></code></pre>
 
                         </div>
                       </div>
@@ -399,20 +494,20 @@ within the UsergridSDK library.</p>
               </ul>
             </div>
             <div class="task-group">
-                <div class="task-name-container">
-                  <a name="/Initialization"></a>
-                  <a name="//apple_ref/swift/Section/Initialization" class="dashAnchor"></a>
-                  <a href="#/Initialization">
-                    <h3 class="section-name">Initialization</h3>
-                  </a>
-                </div>
+              <div class="task-name-container">
+                <a name="/Initialization"></a>
+                <a name="//apple_ref/swift/Section/Initialization" class="dashAnchor"></a>
+                <a href="#/Initialization">
+                  <h3 class="section-name">Initialization</h3>
+                </a>
+              </div>
               <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid18initSharedInstanceFMS0_FT5orgIDSS5appIDSS_CS_14UsergridClient"></a>
-                    <a name="//apple_ref/swift/Method/initSharedInstance(orgID:appID:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid18initSharedInstanceFMS0_FT5orgIDSS5appIDSS_CS_14UsergridClient">initSharedInstance(orgID:appID:)</a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid18initSharedInstanceFT5orgIdSS5appIdSS_CS_14UsergridClient"></a>
+                    <a name="//apple_ref/swift/Method/initSharedInstance(orgId:appId:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid18initSharedInstanceFT5orgIdSS5appIdSS_CS_14UsergridClient">initSharedInstance(orgId:appId:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -420,14 +515,14 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Initializes the <code>Usergrid.sharedInstance</code> of <code>UsergridClient</code>.</p>
+                        <p>Initializes the <code><a href="../Classes/Usergrid.html#/s:ZvC11UsergridSDK8Usergrid14sharedInstanceCS_14UsergridClient">Usergrid.sharedInstance</a></code> of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">initSharedInstance</span><span class="p">(</span><span class="n">orgID</span> <span class="nv">orgID</span> <span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">appID</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">UsergridClient</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">initSharedInstance</span><span class="p">(</span><span class="n">orgId</span> <span class="nv">orgId</span> <span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">appId</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">UsergridClient</span></code></pre>
 
                         </div>
                       </div>
@@ -438,7 +533,7 @@ within the UsergridSDK library.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>orgID</em>
+                                <em>orgId</em>
                                 </code>
                               </td>
                               <td>
@@ -451,7 +546,7 @@ within the UsergridSDK library.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>appID</em>
+                                <em>appId</em>
                                 </code>
                               </td>
                               <td>
@@ -466,7 +561,7 @@ within the UsergridSDK library.</p>
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>The shared instance of <code>UsergridClient</code>.</p>
+                        <p>The shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
 
                       </div>
                     </section>
@@ -475,9 +570,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid18initSharedInstanceFMS0_FT5orgIDSS5appIDSS7baseURLSS_CS_14UsergridClient"></a>
-                    <a name="//apple_ref/swift/Method/initSharedInstance(orgID:appID:baseURL:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid18initSharedInstanceFMS0_FT5orgIDSS5appIDSS7baseURLSS_CS_14UsergridClient">initSharedInstance(orgID:appID:baseURL:)</a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid18initSharedInstanceFT5orgIdSS5appIdSS7baseUrlSS_CS_14UsergridClient"></a>
+                    <a name="//apple_ref/swift/Method/initSharedInstance(orgId:appId:baseUrl:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid18initSharedInstanceFT5orgIdSS5appIdSS7baseUrlSS_CS_14UsergridClient">initSharedInstance(orgId:appId:baseUrl:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -485,14 +580,14 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Initializes the <code>Usergrid.sharedInstance</code> of <code>UsergridClient</code>.</p>
+                        <p>Initializes the <code><a href="../Classes/Usergrid.html#/s:ZvC11UsergridSDK8Usergrid14sharedInstanceCS_14UsergridClient">Usergrid.sharedInstance</a></code> of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">initSharedInstance</span><span class="p">(</span><span class="n">orgID</span> <span class="nv">orgID</span> <span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">appID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">baseURL</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">UsergridClient</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">initSharedInstance</span><span class="p">(</span><span class="n">orgId</span> <span class="nv">orgId</span> <span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">appId</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">baseUrl</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">UsergridClient</span></code></pre>
 
                         </div>
                       </div>
@@ -503,7 +598,7 @@ within the UsergridSDK library.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>orgID</em>
+                                <em>orgId</em>
                                 </code>
                               </td>
                               <td>
@@ -516,7 +611,7 @@ within the UsergridSDK library.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>appID</em>
+                                <em>appId</em>
                                 </code>
                               </td>
                               <td>
@@ -529,7 +624,7 @@ within the UsergridSDK library.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>baseURL</em>
+                                <em>baseUrl</em>
                                 </code>
                               </td>
                               <td>
@@ -544,7 +639,7 @@ within the UsergridSDK library.</p>
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>The shared instance of <code>UsergridClient</code>.</p>
+                        <p>The shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
 
                       </div>
                     </section>
@@ -553,9 +648,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid18initSharedInstanceFMS0_FT13configurationCS_20UsergridClientConfig_CS_14UsergridClient"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid18initSharedInstanceFT13configurationCS_20UsergridClientConfig_CS_14UsergridClient"></a>
                     <a name="//apple_ref/swift/Method/initSharedInstance(configuration:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid18initSharedInstanceFMS0_FT13configurationCS_20UsergridClientConfig_CS_14UsergridClient">initSharedInstance(configuration:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid18initSharedInstanceFT13configurationCS_20UsergridClientConfig_CS_14UsergridClient">initSharedInstance(configuration:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -563,12 +658,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Initializes the <code>Usergrid.sharedInstance</code> of <code>UsergridClient</code>.</p>
+                        <p>Initializes the <code><a href="../Classes/Usergrid.html#/s:ZvC11UsergridSDK8Usergrid14sharedInstanceCS_14UsergridClient">Usergrid.sharedInstance</a></code> of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">initSharedInstance</span><span class="p">(</span><span class="n">configuration</span> <span class="nv">configuration</span><span class="p">:</span> <span class="kt">UsergridClientConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">UsergridClient</span></code></pre>
 
@@ -596,7 +691,7 @@ within the UsergridSDK library.</p>
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>The shared instance of <code>UsergridClient</code>.</p>
+                        <p>The shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
 
                       </div>
                     </section>
@@ -605,20 +700,20 @@ within the UsergridSDK library.</p>
               </ul>
             </div>
             <div class="task-group">
-                <div class="task-name-container">
-                  <a name="/Push%20Notifications"></a>
-                  <a name="//apple_ref/swift/Section/Push Notifications" class="dashAnchor"></a>
-                  <a href="#/Push%20Notifications">
-                    <h3 class="section-name">Push Notifications</h3>
-                  </a>
-                </div>
+              <div class="task-name-container">
+                <a name="/Push%20Notifications"></a>
+                <a name="//apple_ref/swift/Section/Push Notifications" class="dashAnchor"></a>
+                <a href="#/Push%20Notifications">
+                  <h3 class="section-name">Push Notifications</h3>
+                </a>
+              </div>
               <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid14applyPushTokenFMS0_FTCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid14applyPushTokenFTCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/applyPushToken(_:notifierID:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid14applyPushTokenFMS0_FTCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">applyPushToken(_:notifierID:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid14applyPushTokenFTCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">applyPushToken(_:notifierID:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -626,12 +721,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Sets the push token for the given notifier ID and performs a PUT request to update the shared <code>UsergridDevice</code> instance using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Sets the push token for the given notifier ID and performs a PUT request to update the shared <code><a href="../Classes/UsergridDevice.html">UsergridDevice</a></code> instance using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">applyPushToken</span><span class="p">(</span><span class="nv">pushToken</span><span class="p">:</span> <span class="kt">NSData</span><span class="p">,</span> <span class="nv">notifierID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -689,9 +784,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid14applyPushTokenFMS0_FTCS_14UsergridDevice9pushTokenCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid14applyPushTokenFTCS_14UsergridDevice9pushTokenCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/applyPushToken(_:pushToken:notifierID:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid14applyPushTokenFMS0_FTCS_14UsergridDevice9pushTokenCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">applyPushToken(_:pushToken:notifierID:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid14applyPushTokenFTCS_14UsergridDevice9pushTokenCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">applyPushToken(_:pushToken:notifierID:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -699,12 +794,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Sets the push token for the given notifier ID and performs a PUT request to update the given <code>UsergridDevice</code> instance using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Sets the push token for the given notifier ID and performs a PUT request to update the given <code><a href="../Classes/UsergridDevice.html">UsergridDevice</a></code> instance using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">applyPushToken</span><span class="p">(</span><span class="nv">device</span><span class="p">:</span> <span class="kt">UsergridDevice</span><span class="p">,</span> <span class="nv">pushToken</span><span class="p">:</span> <span class="kt">NSData</span><span class="p">,</span> <span class="nv">notifierID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -775,20 +870,20 @@ within the UsergridSDK library.</p>
               </ul>
             </div>
             <div class="task-group">
-                <div class="task-name-container">
-                  <a name="/Authorization"></a>
-                  <a name="//apple_ref/swift/Section/Authorization" class="dashAnchor"></a>
-                  <a href="#/Authorization">
-                    <h3 class="section-name">Authorization</h3>
-                  </a>
-                </div>
+              <div class="task-name-container">
+                <a name="/Authorization"></a>
+                <a name="//apple_ref/swift/Section/Authorization" class="dashAnchor"></a>
+                <a href="#/Authorization">
+                  <h3 class="section-name">Authorization</h3>
+                </a>
+              </div>
               <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZvC11UsergridSDK8Usergrid12authFallbackOS_20UsergridAuthFallback"></a>
-                    <a name="//apple_ref/swift/Variable/authFallback" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZvC11UsergridSDK8Usergrid12authFallbackOS_20UsergridAuthFallback">authFallback</a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid9usingAuthFCS_12UsergridAuthCS_14UsergridClient"></a>
+                    <a name="//apple_ref/swift/Method/usingAuth(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid9usingAuthFCS_12UsergridAuthCS_14UsergridClient">usingAuth(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -796,16 +891,43 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The <code>UsergridAuthFallback</code> value used to determine what type of token will be sent of the shared instance of <code>UsergridClient</code>, if any.</p>
+                        <p>Sets the shared <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>&rsquo;s <code>tempAuth</code> property using the passed in <code><a href="../Classes/UsergridAuth.html">UsergridAuth</a></code>.</p>
+
+<p>This will cause the next CRUD method performed by the client to use the <code>tempAuth</code> property once and will then reset.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">authFallback</span><span class="p">:</span> <span class="kt">UsergridAuthFallback</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">usingAuth</span><span class="p">(</span><span class="nv">auth</span><span class="p">:</span><span class="kt">UsergridAuth</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">UsergridClient</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>auth</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridAuth</code> object to temporarily use for authentication.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code></p>
+
                       </div>
                     </section>
                   </div>
@@ -813,9 +935,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid15authForRequestsFMS0_FT_GSqCS_12UsergridAuth_"></a>
-                    <a name="//apple_ref/swift/Method/authForRequests()" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid15authForRequestsFMS0_FT_GSqCS_12UsergridAuth_">authForRequests()</a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid10usingTokenFSSCS_14UsergridClient"></a>
+                    <a name="//apple_ref/swift/Method/usingToken(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid10usingTokenFSSCS_14UsergridClient">usingToken(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -823,16 +945,70 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Determines the <code>UsergridAuth</code> object that will be used for all outgoing requests made by the shared instance of <code>UsergridClient</code>.</p>
+                        <p>Sets the shared <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>&rsquo;s <code>tempAuth</code> property using the passed in token.</p>
 
-<p>If there is a <code>UsergridUser</code> logged in and the token of that user is valid then it will return that.</p>
-
-<p>Otherwise, if the <code>authFallback</code> is <code>.App</code>, and the <code>UsergridAppAuth</code> of the client is set and the token is valid it will return that.</p>
+<p>This will cause the next CRUD method performed by the client to use the <code>tempAuth</code> property once and will then reset.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">usingToken</span><span class="p">(</span><span class="nv">token</span><span class="p">:</span><span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">UsergridClient</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>auth</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The access token to temporarily use for authentication.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code></p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid15authForRequestsFT_GSqCS_12UsergridAuth_"></a>
+                    <a name="//apple_ref/swift/Method/authForRequests()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid15authForRequestsFT_GSqCS_12UsergridAuth_">authForRequests()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Determines the <code><a href="../Classes/UsergridAuth.html">UsergridAuth</a></code> object that will be used for all outgoing requests made by the shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
+
+<p>If there is a <code><a href="../Classes/UsergridUser.html">UsergridUser</a></code> logged in and the token of that user is valid then it will return that.</p>
+
+<p>Otherwise, if the <code>authFallback</code> is <code>.App</code>, and the <code><a href="../Classes/UsergridAppAuth.html">UsergridAppAuth</a></code> of the client is set and the token is valid it will return that.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">authForRequests</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UsergridAuth</span><span class="p">?</span></code></pre>
 
@@ -840,7 +1016,7 @@ within the UsergridSDK library.</p>
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>The <code>UsergridAuth</code> if one is found or nil if not.</p>
+                        <p>The <code><a href="../Classes/UsergridAuth.html">UsergridAuth</a></code> if one is found or nil if not.</p>
 
                       </div>
                     </section>
@@ -849,9 +1025,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid15authenticateAppFMS0_FTGSqFT4authGSqCS_15UsergridAppAuth_5errorGSqSS__T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid15authenticateAppFTGSqFT4authGSqCS_15UsergridAppAuth_5errorGSqCS_21UsergridResponseError__T___T_"></a>
                     <a name="//apple_ref/swift/Method/authenticateApp(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid15authenticateAppFMS0_FTGSqFT4authGSqCS_15UsergridAppAuth_5errorGSqSS__T___T_">authenticateApp(_:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid15authenticateAppFTGSqFT4authGSqCS_15UsergridAppAuth_5errorGSqCS_21UsergridResponseError__T___T_">authenticateApp(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -859,12 +1035,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Authenticates with the <code>UsergridAppAuth</code> that is contained within the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Authenticates with the <code><a href="../Classes/UsergridAppAuth.html">UsergridAppAuth</a></code> that is contained within the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">authenticateApp</span><span class="p">(</span><span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridAppAuthCompletionBlock</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -896,9 +1072,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid15authenticateAppFMS0_FTCS_15UsergridAppAuth10completionGSqFT4authGSqS1__5errorGSqSS__T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid15authenticateAppFTCS_15UsergridAppAuth10completionGSqFT4authGSqS1__5errorGSqCS_21UsergridResponseError__T___T_"></a>
                     <a name="//apple_ref/swift/Method/authenticateApp(_:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid15authenticateAppFMS0_FTCS_15UsergridAppAuth10completionGSqFT4authGSqS1__5errorGSqSS__T___T_">authenticateApp(_:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid15authenticateAppFTCS_15UsergridAppAuth10completionGSqFT4authGSqS1__5errorGSqCS_21UsergridResponseError__T___T_">authenticateApp(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -906,12 +1082,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Authenticates with the <code>UsergridAppAuth</code> that is passed in using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Authenticates with the <code><a href="../Classes/UsergridAppAuth.html">UsergridAppAuth</a></code> that is passed in using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">authenticateApp</span><span class="p">(</span><span class="nv">auth</span><span class="p">:</span> <span class="kt">UsergridAppAuth</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridAppAuthCompletionBlock</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -956,9 +1132,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid16authenticateUserFMS0_FTCS_16UsergridUserAuth10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqSS__T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid16authenticateUserFTCS_16UsergridUserAuth10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqCS_21UsergridResponseError__T___T_"></a>
                     <a name="//apple_ref/swift/Method/authenticateUser(_:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid16authenticateUserFMS0_FTCS_16UsergridUserAuth10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqSS__T___T_">authenticateUser(_:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid16authenticateUserFTCS_16UsergridUserAuth10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqCS_21UsergridResponseError__T___T_">authenticateUser(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -966,12 +1142,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Authenticates with the <code>UsergridUserAuth</code> that is passed in using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Authenticates with the <code><a href="../Classes/UsergridUserAuth.html">UsergridUserAuth</a></code> that is passed in using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">authenticateUser</span><span class="p">(</span><span class="nv">auth</span><span class="p">:</span> <span class="kt">UsergridUserAuth</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridUserAuthCompletionBlock</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -1016,9 +1192,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid16authenticateUserFMS0_FTCS_16UsergridUserAuth16setAsCurrentUserSb10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqSS__T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid16authenticateUserFTCS_16UsergridUserAuth16setAsCurrentUserSb10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqCS_21UsergridResponseError__T___T_"></a>
                     <a name="//apple_ref/swift/Method/authenticateUser(_:setAsCurrentUser:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid16authenticateUserFMS0_FTCS_16UsergridUserAuth16setAsCurrentUserSb10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqSS__T___T_">authenticateUser(_:setAsCurrentUser:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid16authenticateUserFTCS_16UsergridUserAuth16setAsCurrentUserSb10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqCS_21UsergridResponseError__T___T_">authenticateUser(_:setAsCurrentUser:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1026,12 +1202,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Authenticates with the <code>UsergridUserAuth</code> that is passed in using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Authenticates with the <code><a href="../Classes/UsergridUserAuth.html">UsergridUserAuth</a></code> that is passed in using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">authenticateUser</span><span class="p">(</span><span class="nv">userAuth</span><span class="p">:</span> <span class="kt">UsergridUserAuth</span><span class="p">,</span> <span class="nv">setAsCurrentUser</span><span class="p">:</span><span class="kt">Bool</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridUserAuthCompletionBlock</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -1089,9 +1265,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid17logoutCurrentUserFMS0_FTGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid17logoutCurrentUserFTGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/logoutCurrentUser(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid17logoutCurrentUserFMS0_FTGSqFT8responseCS_16UsergridResponse_T___T_">logoutCurrentUser(_:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid17logoutCurrentUserFTGSqFT8responseCS_16UsergridResponse_T___T_">logoutCurrentUser(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1104,7 +1280,7 @@ within the UsergridSDK library.</p>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">logoutCurrentUser</span><span class="p">(</span><span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -1136,9 +1312,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid19logoutUserAllTokensFMS0_FTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid19logoutUserAllTokensFTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/logoutUserAllTokens(_:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid19logoutUserAllTokensFMS0_FTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">logoutUserAllTokens(_:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid19logoutUserAllTokensFTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">logoutUserAllTokens(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1151,7 +1327,7 @@ within the UsergridSDK library.</p>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">logoutUserAllTokens</span><span class="p">(</span><span class="nv">uuidOrUsername</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -1183,9 +1359,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid10logoutUserFMS0_FTSS5tokenGSqSS_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid10logoutUserFTSS5tokenGSqSS_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/logoutUser(_:token:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid10logoutUserFMS0_FTSS5tokenGSqSS_10completionGSqFT8responseCS_16UsergridResponse_T___T_">logoutUser(_:token:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid10logoutUserFTSS5tokenGSqSS_10completionGSqFT8responseCS_16UsergridResponse_T___T_">logoutUser(_:token:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1200,7 +1376,7 @@ within the UsergridSDK library.</p>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">logoutUser</span><span class="p">(</span><span class="nv">uuidOrUsername</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">token</span><span class="p">:</span><span class="kt">String</span><span class="p">?,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -1232,20 +1408,20 @@ within the UsergridSDK library.</p>
               </ul>
             </div>
             <div class="task-group">
-                <div class="task-name-container">
-                  <a name="/GET"></a>
-                  <a name="//apple_ref/swift/Section/GET" class="dashAnchor"></a>
-                  <a href="#/GET">
-                    <h3 class="section-name">GET</h3>
-                  </a>
-                </div>
+              <div class="task-name-container">
+                <a name="/Generic%20Request%20Methods"></a>
+                <a name="//apple_ref/swift/Section/Generic Request Methods" class="dashAnchor"></a>
+                <a href="#/Generic%20Request%20Methods">
+                  <h3 class="section-name">Generic Request Methods</h3>
+                </a>
+              </div>
               <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid3GETFMS0_FTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
-                    <a name="//apple_ref/swift/Method/GET(_:uuidOrName:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid3GETFMS0_FTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">GET(_:uuidOrName:completion:)</a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid11sendRequestFTCS_15UsergridRequest10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/sendRequest(_:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid11sendRequestFTCS_15UsergridRequest10completionGSqFT8responseCS_16UsergridResponse_T___T_">sendRequest(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1253,12 +1429,89 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Gets a single <code>UsergridEntity</code> of a given type with a specific UUID/name using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Starts the <code><a href="../Classes/UsergridRequest.html">UsergridRequest</a></code> sending process using the shared instance of <code>UsergridCient</code>.</p>
+
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>This method should only be used when you construct your own `UsergridRequest objects.</p>
+
+</div>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">sendRequest</span><span class="p">(</span><span class="nv">request</span><span class="p">:</span><span class="kt">UsergridRequest</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>request</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>UsergridRequest</code> object to send.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The optional completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/GET"></a>
+                <a name="//apple_ref/swift/Section/GET" class="dashAnchor"></a>
+                <a href="#/GET">
+                  <h3 class="section-name">GET</h3>
+                </a>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid3GETFTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/GET(_:uuidOrName:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid3GETFTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">GET(_:uuidOrName:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Gets a single <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> of a given type with a specific UUID/name using the shared instance of <code>UsergridCient</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">GET</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">uuidOrName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -1316,9 +1569,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid3GETFMS0_FTSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
-                    <a name="//apple_ref/swift/Method/GET(_:query:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid3GETFMS0_FTSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_">GET(_:query:completion:)</a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid3GETFTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/GET(_:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid3GETFTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">GET(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1326,14 +1579,14 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Gets a group of <code>UsergridEntity</code> objects of a given type with an optional query using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Gets a group of <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> objects of a given type  using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">GET</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">query</span><span class="p">:</span> <span class="kt">UsergridQuery</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">GET</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1357,12 +1610,59 @@ within the UsergridSDK library.</p>
                             <tr>
                               <td>
                                 <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The optional completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid3GETFTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/GET(_:queryCompletion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid3GETFTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_">GET(_:queryCompletion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Gets a group of <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> objects with a given query using the shared instance of <code>UsergridCient</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">GET</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="kt">UsergridQuery</span><span class="p">,</span> <span class="nv">queryCompletion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
                                 <em>query</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>The optional query to use when gathering <code>UsergridEntity</code> objects.</p>
+                                  <p>The query to use when gathering <code>UsergridEntity</code> objects.</p>
 
                                 </div>
                               </td>
@@ -1370,7 +1670,7 @@ within the UsergridSDK library.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>completion</em>
+                                <em>queryCompletion</em>
                                 </code>
                               </td>
                               <td>
@@ -1389,20 +1689,20 @@ within the UsergridSDK library.</p>
               </ul>
             </div>
             <div class="task-group">
-                <div class="task-name-container">
-                  <a name="/PUT"></a>
-                  <a name="//apple_ref/swift/Section/PUT" class="dashAnchor"></a>
-                  <a href="#/PUT">
-                    <h3 class="section-name">PUT</h3>
-                  </a>
-                </div>
+              <div class="task-name-container">
+                <a name="/PUT"></a>
+                <a name="//apple_ref/swift/Section/PUT" class="dashAnchor"></a>
+                <a href="#/PUT">
+                  <h3 class="section-name">PUT</h3>
+                </a>
+              </div>
               <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid3PUTFMS0_FTSS10uuidOrNameSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid3PUTFTSS10uuidOrNameSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/PUT(_:uuidOrName:jsonBody:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid3PUTFMS0_FTSS10uuidOrNameSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:uuidOrName:jsonBody:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid3PUTFTSS10uuidOrNameSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:uuidOrName:jsonBody:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1410,12 +1710,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Updates an <code>UsergridEntity</code> with the given type and UUID/name specified using the passed in jsonBody using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Updates an <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> with the given type and UUID/name specified using the passed in jsonBody using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">PUT</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">uuidOrName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">jsonBody</span><span class="p">:[</span><span class="kt">String</span><span class="p">:</span><span class="kt">AnyObject</span><span class="p">],</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -1486,9 +1786,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid3PUTFMS0_FTSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid3PUTFTSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/PUT(_:jsonBody:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid3PUTFMS0_FTSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:jsonBody:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid3PUTFTSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:jsonBody:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1496,12 +1796,18 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Updates an <code>UsergridEntity</code> with the given type using the jsonBody where the UUID/name is specified inside of the jsonBody using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Updates an <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> with the given type using the jsonBody where the UUID/name is specified inside of the jsonBody using the shared instance of <code>UsergridCient</code>.</p>
+
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>The <code>jsonBody</code> must contain a valid value for either <code>uuid</code> or <code>name</code>.</p>
+
+</div>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">PUT</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">jsonBody</span><span class="p">:[</span><span class="kt">String</span><span class="p">:</span><span class="kt">AnyObject</span><span class="p">],</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -1559,9 +1865,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid3PUTFMS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid3PUTFTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/PUT(_:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid3PUTFMS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid3PUTFTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1569,12 +1875,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Updates the passed in <code>UsergridEntity</code> using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Updates the passed in <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">PUT</span><span class="p">(</span><span class="nv">entity</span><span class="p">:</span> <span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -1619,9 +1925,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid3PUTFMS0_FTCS_13UsergridQuery8jsonBodyGVSs10DictionarySSPSs9AnyObject__15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid3PUTFTCS_13UsergridQuery8jsonBodyGVs10DictionarySSPs9AnyObject__15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/PUT(_:jsonBody:queryCompletion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid3PUTFMS0_FTCS_13UsergridQuery8jsonBodyGVSs10DictionarySSPSs9AnyObject__15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:jsonBody:queryCompletion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid3PUTFTCS_13UsergridQuery8jsonBodyGVs10DictionarySSPs9AnyObject__15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:jsonBody:queryCompletion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1631,10 +1937,16 @@ within the UsergridSDK library.</p>
                       <div class="abstract">
                         <p>Updates the entities that fit the given query using the passed in jsonBody using the shared instance of <code>UsergridCient</code>.</p>
 
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>The query parameter must have a valid <code>collectionName</code> before calling this method.</p>
+
+</div>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">PUT</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="kt">UsergridQuery</span><span class="p">,</span> <span class="nv">jsonBody</span><span class="p">:[</span><span class="kt">String</span><span class="p">:</span><span class="kt">AnyObject</span><span class="p">],</span> <span class="nv">queryCompletion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -1692,20 +2004,20 @@ within the UsergridSDK library.</p>
               </ul>
             </div>
             <div class="task-group">
-                <div class="task-name-container">
-                  <a name="/POST"></a>
-                  <a name="//apple_ref/swift/Section/POST" class="dashAnchor"></a>
-                  <a href="#/POST">
-                    <h3 class="section-name">POST</h3>
-                  </a>
-                </div>
+              <div class="task-name-container">
+                <a name="/POST"></a>
+                <a name="//apple_ref/swift/Section/POST" class="dashAnchor"></a>
+                <a href="#/POST">
+                  <h3 class="section-name">POST</h3>
+                </a>
+              </div>
               <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid4POSTFMS0_FTSS4nameSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid4POSTFTSS4nameSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/POST(_:name:jsonBody:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid4POSTFMS0_FTSS4nameSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:name:jsonBody:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid4POSTFTSS4nameSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:name:jsonBody:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1713,12 +2025,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Creates and posts an <code>UsergridEntity</code> of the given type with a given name and the given jsonBody using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Creates and posts an <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> of the given type with a given name and the given jsonBody using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">POST</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">jsonBody</span><span class="p">:[</span><span class="kt">String</span><span class="p">:</span><span class="kt">AnyObject</span><span class="p">],</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -1789,9 +2101,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid4POSTFMS0_FTSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid4POSTFTSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/POST(_:jsonBody:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid4POSTFMS0_FTSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:jsonBody:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid4POSTFTSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:jsonBody:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1799,12 +2111,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Creates and posts an <code>UsergridEntity</code> of the given type with the given jsonBody using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Creates and posts an <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> of the given type with the given jsonBody using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">POST</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">jsonBody</span><span class="p">:[</span><span class="kt">String</span><span class="p">:</span><span class="kt">AnyObject</span><span class="p">],</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -1862,9 +2174,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid4POSTFMS0_FTSS10jsonBodiesGSaGVSs10DictionarySSPSs9AnyObject___10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid4POSTFTSS10jsonBodiesGSaGVs10DictionarySSPs9AnyObject___10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/POST(_:jsonBodies:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid4POSTFMS0_FTSS10jsonBodiesGSaGVSs10DictionarySSPSs9AnyObject___10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:jsonBodies:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid4POSTFTSS10jsonBodiesGSaGVs10DictionarySSPs9AnyObject___10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:jsonBodies:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1877,7 +2189,7 @@ within the UsergridSDK library.</p>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">POST</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">jsonBodies</span><span class="p">:[[</span><span class="kt">String</span><span class="p">:</span><span class="kt">AnyObject</span><span class="p">]],</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -1935,9 +2247,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid4POSTFMS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid4POSTFTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/POST(_:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid4POSTFMS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid4POSTFTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1945,12 +2257,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Creates and posts creates an <code>UsergridEntity</code> using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Creates and posts creates an <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">POST</span><span class="p">(</span><span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -1995,9 +2307,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid4POSTFMS0_FTGSaCS_14UsergridEntity_18entitiesCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid4POSTFTGSaCS_14UsergridEntity_18entitiesCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/POST(_:entitiesCompletion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid4POSTFMS0_FTGSaCS_14UsergridEntity_18entitiesCompletionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:entitiesCompletion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid4POSTFTGSaCS_14UsergridEntity_18entitiesCompletionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:entitiesCompletion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2005,12 +2317,18 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Creates and posts an array of <code>UsergridEntity</code> objects using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Creates and posts an array of <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> objects using the shared instance of <code>UsergridCient</code>.</p>
+
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>Each <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> in the array much already have a type assigned and must be the same.</p>
+
+</div>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">POST</span><span class="p">(</span><span class="nv">entities</span><span class="p">:[</span><span class="kt">UsergridEntity</span><span class="p">],</span> <span class="nv">entitiesCompletion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -2055,20 +2373,20 @@ within the UsergridSDK library.</p>
               </ul>
             </div>
             <div class="task-group">
-                <div class="task-name-container">
-                  <a name="/DELETE"></a>
-                  <a name="//apple_ref/swift/Section/DELETE" class="dashAnchor"></a>
-                  <a href="#/DELETE">
-                    <h3 class="section-name">DELETE</h3>
-                  </a>
-                </div>
+              <div class="task-name-container">
+                <a name="/DELETE"></a>
+                <a name="//apple_ref/swift/Section/DELETE" class="dashAnchor"></a>
+                <a href="#/DELETE">
+                  <h3 class="section-name">DELETE</h3>
+                </a>
+              </div>
               <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid6DELETEFMS0_FTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid6DELETEFTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/DELETE(_:uuidOrName:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid6DELETEFMS0_FTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:uuidOrName:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid6DELETEFTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:uuidOrName:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2076,12 +2394,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Destroys the <code>UsergridEntity</code> of a given type with a specific UUID/name using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Destroys the <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> of a given type with a specific UUID/name using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">DELETE</span><span class="p">(</span><span class="nv">type</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">uuidOrName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -2139,9 +2457,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid6DELETEFMS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid6DELETEFTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/DELETE(_:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid6DELETEFMS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid6DELETEFTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2149,12 +2467,18 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Destroys the passed <code>UsergridEntity</code> using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Destroys the passed <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> using the shared instance of <code>UsergridCient</code>.</p>
+
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>The entity object must have a <code>uuid</code> or <code>name</code> assigned.</p>
+
+</div>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">DELETE</span><span class="p">(</span><span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -2199,9 +2523,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid6DELETEFMS0_FTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid6DELETEFTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/DELETE(_:queryCompletion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid6DELETEFMS0_FTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:queryCompletion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid6DELETEFTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:queryCompletion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2209,12 +2533,18 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Destroys the <code>UsergridEntity</code> objects that fit the given <code>UsergridQuery</code> using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Destroys the <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> objects that fit the given <code><a href="../Classes/UsergridQuery.html">UsergridQuery</a></code> using the shared instance of <code>UsergridCient</code>.</p>
+
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    <p>The query parameter must have a valid <code>collectionName</code> before calling this method.</p>
+
+</div>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="kt">DELETE</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span><span class="kt">UsergridQuery</span><span class="p">,</span> <span class="nv">queryCompletion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -2259,20 +2589,20 @@ within the UsergridSDK library.</p>
               </ul>
             </div>
             <div class="task-group">
-                <div class="task-name-container">
-                  <a name="/Connection%20Management"></a>
-                  <a name="//apple_ref/swift/Section/Connection Management" class="dashAnchor"></a>
-                  <a href="#/Connection%20Management">
-                    <h3 class="section-name">Connection Management</h3>
-                  </a>
-                </div>
+              <div class="task-name-container">
+                <a name="/Connection%20Management"></a>
+                <a name="//apple_ref/swift/Section/Connection Management" class="dashAnchor"></a>
+                <a href="#/Connection%20Management">
+                  <h3 class="section-name">Connection Management</h3>
+                </a>
+              </div>
               <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid7connectFMS0_FTCS_14UsergridEntity12relationshipSS2toS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid7connectFTCS_14UsergridEntity12relationshipSS2toS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/connect(_:relationship:to:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid7connectFMS0_FTCS_14UsergridEntity12relationshipSS2toS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_">connect(_:relationship:to:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid7connectFTCS_14UsergridEntity12relationshipSS2toS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_">connect(_:relationship:to:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2280,12 +2610,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Connects the <code>UsergridEntity</code> objects via the relationship using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Connects the <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> objects via the relationship using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">connect</span><span class="p">(</span><span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">to</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -2356,9 +2686,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid7connectFMS0_FTSS8entityIDSS12relationshipSS6toTypeGSqSS_4toIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid7connectFTSS8entityIDSS12relationshipSS6toTypeGSqSS_4toIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/connect(_:entityID:relationship:toType:toID:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid7connectFMS0_FTSS8entityIDSS12relationshipSS6toTypeGSqSS_4toIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">connect(_:entityID:relationship:toType:toID:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid7connectFTSS8entityIDSS12relationshipSS6toTypeGSqSS_4toIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">connect(_:entityID:relationship:toType:toID:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2371,7 +2701,7 @@ within the UsergridSDK library.</p>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">connect</span><span class="p">(</span><span class="nv">entityType</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">entityID</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">toType</span><span class="p">:</span><span class="kt">String</span><span class="p">?,</span> <span class="nv">toID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -2468,9 +2798,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid7connectFMS0_FTSS8entityIDSS12relationshipSS6toTypeSS6toNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid7connectFTSS8entityIDSS12relationshipSS6toTypeSS6toNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/connect(_:entityID:relationship:toType:toName:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid7connectFMS0_FTSS8entityIDSS12relationshipSS6toTypeSS6toNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">connect(_:entityID:relationship:toType:toName:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid7connectFTSS8entityIDSS12relationshipSS6toTypeSS6toNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">connect(_:entityID:relationship:toType:toName:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2483,7 +2813,7 @@ within the UsergridSDK library.</p>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">connect</span><span class="p">(</span><span class="nv">entityType</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">entityID</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">toType</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">toName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -2580,9 +2910,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid10disconnectFMS0_FTCS_14UsergridEntity12relationshipSS4fromS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid10disconnectFTCS_14UsergridEntity12relationshipSS4fromS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/disconnect(_:relationship:from:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid10disconnectFMS0_FTCS_14UsergridEntity12relationshipSS4fromS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_">disconnect(_:relationship:from:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid10disconnectFTCS_14UsergridEntity12relationshipSS4fromS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_">disconnect(_:relationship:from:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2590,12 +2920,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Disconnects the <code>UsergridEntity</code> objects via the relationship using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Disconnects the <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> objects via the relationship using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">disconnect</span><span class="p">(</span><span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -2666,9 +2996,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid10disconnectFMS0_FTSS8entityIDSS12relationshipSS8fromTypeGSqSS_6fromIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid10disconnectFTSS8entityIDSS12relationshipSS8fromTypeGSqSS_6fromIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/disconnect(_:entityID:relationship:fromType:fromID:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid10disconnectFMS0_FTSS8entityIDSS12relationshipSS8fromTypeGSqSS_6fromIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">disconnect(_:entityID:relationship:fromType:fromID:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid10disconnectFTSS8entityIDSS12relationshipSS8fromTypeGSqSS_6fromIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">disconnect(_:entityID:relationship:fromType:fromID:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2681,7 +3011,7 @@ within the UsergridSDK library.</p>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">disconnect</span><span class="p">(</span><span class="nv">entityType</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">entityID</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">fromType</span><span class="p">:</span><span class="kt">String</span><span class="p">?,</span> <span class="nv">fromID</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -2778,9 +3108,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid10disconnectFMS0_FTSS8entityIDSS12relationshipSS8fromTypeSS8fromNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid10disconnectFTSS8entityIDSS12relationshipSS8fromTypeSS8fromNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/disconnect(_:entityID:relationship:fromType:fromName:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid10disconnectFMS0_FTSS8entityIDSS12relationshipSS8fromTypeSS8fromNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">disconnect(_:entityID:relationship:fromType:fromName:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid10disconnectFTSS8entityIDSS12relationshipSS8fromTypeSS8fromNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">disconnect(_:entityID:relationship:fromType:fromName:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2793,7 +3123,7 @@ within the UsergridSDK library.</p>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">disconnect</span><span class="p">(</span><span class="nv">entityType</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">entityID</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">fromType</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">fromName</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -2890,9 +3220,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid14getConnectionsFMS0_FTOS_17UsergridDirection6entityCS_14UsergridEntity12relationshipSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
-                    <a name="//apple_ref/swift/Method/getConnections(_:entity:relationship:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid14getConnectionsFMS0_FTOS_17UsergridDirection6entityCS_14UsergridEntity12relationshipSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">getConnections(_:entity:relationship:completion:)</a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid14getConnectionsFTOS_17UsergridDirection6entityCS_14UsergridEntity12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/getConnections(_:entity:relationship:query:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid14getConnectionsFTOS_17UsergridDirection6entityCS_14UsergridEntity12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_">getConnections(_:entity:relationship:query:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2905,9 +3235,9 @@ within the UsergridSDK library.</p>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">getConnections</span><span class="p">(</span><span class="nv">direction</span><span class="p">:</span><span class="kt">UsergridDirection</span><span class="p">,</span> <span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">getConnections</span><span class="p">(</span><span class="nv">direction</span><span class="p">:</span><span class="kt">UsergridDirection</span><span class="p">,</span> <span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">query</span><span class="p">:</span><span class="kt">UsergridQuery</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -2976,9 +3306,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid14getConnectionsFMS0_FTOS_17UsergridDirection10entityTypeSS8entityIDSS12relationshipSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
-                    <a name="//apple_ref/swift/Method/getConnections(_:entityType:entityID:relationship:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid14getConnectionsFMS0_FTOS_17UsergridDirection10entityTypeSS8entityIDSS12relationshipSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">getConnections(_:entityType:entityID:relationship:completion:)</a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid14getConnectionsFTOS_17UsergridDirection4typeSS10uuidOrNameSS12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/getConnections(_:type:uuidOrName:relationship:query:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid14getConnectionsFTOS_17UsergridDirection4typeSS10uuidOrNameSS12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_">getConnections(_:type:uuidOrName:relationship:query:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2991,9 +3321,9 @@ within the UsergridSDK library.</p>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">getConnections</span><span class="p">(</span><span class="nv">direction</span><span class="p">:</span><span class="kt">UsergridDirection</span><span class="p">,</span> <span class="nv">entityType</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">entityID</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">getConnections</span><span class="p">(</span><span class="nv">direction</span><span class="p">:</span><span class="kt">UsergridDirection</span><span class="p">,</span> <span class="nv">type</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">uuidOrName</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">query</span><span class="p">:</span><span class="kt">UsergridQuery</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -3017,7 +3347,7 @@ within the UsergridSDK library.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>entityType</em>
+                                <em>type</em>
                                 </code>
                               </td>
                               <td>
@@ -3030,7 +3360,7 @@ within the UsergridSDK library.</p>
                             <tr>
                               <td>
                                 <code>
-                                <em>entityID</em>
+                                <em>uuidOrName</em>
                                 </code>
                               </td>
                               <td>
@@ -3056,6 +3386,19 @@ within the UsergridSDK library.</p>
                             <tr>
                               <td>
                                 <code>
+                                <em>query</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The optional query.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
                                 <em>completion</em>
                                 </code>
                               </td>
@@ -3072,23 +3415,12 @@ within the UsergridSDK library.</p>
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-                <div class="task-name-container">
-                  <a name="/Asset%20Management"></a>
-                  <a name="//apple_ref/swift/Section/Asset Management" class="dashAnchor"></a>
-                  <a href="#/Asset%20Management">
-                    <h3 class="section-name">Asset Management</h3>
-                  </a>
-                </div>
-              <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid11uploadAssetFMS0_FTCS_14UsergridEntity5assetCS_13UsergridAsset8progressGSqFT13bytesFinishedVSs5Int6413bytesExpectedS3__T__10completionGSqFT8responseCS_16UsergridResponse5assetGSqS2__5errorGSqSS__T___T_"></a>
-                    <a name="//apple_ref/swift/Method/uploadAsset(_:asset:progress:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid11uploadAssetFMS0_FTCS_14UsergridEntity5assetCS_13UsergridAsset8progressGSqFT13bytesFinishedVSs5Int6413bytesExpectedS3__T__10completionGSqFT8responseCS_16UsergridResponse5assetGSqS2__5errorGSqSS__T___T_">uploadAsset(_:asset:progress:completion:)</a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid14getConnectionsFTOS_17UsergridDirection4uuidSS12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/getConnections(_:uuid:relationship:query:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid14getConnectionsFTOS_17UsergridDirection4uuidSS12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_">getConnections(_:uuid:relationship:query:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -3096,12 +3428,122 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Uploads the asset and connects the data to the given <code>UsergridEntity</code> using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Gets the connected entities for the given relationship using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">getConnections</span><span class="p">(</span><span class="nv">direction</span><span class="p">:</span><span class="kt">UsergridDirection</span><span class="p">,</span> <span class="nv">uuid</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">query</span><span class="p">:</span><span class="kt">UsergridQuery</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>direction</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The direction of the connection.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>uuid</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The entity UUID.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>relationship</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The relationship of the connection.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>query</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The optional query.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The optional completion block that will be called once the request has completed.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Asset%20Management"></a>
+                <a name="//apple_ref/swift/Section/Asset Management" class="dashAnchor"></a>
+                <a href="#/Asset%20Management">
+                  <h3 class="section-name">Asset Management</h3>
+                </a>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid11uploadAssetFTCS_14UsergridEntity5assetCS_13UsergridAsset8progressGSqFT13bytesFinishedVs5Int6413bytesExpectedS3__T__10completionGSqFT5assetGSqS2__8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="//apple_ref/swift/Method/uploadAsset(_:asset:progress:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid11uploadAssetFTCS_14UsergridEntity5assetCS_13UsergridAsset8progressGSqFT13bytesFinishedVs5Int6413bytesExpectedS3__T__10completionGSqFT5assetGSqS2__8responseCS_16UsergridResponse_T___T_">uploadAsset(_:asset:progress:completion:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Uploads the asset and connects the data to the given <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> using the shared instance of <code>UsergridCient</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">uploadAsset</span><span class="p">(</span><span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="k">as</span><span class="nv">set</span><span class="p">:</span><span class="kt">UsergridAsset</span><span class="p">,</span> <span class="nv">progress</span><span class="p">:</span><span class="kt">UsergridAssetRequestProgress</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridAssetUploadCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -3172,9 +3614,9 @@ within the UsergridSDK library.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:ZFC11UsergridSDK8Usergrid13downloadAssetFMS0_FTCS_14UsergridEntity11contentTypeSS8progressGSqFT13bytesFinishedVSs5Int6413bytesExpectedS2__T__10completionGSqFT5assetGSqCS_13UsergridAsset_5errorGSqSS__T___T_"></a>
+                    <a name="/s:ZFC11UsergridSDK8Usergrid13downloadAssetFTCS_14UsergridEntity11contentTypeSS8progressGSqFT13bytesFinishedVs5Int6413bytesExpectedS2__T__10completionGSqFT5assetGSqCS_13UsergridAsset_5errorGSqCS_21UsergridResponseError__T___T_"></a>
                     <a name="//apple_ref/swift/Method/downloadAsset(_:contentType:progress:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid13downloadAssetFMS0_FTCS_14UsergridEntity11contentTypeSS8progressGSqFT13bytesFinishedVSs5Int6413bytesExpectedS2__T__10completionGSqFT5assetGSqCS_13UsergridAsset_5errorGSqSS__T___T_">downloadAsset(_:contentType:progress:completion:)</a>
+                    <a class="token" href="#/s:ZFC11UsergridSDK8Usergrid13downloadAssetFTCS_14UsergridEntity11contentTypeSS8progressGSqFT13bytesFinishedVs5Int6413bytesExpectedS2__T__10completionGSqFT5assetGSqCS_13UsergridAsset_5errorGSqCS_21UsergridResponseError__T___T_">downloadAsset(_:contentType:progress:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -3182,12 +3624,12 @@ within the UsergridSDK library.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Downloads the asset from the given <code>UsergridEntity</code> using the shared instance of <code>UsergridCient</code>.</p>
+                        <p>Downloads the asset from the given <code><a href="../Classes/UsergridEntity.html">UsergridEntity</a></code> using the shared instance of <code>UsergridCient</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">downloadAsset</span><span class="p">(</span><span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">contentType</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">progress</span><span class="p">:</span><span class="kt">UsergridAssetRequestProgress</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridAssetDownloadCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
@@ -3260,8 +3702,8 @@ within the UsergridSDK library.</p>
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2015 <a class="link" href="" target="_blank" rel="external"></a>. All rights reserved. (Last updated: 2015-12-18)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.3.2</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2016 <a class="link" href="" target="_blank" rel="external"></a>. All rights reserved. (Last updated: 2016-04-14)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.5.0</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>

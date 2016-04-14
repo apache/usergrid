@@ -107,6 +107,44 @@ public class UsergridDevice : UsergridEntity {
     }
 
     /**
+     Performs a PUT (or POST if no UUID is found) on the `UsergridDevice` using the shared instance of `UsergridClient`.
+     
+     If this device is equal to `UsergridDevice.sharedDevice` it will also update the shared device on the keychain.
+
+     - parameter completion: An optional completion block that, if successful, will contain the updated/saved `UsergridEntity` object.
+     */
+    public override func save(completion: UsergridResponseCompletion? = nil) {
+        self.save(Usergrid.sharedInstance, completion: completion)
+    }
+
+
+    /**
+     Performs a PUT (or POST if no UUID is found) on the `UsergridDevice`.
+
+     If this device is equal to `UsergridDevice.sharedDevice` it will also update the shared device on the keychain.
+
+     - parameter client:     The client to use when saving.
+     - parameter completion: An optional completion block that, if successful, will contain the updated/saved `UsergridEntity` object.
+     */
+    public override func save(client: UsergridClient, completion: UsergridResponseCompletion? = nil) {
+        super.save(client) { (response) in
+            if( response.ok ) {
+                if( self == UsergridDevice.sharedDevice || self.isEqualToEntity(UsergridDevice.sharedDevice)) {
+                    UsergridDevice.saveSharedDeviceToKeychain()
+                }
+            }
+            completion?(response:response)
+        }
+    }
+
+    /**
+     Saves the `UsergridDevice.sharedDevice` to the keychain.
+     */
+    public static func saveSharedDeviceToKeychain() {
+        UsergridDevice.saveSharedDeviceKeychainItem(UsergridDevice.sharedDevice)
+    }
+
+    /**
     Subscript for the `UsergridDevice` class. Note that all of the `UsergridDeviceProperties` are immutable.
 
     - Warning: When setting a properties value must be a valid JSON object.

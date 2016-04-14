@@ -7,13 +7,14 @@
     <meta charset='utf-8'>
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
+    
   </head>
   <body>
     <a name="//apple_ref/swift/Class/UsergridAuth" class="dashAnchor"></a>
     <a title="UsergridAuth Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (97% documented)</p>
+        <p><a href="../index.html"> Docs</a> (100% documented)</p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -27,7 +28,7 @@
       <nav class="sidebar">
         <ul class="nav-groups">
           <li class="nav-group-name">
-          <a href="../Classes.html">Classes</a>
+            <a href="../Classes.html">Classes</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a href="../Classes/Usergrid.html">Usergrid</a>
@@ -37,6 +38,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/UsergridAsset.html">UsergridAsset</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridAssetUploadRequest.html">UsergridAssetUploadRequest</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/UsergridAuth.html">UsergridAuth</a>
@@ -60,7 +64,13 @@
                 <a href="../Classes/UsergridQuery.html">UsergridQuery</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/UsergridRequest.html">UsergridRequest</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/UsergridResponse.html">UsergridResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UsergridResponseError.html">UsergridResponseError</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/UsergridUser.html">UsergridUser</a>
@@ -71,10 +81,18 @@
             </ul>
           </li>
           <li class="nav-group-name">
-          <a href="../Enums.html">Enums</a>
+            <a href="../Global Variables.html">Global Variables</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Enums/UsergridAuthFallback.html">UsergridAuthFallback</a>
+                <a href="../Global Variables.html#/s:v11UsergridSDK18UsergridSDKVersionSS">UsergridSDKVersion</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enums</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridAuthMode.html">UsergridAuthMode</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/UsergridDeviceProperties.html">UsergridDeviceProperties</a>
@@ -84,6 +102,9 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/UsergridEntityProperties.html">UsergridEntityProperties</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/UsergridHttpMethod.html">UsergridHttpMethod</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/UsergridImageContentType.html">UsergridImageContentType</a>
@@ -100,7 +121,15 @@
             </ul>
           </li>
           <li class="nav-group-name">
-          <a href="../Typealiases.html">Typealiases</a>
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/NSDate.html">NSDate</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Typealiases.html">Typealiases</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a href="../Typealiases.html#/s:11UsergridSDK30UsergridAppAuthCompletionBlock">UsergridAppAuthCompletionBlock</a>
@@ -120,6 +149,12 @@
               <li class="nav-group-task">
                 <a href="../Typealiases.html#/s:11UsergridSDK31UsergridUserAuthCompletionBlock">UsergridUserAuthCompletionBlock</a>
               </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK34UsergridUserAvailabilityCompletion">UsergridUserAvailabilityCompletion</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:11UsergridSDK35UsergridUserResetPasswordCompletion">UsergridUserResetPasswordCompletion</a>
+              </li>
             </ul>
           </li>
         </ul>
@@ -129,25 +164,25 @@
           <section class="section">
             <h1>UsergridAuth</h1>
               <div class="declaration">
-                <div class="Swift">
+                <div class="language">
                   <pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">UsergridAuth</span> <span class="p">:</span> <span class="kt">NSObject</span><span class="p">,</span> <span class="kt">NSCoding</span></code></pre>
 
                 </div>
               </div>
-            <p>The base class for <code>UsergridAppAuth</code> and <code>UsergridUserAuth</code> classes.</p>
+            <p>The <code>UsergridAuth</code> class functions to create and store authentication information used by Usergrid.</p>
 
-<p>This class should never be initialized on its own.  The use of the <code>UsergridAppAuth</code> and <code>UsergridUserAuth</code> subclasses should be used.</p>
+<p>The <code>UsergridAuth</code> sub classes, <code><a href="../Classes/UsergridAppAuth.html">UsergridAppAuth</a></code> and <code><a href="../Classes/UsergridUserAuth.html">UsergridUserAuth</a></code>, provide different ways for authentication to be used in creating requests for access tokens through the SDK.</p>
 
           </section>
           <section class="section task-group-section">
             <div class="task-group">
-                <div class="task-name-container">
-                  <a name="/Instance%20Properties"></a>
-                  <a name="//apple_ref/swift/Section/Instance Properties" class="dashAnchor"></a>
-                  <a href="#/Instance%20Properties">
-                    <h3 class="section-name">Instance Properties</h3>
-                  </a>
-                </div>
+              <div class="task-name-container">
+                <a name="/Instance%20Properties"></a>
+                <a name="//apple_ref/swift/Section/Instance Properties" class="dashAnchor"></a>
+                <a href="#/Instance%20Properties">
+                  <h3 class="section-name">Instance Properties</h3>
+                </a>
+              </div>
               <ul>
                 <li class="item">
                   <div>
@@ -162,12 +197,12 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The access token, if this <code>UsergridAuth</code> was authorized successfully.</p>
+                        <p>The access token, if this <code><a href="../Classes/UsergridAuth.html">UsergridAuth</a></code> was authorized successfully.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">accessToken</span> <span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
 
@@ -179,9 +214,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:vC11UsergridSDK12UsergridAuth9expiresInGSqSi_"></a>
-                    <a name="//apple_ref/swift/Property/expiresIn" class="dashAnchor"></a>
-                    <a class="token" href="#/s:vC11UsergridSDK12UsergridAuth9expiresInGSqSi_">expiresIn</a>
+                    <a name="/s:vC11UsergridSDK12UsergridAuth6expiryGSqCSo6NSDate_"></a>
+                    <a name="//apple_ref/swift/Property/expiry" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC11UsergridSDK12UsergridAuth6expiryGSqCSo6NSDate_">expiry</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -189,14 +224,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The expires in time stamp, if this <code>UsergridAuth</code> was authorized successfully and their was a expires in time stamp within the token response.</p>
+                        <p>The expires at date, if this <code><a href="../Classes/UsergridAuth.html">UsergridAuth</a></code> was authorized successfully and their was a expires in time stamp within the token response.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">expiresIn</span> <span class="p">:</span> <span class="kt">Int</span><span class="p">?</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">expiry</span> <span class="p">:</span> <span class="kt">NSDate</span><span class="p">?</span></code></pre>
 
                         </div>
                       </div>
@@ -221,7 +256,7 @@
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">hasToken</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="n">accessToken</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">}</span></code></pre>
 
@@ -233,9 +268,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:vC11UsergridSDK12UsergridAuth12tokenIsValidSb"></a>
-                    <a name="//apple_ref/swift/Property/tokenIsValid" class="dashAnchor"></a>
-                    <a class="token" href="#/s:vC11UsergridSDK12UsergridAuth12tokenIsValidSb">tokenIsValid</a>
+                    <a name="/s:vC11UsergridSDK12UsergridAuth7isValidSb"></a>
+                    <a name="//apple_ref/swift/Property/isValid" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC11UsergridSDK12UsergridAuth7isValidSb">isValid</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -248,9 +283,9 @@
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">tokenIsValid</span> <span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="n">hasToken</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="k">self</span><span class="o">.</span><span class="n">isExpired</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isValid</span> <span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">return</span> <span class="k">self</span><span class="o">.</span><span class="n">hasToken</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="k">self</span><span class="o">.</span><span class="n">isExpired</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -275,7 +310,7 @@
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isExpired</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
 
@@ -284,12 +319,23 @@
                     </section>
                   </div>
                 </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Initialization"></a>
+                <a name="//apple_ref/swift/Section/Initialization" class="dashAnchor"></a>
+                <a href="#/Initialization">
+                  <h3 class="section-name">Initialization</h3>
+                </a>
+              </div>
+              <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK12UsergridAuthcFMS0_FT_S0_"></a>
-                    <a name="//apple_ref/swift/Method/init()" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK12UsergridAuthcFMS0_FT_S0_">init()</a>
+                    <a name="/s:FC11UsergridSDK12UsergridAuthcFT11accessTokenSS6expiryGSqCSo6NSDate__S0_"></a>
+                    <a name="//apple_ref/swift/Method/init(accessToken:expiry:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK12UsergridAuthcFT11accessTokenSS6expiryGSqCSo6NSDate__S0_">init(accessToken:expiry:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -297,26 +343,75 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>Initializer for a base <code><a href="../Classes/UsergridAuth.html">UsergridAuth</a></code> object that just contains an <code><a href="../Classes/UsergridAuth.html#/s:vC11UsergridSDK12UsergridAuth11accessTokenGSqSS_">accessToken</a></code> and an optional <code><a href="../Classes/UsergridAuth.html#/s:vC11UsergridSDK12UsergridAuth6expiryGSqCSo6NSDate_">expiry</a></code> date.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">UsergridAuth</span> <span class="p">:</span> <span class="kt">NSObject</span><span class="p">,</span> <span class="kt">NSCoding</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">accessToken</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">expiry</span><span class="p">:</span><span class="kt">NSDate</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>accessToken</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The access token.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>expiry</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The optional expiry date.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>A new instance of <code><a href="../Classes/UsergridAuth.html">UsergridAuth</a></code></p>
+
                       </div>
                     </section>
                   </div>
                 </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/NSCoding"></a>
+                <a name="//apple_ref/swift/Section/NSCoding" class="dashAnchor"></a>
+                <a href="#/NSCoding">
+                  <h3 class="section-name">NSCoding</h3>
+                </a>
+              </div>
+              <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK12UsergridAuthcFMS0_FT5coderCSo7NSCoder_GSqS0__"></a>
+                    <a name="/s:FC11UsergridSDK12UsergridAuthcFT5coderCSo7NSCoder_GSqS0__"></a>
                     <a name="//apple_ref/swift/Method/init(coder:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK12UsergridAuthcFMS0_FT5coderCSo7NSCoder_GSqS0__">init(coder:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK12UsergridAuthcFT5coderCSo7NSCoder_GSqS0__">init(coder:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -324,16 +419,41 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>NSCoding protocol initializer.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">UsergridAuth</span> <span class="p">:</span> <span class="kt">NSObject</span><span class="p">,</span> <span class="kt">NSCoding</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">required</span> <span class="kd">public</span> <span class="nf">init</span><span class="p">?(</span><span class="n">coder</span> <span class="nv">aDecoder</span><span class="p">:</span> <span class="kt">NSCoder</span><span class="p">)</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>aDecoder</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The decoder.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>A decoded <code><a href="../Classes/UsergridUser.html">UsergridUser</a></code> object.</p>
+
                       </div>
                     </section>
                   </div>
@@ -341,9 +461,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK12UsergridAuth15encodeWithCoderFS0_FCSo7NSCoderT_"></a>
+                    <a name="/s:FC11UsergridSDK12UsergridAuth15encodeWithCoderFCSo7NSCoderT_"></a>
                     <a name="//apple_ref/swift/Method/encodeWithCoder(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK12UsergridAuth15encodeWithCoderFS0_FCSo7NSCoderT_">encodeWithCoder(_:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK12UsergridAuth15encodeWithCoderFCSo7NSCoderT_">encodeWithCoder(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -351,14 +471,72 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>NSCoding protocol encoder.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
-                        <div class="Swift">
+                        <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">UsergridAuth</span> <span class="p">:</span> <span class="kt">NSObject</span><span class="p">,</span> <span class="kt">NSCoding</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">encodeWithCoder</span><span class="p">(</span><span class="nv">aCoder</span><span class="p">:</span> <span class="kt">NSCoder</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>aCoder</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The encoder.</p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Instance%20Methods"></a>
+                <a name="//apple_ref/swift/Section/Instance Methods" class="dashAnchor"></a>
+                <a href="#/Instance%20Methods">
+                  <h3 class="section-name">Instance Methods</h3>
+                </a>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK12UsergridAuth7destroyFT_T_"></a>
+                    <a name="//apple_ref/swift/Method/destroy()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK12UsergridAuth7destroyFT_T_">destroy()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Destroys/removes the access token and expiry.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">destroy</span><span class="p">()</span></code></pre>
 
                         </div>
                       </div>
@@ -370,8 +548,8 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2015 <a class="link" href="" target="_blank" rel="external"></a>. All rights reserved. (Last updated: 2015-12-18)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.3.2</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2016 <a class="link" href="" target="_blank" rel="external"></a>. All rights reserved. (Last updated: 2016-04-14)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.5.0</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
     </div>
