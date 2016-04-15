@@ -168,8 +168,6 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             };
 
 
-
-            //process up to 10 concurrently
             Observable processMessagesObservable = Observable.create(new IteratorObservable<Entity>(iterator))
                 .flatMap(entity -> {
 
@@ -180,7 +178,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                     // if it's not a device, drill down and get them
                     return Observable.from(getDevices(entity));
 
-                }, 50)
+                })
                 .distinct(ref -> ref.getUuid())
                 .map(sendMessageFunction)
                 .doOnNext( message -> {
