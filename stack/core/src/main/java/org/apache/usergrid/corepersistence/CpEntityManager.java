@@ -2179,8 +2179,8 @@ public class CpEntityManager implements EntityManager {
     public Results getAggregateCounters( UUID userId, UUID groupId, UUID queueId, String category,
         String counterName, CounterResolution resolution, long start, long finish, boolean pad ) {
 
-        start = resolution.round( start );
-        finish = resolution.round( finish );
+        start = start; //resolution.round( start );
+        finish = finish; //resolution.round( finish );
         long expected_time = start;
         Keyspace ko = cass.getApplicationKeyspace( applicationId );
         SliceCounterQuery<String, Long> q = createCounterSliceQuery( ko, se, le );
@@ -2763,11 +2763,14 @@ public class CpEntityManager implements EntityManager {
                     event.setProperty( prop_name, propertyValue );
                 }
             }
+            Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
 
             //doesn't allow the mutator to be ignored.
-            counterUtils.addEventCounterMutations( null, applicationId, event, timestamp );
+            counterUtils.addEventCounterMutations( batch, applicationId, event, timestamp );
 
             incrementEntityCollection( "events", timestamp );
+
+            batch.execute();
 
             return entity;
         }

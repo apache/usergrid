@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
@@ -36,6 +37,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 
 @Component("org.apache.usergrid.rest.applications.events.EventsResource")
@@ -55,6 +58,7 @@ public class EventsResource extends ServiceResource {
 
     @GET
     @JSONP
+    @Consumes(APPLICATION_JSON)
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public QueueResults executeQueueGet(
         @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
@@ -64,6 +68,7 @@ public class EventsResource extends ServiceResource {
             query = new QueueQuery();
         }
         query.setPosition( QueuePosition.START );
+
         QueueResults results = ( ( ApplicationResource ) parent ).getQueues().getFromQueue( "/events", query );
         return results;
     }

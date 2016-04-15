@@ -348,7 +348,7 @@ public class CounterUtils {
         if ( "o".equals( counterType ) || "p".equals( counterType ) ) {
             HCounterColumn<String> c = createCounterColumn( name, value );
             m.addCounter( bytebuffer( entityId ), ENTITY_COUNTERS.toString(), c );
-        }
+    }
         if ( "n".equals( counterType ) || "p".equals( counterType ) ) {
             PrefixedSerializer ps = new PrefixedSerializer( applicationId, ue, ue );
             batcher.add( new Count( ENTITY_COUNTERS.toString(), ps.toByteBuffer( entityId ), name, value ) );

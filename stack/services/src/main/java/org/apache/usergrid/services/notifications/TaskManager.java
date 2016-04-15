@@ -18,11 +18,14 @@ package org.apache.usergrid.services.notifications;
 
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Device;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,10 +47,6 @@ public class TaskManager {
         this.notification = notification;
         hasFinished = false;
     }
-
-    public long getSuccesses(){return successes.get();}
-
-    public long getFailures(){ return failures.get();}
 
     public void completed(Notifier notifier, UUID deviceUUID) throws Exception {
         completed(notifier,null,deviceUUID,null);
@@ -73,7 +72,9 @@ public class TaskManager {
                 }
                 successes.incrementAndGet();
             }
+            em.incrementAggregateCounters( null,null,null,"counters.notifications.completed",1 );
 
+            //counters.increment.
             if (newProviderId != null) {
                 if (logger.isTraceEnabled()) {
                     logger.trace("notification {} replacing device {} notifierId", notification.getUuid(), deviceUUID);
@@ -104,6 +105,8 @@ public class TaskManager {
             }
 
             failures.incrementAndGet();
+            em.incrementAggregateCounters( null,null,null,"counters.notifications.failed",1 );
+
             if(receipt!=null) {
                 if ( receipt.getUuid() != null ) {
                     successes.decrementAndGet();
@@ -177,12 +180,20 @@ public class TaskManager {
             this.failures.decrementAndGet();
         }
 
+        //get call for the notifications.
         this.hasFinished = true;
 
         // force refresh notification by fetching it
         if (refreshNotification) {
             notification = em.get(this.notification.getUuid(), Notification.class);
         }
+
+        Results success = em.getAggregateCounters( null,null,null,"counters.notifications.completed",
+            CounterResolution.ALL,0,System.currentTimeMillis(),false );
+
+
+        Results failed = em.getAggregateCounters( null,null,null,"counters.notifications.failure",
+            CounterResolution.ALL,notification.getCreated(),System.currentTimeMillis(),false );
 
         notification.updateStatistics(successes, failures);
         notification.setModified(System.currentTimeMillis());
