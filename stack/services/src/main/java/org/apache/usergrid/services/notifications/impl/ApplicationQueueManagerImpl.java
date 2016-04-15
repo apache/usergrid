@@ -19,7 +19,10 @@ package org.apache.usergrid.services.notifications.impl;
 import com.codahale.metrics.Meter;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.queue.QueueManager;
@@ -97,14 +100,21 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         final AtomicInteger deviceCount = new AtomicInteger(); //count devices so you can make a judgement on batching
         final ConcurrentLinkedQueue<String> errorMessages = new ConcurrentLinkedQueue<>(); //build up list of issues
 
-
         //get devices in querystring, and make sure you have access
         if (pathQuery != null) {
             final HashMap<Object, ProviderAdapter> notifierMap = getAdapterMap();
             if (logger.isTraceEnabled()) {
                 logger.trace("notification {} start query", notification.getUuid());
             }
-            final Iterator<Device> iterator = pathQuery.iterator(em);
+
+
+            // the main iterator can use graph traversal or index querying
+            final Iterator<Device> iterator;
+            if( notification.getUseGraph()){
+                iterator = pathQuery.graphIterator(em);
+            }else{
+                iterator = pathQuery.iterator(em);
+            }
 
             //if there are more pages (defined by PAGE_SIZE) you probably want this to be async, also if this is already a job then don't reschedule
             if (iterator instanceof ResultsIterator && ((ResultsIterator) iterator).hasPages() && jobExecution == null) {
@@ -167,6 +177,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
             };
 
+            final Map<String, Object> filters = notification.getFilters();
 
             Observable processMessagesObservable = Observable.create(new IteratorObservable<Entity>(iterator))
                 .flatMap(entity -> {
@@ -180,10 +191,73 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                 })
                 .distinct(ref -> ref.getUuid())
+                .flatMap( entityRef -> {
+
+                    return Observable.just(entityRef).flatMap( ref -> {
+
+                        if(logger.isTraceEnabled()){
+                            logger.trace("Loading device: {}", ref.getUuid());
+
+                        }
+                            try {
+                                return Observable.just(em.get(ref, Device.class));
+                            }
+                            catch (Exception e){
+
+                                return Observable.empty();
+
+                            }
+
+                        }).subscribeOn(Schedulers.io());
+
+
+                }, 50)
+                .filter( device -> {
+
+                    if(logger.isTraceEnabled()) {
+                        logger.trace("Filtering device: {}", device.getUuid());
+                    }
+
+
+                    if(notification.getUseGraph() && filters.size() > 0 ) {
+
+                        for (Map.Entry<String, Object> entry : filters.entrySet()) {
+
+                            if ((device.getDynamicProperties().get(entry.getKey()) != null &&
+                                device.getDynamicProperties().get(entry.getKey()).equals(entry.getValue())) ||
+
+                                (device.getProperties().get(entry.getKey()) != null &&
+                                    device.getProperties().get(entry.getKey()).equals(entry.getValue()))
+
+                                ) {
+
+
+                                return true;
+                            }
+
+                        }
+
+                        if(logger.isTraceEnabled()) {
+                            logger.trace("Push notification filter matched for notification {}, so removing from notification",
+                                device.getUuid(), notification.getUuid());
+                        }
+                        return false;
+
+
+                    }
+
+                    return true;
+
+                })
                 .map(sendMessageFunction)
                 .doOnNext( message -> {
                         try {
+
                             if(message.isPresent()){
+
+                                if(logger.isTraceEnabled()) {
+                                    logger.trace("Queueing notification message for device: {}", message.get().getDeviceId());
+                                }
                                 qm.sendMessage( message.get() );
                                 queueMeter.mark();
                             }
@@ -206,7 +280,10 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                     try {
                         notification.setProcessingFinished(System.currentTimeMillis());
+                        notification.setDeviceProcessedCount(deviceCount.get());
                         em.update(notification);
+                        logger.info("{} devices processed for notification {}", deviceCount.get(), notification.getUuid());
+
                     } catch (Exception e) {
                         logger.error("Unable to set processing finished timestamp for notification");
                     }
@@ -569,9 +646,9 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 while( initial || resultSize >= LIMIT){
 
                     initial = false;
+
                     final List<EntityRef> myusers =  em.getCollection(ref, "users", start,
                         LIMIT, Query.Level.REFS, true).getRefs();
-
                     resultSize = myusers.size();
 
                     if(myusers.size() > 0){
@@ -579,13 +656,21 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                     }
 
 
-                    // don't allow a single user to have more than 100 devices?
-                    for (EntityRef user : myusers) {
+                    Observable.from(myusers).flatMap( user -> {
 
-                        devices.addAll( em.getCollection(user, "devices", null, 100,
-                            Query.Level.REFS, true).getRefs() );
+                        try {
+                            devices.addAll(em.getCollection(user, "devices", null, 100,
+                                Query.Level.REFS, true).getRefs());
+                        }catch (Exception e){
+                            logger.error ("Unable to fetch devices for user: {}", user.getUuid());
+                        }
+                        return Observable.from(Collections.singletonList(user));
 
-                    }
+                    }, 50).toBlocking().lastOrDefault(null);
+
+
+
+
 
                 }
 

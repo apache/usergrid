@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.Query.Level;
-import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.utils.InflectionUtils;
 
 
@@ -52,11 +51,10 @@ public class PathQuery<E> {
 
     /**
      * top level
-     *
-     * @param head the top-level entity
+     *  @param head the top-level entity
      * @param query the query - must have a collection or connectType value set
      */
-    public PathQuery( EntityRef head, Query query ) {
+    public PathQuery(EntityRef head, Query query) {
         if ( query.getCollection() == null && query.getConnectionType() == null ) {
             throw new IllegalArgumentException( "Query must have a collection or connectionType value" );
         }
@@ -93,13 +91,31 @@ public class PathQuery<E> {
                 return new PagingResultsIterator( getHeadResults( em ), query.getResultsLevel() );
             }
             else {
-                return new MultiQueryIterator( em, source.refIterator( em ), query );
+                return new MultiQueryIterator( em, source.refIterator( em, false), query );
             }
         }
         catch ( Exception e ) {
             throw new RuntimeException( e );
         }
     }
+
+    public Iterator<E> graphIterator( EntityManager em ) {
+        try {
+
+            if ( uuid != null && type != null ) {
+                return new PagingResultsIterator( getHeadResults( em ), query.getResultsLevel() );
+            }else {
+
+                return new NotificationGraphIterator(em, source.refIterator(em, true), query);
+            }
+
+        }
+        catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+
 
 
     protected Results getHeadResults( EntityManager em ) throws Exception {
@@ -123,7 +139,7 @@ public class PathQuery<E> {
     }
 
 
-    protected Iterator refIterator( EntityManager em ) throws Exception {
+    protected Iterator refIterator(EntityManager em, boolean useGraph) throws Exception {
 
         if ( query.getQl() == null && query.getSingleNameOrEmailIdentifier() != null){
 
@@ -140,7 +156,12 @@ public class PathQuery<E> {
                 q = new Query( q );
                 q.setResultsLevel( Level.REFS );
             }
-            return new MultiQueryIterator( em, source.refIterator( em ), q );
+            if( useGraph){
+                return new NotificationGraphIterator( em, source.refIterator( em, true), q );
+            }else{
+                return new MultiQueryIterator( em, source.refIterator( em, false ), q );
+
+            }
         }
     }
 
