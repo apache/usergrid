@@ -139,6 +139,9 @@ public class NotificationsService extends AbstractCollectionService {
         try {
             validate(null, context.getPayload());
             Notification.PathTokens pathTokens = getPathTokens(context.getRequest().getOriginalParameters());
+            // default saving of receipts
+            context.getProperties().put("saveReceipts", context.getProperties().getOrDefault("saveReceipts", true));
+            context.getProperties().put("processingFinished", 0L); // defaulting processing finished to 0
             context.getProperties().put("state", Notification.State.CREATED);
             context.getProperties().put("pathQuery", pathTokens);
             context.setOwner(sm.getApplication());

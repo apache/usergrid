@@ -93,6 +93,10 @@ public class Notification extends TypedEntity {
     @EntityProperty
     protected String errorMessage;
 
+    /** Flag to disable the creation, saving, connecting of receipt entities for a notification.  */
+    @EntityProperty
+    protected boolean saveReceipts;
+
     @EntityCollection(type = "receipt")
     protected List<UUID> receipts;
 
@@ -175,6 +179,15 @@ public class Notification extends TypedEntity {
 
     public void setCanceled(Boolean canceled) {
         this.canceled = canceled;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public boolean getSaveReceipts() {
+        return saveReceipts;
+    }
+
+    public void setSaveReceipts(boolean saveReceipts) {
+        this.saveReceipts = saveReceipts;
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)

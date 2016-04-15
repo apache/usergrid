@@ -163,6 +163,32 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     }
 
     @Test
+    public void singlePushNotificationNoReceipts() throws Exception {
+
+        app.clear();
+        String payload = "Hello, World!";
+        Map<String, String> payloads = new HashMap<String, String>(1);
+        payloads.put(notifier.getUuid().toString(), payload);
+        app.put("payloads", payloads);
+        app.put("queued", System.currentTimeMillis());
+        app.put("debug", true);
+        app.put("saveReceipts",false );
+        app.put("expire", System.currentTimeMillis() + 300000); // add 5 minutes to current time
+
+        Entity e = app.testRequest(ServiceAction.POST, 1, "devices", device1.getUuid(), "notifications").getEntity();
+        app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
+
+        Notification notification = app.getEntityManager().get(e.getUuid(), Notification.class);
+        assertEquals(
+            notification.getPayloads().get(notifier.getUuid().toString()),
+            payload);
+
+        // perform push //
+        notification = notificationWaitForComplete(notification);
+        checkReceipts(notification, 0);
+    }
+
+    @Test
     public void pushWithNoValidDevicesShouldComplete() throws Exception {
 
         // create unrelated notifier

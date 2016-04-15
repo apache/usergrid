@@ -329,8 +329,22 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                     String notifierName = message.getNotifierKey().toLowerCase();
                     ProviderAdapter providerAdapter = notifierMap.get(notifierName.toLowerCase());
                     Object payload = translatedPayloads.get(notifierName);
-                    Receipt receipt = new Receipt(notification.getUuid(), message.getNotifierId(), payload, deviceUUID);
-                    TaskTracker tracker = new TaskTracker(providerAdapter.getNotifier(), taskManager, receipt, deviceUUID);
+
+                    TaskTracker tracker = null;
+
+                    if(notification.getSaveReceipts()){
+
+                        final Receipt receipt =
+                            new Receipt( notification.getUuid(), message.getNotifierId(), payload, deviceUUID );
+                        tracker =
+                            new TaskTracker( providerAdapter.getNotifier(), taskManager, receipt, deviceUUID );
+
+                    }
+                    else {
+
+                        tracker =
+                            new TaskTracker( providerAdapter.getNotifier(), taskManager, null, deviceUUID );
+                    }
                     if (!isOkToSend(notification)) {
                         tracker.failed(0, "Notification is duplicate/expired/cancelled.");
                     } else {
