@@ -19,6 +19,7 @@ package org.apache.usergrid.services.notifications;
 
 import java.util.*;
 
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,6 +85,7 @@ public class NotificationsService extends AbstractCollectionService {
     private ServiceManagerFactory smf;
     private EntityManagerFactory emf;
     private QueueManagerFactory queueManagerFactory;
+    private EntityCollectionManagerFactory ecmf;
 
     public NotificationsService() {
         if (logger.isTraceEnabled()) {
@@ -139,9 +141,13 @@ public class NotificationsService extends AbstractCollectionService {
         try {
             validate(null, context.getPayload());
             Notification.PathTokens pathTokens = getPathTokens(context.getRequest().getOriginalParameters());
+
             // default saving of receipts
+            context.getProperties().put("filters", context.getProperties().getOrDefault("filters", new HashMap<>()));
+            context.getProperties().put("useGraph", context.getProperties().getOrDefault("useGraph", false));
             context.getProperties().put("saveReceipts", context.getProperties().getOrDefault("saveReceipts", true));
             context.getProperties().put("processingFinished", 0L); // defaulting processing finished to 0
+            context.getProperties().put("deviceProcessedCount", 0); // defaulting processing finished to 0
             context.getProperties().put("state", Notification.State.CREATED);
             context.getProperties().put("pathQuery", pathTokens);
             context.setOwner(sm.getApplication());

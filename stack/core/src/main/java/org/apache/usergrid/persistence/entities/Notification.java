@@ -26,6 +26,8 @@ import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.annotations.EntityCollection;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
 import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.utils.InflectionUtils;
+
 
 /**
  * The entity class for representing Notifications.
@@ -77,6 +79,10 @@ public class Notification extends TypedEntity {
     @EntityProperty
     protected Long expire;
 
+    /** Stores the number of devices processed */
+    @EntityProperty
+    protected int deviceProcessedCount;
+
     /** True if notification is canceled */
     @EntityProperty
     protected Boolean canceled;
@@ -88,6 +94,10 @@ public class Notification extends TypedEntity {
     /** Flag to set the notification priority. Valid values "normal" and "high"  */
     @EntityProperty
     protected String priority;
+
+    /** Flag to signal Usergrid to use graph traversal + filtering to find devices  */
+    @EntityProperty
+    protected boolean useGraph;
 
     /** Error messages that may have been encountered by Usergrid when trying to process the notification */
     @EntityProperty
@@ -103,6 +113,9 @@ public class Notification extends TypedEntity {
     /** Map containing a count for "sent" and "errors" */
     @EntityProperty
     protected Map<String, Long> statistics;
+
+    @EntityProperty
+    protected Map<String, Object> filters;
 
 
     public Notification() {
@@ -173,6 +186,15 @@ public class Notification extends TypedEntity {
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public int getDeviceProcessedCount() {
+        return deviceProcessedCount;
+    }
+
+    public void setDeviceProcessedCount(int deviceProcessedCount) {
+        this.deviceProcessedCount = deviceProcessedCount;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Boolean getCanceled() {
         return canceled;
     }
@@ -188,6 +210,15 @@ public class Notification extends TypedEntity {
 
     public void setSaveReceipts(boolean saveReceipts) {
         this.saveReceipts = saveReceipts;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public boolean getUseGraph() {
+        return useGraph;
+    }
+
+    public void setUseGraph(boolean useGraph) {
+        this.useGraph = useGraph;
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
@@ -250,6 +281,15 @@ public class Notification extends TypedEntity {
 
     public void setStatistics(Map<String, Long> statistics) {
         this.statistics = statistics;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public Map<String, Object> getFilters() {
+        return filters;
+    }
+
+    public void setFilters(Map<String, Object> filters) {
+        this.filters = filters;
     }
 
     public void updateStatistics(long sent, long errors) {
@@ -341,7 +381,8 @@ public class Notification extends TypedEntity {
         @JsonIgnore
         public PathQuery<Device> buildPathQuery() {
             PathQuery pathQuery = null;
-            for (PathToken pathToken : getPathTokens()) {
+            List<PathToken> pathTokens = getPathTokens();
+            for (PathToken pathToken : pathTokens) {
                 String collection = pathToken.getCollection();
                 Query query = new Query();
                 if(pathToken.getQl() != null){
@@ -365,6 +406,25 @@ public class Notification extends TypedEntity {
 
                 if (pathQuery == null) {
                     pathQuery = new PathQuery(getApplicationRef(), query);
+
+                    if ( pathTokens.size() == 1 && collection.equals(InflectionUtils.pluralize(Group.ENTITY_TYPE) )){
+
+                        Query usersQuery = new Query();
+                        usersQuery.setQl("select *");
+                        usersQuery.setCollection("users");
+                        usersQuery.setLimit(100);
+
+                        Query devicesQuery = new Query();
+                        devicesQuery.setQl("select *");
+                        devicesQuery.setCollection("devices");
+                        usersQuery.setLimit(100);
+
+
+                        // build up the chain so the proper iterators can be used later
+                        pathQuery = pathQuery.chain( usersQuery ).chain( devicesQuery );
+
+                    }
+
                 } else {
                     pathQuery = pathQuery.chain(query);
                 }
