@@ -72,7 +72,7 @@ public class TaskManager {
                 }
                 successes.incrementAndGet();
             }
-            em.incrementAggregateCounters( notification.getUuid(),null,notification.getType(),"completed",100000L );
+            em.incrementAggregateCounters( null,null,null,"counters.notifications.completed",1 );
 
             //counters.increment.
             if (newProviderId != null) {
@@ -105,7 +105,7 @@ public class TaskManager {
             }
 
             failures.incrementAndGet();
-            em.incrementAggregateCounters( notification.getUuid(),null,notification.getType(),"failed",1 );
+            em.incrementAggregateCounters( null,null,null,"counters.notifications.failed",1 );
 
             if(receipt!=null) {
                 if ( receipt.getUuid() != null ) {
@@ -187,10 +187,12 @@ public class TaskManager {
         if (refreshNotification) {
             notification = em.get(this.notification.getUuid(), Notification.class);
         }
-        Results success = em.getAggregateCounters( this.notification.getUuid(),null,this.notification.getType(),"completed",
+
+        Results success = em.getAggregateCounters( null,null,null,"counters.notifications.completed",
             CounterResolution.ALL,0,System.currentTimeMillis(),false );
 
-        Results failed = em.getAggregateCounters( this.notification.getUuid(),null,this.notification.getType(),"failed",
+
+        Results failed = em.getAggregateCounters( null,null,null,"counters.notifications.failure",
             CounterResolution.ALL,notification.getCreated(),System.currentTimeMillis(),false );
 
         notification.updateStatistics(successes, failures);
