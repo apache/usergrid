@@ -58,7 +58,9 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
     HashMap<Object, ProviderAdapter> notifierHashMap; // only retrieve notifiers once
 
 
-    public ApplicationQueueManagerImpl(JobScheduler jobScheduler, EntityManager entityManager, QueueManager queueManager, MetricsFactory metricsFactory, Properties properties) {
+    public ApplicationQueueManagerImpl( JobScheduler jobScheduler, EntityManager entityManager,
+                                        QueueManager queueManager, MetricsFactory metricsFactory,
+                                        Properties properties) {
         this.em = entityManager;
         this.qm = queueManager;
         this.jobScheduler = jobScheduler;
@@ -116,20 +118,23 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 iterator = pathQuery.iterator(em);
             }
 
-            //if there are more pages (defined by PAGE_SIZE) you probably want this to be async, also if this is already a job then don't reschedule
-            if (iterator instanceof ResultsIterator && ((ResultsIterator) iterator).hasPages() && jobExecution == null) {
-                if(logger.isTraceEnabled()){
-                    logger.trace("Scheduling notification job as it has multiple pages of devices.");
-                }
-                jobScheduler.scheduleQueueJob(notification, true);
-                em.update(notification);
-                return;
-            }
+//            //if there are more pages (defined by PAGE_SIZE) you probably want this to be async, also if this is already a job then don't reschedule
+//            if (iterator instanceof ResultsIterator && ((ResultsIterator) iterator).hasPages() && jobExecution == null) {
+//                if(logger.isTraceEnabled()){
+//                    logger.trace("Scheduling notification job as it has multiple pages of devices.");
+//                }
+//                jobScheduler.scheduleQueueJob(notification, true);
+//                em.update(notification);
+//                return;
+//            }
             final UUID appId = em.getApplication().getUuid();
             final Map<String, Object> payloads = notification.getPayloads();
 
             final Func1<EntityRef, Optional<ApplicationQueueMessage>> sendMessageFunction = deviceRef -> {
+
                 try {
+
+                    //logger.info("Preparing notification queue message for device: {}", deviceRef.getUuid());
 
                     long now = System.currentTimeMillis();
 
@@ -163,6 +168,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                         notification.setQueued(System.currentTimeMillis());
 
                     }
+
                     deviceCount.incrementAndGet();
 
                     return Optional.of(message);
@@ -190,90 +196,95 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                     return Observable.from(getDevices(entity));
 
                 })
-                .distinct(ref -> ref.getUuid())
-                .flatMap( entityRef -> {
-
-                    return Observable.just(entityRef).flatMap( ref -> {
-
-                        if(logger.isTraceEnabled()){
-                            logger.trace("Loading device: {}", ref.getUuid());
-
-                        }
-                            try {
-                                return Observable.just(em.get(ref, Device.class));
-                            }
-                            catch (Exception e){
-
-                                return Observable.empty();
-
-                            }
-
-                        }).subscribeOn(Schedulers.io());
-
-
-                }, 50)
-                .filter( device -> {
+                .distinct(ref -> ref.getUuid() )
+                .map( entityRef -> entityRef.getUuid() )
+                .buffer(10)
+                .flatMap( uuids -> {
 
                     if(logger.isTraceEnabled()) {
-                        logger.trace("Filtering device: {}", device.getUuid());
+                        logger.trace("Processing batch of {} device(s)", uuids.size());
                     }
 
 
-                    if(notification.getUseGraph() && filters.size() > 0 ) {
+                    return Observable.from(em.getEntities(uuids, "device"))
+                        .filter( device -> {
 
-                        for (Map.Entry<String, Object> entry : filters.entrySet()) {
-
-                            if ((device.getDynamicProperties().get(entry.getKey()) != null &&
-                                device.getDynamicProperties().get(entry.getKey()).equals(entry.getValue())) ||
-
-                                (device.getProperties().get(entry.getKey()) != null &&
-                                    device.getProperties().get(entry.getKey()).equals(entry.getValue()))
-
-                                ) {
-
-
-                                return true;
+                            if(logger.isTraceEnabled()) {
+                                logger.trace("Filtering device: {}", device.getUuid());
                             }
 
-                        }
 
-                        if(logger.isTraceEnabled()) {
-                            logger.trace("Push notification filter matched for notification {}, so removing from notification",
-                                device.getUuid(), notification.getUuid());
-                        }
-                        return false;
+                            if(notification.getUseGraph() && filters.size() > 0 ) {
+
+                                for (Map.Entry<String, Object> entry : filters.entrySet()) {
+
+                                    if ((device.getDynamicProperties().get(entry.getKey()) != null &&
+                                        device.getDynamicProperties().get(entry.getKey()).equals(entry.getValue())) ||
+
+                                        (device.getProperties().get(entry.getKey()) != null &&
+                                            device.getProperties().get(entry.getKey()).equals(entry.getValue()))
+
+                                        ) {
 
 
-                    }
+                                        return true;
+                                    }
 
-                    return true;
-
-                })
-                .map(sendMessageFunction)
-                .doOnNext( message -> {
-                        try {
-
-                            if(message.isPresent()){
+                                }
 
                                 if(logger.isTraceEnabled()) {
-                                    logger.trace("Queueing notification message for device: {}", message.get().getDeviceId());
+                                    logger.trace("Push notification filter matched for notification {}, so removing from notification",
+                                        device.getUuid(), notification.getUuid());
                                 }
-                                qm.sendMessage( message.get() );
-                                queueMeter.mark();
+                                return false;
+
+
                             }
 
-                        } catch (IOException e) {
+                            return true;
 
-                            if(message.isPresent()){
-                                logger.error("Unable to queue notification for notification UUID {} and device UUID {} ",
-                                    message.get().getNotificationId(), message.get().getDeviceId());
+                        })
+                        .map(sendMessageFunction)
+                        .doOnNext( message -> {
+                            try {
+
+                                if(message.isPresent()){
+
+                                    if(logger.isTraceEnabled()) {
+                                        logger.trace("Queueing notification message for device: {}", message.get().getDeviceId());
+                                    }
+                                    qm.sendMessage( message.get() );
+                                    queueMeter.mark();
+                                }
+
+                            } catch (IOException e) {
+
+                                if(message.isPresent()){
+                                    logger.error("Unable to queue notification for notification UUID {} and device UUID {} ",
+                                        message.get().getNotificationId(), message.get().getDeviceId());
+                                }
+                                else{
+                                    logger.error("Unable to queue notification as it's not present when trying to send to queue");
+                                }
+
                             }
-                            else{
-                                logger.error("Unable to queue notification as it's not present when trying to send to queue");
-                            }
 
-                        }
 
+                        }).subscribeOn(Schedulers.io());
+                }, 10)
+
+                .doOnError(throwable -> {
+
+                    logger.error("Error while processing devices for notification : {}", notification.getUuid());
+                    notification.setProcessingFinished(-1L);
+                    notification.setDeviceProcessedCount(deviceCount.get());
+                    logger.warn("Partial notification. Only {} devices processed for notification {}",
+                        deviceCount.get(), notification.getUuid());
+                    try {
+                        em.update(notification);
+                    }catch (Exception e){
+                        logger.error("Error updating negative processing status when processing failed.");
+                    }
 
                 })
                 .doOnCompleted( () -> {
@@ -282,16 +293,14 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                         notification.setProcessingFinished(System.currentTimeMillis());
                         notification.setDeviceProcessedCount(deviceCount.get());
                         em.update(notification);
-                        logger.info("{} devices processed for notification {}", deviceCount.get(), notification.getUuid());
+                        logger.info("{} device(s) processed for notification {}", deviceCount.get(), notification.getUuid());
 
                     } catch (Exception e) {
                         logger.error("Unable to set processing finished timestamp for notification");
                     }
 
-                })
-                .doOnError(throwable -> logger.error("Failed while trying to send notification", throwable));
+                });
 
-            //TODO verify error handling here
             processMessagesObservable.subscribeOn(Schedulers.io()).subscribe(); // fire the queuing into the background
 
         }
