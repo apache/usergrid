@@ -52,6 +52,8 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
     private final Meter queueMeter;
     private final Meter sendMeter;
 
+    private final static String PUSH_PROCESSING_CONCURRENCY_PROP = "usergrid.push.async.processing.concurrency";
+
     HashMap<Object, ProviderAdapter> notifierHashMap; // only retrieve notifiers once
 
 
@@ -91,25 +93,22 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             return;
         }
 
-        if (logger.isTraceEnabled()) {
-            logger.trace("notification {} start queuing", notification.getUuid());
-        }
-
         final PathQuery<Device> pathQuery = notification.getPathQuery().buildPathQuery(); //devices query
         final AtomicInteger deviceCount = new AtomicInteger(); //count devices so you can make a judgement on batching
         final ConcurrentLinkedQueue<String> errorMessages = new ConcurrentLinkedQueue<>(); //build up list of issues
 
-        //get devices in querystring, and make sure you have access
+        // Get devices in querystring, and make sure you have access
         if (pathQuery != null) {
             final HashMap<Object, ProviderAdapter> notifierMap = getAdapterMap();
             if (logger.isTraceEnabled()) {
                 logger.trace("notification {} start query", notification.getUuid());
             }
-            logger.info("notification {} start query", notification.getUuid());
+
+            logger.info("Notification {} started processing", notification.getUuid());
 
 
 
-            // the main iterator can use graph traversal or index querying
+            // The main iterator can use graph traversal or index querying based on payload property. Default is Index.
             final Iterator<Device> iterator;
             if( notification.getUseGraph()){
                 iterator = pathQuery.graphIterator(em);
@@ -117,15 +116,24 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 iterator = pathQuery.iterator(em);
             }
 
-//            //if there are more pages (defined by PAGE_SIZE) you probably want this to be async, also if this is already a job then don't reschedule
-//            if (iterator instanceof ResultsIterator && ((ResultsIterator) iterator).hasPages() && jobExecution == null) {
-//                if(logger.isTraceEnabled()){
-//                    logger.trace("Scheduling notification job as it has multiple pages of devices.");
-//                }
-//                jobScheduler.scheduleQueueJob(notification, true);
-//                em.update(notification);
-//                return;
-//            }
+            /**** Old code to scheduler large sets of data, but now the processing is fired off async in the background.
+                Leaving this only a reference of how to do it, if needed in future.
+
+                    //if there are more pages (defined by PAGE_SIZE) you probably want this to be async,
+                    //also if this is already a job then don't reschedule
+
+                    if (iterator instanceof ResultsIterator
+                                && ((ResultsIterator) iterator).hasPages() && jobExecution == null) {
+
+                        if(logger.isTraceEnabled()){
+                            logger.trace("Scheduling notification job as it has multiple pages of devices.");
+                        }
+                        jobScheduler.scheduleQueueJob(notification, true);
+                        em.update(notification);
+                        return;
+                     }
+             ****/
+
             final UUID appId = em.getApplication().getUuid();
             final Map<String, Object> payloads = notification.getPayloads();
 
@@ -182,27 +190,18 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
             };
 
+
             final Map<String, Object> filters = notification.getFilters();
 
+            Observable processMessagesObservable = Observable.create(new IteratorObservable<EntityRef>(iterator))
 
-
-            Observable processMessagesObservable = Observable.create(new IteratorObservable<UUID>(iterator))
-//                .flatMap(entity -> {
-//
-//                    if(entity.getType().equals(Device.ENTITY_TYPE)){
-//                        return Observable.from(Collections.singletonList(entity));
-//                    }
-//
-//                    // if it's not a device, drill down and get them
-//                    return Observable.from(getDevices(entity));
-//
-//                })
-                .distinct()
                 .flatMap( entityRef -> {
 
                     return Observable.just(entityRef).flatMap(ref->{
 
                         List<Entity> entities = new ArrayList<>();
+
+                            if( ref.getType().equals(User.ENTITY_TYPE)){
 
                                 Query devicesQuery = new Query();
                                 devicesQuery.setCollection("devices");
@@ -210,58 +209,37 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                                 try {
 
-                                   entities = em.searchCollection(new SimpleEntityRef("user", ref), devicesQuery.getCollection(), devicesQuery).getEntities();
+                                   entities = em.searchCollection(new SimpleEntityRef("user", ref.getUuid()), devicesQuery.getCollection(), devicesQuery).getEntities();
 
                                 }catch (Exception e){
 
-                                    logger.error("Unable to load devices for user: {}", ref);
+                                    logger.error("Unable to load devices for user: {}", ref.getUuid());
                                     return Observable.empty();
                                 }
 
 
+                            }else if ( ref.getType().equals(Device.ENTITY_TYPE)){
 
+                                try{
+                                    entities.add(em.get(ref));
 
-//                            if( ref.getType().equals(User.ENTITY_TYPE)){
-//
-//                                Query devicesQuery = new Query();
-//                                devicesQuery.setCollection("devices");
-//                                devicesQuery.setResultsLevel(Query.Level.CORE_PROPERTIES);
-//
-//                                try {
-//
-//                                   entities = em.searchCollection(new SimpleEntityRef("user", ref.getUuid()), devicesQuery.getCollection(), devicesQuery).getEntities();
-//
-//                                }catch (Exception e){
-//
-//                                    logger.error("Unable to load devices for user: {}", ref.getUuid());
-//                                    return Observable.empty();
-//                                }
-//
-//
-//                            }else if ( ref.getType().equals(Device.ENTITY_TYPE)){
-//
-//                                try{
-//                                    entities.add(em.get(ref));
-//
-//                                }catch(Exception e){
-//
-//                                    logger.error("Unable to load device: {}", ref.getUuid());
-//                                    return Observable.empty();
-//
-//                                }
-//
-//                            }
+                                }catch(Exception e){
+
+                                    logger.error("Unable to load device: {}", ref.getUuid());
+                                    return Observable.empty();
+
+                                }
+
+                            }
                         return Observable.from(entities);
 
                         })
+                        .distinct( deviceRef -> deviceRef.getUuid())
                         .filter( device -> {
-
-                            logger.info("Filtering device: {}", device.getUuid());
 
                             if(logger.isTraceEnabled()) {
                                 logger.trace("Filtering device: {}", device.getUuid());
                             }
-
 
                             if(notification.getUseGraph() && filters.size() > 0 ) {
 
@@ -280,7 +258,6 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                                     }
 
                                 }
-
                                 if(logger.isTraceEnabled()) {
                                     logger.trace("Push notification filter did not match for notification {}, so removing from notification",
                                         device.getUuid(), notification.getUuid());
@@ -321,20 +298,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                         }).subscribeOn(Schedulers.io());
 
-                }, 100)
-                //.map( entityRef -> entityRef.getUuid() )
-                //.buffer(10)
-//                .flatMap( uuids -> {
-//
-//                    if(logger.isTraceEnabled()) {
-//                        logger.trace("Processing batch of {} device(s)", uuids.size());
-//                    }
-//
-//
-//                    return Observable.from(em.getEntities(uuids, "device")).subscribeOn(Schedulers.io());
-//
-//                }, 10)
-
+                }, Integer.valueOf(System.getProperty(PUSH_PROCESSING_CONCURRENCY_PROP, "50")))
                 .doOnError(throwable -> {
 
                     logger.error("Error while processing devices for notification : {}", notification.getUuid());
@@ -355,7 +319,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                         notification.setProcessingFinished(System.currentTimeMillis());
                         notification.setDeviceProcessedCount(deviceCount.get());
                         em.update(notification);
-                        logger.info("{} device(s) processed for notification {}", deviceCount.get(), notification.getUuid());
+                        logger.info("Notification {} finished processing {} device(s)", notification.getUuid(), deviceCount.get());
 
                     } catch (Exception e) {
                         logger.error("Unable to set processing finished timestamp for notification");
@@ -622,10 +586,13 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             try {
                 while (!subscriber.isUnsubscribed() && input.hasNext()) {
                     //send our input to the next
+                    //logger.debug("calling next on iterator: {}", input.getClass().getSimpleName());
                     subscriber.onNext((T) input.next());
                 }
 
                 //tell the subscriber we don't have any more data
+                //logger.debug("finished iterator: {}", input.getClass().getSimpleName());
+
                 subscriber.onCompleted();
             } catch (Throwable t) {
                 logger.error("failed on subscriber", t);
@@ -676,90 +643,6 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             return false;
         }
         return true;
-    }
-
-    private List<EntityRef> getDevices(EntityRef ref) {
-
-        List<EntityRef> devices = new ArrayList<>();
-
-        final int LIMIT = Query.MID_LIMIT;
-
-        try {
-
-           if (User.ENTITY_TYPE.equals(ref.getType())) {
-
-                UUID start = null;
-                boolean initial = true;
-                int resultSize = 0;
-                while( initial || resultSize >= Query.DEFAULT_LIMIT) {
-
-                    initial = false;
-
-                    final List<EntityRef> mydevices = em.getCollection(ref, "devices", start, LIMIT,
-                        Query.Level.REFS, true).getRefs();
-
-                    resultSize = mydevices.size();
-
-                    if(mydevices.size() > 0){
-                        start = mydevices.get(mydevices.size() - 1 ).getUuid();
-                    }
-
-                    devices.addAll( mydevices  );
-
-                }
-
-            } else if (Group.ENTITY_TYPE.equals(ref.getType())) {
-
-                UUID start = null;
-                boolean initial = true;
-                int resultSize = 0;
-
-                while( initial || resultSize >= LIMIT){
-
-                    initial = false;
-
-                    final List<EntityRef> myusers =  em.getCollection(ref, "users", start,
-                        LIMIT, Query.Level.REFS, true).getRefs();
-                    resultSize = myusers.size();
-
-                    if(myusers.size() > 0){
-                        start = myusers.get(myusers.size() - 1 ).getUuid();
-                    }
-
-
-                    Observable.from(myusers).flatMap( user -> {
-
-                        try {
-                            devices.addAll(em.getCollection(user, "devices", null, 100,
-                                Query.Level.REFS, true).getRefs());
-                        }catch (Exception e){
-                            logger.error ("Unable to fetch devices for user: {}", user.getUuid());
-                        }
-                        return Observable.from(Collections.singletonList(user));
-
-                    }, 50).toBlocking().lastOrDefault(null);
-
-
-
-
-
-                }
-
-            }
-        } catch (Exception e) {
-
-            if (ref != null){
-                logger.error("Error while retrieving devices for entity type {} and uuid {}. Error: {}",
-                    ref.getType(), ref.getUuid(), e);
-            }else{
-                logger.error("Error while retrieving devices. Entity ref was null.");
-            }
-
-            throw new RuntimeException("Unable to retrieve devices for EntityRef", e);
-
-        }
-
-        return devices;
     }
 
 

@@ -23,10 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class NotificationGraphIterator implements ResultsIterator, Iterable {
 
@@ -67,18 +63,20 @@ public class NotificationGraphIterator implements ResultsIterator, Iterable {
             Object next = source.next();
             Results r;
 
-//            if(next instanceof UUID){
-//
-//                UUID id = (UUID) next;
-//                r = getResultsForId(id, "user");
-//
-//            }else {
-                EntityRef ref = (EntityRef) next;
-                r = getResultsFor(ref);
-           // }
+            EntityRef ref = (EntityRef) next;
+            r = getResultsFor(ref);
 
             if (r.size() > 0) {
-                currentIterator = new PagingResultsIterator(r, query.getResultsLevel());
+
+
+                if(ref.getType().equals(Group.ENTITY_TYPE)) {
+
+                    currentIterator = new PagingResultsIterator(r, query.getResultsLevel(), Query.Level.REFS);
+                }else{
+                    currentIterator = new PagingResultsIterator(r, query.getResultsLevel(), null);
+
+                }
+
                 return currentIterator.hasNext();
             }
         }
@@ -122,26 +120,13 @@ public class NotificationGraphIterator implements ResultsIterator, Iterable {
                 // if we're fetching devices through groups->users->devices, get only the IDs and don't load the entities
                 if( ref.getType().equals(Group.ENTITY_TYPE)){
 
-                    // query users using IDs as we don't need to load the full entities just to find their devices
-                    Query usersQuery = new Query();
-                    usersQuery.setCollection("users");
-                    usersQuery.setResultsLevel(Query.Level.IDS);
-                    usersQuery.setLimit(1000);
+                    // groups->users is a passthrough to devices, load our max limit
+                    query.setLimit(Query.MAX_LIMIT);
 
-
-                    // set the query level for the iterator temporarily to IDS
+                    // set the query level for the when fetching users to IDS, we don't need the full entity
                     query.setResultsLevel(Query.Level.IDS);
 
-                 return entityManager.searchCollection(ref, usersQuery.getCollection(), usersQuery);
-
-
-//                    List<EntityRef> refs =
-//                        results.getIds().stream()
-//                            .map( uuid -> new SimpleEntityRef( "user", uuid) ).collect(Collectors.toList());
-//
-//                    // set the query level for the iterator back to REFS after mapping our IDS
-//                    query.setResultsLevel(Query.Level.REFS);
-//                    return Results.fromRefList(refs);
+                 return entityManager.searchCollection(ref, "users", query);
 
                 }
 
@@ -151,8 +136,6 @@ public class NotificationGraphIterator implements ResultsIterator, Iterable {
                     devicesQuery.setCollection("devices");
                     devicesQuery.setResultsLevel(Query.Level.CORE_PROPERTIES);
 
-                    //query.setCollection("devices");
-                    //query.setResultsLevel(Query.Level.CORE_PROPERTIES);
                     return entityManager.searchCollection(ref, devicesQuery.getCollection(), devicesQuery);
                 }
 
@@ -176,15 +159,5 @@ public class NotificationGraphIterator implements ResultsIterator, Iterable {
             throw new RuntimeException(e);
         }
     }
-
-
-    private Results getResultsForId(UUID uuid, String type) {
-
-        EntityRef ref = new SimpleEntityRef(type, uuid);
-        return getResultsFor(ref);
-
-
-    }
-
 
 }

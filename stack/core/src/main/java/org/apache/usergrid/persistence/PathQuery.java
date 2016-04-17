@@ -88,7 +88,7 @@ public class PathQuery<E> {
         try {
 
             if ( uuid != null && type != null ) {
-                return new PagingResultsIterator( getHeadResults( em ), query.getResultsLevel() );
+                return new PagingResultsIterator( getHeadResults( em ), query.getResultsLevel(), null);
             }
             else {
                 return new MultiQueryIterator( em, source.refIterator( em, false), query );
@@ -103,7 +103,7 @@ public class PathQuery<E> {
         try {
 
             if ( uuid != null && type != null ) {
-                return new PagingResultsIterator( getHeadResults( em ), query.getResultsLevel() );
+                return new PagingResultsIterator( getHeadResults( em ), query.getResultsLevel(), null);
             }else {
 
                 return new NotificationGraphIterator(em, source.refIterator(em, true), query);
@@ -130,6 +130,12 @@ public class PathQuery<E> {
 
             UUID entityId = em.getUniqueIdFromAlias( entityType, name );
 
+            if( entityId == null){
+                throw new
+                    IllegalArgumentException("Entity with name "+name+" not found. Unable to send push notification");
+            }
+
+
             return em.getEntities(Collections.singletonList(entityId), entityType);
         }
 
@@ -143,12 +149,12 @@ public class PathQuery<E> {
 
         if ( query.getQl() == null && query.getSingleNameOrEmailIdentifier() != null){
 
-            return new PagingResultsIterator( getHeadResults( em ), Level.REFS );
+            return new PagingResultsIterator( getHeadResults( em ), Level.REFS, null);
 
         }
 
         if ( type != null  && uuid != null) {
-            return new PagingResultsIterator( getHeadResults( em ), Level.REFS );
+            return new PagingResultsIterator( getHeadResults( em ), Level.REFS, null);
         }
         else {
             Query q = query;
