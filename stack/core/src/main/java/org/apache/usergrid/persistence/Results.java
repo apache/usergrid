@@ -436,6 +436,10 @@ public class Results implements Iterable<Entity> {
         level = Level.REFS;
     }
 
+    public void setRefsOnly( List<EntityRef> resultsRefs ) {
+        refs = resultsRefs;
+    }
+
 
     public Results withRefs( List<EntityRef> resultsRefs ) {
         setRefs( resultsRefs );

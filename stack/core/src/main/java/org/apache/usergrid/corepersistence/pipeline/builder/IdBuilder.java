@@ -151,7 +151,7 @@ public class IdBuilder {
 
     public Observable<ResultsPage<Id>> build(){
         //we must add our resume filter so we drop our previous page first element if it's present
-        return pipeline.withFilter( new IdFilter() ).withFilter(new ResultsPageCollector<>()).execute();
+        return pipeline.withFilter( new IdResumeFilter() ).withFilter(new ResultsPageCollector<>()).execute();
     }
 
 }
