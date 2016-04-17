@@ -17,10 +17,16 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.persistence.entities.Group;
+import org.apache.usergrid.persistence.entities.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class NotificationGraphIterator implements ResultsIterator, Iterable {
 
@@ -58,8 +64,19 @@ public class NotificationGraphIterator implements ResultsIterator, Iterable {
             return true;
         }
         while (source.hasNext()) {
-            EntityRef ref = source.next();
-            Results r = getResultsFor(ref);
+            Object next = source.next();
+            Results r;
+
+//            if(next instanceof UUID){
+//
+//                UUID id = (UUID) next;
+//                r = getResultsForId(id, "user");
+//
+//            }else {
+                EntityRef ref = (EntityRef) next;
+                r = getResultsFor(ref);
+           // }
+
             if (r.size() > 0) {
                 currentIterator = new PagingResultsIterator(r, query.getResultsLevel());
                 return currentIterator.hasNext();
@@ -90,13 +107,57 @@ public class NotificationGraphIterator implements ResultsIterator, Iterable {
 
         try {
 
+
+            query.setLimit(Query.MAX_LIMIT); // always fetch our MAX limit to reduce # of IO hops
             if (query.getCollection() != null) {
+
+                // make sure this results in graph traversal
+                query.setQl("select *");
 
                 if(logger.isTraceEnabled()) {
                     logger.trace("Fetching with refType: {}, collection: {} with no query",
                         ref.getType(), query.getCollection());
                 }
-                return entityManager.searchCollection(ref, query.getCollection(), null);
+
+                // if we're fetching devices through groups->users->devices, get only the IDs and don't load the entities
+                if( ref.getType().equals(Group.ENTITY_TYPE)){
+
+                    // query users using IDs as we don't need to load the full entities just to find their devices
+                    Query usersQuery = new Query();
+                    usersQuery.setCollection("users");
+                    usersQuery.setResultsLevel(Query.Level.IDS);
+                    usersQuery.setLimit(1000);
+
+
+                    // set the query level for the iterator temporarily to IDS
+                    query.setResultsLevel(Query.Level.IDS);
+
+                 return entityManager.searchCollection(ref, usersQuery.getCollection(), usersQuery);
+
+
+//                    List<EntityRef> refs =
+//                        results.getIds().stream()
+//                            .map( uuid -> new SimpleEntityRef( "user", uuid) ).collect(Collectors.toList());
+//
+//                    // set the query level for the iterator back to REFS after mapping our IDS
+//                    query.setResultsLevel(Query.Level.REFS);
+//                    return Results.fromRefList(refs);
+
+                }
+
+                if( ref.getType().equals(User.ENTITY_TYPE)){
+
+                    Query devicesQuery = new Query();
+                    devicesQuery.setCollection("devices");
+                    devicesQuery.setResultsLevel(Query.Level.CORE_PROPERTIES);
+
+                    //query.setCollection("devices");
+                    //query.setResultsLevel(Query.Level.CORE_PROPERTIES);
+                    return entityManager.searchCollection(ref, devicesQuery.getCollection(), devicesQuery);
+                }
+
+                return entityManager.searchCollection(ref, query.getCollection(), query);
+
 
             } else {
 
@@ -105,7 +166,7 @@ public class NotificationGraphIterator implements ResultsIterator, Iterable {
                         ref.getType(), query.getCollection());
                 }
 
-                query.setQl("select *");
+                query.setQl("select *"); // make sure this results in graph traversal
                 return entityManager.searchTargetEntities(ref, query);
 
             }
@@ -115,5 +176,15 @@ public class NotificationGraphIterator implements ResultsIterator, Iterable {
             throw new RuntimeException(e);
         }
     }
+
+
+    private Results getResultsForId(UUID uuid, String type) {
+
+        EntityRef ref = new SimpleEntityRef(type, uuid);
+        return getResultsFor(ref);
+
+
+    }
+
 
 }

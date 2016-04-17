@@ -409,20 +409,28 @@ public class Notification extends TypedEntity {
 
                     if ( pathTokens.size() == 1 && collection.equals(InflectionUtils.pluralize(Group.ENTITY_TYPE) )){
 
-                        Query usersQuery = new Query();
+                        final Query usersQuery = new Query();
                         usersQuery.setQl("select *");
                         usersQuery.setCollection("users");
                         usersQuery.setLimit(100);
 
-                        Query devicesQuery = new Query();
+                        final Query devicesQuery = new Query();
                         devicesQuery.setQl("select *");
                         devicesQuery.setCollection("devices");
-                        usersQuery.setLimit(100);
+                        devicesQuery.setLimit(100);
 
 
                         // build up the chain so the proper iterators can be used later
-                        pathQuery = pathQuery.chain( usersQuery ).chain( devicesQuery );
+                        pathQuery = pathQuery.chain( usersQuery );//.chain( devicesQuery );
 
+                    }else if(pathTokens.size() == 1 && collection.equals(InflectionUtils.pluralize(User.ENTITY_TYPE))){
+
+                        final Query devicesQuery = new Query();
+                        devicesQuery.setQl("select *");
+                        devicesQuery.setCollection("devices");
+                        devicesQuery.setLimit(100);
+
+                        pathQuery = pathQuery.chain( devicesQuery );
                     }
 
                 } else {

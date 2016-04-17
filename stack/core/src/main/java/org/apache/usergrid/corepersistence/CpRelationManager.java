@@ -19,6 +19,7 @@ package org.apache.usergrid.corepersistence;
 
 import java.util.*;
 
+import org.apache.usergrid.corepersistence.results.IdQueryExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -614,6 +615,24 @@ public class CpRelationManager implements RelationManager {
         final Optional<String> queryString = query.isGraphSearch()? Optional.<String>absent(): query.getQl();
         final Id ownerId = headEntity.asId();
 
+
+        if(query.getLevel() == Level.IDS ){
+
+            return new IdQueryExecutor( toExecute.getCursor() ) {
+                @Override
+                protected Observable<ResultsPage<Id>> buildNewResultsPage(
+                    final Optional<String> cursor ) {
+
+                    final CollectionSearch search =
+                        new CollectionSearch( applicationScope, ownerId, collectionName, collection.getType(), toExecute.getLimit(),
+                            queryString, cursor );
+
+                    return collectionService.searchCollectionIds( search );
+                }
+            }.next();
+
+        }
+
         //wire the callback so we can get each page
         return new EntityQueryExecutor( toExecute.getCursor() ) {
             @Override
@@ -988,6 +1007,8 @@ public class CpRelationManager implements RelationManager {
         //                logger.warn( "Attempted to reverse sort order already set", PROPERTY_CREATED );
         //            }
         //        }
+
+
 
         return query;
     }

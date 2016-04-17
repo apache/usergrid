@@ -27,13 +27,7 @@ import org.apache.usergrid.corepersistence.pipeline.read.search.CandidateEntityF
 import org.apache.usergrid.corepersistence.pipeline.read.search.CandidateIdFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.search.SearchCollectionFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.search.SearchConnectionFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.traverse.EntityIdFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.traverse.EntityLoadVerifyFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.traverse.ReadGraphCollectionByIdFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.traverse.ReadGraphCollectionFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.traverse.ReadGraphConnectionByIdFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.traverse.ReadGraphConnectionByTypeFilter;
-import org.apache.usergrid.corepersistence.pipeline.read.traverse.ReadGraphConnectionFilter;
+import org.apache.usergrid.corepersistence.pipeline.read.traverse.*;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;

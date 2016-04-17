@@ -708,6 +708,22 @@ public class Results implements Iterable<Entity> {
         }
     }
 
+    public void addEntities( Results results){
+
+        if(entities == null){
+            //init();
+            entities = new ArrayList<>();
+            level = Level.CORE_PROPERTIES;
+        }
+
+        if( results.getEntities().size() > 0){
+
+            entities.addAll(results.getEntities());
+
+        }
+
+    }
+
 
     /** Remove the passed in results from the current results */
     public void subtract( Results results ) {

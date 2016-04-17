@@ -19,10 +19,7 @@ package org.apache.usergrid.services.notifications.impl;
 import com.codahale.metrics.Meter;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.queue.QueueManager;
@@ -108,6 +105,8 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             if (logger.isTraceEnabled()) {
                 logger.trace("notification {} start query", notification.getUuid());
             }
+            logger.info("notification {} start query", notification.getUuid());
+
 
 
             // the main iterator can use graph traversal or index querying
@@ -185,29 +184,79 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
             final Map<String, Object> filters = notification.getFilters();
 
-            Observable processMessagesObservable = Observable.create(new IteratorObservable<Entity>(iterator))
-                .flatMap(entity -> {
-
-                    if(entity.getType().equals(Device.ENTITY_TYPE)){
-                        return Observable.from(Collections.singletonList(entity));
-                    }
-
-                    // if it's not a device, drill down and get them
-                    return Observable.from(getDevices(entity));
-
-                })
-                .distinct(ref -> ref.getUuid() )
-                .map( entityRef -> entityRef.getUuid() )
-                .buffer(10)
-                .flatMap( uuids -> {
-
-                    if(logger.isTraceEnabled()) {
-                        logger.trace("Processing batch of {} device(s)", uuids.size());
-                    }
 
 
-                    return Observable.from(em.getEntities(uuids, "device"))
+            Observable processMessagesObservable = Observable.create(new IteratorObservable<UUID>(iterator))
+//                .flatMap(entity -> {
+//
+//                    if(entity.getType().equals(Device.ENTITY_TYPE)){
+//                        return Observable.from(Collections.singletonList(entity));
+//                    }
+//
+//                    // if it's not a device, drill down and get them
+//                    return Observable.from(getDevices(entity));
+//
+//                })
+                .distinct()
+                .flatMap( entityRef -> {
+
+                    return Observable.just(entityRef).flatMap(ref->{
+
+                        List<Entity> entities = new ArrayList<>();
+
+                                Query devicesQuery = new Query();
+                                devicesQuery.setCollection("devices");
+                                devicesQuery.setResultsLevel(Query.Level.CORE_PROPERTIES);
+
+                                try {
+
+                                   entities = em.searchCollection(new SimpleEntityRef("user", ref), devicesQuery.getCollection(), devicesQuery).getEntities();
+
+                                }catch (Exception e){
+
+                                    logger.error("Unable to load devices for user: {}", ref);
+                                    return Observable.empty();
+                                }
+
+
+
+
+//                            if( ref.getType().equals(User.ENTITY_TYPE)){
+//
+//                                Query devicesQuery = new Query();
+//                                devicesQuery.setCollection("devices");
+//                                devicesQuery.setResultsLevel(Query.Level.CORE_PROPERTIES);
+//
+//                                try {
+//
+//                                   entities = em.searchCollection(new SimpleEntityRef("user", ref.getUuid()), devicesQuery.getCollection(), devicesQuery).getEntities();
+//
+//                                }catch (Exception e){
+//
+//                                    logger.error("Unable to load devices for user: {}", ref.getUuid());
+//                                    return Observable.empty();
+//                                }
+//
+//
+//                            }else if ( ref.getType().equals(Device.ENTITY_TYPE)){
+//
+//                                try{
+//                                    entities.add(em.get(ref));
+//
+//                                }catch(Exception e){
+//
+//                                    logger.error("Unable to load device: {}", ref.getUuid());
+//                                    return Observable.empty();
+//
+//                                }
+//
+//                            }
+                        return Observable.from(entities);
+
+                        })
                         .filter( device -> {
+
+                            logger.info("Filtering device: {}", device.getUuid());
 
                             if(logger.isTraceEnabled()) {
                                 logger.trace("Filtering device: {}", device.getUuid());
@@ -233,7 +282,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                                 }
 
                                 if(logger.isTraceEnabled()) {
-                                    logger.trace("Push notification filter matched for notification {}, so removing from notification",
+                                    logger.trace("Push notification filter did not match for notification {}, so removing from notification",
                                         device.getUuid(), notification.getUuid());
                                 }
                                 return false;
@@ -271,7 +320,20 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
 
                         }).subscribeOn(Schedulers.io());
-                }, 10)
+
+                }, 100)
+                //.map( entityRef -> entityRef.getUuid() )
+                //.buffer(10)
+//                .flatMap( uuids -> {
+//
+//                    if(logger.isTraceEnabled()) {
+//                        logger.trace("Processing batch of {} device(s)", uuids.size());
+//                    }
+//
+//
+//                    return Observable.from(em.getEntities(uuids, "device")).subscribeOn(Schedulers.io());
+//
+//                }, 10)
 
                 .doOnError(throwable -> {
 
