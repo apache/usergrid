@@ -242,11 +242,14 @@ public class GCMAdapter implements ProviderAdapter {
                     payload.remove(priorityKey);
 
                 }
+//
+//                // add our source notification payload data into the Message Builder
+//                // Message.Builder requires the payload to be Map<String,String> so blindly cast
+//                Map<String,String> dataMap = (Map<String,String>) payload;
+//
+//                dataMap.forEach( (key, value) -> builder.addData(key, value));
 
-                // add our source notification payload data into the Message Builder
-                // Message.Builder requires the payload to be Map<String,String> so blindly cast
-                Map<String,String> dataMap = (Map<String,String>) payload;
-                dataMap.forEach( (key, value) -> builder.addData(key, value));
+                builder.addData("data", JSON.toString(payload));
 
                 Message message = builder.build();
                 MulticastResult multicastResult;

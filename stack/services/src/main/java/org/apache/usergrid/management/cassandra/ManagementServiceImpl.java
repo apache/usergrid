@@ -19,6 +19,9 @@ package org.apache.usergrid.management.cassandra;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.inject.Injector;
@@ -61,6 +64,7 @@ import org.apache.usergrid.security.shiro.credentials.ApplicationClientCredentia
 import org.apache.usergrid.security.shiro.credentials.OrganizationClientCredentials;
 import org.apache.usergrid.security.shiro.principals.ApplicationPrincipal;
 import org.apache.usergrid.security.shiro.principals.OrganizationPrincipal;
+import org.apache.usergrid.security.shiro.utils.LocalShiroCache;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.security.tokens.TokenCategory;
 import org.apache.usergrid.security.tokens.TokenInfo;
@@ -76,6 +80,7 @@ import rx.Observable;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.Boolean.parseBoolean;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
@@ -138,6 +143,8 @@ public class ManagementServiceImpl implements ManagementService {
     public static final String REGISTRATION_REQUIRES_EMAIL_CONFIRMATION = "registration_requires_email_confirmation";
     public static final String NOTIFY_ADMIN_OF_NEW_USERS = "notify_admin_of_new_users";
 
+    public static final String ORG_CONFIG_CACHE_PROP = "usergrid.orgconfig.cache.timeout";
+
     protected ServiceManagerFactory smf;
 
     protected EntityManagerFactory emf;
@@ -163,6 +170,8 @@ public class ManagementServiceImpl implements ManagementService {
 
     protected ApplicationService service;
 
+    protected LocalShiroCache localShiroCache;
+
 
 
     /** Must be constructed with a CassandraClientPool. */
@@ -173,6 +182,7 @@ public class ManagementServiceImpl implements ManagementService {
         this.cacheFactory = injector.getInstance( CacheFactory.class );
         this.aggregationServiceFactory = injector.getInstance(AggregationServiceFactory.class);
         this.service = injector.getInstance(ApplicationService.class);
+        this.localShiroCache = injector.getInstance(LocalShiroCache.class);
 
     }
 
@@ -1431,10 +1441,18 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
+
     public TokenInfo getTokenInfoFromAccessToken(String token, String expected_token_type,
                                                  AuthPrincipalType expected_principal_type) throws Exception {
 
-        TokenInfo tokenInfo = tokens.getTokenInfo( token );
+        return getTokenInfoFromAccessToken(token, expected_token_type, expected_principal_type, true);
+    }
+
+    public TokenInfo getTokenInfoFromAccessToken(String token, String expected_token_type,
+                                                 AuthPrincipalType expected_principal_type,
+                                                 boolean updateAccessTime) throws Exception {
+
+        TokenInfo tokenInfo = tokens.getTokenInfo( token, updateAccessTime );
 
         return validateTokenAndPrincipalTypes(tokenInfo, expected_token_type, expected_principal_type) ?
                 tokenInfo : null;
@@ -1758,6 +1776,7 @@ public class ManagementServiceImpl implements ManagementService {
         ScopedCache scopedCache = cacheFactory.getScopedCache(
             new CacheScope( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" )));
         scopedCache.invalidate();
+        localShiroCache.invalidateAll();
 
         return new ApplicationInfo( applicationId, appInfo.getName() );
     }
@@ -1777,7 +1796,7 @@ public class ManagementServiceImpl implements ManagementService {
             throw new EntityNotFoundException("Deleted application ID " + applicationId + " not found");
         }
 
-        if ( emf.lookupApplication( app.getName() ).isPresent()) {
+        if ( emf.lookupApplication( app.getName() ) != null ) {
             throw new ConflictException("Cannot restore application, one with that name already exists.");
         }
 
@@ -1819,6 +1838,7 @@ public class ManagementServiceImpl implements ManagementService {
         ScopedCache scopedCache = cacheFactory.getScopedCache(
             new CacheScope( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" )));
         scopedCache.invalidate();
+        localShiroCache.invalidateAll();
 
         return new ApplicationInfo( applicationId, appInfo.getName() );
     }
@@ -1970,11 +1990,11 @@ public class ManagementServiceImpl implements ManagementService {
         if ( applicationName == null ) {
             return null;
         }
-        Optional<UUID> applicationId = emf.lookupApplication(applicationName);
-        if ( !applicationId.isPresent() ) {
+        UUID applicationId = emf.lookupApplication(applicationName);
+        if ( applicationId == null ) {
             return null;
         }
-        return new ApplicationInfo( applicationId.get(), applicationName.toLowerCase() );
+        return new ApplicationInfo( applicationId, applicationName.toLowerCase() );
     }
 
 
@@ -3376,25 +3396,8 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public OrganizationConfig getOrganizationConfigForApplication( UUID applicationInfoId ) throws Exception {
 
-        if ( applicationInfoId != null && applicationInfoId != CpNamingUtils.MANAGEMENT_APPLICATION_ID) {
-
-            final EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-
-            Results r = em.getSourceEntities(
-                    new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
-                    ORG_APP_RELATIONSHIP, Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
-
-            Group org = (Group)r.getEntity();
-
-            if ( org != null ) {
-                Map<Object, Object> entityProperties = em.getDictionaryAsMap(org, ORGANIZATION_CONFIG_DICTIONARY);
-                return new OrganizationConfig(orgConfigProperties, org.getUuid(), org.getPath(), entityProperties, false);
-            }
-
-        }
-
-        // return the defaults
-        return new OrganizationConfig(orgConfigProperties);
+        // return from the cache. if the orgconfig cannot be loaded, defaults are loaded and cached
+        return orgConfigByAppCache.get( applicationInfoId );
     }
 
 
@@ -3413,7 +3416,47 @@ public class ManagementServiceImpl implements ManagementService {
                             entry.getValue() );
                 }
             }
+
+            // evict cache for this key if it exists
+            orgConfigByAppCache.invalidate( organizationConfig.getUuid() );
+
         }
     }
+
+
+    private LoadingCache<UUID, OrganizationConfig> orgConfigByAppCache =
+        CacheBuilder.newBuilder().maximumSize( 1000 )
+            .expireAfterWrite( Long.valueOf( System.getProperty(ORG_CONFIG_CACHE_PROP, "30000") ) , TimeUnit.MILLISECONDS)
+            .build( new CacheLoader<UUID, OrganizationConfig>() {
+                public OrganizationConfig load( UUID applicationInfoId ) {
+
+                    try {
+
+                        if (applicationInfoId != null && applicationInfoId != CpNamingUtils.MANAGEMENT_APPLICATION_ID) {
+
+                            final EntityManager em = emf.getEntityManager(smf.getManagementAppId());
+
+                            Results r = em.getSourceEntities(
+                                new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
+                                ORG_APP_RELATIONSHIP, Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
+
+                            Group org = (Group) r.getEntity();
+
+                            if (org != null) {
+                                Map<Object, Object> entityProperties = em.getDictionaryAsMap(org, ORGANIZATION_CONFIG_DICTIONARY);
+                                return new OrganizationConfig(orgConfigProperties, org.getUuid(), org.getPath(), entityProperties, false);
+                            }
+
+                        }
+
+                        return new OrganizationConfig(orgConfigProperties);
+
+                    }catch (Exception e){
+
+                        return new OrganizationConfig(orgConfigProperties);
+
+                    }
+                }}
+            );
 
 }

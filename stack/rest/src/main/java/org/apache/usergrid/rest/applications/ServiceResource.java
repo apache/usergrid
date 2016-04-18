@@ -31,6 +31,7 @@ import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.applications.assets.AssetsResource;
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.services.*;
@@ -39,7 +40,6 @@ import org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore;
 import org.apache.usergrid.services.assets.data.BinaryStore;
 import org.apache.usergrid.services.assets.data.LocalFileBinaryStore;
 import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
-import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.usergrid.utils.JsonUtils;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
@@ -151,7 +151,7 @@ public class ServiceResource extends AbstractContextResource {
 
         MultivaluedMap<String, String> params = ps.getMatrixParameters();
 
-        if ( params != null ) {
+        if ( params != null && params.size() > 0) {
             Query query = Query.fromQueryParams( params );
             if ( query != null ) {
                 parameters = ServiceParameter.addParameter( parameters, query );
@@ -166,7 +166,7 @@ public class ServiceResource extends AbstractContextResource {
             throws Exception {
 
         MultivaluedMap<String, String> params = ui.getQueryParameters();
-        if ( params != null ) {
+        if ( params != null && params.size() > 0) {
             //TODO TN query parameters are not being correctly decoded here.  The URL encoded strings
             //aren't getting decoded properly
             Query query = Query.fromQueryParams( params );
@@ -245,6 +245,116 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
+    public ServiceResults executeServiceGetRequestForSchema(UriInfo ui, ApiResponse response, ServiceAction action,
+                                                             ServicePayload payload) throws Exception {
+
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeServiceRequest" );
+        }
+
+
+        boolean tree = "true".equalsIgnoreCase( ui.getQueryParameters().getFirst( "tree" ) );
+
+        String connectionQueryParm = ui.getQueryParameters().getFirst("connections");
+        boolean returnInboundConnections = true;
+        boolean returnOutboundConnections = true;
+
+        addQueryParams( getServiceParameters(), ui );
+
+        ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
+            returnInboundConnections, returnOutboundConnections );
+
+        response.setServiceRequest( r );
+
+
+        AbstractCollectionService abstractCollectionService = new AbstractCollectionService();
+
+       // abstractCollectionService
+        ServiceResults results = abstractCollectionService.getCollectionSchema( r );
+
+        //        ServiceResults results = r.execute();
+        if ( results != null ) {
+            if ( results.hasData() ) {
+                response.setData( results.getData() );
+            }
+            if ( results.getServiceMetadata() != null ) {
+                response.setMetadata( results.getServiceMetadata() );
+            }
+            Query query = r.getLastQuery();
+            if ( query != null ) {
+                if ( query.hasSelectSubjects() ) {
+                    response.setList( QueryUtils.getSelectionResults( query, results ) );
+                    response.setCount( response.getList().size() );
+                    response.setNext( results.getNextResult() );
+                    response.setPath( results.getPath() );
+                    return results;
+                }
+            }
+
+            response.setResults( results );
+        }
+
+        httpServletRequest.setAttribute( "applicationId", services.getApplicationId() );
+
+        return results;
+    }
+
+    public ServiceResults executeServicePostRequestForSchema(UriInfo ui, ApiResponse response, ServiceAction action,
+                                                         ServicePayload payload) throws Exception {
+
+        if(logger.isTraceEnabled()){
+            logger.trace( "ServiceResource.executeServiceRequest" );
+        }
+
+
+        boolean tree = "true".equalsIgnoreCase( ui.getQueryParameters().getFirst( "tree" ) );
+
+        String connectionQueryParm = ui.getQueryParameters().getFirst("connections");
+        boolean returnInboundConnections = true;
+        boolean returnOutboundConnections = true;
+
+        addQueryParams( getServiceParameters(), ui );
+
+        ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
+            returnInboundConnections, returnOutboundConnections );
+
+        response.setServiceRequest( r );
+
+
+        AbstractCollectionService abstractCollectionService = new AbstractCollectionService();
+
+        ServiceResults results = abstractCollectionService.postCollectionSchema( r );
+
+//        ServiceResults results = r.execute();
+        if ( results != null ) {
+            if ( results.hasData() ) {
+                response.setData( results.getData() );
+            }
+            if ( results.getServiceMetadata() != null ) {
+                response.setMetadata( results.getServiceMetadata() );
+            }
+            Query query = r.getLastQuery();
+            if ( query != null ) {
+                if ( query.hasSelectSubjects() ) {
+                    response.setList( QueryUtils.getSelectionResults( query, results ) );
+                    response.setCount( response.getList().size() );
+                    response.setNext( results.getNextResult() );
+                    response.setPath( results.getPath() );
+                    return results;
+                }
+            }
+
+            response.setResults( results );
+        }
+
+        httpServletRequest.setAttribute( "applicationId", services.getApplicationId() );
+
+        return results;
+
+
+    }
+
+
     public ServiceResults executeServiceRequest( UriInfo ui, ApiResponse response, ServiceAction action,
                                                  ServicePayload payload ) throws Exception {
         if(logger.isTraceEnabled()){
@@ -292,8 +402,7 @@ public class ServiceResource extends AbstractContextResource {
 
         boolean collectionGet = false;
         if ( action == ServiceAction.GET ) {
-            collectionGet = (getServiceParameters().size() == 1 && InflectionUtils
-                    .isPlural(getServiceParameters().get(0)));
+            collectionGet = getServiceParameters().size() == 1;
         }
         addQueryParams( getServiceParameters(), ui );
         ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
@@ -330,9 +439,9 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, "application/javascript"})
-    @RequireApplicationAccess
     @JSONP
     public ApiResponse executeGet( @Context UriInfo ui,
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
@@ -352,7 +461,6 @@ public class ServiceResource extends AbstractContextResource {
 
         return response;
     }
-
 
     @SuppressWarnings({ "unchecked" })
     public ServicePayload getPayload( Object json ) {
@@ -418,7 +526,6 @@ public class ServiceResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "put" );
 
-        services.getApplicationRef();
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
 
@@ -430,8 +537,8 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @POST
-    @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
@@ -465,8 +572,8 @@ public class ServiceResource extends AbstractContextResource {
 
 
 
+    @CheckPermissionsForPath
     @PUT
-    @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
@@ -485,8 +592,8 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @DELETE
-    @RequireApplicationAccess
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executeDelete(
@@ -605,8 +712,8 @@ public class ServiceResource extends AbstractContextResource {
 
     /** ************** the following is file attachment (Asset) support ********************* */
 
+    @CheckPermissionsForPath
     @POST
-    @RequireApplicationAccess
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
@@ -621,8 +728,8 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @PUT
-    @RequireApplicationAccess
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
@@ -709,16 +816,16 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @PUT
-    @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public Response uploadDataStreamPut( @Context UriInfo ui, InputStream uploadedInputStream ) throws Exception {
         return uploadDataStream( ui, uploadedInputStream );
     }
 
 
+    @CheckPermissionsForPath
     @POST
-    @RequireApplicationAccess
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public Response uploadDataStream( @Context UriInfo ui, InputStream uploadedInputStream ) throws Exception {
 
@@ -752,9 +859,8 @@ public class ServiceResource extends AbstractContextResource {
         return Response.status( 200 ).build();
     }
 
-
+    @CheckPermissionsForPath
     @GET
-    @RequireApplicationAccess
     @Produces(MediaType.WILDCARD)
     public Response executeStreamGet( @Context UriInfo ui, @PathParam("entityId") PathSegment entityId,
                                       @HeaderParam("range") String rangeHeader,

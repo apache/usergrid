@@ -83,6 +83,13 @@ public interface AsyncEventService extends ReIndexAction {
     void queueIndexOperationMessage( final IndexOperationMessage indexOperationMessage );
 
     /**
+     *
+     * @param applicationScope
+     * @param entityId
+     */
+    void queueDeIndexOldVersion(final ApplicationScope applicationScope, final Id entityId);
+
+    /**
      * current queue depth
      * @return
      */

@@ -20,8 +20,6 @@ package org.apache.usergrid.persistence;
 import java.util.Map;
 import java.util.UUID;
 
-import com.google.common.base.Optional;
-
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.index.EntityIndex;
 
@@ -121,7 +119,7 @@ public interface EntityManagerFactory {
      *
      * @throws Exception the exception
      */
-    Optional<UUID> lookupApplication( String name ) throws Exception;
+    UUID lookupApplication(String name ) throws Exception;
 
     /**
      * Returns all the applications in the system.
@@ -144,7 +142,7 @@ public interface EntityManagerFactory {
      * Boostraps system data so that we can operate usergrid
      * @throws Exception
      */
-    void boostrap() throws Exception;
+    void bootstrap() throws Exception;
 
     Map<String, String> getServiceProperties();
 

@@ -20,19 +20,18 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.subject.SimplePrincipalCollection;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.cache.CacheFactory;
 import org.apache.usergrid.persistence.cache.CacheScope;
 import org.apache.usergrid.persistence.cache.ScopedCache;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.security.shiro.principals.*;
+import org.apache.usergrid.security.shiro.utils.LocalShiroCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-import java.util.UUID;
 
 
 /**
@@ -45,20 +44,44 @@ public class ShiroCache<K, V> implements Cache<K,V> {
     private final CacheFactory<String, V> cacheFactory;
     private final TypeReference typeRef;
     private final Integer cacheTtl;
+    private final LocalShiroCache localShiroCache;
 
-    public ShiroCache( TypeReference typeRef, CacheFactory<String, V> cacheFactory, Integer cacheTtl ) {
+    public ShiroCache(TypeReference typeRef, CacheFactory<String, V> cacheFactory, Integer cacheTtl, LocalShiroCache<K,V> localShiroCache) {
         this.typeRef = typeRef;
         this.cacheFactory = cacheFactory;
         this.cacheTtl = cacheTtl;
+        this.localShiroCache = localShiroCache;
     }
 
     @Override
     public V get(K key) throws CacheException {
         if ( cacheTtl == 0 ) return null;
 
+        V value;
+
+        //check cache first
+        value = (V) localShiroCache.get(getKeyString(key));
+        if( value !=null ){
+            if(logger.isTraceEnabled()) {
+                logger.trace("Shiro value served from local cache: {}", value);
+            }
+            return value;
+
+        }
+
         ScopedCache<String, V> scopedCache = getCacheScope(key);
         if ( scopedCache != null ) {
-            V value = scopedCache.get(getKeyString(key), typeRef);
+
+            value = scopedCache.get(getKeyString(key), typeRef);
+
+            if(value != null) {
+
+                if(logger.isTraceEnabled()) {
+                    logger.trace("Shiro value service from cassandra cache: {}", value);
+                }
+
+                localShiroCache.put(getKeyString(key), value);
+            }
 
             if ( logger.isTraceEnabled() ) {
                 if (value instanceof UsergridAuthorizationInfo) {
@@ -73,9 +96,9 @@ public class ShiroCache<K, V> implements Cache<K,V> {
                 }
             }
 
-            return value;
         }
-        return null;
+
+        return value;
     }
 
     @Override
@@ -84,7 +107,9 @@ public class ShiroCache<K, V> implements Cache<K,V> {
 
         ScopedCache<String, V> scopedCache = getCacheScope(key);
         if ( scopedCache != null ) {
+
             V ret = scopedCache.put(getKeyString(key), value, cacheTtl);
+            localShiroCache.invalidate(getKeyString(key));
 
             if ( logger.isTraceEnabled() ) {
                 if (value instanceof UsergridAuthorizationInfo) {
@@ -96,7 +121,6 @@ public class ShiroCache<K, V> implements Cache<K,V> {
                     logger.trace("Put to AUTHC cache {} for app {}", getKeyString(key), info.toString());
                 }
             }
-
             return ret;
         }
         return null;
@@ -109,12 +133,15 @@ public class ShiroCache<K, V> implements Cache<K,V> {
         ScopedCache<String, V> scopedCache = getCacheScope(key);
         if ( scopedCache != null ) {
             scopedCache.remove( getKeyString(key) );
+
         }
+        localShiroCache.invalidate(getKeyString(key));
         return null;
     }
 
     @Override
     public void clear() throws CacheException {
+        localShiroCache.invalidateAll();
         // no-op: Usergrid logic will invalidate cache as necessary
     }
 

@@ -183,7 +183,7 @@ public interface IndexFig extends GuicyFig {
      * Return the type of Elasticsearch client.  Valid values are NODE or TRANSPORT.
      */
     @Key( ELASTICSEARCH_CLIENT_TYPE )
-    @Default( "NODE")
+    @Default( "TRANSPORT")
     String getClientType();
 
     /**

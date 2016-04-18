@@ -23,6 +23,8 @@ package org.apache.usergrid.rest.system;
 
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import com.google.common.base.Preconditions;
+import com.google.inject.Injector;
+
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilderImpl;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
@@ -65,6 +67,10 @@ public class IndexResource extends AbstractContextResource {
 
     public IndexResource() {
         super();
+    }
+
+    public IndexResource( Injector injector) {
+        this.injector = injector;
     }
 
 
