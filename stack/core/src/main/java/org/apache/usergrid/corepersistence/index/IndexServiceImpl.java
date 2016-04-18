@@ -226,6 +226,9 @@ public class IndexServiceImpl implements IndexService {
                 return Optional.absent();
             }
 
+
+            // never add "none" because it has special meaning, "none" disables indexing for a type
+            //Do not add "none" to list of required fields!
             fieldsToKeep.remove("none");
 
             defaultProperties.addAll( fieldsToKeep );
