@@ -627,7 +627,7 @@ public class CpEntityManager implements EntityManager {
         if ( collectionIndexingSchema.isPresent()) {
             Map jsonMapData = collectionIndexingSchema.get();
             final ArrayList fields = (ArrayList) jsonMapData.get( "fields" );
-            if ( fields.size() == 1 && fields.get(0).equals("!")) {
+            if ( fields.size() == 1 && fields.get(0).equals("none")) {
                 skipIndexing = true;
             }
         }
@@ -1819,9 +1819,9 @@ public class CpEntityManager implements EntityManager {
             wildCardArrayList.add( "*" );
             schemaMap.put( "fields", wildCardArrayList );
 
-        } else if ( fieldProperties.contains( "!" )) {
+        } else if ( fieldProperties.contains( "none" )) {
             ArrayList<String> wildCardArrayList = new ArrayList<>();
-            wildCardArrayList.add( "!" );
+            wildCardArrayList.add( "none" );
             schemaMap.put( "fields", wildCardArrayList );
 
         } else {
