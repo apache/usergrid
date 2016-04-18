@@ -226,6 +226,8 @@ public class IndexServiceImpl implements IndexService {
                 return Optional.absent();
             }
 
+            fieldsToKeep.remove("none");
+
             defaultProperties.addAll( fieldsToKeep );
         }
         else {

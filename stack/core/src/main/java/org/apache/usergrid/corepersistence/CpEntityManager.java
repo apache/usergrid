@@ -781,7 +781,7 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull(entityRef, "entityRef cannot be null");
 
         CpRelationManager relationManager = new CpRelationManager( managerCache, indexService, collectionService,
-            connectionService, this, entityManagerFig, applicationId, entityRef );
+            connectionService, this, entityManagerFig, applicationId, indexSchemaCacheFactory, entityRef );
         return relationManager;
     }
 
