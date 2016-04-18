@@ -439,7 +439,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             searchResponse = srb.execute().actionGet();
         }
         catch ( Throwable t ) {
-            logger.error( "Unable to communicate with Elasticsearch", t );
+            logger.error( "Unable to communicate with Elasticsearch", t.getMessage() );
             failureMonitor.fail( "Unable to execute batch", t );
             throw t;
         }
@@ -522,7 +522,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             }
         }
         catch ( Throwable t ) {
-            logger.error( "Unable to communicate with Elasticsearch", t );
+            logger.error( "Unable to communicate with Elasticsearch", t.getMessage() );
             failureMonitor.fail( "Unable to execute batch", t );
             throw t;
         }
@@ -607,7 +607,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             }
         }
         catch ( Throwable t ) {
-            logger.error( "Unable to communicate with Elasticsearch", t );
+            logger.error( "Unable to communicate with Elasticsearch", t.getMessage() );
             failureMonitor.fail( "Unable to execute batch", t );
             throw t;
         }
@@ -640,11 +640,11 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
                 @Override
                 public void onFailure( Throwable e ) {
-                    logger.error( "failed on delete index", e );
+                    logger.error( "Failed on delete index", e.getMessage() );
                 }
             } );
             return Observable.from( response );
-        } ).doOnError( t -> logger.error( "Failed on delete application", t ) );
+        } ).doOnError( t -> logger.error( "Failed on delete application", t.getMessage() ) );
     }
 
 
@@ -762,7 +762,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                 operation.doOp();
             }
             catch ( Exception e ) {
-                logger.error( "Unable to execute operation, retrying", e );
+                logger.error( "Unable to execute operation, retrying", e.getMessage() );
                 try {
                     Thread.sleep( WAIT_TIME );
                 } catch ( InterruptedException ie ) {
@@ -788,7 +788,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             return Health.valueOf( chr.getStatus().name() );
         }
         catch ( Exception ex ) {
-            logger.error( "Error connecting to ElasticSearch", ex );
+            logger.error( "Error connecting to ElasticSearch", ex.getMessage() );
         }
 
         // this is bad, red alert!
@@ -812,7 +812,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             return Health.valueOf( chr.getStatus().name() );
         }
         catch ( Exception ex ) {
-            logger.error( "Error connecting to ElasticSearch", ex );
+            logger.error( "Error connecting to ElasticSearch", ex.getMessage() );
         }
 
         // this is bad, red alert!

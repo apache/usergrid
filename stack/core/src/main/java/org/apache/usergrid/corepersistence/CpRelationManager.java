@@ -19,6 +19,11 @@ package org.apache.usergrid.corepersistence;
 
 import java.util.*;
 
+import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
+import org.apache.usergrid.corepersistence.results.IdQueryExecutor;
+import org.apache.usergrid.persistence.map.MapManager;
+import org.apache.usergrid.persistence.map.MapScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -74,13 +79,7 @@ import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createColle
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionEdge;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionSearchByEdge;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getNameFromEdgeType;
-import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TITLE;
-import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.Schema.TYPE_ROLE;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import static org.apache.usergrid.persistence.Schema.*;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import static org.apache.usergrid.utils.MapUtils.addMapSet;
@@ -108,6 +107,8 @@ public class CpRelationManager implements RelationManager {
 
     private final AsyncEventService indexService;
 
+    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+
 
     private final CollectionService collectionService;
     private final ConnectionService connectionService;
@@ -118,6 +119,7 @@ public class CpRelationManager implements RelationManager {
                               final ConnectionService connectionService,
                               final EntityManager em,
                               final EntityManagerFig entityManagerFig, final UUID applicationId,
+                              final IndexSchemaCacheFactory indexSchemaCacheFactory,
                               final EntityRef headEntity) {
 
 
@@ -157,6 +159,8 @@ public class CpRelationManager implements RelationManager {
             .format( "cpHeadEntity cannot be null for entity id %s, app id %s", entityId.getUuid(), applicationId ) );
 
         this.indexService = indexService;
+        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
+
     }
 
 
@@ -407,10 +411,20 @@ public class CpRelationManager implements RelationManager {
 
             //reverse
             return gm.writeEdge( reverseEdge ).doOnNext( reverseEdgeWritten -> {
-                indexService.queueNewEdge( applicationScope, cpHeadEntity, reverseEdge );
+
+                if ( !skipIndexingForType( cpHeadEntity.getId().getType() ) ) {
+
+                    indexService.queueNewEdge(applicationScope, cpHeadEntity, reverseEdge);
+                }
+
             } );
         } ).doOnCompleted( () -> {
-            indexService.queueNewEdge( applicationScope, memberEntity, edge );
+
+            if ( !skipIndexingForType( memberEntity.getId().getType() ) ) {
+                indexService.queueNewEdge(applicationScope, memberEntity, edge);
+            }
+
+
             if ( logger.isDebugEnabled() ) {
                 logger.debug( "Added entity {}:{} to collection {}",
                     itemRef.getUuid().toString(), itemRef.getType(), collectionName );
@@ -532,8 +546,10 @@ public class CpRelationManager implements RelationManager {
 
         //TODO: this should not happen here, needs to go to  SQS
         //indexProducer.put(batch).subscribe();
-        indexService.queueEntityDelete(applicationScope,memberEntity.getId());
+        if ( !skipIndexingForType( memberEntity.getId().getType() ) ) {
 
+            indexService.queueEntityDelete(applicationScope, memberEntity.getId());
+        }
 
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {
@@ -614,6 +630,24 @@ public class CpRelationManager implements RelationManager {
         final Optional<String> queryString = query.isGraphSearch()? Optional.<String>absent(): query.getQl();
         final Id ownerId = headEntity.asId();
 
+
+        if(query.getLevel() == Level.IDS ){
+
+            return new IdQueryExecutor( toExecute.getCursor() ) {
+                @Override
+                protected Observable<ResultsPage<Id>> buildNewResultsPage(
+                    final Optional<String> cursor ) {
+
+                    final CollectionSearch search =
+                        new CollectionSearch( applicationScope, ownerId, collectionName, collection.getType(), toExecute.getLimit(),
+                            queryString, cursor );
+
+                    return collectionService.searchCollectionIds( search );
+                }
+            }.next();
+
+        }
+
         //wire the callback so we can get each page
         return new EntityQueryExecutor( toExecute.getCursor() ) {
             @Override
@@ -690,8 +724,11 @@ public class CpRelationManager implements RelationManager {
 
         gm.writeEdge(edge).toBlocking().lastOrDefault(null); //throw an exception if this fails
 
-        indexService.queueNewEdge( applicationScope, targetEntity, edge );
 
+        if ( !skipIndexingForType( targetEntity.getId().getType() ) ) {
+
+            indexService.queueNewEdge(applicationScope, targetEntity, edge);
+        }
 
         // remove any duplicate edges (keeps the duplicate edge with same timestamp)
         removeDuplicateEdgesAsync(gm, edge);
@@ -768,7 +805,14 @@ public class CpRelationManager implements RelationManager {
 
         //delete all the edges and queue their processing
         gm.loadEdgeVersions( search ).flatMap( returnedEdge -> gm.markEdge( returnedEdge ) )
-          .doOnNext( returnedEdge -> indexService.queueDeleteEdge( applicationScope, returnedEdge ) ).toBlocking()
+          .doOnNext( returnedEdge -> {
+
+              if ( !skipIndexingForType( returnedEdge.getSourceNode().getType() ) || !skipIndexingForType( returnedEdge.getTargetNode().getType() ) ) {
+
+                  indexService.queueDeleteEdge(applicationScope, returnedEdge);
+              }
+
+          }).toBlocking()
           .lastOrDefault( null );
     }
 
@@ -989,6 +1033,8 @@ public class CpRelationManager implements RelationManager {
         //            }
         //        }
 
+
+
         return query;
     }
 
@@ -1034,6 +1080,39 @@ public class CpRelationManager implements RelationManager {
             gm.deleteEdge(lastEdge).toBlocking().lastOrDefault(null); // this should throw an exception
         }).toBlocking().lastOrDefault(null);//this should throw an exception
 
+    }
+
+    private boolean skipIndexingForType( String type ) {
+
+        boolean skipIndexing = false;
+
+        MapManager mm = getMapManagerForTypes();
+        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+        String collectionName = Schema.defaultCollectionName( type );
+        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+
+        if ( collectionIndexingSchema.isPresent()) {
+            Map jsonMapData = collectionIndexingSchema.get();
+            final ArrayList fields = (ArrayList) jsonMapData.get( "fields" );
+            if ( fields.size() == 1 && fields.get(0).equals("none")) {
+                skipIndexing = true;
+            }
+        }
+
+        return skipIndexing;
+    }
+
+    /**
+     * Get the map manager for uuid mapping
+     */
+    private MapManager getMapManagerForTypes() {
+        Id mapOwner = new SimpleId( applicationId, TYPE_APPLICATION );
+
+        final MapScope ms = CpNamingUtils.getEntityTypeMapScope(mapOwner);
+
+        MapManager mm = managerCache.getMapManager( ms );
+
+        return mm;
     }
 
 }

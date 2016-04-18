@@ -34,7 +34,9 @@ public class IllegalArgumentExceptionMapper extends AbstractExceptionMapper<Ille
     @Override
     public Response toResponse( IllegalArgumentException e ) {
 
-        logger.error( "Illegal argument was passed, returning bad request to user", e );
+        if(logger.isTraceEnabled()) {
+            logger.trace("Illegal argument was passed, returning bad request to user", e.getMessage());
+        }
 
         return toResponse( BAD_REQUEST, e );
     }

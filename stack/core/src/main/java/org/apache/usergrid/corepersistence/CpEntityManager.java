@@ -34,7 +34,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.apache.usergrid.persistence.collection.EntitySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -625,7 +627,7 @@ public class CpEntityManager implements EntityManager {
         if ( collectionIndexingSchema.isPresent()) {
             Map jsonMapData = collectionIndexingSchema.get();
             final ArrayList fields = (ArrayList) jsonMapData.get( "fields" );
-            if ( fields.size() == 1 && fields.get(0).equals("!")) {
+            if ( fields.size() == 1 && fields.get(0).equals("none")) {
                 skipIndexing = true;
             }
         }
@@ -779,7 +781,7 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull(entityRef, "entityRef cannot be null");
 
         CpRelationManager relationManager = new CpRelationManager( managerCache, indexService, collectionService,
-            connectionService, this, entityManagerFig, applicationId, entityRef );
+            connectionService, this, entityManagerFig, applicationId, indexSchemaCacheFactory, entityRef );
         return relationManager;
     }
 
@@ -1817,9 +1819,9 @@ public class CpEntityManager implements EntityManager {
             wildCardArrayList.add( "*" );
             schemaMap.put( "fields", wildCardArrayList );
 
-        } else if ( fieldProperties.contains( "!" )) {
+        } else if ( fieldProperties.contains( "none" )) {
             ArrayList<String> wildCardArrayList = new ArrayList<>();
-            wildCardArrayList.add( "!" );
+            wildCardArrayList.add( "none" );
             schemaMap.put( "fields", wildCardArrayList );
 
         } else {
@@ -2511,22 +2513,41 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Results getEntities( List<UUID> ids, String type ) {
 
-        ArrayList<Entity> entities = new ArrayList<Entity>();
 
-        for ( UUID uuid : ids ) {
-            EntityRef ref = new SimpleEntityRef( type, uuid );
-            Entity entity = null;
-            try {
-                entity = get( ref );
-            }
-            catch ( Exception ex ) {
-                logger.warn( "Entity {}/{} not found", uuid, type );
-            }
 
-            if ( entity != null ) {
-                entities.add( entity );
-            }
+        List<Id> entityIds = new ArrayList<>();
+
+        for( UUID uuid : ids){
+
+            entityIds.add(new SimpleId( uuid, type ));
+
         }
+
+        // leverage ecm.load so it's a batch fetch of all entities from Cassandra
+        EntitySet entitySet = ecm.load( entityIds ).toBlocking().last();
+
+        List<Entity> entities = entitySet.getEntities().stream().map( mvccEntity -> {
+
+            if( mvccEntity.getEntity().isPresent() ){
+
+                org.apache.usergrid.persistence.model.entity.Entity cpEntity = mvccEntity.getEntity().get();
+
+                Class clazz = Schema.getDefaultSchema().getEntityClass( mvccEntity.getId().getType() );
+
+                Entity entity = EntityFactory.newEntity( mvccEntity.getId().getUuid(), mvccEntity.getId().getType(), clazz );
+                entity.setProperties(  cpEntity  );
+
+                return entity;
+
+            }else{
+
+                logger.warn("Tried fetching entity with id: {} and type: but was not found",
+                    mvccEntity.getId().getUuid(), mvccEntity.getId().getType() );
+
+                return null;
+            }
+        }).collect(Collectors.toList());
+
 
         return Results.fromEntities( entities );
     }
