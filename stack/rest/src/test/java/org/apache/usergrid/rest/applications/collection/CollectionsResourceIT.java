@@ -946,14 +946,14 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
 
     /**
-     * Test that when schema is "!" entity gets saved but does not get indexed
+     * Test that when schema is "none" entity gets saved but does not get indexed
      */
     @Test
     public void postCollectionSchemaWithWildcardIndexNone() throws Exception {
 
         // creating schema with no index wildcard and other fields that should be ignored
         ArrayList<String> indexingArray = new ArrayList<>(  );
-        indexingArray.add( "!" );
+        indexingArray.add( "none" );
         indexingArray.add( "one" );
         indexingArray.add( "two" );
         Entity payload = new Entity();
@@ -968,7 +968,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         Collection collection = app().collection( collectionName ).collection( "_index" ).get();
         LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
         ArrayList<String> schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
-        assertTrue( schema.contains( "!" ) );
+        assertTrue( schema.contains( "none" ) );
         assertFalse( schema.contains( "one" ) );
         assertFalse( schema.contains( "two" ) );
 

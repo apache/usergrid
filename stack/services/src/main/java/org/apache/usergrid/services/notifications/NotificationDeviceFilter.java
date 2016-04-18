@@ -14,30 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.apache.usergrid.corepersistence.service;
-
-
-import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
-import org.apache.usergrid.persistence.model.entity.Entity;
-
-import org.apache.usergrid.persistence.model.entity.Id;
-import rx.Observable;
+package org.apache.usergrid.services.notifications;
 
 
-/**
- * Interface for operating on collections
- */
-public interface CollectionService {
-
-    /**
-     * Search a collection and return an observable of results pages
-     * @param search The search to perform
-     * @return An observable with results page entries for the stream
-     */
-    Observable<ResultsPage<Entity>> searchCollection(final CollectionSearch search);
+public class NotificationDeviceFilter {
 
 
+    private String key;
+    private Object value;
 
-    Observable<ResultsPage<Id>> searchCollectionIds(final CollectionSearch search);
+    public NotificationDeviceFilter(String key, Object value){
+
+        this.key = key;
+        this.value = value;
+
+    }
+
+    public Object getValue(){
+
+        return this.value;
+
+    }
+
+    public String getKey(){
+
+        return this.key;
+    }
+
+
 }

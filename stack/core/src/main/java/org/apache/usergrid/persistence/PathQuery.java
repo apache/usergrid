@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.Query.Level;
-import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.utils.InflectionUtils;
 
 
@@ -52,11 +51,10 @@ public class PathQuery<E> {
 
     /**
      * top level
-     *
-     * @param head the top-level entity
+     *  @param head the top-level entity
      * @param query the query - must have a collection or connectType value set
      */
-    public PathQuery( EntityRef head, Query query ) {
+    public PathQuery(EntityRef head, Query query) {
         if ( query.getCollection() == null && query.getConnectionType() == null ) {
             throw new IllegalArgumentException( "Query must have a collection or connectionType value" );
         }
@@ -90,16 +88,34 @@ public class PathQuery<E> {
         try {
 
             if ( uuid != null && type != null ) {
-                return new PagingResultsIterator( getHeadResults( em ), query.getResultsLevel() );
+                return new PagingResultsIterator( getHeadResults( em ), query.getResultsLevel(), null);
             }
             else {
-                return new MultiQueryIterator( em, source.refIterator( em ), query );
+                return new MultiQueryIterator( em, source.refIterator( em, false), query );
             }
         }
         catch ( Exception e ) {
             throw new RuntimeException( e );
         }
     }
+
+    public Iterator<E> graphIterator( EntityManager em ) {
+        try {
+
+            if ( uuid != null && type != null ) {
+                return new PagingResultsIterator( getHeadResults( em ), query.getResultsLevel(), null);
+            }else {
+
+                return new NotificationGraphIterator(em, source.refIterator(em, true), query);
+            }
+
+        }
+        catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+
 
 
     protected Results getHeadResults( EntityManager em ) throws Exception {
@@ -114,6 +130,12 @@ public class PathQuery<E> {
 
             UUID entityId = em.getUniqueIdFromAlias( entityType, name );
 
+            if( entityId == null){
+                throw new
+                    IllegalArgumentException("Entity with name "+name+" not found. Unable to send push notification");
+            }
+
+
             return em.getEntities(Collections.singletonList(entityId), entityType);
         }
 
@@ -123,16 +145,16 @@ public class PathQuery<E> {
     }
 
 
-    protected Iterator refIterator( EntityManager em ) throws Exception {
+    protected Iterator refIterator(EntityManager em, boolean useGraph) throws Exception {
 
         if ( query.getQl() == null && query.getSingleNameOrEmailIdentifier() != null){
 
-            return new PagingResultsIterator( getHeadResults( em ), Level.REFS );
+            return new PagingResultsIterator( getHeadResults( em ), Level.REFS, null);
 
         }
 
         if ( type != null  && uuid != null) {
-            return new PagingResultsIterator( getHeadResults( em ), Level.REFS );
+            return new PagingResultsIterator( getHeadResults( em ), Level.REFS, null);
         }
         else {
             Query q = query;
@@ -140,7 +162,12 @@ public class PathQuery<E> {
                 q = new Query( q );
                 q.setResultsLevel( Level.REFS );
             }
-            return new MultiQueryIterator( em, source.refIterator( em ), q );
+            if( useGraph){
+                return new NotificationGraphIterator( em, source.refIterator( em, true), q );
+            }else{
+                return new MultiQueryIterator( em, source.refIterator( em, false ), q );
+
+            }
         }
     }
 
