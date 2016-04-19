@@ -95,7 +95,8 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter implements C
 
                 AuthPrincipalInfo principal = null;
                 try {
-                    TokenInfo tokenInfo = tokens.getTokenInfo( accessToken );
+                    // will update access time in principal if statements below, don't do it here
+                    TokenInfo tokenInfo = tokens.getTokenInfo( accessToken, false );
                     principal = tokenInfo.getPrincipal();
                 } catch (BadTokenException e1) {
                     throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );

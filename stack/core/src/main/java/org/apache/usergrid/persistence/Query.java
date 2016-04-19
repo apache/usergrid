@@ -61,6 +61,8 @@ public class Query {
 
     public static final int DEFAULT_LIMIT = 10;
 
+    public static final int MID_LIMIT = 500;
+
     public static final int MAX_LIMIT = 1000;
 
     public static final String PROPERTY_UUID = "uuid";

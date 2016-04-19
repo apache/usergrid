@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -53,7 +52,6 @@ import com.netflix.astyanax.util.RangeBuilder;
 import rx.Observable;
 import rx.Observer;
 import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 import static org.junit.Assert.assertEquals;
@@ -156,7 +154,7 @@ public class MultiRowColumnIteratorTest {
 
         final ColumnSearch<Long> ascendingSearch = new ColumnSearch<Long>() {
             @Override
-            public void buildRange( final RangeBuilder rangeBuilder, final Long value ) {
+            public void buildRange(final RangeBuilder rangeBuilder, final Long value, Long end) {
                 rangeBuilder.setStart( value );
             }
 
@@ -201,7 +199,7 @@ public class MultiRowColumnIteratorTest {
 
         final ColumnSearch<Long> descendingSearch = new ColumnSearch<Long>() {
             @Override
-            public void buildRange( final RangeBuilder rangeBuilder, final Long value ) {
+            public void buildRange(final RangeBuilder rangeBuilder, final Long value, Long end) {
                 rangeBuilder.setStart( value );
                 buildRange( rangeBuilder );
             }
@@ -276,7 +274,7 @@ public class MultiRowColumnIteratorTest {
 
         final ColumnSearch<Long> ascendingSearch = new ColumnSearch<Long>() {
             @Override
-            public void buildRange( final RangeBuilder rangeBuilder, final Long value ) {
+            public void buildRange(final RangeBuilder rangeBuilder, final Long value, Long end) {
                 rangeBuilder.setStart( value );
             }
 
@@ -325,7 +323,7 @@ public class MultiRowColumnIteratorTest {
 
         final ColumnSearch<Long> descendingSearch = new ColumnSearch<Long>() {
             @Override
-            public void buildRange( final RangeBuilder rangeBuilder, final Long value ) {
+            public void buildRange(final RangeBuilder rangeBuilder, final Long value, Long end) {
                 rangeBuilder.setStart( value );
                 buildRange( rangeBuilder );
             }
@@ -414,7 +412,7 @@ public class MultiRowColumnIteratorTest {
 
         final ColumnSearch<Long> ascendingSearch = new ColumnSearch<Long>() {
             @Override
-            public void buildRange( final RangeBuilder rangeBuilder, final Long value ) {
+            public void buildRange(final RangeBuilder rangeBuilder, final Long value, Long end) {
                 rangeBuilder.setStart( value );
             }
 
@@ -459,7 +457,7 @@ public class MultiRowColumnIteratorTest {
 
         final ColumnSearch<Long> descendingSearch = new ColumnSearch<Long>() {
             @Override
-            public void buildRange( final RangeBuilder rangeBuilder, final Long value ) {
+            public void buildRange(final RangeBuilder rangeBuilder, final Long value, Long end) {
                 rangeBuilder.setStart( value );
                 buildRange( rangeBuilder );
             }

@@ -45,10 +45,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * Singleton listens for notifications queue messages
  */
 public class QueueListener  {
-    public  final int MESSAGE_TRANSACTION_TIMEOUT =  25 * 1000;
+
     private final QueueManagerFactory queueManagerFactory;
 
-    public   long DEFAULT_SLEEP = 5000;
+    public static long DEFAULT_SLEEP = 100;
 
     private static final Logger logger = LoggerFactory.getLogger(QueueListener.class);
 
@@ -61,9 +61,6 @@ public class QueueListener  {
 
     private Properties properties;
 
-
-    private ServiceManager svcMgr;
-
     private long sleepWhenNoneFound = 0;
 
     private long sleepBetweenRuns = 0;
@@ -71,8 +68,8 @@ public class QueueListener  {
     private ExecutorService pool;
     private List<Future> futures;
 
-    public  final int MAX_THREADS = 2;
-    private Integer batchSize = 10;
+    private static final int PUSH_CONSUMER_MAX_THREADS = 8;
+    public static final int MAX_TAKE = 10;
     private String queueName;
     private int consecutiveCallsToRemoveDevices;
 
@@ -99,15 +96,14 @@ public class QueueListener  {
 
             try {
 
-                sleepBetweenRuns = new Long(properties.getProperty("usergrid.notifications.listener.sleep.between", ""+sleepBetweenRuns)).longValue();
-                sleepWhenNoneFound = new Long(properties.getProperty("usergrid.notifications.listener.sleep.after", ""+DEFAULT_SLEEP)).longValue();
-                batchSize = new Integer(properties.getProperty("usergrid.notifications.listener.batchSize", (""+batchSize)));
+                sleepBetweenRuns = new Long(properties.getProperty("usergrid.push.sleep", "" + DEFAULT_SLEEP));
+                sleepWhenNoneFound = new Long(properties.getProperty("usergrid.push.sleep", "" + DEFAULT_SLEEP));
                 consecutiveCallsToRemoveDevices = new Integer(properties.getProperty("usergrid.notifications.inactive.interval", ""+200));
                 queueName = ApplicationQueueManagerImpl.getQueueNames(properties);
 
-                int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", ""+MAX_THREADS));
+                int maxThreads = new Integer(properties.getProperty("usergrid.push.worker_count", ""+PUSH_CONSUMER_MAX_THREADS));
 
-                futures = new ArrayList<Future>(maxThreads);
+                futures = new ArrayList<>(maxThreads);
 
                 //create our thread pool based on our threadcount.
 
@@ -144,33 +140,40 @@ public class QueueListener  {
     }
 
     private void execute(int threadNumber){
+
         if(Thread.currentThread().isDaemon()) {
             Thread.currentThread().setDaemon(true);
         }
+
         Thread.currentThread().setName(getClass().getSimpleName()+"_PushNotifications-"+threadNumber);
 
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
+
         if (logger.isTraceEnabled()) {
             logger.trace("QueueListener: Starting execute process.");
         }
+
         Meter meter = metricsService.getMeter(QueueListener.class, "execute.commit");
         com.codahale.metrics.Timer timer = metricsService.getTimer(QueueListener.class, "execute.dequeue");
-        svcMgr = smf.getServiceManager(smf.getManagementAppId());
+
         if (logger.isTraceEnabled()) {
             logger.trace("getting from queue {} ", queueName);
         }
+
         QueueScope queueScope = new QueueScopeImpl( queueName, QueueScope.RegionImplementation.LOCAL);
         QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
+
         // run until there are no more active jobs
         final AtomicLong runCount = new AtomicLong(0);
+
         //cache to retrieve push manager, cached per notifier, so many notifications will get same push manager
         LoadingCache<UUID, ApplicationQueueManager> queueManagerMap = getQueueManagerCache(queueManager);
 
         while ( true ) {
 
                 Timer.Context timerContext = timer.time();
-                rx.Observable.from(queueManager.getMessages(getBatchSize(), ApplicationQueueMessage.class))
-                    .buffer(getBatchSize())
+                rx.Observable.from(queueManager.getMessages(MAX_TAKE, ApplicationQueueMessage.class))
+                    .buffer(MAX_TAKE)
                     .doOnNext(messages -> {
 
                         try {
@@ -328,13 +331,5 @@ public class QueueListener  {
 
         pool.shutdownNow();
     }
-
-
-    public void setBatchSize(int batchSize){
-        this.batchSize = batchSize;
-    }
-    public int getBatchSize(){return batchSize;}
-
-
 
 }
