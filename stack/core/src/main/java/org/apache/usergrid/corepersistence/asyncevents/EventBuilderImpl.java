@@ -20,8 +20,11 @@
 package org.apache.usergrid.corepersistence.asyncevents;
 
 
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
+import org.apache.usergrid.persistence.collection.VersionSet;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,7 +121,7 @@ public class EventBuilderImpl implements EventBuilder {
         MvccLogEntry mostRecentlyMarked = ecm.getVersions( entityId ).toBlocking()
             .firstOrDefault( null, mvccLogEntry -> mvccLogEntry.getState() == MvccLogEntry.State.DELETED );
 
-        // De-indexing and entity deletes don't check log entiries.  We must do that first. If no DELETED logs, then
+        // De-indexing and entity deletes don't check log entries.  We must do that first. If no DELETED logs, then
         // return an empty observable as our no-op.
         Observable<IndexOperationMessage> deIndexObservable = Observable.empty();
         Observable<List<MvccLogEntry>> ecmDeleteObservable = Observable.empty();
@@ -140,7 +143,6 @@ public class EventBuilderImpl implements EventBuilder {
 
         return new EntityDeleteResults( deIndexObservable, ecmDeleteObservable, graphCompactObservable );
     }
-
 
     @Override
     public Observable<IndexOperationMessage> buildEntityIndex( final EntityIndexOperation entityIndexOperation ) {
@@ -168,4 +170,35 @@ public class EventBuilderImpl implements EventBuilder {
             //perform indexing on the task scheduler and start it
             .flatMap( entity -> indexService.indexEntity( applicationScope, entity ) );
     }
+
+
+    @Override
+    public Observable<IndexOperationMessage> deIndexOlderVersions(final ApplicationScope applicationScope, Id entityId ){
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Removing old versions of entity {} from index in app scope {}", entityId, applicationScope );
+        }
+
+        final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
+
+        // find all versions of the entity that come before the provided entityId
+        VersionSet latestVersions = ecm.getLatestVersion(Collections.singletonList(entityId) ).toBlocking()
+            .firstOrDefault( null );
+
+        // If there are no versions before this, allow it to return an empty observable
+        Observable<IndexOperationMessage> deIndexObservable = Observable.empty();
+
+        if(latestVersions.getMaxVersion(entityId) != null){
+
+            UUID latestVersion = latestVersions.getMaxVersion(entityId).getVersion();
+
+            deIndexObservable =
+                indexService.deleteEntityIndexes( applicationScope, entityId, latestVersion);
+
+        }
+
+        return  deIndexObservable;
+
+    }
+
 }

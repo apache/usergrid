@@ -19,17 +19,26 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
+import java.util.Set;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.index.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
+import org.apache.usergrid.persistence.index.CandidateResult;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
+import org.apache.usergrid.persistence.index.IndexAlias;
+import org.apache.usergrid.persistence.index.IndexEdge;
+import org.apache.usergrid.persistence.index.IndexLocationStrategy;
+import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+
+import com.google.common.base.Optional;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
@@ -62,6 +71,11 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     @Override
     public EntityIndexBatch index( final IndexEdge indexEdge, final Entity entity ) {
+        return index( indexEdge,entity, Optional.absent() );
+    }
+
+    @Override
+    public EntityIndexBatch index( final IndexEdge indexEdge, final Entity entity, final Optional<Set<String>> fieldsToIndex ) {
         IndexValidationUtils.validateIndexEdge(indexEdge);
         ValidationUtils.verifyEntityWrite(entity);
         ValidationUtils.verifyVersion( entity.getVersion() );
@@ -70,14 +84,13 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Indexing to alias {} with scope {} on edge {} with entity data {}",
-                    writeAlias, applicationScope, indexEdge, entity );
+                    writeAlias, applicationScope, indexEdge, entity.getFieldMap().keySet() );
         }
 
         //add app id for indexing
-        container.addIndexRequest(new IndexOperation(writeAlias, applicationScope, indexEdge, entity));
+        container.addIndexRequest(new IndexOperation(writeAlias, applicationScope, indexEdge, entity,fieldsToIndex));
         return this;
     }
-
 
     @Override
     public EntityIndexBatch deindex( final SearchEdge searchEdge, final Id id, final UUID version ) {

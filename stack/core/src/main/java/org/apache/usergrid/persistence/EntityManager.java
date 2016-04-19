@@ -512,6 +512,12 @@ public interface EntityManager {
      */
     public Entity createRole( String roleName, String roleTitle, long inactivity ) throws Exception;
 
+    public Map createCollectionSchema( String collectionName, String owner ,Map<String, Object> properties );
+
+    void deleteCollectionSchema( String collectionName );
+
+    Object getCollectionSchema( String collectionName );
+
     public void grantRolePermission( String roleName, String permission ) throws Exception;
 
     public void grantRolePermissions( String roleName, Collection<String> permissions ) throws Exception;
@@ -521,6 +527,7 @@ public interface EntityManager {
     public Set<String> getRolePermissions( String roleName ) throws Exception;
 
     public void deleteRole( String roleName ) throws Exception;
+
     public void deleteRole( String roleName, final Optional<EntityRef> roleRef ) throws Exception;
 
 

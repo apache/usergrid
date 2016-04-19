@@ -110,7 +110,7 @@ public abstract class QueueListener  {
             try {
                 sleepBetweenRuns = new Long(properties.getProperty("usergrid.queues.listener.sleep.between", ""+sleepBetweenRuns)).longValue();
                 sleepWhenNoneFound = new Long(properties.getProperty("usergrid.queues.listener.sleep.after", ""+DEFAULT_SLEEP)).longValue();
-                batchSize = new Integer(properties.getProperty("usergrid.queues.listener.batchSize", (""+batchSize)));
+                batchSize = new Integer(properties.getProperty("usergrid.queues.listener.MAX_TAKE", (""+batchSize)));
                 consecutiveCallsToRemoveDevices = new Integer(properties.getProperty("usergrid.queues.inactive.interval", ""+200));
                 queueName = getQueueName();
 

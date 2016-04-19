@@ -48,7 +48,7 @@ public class CoreSchemaManager implements SchemaManager {
     @Override
     public void create() {
         try {
-            setup.initSubsystems();
+            setup.initSchema();
         }
         catch ( Exception ex ) {
             logger.error( "Could not setup usergrid core schema", ex );
@@ -58,18 +58,12 @@ public class CoreSchemaManager implements SchemaManager {
 
 
     @Override
-    public boolean exists() {
-        return setup.keyspacesExist();
-    }
-
-
-    @Override
     public void populateBaseData() {
         try {
 
-            setup.setupStaticKeyspace();
-            setup.setupSystemKeyspace();
-            setup.createDefaultApplications();
+            setup.initSchema();
+            setup.runDataMigration();
+            setup.initMgmtApp();
         }
 
         catch ( Exception ex ) {

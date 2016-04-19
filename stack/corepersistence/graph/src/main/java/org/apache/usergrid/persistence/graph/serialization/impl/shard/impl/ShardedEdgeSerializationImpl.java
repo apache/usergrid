@@ -29,6 +29,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
@@ -67,6 +68,8 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.Serializer;
 import com.netflix.astyanax.util.RangeBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -76,6 +79,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Singleton
 public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
+
+    private static final Logger logger = LoggerFactory.getLogger( ShardedEdgeSerializationImpl.class );
+
 
     protected final Keyspace keyspace;
     protected final CassandraConfig cassandraConfig;
@@ -345,12 +351,16 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
         final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( DescendingTimestampComparator.INSTANCE, search.getOrder());
 
+        Optional<Long> lastTimestamp = Optional.absent();
+        if(search.last().isPresent()){
+            lastTimestamp = Optional.of(search.last().get().getTimestamp());
+        }
 
 
 
         final EdgeSearcher<EdgeRowKey, Long, MarkedEdge> searcher =
                 new EdgeSearcher<EdgeRowKey, Long, MarkedEdge>( scope, shards, search.getOrder(),  comparator, maxTimestamp,
-                        search.last().transform( TRANSFORM ) ) {
+                        search.last().transform( TRANSFORM ), lastTimestamp ) {
 
 
                     @Override
@@ -389,7 +399,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                 };
 
         return new ShardsColumnIterator<>( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 
@@ -401,6 +411,10 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateSearchByEdgeType( search );
 
+        if(logger.isTraceEnabled()){
+            logger.trace("getEdgesFromSource shards: {}", shards);
+        }
+
         final Id sourceId = search.getNode();
         final String type = search.getType();
         final long maxTimestamp = search.getMaxTimestamp();
@@ -411,11 +425,15 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
         final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( TargetDirectedEdgeDescendingComparator.INSTANCE, search.getOrder());
 
+        Optional<Long> lastTimestamp = Optional.absent();
+        if(search.last().isPresent()){
+            lastTimestamp = Optional.of(search.last().get().getTimestamp());
+        }
 
 
         final EdgeSearcher<RowKey, DirectedEdge, MarkedEdge> searcher =
                 new EdgeSearcher<RowKey, DirectedEdge, MarkedEdge>( scope, shards, search.getOrder(), comparator, maxTimestamp,
-                        search.last().transform( TRANSFORM ) ) {
+                        search.last().transform( TRANSFORM ), lastTimestamp ) {
 
 
                     @Override
@@ -452,7 +470,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
         return new ShardsColumnIterator<>( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 
@@ -475,10 +493,14 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
         final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( TargetDirectedEdgeDescendingComparator.INSTANCE, search.getOrder());
 
+        Optional<Long> lastTimestamp = Optional.absent();
+        if(search.last().isPresent()){
+            lastTimestamp = Optional.of(search.last().get().getTimestamp());
+        }
 
         final EdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge> searcher =
                 new EdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge>( scope, shards, search.getOrder(), comparator, maxTimestamp,
-                        search.last().transform( TRANSFORM ) ) {
+                        search.last().transform( TRANSFORM ), lastTimestamp ) {
 
                     @Override
                     protected Serializer<DirectedEdge> getSerializer() {
@@ -513,7 +535,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                 };
 
         return new ShardsColumnIterator( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 
@@ -532,9 +554,14 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
         final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( SourceDirectedEdgeDescendingComparator.INSTANCE, search.getOrder());
 
+        Optional<Long> lastTimestamp = Optional.absent();
+        if(search.last().isPresent()){
+            lastTimestamp = Optional.of(search.last().get().getTimestamp());
+        }
+
         final EdgeSearcher<RowKey, DirectedEdge, MarkedEdge> searcher =
                 new EdgeSearcher<RowKey, DirectedEdge, MarkedEdge>( scope, shards, search.getOrder(),comparator,  maxTimestamp,
-                        search.last().transform( TRANSFORM ) ) {
+                        search.last().transform( TRANSFORM ), lastTimestamp ) {
 
                     @Override
                     protected Serializer<DirectedEdge> getSerializer() {
@@ -570,7 +597,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
         return new ShardsColumnIterator<>( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 
@@ -593,10 +620,14 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
         final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( SourceDirectedEdgeDescendingComparator.INSTANCE, search.getOrder());
 
+        Optional<Long> lastTimestamp = Optional.absent();
+        if(search.last().isPresent()){
+            lastTimestamp = Optional.of(search.last().get().getTimestamp());
+        }
 
         final EdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge> searcher =
                 new EdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge>( scope, shards, search.getOrder(), comparator, maxTimestamp,
-                        search.last().transform( TRANSFORM ) ) {
+                        search.last().transform( TRANSFORM ), lastTimestamp ) {
                     @Override
                     protected Serializer<DirectedEdge> getSerializer() {
                         return serializer;
@@ -629,7 +660,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                 };
 
         return new ShardsColumnIterator<>( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 

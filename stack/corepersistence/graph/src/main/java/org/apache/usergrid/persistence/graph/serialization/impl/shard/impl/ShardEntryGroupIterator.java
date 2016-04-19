@@ -14,6 +14,8 @@ import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroup
 
 import com.google.common.base.Preconditions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.schedulers.Schedulers;
 
 
@@ -22,6 +24,9 @@ import rx.schedulers.Schedulers;
  * groups can then be used in a distributed system to handle concurrent reads and writes
  */
 public class ShardEntryGroupIterator implements Iterator<ShardEntryGroup> {
+
+    private static final Logger logger = LoggerFactory.getLogger( ShardEntryGroupIterator.class );
+
 
 
     private final ShardGroupCompaction shardGroupCompaction;
@@ -106,11 +111,18 @@ public class ShardEntryGroupIterator implements Iterator<ShardEntryGroup> {
 
             //we can't add this one to the entries, it doesn't fit within the delta, allocate a new one and break
             if ( next.addShard( shard ) ) {
+
+                if(logger.isTraceEnabled()) {
+                    logger.trace("adding shard: {}", shard);
+                }
                 continue;
             }
 
 
             sourceIterator.pushback( shard );
+            if(logger.isTraceEnabled()) {
+                logger.trace("unable to add shard: {}, pushing back and stopping", shard);
+            }
 
             break;
         }

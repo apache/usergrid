@@ -21,6 +21,7 @@ package org.apache.usergrid.corepersistence.index;
 
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
@@ -52,6 +53,8 @@ public interface ReIndexRequestBuilder {
     ReIndexRequestBuilder withCursor(final String cursor);
 
 
+    ReIndexRequestBuilder withDelay( int delayTimer, TimeUnit timeUnit );
+
     /**
      * Set the timestamp to re-index entities updated >= this timestamp
      * @param timestamp
@@ -59,6 +62,10 @@ public interface ReIndexRequestBuilder {
      */
     ReIndexRequestBuilder withStartTimestamp(final Long timestamp);
 
+
+    Optional<Integer> getDelayTimer();
+
+    Optional<TimeUnit> getTimeUnitOptional();
 
     /**
      * Get the application scope
