@@ -242,14 +242,10 @@ public class GCMAdapter implements ProviderAdapter {
                     payload.remove(priorityKey);
 
                 }
-//
-//                // add our source notification payload data into the Message Builder
-//                // Message.Builder requires the payload to be Map<String,String> so blindly cast
-//                Map<String,String> dataMap = (Map<String,String>) payload;
-//
-//                dataMap.forEach( (key, value) -> builder.addData(key, value));
 
-                builder.addData("data", JSON.toString(payload));
+                builder.setData(payload);
+                // GCM will accept Map<String,Object> but builder.build().toString() will throw a class cast
+                // exception, but luckily Message.toString() is not used anywhere in the GCM SDK or Usergrid
 
                 Message message = builder.build();
                 MulticastResult multicastResult;
