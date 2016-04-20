@@ -86,7 +86,7 @@ public class CollectionResource extends ServiceResource {
      * POST settings for a collection.
      *
      * Expects a JSON object which may include:
-     * - fields: (array or string) either an array of field names to be indexed, or 'all' or 'none'
+     * - fields: (array) field names to be indexed, '*' for all and 'none' for no indexing
      * - region: (string) name of the authoritative region for this collection
      */
     @POST
@@ -122,6 +122,17 @@ public class CollectionResource extends ServiceResource {
         ServicePayload payload = getPayload( json );
 
         executeServicePostRequestForSettings( ui,response, ServiceAction.POST, payload );
+
+        if(payload.getProperty( "fields" )==null){
+            throw new NullArgumentException( "fields" );
+        }
+
+        if(! (payload.getProperty( "fields" ) instanceof ArrayList)){
+            throw new NullArgumentException( "fields must be of json array type" );
+        }
+
+
+        executeServicePostRequestForSettings( ui,response, ServiceAction.POST,payload );
 
         return response;
     }

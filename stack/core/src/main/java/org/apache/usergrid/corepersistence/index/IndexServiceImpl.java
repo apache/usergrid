@@ -20,11 +20,10 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.codahale.metrics.Timer;
+import com.google.common.base.Optional;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -35,14 +34,7 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
-import org.apache.usergrid.persistence.index.CandidateResult;
-import org.apache.usergrid.persistence.index.CandidateResults;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexEdge;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.SearchEdge;
+import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
@@ -52,17 +44,13 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.usergrid.utils.UUIDUtils;
-
-import com.codahale.metrics.Timer;
-import com.google.common.base.Optional;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createSearchEdgeFromSource;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromTarget;
+import java.util.*;
+
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.*;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 
 
