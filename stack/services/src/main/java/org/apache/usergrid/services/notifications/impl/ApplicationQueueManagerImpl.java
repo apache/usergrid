@@ -19,6 +19,7 @@ package org.apache.usergrid.services.notifications.impl;
 import com.codahale.metrics.Meter;
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.core.executor.TaskExecutorFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.Query;
@@ -52,9 +53,17 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
     private final Meter queueMeter;
     private final Meter sendMeter;
 
+    private final static String PUSH_PROCESSING_MAXTHREADS_PROP = "usergrid.push.async.processing.threads";
+    private final static String PUSH_PROCESSING_QUEUESIZE_PROP = "usergrid.push.async.processing.queue.size";
     private final static String PUSH_PROCESSING_CONCURRENCY_PROP = "usergrid.push.async.processing.concurrency";
 
     HashMap<Object, ProviderAdapter> notifierHashMap; // only retrieve notifiers once
+
+
+
+    private final ExecutorService asyncExecutor;
+
+
 
 
     public ApplicationQueueManagerImpl( JobScheduler jobScheduler, EntityManager entityManager,
@@ -65,8 +74,31 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         this.jobScheduler = jobScheduler;
         this.metricsFactory = metricsFactory;
         this.queueName = getQueueNames(properties);
-        queueMeter = metricsFactory.getMeter(ApplicationQueueManagerImpl.class, "notification.queue");
-        sendMeter = metricsFactory.getMeter(NotificationsService.class, "queue.send");
+        this.queueMeter = metricsFactory.getMeter(ApplicationQueueManagerImpl.class, "notification.queue");
+        this.sendMeter = metricsFactory.getMeter(NotificationsService.class, "queue.send");
+
+        int maxAsyncThreads;
+        int workerQueueSize;
+
+        try {
+
+            maxAsyncThreads = Integer.valueOf(System.getProperty(PUSH_PROCESSING_MAXTHREADS_PROP, "200"));
+            workerQueueSize = Integer.valueOf(System.getProperty(PUSH_PROCESSING_QUEUESIZE_PROP, "2000"));
+
+        } catch (Exception e){
+
+            // if junk is passed into the property, just default the values
+            maxAsyncThreads = 200;
+            workerQueueSize = 2000;
+
+        }
+
+
+        // create our own executor which has a bounded queue w/ caller runs policy for rejected tasks
+        this.asyncExecutor = TaskExecutorFactory
+            .createTaskExecutor( "push-device-io", maxAsyncThreads, workerQueueSize,
+                TaskExecutorFactory.RejectionAction.CALLERRUNS );
+
 
     }
 
@@ -296,7 +328,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                             }
 
 
-                        }).subscribeOn(Schedulers.io());
+                        }).subscribeOn(Schedulers.from(asyncExecutor));
 
                 }, Integer.valueOf(System.getProperty(PUSH_PROCESSING_CONCURRENCY_PROP, "50")))
                 .doOnError(throwable -> {
@@ -327,7 +359,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                 });
 
-            processMessagesObservable.subscribeOn(Schedulers.io()).subscribe(); // fire the queuing into the background
+            processMessagesObservable.subscribeOn(Schedulers.from(asyncExecutor)).subscribe(); // fire the queuing into the background
 
         }
 
@@ -348,7 +380,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         // if no devices, go ahead and mark the batch finished
         if (deviceCount.get() <= 0 ) {
             TaskManager taskManager = new TaskManager(em, notification);
-            taskManager.finishedBatch(true);
+            taskManager.finishedBatch();
         }
 
 
@@ -540,32 +572,43 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
 
     /**
-     * Validates that a notifier and adapter exists to send notifications to;
-     * {"winphone":"mymessage","apple":"mymessage"}
-     * TODO: document this method better
+     *  Validates that a notifier and adapter exists to send notifications to. For the example payload
+     *
+     *  { "payloads" : {"winphone":"mymessage","apple":"mymessage"} }
+     *
+     *  Notifiers with name "winphone" and "apple" must exist.
      */
-    private Map<String, Object> translatePayloads(Map<String, Object> payloads, Map<Object, ProviderAdapter>
-        notifierMap) throws Exception {
-        Map<String, Object> translatedPayloads = new HashMap<String, Object>(payloads.size());
+    private Map<String, Object> translatePayloads(Map<String, Object> payloads,
+                                                  Map<Object, ProviderAdapter> notifierMap) throws Exception {
+
+        final Map<String, Object> translatedPayloads = new HashMap<String, Object>(payloads.size());
+
         for (Map.Entry<String, Object> entry : payloads.entrySet()) {
+
             String payloadKey = entry.getKey().toLowerCase();
             Object payloadValue = entry.getValue();
+
             //look for adapter from payload map
             ProviderAdapter providerAdapter = notifierMap.get(payloadKey);
             if (providerAdapter != null) {
+
                 //translate payload to usable information
                 Object translatedPayload = payloadValue != null ? providerAdapter.translatePayload(payloadValue) : null;
                 if (translatedPayload != null) {
                     translatedPayloads.put(payloadKey, translatedPayload);
                 }
+
             }
         }
         return translatedPayloads;
     }
 
     public static String getQueueNames(Properties properties) {
-        String name = properties.getProperty(ApplicationQueueManagerImpl.DEFAULT_QUEUE_PROPERTY, ApplicationQueueManagerImpl.DEFAULT_QUEUE_NAME);
+
+        String name = properties.getProperty(ApplicationQueueManagerImpl.DEFAULT_QUEUE_PROPERTY,
+            ApplicationQueueManagerImpl.DEFAULT_QUEUE_NAME);
         return name;
+
     }
 
     private static final class IteratorObservable<T> implements rx.Observable.OnSubscribe<T> {
@@ -585,15 +628,15 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
             try {
                 while (!subscriber.isUnsubscribed() && input.hasNext()) {
+
                     //send our input to the next
-                    //logger.debug("calling next on iterator: {}", input.getClass().getSimpleName());
                     subscriber.onNext((T) input.next());
+
                 }
 
                 //tell the subscriber we don't have any more data
-                //logger.debug("finished iterator: {}", input.getClass().getSimpleName());
-
                 subscriber.onCompleted();
+
             } catch (Throwable t) {
                 logger.error("failed on subscriber", t);
                 subscriber.onError(t);
@@ -617,10 +660,9 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                     }
                 }
             } catch (Exception e) {
-                logger.error("checkForInactiveDevices", e); // not
-                // essential so
-                // don't fail,
-                // but log
+                // not essential so don't fail, but log
+                logger.error("checkForInactiveDevices", e);
+
             }
         }
     }
@@ -630,14 +672,14 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
         if (notification.getCanceled() == Boolean.TRUE) {
             if (logger.isDebugEnabled()) {
-                logger.debug("notification {} canceled. not sending.",
+                logger.debug("Notification {} canceled. Not sending.",
                     notification.getUuid());
             }
             return false;
         }
         if (notification.isExpired()) {
             if (logger.isDebugEnabled()) {
-                logger.debug("notification {} expired. not sending.",
+                logger.debug("Notification {} expired. Not sending.",
                     notification.getUuid());
             }
             return false;
@@ -654,7 +696,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             }
             return value != null ? value.toString() : null;
         } catch (Exception e) {
-            logger.error("Error getting provider ID, proceeding with rest of batch", e);
+            logger.error("Error getting notifier for device {}, proceeding with rest of batch", device, e);
             return null;
         }
     }
