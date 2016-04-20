@@ -137,20 +137,29 @@ public class ReIndexServiceImpl implements ReIndexService {
         // create an observable that loads a batch to be indexed
 
         if(reIndexRequestBuilder.getCollectionName().isPresent()) {
-            String collectionName =  InflectionUtils.pluralize( CpNamingUtils.getNameFromEdgeType(reIndexRequestBuilder.getCollectionName().get() ));
-            MapManager collectionMapStorage = mapManagerFactory.createMapManager( CpNamingUtils.getEntityTypeMapScope( appId.get().getApplication()  ) );
-            IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( collectionMapStorage );
 
-            Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+            String collectionName =  InflectionUtils.pluralize(
+                CpNamingUtils.getNameFromEdgeType(reIndexRequestBuilder.getCollectionName().get() ));
 
-            //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
+            MapManager collectionMapStorage = mapManagerFactory.createMapManager(
+                CpNamingUtils.getEntityTypeMapScope( appId.get().getApplication()  ) );
+
+            CollectionSettingsCache collectionSettingsCache =
+                indexSchemaCacheFactory.getInstance( collectionMapStorage );
+
+            Optional<Map<String, Object>> collectionIndexingSchema =
+                collectionSettingsCache.getCollectionSettings( collectionName );
+
+            // If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
             if ( collectionIndexingSchema.isPresent() ) {
 
                 Map jsonMapData = collectionIndexingSchema.get();
 
                 jsonMapData.put( "lastReindexed", Instant.now().toEpochMilli() );
-                //should probably roll this into the cache.
-                indexSchemaCache.putCollectionSchema( collectionName, JsonUtils.mapToJsonString(jsonMapData ) );
+
+                // should probably roll this into the cache.
+                collectionSettingsCache.putCollectionSettings(
+                    collectionName, JsonUtils.mapToJsonString(jsonMapData ) );
             }
 
         }
@@ -168,13 +177,14 @@ public class ReIndexServiceImpl implements ReIndexService {
                 .subscribeOn( Schedulers.io() ), indexProcessorFig.getReindexConcurrencyFactor());
 
 
-        //start our sampler and state persistence
-        //take a sample every sample interval to allow us to resume state with minimal loss
-        //create our flushing collector and flush the edge scopes to it
+        // start our sampler and state persistence
+        // take a sample every sample interval to allow us to resume state with minimal loss
+        // create our flushing collector and flush the edge scopes to it
         runningReIndex.collect(() -> new FlushingCollector(jobId),
-            ((flushingCollector, edgeScopes) -> flushingCollector.flushBuffer(edgeScopes))).doOnNext( flushingCollector-> flushingCollector.complete() )
+            ((flushingCollector, edgeScopes) -> flushingCollector.flushBuffer(edgeScopes)))
+                .doOnNext( flushingCollector-> flushingCollector.complete() )
                 //subscribe on our I/O scheduler and run the task
-            .subscribeOn( Schedulers.io() ).subscribe(); //want reindex to continually run so leave subscribe.
+                .subscribeOn( Schedulers.io() ).subscribe(); //want reindex to continually run so leave subscribe.
 
 
         return new ReIndexStatus( jobId, Status.STARTED, 0, 0 );

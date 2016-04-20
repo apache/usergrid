@@ -23,7 +23,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
-import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsCache;
 import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -149,9 +149,10 @@ public class ApplicationServiceImpl  implements ApplicationService{
         boolean skipIndexing = false;
 
         MapManager mm = getMapManagerForTypes(applicationScope);
-        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+        CollectionSettingsCache collectionSettingsCache = indexSchemaCacheFactory.getInstance( mm );
         String collectionName = Schema.defaultCollectionName( type );
-        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+        Optional<Map<String, Object>> collectionIndexingSchema =
+            collectionSettingsCache.getCollectionSettings( collectionName );
 
         if ( collectionIndexingSchema.isPresent()) {
             Map jsonMapData = collectionIndexingSchema.get();

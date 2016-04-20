@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +55,6 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.utils.InflectionUtils;
-import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.codahale.metrics.Timer;
@@ -210,9 +208,10 @@ public class IndexServiceImpl implements IndexService {
 
         String collectionName = CpNamingUtils.getCollectionNameFromEdgeName( indexEdge.getEdgeName() );
 
-        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+        CollectionSettingsCache collectionSettingsCache = indexSchemaCacheFactory.getInstance( mm );
 
-        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+        Optional<Map<String, Object>> collectionIndexingSchema =
+            collectionSettingsCache.getCollectionSettings( collectionName );
 
         //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
         if ( collectionIndexingSchema.isPresent()) {

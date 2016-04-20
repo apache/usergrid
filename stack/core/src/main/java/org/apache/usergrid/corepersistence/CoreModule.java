@@ -16,7 +16,6 @@
 package org.apache.usergrid.corepersistence;
 
 
-import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
 import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
 import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFig;
 import org.apache.usergrid.locking.guice.LockModule;

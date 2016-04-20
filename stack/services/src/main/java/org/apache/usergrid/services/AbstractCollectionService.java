@@ -331,7 +331,7 @@ public class AbstractCollectionService extends AbstractService {
     }
 
     @Override
-    public ServiceResults postCollectionSchema( ServiceRequest serviceRequest ) throws Exception {
+    public ServiceResults postCollectionSettings( ServiceRequest serviceRequest ) throws Exception {
         setServiceManager( serviceRequest.getServices() );
         ServiceContext context = serviceRequest.getAppContext();
 
@@ -345,15 +345,15 @@ public class AbstractCollectionService extends AbstractService {
         if(currentUserPrincipal instanceof AdminUserPrincipal) {
             AdminUserPrincipal adminUserPrincipal = ( AdminUserPrincipal ) currentUserPrincipal;
 
-            collectionSchema = em.createCollectionSchema( context.getCollectionName(),
+            collectionSchema = em.createCollectionSettings( context.getCollectionName(),
                 adminUserPrincipal.getUser().getEmail(), context.getProperties() );
         }
         else if(currentUserPrincipal instanceof ApplicationPrincipal){
-            collectionSchema = em.createCollectionSchema( context.getCollectionName(),
+            collectionSchema = em.createCollectionSettings( context.getCollectionName(),
                 "app credentials", context.getProperties() );
         }
         else if ( currentUserPrincipal instanceof PrincipalIdentifier ) {
-            collectionSchema = em.createCollectionSchema( context.getCollectionName(),
+            collectionSchema = em.createCollectionSettings( context.getCollectionName(),
                 "generic credentials", context.getProperties() );
         }
 
@@ -362,13 +362,13 @@ public class AbstractCollectionService extends AbstractService {
     }
 
     @Override
-    public ServiceResults getCollectionSchema( ServiceRequest serviceRequest ) throws Exception {
+    public ServiceResults getCollectionSettings( ServiceRequest serviceRequest ) throws Exception {
         setServiceManager( serviceRequest.getServices() );
         ServiceContext context = serviceRequest.getAppContext();
         context.setAction( ServiceAction.GET );
         checkPermissionsForCollection( context );
 
-        Object collectionSchema = em.getCollectionSchema( context.getCollectionName() );
+        Object collectionSchema = em.getCollectionSettings( context.getCollectionName() );
 
         return new ServiceResults( this, context, Type.COLLECTION, Results.fromData( collectionSchema ), null, null );
 

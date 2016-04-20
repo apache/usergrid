@@ -19,7 +19,7 @@ package org.apache.usergrid.corepersistence;
 
 import java.util.*;
 
-import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsCache;
 import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
 import org.apache.usergrid.corepersistence.results.IdQueryExecutor;
 import org.apache.usergrid.persistence.map.MapManager;
@@ -1087,9 +1087,10 @@ public class CpRelationManager implements RelationManager {
         boolean skipIndexing = false;
 
         MapManager mm = getMapManagerForTypes();
-        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+        CollectionSettingsCache collectionSettingsCache = indexSchemaCacheFactory.getInstance( mm );
         String collectionName = Schema.defaultCollectionName( type );
-        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+        Optional<Map<String, Object>> collectionIndexingSchema =
+            collectionSettingsCache.getCollectionSettings( collectionName );
 
         if ( collectionIndexingSchema.isPresent()) {
             Map jsonMapData = collectionIndexingSchema.get();

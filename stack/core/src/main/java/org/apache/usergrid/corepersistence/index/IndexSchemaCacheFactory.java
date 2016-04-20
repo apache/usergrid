@@ -36,8 +36,8 @@ public class IndexSchemaCacheFactory {
         this.fig = fig;
     }
 
-    public IndexSchemaCache getInstance(MapManager mapManager ){
-        return new IndexSchemaCacheImpl( mapManager,fig );
+    public CollectionSettingsCache getInstance(MapManager mapManager ){
+        return new CollectionSettingsCacheImpl( mapManager,fig );
     }
 
 
