@@ -37,12 +37,10 @@ public class TaskManager {
     private AtomicLong successes = new AtomicLong();
     private AtomicLong failures = new AtomicLong();
     private EntityManager em;
-    private boolean hasFinished;
 
     public TaskManager(EntityManager em, Notification notification) {
         this.em = em;
         this.notification = notification;
-        hasFinished = false;
     }
 
     public long getSuccesses(){return successes.get();}
@@ -53,77 +51,69 @@ public class TaskManager {
         completed(notifier,null,deviceUUID,null);
     }
     public void completed(Notifier notifier, Receipt receipt, UUID deviceUUID, String newProviderId) throws Exception {
-        if (logger.isTraceEnabled()) {
-            logger.trace("REMOVED {}", deviceUUID);
-        }
+
+        successes.incrementAndGet();
+
         try {
-            if (logger.isTraceEnabled()) {
-                logger.trace("notification {} removing device {} from remaining", notification.getUuid(), deviceUUID);
-            }
 
             EntityRef deviceRef = new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID);
+
             if (receipt != null) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("notification {} sent to device {}. saving receipt.", notification.getUuid(), deviceUUID);
-                }
+
                 receipt.setSent(System.currentTimeMillis());
                 this.saveReceipt(notification, deviceRef, receipt,false);
                 if (logger.isTraceEnabled()) {
-                    logger.trace("notification {} receipt saved for device {}", notification.getUuid(), deviceUUID);
+                    logger.trace("Notification {} receipt saved for device {}", notification.getUuid(), deviceUUID);
                 }
-                successes.incrementAndGet();
+
             }
 
             if (newProviderId != null) {
                 if (logger.isTraceEnabled()) {
-                    logger.trace("notification {} replacing device {} notifierId", notification.getUuid(), deviceUUID);
+                    logger.trace("Notification {} replacing notifier id for device {} ", notification.getUuid(), deviceUUID);
                 }
                 replaceProviderId(deviceRef, notifier, newProviderId);
             }
 
             if (logger.isTraceEnabled()) {
-                logger.trace("notification {} completed device {}", notification.getUuid(), deviceUUID);
+                logger.trace("Notification {} sending completed for device {}", notification.getUuid(), deviceUUID);
             }
 
-        } finally {
-            if (logger.isTraceEnabled()) {
-                logger.trace("COUNT is: {}", successes.get());
-            }
-//            if (hasFinished) { //process has finished but notifications are still coming in
-//                finishedBatch();
-//
-//            }
+        } catch(Exception e) {
+
+            logger.error("Unable to mark notification {} as completed due to: {}", notification.getUuid(), e);
+
         }
     }
 
     public void failed(Notifier notifier, Receipt receipt, UUID deviceUUID, Object code, String message) throws Exception {
 
+        failures.incrementAndGet();
+
         try {
             if (logger.isDebugEnabled()) {
-                logger.debug("notification {} for device {} got error {}", notification.getUuid(), deviceUUID, code);
+                logger.debug("Notification {} for device {} got error {}", notification.getUuid(), deviceUUID, code);
             }
 
-            failures.incrementAndGet();
-            if(receipt!=null) {
-                if ( receipt.getUuid() != null ) {
-                    successes.decrementAndGet();
-                }
+            if(receipt != null) {
                 receipt.setErrorCode( code );
                 receipt.setErrorMessage( message );
                 this.saveReceipt( notification, new SimpleEntityRef( Device.ENTITY_TYPE, deviceUUID ), receipt, true );
-                if ( logger.isDebugEnabled() ) {
-                    logger.debug( "notification {} receipt saved for device {}", notification.getUuid(), deviceUUID );
-                }
             }
-        } finally {
+
             completed(notifier, deviceUUID);
             finishedBatch();
+
+        } catch (Exception e){
+
+            logger.error("Unable to finish marking notification {} as failed due to error: ", notification.getUuid(), e);
+
         }
     }
 
-    /*
-    * called from TaskManager - creates a persistent receipt and updates the
-    * passed one w/ the UUID
+    /**
+    * Called from TaskManager - Creates a persistent receipt
+    *
     */
     private void saveReceipt(EntityRef notification, EntityRef device, Receipt receipt, boolean hasError) throws Exception {
 
@@ -142,11 +132,16 @@ public class TaskManager {
             } else {
                 em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, receipt);
             }
+
+            if ( logger.isDebugEnabled() ) {
+                logger.debug( "Notification {} receipt saved for device {}", notification.getUuid(), device.getUuid() );
+            }
+
         }
 
     }
 
-    protected void replaceProviderId(EntityRef device, Notifier notifier,
+    private void replaceProviderId(EntityRef device, Notifier notifier,
                                      String newProviderId) throws Exception {
         Object value = em.getProperty(device, notifier.getName()
                 + ApplicationQueueManager.NOTIFIER_ID_POSTFIX);
@@ -161,33 +156,24 @@ public class TaskManager {
         }
     }
 
+
     public void finishedBatch() throws Exception {
-        finishedBatch(true);
-    }
 
-    public void finishedBatch(boolean refreshNotification) throws Exception {
+        long successes = this.successes.get();
+        long failures = this.failures.get();
 
-        long successes = this.successes.get(); //reset counters
-        long failures = this.failures.get(); //reset counters
+        // reset the counters
+        this.successes.set(0);
+        this.failures.set(0);
 
-        for (int i = 0; i < successes; i++) {
-            this.successes.decrementAndGet();
-        }
-        for (int i = 0; i < failures; i++) {
-            this.failures.decrementAndGet();
-        }
-
-        this.hasFinished = true;
-
-        // force refresh notification by fetching it
-        if (refreshNotification) {
-            notification = em.get(this.notification.getUuid(), Notification.class);
-        }
+        // get the latest notification info
+        notification = em.get(this.notification.getUuid(), Notification.class);
 
         notification.updateStatistics(successes, failures);
         notification.setModified(System.currentTimeMillis());
         notification.setFinished(notification.getModified());
 
         em.update(notification);
+
     }
 }
