@@ -136,7 +136,10 @@ public class NotificationsService extends AbstractCollectionService {
             // perform some input validates on useGraph payload property vs. ql= path query
             final List<ServiceParameter> parameters = context.getRequest().getOriginalParameters();
             for (ServiceParameter parameter : parameters){
-                if( parameter instanceof ServiceParameter.QueryParameter && context.getProperties().get("useGraph").equals(true)){
+                if( parameter instanceof ServiceParameter.QueryParameter
+                    && context.getProperties().get("useGraph") != null
+                      && context.getProperties().get("useGraph").equals(true)){
+
                     throw new IllegalArgumentException("Query ql parameter cannot be used with useGraph:true property value");
                 }
             }
