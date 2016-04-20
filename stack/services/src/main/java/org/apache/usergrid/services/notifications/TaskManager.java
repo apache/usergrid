@@ -26,6 +26,8 @@ import org.apache.usergrid.persistence.entities.Receipt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -54,7 +56,13 @@ public class TaskManager {
 
         successes.incrementAndGet();
 
+
         try {
+            //.{year}.{month}.{day}.{HH24} possibly minute.
+            //random date and time for format
+
+
+            incrementNotificationCounter( "completed" );
 
             EntityRef deviceRef = new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID);
 
@@ -91,6 +99,9 @@ public class TaskManager {
         failures.incrementAndGet();
 
         try {
+
+            incrementNotificationCounter( "failed" );
+
             if (logger.isDebugEnabled()) {
                 logger.debug("Notification {} for device {} got error {}", notification.getUuid(), deviceUUID, code);
             }
@@ -154,6 +165,20 @@ public class TaskManager {
                 em.setProperty(device, notifier.getUuid() + ApplicationQueueManager.NOTIFIER_ID_POSTFIX, newProviderId);
             }
         }
+    }
+
+    public void incrementNotificationCounter(String status){
+        em.incrementAggregateCounters( null,null,null,"counters.notifications."+notification.getUuid()+"."+status,1 );
+
+        LocalDateTime localDateTime = LocalDateTime.now();
+        StringBuilder currentDate = new StringBuilder(  );
+        currentDate.append( "counters.notifications.aggregate."+status+"." );
+        currentDate.append( localDateTime.getYear()+"." );
+        currentDate.append( localDateTime.getMonth()+"." );
+        currentDate.append( localDateTime.getDayOfMonth()+"." );
+        currentDate.append( localDateTime.getMinute() );
+        em.incrementAggregateCounters( null,null,null,currentDate.toString(),1 );
+
     }
 
 
