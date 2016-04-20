@@ -22,29 +22,26 @@ import java.util.Map;
 import com.google.common.base.Optional;
 
 
-public interface IndexSchemaCache {
+public interface CollectionSettingsCache {
 
     /**
      * Get the collection schema from the cache.
-     * @param collectionName
-     * @return
      */
-    public Optional<Map> getCollectionSchema( String collectionName );
+    Optional<Map<String, Object>> getCollectionSettings(String collectionName );
 
-    void putCollectionSchema( String collectionName, String collectionSchema );
+    void putCollectionSettings(String collectionName, String collectionSettings );
 
-    void deleteCollectionSchema( String collectionName );
+    void deleteCollectionSettings(String collectionName );
 
     /**
      * Evict the collection schema from the cache.
-     * @param collectionName
      */
-    public void evictCollectionSchema(String collectionName);
+    void evictCollectionSettings(String collectionName);
 
     /**
      * Evict everything from the cache.
      */
-    public void evictCache();
+    void evictCache();
 
 
 }

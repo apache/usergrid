@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsCache;
 import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
@@ -620,9 +620,10 @@ public class CpEntityManager implements EntityManager {
         boolean skipIndexing = false;
 
         MapManager mm = getMapManagerForTypes();
-        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+        CollectionSettingsCache collectionSettingsCache = indexSchemaCacheFactory.getInstance( mm );
         String collectionName = Schema.defaultCollectionName( type );
-        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+        Optional<Map<String, Object>> collectionIndexingSchema =
+            collectionSettingsCache.getCollectionSettings( collectionName );
 
         if ( collectionIndexingSchema.isPresent()) {
             Map jsonMapData = collectionIndexingSchema.get();
@@ -1778,7 +1779,7 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public Map createCollectionSchema( String collectionName, String owner ,Map<String, Object> properties ){
+    public Map createCollectionSettings( String collectionName, String owner ,Map<String, Object> properties ){
 
 
         //TODO: change timeservice as below then use timeservice.
@@ -1796,9 +1797,10 @@ public class CpEntityManager implements EntityManager {
 
         MapManager mm = getMapManagerForTypes();
 
-        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+        CollectionSettingsCache collectionSettingsCache = indexSchemaCacheFactory.getInstance( mm );
 
-        Optional<Map> collectionIndexingSchema = indexSchemaCache.getCollectionSchema( collectionName );
+        Optional<Map<String, Object>> collectionIndexingSchema =
+            collectionSettingsCache.getCollectionSettings( collectionName );
 
 
         //If there is an existing schema then take the lastReindexed time and keep it around.Otherwise initialize to 0.
@@ -1828,30 +1830,31 @@ public class CpEntityManager implements EntityManager {
             schemaMap.putAll( properties );
         }
 
-        indexSchemaCache.putCollectionSchema( collectionName, JsonUtils.mapToJsonString( schemaMap ) );
+        collectionSettingsCache.putCollectionSettings( collectionName, JsonUtils.mapToJsonString( schemaMap ) );
 
         return schemaMap;
 
     }
 
     @Override
-    public void deleteCollectionSchema( String collectionName ){
+    public void deleteCollectionSettings( String collectionName ){
         MapManager mm = getMapManagerForTypes();
 
-        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+        CollectionSettingsCache collectionSettingsCache = indexSchemaCacheFactory.getInstance( mm );
 
-        indexSchemaCache.deleteCollectionSchema( collectionName );
+        collectionSettingsCache.deleteCollectionSettings( collectionName );
 
     }
 
 
     @Override
-    public Object getCollectionSchema( String collectionName ){
+    public Object getCollectionSettings( String collectionName ){
         MapManager mm = getMapManagerForTypes();
 
-        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+        CollectionSettingsCache collectionSettingsCache = indexSchemaCacheFactory.getInstance( mm );
 
-        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+        Optional<Map<String, Object>> collectionIndexingSchema =
+            collectionSettingsCache.getCollectionSettings( collectionName );
 
         if(collectionIndexingSchema.isPresent()){
             return collectionIndexingSchema.get();

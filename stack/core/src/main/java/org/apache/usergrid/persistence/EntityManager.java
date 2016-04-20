@@ -512,11 +512,11 @@ public interface EntityManager {
      */
     public Entity createRole( String roleName, String roleTitle, long inactivity ) throws Exception;
 
-    public Map createCollectionSchema( String collectionName, String owner ,Map<String, Object> properties );
+    public Map createCollectionSettings( String collectionName, String owner ,Map<String, Object> properties );
 
-    void deleteCollectionSchema( String collectionName );
+    void deleteCollectionSettings( String collectionName );
 
-    Object getCollectionSchema( String collectionName );
+    Object getCollectionSettings( String collectionName );
 
     public void grantRolePermission( String roleName, String permission ) throws Exception;
 

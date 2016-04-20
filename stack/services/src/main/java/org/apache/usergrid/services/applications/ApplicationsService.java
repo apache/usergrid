@@ -96,13 +96,13 @@ public class ApplicationsService extends AbstractService {
 
 
     @Override
-    public ServiceResults postCollectionSchema( final ServiceRequest request ) throws Exception {
+    public ServiceResults postCollectionSettings( final ServiceRequest request ) throws Exception {
         throw new UnsupportedServiceOperationException( request );
     }
 
 
     @Override
-    public ServiceResults getCollectionSchema( final ServiceRequest serviceRequest ) throws Exception {
+    public ServiceResults getCollectionSettings( final ServiceRequest serviceRequest ) throws Exception {
         throw new UnsupportedServiceOperationException( serviceRequest );
     }
 
