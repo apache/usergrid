@@ -52,6 +52,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
     private final String queueName;
     private final Meter queueMeter;
     private final Meter sendMeter;
+    private int concurrencyFactor;
 
     private final static String PUSH_PROCESSING_MAXTHREADS_PROP = "usergrid.push.async.processing.threads";
     private final static String PUSH_PROCESSING_QUEUESIZE_PROP = "usergrid.push.async.processing.queue.size";
@@ -84,12 +85,14 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
             maxAsyncThreads = Integer.valueOf(System.getProperty(PUSH_PROCESSING_MAXTHREADS_PROP, "200"));
             workerQueueSize = Integer.valueOf(System.getProperty(PUSH_PROCESSING_QUEUESIZE_PROP, "2000"));
+            this.concurrencyFactor = Integer.valueOf(System.getProperty(PUSH_PROCESSING_CONCURRENCY_PROP, "50"));
 
         } catch (Exception e){
 
             // if junk is passed into the property, just default the values
             maxAsyncThreads = 200;
             workerQueueSize = 2000;
+            this.concurrencyFactor = 50;
 
         }
 
@@ -330,7 +333,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                         }).subscribeOn(Schedulers.from(asyncExecutor));
 
-                }, Integer.valueOf(System.getProperty(PUSH_PROCESSING_CONCURRENCY_PROP, "50")))
+                }, concurrencyFactor)
                 .doOnError(throwable -> {
 
                     logger.error("Error while processing devices for notification : {}", notification.getUuid());
