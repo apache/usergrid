@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.exceptions.PersistenceException;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
@@ -65,7 +66,11 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
             .build(new CacheLoader<String, UUID>() {
                 @Override
                 public UUID load(final String key) throws Exception {
-                    return fetchApplicationId(key);
+                    UUID appId = fetchApplicationId(key);
+                    if ( appId == null ) {
+                        throw new PersistenceException("Error getting applicationId");
+                    }
+                    return appId;
                 }
             });
     }
