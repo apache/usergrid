@@ -314,7 +314,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 .distinct( queueMessage -> {
 
                     if(queueMessage.isPresent()) {
-                        return queueMessage.get().getNotificationId();
+                        return queueMessage.get().getDeviceId();
                     }
 
                     return UUIDUtils.newTimeUUID(); // this should be distinct, default handling for the Optional.empty() case
