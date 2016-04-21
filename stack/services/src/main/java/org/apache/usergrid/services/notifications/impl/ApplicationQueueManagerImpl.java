@@ -23,6 +23,7 @@ import org.apache.usergrid.persistence.core.executor.TaskExecutorFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueMessage;
 import org.apache.usergrid.services.notifications.*;
@@ -316,7 +317,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                         return queueMessage.get().getNotificationId();
                     }
 
-                    return queueMessage; // this will always be distinct, default handling for the Optional.empty() case
+                    return UUIDUtils.newTimeUUID(); // this should be distinct, default handling for the Optional.empty() case
 
                 } )
                 .doOnNext( message -> {
