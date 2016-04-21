@@ -35,6 +35,8 @@ public interface AkkaFig extends GuicyFig {
 
     String AKKA_REGION = "collection.akka.region";
 
+    String AKKA_REGION_LIST = "usergrid.queue.regionList"; // same region list used by queues
+
     String AKKA_REGION_SEEDS = "collection.akka.region.seeds";
 
     String AKKA_UNIQUEVALUE_ACTORS = "collection.akka.uniquevalue.actors";
@@ -75,6 +77,13 @@ public interface AkkaFig extends GuicyFig {
     String getRegion();
 
     /**
+     * Comma separated list of regions known to cluster.
+     */
+    @Key(AKKA_REGION_LIST)
+    @Default("us-east")
+    String getRegionList();
+
+    /**
      * Number of UniqueValueActors to be started on each node
      */
     @Key(AKKA_UNIQUEVALUE_ACTORS)
@@ -82,32 +91,32 @@ public interface AkkaFig extends GuicyFig {
     int getUniqueValueActors();
 
     /**
-     * Comma-separated lists of seeds each with format {region}:{hostname}:{port}
+     * Comma-separated lists of seeds each with format {region}:{hostname}:{port}.
+     * Regions MUST be listed in the 'usergrid.queue.regionList'
      */
     @Key(AKKA_REGION_SEEDS)
-    @Default("us-east:localhost:2551")
+    @Default("us-east-1:localhost:2551")
     String getRegionSeeds();
 
     /**
      * Authoritative regions may be specified for types
      * Comma-separated lists of region types each with format {region}:{type}
      */
-    // TODO: allow this to be set via REST API
     @Key(AKKA_UNIQUEVALUE_REGION_TYPES)
-    @Default("us-east:user")
+    @Default("us-east-1:user")
     String getRegionTypes();
 
     /**
      * Unique Value cache TTL in seconds.
      */
     @Key(AKKA_UNIQUEVALUE_CACHE_TTL)
-    @Default("5")
+    @Default("10")
     int getUniqueValueCacheTtl();
 
     /**
      * Unique Value Reservation TTL in seconds.
      */
     @Key(AKKA_UNIQUEVALUE_RESERVATION_TTL)
-    @Default("5")
+    @Default("10")
     int getUniqueValueReservationTtl();
 }

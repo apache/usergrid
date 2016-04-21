@@ -35,9 +35,7 @@ public class ReservationCacheActor extends UntypedActor {
     int reservationCount = 0;
     int cancellationCount = 0;
 
-    public ReservationCacheActor(String injectorName ) {
-
-        logger.info("Starting for {}", injectorName);
+    public ReservationCacheActor() {
 
         // subscribe to the topic named "content"
         ActorRef mediator = DistributedPubSub.get(getContext().system()).mediator();

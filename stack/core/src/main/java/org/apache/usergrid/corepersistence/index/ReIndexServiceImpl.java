@@ -83,7 +83,7 @@ public class ReIndexServiceImpl implements ReIndexService {
     private final MapManagerFactory mapManagerFactory;
     private final AsyncEventService indexService;
     private final EntityIndexFactory entityIndexFactory;
-    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+    private final CollectionSettingsCacheFactory collectionSettingsCacheFactory;
 
 
     @Inject
@@ -93,7 +93,7 @@ public class ReIndexServiceImpl implements ReIndexService {
                                final MapManagerFactory mapManagerFactory,
                                final AllApplicationsObservable allApplicationsObservable,
                                final IndexProcessorFig indexProcessorFig,
-                               final IndexSchemaCacheFactory indexSchemaCacheFactory,
+                               final CollectionSettingsCacheFactory collectionSettingsCacheFactory,
                                final AsyncEventService indexService ) {
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
@@ -101,7 +101,7 @@ public class ReIndexServiceImpl implements ReIndexService {
         this.allApplicationsObservable = allApplicationsObservable;
         this.indexProcessorFig = indexProcessorFig;
         this.indexService = indexService;
-        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
+        this.collectionSettingsCacheFactory = collectionSettingsCacheFactory;
         this.mapManagerFactory = mapManagerFactory;
         this.mapManager = mapManagerFactory.createMapManager( RESUME_MAP_SCOPE );
     }
@@ -145,15 +145,15 @@ public class ReIndexServiceImpl implements ReIndexService {
                 CpNamingUtils.getEntityTypeMapScope( appId.get().getApplication()  ) );
 
             CollectionSettingsCache collectionSettingsCache =
-                indexSchemaCacheFactory.getInstance( collectionMapStorage );
+                collectionSettingsCacheFactory.getInstance( collectionMapStorage );
 
-            Optional<Map<String, Object>> collectionIndexingSchema =
+            Optional<Map<String, Object>> collectionSettings =
                 collectionSettingsCache.getCollectionSettings( collectionName );
 
             // If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
-            if ( collectionIndexingSchema.isPresent() ) {
+            if ( collectionSettings.isPresent() ) {
 
-                Map jsonMapData = collectionIndexingSchema.get();
+                Map jsonMapData = collectionSettings.get();
 
                 jsonMapData.put( "lastReindexed", Instant.now().toEpochMilli() );
 

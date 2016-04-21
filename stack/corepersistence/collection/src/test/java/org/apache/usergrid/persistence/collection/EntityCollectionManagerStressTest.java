@@ -81,7 +81,7 @@ public class EntityCollectionManagerStressTest {
             newEntity.setField(new StringField("name", String.valueOf(i)));
             newEntity.setField(new LocationField("location", new Location(120,40)));
 
-            Entity returned = manager.write(newEntity).toBlocking().last();
+            Entity returned = manager.write(newEntity, null ).toBlocking().last();
 
             assertNotNull("Returned has a id", returned.getId());
             assertNotNull("Returned has a version", returned.getVersion());

@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsCache;
-import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsCacheFactory;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Schema;
@@ -59,7 +59,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
     private final EventBuilder eventBuilder;
     private final MapManagerFactory mapManagerFactory;
     private final GraphManagerFactory graphManagerFactory;
-    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+    private final CollectionSettingsCacheFactory collectionSettingsCacheFactory;
 
 
 
@@ -70,7 +70,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
                                   EventBuilder eventBuilder,
                                   MapManagerFactory mapManagerFactory,
                                   GraphManagerFactory graphManagerFactory,
-                                  IndexSchemaCacheFactory indexSchemaCacheFactory
+                                  CollectionSettingsCacheFactory collectionSettingsCacheFactory
     ){
 
         this.allEntityIdsObservable = allEntityIdsObservable;
@@ -79,7 +79,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
         this.eventBuilder = eventBuilder;
         this.mapManagerFactory = mapManagerFactory;
         this.graphManagerFactory = graphManagerFactory;
-        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
+        this.collectionSettingsCacheFactory = collectionSettingsCacheFactory;
     }
 
 
@@ -149,7 +149,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
         boolean skipIndexing = false;
 
         MapManager mm = getMapManagerForTypes(applicationScope);
-        CollectionSettingsCache collectionSettingsCache = indexSchemaCacheFactory.getInstance( mm );
+        CollectionSettingsCache collectionSettingsCache = collectionSettingsCacheFactory.getInstance( mm );
         String collectionName = Schema.defaultCollectionName( type );
         Optional<Map<String, Object>> collectionIndexingSchema =
             collectionSettingsCache.getCollectionSettings( collectionName );

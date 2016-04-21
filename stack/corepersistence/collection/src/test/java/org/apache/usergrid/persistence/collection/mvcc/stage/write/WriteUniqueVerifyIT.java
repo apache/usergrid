@@ -74,7 +74,7 @@ public class WriteUniqueVerifyIT {
         entity.setField(new StringField("name", "Aston Martin Vanquish", true));
         entity.setField(new StringField("identifier", "v12", true));
         entity.setField(new IntegerField("top_speed_mph", 200));
-        entityManager.write( entity ).toBlocking().last();
+        entityManager.write( entity, null ).toBlocking().last();
 
         Entity entityFetched = entityManager.load( entity.getId() ).toBlocking().last();
         entityFetched.setField( new StringField("foo", "bar"));
@@ -91,7 +91,7 @@ public class WriteUniqueVerifyIT {
         entity2.setField(new IntegerField("top_speed_mph", 120));
 
         try {
-            entityManager.write( entity2 ).toBlocking().last();
+            entityManager.write( entity2, null ).toBlocking().last();
             fail("Write should have thrown an exception");
 
         } catch ( Exception ex ) {
@@ -103,7 +103,7 @@ public class WriteUniqueVerifyIT {
 
         // ensure we can update original entity without error
         entity.setField( new IntegerField("top_speed_mph", 190) );
-        entityManager.write( entity );
+        entityManager.write( entity, null );
     }
 
     @Test
@@ -118,11 +118,11 @@ public class WriteUniqueVerifyIT {
         entity.setField(new StringField("name", "Porsche 911 GT3", true));
         entity.setField(new StringField("identifier", "911gt3", true));
         entity.setField(new IntegerField("top_speed_mph", 194));
-        entityManager.write( entity ).toBlocking().last();
+        entityManager.write( entity, null ).toBlocking().last();
 
         Entity entityFetched = entityManager.load( entity.getId() ).toBlocking().last();
         entityFetched.setField( new StringField("foo", "baz"));
-        entityManager.write( entityFetched ).toBlocking().last();
+        entityManager.write( entityFetched, null ).toBlocking().last();
     }
 
     @Test
@@ -137,9 +137,9 @@ public class WriteUniqueVerifyIT {
         entity.setField(new StringField("name", "Alfa Romeo 8C Competizione", true));
         entity.setField(new StringField("identifier", "ar8c", true));
         entity.setField(new IntegerField("top_speed_mph", 182));
-        entityManager.write( entity ).toBlocking().last();
+        entityManager.write( entity, null ).toBlocking().last();
 
         entity.setField( new StringField("foo", "bar"));
-        entityManager.write( entity ).toBlocking().last();
+        entityManager.write( entity, null ).toBlocking().last();
     }
 }

@@ -64,7 +64,6 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.codahale.metrics.Timer;
@@ -81,7 +80,6 @@ import com.netflix.astyanax.serializers.StringSerializer;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action0;
 
 
 /**
@@ -171,7 +169,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Override
-    public Observable<Entity> write( final Entity entity ) {
+    public Observable<Entity> write(final Entity entity, String region) {
 
         //do our input validation
         Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
@@ -182,20 +180,20 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         // create our observable and start the write
-        final CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( applicationScope, entity );
+        final CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( applicationScope, entity, region );
 
         Observable<CollectionIoEvent<MvccEntity>> observable =  stageRunner( writeData, writeStart );
 
 
-        final Observable<Entity> write = observable.map( writeCommit )
-                                                   .map(ioEvent -> {
-                //fire this in the background so we don't block writes
-                Observable.just( ioEvent ).compose( uniqueCleanup ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
-                return ioEvent;
-            }
-         )
-                                                                              //now extract the ioEvent we need to return and update the version
-                                                                              .map( ioEvent -> ioEvent.getEvent().getEntity().get() );
+        final Observable<Entity> write = observable.map( writeCommit ).map(ioEvent -> {
+
+            // fire this in the background so we don't block writes
+            Observable.just( ioEvent ).compose( uniqueCleanup )
+                .subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
+            return ioEvent;
+
+        }) // now extract the ioEvent we need to return and update the version
+        .map( ioEvent -> ioEvent.getEvent().getEntity().get() );
 
         return ObservableTimer.time( write, writeTimer );
     }
@@ -211,7 +209,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         Observable<Id> o = Observable.just( new CollectionIoEvent<>( applicationScope, entityId ) ).map( markStart )
             .doOnNext( markCommit ).compose( uniqueCleanup ).map(
                 entityEvent -> entityEvent.getEvent().getId() );
-
 
         return ObservableTimer.time( o, deleteTimer );
     }

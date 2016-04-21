@@ -242,6 +242,7 @@ public abstract class AbstractContextResource {
     protected EntityManagerFactory getEmf(){
         return emf;
     }
+
     /**
      * Next three new methods necessary to work around inexplicable problems with EntityHolder.
      * This problem happens consistently when you deploy "two-dot-o" to Tomcat:
