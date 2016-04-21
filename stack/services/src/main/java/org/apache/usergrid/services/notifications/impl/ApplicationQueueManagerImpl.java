@@ -45,8 +45,6 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ApplicationQueueManagerImpl.class);
 
-    //this is for tests, will not mark initial post complete, set to false for tests
-
     private final EntityManager em;
     private final QueueManager qm;
     private final JobScheduler jobScheduler;
@@ -245,6 +243,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                                 Query devicesQuery = new Query();
                                 devicesQuery.setCollection("devices");
                                 devicesQuery.setResultsLevel(Query.Level.CORE_PROPERTIES);
+                                devicesQuery.setLimit(50); // for now, assume a user has no more than 50 devices
 
                                 try {
 
