@@ -249,22 +249,24 @@ public class RootResource extends AbstractContextResource implements MetricProce
     }
 
     @GET
-    @Path("/status/memory")
+    @Path("/status/heap")
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
-    public ApiResponse getMemoryStats(){
+    public ApiResponse getHeapStats(){
 
         ApiResponse response = createApiResponse();
 
         ObjectNode node = JsonNodeFactory.instance.objectNode();
 
-        long heapSize = Runtime.getRuntime().totalMemory();
+        long heapAllocatedSize = Runtime.getRuntime().totalMemory();
         long heapMaxSize = Runtime.getRuntime().maxMemory();
         long heapFreeSize = Runtime.getRuntime().freeMemory();
+        long heapUsedSize = heapAllocatedSize - heapFreeSize;
 
-        node.put( "currentHeap", org.apache.usergrid.utils.StringUtils.readableByteSize(heapSize) );
-        node.put( "maxHeap", org.apache.usergrid.utils.StringUtils.readableByteSize(heapMaxSize) );
-        node.put( "freeHeap", org.apache.usergrid.utils.StringUtils.readableByteSize(heapFreeSize) );
+        node.put( "used", org.apache.usergrid.utils.StringUtils.readableByteSize(heapUsedSize) );
+        node.put( "free", org.apache.usergrid.utils.StringUtils.readableByteSize(heapFreeSize) );
+        node.put( "allocated", org.apache.usergrid.utils.StringUtils.readableByteSize(heapAllocatedSize) );
+        node.put( "max", org.apache.usergrid.utils.StringUtils.readableByteSize(heapMaxSize) );
 
         response.setProperty( "status", node );
         return response;
