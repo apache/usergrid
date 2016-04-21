@@ -1061,6 +1061,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         assertEquals( 0, connectionsByQuery.getNumOfEntities() );
     }
 
+
     @Test
     public void testCollectionRegion() {
 
