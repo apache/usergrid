@@ -62,7 +62,7 @@ public class TaskManager {
             //random date and time for format
 
 
-            incrementNotificationCounter( "completed" );
+            //incrementNotificationCounter( "completed" );
 
             EntityRef deviceRef = new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID);
 
@@ -100,7 +100,7 @@ public class TaskManager {
 
         try {
 
-            incrementNotificationCounter( "failed" );
+            //incrementNotificationCounter( "failed" );
 
             if (logger.isDebugEnabled()) {
                 logger.debug("Notification {} for device {} got error {}", notification.getUuid(), deviceUUID, code);

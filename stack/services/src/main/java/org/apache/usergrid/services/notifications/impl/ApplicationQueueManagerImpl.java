@@ -62,7 +62,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
 
 
-    private final ExecutorService asyncExecutor;
+    //private final ExecutorService asyncExecutor;
 
 
 
@@ -78,6 +78,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         this.queueMeter = metricsFactory.getMeter(ApplicationQueueManagerImpl.class, "notification.queue");
         this.sendMeter = metricsFactory.getMeter(NotificationsService.class, "queue.send");
 
+        /**
         int maxAsyncThreads;
         int workerQueueSize;
 
@@ -102,7 +103,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
             .createTaskExecutor( "push-device-io", maxAsyncThreads, workerQueueSize,
                 TaskExecutorFactory.RejectionAction.CALLERRUNS );
 
-
+        **/
     }
 
     private boolean scheduleQueueJob(Notification notification) throws Exception {
@@ -269,7 +270,6 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                         return Observable.from(entities);
 
                         })
-                        .distinct( deviceRef -> deviceRef.getUuid())
                         .filter( device -> {
 
                             if(logger.isTraceEnabled()) {
@@ -306,37 +306,47 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                         })
                         .map(sendMessageFunction)
-                        .doOnNext( message -> {
-                            try {
-
-                                if(message.isPresent()){
-
-                                    if(logger.isTraceEnabled()) {
-                                        logger.trace("Queueing notification message for device: {}", message.get().getDeviceId());
-                                    }
-                                    qm.sendMessage( message.get() );
-                                    queueMeter.mark();
-                                }
-
-                            } catch (IOException e) {
-
-                                if(message.isPresent()){
-                                    logger.error("Unable to queue notification for notification UUID {} and device UUID {} ",
-                                        message.get().getNotificationId(), message.get().getDeviceId());
-                                }
-                                else{
-                                    logger.error("Unable to queue notification as it's not present when trying to send to queue");
-                                }
-
-                            }
-
-
-                        }).subscribeOn(Schedulers.from(asyncExecutor));
+                        .subscribeOn(Schedulers.io());
 
                 }, concurrencyFactor)
+                .distinct( queueMessage -> {
+
+                    if(queueMessage.isPresent()) {
+                        return queueMessage.get().getNotificationId();
+                    }
+                    
+                    return queueMessage; // this will always be distinct, default handling for the Optional.empty() case
+
+                } )
+                .doOnNext( message -> {
+                    try {
+
+                        if(message.isPresent()){
+
+                            if(logger.isTraceEnabled()) {
+                                logger.trace("Queueing notification message for device: {}", message.get().getDeviceId());
+                            }
+                            qm.sendMessage( message.get() );
+                            queueMeter.mark();
+                        }
+
+                    } catch (IOException e) {
+
+                        if(message.isPresent()){
+                            logger.error("Unable to queue notification for notification UUID {} and device UUID {} ",
+                                message.get().getNotificationId(), message.get().getDeviceId());
+                        }
+                        else{
+                            logger.error("Unable to queue notification as it's not present when trying to send to queue");
+                        }
+
+                    }
+
+
+                })
                 .doOnError(throwable -> {
 
-                    logger.error("Error while processing devices for notification : {}", notification.getUuid());
+                    logger.error("Error while processing devices for notification : {}, error: {}", notification.getUuid(), throwable.getMessage());
                     notification.setProcessingFinished(-1L);
                     notification.setDeviceProcessedCount(deviceCount.get());
                     logger.warn("Partial notification. Only {} devices processed for notification {}",
@@ -362,7 +372,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                 });
 
-            processMessagesObservable.subscribeOn(Schedulers.from(asyncExecutor)).subscribe(); // fire the queuing into the background
+            processMessagesObservable.subscribeOn(Schedulers.io()).subscribe(); // fire the queuing into the background
 
         }
 
