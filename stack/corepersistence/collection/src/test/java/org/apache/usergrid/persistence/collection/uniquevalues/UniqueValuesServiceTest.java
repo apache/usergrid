@@ -120,7 +120,7 @@ public class UniqueValuesServiceTest {
                         newEntity.setField( new StringField( "username", username, true ) );
                         newEntity.setField( new StringField( "email", username + "@example.org", true ) );
 
-                        Observable<Entity> observable = manager.write( newEntity );
+                        Observable<Entity> observable = manager.write( newEntity, null );
                         Entity returned = observable.toBlocking().lastOrDefault( null );
 
                         usersCreated.put( username, newEntity );

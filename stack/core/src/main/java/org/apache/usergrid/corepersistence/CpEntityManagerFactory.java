@@ -22,6 +22,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.collection.uniquevalues.AkkaFig;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -31,7 +33,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.apache.commons.lang.StringUtils;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsCacheFactory;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.corepersistence.service.CollectionService;
@@ -111,7 +113,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         });
 
     private final ApplicationIdCache applicationIdCache;
-    //private final IndexSchemaCache indexSchemaCache;
 
     private ManagerCache managerCache;
 
@@ -124,7 +125,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final CollectionService collectionService;
     private final ConnectionService connectionService;
     private final GraphManagerFactory graphManagerFactory;
-    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+    private final CollectionSettingsCacheFactory collectionSettingsCacheFactory;
+    private UniqueValuesService uniqueValuesService;
 
     public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
                                    final Injector injector ) {
@@ -140,14 +142,18 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
         this.collectionService = injector.getInstance( CollectionService.class );
         this.connectionService = injector.getInstance( ConnectionService.class );
-        this.indexSchemaCacheFactory = injector.getInstance( IndexSchemaCacheFactory.class );
 
-        //this line always needs to be last due to the temporary cicular dependency until spring is removed
+        this.collectionSettingsCacheFactory = injector.getInstance( CollectionSettingsCacheFactory.class );
 
+        AkkaFig akkaFig = injector.getInstance( AkkaFig.class );
+        if ( akkaFig.getAkkaEnabled() ) {
+            this.uniqueValuesService = injector.getInstance( UniqueValuesService.class );
+            this.uniqueValuesService.start();
+        }
+
+        // this line always needs to be last due to the temporary cicular dependency until spring is removed
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
-
-
     }
 
 
@@ -201,8 +207,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private EntityManager _getEntityManager( UUID applicationId ) {
-        EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache,
-            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService,indexSchemaCacheFactory, applicationId );
+
+        EntityManager em = new CpEntityManager( cassandraService, counterUtils, indexService, managerCache,
+            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService,
+            collectionSettingsCacheFactory, applicationId );
 
         return em;
     }

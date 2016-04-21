@@ -28,11 +28,11 @@ import com.google.inject.Singleton;
  * This can only be implemented after we have the impl for the application cache.
  */
 @Singleton
-public class IndexSchemaCacheFactory {
+public class CollectionSettingsCacheFactory {
     private final IndexSchemaCacheFig fig;
 
     @Inject
-    public IndexSchemaCacheFactory(IndexSchemaCacheFig fig){
+    public CollectionSettingsCacheFactory(IndexSchemaCacheFig fig){
         this.fig = fig;
     }
 

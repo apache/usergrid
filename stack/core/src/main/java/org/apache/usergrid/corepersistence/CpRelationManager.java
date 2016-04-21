@@ -20,7 +20,7 @@ package org.apache.usergrid.corepersistence;
 import java.util.*;
 
 import org.apache.usergrid.corepersistence.index.CollectionSettingsCache;
-import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsCacheFactory;
 import org.apache.usergrid.corepersistence.results.IdQueryExecutor;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
@@ -107,7 +107,7 @@ public class CpRelationManager implements RelationManager {
 
     private final AsyncEventService indexService;
 
-    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+    private final CollectionSettingsCacheFactory collectionSettingsCacheFactory;
 
 
     private final CollectionService collectionService;
@@ -119,7 +119,7 @@ public class CpRelationManager implements RelationManager {
                               final ConnectionService connectionService,
                               final EntityManager em,
                               final EntityManagerFig entityManagerFig, final UUID applicationId,
-                              final IndexSchemaCacheFactory indexSchemaCacheFactory,
+                              final CollectionSettingsCacheFactory collectionSettingsCacheFactory,
                               final EntityRef headEntity) {
 
 
@@ -159,7 +159,7 @@ public class CpRelationManager implements RelationManager {
             .format( "cpHeadEntity cannot be null for entity id %s, app id %s", entityId.getUuid(), applicationId ) );
 
         this.indexService = indexService;
-        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
+        this.collectionSettingsCacheFactory = collectionSettingsCacheFactory;
 
     }
 
@@ -1087,15 +1087,15 @@ public class CpRelationManager implements RelationManager {
         boolean skipIndexing = false;
 
         MapManager mm = getMapManagerForTypes();
-        CollectionSettingsCache collectionSettingsCache = indexSchemaCacheFactory.getInstance( mm );
+        CollectionSettingsCache collectionSettingsCache = collectionSettingsCacheFactory.getInstance( mm );
         String collectionName = Schema.defaultCollectionName( type );
         Optional<Map<String, Object>> collectionIndexingSchema =
             collectionSettingsCache.getCollectionSettings( collectionName );
 
         if ( collectionIndexingSchema.isPresent()) {
             Map jsonMapData = collectionIndexingSchema.get();
-            final ArrayList fields = (ArrayList) jsonMapData.get( "fields" );
-            if ( fields.size() == 1 && fields.get(0).equals("none")) {
+            final Object fields = jsonMapData.get( "fields" );
+            if ( fields != null && fields instanceof String && "none".equalsIgnoreCase( fields.toString())) {
                 skipIndexing = true;
             }
         }

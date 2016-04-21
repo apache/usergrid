@@ -20,8 +20,6 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -155,7 +153,7 @@ public class IndexServiceTest {
         final EntityCollectionManager collectionManager =
             entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
-        collectionManager.write( testEntity ).toBlocking().last();
+        collectionManager.write( testEntity, null ).toBlocking().last();
 
         final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
 
@@ -228,7 +226,7 @@ public class IndexServiceTest {
         final EntityCollectionManager collectionManager =
             entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
-        collectionManager.write( testEntity ).toBlocking().last();
+        collectionManager.write( testEntity, null ).toBlocking().last();
 
         final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
 
@@ -475,7 +473,7 @@ public class IndexServiceTest {
         final EntityCollectionManager collectionManager =
             entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
-        collectionManager.write( testEntity ).toBlocking().last();
+        collectionManager.write( testEntity, null ).toBlocking().last();
 
         //create our collection edge
         final Edge collectionEdge =

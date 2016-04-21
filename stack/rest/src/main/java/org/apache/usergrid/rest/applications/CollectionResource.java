@@ -86,7 +86,7 @@ public class CollectionResource extends ServiceResource {
      * POST settings for a collection.
      *
      * Expects a JSON object which may include:
-     * - fields: (array) field names to be indexed, '*' for all and 'none' for no indexing
+     * - fields: (array or string) either an array of field names to be indexed, or 'all' or 'none'
      * - region: (string) name of the authoritative region for this collection
      */
     @POST
@@ -108,7 +108,7 @@ public class CollectionResource extends ServiceResource {
 
         Object json;
         if ( StringUtils.isEmpty( body ) ) {
-            json = null;
+            throw new NullArgumentException( "No body posted" );
         } else {
             json = readJsonToObject( body );
         }
@@ -121,25 +121,16 @@ public class CollectionResource extends ServiceResource {
 
         ServicePayload payload = getPayload( json );
 
-        if(payload.getProperty( "fields" )==null){
-            throw new NullArgumentException( "fields" );
-        }
-
-        if(! (payload.getProperty( "fields" ) instanceof ArrayList)){
-            throw new NullArgumentException( "fields must be of json array type" );
-        }
-
-
-        executeServicePostRequestForSettings( ui,response, ServiceAction.POST,payload );
+        executeServicePostRequestForSettings( ui,response, ServiceAction.POST, payload );
 
         return response;
     }
 
 
-    private void addItemToServiceContext( final @Context UriInfo ui,
-                                          final @PathParam( "itemName" ) PathSegment itemName ) throws Exception {
-        //The below is duplicated because it could change in the future and is probably not all needed but
-        //not determined yet.
+    private void addItemToServiceContext( UriInfo ui, PathSegment itemName ) throws Exception {
+
+        // The below is duplicated because it could change in the future
+        // and is probably not all needed but not determined yet.
         if ( itemName.getPath().startsWith( "{" ) ) {
             Query query = Query.fromJsonString( itemName.getPath() );
             if ( query != null ) {
@@ -190,7 +181,7 @@ public class CollectionResource extends ServiceResource {
 
 
     @GET
-    @Path( "{itemName}/_index")
+    @Path( "{itemName}/_settings")
     @Produces({MediaType.APPLICATION_JSON,"application/javascript"})
     @RequireApplicationAccess
     @JSONP
@@ -200,7 +191,7 @@ public class CollectionResource extends ServiceResource {
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         if(logger.isTraceEnabled()){
-            logger.trace( "CollectionResource.executeGetOnIndex" );
+            logger.trace( "CollectionResource.executeGetOnSettings" );
         }
 
         addItemToServiceContext( ui, itemName );

@@ -16,7 +16,7 @@
 package org.apache.usergrid.corepersistence;
 
 
-import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsCacheFactory;
 import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFig;
 import org.apache.usergrid.locking.guice.LockModule;
 import org.apache.usergrid.persistence.cache.guice.CacheModule;
@@ -130,7 +130,7 @@ public class CoreModule extends AbstractModule {
 
         bind( ManagerCache.class ).to( CpManagerCache.class );
         bind( ApplicationIdCacheFactory.class );
-        bind( IndexSchemaCacheFactory.class );
+        bind( CollectionSettingsCacheFactory.class );
 
 
         /**

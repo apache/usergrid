@@ -117,7 +117,8 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         final Entity entity = mvccEntity.getEntity().get();
 
         try {
-            akkaUvService.confirmUniqueValues( applicationScope, entity, mvccEntity.getVersion() );
+            akkaUvService.confirmUniqueValues(
+                applicationScope, entity, mvccEntity.getVersion(), ioEvent.getRegion() );
 
         } catch (UniqueValueException e) {
             Map<String, Field> violations = new HashMap<>();
@@ -155,18 +156,11 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         // merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );
 
-        // re-write the unique values but this time with no TTL
-        for ( Field field : EntityUtils.getUniqueFields(mvccEntity.getEntity().get()) ) {
-
-                UniqueValue written  = new UniqueValueImpl( field,
-                    entityId,version);
-
-                MutationBatch mb = uniqueValueStrat.write(applicationScope,  written );
-
-                logger.debug("Finalizing {} unique value {}", field.getName(), field.getValue().toString());
-
-                // merge into our existing mutation batch
-                logMutation.mergeShallow( mb );
+        // akkaFig may be null when this is called from JUnit tests
+        if ( akkaFig != null && akkaFig.getAkkaEnabled() ) {
+            confirmUniqueFieldsAkka( mvccEntity, version, applicationScope, ioEvent.getRegion() );
+        } else {
+            confirmUniqueFields( mvccEntity, version, applicationScope, logMutation );
         }
 
         try {
@@ -179,5 +173,52 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         }
 
         return ioEvent;
+    }
+
+
+    private void confirmUniqueFields(
+        MvccEntity mvccEntity, UUID version, ApplicationScope scope, MutationBatch logMutation) {
+
+        final Entity entity = mvccEntity.getEntity().get();
+
+        // re-write the unique values but this time with no TTL
+        for ( Field field : EntityUtils.getUniqueFields(mvccEntity.getEntity().get()) ) {
+
+                UniqueValue written  = new UniqueValueImpl( field, entity.getId(), version);
+
+                MutationBatch mb = uniqueValueStrat.write(scope,  written );
+
+                logger.debug("Finalizing {} unique value {}", field.getName(), field.getValue().toString());
+
+                // merge into our existing mutation batch
+                logMutation.mergeShallow( mb );
+        }
+
+        try {
+            logMutation.execute();
+        }
+        catch ( ConnectionException e ) {
+            logger.error( "Failed to execute write asynchronously ", e );
+            throw new WriteCommitException( mvccEntity, scope,
+                "Failed to execute write asynchronously ", e );
+        }
+    }
+
+
+    private void confirmUniqueFieldsAkka(
+        MvccEntity mvccEntity, UUID version, ApplicationScope scope, String region ) {
+
+        final Entity entity = mvccEntity.getEntity().get();
+
+        try {
+            akkaUvService.confirmUniqueValues( scope, entity, version, region );
+
+        } catch (UniqueValueException e) {
+
+            Map<String, Field> violations = new HashMap<>();
+            violations.put( e.getField().getName(), e.getField() );
+
+            throw new WriteUniqueVerifyException( mvccEntity, scope, violations  );
+        }
     }
 }

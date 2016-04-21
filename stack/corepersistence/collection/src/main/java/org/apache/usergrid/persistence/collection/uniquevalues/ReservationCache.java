@@ -9,25 +9,33 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.TimeUnit;
 
 
-// cannot be a Guice singleton, must be shared across injectors
-// @com.google.inject.Singleton
 public class ReservationCache {
     private static final Logger logger = LoggerFactory.getLogger( RequestActor.class );
 
-    Cache<String, UniqueValueActor.Reservation> cache = CacheBuilder.newBuilder()
-       .maximumSize(1000)
-       .concurrencyLevel( 300 )
-       .expireAfterWrite(30, TimeUnit.SECONDS)
-       .recordStats()
-       .build();
+    Cache<String, UniqueValueActor.Reservation> cache;
 
-    private static ReservationCache instance = new ReservationCache();
+    // use hokey old-style singleton because its not that easy to get Guice into an actor
+    private static ReservationCache instance = null;
 
-    public static ReservationCache getInstance() {
-        return instance;
+    ReservationCache( long ttl ) {
+        cache = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .concurrencyLevel( 300 )
+            .expireAfterWrite(ttl, TimeUnit.SECONDS)
+            .recordStats()
+            .build();
     }
 
-    private ReservationCache() {}
+    public static void init( long ttl ) {
+        instance = new ReservationCache( ttl );
+    }
+
+    public static ReservationCache getInstance() {
+        if ( instance == null ) {
+            throw new IllegalStateException( "ReservationCache not initialized yet" );
+        }
+        return instance;
+    }
 
     public UniqueValueActor.Reservation get( String rowKey ) {
         UniqueValueActor.Reservation res = cache.getIfPresent( rowKey );

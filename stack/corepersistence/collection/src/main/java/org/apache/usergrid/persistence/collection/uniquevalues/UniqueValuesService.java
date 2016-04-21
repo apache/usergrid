@@ -30,20 +30,35 @@ import java.util.UUID;
 public interface UniqueValuesService {
 
     /**
+     * Initialize and start service.
+     */
+    void start();
+
+    /**
      * Check that unique values are unique and reserve them for a limited time.
      * If the reservations are not confirmed, they will expire.
+     *
+     * @param scope Application scope of entity.
+     * @param entity Entity with unique values to be confirmed.
+     * @param version Version of entity claiming unique values.
+     * @param region Authoritative Region to be used for this entity or null to use current region.
+     * @throws UniqueValueException if unique values cannot be confirmed.
      */
-    void reserveUniqueValues( ApplicationScope scope, Entity entity, UUID version ) throws UniqueValueException;
+    void reserveUniqueValues( ApplicationScope scope, Entity entity, UUID version, String region )
+        throws UniqueValueException;
 
     /**
      * Confirm unique values that were reserved earlier.
+     *
+     * @param scope Application scope of entity.
+     * @param entity Entity with unique values to be reserved.
+     * @param version Version of entity claiming unique values.
+     * @param region Authoritative Region to be used for this entity or null to use current region.
+     * @throws UniqueValueException if unique values cannot be reserved.
      */
-    void confirmUniqueValues( ApplicationScope scope, Entity entity, UUID version ) throws UniqueValueException;
+    void confirmUniqueValues( ApplicationScope scope, Entity entity, UUID version , String region )
+        throws UniqueValueException;
 
-    /**
-     * Initialize and wait for Akka actors to start.
-     */
-    void start();
 
     /**
      * For test purposes only.

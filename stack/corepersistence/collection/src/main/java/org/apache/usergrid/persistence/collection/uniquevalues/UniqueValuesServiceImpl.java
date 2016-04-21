@@ -51,13 +51,8 @@ import java.util.concurrent.TimeUnit;
 public class UniqueValuesServiceImpl implements UniqueValuesService {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValuesServiceImpl.class );
 
-    @Inject
     AkkaFig akkaFig;
-
-    @Inject
     UniqueValuesTable table;
-
-
     private String hostname;
     private Integer port;
     private String currentRegion;
@@ -81,8 +76,14 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     private final boolean disableUniqueValues;
 
 
-    public UniqueValuesServiceImpl() {
+    @Inject
+    public UniqueValuesServiceImpl( AkkaFig akkaFig, UniqueValuesTable table ) {
+        this.akkaFig = akkaFig;
+        this.table = table;
+
+        ReservationCache.init( akkaFig.getUniqueValueCacheTtl() );
         this.reservationCache = ReservationCache.getInstance();
+
         this.disableUniqueValues = false;
     }
 
@@ -91,6 +92,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
      * Init Akka ActorSystems and wait for request actors to start.
      */
     public void start() {
+
         this.hostname = akkaFig.getHostname();
         this.port = akkaFig.getPort();
         this.currentRegion = akkaFig.getRegion();
@@ -104,6 +106,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
      * For testing purposes only; does not wait for request actors to start.
      */
     public void start( String hostname, Integer port, String currentRegion ) {
+
         this.hostname = hostname;
         this.port = port;
         this.currentRegion = currentRegion;
@@ -158,12 +161,19 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             throw new RuntimeException( "No value specified for akka.region");
         }
 
+        List regionList = Arrays.asList( akkaFig.getRegionList().toLowerCase().split(",") );
+
         String typesValue = akkaFig.getRegionTypes();
         String[] regionTypes = StringUtils.isEmpty( typesValue ) ? new String[0] : typesValue.split(",");
         for ( String regionType : regionTypes ) {
-            String[] parts = regionType.split(":");
+            String[] parts = regionType.toLowerCase().split(":");
             String typeRegion = parts[0];
             String type = parts[1];
+
+            if ( !regionList.contains( typeRegion) ) {
+                throw new RuntimeException(
+                    "'collection.akka.region.seeds' references unknown region: " + typeRegion );
+            }
             this.regionsByType.put( type, typeRegion );
         }
 
@@ -419,12 +429,13 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
 
     @Override
-    public void reserveUniqueValues( ApplicationScope scope, Entity entity, UUID version) throws UniqueValueException {
+    public void reserveUniqueValues(
+        ApplicationScope scope, Entity entity, UUID version, String region ) throws UniqueValueException {
 
         try {
             for (Field field : entity.getFields()) {
                 if (field.isUnique()) {
-                    reserveUniqueField( scope, entity, version, field );
+                    reserveUniqueField( scope, entity, version, field, region );
                 }
             }
 
@@ -432,7 +443,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
             for (Field field : entity.getFields()) {
                 try {
-                    cancelUniqueField( scope, entity, version, field );
+                    cancelUniqueField( scope, entity, version, field, region );
                 } catch (Throwable ignored) {
                     logger.debug( "Error canceling unique field", ignored );
                 }
@@ -444,12 +455,13 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
 
     @Override
-    public void confirmUniqueValues( ApplicationScope scope, Entity entity, UUID version ) throws UniqueValueException {
+    public void confirmUniqueValues(
+        ApplicationScope scope, Entity entity, UUID version, String region ) throws UniqueValueException {
 
         try {
             for (Field field : entity.getFields()) {
                 if (field.isUnique()) {
-                    confirmUniqueField( scope, entity, version, field );
+                    confirmUniqueField( scope, entity, version, field, region );
                 }
             }
 
@@ -457,7 +469,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
             for (Field field : entity.getFields()) {
                 try {
-                    cancelUniqueField( scope, entity, version, field );
+                    cancelUniqueField( scope, entity, version, field, region) ;
                 } catch (Throwable ignored) {
                     logger.debug( "Error canceling unique field", ignored );
                 }
@@ -469,12 +481,17 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
 
     private void reserveUniqueField(
-        ApplicationScope scope, Entity entity, UUID version, Field field ) throws UniqueValueException {
+        ApplicationScope scope, Entity entity, UUID version, Field field, String region ) throws UniqueValueException {
 
-        ActorRef requestActor = lookupRequestActorForType( entity.getId().getType() );
+        final ActorRef requestActor;
+        if ( region != null ) {
+            requestActor = getRequestActorsByRegion().get( region );
+        } else {
+            requestActor = lookupRequestActorForType( entity.getId().getType() );
+        }
 
         if ( requestActor == null ) {
-            throw new RuntimeException( "No request actor for type, cannot verify unique fields!" );
+            throw new RuntimeException( "No request actor for region or type, cannot verify unique fields!" );
         }
 
         UniqueValueActor.Request request = new UniqueValueActor.Reservation(
@@ -488,12 +505,12 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             throw new UniqueValueException( "Error property not unique (cache)", field);
         }
 
-        sendUniqueValueRequest(  entity, requestActor, request );
+        sendUniqueValueRequest( entity, requestActor, request );
     }
 
 
     private void confirmUniqueField(
-        ApplicationScope scope, Entity entity, UUID version, Field field ) throws UniqueValueException {
+        ApplicationScope scope, Entity entity, UUID version, Field field, String region) throws UniqueValueException {
 
         ActorRef requestActor = lookupRequestActorForType( entity.getId().getType() );
 
@@ -509,7 +526,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
 
     private void cancelUniqueField(
-        ApplicationScope scope, Entity entity, UUID version, Field field ) throws UniqueValueException {
+        ApplicationScope scope, Entity entity, UUID version, Field field, String region ) throws UniqueValueException {
 
         ActorRef requestActor = lookupRequestActorForType( entity.getId().getType() );
 
@@ -525,11 +542,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
 
     private ActorRef lookupRequestActorForType( String type ) {
-        String region = getRegionsByType().get( type );
-        if ( region == null ) {
-            region = currentRegion;
-        }
-        ActorRef requestActor = getRequestActorsByRegion().get(region);
+        final String region = getRegionsByType().get( type );
+        ActorRef requestActor = getRequestActorsByRegion().get( region == null ? currentRegion : region );
         if ( requestActor == null ) {
             throw new RuntimeException( "No request actor available for region: " + region );
         }
@@ -538,7 +552,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
 
     private void sendUniqueValueRequest(
-        Entity entity, ActorRef requestActor, UniqueValueActor.Request request) throws UniqueValueException {
+        Entity entity, ActorRef requestActor, UniqueValueActor.Request request ) throws UniqueValueException {
 
         int maxRetries = 5;
         int retries = 0;

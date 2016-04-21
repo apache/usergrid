@@ -123,7 +123,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
         final ApplicationScope applicationScope = ioevent.getEntityCollection();
 
         try {
-            akkaUvService.reserveUniqueValues( applicationScope, entity, mvccEntity.getVersion() );
+            akkaUvService.reserveUniqueValues( applicationScope, entity, mvccEntity.getVersion(), ioevent.getRegion() );
 
         } catch (UniqueValueException e) {
             Map<String, Field> violations = new HashMap<>();

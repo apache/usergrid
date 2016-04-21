@@ -39,10 +39,11 @@ public interface EntityCollectionManager {
      * completely overwrite the previous values, if it exists.
      *
      * @param entity The entity to update
+     * @param region The authoritative region for the entity type or null to use current region.
      *
      * @return the Observable with the updated entity in the body
      */
-    Observable<Entity> write( Entity entity );
+    Observable<Entity> write( Entity entity, String region );
 
 
     /**

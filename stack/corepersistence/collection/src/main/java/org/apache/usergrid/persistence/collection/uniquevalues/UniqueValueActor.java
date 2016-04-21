@@ -30,12 +30,6 @@ public class UniqueValueActor extends UntypedActor {
 
     public UniqueValueActor( UniqueValuesTable table ) {
         this.table = table;
-
-//        chaos = Boolean.parseBoolean( uniqueValuesService.getProperties()
-//                .getProperty( "akka.test.chaos", "false" ) );
-
-//        metricsService =
-//                GuiceModule.getInjector( injectorName ).getInstance( MetricsService.class );
     }
 
     @Override

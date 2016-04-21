@@ -20,11 +20,7 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +78,7 @@ public class IndexServiceImpl implements IndexService {
     private final GraphManagerFactory graphManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
     private final MapManagerFactory mapManagerFactory;
-    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+    private final CollectionSettingsCacheFactory collectionSettingsCacheFactory;
     private final EdgesObservable edgesObservable;
     private final IndexFig indexFig;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
@@ -93,7 +89,7 @@ public class IndexServiceImpl implements IndexService {
     @Inject
     public IndexServiceImpl( final GraphManagerFactory graphManagerFactory, final EntityIndexFactory entityIndexFactory,
                              final MapManagerFactory mapManagerFactory,
-                             final IndexSchemaCacheFactory indexSchemaCacheFactory,
+                             final CollectionSettingsCacheFactory collectionSettingsCacheFactory,
                              final EdgesObservable edgesObservable, final IndexFig indexFig,
                              final IndexLocationStrategyFactory indexLocationStrategyFactory,
                              final MetricsFactory metricsFactory ) {
@@ -103,7 +99,7 @@ public class IndexServiceImpl implements IndexService {
         this.edgesObservable = edgesObservable;
         this.indexFig = indexFig;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
-        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
+        this.collectionSettingsCacheFactory = collectionSettingsCacheFactory;
         this.indexTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.update_all");
         this.addTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.add" );
     }
@@ -204,11 +200,10 @@ public class IndexServiceImpl implements IndexService {
         MapManager mm = mapManagerFactory.createMapManager( ms );
 
         Set<String> defaultProperties;
-        ArrayList fieldsToKeep;
 
         String collectionName = CpNamingUtils.getCollectionNameFromEdgeName( indexEdge.getEdgeName() );
 
-        CollectionSettingsCache collectionSettingsCache = indexSchemaCacheFactory.getInstance( mm );
+        CollectionSettingsCache collectionSettingsCache = collectionSettingsCacheFactory.getInstance( mm );
 
         Optional<Map<String, Object>> collectionIndexingSchema =
             collectionSettingsCache.getCollectionSettings( collectionName );
@@ -219,18 +214,18 @@ public class IndexServiceImpl implements IndexService {
             Map jsonMapData = collectionIndexingSchema.get();
             Schema schema = Schema.getDefaultSchema();
             defaultProperties = schema.getRequiredProperties( collectionName );
-            fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
 
-            if(fieldsToKeep.contains( "*" )){
+            Object fields = jsonMapData.get("fields");
+
+            if ( fields != null && fields instanceof String && "all".equalsIgnoreCase(fields.toString())) {
                 return Optional.absent();
             }
 
-            // never add "none" because it has special meaning, "none" disables indexing for a type
-            fieldsToKeep.remove("none");
+            if ( fields != null && fields instanceof List ) {
+                defaultProperties.addAll( (List) fields );
+            }
 
-            defaultProperties.addAll( fieldsToKeep );
-        }
-        else {
+        } else {
             return Optional.absent();
         }
 
