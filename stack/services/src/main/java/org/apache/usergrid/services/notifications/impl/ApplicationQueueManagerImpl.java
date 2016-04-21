@@ -64,7 +64,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
 
 
-    private final Scheduler scheduler;
+    //private final Scheduler scheduler;
 
 
 
@@ -79,8 +79,10 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         this.queueName = getQueueNames(properties);
         this.queueMeter = metricsFactory.getMeter(ApplicationQueueManagerImpl.class, "notification.queue");
         this.sendMeter = metricsFactory.getMeter(NotificationsService.class, "queue.send");
+        this.concurrencyFactor = Integer.valueOf(System.getProperty(PUSH_PROCESSING_CONCURRENCY_PROP, "50"));
 
 
+        /**
         int maxAsyncThreads;
         int workerQueueSize;
 
@@ -88,7 +90,6 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
             maxAsyncThreads = Integer.valueOf(System.getProperty(PUSH_PROCESSING_MAXTHREADS_PROP, "200"));
             workerQueueSize = Integer.valueOf(System.getProperty(PUSH_PROCESSING_QUEUESIZE_PROP, "2000"));
-            this.concurrencyFactor = Integer.valueOf(System.getProperty(PUSH_PROCESSING_CONCURRENCY_PROP, "50"));
 
         } catch (Exception e){
 
@@ -104,7 +105,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         this.scheduler = Schedulers.from(TaskExecutorFactory
             .createTaskExecutor( "push-device-io", maxAsyncThreads, workerQueueSize,
                 TaskExecutorFactory.RejectionAction.CALLERRUNS ));
-
+         **/
 
     }
 
@@ -308,7 +309,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                         })
                         .map(sendMessageFunction)
-                        .subscribeOn(scheduler);
+                        .subscribeOn(Schedulers.io());
 
                 }, concurrencyFactor)
                 .distinct( queueMessage -> {
@@ -374,7 +375,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                 });
 
-            processMessagesObservable.subscribeOn(scheduler).subscribe(); // fire the queuing into the background
+            processMessagesObservable.subscribeOn(Schedulers.io()).subscribe(); // fire the queuing into the background
 
         }
 
