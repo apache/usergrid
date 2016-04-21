@@ -29,6 +29,7 @@ import org.apache.usergrid.services.notifications.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
+import rx.Scheduler;
 import rx.Subscriber;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -62,7 +63,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
 
 
-    //private final ExecutorService asyncExecutor;
+    private final Scheduler scheduler;
 
 
 
@@ -78,7 +79,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         this.queueMeter = metricsFactory.getMeter(ApplicationQueueManagerImpl.class, "notification.queue");
         this.sendMeter = metricsFactory.getMeter(NotificationsService.class, "queue.send");
 
-        /**
+
         int maxAsyncThreads;
         int workerQueueSize;
 
@@ -99,11 +100,11 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
 
         // create our own executor which has a bounded queue w/ caller runs policy for rejected tasks
-        this.asyncExecutor = TaskExecutorFactory
+        this.scheduler = Schedulers.from(TaskExecutorFactory
             .createTaskExecutor( "push-device-io", maxAsyncThreads, workerQueueSize,
-                TaskExecutorFactory.RejectionAction.CALLERRUNS );
+                TaskExecutorFactory.RejectionAction.CALLERRUNS ));
 
-        **/
+
     }
 
     private boolean scheduleQueueJob(Notification notification) throws Exception {
@@ -306,7 +307,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                         })
                         .map(sendMessageFunction)
-                        .subscribeOn(Schedulers.io());
+                        .subscribeOn(scheduler);
 
                 }, concurrencyFactor)
                 .distinct( queueMessage -> {
@@ -314,7 +315,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                     if(queueMessage.isPresent()) {
                         return queueMessage.get().getNotificationId();
                     }
-                    
+
                     return queueMessage; // this will always be distinct, default handling for the Optional.empty() case
 
                 } )
@@ -372,7 +373,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
                 });
 
-            processMessagesObservable.subscribeOn(Schedulers.io()).subscribe(); // fire the queuing into the background
+            processMessagesObservable.subscribeOn(scheduler).subscribe(); // fire the queuing into the background
 
         }
 
