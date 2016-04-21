@@ -248,6 +248,29 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
     }
 
+    @GET
+    @Path("/status/memory")
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getMemoryStats(){
+
+        ApiResponse response = createApiResponse();
+
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+
+        long heapSize = Runtime.getRuntime().totalMemory();
+        long heapMaxSize = Runtime.getRuntime().maxMemory();
+        long heapFreeSize = Runtime.getRuntime().freeMemory();
+
+        node.put( "currentHeap", org.apache.usergrid.utils.StringUtils.readableByteSize(heapSize) );
+        node.put( "maxHeap", org.apache.usergrid.utils.StringUtils.readableByteSize(heapMaxSize) );
+        node.put( "freeHeap", org.apache.usergrid.utils.StringUtils.readableByteSize(heapFreeSize) );
+
+        response.setProperty( "status", node );
+        return response;
+
+    }
+
 
 
     private void dumpMetrics( ObjectNode node ) {
