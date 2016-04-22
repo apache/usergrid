@@ -136,7 +136,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         try {
 
-            this.pathResource( getOrgAppPath( "testcollections/_indexes" ) ).post( false, payload,
+            this.pathResource( getOrgAppPath( "testcollections/_index" ) ).post( false, payload,
                 new QueryParameters().addParam( "grant_type", "client_credentials" ).addParam( "client_id",
                     String.valueOf( ( ( Map ) appCredentials.get( "credentials" ) ).get( "client_id" ) ) )
                                      .addParam( "client_secret", String.valueOf(
@@ -167,7 +167,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        Entity thing = this.app().collection( "testCollections" ).collection( "_indexes" ).post( payload );
+        Entity thing = this.app().collection( "testCollections" ).collection( "_index" ).post( payload );
         refreshIndex();
 
 
@@ -206,7 +206,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         //to prove that the entity exists
 
         //next part is to delete the schema then reindex it and it should work.
-        this.app().collection( "testCollections" ).collection( "_indexes" ).delete();
+        this.app().collection( "testCollections" ).collection( "_index" ).delete();
         refreshIndex();
 
         this.app().collection( "testCollections" ).collection( "_reindex" )
@@ -245,7 +245,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post index to the collection metadata
         try {
-            this.app().collection( "testCollections" ).collection( "_indexes" ).post( payload );
+            this.app().collection( "testCollections" ).collection( "_index" ).post( payload );
             fail();
         }catch(BadRequestException bre){
             //this is expected.
@@ -259,7 +259,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingMap);
 
         try {
-            this.app().collection( "testCollections" ).collection( "_indexes" ).post( payload );
+            this.app().collection( "testCollections" ).collection( "_index" ).post( payload );
             fail();
         }catch(BadRequestException bre){
             //this is expected.
@@ -269,7 +269,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         try {
-            this.app().collection( "testCollections" ).collection( "_indexes" ).post( payload );
+            this.app().collection( "testCollections" ).collection( "_index" ).post( payload );
         }catch(BadRequestException bre){
             fail( "This shouldn't fail" );
         }
@@ -292,7 +292,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        Entity thing = this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        Entity thing = this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
 
@@ -366,7 +366,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        Entity thing = this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        Entity thing = this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
 
@@ -417,7 +417,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        Entity thing = this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        Entity thing = this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
         Collection collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
@@ -445,7 +445,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
 
         collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
 
@@ -497,7 +497,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
         //Create test collection with a test entity that is partially indexed.
@@ -539,7 +539,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
         Map<String,Object> arrayFieldsForTesting = new HashMap<>();
@@ -589,7 +589,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
         Map<String,Object> arrayFieldsForTesting = new HashMap<>();
@@ -632,7 +632,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
         Map<String,Object> arrayFieldsForTestingSelectiveIndexing = new HashMap<>();
@@ -687,7 +687,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
         Map<String,Object> arrayFieldsForTestingSelectiveIndexing = new HashMap<>();
@@ -738,7 +738,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
         //Create test collection with a test entity that is partially indexed.
@@ -961,7 +961,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         String randomizer = RandomStringUtils.randomAlphanumeric(10);
         String collectionName = "col_" + randomizer;
-        app().collection( collectionName ).collection( "_indexes" ).post( payload );
+        app().collection( collectionName ).collection( "_index" ).post( payload );
         refreshIndex();
 
         // was the no-index wildcard saved and others ignored?
@@ -1009,7 +1009,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         String randomizer = RandomStringUtils.randomAlphanumeric(10);
         String unIndexedCollectionName = "col_" + randomizer;
-        app().collection( unIndexedCollectionName ).collection( "_indexes" ).post( payload );
+        app().collection( unIndexedCollectionName ).collection( "_index" ).post( payload );
         refreshIndex();
 
         String entityName1 = "unindexed1";
@@ -1070,7 +1070,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         String unIndexedCollectionName = "col_" + randomizer;
-        app().collection( unIndexedCollectionName ).collection( "_indexes" ).post( payload );
+        app().collection( unIndexedCollectionName ).collection( "_index" ).post( payload );
         refreshIndex();
 
         String entityName1 = "unindexed1";
