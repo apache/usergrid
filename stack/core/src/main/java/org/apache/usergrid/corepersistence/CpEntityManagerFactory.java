@@ -146,14 +146,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.collectionSettingsCacheFactory = injector.getInstance( CollectionSettingsCacheFactory.class );
 
         AkkaFig akkaFig = injector.getInstance( AkkaFig.class );
-        if ( akkaFig.getAkkaEnabled() ) {
-            this.uniqueValuesService = injector.getInstance( UniqueValuesService.class );
-            this.uniqueValuesService.start();
-        }
 
         // this line always needs to be last due to the temporary cicular dependency until spring is removed
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
+
+        if ( akkaFig.getAkkaEnabled() ) {
+            try {
+                this.uniqueValuesService = injector.getInstance( UniqueValuesService.class );
+                this.uniqueValuesService.start();
+            } catch (Throwable t) {
+                logger.error("Error starting Akka", t);
+            }
+        }
     }
 
 
