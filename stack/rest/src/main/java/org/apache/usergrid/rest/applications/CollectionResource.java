@@ -222,10 +222,6 @@ public class CollectionResource extends ServiceResource {
 
         addItemToServiceContext( ui, itemName );
 
-//        final ReIndexRequestBuilder request =
-//            createRequest().withApplicationId( services.getApplicationId() ).withCollection(
-//                String.valueOf( getServiceParameters().get( 0 ) ) ).withDelay( 50, TimeUnit.MILLISECONDS );
-//
         IndexResource indexResource = new IndexResource(injector);
         return indexResource.rebuildIndexesPost(
             services.getApplicationId().toString(),itemName.getPath(),false,callback );

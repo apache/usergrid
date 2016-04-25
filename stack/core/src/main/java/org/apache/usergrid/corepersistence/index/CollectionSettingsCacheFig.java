@@ -23,17 +23,17 @@ import org.safehaus.guicyfig.Key;
 
 
 /**
- * Index schema configuration.
+ * Collection settings cache config
  */
 @FigSingleton
-public interface IndexSchemaCacheFig extends GuicyFig {
+public interface CollectionSettingsCacheFig extends GuicyFig {
 
-    @Key( "usergrid.index_schema_cache_size" )
+    @Key( "usergrid.collection_settings_cache_size" )
     @Default( "5000" )
     int getCacheSize();
 
-    @Key( "usergrid.index_schema_cache_timeout_ms" )
-    @Default( "60000" )
+    @Key( "usergrid.collection_settings_cache_timeout_ms" )
+    @Default( "15000" )
     int getCacheTimeout();
 
 }
