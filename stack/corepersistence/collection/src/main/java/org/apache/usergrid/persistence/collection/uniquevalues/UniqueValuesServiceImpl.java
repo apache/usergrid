@@ -163,6 +163,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
         List regionList = Arrays.asList( akkaFig.getRegionList().toLowerCase().split(",") );
 
+        logger.info("Initializing Akka for hostname {} region {} regionList {}", hostname, currentRegion, regionList);
+
         String typesValue = akkaFig.getRegionTypes();
         String[] regionTypes = StringUtils.isEmpty( typesValue ) ? new String[0] : typesValue.split(",");
         for ( String regionType : regionTypes ) {

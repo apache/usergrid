@@ -95,7 +95,7 @@ public interface AkkaFig extends GuicyFig {
      * Regions MUST be listed in the 'usergrid.queue.regionList'
      */
     @Key(AKKA_REGION_SEEDS)
-    @Default("us-east-1:localhost:2551")
+    @Default("us-east:localhost:2551")
     String getRegionSeeds();
 
     /**
@@ -103,7 +103,7 @@ public interface AkkaFig extends GuicyFig {
      * Comma-separated lists of region types each with format {region}:{type}
      */
     @Key(AKKA_UNIQUEVALUE_REGION_TYPES)
-    @Default("us-east-1:user")
+    @Default("us-east:user")
     String getRegionTypes();
 
     /**
