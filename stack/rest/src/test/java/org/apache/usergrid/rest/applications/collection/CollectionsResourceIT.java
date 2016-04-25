@@ -18,20 +18,12 @@ package org.apache.usergrid.rest.applications.collection;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
-
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.entities.Application;
-
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.*;
 import org.apache.usergrid.rest.test.resource.model.Collection;
-import org.apache.usergrid.rest.test.resource.model.Credentials;
-import org.apache.usergrid.rest.test.resource.model.Entity;
-import org.apache.usergrid.rest.test.resource.model.QueryParameters;
-import org.apache.usergrid.rest.test.resource.model.Token;
-import org.apache.usergrid.services.ServiceParameter;
-
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -39,13 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.core.MediaType;
-
 import java.io.IOException;
 import java.util.*;
-
-import org.apache.commons.lang.NullArgumentException;
 
 import static org.junit.Assert.*;
 
@@ -967,14 +954,12 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         // create entities in an un-indexed collection
 
-        ArrayList<String> indexingArray = new ArrayList<>(  );
-        indexingArray.add( "!" );
         Entity payload = new Entity();
-        payload.put( "fields", indexingArray);
+        payload.put( "fields", "none");
 
         String randomizer = RandomStringUtils.randomAlphanumeric(10);
         String unIndexedCollectionName = "col_" + randomizer;
-        app().collection( unIndexedCollectionName ).collection( "_indexes" ).post( payload );
+        app().collection( unIndexedCollectionName ).collection( "_settings" ).post( payload );
         refreshIndex();
 
         String entityName1 = "unindexed1";
@@ -1029,13 +1014,11 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         // create an un-indexed entity
 
-        ArrayList<String> indexingArray = new ArrayList<>(  );
-        indexingArray.add( "!" );
         Entity payload = new Entity();
-        payload.put( "fields", indexingArray);
+        payload.put( "fields", "none");
 
         String unIndexedCollectionName = "col_" + randomizer;
-        app().collection( unIndexedCollectionName ).collection( "_indexes" ).post( payload );
+        app().collection( unIndexedCollectionName ).collection( "_settings" ).post( payload );
         refreshIndex();
 
         String entityName1 = "unindexed1";

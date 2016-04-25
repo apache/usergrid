@@ -141,7 +141,7 @@ public class CoreModule extends AbstractModule {
 
         install( new GuicyFigModule( ApplicationIdCacheFig.class ) );
 
-        install( new GuicyFigModule( IndexSchemaCacheFig.class ) );
+        install( new GuicyFigModule( CollectionSettingsCacheFig.class ) );
 
         install( new GuicyFigModule( EntityManagerFig.class ) );
 

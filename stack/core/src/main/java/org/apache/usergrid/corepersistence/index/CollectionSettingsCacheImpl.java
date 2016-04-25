@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -42,13 +43,12 @@ public class CollectionSettingsCacheImpl implements CollectionSettingsCache {
     private final MapManager mapManager;
 
 
-    public CollectionSettingsCacheImpl( MapManager mapManager, IndexSchemaCacheFig indexSchemaCacheFig) {
+    public CollectionSettingsCacheImpl( MapManager mapManager, CollectionSettingsCacheFig indexSchemaCacheFig) {
         this.mapManager = mapManager;
 
         indexSchemaCache = CacheBuilder.newBuilder()
             .maximumSize( indexSchemaCacheFig.getCacheSize() )
-            // I don't think we want this to expire this quickly:
-            //.expireAfterWrite( indexSchemaCacheFig.getCacheTimeout(), TimeUnit.MILLISECONDS )
+            .expireAfterWrite( indexSchemaCacheFig.getCacheTimeout(), TimeUnit.MILLISECONDS )
             .build( new CacheLoader<String, Optional<Map<String, Object>>>() {
                 @Override
                 public Optional<Map<String, Object>> load( final String collectionName ) throws Exception {

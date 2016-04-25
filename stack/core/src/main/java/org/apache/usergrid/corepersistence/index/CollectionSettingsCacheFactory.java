@@ -29,10 +29,10 @@ import com.google.inject.Singleton;
  */
 @Singleton
 public class CollectionSettingsCacheFactory {
-    private final IndexSchemaCacheFig fig;
+    private final CollectionSettingsCacheFig fig;
 
     @Inject
-    public CollectionSettingsCacheFactory(IndexSchemaCacheFig fig){
+    public CollectionSettingsCacheFactory(CollectionSettingsCacheFig fig){
         this.fig = fig;
     }
 
