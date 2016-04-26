@@ -223,47 +223,6 @@ public class CollectionsResourceIT extends AbstractRestIT {
     }
 
     @Test
-    public void verifyThatFieldsIsRequiredForCollectionSchema() throws Exception {
-        ArrayList<String> indexingArray = new ArrayList<>(  );
-
-        //field "fields" is required.
-        Entity payload = new Entity();
-        payload.put( "fieldWeirdnessNotFields", indexingArray);
-
-        //Post index to the collection metadata
-        try {
-            this.app().collection( "testCollections" ).collection( "_settings" ).post( payload );
-            fail();
-        }catch(BadRequestException bre){
-            //this is expected.
-        }
-
-        //ensure that it has to be an arraylist passed in.
-        Map indexingMap = new HashMap<>(  );
-        indexingMap.put( "exludeStuff","randomtext" );
-
-        payload = new Entity();
-        payload.put( "fields", indexingMap);
-
-        try {
-            this.app().collection( "testCollections" ).collection( "_settings" ).post( payload );
-            fail();
-        }catch(BadRequestException bre){
-            //this is expected.
-        }
-
-        payload = new Entity();
-        payload.put( "fields", indexingArray);
-
-        try {
-            this.app().collection( "testCollections" ).collection( "_settings" ).post( payload );
-        }catch(BadRequestException bre){
-            fail( "This shouldn't fail" );
-        }
-
-    }
-
-    @Test
     public void postCollectionSchemaWithWildcardIndexAll() throws Exception {
 
         // setup collection with index all

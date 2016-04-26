@@ -113,10 +113,14 @@ public interface EntityCollectionManager {
      */
     Observable<MvccLogEntry> delete( final Collection<MvccLogEntry> entries );
 
-
     /**
      * Returns health of entity data store.
      */
     Health getHealth();
+
+    /**
+     * For testing purposes only.
+     */
+    void startAkkaForTesting( String hostname, int port, String region );
 
 }

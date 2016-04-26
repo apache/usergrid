@@ -18,6 +18,7 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,6 +42,9 @@ import org.apache.usergrid.persistence.model.field.StringField;
 
 import com.google.inject.Inject;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -53,6 +57,9 @@ import static org.junit.Assert.fail;
 public class WriteUniqueVerifyIT {
 
     @Inject
+    private EntityCollectionManagerFactory factory;
+
+    @Inject
     SerializationFig serializationFig;
 
     @Inject
@@ -61,6 +68,17 @@ public class WriteUniqueVerifyIT {
 
     @Inject
     public EntityCollectionManagerFactory cmf;
+
+    private static AtomicBoolean startedAkka = new AtomicBoolean( false );
+
+    @Before
+    public void initAkka() {
+        if ( !startedAkka.getAndSet( true ) ) {
+            ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
+            EntityCollectionManager manager = factory.createCollectionManager( context );
+            manager.startAkkaForTesting( "127.0.0.1", 2551, "us-east" );
+        }
+    }
 
     @Test
     public void testConflict() {
@@ -96,9 +114,7 @@ public class WriteUniqueVerifyIT {
 
         } catch ( Exception ex ) {
             WriteUniqueVerifyException e = (WriteUniqueVerifyException)ex;
-
-            // verify two unique value violations
-            assertEquals( 2, e.getVioliations().size() );
+            assertTrue( !e.getVioliations().isEmpty() );
         }
 
         // ensure we can update original entity without error

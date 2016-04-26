@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.netflix.astyanax.model.ConsistencyLevel;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,25 +123,37 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final ApplicationScope applicationScope;
     private final RxTaskScheduler rxTaskScheduler;
 
+    private final UniqueValuesService uniqueValuesService;
+
 
     @Inject
-    public EntityCollectionManagerImpl( final WriteStart writeStart, final WriteUniqueVerify writeVerifyUnique,
+    public EntityCollectionManagerImpl( final WriteStart writeStart,
+                                        final WriteUniqueVerify writeVerifyUnique,
                                         final WriteOptimisticVerify writeOptimisticVerify,
-                                        final WriteCommit writeCommit, final RollbackAction rollback,
-                                        final MarkStart markStart, final MarkCommit markCommit,
-                                        final UniqueCleanup uniqueCleanup, final VersionCompact versionCompact,
+                                        final WriteCommit writeCommit,
+                                        final RollbackAction rollback,
+                                        final MarkStart markStart,
+                                        final MarkCommit markCommit,
+                                        final UniqueCleanup uniqueCleanup,
+                                        final VersionCompact versionCompact,
                                         final MvccEntitySerializationStrategy entitySerializationStrategy,
                                         final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
                                         final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
-                                        final Keyspace keyspace, final MetricsFactory metricsFactory,
-                                        final SerializationFig serializationFig, final RxTaskScheduler rxTaskScheduler,
+                                        final Keyspace keyspace,
+                                        final MetricsFactory metricsFactory,
+                                        final SerializationFig serializationFig,
+                                        final RxTaskScheduler rxTaskScheduler,
+                                        UniqueValuesService uniqueValuesService,
                                         @Assisted final ApplicationScope applicationScope ) {
+
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
         this.uniqueCleanup = uniqueCleanup;
         this.versionCompact = versionCompact;
         this.serializationFig = serializationFig;
         this.rxTaskScheduler = rxTaskScheduler;
+
+        this.uniqueValuesService = uniqueValuesService;
 
         ValidationUtils.validateApplicationScope( applicationScope );
 
@@ -458,5 +471,18 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         }
 
         return Health.RED;
+    }
+
+
+    @Override
+    public void startAkkaForTesting( String hostname, int port, String region ) {
+        try {
+            uniqueValuesService.start( hostname, port, region );
+            uniqueValuesService.waitForRequestActors();
+
+        } catch (Throwable t) {
+            logger.error("Error starting Akka", t);
+            throw t;
+        }
     }
 }

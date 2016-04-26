@@ -157,6 +157,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 this.uniqueValuesService.start();
             } catch (Throwable t) {
                 logger.error("Error starting Akka", t);
+                throw t;
             }
         }
     }
