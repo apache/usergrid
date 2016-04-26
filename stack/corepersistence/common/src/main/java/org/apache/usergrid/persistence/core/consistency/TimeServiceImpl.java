@@ -20,6 +20,9 @@
 package org.apache.usergrid.persistence.core.consistency;
 
 
+import java.time.Instant;
+
+
 /**
  * Simple time service to get the current system time.
  */
@@ -28,6 +31,6 @@ public class TimeServiceImpl implements TimeService{
 
     @Override
     public long getCurrentTime() {
-        return System.currentTimeMillis();
+        return Instant.now().toEpochMilli();
     }
 }

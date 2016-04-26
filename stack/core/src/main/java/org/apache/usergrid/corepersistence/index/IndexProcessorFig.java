@@ -40,11 +40,11 @@ public interface IndexProcessorFig extends GuicyFig {
 
     String ELASTICSEARCH_QUEUE_IMPL = "elasticsearch.queue_impl";
 
-    String INDEX_QUEUE_READ_TIMEOUT = "elasticsearch.queue_read_timeout";
-
     String INDEX_QUEUE_VISIBILITY_TIMEOUT = "elasticsearch.queue_visibility_timeout";
 
     String REINDEX_BUFFER_SIZE = "elasticsearch.reindex.buffer_size";
+
+    String REINDEX_CONCURRENCY_FACTOR = "elasticsearch.reindex.concurrency.factor";
 
 
     /**
@@ -55,12 +55,6 @@ public interface IndexProcessorFig extends GuicyFig {
     @Key(FAILURE_REJECTED_RETRY_WAIT_TIME)
     long getFailureRetryTime();
 
-    /**
-     * Set the read timeout for processing messages in the queue. (in milliseconds)
-     */
-    @Default("10000")
-    @Key(INDEX_QUEUE_READ_TIMEOUT)
-    int getIndexQueueTimeout();
 
     /**
      * Set the visibility timeout for messages received from the queue. (in milliseconds).
@@ -83,7 +77,7 @@ public interface IndexProcessorFig extends GuicyFig {
     /**
      * The number of worker threads used to read index write requests from the queue.
      */
-    @Default("16")
+    @Default("8")
     @Key(ELASTICSEARCH_WORKER_COUNT)
     int getWorkerCount();
 
@@ -96,9 +90,16 @@ public interface IndexProcessorFig extends GuicyFig {
     @Key(ELASTICSEARCH_QUEUE_IMPL)
     String getQueueImplementation();
 
-    @Default("1000")
+    @Default("100")
     @Key(REINDEX_BUFFER_SIZE)
     int getReindexBufferSize();
+
+    /**
+     * The number of parallel buffers during re-index that can be processed
+     */
+    @Default("10")
+    @Key(REINDEX_CONCURRENCY_FACTOR)
+    int getReindexConcurrencyFactor();
 
     /**
      * Flag to resolve the LOCAL queue implementation service synchronously.

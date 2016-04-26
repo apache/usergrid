@@ -26,6 +26,7 @@ import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.index.impl.IndexOperation;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -37,14 +38,6 @@ import rx.Observable;
  * Interface for constructing an observable stream to perform asynchonous events
  */
 public interface EventBuilder {
-
-    /**
-     * Return the cold observable of entity index update operations
-     * @param applicationScope
-     * @param entity
-     * @return
-     */
-    Observable<IndexOperationMessage> buildEntityIndexUpdate( ApplicationScope applicationScope, Entity entity );
 
     /**
      * Return the cold observable of the new edge operation
@@ -64,12 +57,14 @@ public interface EventBuilder {
     Observable<IndexOperationMessage> buildDeleteEdge( ApplicationScope applicationScope, Edge edge );
 
     /**
-     * Return a ben with 2 obervable streams for entity delete.
+     * Return a bin with 2 observable streams for entity delete.
      * @param applicationScope
      * @param entityId
      * @return
      */
-    EventBuilderImpl.EntityDeleteResults buildEntityDelete( ApplicationScope applicationScope, Id entityId );
+    EntityDeleteResults buildEntityDelete(ApplicationScope applicationScope, Id entityId );
+
+
 
     /**
      * Re-index an entity in the scope provided
@@ -77,6 +72,15 @@ public interface EventBuilder {
      * @return
      */
     Observable<IndexOperationMessage> buildEntityIndex( EntityIndexOperation entityIndexOperation );
+
+
+    /**
+     * Find all versions of the entity older than the latest and de-index them.
+     * @param applicationScope
+     * @param entityId
+     * @return
+     */
+    Observable<IndexOperationMessage> deIndexOlderVersions(ApplicationScope applicationScope, Id entityId );
 
     /**
      * A bean to hold both our observables so the caller can choose the subscription mechanism.  Note that

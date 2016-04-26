@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 import java.util.Collections;
 import java.util.Iterator;
 
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,14 +34,6 @@ import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardEntryGroup;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupCompaction;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 
 import com.google.common.base.Optional;
@@ -65,19 +58,22 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
     private final TimeService timeService;
     private final GraphFig graphFig;
     private final ShardGroupCompaction shardGroupCompaction;
+    private final NodeShardCache nodeShardCache;
 
 
     @Inject
     public NodeShardAllocationImpl( final EdgeShardSerialization edgeShardSerialization,
                                     final EdgeColumnFamilies edgeColumnFamilies,
                                     final ShardedEdgeSerialization shardedEdgeSerialization, final TimeService timeService,
-                                    final GraphFig graphFig, final ShardGroupCompaction shardGroupCompaction ) {
+                                    final GraphFig graphFig, final ShardGroupCompaction shardGroupCompaction,
+                                    final NodeShardCache nodeShardCache) {
         this.edgeShardSerialization = edgeShardSerialization;
         this.edgeColumnFamilies = edgeColumnFamilies;
         this.shardedEdgeSerialization = shardedEdgeSerialization;
         this.timeService = timeService;
         this.graphFig = graphFig;
         this.shardGroupCompaction = shardGroupCompaction;
+        this.nodeShardCache = nodeShardCache;
     }
 
 
@@ -98,12 +94,12 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         else {
             existingShards = edgeShardSerialization.getShardMetaData( scope, maxShardId, directedEdgeMeta );
+            //logger.info("existing shards has something: {}", existingShards.hasNext());
 
             /**
-             * We didn't get anything out of cassandra, so we need to create the minumum shard
+             * We didn't get anything out of cassandra, so we need to create the minimum shard
              */
             if ( existingShards == null || !existingShards.hasNext() ) {
-
 
                 final MutationBatch batch = edgeShardSerialization.writeShardMeta( scope, Shard.MIN_SHARD, directedEdgeMeta );
                 try {
@@ -117,6 +113,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             }
         }
 
+        //logger.info("getShards existing shards: {}", existingShards);
 
         return new ShardEntryGroupIterator( existingShards, graphFig.getShardMinDelta(), shardGroupCompaction, scope,
             directedEdgeMeta );
@@ -158,7 +155,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
         if ( shard.getCreatedTime() >= minTime ) {
-            if (logger.isTraceEnabled()) logger.trace( "Shard entry group {}  and shard {} is before the minimum created time of {}.  Not allocating.does not have 1 entry, not allocating", shardEntryGroup, shard, minTime );
+            if (logger.isTraceEnabled()) logger.trace( "Shard entry group {}  and shard {} is before the minimum created time of {}.  Not allocating", shardEntryGroup, shard, minTime );
             return false;
         }
 
@@ -194,7 +191,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          */
 
         final Iterator<MarkedEdge> edges = directedEdgeMeta
-            .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, shardEntryGroup.getReadShards(), 0,
+            .loadEdges( shardedEdgeSerialization, edgeColumnFamilies, scope, Collections.singletonList(shard),0,
                 SearchByEdgeType.Order.ASCENDING );
 
 
@@ -215,7 +212,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * element will suffice.
          */
 
-
+        long edgeCount = 0;
         for ( long i = 1; edges.hasNext(); i++ ) {
             //we hit a pivot shard, set it since it could be the last one we encounter
             if ( i % shardSize == 0 ) {
@@ -224,6 +221,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
             else {
                 edges.next();
             }
+            edgeCount++;
         }
 
 
@@ -231,7 +229,10 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
          * Sanity check in case we audit before we have a full shard
          */
         if ( marked == null ) {
-            if (logger.isTraceEnabled()) logger.trace( "Shard {} in shard group {} not full, not splitting",  shard, shardEntryGroup );
+            if (logger.isTraceEnabled()){
+                logger.trace( "Shard {} in shard group {} not full, " +
+                    "not splitting. Edge count: {}",  shard, shardEntryGroup, edgeCount );
+            }
             return false;
         }
 
@@ -245,6 +246,13 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         try {
             batch.execute();
+
+            if(logger.isTraceEnabled()) {
+                logger.trace("Clearing shard cache");
+            }
+
+            // invalidate the shard cache so we can be sure that all read shards are up to date
+            nodeShardCache.invalidate(scope, directedEdgeMeta);
         }
         catch ( ConnectionException e ) {
             throw new RuntimeException( "Unable to connect to casandra", e );
