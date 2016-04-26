@@ -18,15 +18,9 @@
 package org.apache.usergrid.persistence.collection;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import com.fasterxml.uuid.UUIDComparator;
+import com.google.inject.Inject;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
@@ -49,20 +43,19 @@ import org.apache.usergrid.persistence.model.field.BooleanField;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.StringField;
-
-import com.fasterxml.uuid.UUIDComparator;
-import com.google.inject.Inject;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import rx.Observable;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.junit.Assert.*;
 
 
 /** @author tnine */
@@ -87,13 +80,22 @@ public class EntityCollectionManagerIT {
     @Inject
     private MvccEntitySerializationStrategy entitySerializationStrategy;
 
+    private static AtomicBoolean startedAkka = new AtomicBoolean( false );
+
+    @Before
+    public void initAkka() {
+        if ( !startedAkka.getAndSet( true ) ) {
+            ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
+            EntityCollectionManager manager = factory.createCollectionManager( context );
+            manager.startAkkaForTesting( "127.0.0.1", 2551, "us-east" );
+        }
+    }
+
 
     @Test
     public void write() {
 
-
         ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
-
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
 
@@ -111,7 +113,6 @@ public class EntityCollectionManagerIT {
 
     @Test
     public void writeWithUniqueValues() {
-
 
         ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
@@ -288,7 +289,6 @@ public class EntityCollectionManagerIT {
     @Test
     public void writeAndGetField() {
 
-
         ApplicationScope collectionScope1 = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         Entity newEntity = new Entity( new SimpleId( "test" ) );
@@ -317,6 +317,7 @@ public class EntityCollectionManagerIT {
 
     @Test
     public void writeAndGetField2X() throws InterruptedException {
+
         ApplicationScope collectionScope1 = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         final Id entityId = new SimpleId( "test" );
@@ -334,12 +335,14 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Id was assigned", createReturned.getId() );
         assertNotNull( "Version was assigned", createReturned.getVersion() );
 
-        final Id existingId = manager.getIdField( firstInstance.getId().getType(), firstField ).toBlocking().lastOrDefault( null );
+        final Id existingId = manager.getIdField( firstInstance.getId().getType(), firstField )
+            .toBlocking().lastOrDefault( null );
         assertNotNull( existingId );
         assertEquals( firstInstance.getId(), existingId );
 
         Field fieldNull = new StringField( "testFieldNotThere", "uniquely", true );
-        final Id noId = manager.getIdField( firstInstance.getId().getType(), fieldNull ).toBlocking().lastOrDefault( null );
+        final Id noId = manager.getIdField( firstInstance.getId().getType(), fieldNull )
+            .toBlocking().lastOrDefault( null );
         assertNull( noId );
 
 
@@ -357,7 +360,8 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Id was assigned", createReturnedSecond.getId() );
         assertNotNull( "Version was assigned", createReturnedSecond.getVersion() );
 
-        assertNotEquals( "Versions should not be equal", createReturned.getVersion(), createReturnedSecond.getVersion() );
+        assertNotEquals( "Versions should not be equal",
+            createReturned.getVersion(), createReturnedSecond.getVersion() );
 
         //sanity check, get the entity to ensure it's the right version
 
@@ -370,11 +374,13 @@ public class EntityCollectionManagerIT {
         Thread.sleep( 2000 );
 
         //TODO, we need to implement verify and repair on this
-        final Id idFirst = manager.getIdField( firstInstance.getId().getType(), firstField ).toBlocking().lastOrDefault( null );
+        final Id idFirst = manager.getIdField( firstInstance.getId().getType(), firstField )
+            .toBlocking().lastOrDefault( null );
         assertNull(idFirst);
 
 
-        final Id idSecond = manager.getIdField( secondInstance.getId().getType(), secondField ).toBlocking().lastOrDefault( null );
+        final Id idSecond = manager.getIdField( secondInstance.getId().getType(), secondField )
+            .toBlocking().lastOrDefault( null );
 
         assertNotNull( idSecond );
         assertEquals( secondInstance.getId(), idSecond );
@@ -618,7 +624,6 @@ public class EntityCollectionManagerIT {
     public void testVersionLogUpdate() {
 
         ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
-
 
         final EntityCollectionManager manager = factory.createCollectionManager( context );
 

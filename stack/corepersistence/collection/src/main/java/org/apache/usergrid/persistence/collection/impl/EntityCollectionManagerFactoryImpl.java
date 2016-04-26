@@ -1,21 +1,19 @@
 /*
-<<<<<<< HEAD
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  The ASF licenses this file to You
+ * under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  * Licensed to the Apache Software Foundation (ASF) under one or more
- *  *  contributor license agreements.  The ASF licenses this file to You
- *  * under the Apache License, Version 2.0 (the "License"); you may not
- *  * use this file except in compliance with the License.
- *  * You may obtain a copy of the License at
- *  *
- *  *     http://www.apache.org/licenses/LICENSE-2.0
- *  *
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.  For additional information regarding
- *  * copyright in this work, please see the NOTICE file in the top level
- *  * directory of this distribution.
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.  For additional information regarding
+ * copyright in this work, please see the NOTICE file in the top level
+ * directory of this distribution.
  *
  */
 package org.apache.usergrid.persistence.collection.impl;
@@ -40,6 +38,7 @@ import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerial
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -77,6 +76,8 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
     private final Keyspace keyspace;
     private final MetricsFactory metricsFactory;
     private final RxTaskScheduler rxTaskScheduler;
+    private final UniqueValuesService uniqueValuesService;
+
 
     private LoadingCache<ApplicationScope, EntityCollectionManager> ecmCache =
         CacheBuilder.newBuilder().maximumSize( 1000 )
@@ -100,6 +101,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                 metricsFactory,
                                 serializationFig,
                                 rxTaskScheduler,
+                                uniqueValuesService,
                                 scope );
 
                             return target;
@@ -109,18 +111,24 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
 
     @Inject
     public EntityCollectionManagerFactoryImpl(
-            final WriteStart writeStart, final WriteUniqueVerify writeVerifyUnique,
+            final WriteStart writeStart,
+            final WriteUniqueVerify writeVerifyUnique,
             final WriteOptimisticVerify writeOptimisticVerify,
-            final WriteCommit writeCommit, final RollbackAction rollback,
-            final MarkStart markStart, final MarkCommit markCommit,
-            final UniqueCleanup uniqueCleanup, final VersionCompact versionCompact,
+            final WriteCommit writeCommit,
+            final RollbackAction rollback,
+            final MarkStart markStart,
+            final MarkCommit markCommit,
+            final UniqueCleanup uniqueCleanup,
+            final VersionCompact versionCompact,
             final SerializationFig serializationFig,
             final MvccEntitySerializationStrategy entitySerializationStrategy,
             final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
             final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
-            final Keyspace keyspace, final EntityCacheFig entityCacheFig,
+            final Keyspace keyspace,
+            final EntityCacheFig entityCacheFig,
             final MetricsFactory metricsFactory, @CollectionExecutorScheduler
-            final RxTaskScheduler rxTaskScheduler ) {
+            final RxTaskScheduler rxTaskScheduler,
+            final UniqueValuesService uniqueValuesService ) {
 
         this.writeStart = writeStart;
         this.writeVerifyUnique = writeVerifyUnique;
@@ -138,14 +146,15 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
         this.keyspace = keyspace;
         this.metricsFactory = metricsFactory;
         this.rxTaskScheduler = rxTaskScheduler;
+        this.uniqueValuesService = uniqueValuesService;
     }
 
     @Override
     public EntityCollectionManager createCollectionManager(ApplicationScope applicationScope) {
         Preconditions.checkNotNull(applicationScope);
-        try{
+        try {
             return ecmCache.get(applicationScope);
-        }catch (ExecutionException ee){
+        } catch (ExecutionException ee) {
             throw new RuntimeException(ee);
         }
     }

@@ -98,36 +98,9 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
 
     @Override
     public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<MvccEntity> ioEvent ) {
-        if ( akkaFig.getAkkaEnabled() ) {
-            return confirmUniqueFieldsAkka( ioEvent );
-        }
         return confirmUniqueFields( ioEvent );
     }
 
-    private CollectionIoEvent<MvccEntity> confirmUniqueFieldsAkka(CollectionIoEvent<MvccEntity> ioEvent) {
-
-        final MvccEntity mvccEntity = ioEvent.getEvent();
-        MvccValidationUtils.verifyMvccEntityWithEntity( mvccEntity );
-
-        final Id entityId = mvccEntity.getId();
-        final UUID version = mvccEntity.getVersion();
-        final ApplicationScope applicationScope = ioEvent.getEntityCollection();
-
-        //set the version into the entity
-        final Entity entity = mvccEntity.getEntity().get();
-
-        try {
-            akkaUvService.confirmUniqueValues(
-                applicationScope, entity, mvccEntity.getVersion(), ioEvent.getRegion() );
-
-        } catch (UniqueValueException e) {
-            Map<String, Field> violations = new HashMap<>();
-            violations.put( e.getField().getName(), e.getField() );
-            throw new WriteUniqueVerifyException( mvccEntity, applicationScope, violations  );
-        }
-
-        return ioEvent;
-    }
 
     private CollectionIoEvent<MvccEntity> confirmUniqueFields(CollectionIoEvent<MvccEntity> ioEvent) {
         final MvccEntity mvccEntity = ioEvent.getEvent();

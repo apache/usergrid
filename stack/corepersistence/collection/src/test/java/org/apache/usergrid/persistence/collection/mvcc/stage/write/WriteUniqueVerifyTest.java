@@ -18,6 +18,11 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +44,8 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
 import static org.mockito.Mockito.mock;
@@ -52,8 +59,10 @@ import static org.mockito.Mockito.when;
 public class WriteUniqueVerifyTest {
 
     @Inject
-    private UniqueValueSerializationStrategy uvstrat;
+    private EntityCollectionManagerFactory factory;
 
+    @Inject
+    private UniqueValueSerializationStrategy uvstrat;
 
     @Inject
     @Rule
@@ -66,6 +75,18 @@ public class WriteUniqueVerifyTest {
 
     @Inject
     private CassandraConfig cassandraConfig;
+
+
+    private static AtomicBoolean startedAkka = new AtomicBoolean( false );
+
+    @Before
+    public void initAkka() {
+        if ( !startedAkka.getAndSet( true ) ) {
+            ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
+            EntityCollectionManager manager = factory.createCollectionManager( context );
+            manager.startAkkaForTesting( "127.0.0.1", 2551, "us-east" );
+        }
+    }
 
 
     @Test

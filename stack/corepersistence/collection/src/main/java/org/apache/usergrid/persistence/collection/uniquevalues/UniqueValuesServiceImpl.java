@@ -35,6 +35,7 @@ import com.google.inject.Singleton;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -434,6 +435,10 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     public void reserveUniqueValues(
         ApplicationScope scope, Entity entity, UUID version, String region ) throws UniqueValueException {
 
+        if ( this.getRequestActorsByRegion().isEmpty() ) {
+            throw new RuntimeException("Unique values service not initialized, no request actors ready");
+        }
+
         try {
             for (Field field : entity.getFields()) {
                 if (field.isUnique()) {
@@ -459,6 +464,10 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     @Override
     public void confirmUniqueValues(
         ApplicationScope scope, Entity entity, UUID version, String region ) throws UniqueValueException {
+
+        if ( this.getRequestActorsByRegion().isEmpty() ) {
+            throw new RuntimeException("Unique values service not initialized, no request actors ready");
+        }
 
         try {
             for (Field field : entity.getFields()) {

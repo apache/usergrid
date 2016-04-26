@@ -23,6 +23,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +46,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.codahale.metrics.MetricRegistry.name;
 
 
+/**
+ * Tests that Usergrid will not allow creation of Users with duplicate usernames.
+ *
+ * Intended for use against a production-like cluster, not run during normal JUnit testing.
+ *
+ * Comment out the @Ignore annotation below and edit to add your target hosts.
+ */
 public class UniqueValuesIT {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValuesIT.class );
 
@@ -53,11 +61,12 @@ public class UniqueValuesIT {
     private static final AtomicInteger dupCounter = new AtomicInteger( 0 );
 
     @Test
-    public void testBasicOperation() throws Exception {
+    @Ignore("Intended for use against  prod-like cluster")
+    public void testDuplicatePrevention() throws Exception {
 
-        int numThreads = 3;
+        int numThreads = 6;
         int poolsize = 40;
-        int numUsers = 10;
+        int numUsers = 100;
 
         Multimap<String, Form> usersCreated = Multimaps.synchronizedMultimap( HashMultimap.create() );
         Multimap<String, Form> dupsRejected = Multimaps.synchronizedMultimap( HashMultimap.create() );
