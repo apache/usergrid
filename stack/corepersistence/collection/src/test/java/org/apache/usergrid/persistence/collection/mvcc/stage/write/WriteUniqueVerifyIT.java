@@ -76,7 +76,7 @@ public class WriteUniqueVerifyIT {
         if ( !startedAkka.getAndSet( true ) ) {
             ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
             EntityCollectionManager manager = factory.createCollectionManager( context );
-            manager.startAkkaForTesting( "127.0.0.1", 2551, "us-east" );
+            manager.startAkkaForTesting( "127.0.0.1", 2552, "us-east" );
         }
     }
 

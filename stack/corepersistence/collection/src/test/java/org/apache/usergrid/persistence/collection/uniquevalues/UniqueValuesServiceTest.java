@@ -17,6 +17,7 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,6 +29,7 @@ import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -52,6 +54,16 @@ public class UniqueValuesServiceTest {
     @Inject
     UniqueValuesService uniqueValuesService;
 
+    private static AtomicBoolean startedAkka = new AtomicBoolean( false );
+
+    @Before
+    public void initAkka() {
+        if ( !startedAkka.getAndSet( true ) ) {
+            ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
+            EntityCollectionManager manager = factory.createCollectionManager( context );
+            manager.startAkkaForTesting( "127.0.0.1", 2554, "us-east" );
+        }
+    }
 
 
     /**
@@ -60,12 +72,7 @@ public class UniqueValuesServiceTest {
     @Test
     public void testDuplicatePrevention() throws Exception {
 
-        if ( !akkaFig.getAkkaEnabled() ) {
-            logger.warn("Skipping test because Akka is not enabled");
-            return;
-        }
-        uniqueValuesService.start("127.0.0.1", 2551, "us-east");
-        uniqueValuesService.waitForRequestActors();
+        initAkka();
 
         final AtomicInteger successCounter = new AtomicInteger( 0 );
         final AtomicInteger errorCounter = new AtomicInteger( 0 );
