@@ -105,7 +105,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
     @Override
     public void call( final CollectionIoEvent<MvccEntity> ioevent ) {
-        if ( akkaFig.getAkkaEnabled() ) {
+        if ( akkaFig != null && akkaFig.getAkkaEnabled() ) {
             verifyUniqueFieldsAkka( ioevent );
         } else {
             verifyUniqueFields( ioevent );

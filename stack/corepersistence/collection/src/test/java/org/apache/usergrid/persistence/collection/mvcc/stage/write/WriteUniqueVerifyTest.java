@@ -68,8 +68,6 @@ public class WriteUniqueVerifyTest {
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
-
-
     @Inject
     private SerializationFig fig;
 
@@ -84,13 +82,14 @@ public class WriteUniqueVerifyTest {
         if ( !startedAkka.getAndSet( true ) ) {
             ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
             EntityCollectionManager manager = factory.createCollectionManager( context );
-            manager.startAkkaForTesting( "127.0.0.1", 2551, "us-east" );
+            manager.startAkkaForTesting( "127.0.0.1", 2553, "us-east" );
         }
     }
 
 
     @Test
     public void testNoFields() throws ConnectionException {
+
         final ApplicationScope collectionScope = mock( ApplicationScope.class );
         final Keyspace keyspace = mock(Keyspace.class);
         final MutationBatch batch = mock(MutationBatch.class);
@@ -103,10 +102,9 @@ public class WriteUniqueVerifyTest {
         final MvccEntity mvccEntity = fromEntity( entity );
 
         // run the stage
-        WriteUniqueVerify newStage = new WriteUniqueVerify( uvstrat, fig, keyspace,cassandraConfig, null, null );
+        WriteUniqueVerify newStage = new WriteUniqueVerify( uvstrat, fig, keyspace, cassandraConfig, null, null );
 
-       newStage.call(
-            new CollectionIoEvent<>( collectionScope, mvccEntity ) ) ;
+       newStage.call( new CollectionIoEvent<>( collectionScope, mvccEntity ) ) ;
 
        //if we get here, it's a success.  We want to test no exceptions are thrown
 

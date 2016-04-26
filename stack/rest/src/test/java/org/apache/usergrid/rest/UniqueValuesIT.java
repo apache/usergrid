@@ -81,7 +81,7 @@ public class UniqueValuesIT {
 
         final AtomicBoolean failed = new AtomicBoolean(false);
 
-        String randomizer = RandomStringUtils.randomAlphanumeric( 20 );
+        String randomizer = RandomStringUtils.randomAlphanumeric( 8 );
 
         String[] targetHosts = {"http://localhost:9090","http://localhost:9090"};
 
@@ -94,7 +94,7 @@ public class UniqueValuesIT {
 
                 if ( failed.get() ) { break; }
 
-                String username = "user_" + randomizer + "_" + i;
+                String username = "uv_test_user_" + randomizer;
                 final String host = targetHosts[ j % targetHosts.length ];
 
                 execService.submit( () -> {
