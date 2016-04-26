@@ -16,6 +16,9 @@
 package org.apache.usergrid.corepersistence;
 
 
+import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFig;
 import org.apache.usergrid.locking.guice.LockModule;
 import org.apache.usergrid.persistence.cache.guice.CacheModule;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -40,7 +43,6 @@ import org.apache.usergrid.corepersistence.index.ReIndexServiceImpl;
 import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.DeDupConnectionDataMigration;
-import org.apache.usergrid.corepersistence.migration.MigrationModuleVersionPlugin;
 import org.apache.usergrid.corepersistence.pipeline.PipelineModule;
 import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservableImpl;
@@ -129,6 +131,7 @@ public class CoreModule extends AbstractModule {
 
         bind( ManagerCache.class ).to( CpManagerCache.class );
         bind( ApplicationIdCacheFactory.class );
+        bind( IndexSchemaCacheFactory.class );
 
 
         /**
@@ -144,7 +147,6 @@ public class CoreModule extends AbstractModule {
         //wire up the collection migration plugin
         final Multibinder<MigrationPlugin> plugins = Multibinder.newSetBinder( binder(), MigrationPlugin.class );
         plugins.addBinding().to( CoreMigrationPlugin.class );
-        plugins.addBinding().to( MigrationModuleVersionPlugin.class );
 
         bind( AllApplicationsObservable.class ).to( AllApplicationsObservableImpl.class );
         bind( AllEntityIdsObservable.class ).to( AllEntityIdsObservableImpl.class );
@@ -178,6 +180,8 @@ public class CoreModule extends AbstractModule {
 
 
         install( new GuicyFigModule( ApplicationIdCacheFig.class ) );
+
+        install( new GuicyFigModule( IndexSchemaCacheFig.class ) );
 
         install( new GuicyFigModule( EntityManagerFig.class ) );
 

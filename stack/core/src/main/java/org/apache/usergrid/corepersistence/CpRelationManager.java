@@ -17,15 +17,13 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
+import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
+import org.apache.usergrid.corepersistence.results.IdQueryExecutor;
+import org.apache.usergrid.persistence.map.MapManager;
+import org.apache.usergrid.persistence.map.MapScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -65,9 +63,6 @@ import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -79,20 +74,12 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import rx.Observable;
-import rx.functions.Func1;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createCollectionEdge;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createCollectionSearchEdge;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionEdge;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionSearchByEdge;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getNameFromEdgeType;
-import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TITLE;
-import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
-import static org.apache.usergrid.persistence.Schema.TYPE_ROLE;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import static org.apache.usergrid.persistence.Schema.*;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import static org.apache.usergrid.utils.MapUtils.addMapSet;
@@ -120,6 +107,8 @@ public class CpRelationManager implements RelationManager {
 
     private final AsyncEventService indexService;
 
+    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+
 
     private final CollectionService collectionService;
     private final ConnectionService connectionService;
@@ -130,6 +119,7 @@ public class CpRelationManager implements RelationManager {
                               final ConnectionService connectionService,
                               final EntityManager em,
                               final EntityManagerFig entityManagerFig, final UUID applicationId,
+                              final IndexSchemaCacheFactory indexSchemaCacheFactory,
                               final EntityRef headEntity) {
 
 
@@ -169,6 +159,8 @@ public class CpRelationManager implements RelationManager {
             .format( "cpHeadEntity cannot be null for entity id %s, app id %s", entityId.getUuid(), applicationId ) );
 
         this.indexService = indexService;
+        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
+
     }
 
 
@@ -323,14 +315,31 @@ public class CpRelationManager implements RelationManager {
 
         final String ql;
 
-        if ( startResult != null ) {
-            ql = "select * where created > " + startResult.timestamp();
-        }
-        else {
+
+        if (startResult != null ) {
+
+            // UUID timestamp is a different measure than 'created' field on entities
+            Calendar uuidEpoch = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            uuidEpoch.clear();
+            uuidEpoch.set(1582, 9, 15, 0, 0, 0); // 9 = October
+            long epochMillis = uuidEpoch.getTime().getTime();
+
+            long time = (startResult.timestamp() / 10000L) + epochMillis;
+
+            if ( !reversed ) {
+                ql = "select * where created > " + time;
+            } else {
+                ql = "select * where created < " + time;
+            }
+
+        } else {
             ql = "select *";
         }
 
         Query query = Query.fromQL( ql );
+        if(query == null ){
+            throw new RuntimeException("Unable to get data for collection: "+collectionName);
+        }
         query.setLimit( count );
         query.setReversed( reversed );
 
@@ -402,10 +411,20 @@ public class CpRelationManager implements RelationManager {
 
             //reverse
             return gm.writeEdge( reverseEdge ).doOnNext( reverseEdgeWritten -> {
-                indexService.queueNewEdge( applicationScope, cpHeadEntity, reverseEdge );
+
+                if ( !skipIndexingForType( cpHeadEntity.getId().getType() ) ) {
+
+                    indexService.queueNewEdge(applicationScope, cpHeadEntity, reverseEdge);
+                }
+
             } );
         } ).doOnCompleted( () -> {
-            indexService.queueNewEdge( applicationScope, memberEntity, edge );
+
+            if ( !skipIndexingForType( memberEntity.getId().getType() ) ) {
+                indexService.queueNewEdge(applicationScope, memberEntity, edge);
+            }
+
+
             if ( logger.isDebugEnabled() ) {
                 logger.debug( "Added entity {}:{} to collection {}",
                     itemRef.getUuid().toString(), itemRef.getType(), collectionName );
@@ -527,8 +546,10 @@ public class CpRelationManager implements RelationManager {
 
         //TODO: this should not happen here, needs to go to  SQS
         //indexProducer.put(batch).subscribe();
-        indexService.queueEntityDelete(applicationScope,memberEntity.getId());
+        if ( !skipIndexingForType( memberEntity.getId().getType() ) ) {
 
+            indexService.queueEntityDelete(applicationScope, memberEntity.getId());
+        }
 
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {
@@ -609,6 +630,24 @@ public class CpRelationManager implements RelationManager {
         final Optional<String> queryString = query.isGraphSearch()? Optional.<String>absent(): query.getQl();
         final Id ownerId = headEntity.asId();
 
+
+        if(query.getLevel() == Level.IDS ){
+
+            return new IdQueryExecutor( toExecute.getCursor() ) {
+                @Override
+                protected Observable<ResultsPage<Id>> buildNewResultsPage(
+                    final Optional<String> cursor ) {
+
+                    final CollectionSearch search =
+                        new CollectionSearch( applicationScope, ownerId, collectionName, collection.getType(), toExecute.getLimit(),
+                            queryString, cursor );
+
+                    return collectionService.searchCollectionIds( search );
+                }
+            }.next();
+
+        }
+
         //wire the callback so we can get each page
         return new EntityQueryExecutor( toExecute.getCursor() ) {
             @Override
@@ -685,8 +724,11 @@ public class CpRelationManager implements RelationManager {
 
         gm.writeEdge(edge).toBlocking().lastOrDefault(null); //throw an exception if this fails
 
-        indexService.queueNewEdge( applicationScope, targetEntity, edge );
 
+        if ( !skipIndexingForType( targetEntity.getId().getType() ) ) {
+
+            indexService.queueNewEdge(applicationScope, targetEntity, edge);
+        }
 
         // remove any duplicate edges (keeps the duplicate edge with same timestamp)
         removeDuplicateEdgesAsync(gm, edge);
@@ -763,7 +805,14 @@ public class CpRelationManager implements RelationManager {
 
         //delete all the edges and queue their processing
         gm.loadEdgeVersions( search ).flatMap( returnedEdge -> gm.markEdge( returnedEdge ) )
-          .doOnNext( returnedEdge -> indexService.queueDeleteEdge( applicationScope, returnedEdge ) ).toBlocking()
+          .doOnNext( returnedEdge -> {
+
+              if ( !skipIndexingForType( returnedEdge.getSourceNode().getType() ) || !skipIndexingForType( returnedEdge.getTargetNode().getType() ) ) {
+
+                  indexService.queueDeleteEdge(applicationScope, returnedEdge);
+              }
+
+          }).toBlocking()
           .lastOrDefault( null );
     }
 
@@ -940,6 +989,13 @@ public class CpRelationManager implements RelationManager {
 
                 query.setQl( newQuery );
             }
+            // groups have a special unique identifier
+            else if ( query.getEntityType().equals( Group.ENTITY_TYPE ) ){
+
+                final String newQuery = "select * where path='" + query.getSingleNameOrEmailIdentifier() + "'";
+
+                query.setQl( newQuery );
+            }
 
             // use the ident with the default alias. could be an email
             else {
@@ -976,6 +1032,8 @@ public class CpRelationManager implements RelationManager {
         //                logger.warn( "Attempted to reverse sort order already set", PROPERTY_CREATED );
         //            }
         //        }
+
+
 
         return query;
     }
@@ -1022,6 +1080,39 @@ public class CpRelationManager implements RelationManager {
             gm.deleteEdge(lastEdge).toBlocking().lastOrDefault(null); // this should throw an exception
         }).toBlocking().lastOrDefault(null);//this should throw an exception
 
+    }
+
+    private boolean skipIndexingForType( String type ) {
+
+        boolean skipIndexing = false;
+
+        MapManager mm = getMapManagerForTypes();
+        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+        String collectionName = Schema.defaultCollectionName( type );
+        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+
+        if ( collectionIndexingSchema.isPresent()) {
+            Map jsonMapData = collectionIndexingSchema.get();
+            final ArrayList fields = (ArrayList) jsonMapData.get( "fields" );
+            if ( fields.size() == 1 && fields.get(0).equals("none")) {
+                skipIndexing = true;
+            }
+        }
+
+        return skipIndexing;
+    }
+
+    /**
+     * Get the map manager for uuid mapping
+     */
+    private MapManager getMapManagerForTypes() {
+        Id mapOwner = new SimpleId( applicationId, TYPE_APPLICATION );
+
+        final MapScope ms = CpNamingUtils.getEntityTypeMapScope(mapOwner);
+
+        MapManager mm = managerCache.getMapManager( ms );
+
+        return mm;
     }
 
 }

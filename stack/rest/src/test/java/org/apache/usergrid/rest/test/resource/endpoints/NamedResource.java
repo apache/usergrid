@@ -272,6 +272,28 @@ public class NamedResource implements UrlResource {
             .post(javax.ws.rs.client.Entity.json(entity), gt);
     }
 
+    // Used for empty posts
+    public <T> T post(boolean useToken, Token tokenToUse , Class<T> type, Map entity,
+                      final QueryParameters queryParameters, boolean useBasicAuthentication) {
+
+        WebTarget resource = getTarget( useToken,tokenToUse );
+        resource = addParametersToResource(resource, queryParameters);
+
+        GenericType<T> gt = new GenericType<>((Class) type);
+
+        if (useBasicAuthentication) {
+            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
+                                                                         .credentials("superuser", "superpassword").build();
+            return resource.register(feature).request()
+                           .accept(MediaType.APPLICATION_JSON)
+                           .post(javax.ws.rs.client.Entity.json(entity), gt);
+        }
+
+        return resource.request()
+                       .accept(MediaType.APPLICATION_JSON)
+                       .post(javax.ws.rs.client.Entity.json(entity), gt);
+    }
+
     //For edge cases like Organizations and Tokens without any payload
     public <T> T get(Class<T> type) {
         return get(type, null, true);

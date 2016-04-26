@@ -30,6 +30,7 @@ import org.apache.usergrid.corepersistence.pipeline.read.collect.ConnectionRefRe
 import org.apache.usergrid.corepersistence.pipeline.read.collect.IdResumeFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.ResultsPageCollector;
 import org.apache.usergrid.corepersistence.pipeline.read.search.Candidate;
+import org.apache.usergrid.corepersistence.pipeline.read.traverse.IdFilter;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -146,6 +147,11 @@ public class IdBuilder {
         final Pipeline<FilterResult<ConnectionRef>> connectionRefFilter = pipeline.withFilter( new ConnectionRefFilter(sourceId, connectionType  ) ).withFilter(
             new ConnectionRefResumeFilter() );
         return new ConnectionRefBuilder(connectionRefFilter);
+    }
+
+    public Observable<ResultsPage<Id>> build(){
+        //we must add our resume filter so we drop our previous page first element if it's present
+        return pipeline.withFilter( new IdResumeFilter() ).withFilter(new ResultsPageCollector<>()).execute();
     }
 
 }

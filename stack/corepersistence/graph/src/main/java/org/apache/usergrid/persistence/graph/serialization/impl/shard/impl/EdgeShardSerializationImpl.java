@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
+import com.google.common.util.concurrent.ExecutionError;
 import org.apache.cassandra.db.marshal.BytesType;
 
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
@@ -39,8 +40,10 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.Shard;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.serialize.EdgeShardRowKeySerializer;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.serialize.ShardSerializer;
 import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 
 import com.google.common.base.Optional;
@@ -53,10 +56,15 @@ import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.query.RowQuery;
 import com.netflix.astyanax.serializers.LongSerializer;
 import com.netflix.astyanax.util.RangeBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Singleton
 public class EdgeShardSerializationImpl implements EdgeShardSerialization {
+
+    private static final Logger logger = LoggerFactory.getLogger( EdgeShardSerializationImpl.class );
+
 
     /**
      * Edge shards
@@ -67,6 +75,7 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
 
     private static final ShardColumnParser COLUMN_PARSER = new ShardColumnParser();
+    private static final ShardSerializer SHARD_SERIALIZER = ShardSerializer.INSTANCE;
 
 
     protected final Keyspace keyspace;
@@ -100,8 +109,11 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        batch.withTimestamp( shard.getCreatedTime() ).withRow( EDGE_SHARDS, rowKey )
-             .putColumn( shard.getShardIndex(), shard.isCompacted() );
+        // write the row with a current timestamp so we can ensure that it's persisted with updated shard meta
+        long batchTimestamp = System.currentTimeMillis();
+
+        batch.withTimestamp( batchTimestamp ).withRow( EDGE_SHARDS, rowKey )
+             .putColumn( shard.getShardIndex(), SHARD_SERIALIZER.toByteBuffer(shard)).setTimestamp(batchTimestamp);
 
         return batch;
     }
@@ -156,8 +168,11 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
         final MutationBatch batch = keyspace.prepareMutationBatch();
 
-        batch.withTimestamp(shard.getCreatedTime()).withRow( EDGE_SHARDS, rowKey )
-            .deleteColumn( shard.getShardIndex() );
+        // write the row with a current timestamp so we can ensure that it's persisted with updated shard meta
+        long batchTimestamp = System.currentTimeMillis();
+
+        batch.withTimestamp(batchTimestamp).withRow( EDGE_SHARDS, rowKey )
+            .deleteColumn( shard.getShardIndex() ).setTimestamp(batchTimestamp);
 
         return batch;
     }
@@ -180,9 +195,40 @@ public class EdgeShardSerializationImpl implements EdgeShardSerialization {
 
     private static class ShardColumnParser implements ColumnParser<Long, Shard> {
 
+        /** Example CQL schema for this table
+         *
+         * CREATE TABLE "Usergrid_Applications"."Edge_Shards" (
+         *    key blob,
+         *    column1 bigint,
+         *    value blob,
+         *    PRIMARY KEY (key, column1)
+         *    ) WITH COMPACT STORAGE
+         *    AND CLUSTERING ORDER BY (column1 DESC)
+         *
+         *
+         *
+         */
+
+
         @Override
         public Shard parseColumn( final Column<Long> column ) {
-            return new Shard( column.getName(), column.getTimestamp(), column.getBooleanValue() );
+
+            // A custom serializer was introduced to handle parsing multiple column formats without re-writing the data.
+            // The column can be stored as a legacy, single boolean, value OR a new, composite, value which contains
+            // every item in the shard. If the legacy value is seen, we return a shard with Long.MIN for index and
+            // createdTime so it can be identified later and handled.
+
+            try {
+
+                return column.getValue(SHARD_SERIALIZER);
+
+            } catch ( Exception e) {
+
+                // unable to parse the new format so return the old format
+                return new Shard(column.getName(), column.getTimestamp(), column.getBooleanValue());
+
+            }
+
         }
     }
 }

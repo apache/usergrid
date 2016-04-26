@@ -18,6 +18,7 @@
 package org.apache.usergrid.rest.applications;
 
 
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.mgmt.ManagementResponse;
@@ -36,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 
-
+@NotThreadSafe
 public class ApplicationCreateIT extends AbstractRestIT {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationCreateIT.class);
 

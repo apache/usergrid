@@ -20,15 +20,18 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -37,12 +40,27 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
+import org.apache.usergrid.persistence.index.CandidateResult;
+import org.apache.usergrid.persistence.index.CandidateResults;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
+import org.apache.usergrid.persistence.index.EntityIndexFactory;
+import org.apache.usergrid.persistence.index.IndexEdge;
+import org.apache.usergrid.persistence.index.IndexFig;
+import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
+import org.apache.usergrid.persistence.map.MapManager;
+import org.apache.usergrid.persistence.map.MapManagerFactory;
+import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.utils.InflectionUtils;
+import org.apache.usergrid.utils.JsonUtils;
+import org.apache.usergrid.utils.UUIDUtils;
 
 import com.codahale.metrics.Timer;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -51,7 +69,7 @@ import rx.Observable;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createSearchEdgeFromSource;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromTarget;
-import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 
 
 /**
@@ -65,6 +83,8 @@ public class IndexServiceImpl implements IndexService {
 
     private final GraphManagerFactory graphManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
+    private final MapManagerFactory mapManagerFactory;
+    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
     private final EdgesObservable edgesObservable;
     private final IndexFig indexFig;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
@@ -74,12 +94,18 @@ public class IndexServiceImpl implements IndexService {
 
     @Inject
     public IndexServiceImpl( final GraphManagerFactory graphManagerFactory, final EntityIndexFactory entityIndexFactory,
-                             final EdgesObservable edgesObservable, final IndexFig indexFig, final IndexLocationStrategyFactory indexLocationStrategyFactory, final MetricsFactory metricsFactory ) {
+                             final MapManagerFactory mapManagerFactory,
+                             final IndexSchemaCacheFactory indexSchemaCacheFactory,
+                             final EdgesObservable edgesObservable, final IndexFig indexFig,
+                             final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                             final MetricsFactory metricsFactory ) {
         this.graphManagerFactory = graphManagerFactory;
         this.entityIndexFactory = entityIndexFactory;
+        this.mapManagerFactory = mapManagerFactory;
         this.edgesObservable = edgesObservable;
         this.indexFig = indexFig;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
+        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
         this.indexTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.update_all");
         this.addTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.add" );
     }
@@ -92,7 +118,6 @@ public class IndexServiceImpl implements IndexService {
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
         final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope));
 
-
         final Id entityId = entity.getId();
 
 
@@ -104,7 +129,9 @@ public class IndexServiceImpl implements IndexService {
 
         //do our observable for batching
         //try to send a whole batch if we can
-        final Observable<IndexOperationMessage>  batches =  sourceEdgesToIndex.buffer( indexFig.getIndexBatchSize() )
+
+        final Observable<IndexOperationMessage>  batches =  sourceEdgesToIndex
+            .buffer(indexFig.getIndexBatchSize() )
 
             //map into batches based on our buffer size
             .flatMap( buffer -> Observable.from( buffer )
@@ -113,7 +140,10 @@ public class IndexServiceImpl implements IndexService {
                     if (logger.isDebugEnabled()) {
                         logger.debug("adding edge {} to batch for entity {}", indexEdge, entity);
                     }
-                    batch.index( indexEdge, entity );
+
+                    final Optional<Set<String>> fieldsToIndex = getFilteredStringObjectMap( indexEdge );
+
+                    batch.index( indexEdge, entity ,fieldsToIndex);
                 } )
                     //return the future from the batch execution
                 .map( batch -> batch.build() ) );
@@ -144,16 +174,68 @@ public class IndexServiceImpl implements IndexService {
                 logger.debug("adding edge {} to batch for entity {}", indexEdge, entity);
             }
 
-            batch.index( indexEdge, entity );
+            Optional<Set<String>> fieldsToIndex = getFilteredStringObjectMap( indexEdge );
+
+            batch.index( indexEdge, entity ,fieldsToIndex);
+
 
             return batch.build();
         } );
 
         return ObservableTimer.time( batches, addTimer  );
 
-
     }
 
+    /**
+     * This method takes in an entity and flattens it out then begins the process to filter out
+     * properties that we do not want to index. Once flatted we parse through each property
+     * and verify that we want it to be indexed on. The set of default properties that will always be indexed are as follows.
+     * UUID - TYPE - MODIFIED - CREATED. Depending on the schema this may change. For instance, users will always require
+     * NAME, but the above four will always be taken in.
+
+     * @param indexEdge
+     * @return This returns a filtered map that contains the flatted properties of the entity. If there isn't a schema
+     * associated with the collection then return null ( and index the entity in its entirety )
+     */
+    private Optional<Set<String>> getFilteredStringObjectMap( final IndexEdge indexEdge ) {
+
+        Id mapOwner = new SimpleId( indexEdge.getNodeId().getUuid(), TYPE_APPLICATION );
+
+        final MapScope ms = CpNamingUtils.getEntityTypeMapScope( mapOwner );
+
+        MapManager mm = mapManagerFactory.createMapManager( ms );
+
+        Set<String> defaultProperties;
+        ArrayList fieldsToKeep;
+
+        String collectionName = CpNamingUtils.getCollectionNameFromEdgeName( indexEdge.getEdgeName() );
+
+        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+
+        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+
+        //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
+        if ( collectionIndexingSchema.isPresent()) {
+
+            Map jsonMapData = collectionIndexingSchema.get();
+            Schema schema = Schema.getDefaultSchema();
+            defaultProperties = schema.getRequiredProperties( collectionName );
+            fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
+
+            if(fieldsToKeep.contains( "*" )){
+                return Optional.absent();
+            }
+
+            fieldsToKeep.remove("none");
+
+            defaultProperties.addAll( fieldsToKeep );
+        }
+        else {
+            return Optional.absent();
+        }
+
+        return Optional.of(defaultProperties);
+    }
 
     //Steps to delete an IndexEdge.
     //1.Take the search edge given and search for all the edges in elasticsearch matching that search edge

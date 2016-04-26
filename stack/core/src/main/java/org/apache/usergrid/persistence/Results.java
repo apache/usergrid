@@ -436,6 +436,10 @@ public class Results implements Iterable<Entity> {
         level = Level.REFS;
     }
 
+    public void setRefsOnly( List<EntityRef> resultsRefs ) {
+        refs = resultsRefs;
+    }
+
 
     public Results withRefs( List<EntityRef> resultsRefs ) {
         setRefs( resultsRefs );
@@ -706,6 +710,22 @@ public class Results implements Iterable<Entity> {
             ids = new ArrayList<UUID>( idSet );
 
         }
+    }
+
+    public void addEntities( Results results){
+
+        if(entities == null){
+            //init();
+            entities = new ArrayList<>();
+            level = Level.CORE_PROPERTIES;
+        }
+
+        if( results.getEntities().size() > 0){
+
+            entities.addAll(results.getEntities());
+
+        }
+
     }
 
 

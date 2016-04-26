@@ -104,14 +104,16 @@ public class TaskManager {
             }
 
             failures.incrementAndGet();
-            if (receipt.getUuid() != null) {
-                successes.decrementAndGet();
-            }
-            receipt.setErrorCode(code);
-            receipt.setErrorMessage(message);
-            this.saveReceipt(notification, new SimpleEntityRef(Device.ENTITY_TYPE, deviceUUID), receipt,true);
-            if (logger.isDebugEnabled()) {
-                logger.debug("notification {} receipt saved for device {}", notification.getUuid(), deviceUUID);
+            if(receipt!=null) {
+                if ( receipt.getUuid() != null ) {
+                    successes.decrementAndGet();
+                }
+                receipt.setErrorCode( code );
+                receipt.setErrorMessage( message );
+                this.saveReceipt( notification, new SimpleEntityRef( Device.ENTITY_TYPE, deviceUUID ), receipt, true );
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug( "notification {} receipt saved for device {}", notification.getUuid(), deviceUUID );
+                }
             }
         } finally {
             completed(notifier, deviceUUID);
@@ -124,14 +126,21 @@ public class TaskManager {
     * passed one w/ the UUID
     */
     private void saveReceipt(EntityRef notification, EntityRef device, Receipt receipt, boolean hasError) throws Exception {
-        if (this.notification.getDebug() || hasError) {
+
+        boolean debug = false;
+        if(this.notification != null){
+            debug = this.notification.getDebug();
+        }
+
+        if ( debug || hasError) {
+
+            List<EntityRef> entities = Arrays.asList(notification, device);
+
             if (receipt.getUuid() == null) {
                 Receipt savedReceipt = em.create(receipt);
-                receipt.setUuid(savedReceipt.getUuid());
-                List<EntityRef> entities = Arrays.asList(notification, device);
                 em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, savedReceipt);
             } else {
-                em.update(receipt);
+                em.addToCollections(entities, Notification.RECEIPTS_COLLECTION, receipt);
             }
         }
 

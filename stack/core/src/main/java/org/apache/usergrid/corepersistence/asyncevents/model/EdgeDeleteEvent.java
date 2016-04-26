@@ -25,7 +25,9 @@ import org.apache.usergrid.persistence.graph.Edge;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-
+/**
+ * Event that will signal to finish the actual delete (post-mark delete) for an Edge
+ */
 public final class EdgeDeleteEvent extends AsyncEvent {
 
     @JsonProperty

@@ -20,9 +20,10 @@ object EntityType {
   val Trivial = "trivial"
   val TrivialSortable = "trivialSortable"
   val Basic = "basic"
+  val Nested = "nested"
   val LargeMultiField = "largeMultiField"
 
-  val Values = Seq(Trivial,TrivialSortable,Basic,LargeMultiField)
+  val Values = Seq(Trivial,TrivialSortable,Basic,LargeMultiField,Nested)
 
   def isValid(str: String): Boolean = {
     Values.contains(str)

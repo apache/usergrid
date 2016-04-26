@@ -32,7 +32,6 @@ import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
-import org.apache.usergrid.rest.exceptions.UnsupportedRestOperationException;
 import org.apache.usergrid.rest.management.organizations.applications.imports.ImportsResource;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.rest.utils.JSONPUtils;
@@ -53,7 +52,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.UUID;
 
 import static javax.servlet.http.HttpServletResponse.*;
@@ -73,6 +71,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 public class ApplicationResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger(ApplicationResource.class);
+
+    public static final String CONFIRM_APPLICATION_IDENTIFIER = "confirm_application_identifier";
 
     @Autowired
     protected ExportService exportService;
@@ -476,29 +476,33 @@ public class ApplicationResource extends AbstractContextResource {
     }
 
 
+    /**
+     * Caller MUST pass confirm_application_identifier that is either the UUID or the
+     * name of the application to be deleted. Yes, this is redundant and intended to
+     * be a protection measure to force caller to confirm that they want to do a delete.
+     */
     @DELETE
     @RequireOrganizationAccess
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executeDelete(  @Context UriInfo ui,
         @QueryParam("callback") @DefaultValue("callback") String callback,
-        @QueryParam("app_delete_confirm") String confirmDelete) throws Exception {
+        @QueryParam(CONFIRM_APPLICATION_IDENTIFIER) String confirmApplicationIdentifier) throws Exception {
 
-        if (!"confirm_delete_of_application_and_data".equals( confirmDelete ) ) {
-            throw new IllegalArgumentException(
-                "Cannot delete application without app_delete_confirm parameter");
-        }
-
-        Properties props = management.getProperties();
-
-        // for now, only works in test mode
-        String testProp = ( String ) props.get( "usergrid.test" );
-        if ( testProp == null || !Boolean.parseBoolean( testProp ) ) {
-            throw new UnsupportedRestOperationException("Test props not not functioning correctly.");
-        }
-
-        if ( applicationId == null ) {
+        if ( application == null && applicationId == null ) {
             throw new IllegalArgumentException("Application ID not specified in request");
+        }
+
+        // If the path uses name then expect name, otherwise if they use uuid then expect uuid.
+        if (application == null) {
+            if (!applicationId.toString().equals( confirmApplicationIdentifier )) {
+                throw new IllegalArgumentException(
+                    "Cannot delete application without supplying correct application id.");
+            }
+
+        } else if (!application.getName().split( "/" )[1].equals( confirmApplicationIdentifier ) ) {
+            throw new IllegalArgumentException(
+                "Cannot delete application without supplying correct application name");
         }
 
         management.deleteApplication( applicationId );
