@@ -45,8 +45,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.codahale.metrics.MetricRegistry.name;
 
 
-public class UniqueValuesTest {
-    private static final Logger logger = LoggerFactory.getLogger( UniqueValuesTest.class );
+public class UniqueValuesIT {
+    private static final Logger logger = LoggerFactory.getLogger( UniqueValuesIT.class );
 
     private static final AtomicInteger successCounter = new AtomicInteger( 0 );
     private static final AtomicInteger errorCounter = new AtomicInteger( 0 );
@@ -67,7 +67,7 @@ public class UniqueValuesTest {
         Client client = ClientBuilder.newClient();
 
         final MetricRegistry metrics = new MetricRegistry();
-        final Timer responses = metrics.timer(name(UniqueValuesTest.class, "responses"));
+        final Timer responses = metrics.timer(name(UniqueValuesIT.class, "responses"));
         long startTime = System.currentTimeMillis();
 
         final AtomicBoolean failed = new AtomicBoolean(false);
