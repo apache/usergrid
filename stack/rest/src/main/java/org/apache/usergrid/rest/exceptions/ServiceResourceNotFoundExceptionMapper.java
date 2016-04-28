@@ -20,11 +20,9 @@ package org.apache.usergrid.rest.exceptions;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
-import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 
 @Provider
@@ -32,11 +30,6 @@ public class ServiceResourceNotFoundExceptionMapper extends AbstractExceptionMap
 
     @Override
     public Response toResponse( ServiceResourceNotFoundException e ) {
-        if ( SubjectUtils.getSubjectUserId() == null ) {
-            return toResponse( UNAUTHORIZED, e );
-        }
-        else {
-            return toResponse( NOT_FOUND, e );
-        }
+        return toResponse( NOT_FOUND, e );
     }
 }

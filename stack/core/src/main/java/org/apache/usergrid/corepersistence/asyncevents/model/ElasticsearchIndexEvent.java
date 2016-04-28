@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 /**
- * An index event for publishing to elastic search
+ * An index event for publishing operations (index and de-index) to Elasticsearch
  */
 public final class ElasticsearchIndexEvent extends AsyncEvent {
 

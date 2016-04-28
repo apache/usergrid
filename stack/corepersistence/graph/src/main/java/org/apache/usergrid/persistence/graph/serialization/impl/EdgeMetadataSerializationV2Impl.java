@@ -491,7 +491,7 @@ public class EdgeMetadataSerializationV2Impl implements EdgeMetadataSerializatio
         //resume from the last if specified.  Also set the range
         return new ColumnSearch<String>() {
             @Override
-            public void buildRange( final RangeBuilder rangeBuilder, final String value ) {
+            public void buildRange(final RangeBuilder rangeBuilder, final String value, String end) {
                 rangeBuilder.setLimit( graphFig.getScanPageSize() );
 
 
@@ -519,7 +519,7 @@ public class EdgeMetadataSerializationV2Impl implements EdgeMetadataSerializatio
 
             @Override
             public void buildRange( final RangeBuilder rangeBuilder ) {
-                buildRange( rangeBuilder, null );
+                buildRange( rangeBuilder, null, null);
             }
 
 

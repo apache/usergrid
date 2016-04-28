@@ -29,6 +29,8 @@ import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Collection;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
@@ -37,6 +39,9 @@ import static org.junit.Assert.*;
  */
 
 public class PagingResourceIT extends AbstractRestIT {
+
+    private static final Logger logger = LoggerFactory.getLogger(PagingResourceIT.class);
+
 
     /**
      * Creates 40 objects and then creates a query to delete sets of 10 entities per call. Checks at the end
@@ -155,7 +160,7 @@ public class PagingResourceIT extends AbstractRestIT {
         parameters.setKeyValue( "limit", "" );
 
         //sends GET call using empty parameters
-        pageAndVerifyEntities( collectionName,parameters, numOfPages, numOfEntities );
+        pageAndVerifyEntities( collectionName,parameters, numOfPages, numOfEntities, "asc");
 
     }
 
@@ -182,7 +187,7 @@ public class PagingResourceIT extends AbstractRestIT {
         //pages through entities and verifies that they are correct.
         QueryParameters queryParameters = new QueryParameters();
         queryParameters.setQuery( "select * ORDER BY created" );
-        pageAndVerifyEntities( collectionName,queryParameters,numOfPages, numOfEntities );
+        pageAndVerifyEntities( collectionName,queryParameters,numOfPages, numOfEntities, "asc");
 
         //Create new collection of only 5 entities
         String trinketCollectionName = "trinkets" ;
@@ -194,7 +199,7 @@ public class PagingResourceIT extends AbstractRestIT {
         //Created a new query parameter because when generated it store the cursor token back into it.
         queryParameters = new QueryParameters();
         queryParameters.setQuery( "select * ORDER BY created" );
-        pageAndVerifyEntities( trinketCollectionName,queryParameters,numOfPages, numOfEntities );
+        pageAndVerifyEntities( trinketCollectionName,queryParameters,numOfPages, numOfEntities, "asc");
 
     }
 
@@ -215,7 +220,32 @@ public class PagingResourceIT extends AbstractRestIT {
         //pages through entities and verifies that they are correct.
         QueryParameters queryParameters = new QueryParameters();
         queryParameters.setQuery( "select * ORDER BY created" );
-        pageAndVerifyEntities(collectionName, queryParameters, numOfPages, numOfEntities);
+        pageAndVerifyEntities(collectionName, queryParameters, numOfPages, numOfEntities, "asc");
+    }
+
+    @Test
+    @Ignore("This is not guaranteed to create multiple shards.  Need to be sure of this for a valid test.")
+    public void pagingEntitiesAcrossShardsWithGraph() throws IOException {
+
+
+        int numOfEntities = 2000;
+        int limit = 5;
+        int numOfPages = numOfEntities/limit;
+
+        String collectionName = "testPagingEntities" ;
+
+        //creates entities
+        createEntities(collectionName, numOfEntities);
+
+        //pages through entities and verifies that they are correct.
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.setQuery( "select *" );
+        queryParameters.setLimit(limit);
+
+        // page the same stuff multiple times
+        logger.info("Paging {} entities with page size of {}", numOfEntities, limit);
+        pageAndVerifyEntities(collectionName, queryParameters, numOfPages, numOfEntities, "desc");
+
     }
 
 
@@ -253,7 +283,7 @@ public class PagingResourceIT extends AbstractRestIT {
         qp.setQuery("select * order by created asc");
         qp.setLimit(10);
 
-        pageAndVerifyEntities(collectionName, qp, numOfPages, numOfEntities);
+        pageAndVerifyEntities(collectionName, qp, numOfPages, numOfEntities, "asc");
     }
 
 
@@ -321,27 +351,40 @@ public class PagingResourceIT extends AbstractRestIT {
      * creation from the createEntities method.
      * @param collectionName
      * @param numOfPages
+     * @param order
      * @return
      */
-    public Collection pageAndVerifyEntities(String collectionName,QueryParameters queryParameters, int numOfPages, int numOfEntities ){
+    public Collection pageAndVerifyEntities(String collectionName, QueryParameters queryParameters, int numOfPages, int numOfEntities, String order){
         //Get the entities that exist in the collection
         Collection testCollections = this.app().collection( collectionName ).get(queryParameters);
 
         //checks to make sure we can page through all entities in order.
 
         //Used as an index to see what value we're on and also used to keep track of the current index of the entity.
+
         int entityIndex = 1;
+        if(order.equals("desc")){
+            entityIndex = numOfEntities;
+        }
         int pageIndex = 0;
 
 
         //Counts all the entities in pages with cursors
         while(testCollections.getCursor()!=null){
+            //logger.info("cursor: {}", testCollections.getCursor());
             //page through returned entities.
             while ( testCollections.hasNext() ) {
                 Entity returnedEntity = testCollections.next();
                 //verifies that the names are in order, named string values will always +1 of the current index
                 assertEquals( String.valueOf( entityIndex ), returnedEntity.get( "name" ) );
-                entityIndex++;
+
+                if(order.equals("desc")){
+                    entityIndex--;
+                }else{
+                    entityIndex++;
+                }
+
+
             }
             testCollections =
                         this.app().collection( collectionName ).getNextPage( testCollections, queryParameters, true );
@@ -366,7 +409,14 @@ public class PagingResourceIT extends AbstractRestIT {
 
 
         //added in a minus one to account for the adding the additional 1 above.
-        assertEquals( numOfEntities, entityIndex-1 );
+
+        if(order.equals("desc")){
+            assertEquals( 0, entityIndex );
+        }else{
+            assertEquals( numOfEntities, entityIndex - 1 );
+        }
+
+
         assertEquals( numOfPages, pageIndex );
         return testCollections;
     }
@@ -398,6 +448,10 @@ public class PagingResourceIT extends AbstractRestIT {
             entities.add( entity );
 
             this.app().collection( collectionName ).post( entity );
+
+            if ( i % 100 == 0){
+                logger.info("created {} entities", i);
+            }
         }
 
         this.refreshIndex();

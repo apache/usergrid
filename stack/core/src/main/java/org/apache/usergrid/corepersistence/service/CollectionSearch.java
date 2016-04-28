@@ -29,6 +29,10 @@ import com.google.common.base.Optional;
  */
 public class CollectionSearch {
 
+    public enum Level {
+        IDS, ALL
+    }
+
     private final ApplicationScope applicationScope;
     private final Id collectionOwnerId;
     private final String collectionName;
@@ -36,6 +40,7 @@ public class CollectionSearch {
     private final int limit;
     private final Optional<String> query;
     private final Optional<String> cursor;
+    private Level level = Level.ALL;
 
 
     public CollectionSearch( final ApplicationScope applicationScope, final Id collectionOwnerId, final String
@@ -84,4 +89,8 @@ public class CollectionSearch {
     public Id getCollectionOwnerId() {
         return collectionOwnerId;
     }
+
+    public void setResultsLevel(Level level){ this.level = level; }
+
+    public Level getResultsLevel(){ return level; }
 }

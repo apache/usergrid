@@ -99,4 +99,8 @@ public interface QueueFig extends GuicyFig {
     @Default( "3000" ) // 3 seconds
     int getQueuePollTimeshift();
 
+    @Key( "usergrid.queue.quorum.fallback")
+    @Default("false") // 30 seconds
+    boolean getQuorumFallback();
+
 }

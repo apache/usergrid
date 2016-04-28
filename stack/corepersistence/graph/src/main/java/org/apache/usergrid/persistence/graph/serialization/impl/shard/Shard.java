@@ -19,6 +19,9 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
+import com.google.common.base.Optional;
+import org.apache.usergrid.persistence.graph.Edge;
+
 public class Shard implements Comparable<Shard> {
 
 
@@ -30,12 +33,14 @@ public class Shard implements Comparable<Shard> {
     private final long shardIndex;
     private final long createdTime;
     private final boolean compacted;
+    private Optional<DirectedEdge> shardEnd;
 
 
     public Shard( final long shardIndex, final long createdTime, final boolean compacted ) {
         this.shardIndex = shardIndex;
         this.createdTime = createdTime;
         this.compacted = compacted;
+        this.shardEnd = Optional.absent();
     }
 
 
@@ -69,6 +74,14 @@ public class Shard implements Comparable<Shard> {
      */
     public boolean isMinShard(){
         return shardIndex == MIN_SHARD.shardIndex;
+    }
+
+    public void setShardEnd(final Optional<DirectedEdge> shardEnd) {
+        this.shardEnd = shardEnd;
+    }
+
+    public Optional<DirectedEdge> getShardEnd() {
+        return shardEnd;
     }
 
 
@@ -149,10 +162,20 @@ public class Shard implements Comparable<Shard> {
 
     @Override
     public String toString() {
-        return "Shard{" +
-                "shardIndex=" + shardIndex +
-                ", createdTime=" + createdTime +
-                ", compacted=" + compacted +
-                '}';
+
+        StringBuilder string = new StringBuilder();
+        string.append("Shard{ ");
+        string.append("shardIndex=").append(shardIndex);
+        string.append(", createdTime=").append(createdTime);
+        string.append(", compacted=").append(compacted);
+        string.append(", shardEndTimestamp=");
+        if(shardEnd.isPresent()){
+            string.append(shardEnd.get().timestamp);
+        }else{
+            string.append("null");
+        }
+        string.append(" }");
+
+        return string.toString();
     }
 }

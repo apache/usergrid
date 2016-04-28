@@ -70,6 +70,7 @@ import static org.junit.Assert.assertTrue;
  * Test on read style clean-up of stale ElasticSearch indexes.
  */
 @NotThreadSafe
+@Ignore
 public class StaleIndexCleanupTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( StaleIndexCleanupTest.class );
     public static final String EVENTS_DISABLED = "corepersistence.events.disabled";
@@ -127,185 +128,10 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
         CandidateResults results;
         results = queryCollectionCp("things", "thing", "select *");
-        assertEquals(2, results.size());
-    }
+        assertEquals(1, results.size());
 
+        assertEquals(newVersion, results.get(0).getVersion());
 
-
-    /**
-     * USERGRID-492 test for ordering
-     */
-    @Test
-    public void testUpdateVersionMaxFirst() throws Exception {
-
-        String entityName =UUID.randomUUID()+  "thing";
-        // turn off post processing stuff that cleans up stale entities
-        System.setProperty( EVENTS_DISABLED, "true" );
-
-        final EntityManager em = app.getEntityManager();
-
-        Entity thing = em.create( entityName, new HashMap<String, Object>() {{
-            put( "ordinal", 0 );
-        }} );
-        UUID originalVersion = getCpEntity( thing ).getVersion();
-        app.refreshIndex();
-
-        assertEquals( 1, queryCollectionCp( entityName+"s", entityName, "select *" ).size() );
-
-        em.updateProperties( thing, new HashMap<String, Object>() {{
-            put( "ordinal", 1 );
-        }} );
-        app.refreshIndex();
-
-        UUID newVersion =  getCpEntity( thing ).getVersion();
-
-        CandidateResults candidateResults = null;
-
-
-        candidateResults = queryCollectionCp(entityName+"s", entityName, "select * order by ordinal desc");
-        if(candidateResults.size()!=2){
-            Thread.sleep(200);
-        }
-
-
-        assertEquals(2, candidateResults.size());
-
-        //now run enable events and ensure we clean up
-        System.setProperty(EVENTS_DISABLED, "false");
-
-        Results results =  queryCollectionEm(entityName+"s", "select * order by ordinal desc");
-
-        assertEquals( 1, results.size());
-        assertEquals(1, results.getEntities().get(0).getProperty("ordinal"));
-
-        app.refreshIndex();
-
-        //ensure it's actually gone
-        candidateResults = queryCollectionCp( entityName+"s", entityName, "select * order by ordinal desc" );
-
-        assertEquals(1, candidateResults.size());
-
-        //TODO: will always fail because we don't cleanup
-
-        assertEquals(newVersion, candidateResults.get(0).getVersion());
-    }
-
-
-    /**
-     * Test that the CpRelationManager cleans up and stale indexes that it finds when
-     * it is building search results.
-     * TODO: does this test still make sense?
-     */
-    @Test
-    public void testStaleIndexCleanup() throws Exception {
-
-
-        logger.info( "Started testStaleIndexCleanup()" );
-
-        // this EVENTS_DISABLED property is no longer supported
-        //System.setProperty( EVENTS_DISABLED, "true" );
-
-        final EntityManager em = app.getEntityManager();
-
-        final int numEntities = 20;
-        final int numUpdates = 40;
-
-        final AtomicInteger updateCount =  new AtomicInteger(  );
-
-        // create lots of entities
-        final List<Entity> things = new ArrayList<Entity>( numEntities );
-        for ( int i = 0; i < numEntities; i++ ) {
-            final String thingName = "thing" + i;
-            things.add( em.create( "thing", new HashMap<String, Object>() {{
-                put( "name", thingName );
-                put( "updateCount", updateCount.getAndIncrement() );
-            }} ) );
-
-        }
-        app.refreshIndex();
-
-        CandidateResults crs = queryCollectionCp( "things", "thing", "select * order by updateCount asc" );
-        Assert.assertEquals( "Expect no stale candidates yet", numEntities, crs.size() );
-
-        // update each one a bunch of times
-        int count = 0;
-
-        List<Entity> maxVersions = new ArrayList<>( numEntities );
-
-        for ( Entity thing : things ) {
-
-            Entity toUpdate = null;
-
-            for ( int j = 0; j < numUpdates; j++ ) {
-
-                toUpdate = em.get( thing.getUuid() );
-                //update the update count, so we'll order from the first entity created to the last
-                toUpdate.setProperty( "updateCount", updateCount.getAndIncrement() );
-                em.update( toUpdate );
-
-                count++;
-                if ( count % 100 == 0 ) {
-                    logger.info( "Updated {} of {} times", count, numEntities * numUpdates );
-                }
-            }
-
-            maxVersions.add( toUpdate );
-        }
-
-        app.refreshIndex();
-
-        // query Core Persistence directly for total number of result candidates
-
-        // Because events are not disabled there will be no stale candidates
-
-//        crs = queryCollectionCp( "things", "thing", "select * order by updateCount asc" );
-//        Assert.assertEquals( "Expect stale candidates", numEntities * ( numUpdates + 1 ), crs.size() );
-
-        // query EntityManager for results and page through them
-        // should return numEntities because it filters out the stale entities
-//        final int limit = 8;
-//
-//        // we order by updateCount asc, this forces old versions to appear first, otherwise,
-//        // we don't clean them up in our versions
-//        Query q = Query.fromQL( "select * order by updateCount asc" );
-//        q.setLimit( limit );
-//
-//        int thingCount = 0;
-//        int index = 0;
-//        String cursor;
-//
-//        do {
-//            Results results = em.searchCollection( em.getApplicationRef(), "things", q );
-//            thingCount += results.size();
-//
-//            logger.debug( "Retrieved total of {} entities", thingCount );
-//
-//            cursor = results.getCursor();
-//            if ( cursor != null && thingCount < numEntities ) {
-//                assertEquals( limit, results.size() );
-//            }
-//
-//            for ( int i = 0; i < results.size(); i++, index++ ) {
-//
-//                final Entity returned = results.getEntities().get( i );
-//
-//                // last entities appear first
-//                final Entity expected = maxVersions.get( index );
-//                assertEquals("correct entity returned", expected, returned);
-//
-//            }
-//        }
-//        while ( cursor != null );
-//
-//        assertEquals( "Expect no stale candidates", numEntities, thingCount );
-//
-//
-//        app.refreshIndex();
-//
-//
-//        // query for total number of result candidates = numEntities
-//        crs = queryCollectionCp( "things", "thing", "select *" );
-//        Assert.assertEquals( "Expect stale candidates de-indexed", numEntities, crs.size() );//20,21
     }
 
 
@@ -313,7 +139,6 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
      * Test that the EntityDeleteImpl cleans up stale indexes on delete. Ensures that when an
      * entity is deleted its old indexes are cleared from ElasticSearch.
      */
-//    @Test(timeout=30000)
     @Test
     public void testCleanupOnDelete() throws Exception {
 
@@ -417,8 +242,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
 
 
     /**
-     * Test that the EntityDeleteImpl cleans up stale indexes on update. Ensures that when an
-     * entity is updated its old indexes are cleared from ElasticSearch.
+     * Test that the AbstractElasticsearchFilter de-indexes old versions when reading candidates
      */
     @Test()
     public void testCleanupOnUpdate() throws Exception {
