@@ -776,12 +776,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.jboss.netty</groupId>
-                <artifactId>netty</artifactId>
-                <version>3.2.7.Final</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.jsoup</groupId>
                 <artifactId>jsoup</artifactId>
                 <version>1.6.0</version>
