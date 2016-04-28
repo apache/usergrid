@@ -25,6 +25,9 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 ;
@@ -37,6 +40,9 @@ public class MapManagerImpl implements MapManager {
 
     private final MapScope scope;
     private final MapSerialization mapSerialization;
+
+    //Maybe this should go in front of the mapSerialization stuff because thats where we actually make the calls
+    //to cassandra. Then the parsing could be done through an interface.
 
 
     @Inject

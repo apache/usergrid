@@ -25,6 +25,9 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.shiro.subject.Subject;
+
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
@@ -34,6 +37,10 @@ import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.persistence.Query.Level;
+import org.apache.usergrid.security.shiro.principals.AdminUserPrincipal;
+import org.apache.usergrid.security.shiro.principals.ApplicationPrincipal;
+import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
@@ -49,6 +56,11 @@ public class AbstractCollectionService extends AbstractService {
     public AbstractCollectionService() {
         declareMetadataType( "indexes" );
     }
+
+    public AbstractCollectionService(ServiceRequest serviceRequest){
+        setServiceManager( serviceRequest.getServices() );
+    }
+
 
     @Override
     public Entity getEntity( ServiceRequest request, UUID uuid ) throws Exception {
@@ -316,6 +328,50 @@ public class AbstractCollectionService extends AbstractService {
         updateEntities( context, r );
 
         return new ServiceResults( this, context, Type.COLLECTION, r, null, null );
+    }
+
+    @Override
+    public ServiceResults postCollectionSchema( ServiceRequest serviceRequest ) throws Exception {
+        setServiceManager( serviceRequest.getServices() );
+        ServiceContext context = serviceRequest.getAppContext();
+
+        checkPermissionsForCollection( context );
+        //TODO: write rest test for these line of codes
+        Subject currentUser = SubjectUtils.getSubject();
+        Object currentUserPrincipal =currentUser.getPrincipal();
+
+        Map collectionSchema = null;
+
+        if(currentUserPrincipal instanceof AdminUserPrincipal) {
+            AdminUserPrincipal adminUserPrincipal = ( AdminUserPrincipal ) currentUserPrincipal;
+
+            collectionSchema = em.createCollectionSchema( context.getCollectionName(),
+                adminUserPrincipal.getUser().getEmail(), context.getProperties() );
+        }
+        else if(currentUserPrincipal instanceof ApplicationPrincipal){
+            collectionSchema = em.createCollectionSchema( context.getCollectionName(),
+                "app credentials", context.getProperties() );
+        }
+        else if ( currentUserPrincipal instanceof PrincipalIdentifier ) {
+            collectionSchema = em.createCollectionSchema( context.getCollectionName(),
+                "generic credentials", context.getProperties() );
+        }
+
+        return new ServiceResults( this, context, Type.COLLECTION, Results.fromData( collectionSchema ), null, null );
+
+    }
+
+    @Override
+    public ServiceResults getCollectionSchema( ServiceRequest serviceRequest ) throws Exception {
+        setServiceManager( serviceRequest.getServices() );
+        ServiceContext context = serviceRequest.getAppContext();
+        context.setAction( ServiceAction.GET );
+        checkPermissionsForCollection( context );
+
+        Object collectionSchema = em.getCollectionSchema( context.getCollectionName() );
+
+        return new ServiceResults( this, context, Type.COLLECTION, Results.fromData( collectionSchema ), null, null );
+
     }
 
 

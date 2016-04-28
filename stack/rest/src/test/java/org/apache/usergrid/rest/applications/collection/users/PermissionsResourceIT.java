@@ -20,6 +20,7 @@ package org.apache.usergrid.rest.applications.collection.users;
 import java.util.List;
 import java.util.UUID;
 
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
@@ -38,6 +39,7 @@ import static org.junit.Assert.*;
 /**
  * Tests permissions of adding and removing users from roles as well as groups.
  */
+@NotThreadSafe
 public class PermissionsResourceIT extends AbstractRestIT {
 
     private static final String ROLE = "permtestrole";
@@ -193,7 +195,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
     }
 
     @Test
-    public void getNonExistantEntityReturns404() throws Exception {
+    public void getNonExistentEntityReturns404() throws Exception {
 
         // Call a get on a existing entity with no access token and check if we get a 401
         try {
@@ -409,7 +411,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
                 "get,put,post:/reviews/**" );
         // allow access to all user's connections excluding delete
         addPermission( "reviewer",
-                "get,put,post:/users/${user}/**" );
+                "get,put,post:/users/me/**" );
         // allow access to the review relationship excluding delete
         addPermission( "reviewer",
                 "get,put,post:/books/*/review/*" );

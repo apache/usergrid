@@ -31,6 +31,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.apache.commons.lang.StringUtils;
 
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.corepersistence.service.CollectionService;
@@ -110,6 +111,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         });
 
     private final ApplicationIdCache applicationIdCache;
+    //private final IndexSchemaCache indexSchemaCache;
 
     private ManagerCache managerCache;
 
@@ -122,6 +124,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final CollectionService collectionService;
     private final ConnectionService connectionService;
     private final GraphManagerFactory graphManagerFactory;
+    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
 
     public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
                                    final Injector injector ) {
@@ -137,8 +140,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
         this.collectionService = injector.getInstance( CollectionService.class );
         this.connectionService = injector.getInstance( ConnectionService.class );
+        this.indexSchemaCacheFactory = injector.getInstance( IndexSchemaCacheFactory.class );
 
         //this line always needs to be last due to the temporary cicular dependency until spring is removed
+
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
 
@@ -157,7 +162,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
 
-    private void init() {
+    private void initMgmtAppInternal() {
 
         EntityManager em = getEntityManager(getManagementAppId());
         indexService.queueInitializeApplicationIndex(CpNamingUtils.getApplicationScope(getManagementAppId()));
@@ -170,8 +175,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 em.create( getManagementAppId(), TYPE_APPLICATION, mgmtAppProps);
                 em.getApplication();
             }
-
-//            entityIndex.refreshAsync();
 
         } catch (Exception ex) {
             throw new RuntimeException("Fatal error creating management application", ex);
@@ -199,7 +202,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private EntityManager _getEntityManager( UUID applicationId ) {
         EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache,
-            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService, applicationId );
+            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService,indexSchemaCacheFactory, applicationId );
 
         return em;
     }
@@ -216,9 +219,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         String appName = buildAppName( orgName, name );
 
-        final Optional<UUID> appId = applicationIdCache.getApplicationId( appName );
+        final UUID appId = applicationIdCache.getApplicationId( appName );
 
-        if ( appId.isPresent()) {
+        if ( appId != null ) {
             throw new ApplicationAlreadyExistsException( name );
         }
 
@@ -246,8 +249,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public Entity initializeApplicationV2(String organizationName, final UUID applicationId, String name,
                                           Map<String, Object> properties, boolean forMigration) throws Exception {
 
-        // Ensure our management system exists before creating our application
-        init();
+        // Ensure the management application is initialized
+        initMgmtAppInternal();
 
         EntityManager managementEm = getEntityManager( getManagementAppId() );
         EntityManager appEm = getEntityManager(applicationId);
@@ -256,11 +259,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // check for pre-existing application
 
-        if ( lookupApplication( appName ).isPresent()) {
+        if ( lookupApplication( appName ) != null ) {
             throw new ApplicationAlreadyExistsException( appName );
         }
 
-        getSetup().setupApplicationKeyspace( applicationId, appName );
+        // Initialize the index for this new application
         appEm.initializeIndex();
         indexService.queueInitializeApplicationIndex(CpNamingUtils.getApplicationScope(applicationId));
         if ( properties == null ) {
@@ -447,7 +450,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    public Optional<UUID> lookupApplication( String orgAppName ) throws Exception {
+    public UUID lookupApplication(String orgAppName ) throws Exception {
         return applicationIdCache.getApplicationId(orgAppName);
     }
 
@@ -517,19 +520,25 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void setup() throws Exception {
-        getSetup().initSubsystems();
+        getSetup().initSchema();
     }
 
 
     @Override
-    public void boostrap() throws Exception {
+    public void bootstrap() throws Exception {
 
-        //we want to make sure our keyspaces exist
-        setup();
-        //create the defautl applications
-        getSetup().createDefaultApplications();
-        //init any other data we need
-        init();
+        // Always make sure the database schema is initialized
+        getSetup().initSchema();
+
+        // Make sure the management application is created
+        initMgmtAppInternal();
+
+        // Roll the new 2.x Migration classes to the latest version supported
+        getSetup().runDataMigration();
+
+        // Ensure management app is initialized
+        getSetup().initMgmtApp();
+
     }
 
 

@@ -45,6 +45,9 @@ public class ApplicationUserPrincipal extends UserPrincipal {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminUserPrincipal.class);
 
+    /**
+     * Needed for Jackson, do not remove
+     */
     public ApplicationUserPrincipal() {}
 
     public ApplicationUserPrincipal( UUID applicationId, UserInfo user ) {

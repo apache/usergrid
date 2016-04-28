@@ -171,6 +171,7 @@ public class CassandraClusterImpl implements CassandraCluster {
                 .setLocalDatacenter( cassandraFig.getLocalDataCenter() )
                 .setMaxConnsPerHost( poolSize )
                 .setSeeds( cassandraFig.getHosts() )
+                .setConnectTimeout( cassandraFig.getTimeout() )
                 .setSocketTimeout( cassandraFig.getTimeout() )
                 .setAuthenticationCredentials(new SimpleAuthenticationCredentials( username, password));
 
@@ -182,7 +183,8 @@ public class CassandraClusterImpl implements CassandraCluster {
                 .setLocalDatacenter( cassandraFig.getLocalDataCenter() )
                 .setMaxConnsPerHost( poolSize )
                 .setSeeds( cassandraFig.getHosts() )
-                .setSocketTimeout( cassandraFig.getTimeout() );
+                .setSocketTimeout( cassandraFig.getTimeout() )
+                .setConnectTimeout( cassandraFig.getTimeout() );
         }
 
 

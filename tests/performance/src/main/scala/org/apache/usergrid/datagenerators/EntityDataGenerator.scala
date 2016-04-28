@@ -108,6 +108,45 @@ object EntityDataGenerator {
        new JSONObject(Map("sortField" -> Utils.generateRandomInt(1,10000000))).toString()
    }
 
+  def generateNestedEntity(name: String = null): String = {
+
+      new JSONObject(Map("magicData"->
+          new JSONObject(
+            Map(
+              "level1" -> "level1",
+              "level2" -> "level2",
+              "level3" -> "level3",
+              "level4" ->
+                new JSONObject(
+                  Map(
+                    "level5" -> "level5",
+                    "level6" -> "level6",
+                    "level7" -> "level7",
+                    "level8" ->
+                      new JSONObject(
+                        Map(
+                          "level9" -> "level9",
+                          "level10" -> "level10",
+                          "level11" -> "level11",
+                          "level12" ->
+                            new JSONObject(
+                              Map(
+                                "level13" -> "level13",
+                                "level14" -> "level14",
+                                "level15" -> "level15",
+                                "level16" -> "level16"
+                              )
+                            )
+                        )
+                      )
+                  )
+                )
+            )
+          )
+        )
+      ).toString()
+  }
+
   val pirate1KString = "Yarrrrrrrrrrrrrrrr! Blimey! Avast ye scurvy dog! Dead men tell no tales. Hang him from the yardarm! Heave ho! Run a shot across the bow. Yo-ho-ho and a bottle of rum. Heave ho ye scallywag, or ye shall walk the plank! Weigh anchor and hoist the mizzen! Thar she blows! Shiver me timbers! Splice the mainbrace! Keelhaul the hornswaggler! Raise the Jolly Roger! Feed him to the fish! You fight like a dairy farmer. How appropriate, you fight like a cow. Batten down the hatches! Blow the man down! Swab the deck! Ahoy, matey! I'll crush ye barnacles! Fetch me grog! Gangway! Arrr, he's gone to Davy Jones's Locker. He be three sheets to the wind. Yo-ho me hearties! Prepare to be boarded! All your pieces of eight, else ye meet me cat o'nine tails! Bring 'er alongside! The rougher the seas, the smoother we sail! It's more fun to be a pirate than to join the navy. The beatings will continue until morale improves! Fifteen men on the dead man's chest! I be the captain of this ship -- swab the decks! "
 
   def generateLargeMultiFieldEntity(name: String = null, entityNum: Int = 0): String = {
@@ -157,6 +196,7 @@ object EntityDataGenerator {
        case EntityType.TrivialSortable => generateTrivialSortableEntity(entityName)
        case EntityType.Basic => generateBasicEntity(entityName)
        case EntityType.LargeMultiField => generateLargeMultiFieldEntity(entityName, entityNum)
+       case EntityType.Nested => generateNestedEntity(null)
      }
    }
 

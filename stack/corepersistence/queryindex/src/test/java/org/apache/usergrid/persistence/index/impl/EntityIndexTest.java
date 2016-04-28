@@ -412,7 +412,7 @@ public class EntityIndexTest extends BaseIT {
             IndexEdge searchEdge = new IndexEdgeImpl( appId, "mehCars", SearchEdge.NodeType.SOURCE, System.currentTimeMillis()*1000 );
 
             //index the new entity. This is where the loop will be set to create like 100 entities.
-            indexProducer.put(entityIndex.createBatch().index( searchEdge, entity[i]  ).build()).subscribe();
+            indexProducer.put(entityIndex.createBatch().index( searchEdge, entity[i] ).build()).subscribe();
 
         }
         entityIndex.refreshAsync().toBlocking().first();

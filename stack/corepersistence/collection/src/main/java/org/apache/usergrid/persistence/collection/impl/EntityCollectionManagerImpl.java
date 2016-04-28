@@ -184,7 +184,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         // create our observable and start the write
         final CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( applicationScope, entity );
 
-        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData, writeStart );
+        Observable<CollectionIoEvent<MvccEntity>> observable =  stageRunner( writeData, writeStart );
 
 
         final Observable<Entity> write = observable.map( writeCommit )

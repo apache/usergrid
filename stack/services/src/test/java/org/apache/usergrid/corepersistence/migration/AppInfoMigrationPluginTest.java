@@ -202,7 +202,7 @@ public class AppInfoMigrationPluginTest {
         for ( Entity applicationInfo : deletedApps ) {
 
             String appName = applicationInfo.getName();
-            boolean isPresent = setup.getEmf().lookupApplication( appName ).isPresent();
+            boolean isPresent = setup.getEmf().lookupApplication( appName ) != null;
 
             // missing application_info does not completely break applications, but we...
             assertFalse("Should not be able to lookup deleted application by name" + appName, isPresent);
@@ -219,11 +219,11 @@ public class AppInfoMigrationPluginTest {
 
             String appName = orgName + "/application" + i;
 
-            Optional<UUID> uuid = setup.getEmf().lookupApplication(appName);
+            UUID uuid = setup.getEmf().lookupApplication(appName);
 
-            assertTrue ("Should be able to get application", uuid.isPresent() );
+            assertTrue ("Should be able to get application", uuid != null );
 
-            EntityManager em = setup.getEmf().getEntityManager( uuid.get() );
+            EntityManager em = setup.getEmf().getEntityManager( uuid );
 
             Application app = em.getApplication();
             assertEquals( appName, app.getName() );

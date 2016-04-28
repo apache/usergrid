@@ -20,7 +20,10 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -42,6 +45,8 @@ import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.utils.InflectionUtils;
+import org.apache.usergrid.utils.JsonUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Optional;
@@ -75,8 +80,10 @@ public class ReIndexServiceImpl implements ReIndexService {
     private final AllEntityIdsObservable allEntityIdsObservable;
     private final IndexProcessorFig indexProcessorFig;
     private final MapManager mapManager;
+    private final MapManagerFactory mapManagerFactory;
     private final AsyncEventService indexService;
     private final EntityIndexFactory entityIndexFactory;
+    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
 
 
     @Inject
@@ -86,6 +93,7 @@ public class ReIndexServiceImpl implements ReIndexService {
                                final MapManagerFactory mapManagerFactory,
                                final AllApplicationsObservable allApplicationsObservable,
                                final IndexProcessorFig indexProcessorFig,
+                               final IndexSchemaCacheFactory indexSchemaCacheFactory,
                                final AsyncEventService indexService ) {
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
@@ -93,11 +101,13 @@ public class ReIndexServiceImpl implements ReIndexService {
         this.allApplicationsObservable = allApplicationsObservable;
         this.indexProcessorFig = indexProcessorFig;
         this.indexService = indexService;
-
+        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
+        this.mapManagerFactory = mapManagerFactory;
         this.mapManager = mapManagerFactory.createMapManager( RESUME_MAP_SCOPE );
     }
 
 
+    //TODO: optional delay, param.
     @Override
     public ReIndexStatus rebuildIndex( final ReIndexRequestBuilder reIndexRequestBuilder ) {
 
@@ -109,6 +119,10 @@ public class ReIndexServiceImpl implements ReIndexService {
         final CursorSeek<Edge> cursorSeek = getResumeEdge( cursor );
 
         final Optional<ApplicationScope> appId = reIndexRequestBuilder.getApplicationScope();
+
+        final Optional<Integer> delayTimer = reIndexRequestBuilder.getDelayTimer();
+
+        final Optional<TimeUnit> timeUnitOptional = reIndexRequestBuilder.getTimeUnitOptional();
 
         Preconditions.checkArgument( !(cursor.isPresent() && appId.isPresent()),
             "You cannot specify an app id and a cursor.  When resuming with cursor you must omit the appid" );
@@ -122,15 +136,36 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         // create an observable that loads a batch to be indexed
 
-        final Observable<List<EdgeScope>> runningReIndex = allEntityIdsObservable.getEdgesToEntities( applicationScopes,
+        if(reIndexRequestBuilder.getCollectionName().isPresent()) {
+            String collectionName =  InflectionUtils.pluralize( CpNamingUtils.getNameFromEdgeType(reIndexRequestBuilder.getCollectionName().get() ));
+            MapManager collectionMapStorage = mapManagerFactory.createMapManager( CpNamingUtils.getEntityTypeMapScope( appId.get().getApplication()  ) );
+            IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( collectionMapStorage );
+
+            Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+
+            //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
+            if ( collectionIndexingSchema.isPresent() ) {
+
+                Map jsonMapData = collectionIndexingSchema.get();
+
+                jsonMapData.put( "lastReindexed", Instant.now().toEpochMilli() );
+                //should probably roll this into the cache.
+                indexSchemaCache.putCollectionSchema( collectionName, JsonUtils.mapToJsonString(jsonMapData ) );
+            }
+
+        }
+
+        Observable<List<EdgeScope>> runningReIndex = allEntityIdsObservable.getEdgesToEntities( applicationScopes,
             reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
+
             .buffer( indexProcessorFig.getReindexBufferSize())
-            .doOnNext(edges -> {
+            .flatMap( edgeScopes -> Observable.just(edgeScopes)
+                .doOnNext(edges -> {
 
-                logger.info("Sending batch of {} to be indexed.", edges.size());
-                indexService.indexBatch(edges, modifiedSince);
-
-            });
+                    logger.info("Sending batch of {} to be indexed.", edges.size());
+                    indexService.indexBatch(edges, modifiedSince);
+                })
+                .subscribeOn( Schedulers.io() ), indexProcessorFig.getReindexConcurrencyFactor());
 
 
         //start our sampler and state persistence
