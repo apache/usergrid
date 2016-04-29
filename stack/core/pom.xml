@@ -148,8 +148,8 @@
     </dependency>
 
     <dependency>
-      <groupId>commons-collections</groupId>
-      <artifactId>commons-collections</artifactId>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-collections4</artifactId>
     </dependency>
 
     <dependency>
@@ -202,11 +202,6 @@
     <dependency>
       <groupId>com.fasterxml.uuid</groupId>
       <artifactId>java-uuid-generator</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.hazelcast</groupId>
-      <artifactId>hazelcast-all</artifactId>
     </dependency>
 
     <dependency>
@@ -348,16 +343,6 @@
       <artifactId>spring-test</artifactId>
       <scope>test</scope>
     </dependency>
-
-
-       <dependency>
-        <groupId>org.apache.usergrid</groupId>
-        <artifactId>common</artifactId>
-        <version>2.1.1-SNAPSHOT</version>
-        <type>test-jar</type>
-           <scope>test</scope>
-       </dependency>
-
 
     <!-- Core Persistence deps -->
     <dependency>

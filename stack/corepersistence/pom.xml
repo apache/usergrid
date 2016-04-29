@@ -77,7 +77,7 @@ limitations under the License.
         <cassandra.version>1.2.18</cassandra.version>
         <!--        <chop.version>1.0</chop.version>-->
         <commons.codec.version>1.6</commons.codec.version>
-        <commons.collections.version>3.2.1</commons.collections.version>
+        <commons.collections4.version>4.0</commons.collections4.version>
         <commons.io.version>2.4</commons.io.version>
         <commons.lang.version>3.1</commons.lang.version>
         <elasticsearch.version>1.7.3</elasticsearch.version>
