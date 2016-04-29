@@ -17,7 +17,10 @@
 package org.apache.usergrid.rest.management.organizations;
 
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -276,6 +279,26 @@ public class OrganizationResource extends AbstractContextResource {
         management.updateOrganization( organization );
 
         return response;
+    }
+
+
+    protected Set<String> getSetFromCommaSeparatedString( String input ) {
+        Set<String> ret = new HashSet<>();
+        StringTokenizer tokenizer = new StringTokenizer(input, ",");
+
+        while (tokenizer.hasMoreTokens()) {
+            ret.add(tokenizer.nextToken());
+        }
+
+        return ret;
+    }
+
+
+    protected Map<String, Object> getConfigData(OrganizationConfig orgConfig, String itemsParam,
+                                                boolean includeDefaults, boolean includeOverrides) {
+        boolean itemsParamEmpty = itemsParam == null || itemsParam.isEmpty() || itemsParam.equals("*");
+        return orgConfig.getOrgConfigCustomMap(itemsParamEmpty ? null : getSetFromCommaSeparatedString(itemsParam),
+            includeDefaults, includeOverrides);
     }
 
     @JSONP

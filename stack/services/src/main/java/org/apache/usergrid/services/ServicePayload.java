@@ -24,10 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.usergrid.utils.JsonUtils;
+import org.apache.commons.collections4.iterators.EmptyIterator;
+import org.apache.commons.collections4.iterators.SingletonListIterator;
 
-import org.apache.commons.collections.iterators.EmptyIterator;
-import org.apache.commons.collections.iterators.SingletonListIterator;
+import org.apache.usergrid.utils.JsonUtils;
 
 import static org.apache.usergrid.utils.JsonUtils.normalizeJsonTree;
 
@@ -193,7 +193,7 @@ public class ServicePayload {
             return batch.iterator();
         }
         if ( properties != null ) {
-            return new SingletonListIterator( properties );
+            return new SingletonListIterator<>( properties );
         }
         return EmptyIterator.INSTANCE;
     }
