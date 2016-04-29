@@ -34,7 +34,8 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 
 
-public class MapUtils extends org.apache.commons.collections.MapUtils {
+public class MapUtils extends org.apache.commons.collections4.MapUtils{
+
 
     public static <A, B> void addMapSet( Map<A, Set<B>> map, A a, B b ) {
         addMapSet( map, false, a, b );
