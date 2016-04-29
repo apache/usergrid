@@ -37,16 +37,9 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.uuid.UUIDComparator;
+import com.google.common.collect.Iterators;
 
-import static org.apache.commons.collections.IteratorUtils.asEnumeration;
-import static org.apache.commons.collections.MapUtils.getBooleanValue;
-import static org.apache.commons.collections.MapUtils.getByteValue;
-import static org.apache.commons.collections.MapUtils.getDoubleValue;
-import static org.apache.commons.collections.MapUtils.getFloatValue;
-import static org.apache.commons.collections.MapUtils.getIntValue;
-import static org.apache.commons.collections.MapUtils.getLongValue;
-import static org.apache.commons.collections.MapUtils.getShortValue;
-import static org.apache.commons.collections.MapUtils.getString;
+import static org.apache.commons.collections4.MapUtils.*;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.ConversionUtils.bytes;
 import static org.apache.usergrid.utils.ConversionUtils.coerceMap;
@@ -268,7 +261,7 @@ public class Message {
     @JsonIgnore
     @SuppressWarnings("unchecked")
     public Enumeration<String> getPropertyNames() {
-        return asEnumeration( properties.keySet().iterator() );
+        return Iterators.asEnumeration( properties.keySet().iterator() );
     }
 
 

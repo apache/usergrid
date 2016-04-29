@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.apache.commons.collections.MapUtils.getObject;
+import static org.apache.commons.collections4.MapUtils.getObject;
 import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
 import static org.apache.usergrid.utils.ConversionUtils.getBoolean;
 import static org.apache.usergrid.utils.ConversionUtils.string;
