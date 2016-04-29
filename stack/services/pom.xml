@@ -260,57 +260,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.jclouds</groupId>
-            <artifactId>jclouds-blobstore</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.jclouds</groupId>
-            <artifactId>jclouds-core</artifactId>
-            <exclusions>
-                <exclusion>
-                    <artifactId>guice-assistedinject</artifactId>
-                    <groupId>com.google.inject.extensions</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>guice</artifactId>
-                    <groupId>com.google.inject</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.jclouds</groupId>
-            <artifactId>jclouds-allblobstore</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.jclouds.driver</groupId>
-            <artifactId>jclouds-netty</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.jclouds.driver</groupId>
-            <artifactId>jclouds-apachehc</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.jclouds.driver</groupId>
-            <artifactId>jclouds-log4j</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.jclouds.driver</groupId>
-            <artifactId>jclouds-slf4j</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
         </dependency>
