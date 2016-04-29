@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 
 
-public class ListUtils extends org.apache.commons.collections.ListUtils {
+public class ListUtils  {
     private static final Logger logger = LoggerFactory.getLogger( ListUtils.class );
 
 

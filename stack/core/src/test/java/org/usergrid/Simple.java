@@ -20,13 +20,12 @@ package org.usergrid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.usergrid.clustering.hazelcast.HazelcastTest;
 import org.apache.usergrid.persistence.TypedEntity;
 
 
 public class Simple extends TypedEntity {
 
-    private static final Logger logger = LoggerFactory.getLogger( HazelcastTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( Simple.class );
 
 
     public Simple() {
