@@ -199,11 +199,6 @@
       <artifactId>java-uuid-generator</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>com.netflix.curator</groupId>
-      <artifactId>curator-recipes</artifactId>
-    </dependency>
-
       <dependency>
           <groupId>com.netflix.astyanax</groupId>
           <artifactId>astyanax-recipes</artifactId>
@@ -279,11 +274,6 @@
     <dependency>
       <groupId>org.aspectj</groupId>
       <artifactId>aspectjrt</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>cglib</groupId>
-      <artifactId>cglib-nodep</artifactId>
     </dependency>
 
     <dependency>
