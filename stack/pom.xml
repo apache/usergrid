@@ -117,7 +117,7 @@
         <shiro-version>1.2.4</shiro-version>
         <slf4j-version>1.7.2</slf4j-version>
         <snakeyaml-version>1.9</snakeyaml-version>
-        <tomcat-version>7.0.64</tomcat-version>
+        <tomcat-version>8.5.0</tomcat-version>
         <antlr.version>3.4</antlr.version>
         <tika.version>1.4</tika.version>
         <mockito.version>1.10.8</mockito.version>
@@ -903,24 +903,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.powermock</groupId>
-                <artifactId>powermock-module-junit4</artifactId>
-                <version>${powermock.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.powermock</groupId>
-                <artifactId>powermock-module-junit4-rule-agent</artifactId>
-                <version>${powermock.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.powermock</groupId>
-                <artifactId>powermock-api-mockito</artifactId>
-                <version>${powermock.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>${junit-version}</version>
@@ -1008,6 +990,8 @@
                 <version>2.3</version>
             </dependency>
 
+            <!--This is for the command line tools to hook in and use their stuff. It's pretty small so i left-->
+            <!--it until we get rid of the tools directory.-->
             <dependency>
                 <groupId>com.beust</groupId>
                 <artifactId>jcommander</artifactId>
@@ -1018,13 +1002,6 @@
                 <groupId>org.mindrot</groupId>
                 <artifactId>jbcrypt</artifactId>
                 <version>0.3m</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.apple</groupId>
-                <artifactId>AppleJavaExtensions</artifactId>
-                <!-- from local-depedendencies -->
-                <version>1.4</version>
             </dependency>
 
             <dependency>
@@ -1039,6 +1016,8 @@
                 <version>1.1.1</version>
             </dependency>
 
+            <!--Used for the trace aspect stuff in usergrid lower levels. Needs further understanding
+            before removal.-->
             <dependency>
                 <groupId>org.aspectj</groupId>
                 <artifactId>aspectjweaver</artifactId>
@@ -1049,34 +1028,6 @@
                 <groupId>org.aspectj</groupId>
                 <artifactId>aspectjrt</artifactId>
                 <version>1.6.12</version>
-            </dependency>
-
-            <dependency>
-                <groupId>cglib</groupId>
-                <artifactId>cglib-nodep</artifactId>
-                <version>2.2.2</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.netflix.curator</groupId>
-                <artifactId>curator-recipes</artifactId>
-                <version>1.2.6</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.google.guava</groupId>
-                        <artifactId>guava</artifactId>
-                    </exclusion>
-
-                    <exclusion>
-                        <groupId>org.apache.zookeeper</groupId>
-                        <artifactId>zookeeper</artifactId>
-                    </exclusion>
-
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <dependency>
