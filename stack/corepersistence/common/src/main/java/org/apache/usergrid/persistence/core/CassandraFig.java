@@ -33,6 +33,7 @@ public interface CassandraFig extends GuicyFig {
 
     // cassndra properties used by datastax driver
     String READ_CL = "cassandra.readcl";
+    String READ_CL_CONSISTENT = "cassandra.readcl.consistent";
     String WRITE_CL = "cassandra.writecl";
     String STRATEGY = "cassandra.strategy";
     String STRATEGY_OPTIONS = "cassandra.strategy.options";
@@ -135,6 +136,10 @@ public interface CassandraFig extends GuicyFig {
     @Default("LOCAL_QUORUM")
     @Key(READ_CL)
     String getReadCl();
+
+    @Default("QUORUM")
+    @Key(READ_CL_CONSISTENT)
+    String getReadClConsistent();
 
     @Default("LOCAL_QUORUM")
     @Key(WRITE_CL)
