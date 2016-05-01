@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.astyanax;
+package org.apache.usergrid.persistence.core;
 
 
 import java.beans.PropertyChangeEvent;
@@ -26,7 +26,6 @@ import java.beans.PropertyChangeListener;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.model.ConsistencyLevel;
-import org.apache.usergrid.persistence.core.CassandraFig;
 
 
 /**

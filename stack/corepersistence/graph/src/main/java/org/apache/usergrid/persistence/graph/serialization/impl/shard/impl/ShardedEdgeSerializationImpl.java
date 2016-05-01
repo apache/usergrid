@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import com.google.common.base.Optional;
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.consistency.TimeService;

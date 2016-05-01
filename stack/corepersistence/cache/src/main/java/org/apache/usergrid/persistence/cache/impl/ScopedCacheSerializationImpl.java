@@ -29,6 +29,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.cache.CacheScope;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.*;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
