@@ -90,23 +90,17 @@ public interface CassandraFig extends GuicyFig {
     @Default( "9160" )
     int getThriftPort();
 
-    @Key( "cassandra.username" )
+    @Key( USERNAME )
     @Default( DEFAULT_USERNAME )
     String getUsername();
 
-    @Key( "cassandra.password" )
+    @Key( PASSWORD )
     @Default( DEFAULT_PASSWORD )
     String getPassword();
 
     @Key( "cassandra.datacenter.local" )
     @Default( DEFAULT_LOCAL_DC )
     String getLocalDataCenter();
-
-    @Key( USERNAME )
-    String getUsername();
-
-    @Key( PASSWORD )
-    String getPassword();
 
     @Key( "cassandra.connections" )
     @Default( DEFAULT_CONNECTION_POOLSIZE )
