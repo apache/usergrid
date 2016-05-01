@@ -22,27 +22,12 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Using;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
-import com.google.common.hash.PrimitiveSink;
 import com.google.inject.Inject;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.Serializer;
-import com.netflix.astyanax.connectionpool.OperationResult;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
-import com.netflix.astyanax.model.Column;
-import com.netflix.astyanax.model.CompositeBuilder;
-import com.netflix.astyanax.model.CompositeParser;
-import com.netflix.astyanax.serializers.ObjectSerializer;
-import com.netflix.astyanax.serializers.StringSerializer;
-import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.usergrid.persistence.cache.CacheScope;
 import org.apache.usergrid.persistence.core.astyanax.*;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
@@ -55,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.Callable;
 
 
 /**
@@ -258,7 +242,7 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
 
     }
 
-    
+
     @Override
     public void invalidate(CacheScope scope) {
 
