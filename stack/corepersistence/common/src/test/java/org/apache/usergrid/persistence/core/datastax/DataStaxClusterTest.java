@@ -32,7 +32,7 @@ import static org.junit.Assert.*;
 
 @RunWith( ITRunner.class )
 @UseModules( TestCommonModule.class )
-public class DatastaxClusterTest {
+public class DataStaxClusterTest {
 
 
     @Inject
