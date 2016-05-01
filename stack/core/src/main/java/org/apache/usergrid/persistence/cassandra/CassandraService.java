@@ -17,7 +17,6 @@
 package org.apache.usergrid.persistence.cassandra;
 
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import me.prettyprint.cassandra.connection.HConnectionManager;
 import me.prettyprint.cassandra.model.ConfigurableConsistencyLevel;
@@ -36,7 +35,7 @@ import me.prettyprint.hector.api.query.ColumnQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceQuery;
 import org.apache.usergrid.locking.LockManager;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.hector.CountingMutator;
 import org.apache.usergrid.utils.MapUtils;
 import org.slf4j.Logger;

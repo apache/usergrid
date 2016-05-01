@@ -16,24 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.migration.schema;
+package org.apache.usergrid.persistence.core.datastax;
 
 
-import java.util.Collection;
+import com.datastax.driver.core.Session;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.Singleton;
 
-import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+@Singleton
+public class DataStaxSessionProvider implements Provider<Session> {
 
+    private final DataStaxCluster dataStaxCluster;
 
-/**
- * @author tnine
- */
-public interface Migration {
+    @Inject
+    public DataStaxSessionProvider( final DataStaxCluster dataStaxCluster ){
 
-    /**
-     * Get the column families required for this implementation.  If one does not exist it will be created.
-     */
-    Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies();
+        this.dataStaxCluster = dataStaxCluster;
+    }
 
-    Collection<TableDefinition> getTables();
+    @Override
+    public Session get(){
+
+        return dataStaxCluster.getApplicationSession();
+    }
 }

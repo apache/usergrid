@@ -38,6 +38,7 @@ import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
@@ -108,6 +109,12 @@ public class NodeSerializationImpl implements NodeSerialization, Migration {
                 new MultiTenantColumnFamilyDefinition( GRAPH_DELETE, BytesType.class.getSimpleName(),
                         BooleanType.class.getSimpleName(), BytesType.class.getSimpleName(),
                         MultiTenantColumnFamilyDefinition.CacheOption.ALL ) );
+    }
+
+    @Override
+    public Collection<TableDefinition> getTables() {
+
+        return Collections.emptyList();
     }
 
 

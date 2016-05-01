@@ -16,24 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.migration.schema;
+package org.apache.usergrid.persistence.core.datastax;
 
 
-import java.util.Collection;
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Session;
 
-import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+public interface DataStaxCluster {
 
+    Cluster getCluster();
 
-/**
- * @author tnine
- */
-public interface Migration {
+    Session getClusterSession();
 
-    /**
-     * Get the column families required for this implementation.  If one does not exist it will be created.
-     */
-    Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies();
+    Session getApplicationSession();
 
-    Collection<TableDefinition> getTables();
+    void createOrUpdateKeyspace() throws Exception;
+
+    void waitForSchemaAgreement();
+
 }

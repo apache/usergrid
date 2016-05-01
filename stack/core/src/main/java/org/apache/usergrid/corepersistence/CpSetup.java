@@ -112,7 +112,6 @@ public class CpSetup implements Setup {
 
     }
 
-
     private void setupLegacySchema() throws Exception {
 
         logger.info( "Initialize keyspace and legacy column families" );
@@ -148,8 +147,5 @@ public class CpSetup implements Setup {
             throw new RuntimeException( "Error migrating Core Persistence", ex );
         }
     }
-
-
-
 
 }

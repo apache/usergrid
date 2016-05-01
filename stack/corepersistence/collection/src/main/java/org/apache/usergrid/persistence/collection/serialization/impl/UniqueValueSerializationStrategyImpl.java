@@ -18,13 +18,9 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +30,7 @@ import org.apache.usergrid.persistence.collection.serialization.SerializationFig
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
 import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
@@ -240,7 +236,7 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     @Override
     public UniqueValueSet load( final ApplicationScope colScope, final String type, final Collection<Field> fields )
         throws ConnectionException {
-        return load( colScope, ConsistencyLevel.valueOf( cassandraFig.getReadCL() ), type, fields );
+        return load( colScope, ConsistencyLevel.valueOf( cassandraFig.getAstyanaxReadCL() ), type, fields );
     }
 
 
@@ -377,6 +373,12 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                 MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
 
         return Arrays.asList( uniqueLookupCF, uniqueLogCF );
+    }
+
+    @Override
+    public Collection<TableDefinition> getTables() {
+
+        return Collections.emptyList();
     }
 
 

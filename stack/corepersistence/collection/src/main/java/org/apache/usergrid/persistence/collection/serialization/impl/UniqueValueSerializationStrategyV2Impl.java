@@ -22,17 +22,19 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.apache.cassandra.db.marshal.BytesType;
 
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 
@@ -99,6 +101,11 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
         return Arrays.asList( uniqueLookupCF, uniqueLogCF );
     }
 
+    @Override
+    public Collection<TableDefinition> getTables() {
+
+        return Collections.emptyList();
+    }
 
     @Override
     protected MultiTenantColumnFamily<ScopedRowKey<TypeField>, EntityVersion> getUniqueValuesCF() {

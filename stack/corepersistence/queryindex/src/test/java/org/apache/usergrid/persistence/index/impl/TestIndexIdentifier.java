@@ -20,9 +20,8 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.apache.usergrid.persistence.index.IndexAlias;
 import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
