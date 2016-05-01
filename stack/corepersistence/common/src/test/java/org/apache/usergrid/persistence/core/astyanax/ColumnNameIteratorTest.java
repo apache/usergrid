@@ -24,6 +24,7 @@ package org.apache.usergrid.persistence.core.astyanax;
 
 import java.util.HashMap;
 
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.CassandraFig;
 import org.junit.Before;
 import org.junit.Test;

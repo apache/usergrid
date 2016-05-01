@@ -21,6 +21,8 @@ package org.apache.usergrid.persistence.core.guice;
 
 import com.datastax.driver.core.Session;
 import com.netflix.astyanax.Keyspace;
+import org.apache.usergrid.persistence.core.CassandraConfig;
+import org.apache.usergrid.persistence.core.CassandraConfigImpl;
 import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.*;
 import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
