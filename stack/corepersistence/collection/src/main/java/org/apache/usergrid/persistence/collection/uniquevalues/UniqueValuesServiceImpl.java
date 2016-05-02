@@ -55,7 +55,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     AkkaFig akkaFig;
     UniqueValuesTable table;
     private String hostname;
-    private Integer port;
+    private Integer port = null;
     private String currentRegion;
 
     private Map<String, ActorRef> requestActorsByRegion;
@@ -95,8 +95,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     public void start() {
 
         this.hostname = akkaFig.getHostname();
-        this.port = akkaFig.getPort();
         this.currentRegion = akkaFig.getRegion();
+        this.port = null;
 
         initAkka();
         waitForRequestActors();
@@ -109,8 +109,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     public void start( String hostname, Integer port, String currentRegion ) {
 
         this.hostname = hostname;
-        this.port = port;
         this.currentRegion = currentRegion;
+        this.port = port;
 
         initAkka();
     }
@@ -196,7 +196,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             ActorSystem actorSystem = systemMap.get( region );
             if ( !actorSystem.equals( localSystem ) ) {
                 logger.info("Starting ReservationCacheUpdater for {}", region );
-                actorSystem.actorOf( Props.create( ReservationCacheActor.class, region ), "subscriber");
+                actorSystem.actorOf( Props.create( ReservationCacheActor.class ), "subscriber");
             }
         }
     }
@@ -255,6 +255,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         requestActorsByRegion = new HashMap<>();
 
         for ( String region : systemMap.keySet() ) {
+
+            logger.info("Creating request actor for region {}", region);
 
             // Each RequestActor needs to know path to ClusterSingletonProxy and region
             ActorRef requestActor = systemMap.get( region ).actorOf(
@@ -322,6 +324,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
         String[] regionSeeds = akkaFig.getRegionSeeds().split( "," );
 
+        logger.info("Found region {} seeds {}", regionSeeds.length, regionSeeds);
+
         try {
 
             if ( port != null ) {
@@ -329,6 +333,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
                 // we are testing
                 String seed = "akka.tcp://ClusterSystem@" + hostname + ":" + port;
                 seedsByRegion.put( currentRegion, seed );
+                logger.info("Akka testing, only starting one seed");
 
             } else {
 
@@ -344,13 +349,14 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
                     final Integer regionPort;
 
                     if (port == null) {
-                        // we assume 0th seed has the right port
                         regionPort = Integer.parseInt( regionPortString );
                     } else {
                         regionPort = port; // unless we are testing
                     }
 
                     String seed = "akka.tcp://ClusterSystem@" + hostname + ":" + regionPort;
+
+                    logger.info("Adding seed {} for region {}", seed, region );
 
                     seedsByRegion.put( region, seed );
                 }
@@ -366,23 +372,18 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             for ( String region : seedsByRegion.keySet() ) {
 
                 List<String> seeds = seedsByRegion.get( region );
-
-                final Integer regionPort;
-
-                if (port == null) {
-                    // we assume 0th seed has the right port
-                    int lastColon = seeds.get(0).lastIndexOf(":") + 1;
-                    regionPort = Integer.parseInt( seeds.get(0).substring( lastColon ));
-                } else {
-                    regionPort = port; // unless we are testing
-                }
+                int lastColon = seeds.get(0).lastIndexOf(":") + 1;
+                final Integer regionPort = Integer.parseInt( seeds.get(0).substring( lastColon ));
 
                 // cluster singletons only run role "io" nodes and NOT on "client" nodes of other regions
                 String clusterRole = currentRegion.equals( region ) ? "io" : "client";
 
-                logger.info( "Config for region {} is:\npoc Akka Hostname {}\npoc Akka Seeds {}\n" +
-                                "poc Akka Port {}\npoc UniqueValueActors per node {}",
-                        region, hostname, seeds, port, numInstancesPerNode );
+                logger.info( "Config for region {} is:\n" +
+                    "poc Akka Hostname {}\n" +
+                    "poc Akka Seeds {}\n" +
+                    "poc Akka Port {}\n" +
+                    "poc UniqueValueActors per node {}",
+                    region, hostname, seeds, port, numInstancesPerNode );
 
                 Map<String, Object> configMap = new HashMap<String, Object>() {{
                     put( "akka", new HashMap<String, Object>() {{

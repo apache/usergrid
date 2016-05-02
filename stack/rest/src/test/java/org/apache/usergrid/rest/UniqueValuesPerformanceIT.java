@@ -75,7 +75,7 @@ public class UniqueValuesPerformanceIT {
 
         String randomizer = RandomStringUtils.randomAlphanumeric( 8 );
 
-        String[] targetHosts = {"http://localhost:9090","http://localhost:9090"};
+        String[] targetHosts = {"http://localhost:8080","http://localhost:9090"};
 
         final MetricRegistry metrics = new MetricRegistry();
         final Timer responses = metrics.timer( name( UniqueValuesPerformanceIT.class, "responses" ) );
@@ -89,7 +89,7 @@ public class UniqueValuesPerformanceIT {
 
                     // every user gets unique name, no duplicates in this test
                     UUID uuid = UUID.randomUUID();
-                    String username = "uv_test_user_" + randomizer;
+                    String username = "uv_test_user_" + uuid;
 
                     Form form = new Form();
                     form.param( "name", username );
@@ -111,8 +111,6 @@ public class UniqueValuesPerformanceIT {
 
                         } else {
                             String responseBody = response.readEntity( String.class );
-                            int rootCause = responseBody.indexOf( "root cause" );
-                            responseBody = rootCause > 0 ? responseBody.substring( rootCause, rootCause + 100 ) : "";
                             logger.error( "User creation failed status {} - {}", response.getStatus(), responseBody );
                             errorCounter.incrementAndGet();
                         }
