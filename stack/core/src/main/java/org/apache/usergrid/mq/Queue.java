@@ -31,14 +31,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import static java.util.UUID.nameUUIDFromBytes;
 
-import static org.apache.commons.collections.MapUtils.getBooleanValue;
-import static org.apache.commons.collections.MapUtils.getByteValue;
-import static org.apache.commons.collections.MapUtils.getDoubleValue;
-import static org.apache.commons.collections.MapUtils.getFloatValue;
-import static org.apache.commons.collections.MapUtils.getIntValue;
-import static org.apache.commons.collections.MapUtils.getLongValue;
-import static org.apache.commons.collections.MapUtils.getShortValue;
-import static org.apache.commons.collections.MapUtils.getString;
+
+import static org.apache.commons.collections4.MapUtils.*;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 
 

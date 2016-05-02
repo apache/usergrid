@@ -47,8 +47,7 @@ import java.util.*;
 
 import static me.prettyprint.cassandra.service.FailoverPolicy.ON_FAIL_TRY_ALL_AVAILABLE;
 import static me.prettyprint.hector.api.factory.HFactory.*;
-import static org.apache.commons.collections.MapUtils.getIntValue;
-import static org.apache.commons.collections.MapUtils.getString;
+import static org.apache.commons.collections4.MapUtils.*;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.batchExecute;
 import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
 import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;

@@ -95,6 +95,7 @@
 
         <!-- =================================================================== -->
         <!-- Properties: Dependency Settings -->
+        <!-- Properties: Dependency Settings -->
         <!-- =================================================================== -->
 
         <amber-version>0.22-incubating</amber-version>
@@ -109,7 +110,6 @@
         <jacoco.version>0.7.5.201505241946</jacoco.version>
         <jackson-version>1.9.9</jackson-version>
         <jackson-2-version>2.3.3</jackson-2-version>
-        <jclouds.version>1.9.0</jclouds.version>
         <jersey-version>2.21</jersey-version>
         <junit-version>4.12</junit-version>
         <log4j-version>1.2.16</log4j-version>
@@ -246,9 +246,9 @@
             </dependency>
 
             <dependency>
-                <groupId>commons-collections</groupId>
-                <artifactId>commons-collections</artifactId>
-                <version>3.2.1</version>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-collections4</artifactId>
+                <version>4.0</version>
             </dependency>
 
             <dependency>
@@ -264,18 +264,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.activemq</groupId>
-                <artifactId>activemq-core</artifactId>
-                <version>5.5.0</version>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>commons-logging</artifactId>
-                        <groupId>commons-logging</groupId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
                 <version>4.4.1</version>
@@ -285,20 +273,6 @@
                         <artifactId>commons-codec</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-
-
-
-            <dependency>
-                <groupId>org.apache.activemq</groupId>
-                <artifactId>activemq-spring</artifactId>
-                <version>5.5.0</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.activemq</groupId>
-                <artifactId>activemq-pool</artifactId>
-                <version>5.5.0</version>
             </dependency>
 
             <dependency>
@@ -559,12 +533,6 @@
             </dependency>
 
             <dependency>
-                <groupId>javax.persistence</groupId>
-                <artifactId>persistence-api</artifactId>
-                <version>1.0</version>
-            </dependency>
-
-            <dependency>
                 <groupId>javax.servlet</groupId>
                 <artifactId>javax.servlet-api</artifactId>
                 <version>3.0.1</version>
@@ -635,12 +603,6 @@
                         <artifactId>log4j</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>com.hazelcast</groupId>
-                <artifactId>hazelcast-all</artifactId>
-                <version>1.9.3.1</version>
             </dependency>
 
             <dependency>
@@ -776,12 +738,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.jboss.netty</groupId>
-                <artifactId>netty</artifactId>
-                <version>3.2.7.Final</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.jsoup</groupId>
                 <artifactId>jsoup</artifactId>
                 <version>1.6.0</version>
@@ -824,12 +780,6 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-aop</artifactId>
                 <version>${org.springframework.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>aopalliance</groupId>
-                        <artifactId>aopalliance</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <dependency>
@@ -860,12 +810,6 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-web</artifactId>
                 <version>${org.springframework.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>aopalliance</groupId>
-                        <artifactId>aopalliance</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <dependency>
@@ -893,7 +837,7 @@
                 <version>0.9.94</version>
             </dependency>
 
-
+            <!-- Used for the asset mime type identification-->
             <dependency>
                 <groupId>org.apache.tika</groupId>
                 <artifactId>tika-core</artifactId>
@@ -956,24 +900,6 @@
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-all</artifactId>
                 <version>1.10.8</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.powermock</groupId>
-                <artifactId>powermock-module-junit4</artifactId>
-                <version>${powermock.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.powermock</groupId>
-                <artifactId>powermock-module-junit4-rule-agent</artifactId>
-                <version>${powermock.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.powermock</groupId>
-                <artifactId>powermock-api-mockito</artifactId>
-                <version>${powermock.version}</version>
             </dependency>
 
             <dependency>
@@ -1053,96 +979,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.jclouds</groupId>
-                <artifactId>jclouds-blobstore</artifactId>
-                <version>${jclouds.version}</version>
-                <exclusions>
-                    <!-- blows up our version of guice-->
-                    <exclusion>
-                        <groupId>com.google.inject.extensions</groupId>
-                        <artifactId>guice-assistedinject</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.jclouds</groupId>
-                <artifactId>jclouds-core</artifactId>
-                <version>${jclouds.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.sun.jersey</groupId>
-                        <artifactId>jersey-core</artifactId>
-                    </exclusion>
-
-                    <exclusion>
-                        <groupId>com.google.guava</groupId>
-                        <artifactId>guava</artifactId>
-                    </exclusion>
-
-                    <exclusion>
-                        <groupId>aopalliance</groupId>
-                        <artifactId>aopalliance</artifactId>
-                    </exclusion>
-
-                    <!-- if this is uncommented out sends our service tier into bootloop -->
-                    <!-- blows up our version of guice-->
-                    <!--<exclusion>-->
-                    <!--<groupId>com.google.inject.extensions</groupId>-->
-                    <!--<artifactId>guice-assistedinject</artifactId>-->
-                    <!--</exclusion>-->
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>aopalliance</groupId>
-                <artifactId>aopalliance</artifactId>
-                <version>1.0</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.jclouds</groupId>
-                <artifactId>jclouds-allblobstore</artifactId>
-                <version>${jclouds.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>commons-io</groupId>
-                        <artifactId>commons-io</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.jclouds.driver</groupId>
-                <artifactId>jclouds-netty</artifactId>
-                <version>${jclouds.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.jclouds.driver</groupId>
-                <artifactId>jclouds-apachehc</artifactId>
-                <version>${jclouds.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.jclouds.driver</groupId>
-                <artifactId>jclouds-log4j</artifactId>
-                <version>${jclouds.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.jclouds.driver</groupId>
-                <artifactId>jclouds-slf4j</artifactId>
-                <version>${jclouds.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.usergrid</groupId>
                 <artifactId>usergrid-java-client</artifactId>
                 <version>0.0.10-SNAPSHOT</version>
@@ -1154,6 +990,8 @@
                 <version>2.3</version>
             </dependency>
 
+            <!--This is for the command line tools to hook in and use their stuff. It's pretty small so i left-->
+            <!--it until we get rid of the tools directory.-->
             <dependency>
                 <groupId>com.beust</groupId>
                 <artifactId>jcommander</artifactId>
@@ -1164,13 +1002,6 @@
                 <groupId>org.mindrot</groupId>
                 <artifactId>jbcrypt</artifactId>
                 <version>0.3m</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.apple</groupId>
-                <artifactId>AppleJavaExtensions</artifactId>
-                <!-- from local-depedendencies -->
-                <version>1.4</version>
             </dependency>
 
             <dependency>
@@ -1185,6 +1016,8 @@
                 <version>1.1.1</version>
             </dependency>
 
+            <!--Used for the trace aspect stuff in usergrid lower levels. Needs further understanding
+            before removal.-->
             <dependency>
                 <groupId>org.aspectj</groupId>
                 <artifactId>aspectjweaver</artifactId>
@@ -1195,34 +1028,6 @@
                 <groupId>org.aspectj</groupId>
                 <artifactId>aspectjrt</artifactId>
                 <version>1.6.12</version>
-            </dependency>
-
-            <dependency>
-                <groupId>cglib</groupId>
-                <artifactId>cglib-nodep</artifactId>
-                <version>2.2.2</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.netflix.curator</groupId>
-                <artifactId>curator-recipes</artifactId>
-                <version>1.2.6</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.google.guava</groupId>
-                        <artifactId>guava</artifactId>
-                    </exclusion>
-
-                    <exclusion>
-                        <groupId>org.apache.zookeeper</groupId>
-                        <artifactId>zookeeper</artifactId>
-                    </exclusion>
-
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-api</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <dependency>

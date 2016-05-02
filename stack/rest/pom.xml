@@ -208,8 +208,8 @@
         <!-- Apache Dependencies -->
 
         <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
         </dependency>
 
         <!-- Java EE and Jersey dependencies -->
@@ -415,11 +415,6 @@
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>
             <version>3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-apache-client</artifactId>
-            <version>1.19</version>
         </dependency>
 
     </dependencies>

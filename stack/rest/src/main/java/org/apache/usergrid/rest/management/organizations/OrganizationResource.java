@@ -17,43 +17,46 @@
 package org.apache.usergrid.rest.management.organizations;
 
 
-import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
-import org.apache.amber.oauth2.common.exception.OAuthSystemException;
-import org.apache.commons.lang.NullArgumentException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+
+import org.glassfish.jersey.server.mvc.Viewable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.OrganizationConfig;
 import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.export.ExportService;
-import org.apache.usergrid.persistence.entities.Export;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
-import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.management.organizations.applications.ApplicationsResource;
 import org.apache.usergrid.rest.management.organizations.users.UsersResource;
 import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
-import org.apache.usergrid.rest.utils.JSONPUtils;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
 import org.apache.usergrid.services.ServiceResults;
-import org.glassfish.jersey.server.mvc.Viewable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.util.*;
-
-import static javax.servlet.http.HttpServletResponse.*;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 
 
 @Component("org.apache.usergrid.rest.management.organizations.OrganizationResource")
@@ -65,9 +68,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 public class OrganizationResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( OrganizationsResource.class );
-
-    @Autowired
-    protected ExportService exportService;
 
     OrganizationInfo organization;
 
@@ -281,102 +281,8 @@ public class OrganizationResource extends AbstractContextResource {
         return response;
     }
 
-    @POST
-    @Path("export")
-    @Consumes(APPLICATION_JSON)
-    @RequireOrganizationAccess
-    public Response exportPostJson( @Context UriInfo ui,Map<String, Object> json,
-                                    @QueryParam("callback") @DefaultValue("") String callback )
-            throws OAuthSystemException {
 
-        if (logger.isTraceEnabled()) {
-            logger.trace("executePostJson");
-        }
-
-        Map<String, String> uuidRet = new HashMap<>();
-
-        try {
-            Object propertiesObj = json.get("properties");
-            if (propertiesObj == null) {
-                throw new NullArgumentException("Could not find 'properties'");
-            }
-            if (!(propertiesObj instanceof Map)) {
-                throw new IllegalArgumentException("'properties' not a map");
-            }
-
-            @SuppressWarnings("unchecked")
-            Map<String,Object> properties = (Map<String,Object>)propertiesObj;
-
-            String storage_provider = ( String ) properties.get( "storage_provider" );
-            if(storage_provider == null) {
-                throw new NullArgumentException( "Could not find field 'storage_provider'" );
-            }
-
-            Object storageInfoObj = properties.get("storage_info");
-            if(storageInfoObj == null) {
-                throw new NullArgumentException( "Could not find field 'storage_info'" );
-            }
-            @SuppressWarnings("unchecked")
-            Map<String,Object> storage_info = (Map<String, Object>)storageInfoObj;
-
-            String bucketName = ( String ) storage_info.get( "bucket_location" );
-            String accessId = ( String ) storage_info.get( "s3_access_id" );
-            String secretKey = ( String ) storage_info.get( "s3_key" );
-
-            if ( bucketName == null ) {
-                throw new NullArgumentException( "Could not find field 'bucketName'" );
-            }
-            if ( accessId == null ) {
-                throw new NullArgumentException( "Could not find field 's3_access_id'" );
-            }
-            if ( secretKey == null ) {
-
-                throw new NullArgumentException( "Could not find field 's3_key'" );
-            }
-
-            json.put( "organizationId",organization.getUuid());
-
-            UUID jobUUID = exportService.schedule( json );
-            uuidRet.put( "Export Entity", jobUUID.toString() );
-        }
-        catch ( NullArgumentException e ) {
-            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
-        }
-        catch ( Exception e ) {
-            //TODO:throw descriptive error message and or include on in the response
-            //TODO:fix below, it doesn't work if there is an exception. Make it look like the OauthResponse.
-            return Response.status(  SC_INTERNAL_SERVER_ERROR ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
-        }
-        return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
-    }
-
-    @GET
-    @RequireOrganizationAccess
-    @Path("export/{exportEntity: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-    public Response exportGetJson( @Context UriInfo ui, @PathParam("exportEntity") UUID exportEntityUUIDStr,
-                                   @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
-
-        Export entity;
-        try {
-            entity = smf.getServiceManager( emf.getManagementAppId() ).getEntityManager()
-                        .get( exportEntityUUIDStr, Export.class );
-        }
-        catch ( Exception e ) { //this might not be a bad request and needs better error checking
-            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
-        }
-
-        if ( entity == null ) {
-            return Response.status( SC_BAD_REQUEST ).build();
-        }
-
-        return Response.status( SC_OK ).entity( entity).build();
-    }
-
-
-    protected Set<String> getSetFromCommaSeparatedString(String input) {
+    protected Set<String> getSetFromCommaSeparatedString( String input ) {
         Set<String> ret = new HashSet<>();
         StringTokenizer tokenizer = new StringTokenizer(input, ",");
 
@@ -392,9 +298,8 @@ public class OrganizationResource extends AbstractContextResource {
                                                 boolean includeDefaults, boolean includeOverrides) {
         boolean itemsParamEmpty = itemsParam == null || itemsParam.isEmpty() || itemsParam.equals("*");
         return orgConfig.getOrgConfigCustomMap(itemsParamEmpty ? null : getSetFromCommaSeparatedString(itemsParam),
-                includeDefaults, includeOverrides);
+            includeDefaults, includeOverrides);
     }
-
 
     @JSONP
     @RequireSystemAccess
