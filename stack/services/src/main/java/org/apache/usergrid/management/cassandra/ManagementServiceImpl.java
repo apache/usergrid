@@ -17,7 +17,6 @@
 package org.apache.usergrid.management.cassandra;
 
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -88,6 +87,8 @@ import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.locking.LockHelper.getUniqueUpdateLock;
 import static org.apache.usergrid.management.AccountCreationProps.*;
+import static org.apache.usergrid.management.OrganizationConfigProps.ORGPROPERTIES_ADMIN_SYSADMIN_EMAIL;
+import static org.apache.usergrid.management.OrganizationConfigProps.WorkflowUrl;
 import static org.apache.usergrid.persistence.CredentialsInfo.getCredentialsSecret;
 import static org.apache.usergrid.persistence.Schema.*;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
@@ -107,7 +108,6 @@ import static org.apache.usergrid.utils.ConversionUtils.uuid;
 import static org.apache.usergrid.utils.ListUtils.anyNull;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.apache.usergrid.utils.PasswordUtils.mongoPassword;
-import static org.apache.usergrid.management.OrganizationConfigProps.*;
 
 
 public class ManagementServiceImpl implements ManagementService {
@@ -171,6 +171,37 @@ public class ManagementServiceImpl implements ManagementService {
     protected ApplicationService service;
 
     protected LocalShiroCache localShiroCache;
+
+
+    private LoadingCache<UUID, OrganizationConfig> orgConfigByAppCache = CacheBuilder.newBuilder().maximumSize( 1000 )
+        .expireAfterWrite( Long.valueOf( System.getProperty(ORG_CONFIG_CACHE_PROP, "30000") ) , TimeUnit.MILLISECONDS)
+        .build( new CacheLoader<UUID, OrganizationConfig>() {
+            public OrganizationConfig load( UUID applicationInfoId ) {
+
+                try {
+
+                    if (applicationInfoId != null && applicationInfoId != CpNamingUtils.MANAGEMENT_APPLICATION_ID) {
+
+                        final EntityManager em = emf.getEntityManager(smf.getManagementAppId());
+
+                        Results r = em.getSourceEntities(
+                            new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
+                            ORG_APP_RELATIONSHIP, Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
+
+                        Group org = (Group) r.getEntity();
+                        if (org != null) {
+                            Map<Object, Object> entityProperties = em.getDictionaryAsMap(org, ORGANIZATION_CONFIG_DICTIONARY);
+                            return new OrganizationConfig(orgConfigProperties, org.getUuid(), org.getPath(), entityProperties, false);
+                        }
+                    }
+
+                    return new OrganizationConfig(orgConfigProperties);
+
+                } catch (Exception e) {
+                    return new OrganizationConfig(orgConfigProperties);
+                }
+            }}
+        );
 
 
 
@@ -1678,6 +1709,8 @@ public class ManagementServiceImpl implements ManagementService {
         em.addToCollection(new SimpleEntityRef(Group.ENTITY_TYPE, organization.getUuid()), "users",
             new SimpleEntityRef(User.ENTITY_TYPE, user.getUuid()));
 
+        invalidateManagementAppAuthCache();
+
         if ( email ) {
             sendAdminUserInvitedEmail( user, organization );
         }
@@ -1713,6 +1746,8 @@ public class ManagementServiceImpl implements ManagementService {
 
         em.removeFromCollection(new SimpleEntityRef(Group.ENTITY_TYPE, organizationId), "users",
             new SimpleEntityRef(User.ENTITY_TYPE, userId));
+
+        invalidateManagementAppAuthCache();
     }
 
 
@@ -1773,13 +1808,11 @@ public class ManagementServiceImpl implements ManagementService {
                     + ")</a> created a new application named " + applicationName, null );
         }
 
-        ScopedCache scopedCache = cacheFactory.getScopedCache(
-            new CacheScope( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" )));
-        scopedCache.invalidate();
-        localShiroCache.invalidateAll();
+        invalidateManagementAppAuthCache();
 
         return new ApplicationInfo( applicationId, appInfo.getName() );
     }
+
 
 
     @Override
@@ -1835,10 +1868,7 @@ public class ManagementServiceImpl implements ManagementService {
                     + ")</a> restored an application named " + appInfo.getName(), null );
         }
 
-        ScopedCache scopedCache = cacheFactory.getScopedCache(
-            new CacheScope( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" )));
-        scopedCache.invalidate();
-        localShiroCache.invalidateAll();
+        invalidateManagementAppAuthCache();
 
         return new ApplicationInfo( applicationId, appInfo.getName() );
     }
@@ -2274,6 +2304,8 @@ public class ManagementServiceImpl implements ManagementService {
     public void activateAdminUser( UUID userId ) throws Exception {
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
         em.setProperty( new SimpleEntityRef( User.ENTITY_TYPE, userId ), "activated", true );
+
+        invalidateManagementAppAuthCache();
     }
 
 
@@ -3424,39 +3456,10 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    private LoadingCache<UUID, OrganizationConfig> orgConfigByAppCache =
-        CacheBuilder.newBuilder().maximumSize( 1000 )
-            .expireAfterWrite( Long.valueOf( System.getProperty(ORG_CONFIG_CACHE_PROP, "30000") ) , TimeUnit.MILLISECONDS)
-            .build( new CacheLoader<UUID, OrganizationConfig>() {
-                public OrganizationConfig load( UUID applicationInfoId ) {
-
-                    try {
-
-                        if (applicationInfoId != null && applicationInfoId != CpNamingUtils.MANAGEMENT_APPLICATION_ID) {
-
-                            final EntityManager em = emf.getEntityManager(smf.getManagementAppId());
-
-                            Results r = em.getSourceEntities(
-                                new SimpleEntityRef(CpNamingUtils.APPLICATION_INFO, applicationInfoId),
-                                ORG_APP_RELATIONSHIP, Group.ENTITY_TYPE, Level.ALL_PROPERTIES);
-
-                            Group org = (Group) r.getEntity();
-
-                            if (org != null) {
-                                Map<Object, Object> entityProperties = em.getDictionaryAsMap(org, ORGANIZATION_CONFIG_DICTIONARY);
-                                return new OrganizationConfig(orgConfigProperties, org.getUuid(), org.getPath(), entityProperties, false);
-                            }
-
-                        }
-
-                        return new OrganizationConfig(orgConfigProperties);
-
-                    }catch (Exception e){
-
-                        return new OrganizationConfig(orgConfigProperties);
-
-                    }
-                }}
-            );
-
+    private void invalidateManagementAppAuthCache() {
+        ScopedCache scopedCache = cacheFactory.getScopedCache(
+            new CacheScope( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" )));
+        scopedCache.invalidate();
+        localShiroCache.invalidateAll();
+    }
 }
