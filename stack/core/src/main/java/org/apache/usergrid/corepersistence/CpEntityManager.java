@@ -651,14 +651,14 @@ public class CpEntityManager implements EntityManager {
      */
     @Override
     public void delete( EntityRef entityRef ) throws Exception {
-        //TODO: since we want the user to mark it and we sweep it later. It should be marked by the graph manager here.
         //Step 1 & 2 Currently to block so we ensure that marking is done immediately
         //If this returns null then nothing was marked null so the entity doesn't exist
         markEntity( entityRef ).toBlocking().lastOrDefault( null );
 
-        //TODO: figure out how to return async call to service tier? Do I not need to?
         //Step 3
         deleteAsync( entityRef );
+
+        decrementEntityCollection( Schema.defaultCollectionName( entityRef.getType() ));
 
     }
 
