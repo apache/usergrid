@@ -141,7 +141,9 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                 logger.trace("notification {} start query", notification.getUuid());
             }
 
-            logger.info("Notification {} started processing", notification.getUuid());
+            if(logger.isTraceEnabled()) {
+                logger.trace("Notification {} started processing", notification.getUuid());
+            }
 
 
 
@@ -366,7 +368,9 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                         notification.setProcessingFinished(System.currentTimeMillis());
                         notification.setDeviceProcessedCount(deviceCount.get());
                         em.update(notification);
-                        logger.info("Notification {} finished processing {} device(s)", notification.getUuid(), deviceCount.get());
+                        if(logger.isTraceEnabled()) {
+                            logger.trace("Notification {} finished processing {} device(s)", notification.getUuid(), deviceCount.get());
+                        }
 
                     } catch (Exception e) {
                         logger.error("Unable to set processing finished timestamp for notification");

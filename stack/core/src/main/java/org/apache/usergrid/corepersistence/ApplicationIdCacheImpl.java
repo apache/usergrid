@@ -81,7 +81,7 @@ public class ApplicationIdCacheImpl implements ApplicationIdCache {
             return appCache.get( applicationName.toLowerCase() );
         } catch (Exception e) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Returning for key {} value null", applicationName);
+                logger.debug("Returning for key {} value null due to exception: {}", applicationName, e);
             }
             return null;
         }

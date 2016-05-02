@@ -61,9 +61,15 @@
         <property name="loadBalancingPolicy" ref="loadBalancingPolicy"/>
 	</bean>
 
+    <util:map id="cassandraCredentials" map-class="java.util.HashMap">
+        <entry key="username" value="${cassandra.username}" />
+        <entry key="password" value="${cassandra.password}" />
+    </util:map>
+
 	<bean id="cassandraCluster" class="me.prettyprint.cassandra.service.ThriftCluster">
 		<constructor-arg value="${cassandra.cluster}" />
 		<constructor-arg ref="cassandraHostConfigurator" />
+        <constructor-arg ref="cassandraCredentials" />
 	</bean>
 
     <bean id="loadBalancingPolicy" class="me.prettyprint.cassandra.connection.DynamicLoadBalancingPolicy"/>
