@@ -303,9 +303,6 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             logger.trace("Finished compacting {} shards and moved {} edges", sourceShards, totalEdgeCount);
         }
 
-        logger.info("Finished compacting {} shards and moved {} edges", sourceShards, totalEdgeCount);
-
-
         resultBuilder.withCopiedEdges( totalEdgeCount ).withSourceShards( sourceShards ).withTargetShard( targetShard );
 
         /**
@@ -351,8 +348,9 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
             Shard compactedShard = new Shard( targetShard.getShardIndex(), timeService.getCurrentTime(), true );
             compactedShard.setShardEnd(targetShard.getShardEnd());
 
-            logger.info( "Shard has been fully compacted.  Marking shard {} as compacted in Cassandra", compactedShard );
-
+            if(logger.isTraceEnabled()) {
+                logger.trace("Shard has been fully compacted.  Marking shard {} as compacted in Cassandra", compactedShard);
+            }
 
             final MutationBatch updateMark = edgeShardSerialization.writeShardMeta( scope, compactedShard, edgeMeta );
             try {
@@ -402,7 +400,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
         }
         catch ( RejectedExecutionException ree ) {
 
-            //ignore, if this happens we don't care, we're saturated, we can check later
+            // ignore, if this happens we don't care, we're saturated, we can check later
             logger.info( "Rejected audit for shard of scope {} edge, meta {} and group {}", scope, edgeMeta, group );
 
             return Futures.immediateFuture( AuditResult.NOT_CHECKED );
@@ -503,8 +501,10 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                  */
                 try {
                     CompactionResult result = compact( scope, edgeMeta, group );
-                    logger.info( "Compaction result for compaction of scope {} with edge meta data of {} and shard group {} is {}",
-                            scope, edgeMeta, group, result );
+                    if(logger.isTraceEnabled()) {
+                        logger.trace("Compaction result for compaction of scope {} with edge meta data of {} and shard group {} is {}",
+                            scope, edgeMeta, group, result);
+                    }
                 }
                 finally {
                     shardCompactionTaskTracker.complete( scope, edgeMeta, group );
@@ -535,8 +535,6 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
                                      ShardEntryGroup group ) {
             final Long hash = doHash( scope, edgeMeta, group ).hash().asLong();
             final Boolean returned = runningTasks.putIfAbsent( hash, TRUE );
-            //logger.info("hash components are app: {}, edgeMeta: {}, group: {}", scope.getApplication(), edgeMeta, group);
-            //logger.info("checking hash value of: {}, already started: {}", hash, returned );
 
             /**
              * Someone already put the value

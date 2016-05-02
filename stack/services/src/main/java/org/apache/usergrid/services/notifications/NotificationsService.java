@@ -77,6 +77,7 @@ public class NotificationsService extends AbstractCollectionService {
     private ServiceManagerFactory smf;
     private EntityManagerFactory emf;
     private QueueManagerFactory queueManagerFactory;
+    private ApplicationQueueManagerCache applicationQueueManagerCache;
 
     public NotificationsService() {
         if (logger.isTraceEnabled()) {
@@ -99,7 +100,10 @@ public class NotificationsService extends AbstractCollectionService {
         QueueScope queueScope = new QueueScopeImpl( name, QueueScope.RegionImplementation.LOCAL);
         queueManagerFactory = getApplicationContext().getBean( Injector.class ).getInstance(QueueManagerFactory.class);
         QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
-        notificationQueueManager = new ApplicationQueueManagerImpl(jobScheduler,em,queueManager,metricsService,props);
+        applicationQueueManagerCache = getApplicationContext().getBean(Injector.class).getInstance(ApplicationQueueManagerCache.class);
+        notificationQueueManager = applicationQueueManagerCache
+            .getApplicationQueueManager(em,queueManager, jobScheduler, metricsService ,props);
+
         gracePeriod = JobScheduler.SCHEDULER_GRACE_PERIOD;
     }
 
