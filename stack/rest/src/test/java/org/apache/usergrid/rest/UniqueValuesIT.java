@@ -83,7 +83,7 @@ public class UniqueValuesIT {
 
         String randomizer = RandomStringUtils.randomAlphanumeric( 8 );
 
-        String[] targetHosts = {"http://localhost:9090","http://localhost:9090"};
+        String[] targetHosts = {"http://localhost:8080","http://localhost:9090"};
 
         for (int i = 0; i < numUsers; i++) {
 
@@ -171,7 +171,7 @@ public class UniqueValuesIT {
 
         logger.info( "Success count = {}", successCounter.get() );
 
-        logger.info( "Dup count = {}", dupCounter.get() );
+        logger.info( "Rejected dup count = {}", dupCounter.get() );
 
 //        for ( String username : usersCreated.keys() ) {
 //            System.out.println( username );
