@@ -194,7 +194,8 @@ public abstract class ToolBase {
 
         Setup setup = ( (CpEntityManagerFactory) emf ).getSetup();
         logger.info( "Setting up Usergrid schema" );
-        setup.initSubsystems();
+        setup.initSchema();
+        setup.initMgmtApp();
         logger.info( "Usergrid schema setup" );
 
         logger.info( "Setting up Usergrid management services" );

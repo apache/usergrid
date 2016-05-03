@@ -125,7 +125,7 @@ public class ExportApp extends ExportingToolBase {
 
         startSpring();
 
-        UUID applicationId = emf.lookupApplication( applicationName ).get();
+        UUID applicationId = emf.lookupApplication( applicationName );
         if (applicationId == null) {
             throw new RuntimeException( "Cannot find application " + applicationName );
         }
