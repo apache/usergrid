@@ -16,27 +16,51 @@
  */
 package org.apache.usergrid.services.notifications.impl;
 
-import com.codahale.metrics.Meter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.batch.JobExecution;
-import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.PathQuery;
+import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.ResultsIterator;
+import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.entities.Device;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
-import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueMessage;
-import org.apache.usergrid.services.notifications.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.usergrid.services.notifications.ApplicationQueueManager;
+import org.apache.usergrid.services.notifications.ApplicationQueueMessage;
+import org.apache.usergrid.services.notifications.JobScheduler;
+import org.apache.usergrid.services.notifications.NotificationsService;
+import org.apache.usergrid.services.notifications.ProviderAdapter;
+import org.apache.usergrid.services.notifications.ProviderAdapterFactory;
+import org.apache.usergrid.services.notifications.TaskManager;
+import org.apache.usergrid.services.notifications.TaskTracker;
+
+import com.codahale.metrics.Meter;
+
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Func1;
-
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
@@ -460,13 +484,23 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
 
     private boolean isOkToSend(Notification notification) {
-        Map<String, Long> stats = notification.getStatistics();
-        if (stats != null && notification.getExpectedCount() == (stats.get("sent") + stats.get("errors"))) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("notification {} already processed. not sending.",
-                    notification.getUuid());
+        Map<String, Object> stats = notification.getStatistics();
+        if(stats!=null && stats.get( "sent" )instanceof Integer) {
+            if ( notification.getExpectedCount() == ( (Integer ) stats.get( "sent" ) + (Integer ) stats.get( "errors" ) ) ) {
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug( "notification {} already processed. not sending.", notification.getUuid() );
+                }
+                return false;
             }
-            return false;
+        }
+
+        else if(stats !=null && stats.get( "sent" )instanceof Long) {
+            if ( notification.getExpectedCount() == ( ( Long ) stats.get( "sent" ) + ( Long ) stats.get( "errors" ) ) ) {
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug( "notification {} already processed. not sending.", notification.getUuid() );
+                }
+                return false;
+            }
         }
         if (notification.getCanceled() == Boolean.TRUE) {
             if (logger.isDebugEnabled()) {
