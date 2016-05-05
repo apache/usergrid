@@ -28,7 +28,6 @@ import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
-import org.apache.usergrid.rest.management.ManagementResource;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
@@ -45,6 +44,7 @@ import java.util.UUID;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_CENTRAL_URL;
 
 
 @Component( "org.apache.usergrid.rest.management.users.UsersResource" )
@@ -115,11 +115,11 @@ public class UsersResource extends AbstractContextResource {
             throws Exception {
 
         final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
 
         if ( externalTokensEnabled ) {
             throw new IllegalArgumentException( "Admin Users must signup via " +
-                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_CENTRAL_URL ) );
         }
 
         // email is only required parameter
