@@ -128,17 +128,26 @@ public class ServiceManager {
                     if ( application != null ) {
                         appNotFound = false;
                         applicationId = application.getUuid();
+
                     } else {
+                        // Cassandra may be alive but responding very slowly, let's wait and retry
+                        logger.error("STARTUP PROBLEM: Cannot get application by UUID. Will retry in {} seconds #{}",
+                            retryInterval/1000, retryCount);
                         Thread.sleep( retryInterval );
                         retryCount++;
                     }
                 }
 
                 if ( application == null ) {
-                    Exception e = new RuntimeException( "application id {" + em.getApplicationId() + "} is returning null" );
-                    logger.error( "Failed to get application", e );
+                    Exception e = new RuntimeException(
+                        "STARTUP FAILURE: application id {" + em.getApplicationId()
+                            + "} is returning null after " + retryCount + " retries" );
                     throw e;
                 }
+
+            } catch ( RuntimeException re ) {
+                logger.error( "ServiceManager init failure", re );
+                throw re;
 
             } catch ( Exception e ) {
                 logger.error( "ServiceManager init failure", e );
