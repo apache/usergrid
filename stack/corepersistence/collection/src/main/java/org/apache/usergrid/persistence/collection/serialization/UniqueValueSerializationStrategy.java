@@ -21,6 +21,8 @@ package org.apache.usergrid.persistence.collection.serialization;
 import java.util.Collection;
 import java.util.Iterator;
 
+import com.datastax.driver.core.BatchStatement;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueSerializationStrategyImpl;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -46,7 +48,6 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
      *
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
-    MutationBatch write( ApplicationScope applicationScope, UniqueValue uniqueValue );
 
     /**
      * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
@@ -56,7 +57,8 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
      * @param timeToLive How long object should live in seconds.  -1 implies store forever
      * @return MutatationBatch that encapsulates operation, caller may or may not execute.
      */
-    MutationBatch write( ApplicationScope applicationScope, UniqueValue uniqueValue, int timeToLive );
+
+    BatchStatement writeCQL(ApplicationScope applicationScope, UniqueValue uniqueValue, int timeToLive );
 
     /**
      * Load UniqueValue that matches field from collection or null if that value does not exist.

@@ -18,9 +18,19 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
+import java.nio.ByteBuffer;
 import java.util.*;
 
+import com.datastax.driver.core.*;
+import com.datastax.driver.core.querybuilder.Clause;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Using;
+import com.netflix.astyanax.model.*;
+import com.netflix.astyanax.util.RangeBuilder;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.field.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,18 +50,13 @@ import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.field.Field;
 
 import com.google.common.base.Preconditions;
 import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.model.Column;
-import com.netflix.astyanax.model.ConsistencyLevel;
-import com.netflix.astyanax.model.Row;
 import com.netflix.astyanax.query.RowQuery;
-import com.netflix.astyanax.util.RangeBuilder;
 
 
 /**
@@ -62,6 +67,9 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
     private static final Logger log = LoggerFactory.getLogger( UniqueValueSerializationStrategyImpl.class );
 
+    public static final String UUID_TYPE_REVERSED = "UUIDType(reversed=true)";
+
+
 
     private final MultiTenantColumnFamily<ScopedRowKey<FieldKey>, EntityVersion>
         CF_UNIQUE_VALUES;
@@ -70,12 +78,24 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     private final MultiTenantColumnFamily<ScopedRowKey<EntityKey>, UniqueFieldEntry>
         CF_ENTITY_UNIQUE_VALUE_LOG ;
 
+    private final String TABLE_UNIQUE_VALUES;
+    private final String TABLE_UNIQUE_VALUES_LOG;
+
+
+    private final Map COLUMNS_UNIQUE_VALUES;
+    private final Map COLUMNS_UNIQUE_VALUES_LOG;
+
+
+
     public static final int COL_VALUE = 0x0;
 
 
     private final SerializationFig serializationFig;
     protected final Keyspace keyspace;
     private final CassandraFig cassandraFig;
+
+    private final Session session;
+    private final CassandraConfig cassandraConfig;
 
 
     /**
@@ -86,13 +106,24 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
      * @param serializationFig The serialization configuration
      */
     public UniqueValueSerializationStrategyImpl( final Keyspace keyspace, final CassandraFig cassandraFig,
-                                                 final SerializationFig serializationFig ) {
+                                                 final SerializationFig serializationFig,
+                                                 final Session session, final CassandraConfig cassandraConfig) {
         this.keyspace = keyspace;
         this.cassandraFig = cassandraFig;
         this.serializationFig = serializationFig;
 
+        this.session = session;
+        this.cassandraConfig = cassandraConfig;
+
         CF_UNIQUE_VALUES = getUniqueValuesCF();
         CF_ENTITY_UNIQUE_VALUE_LOG = getEntityUniqueLogCF();
+
+        TABLE_UNIQUE_VALUES = getUniqueValuesTable().getTableName();
+        TABLE_UNIQUE_VALUES_LOG = getEntityUniqueLogTable().getTableName();
+
+        COLUMNS_UNIQUE_VALUES = getUniqueValuesTable().getColumns();
+        COLUMNS_UNIQUE_VALUES_LOG = getEntityUniqueLogTable().getColumns();
+
     }
 
 
@@ -129,7 +160,6 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     }
 
 
-    @Override
     public MutationBatch write( final ApplicationScope collectionScope, final UniqueValue value,
                                 final int timeToLive ) {
 
@@ -161,6 +191,86 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                 colMutation.putColumn( uniqueFieldEntry, COL_VALUE );
             }
         } );
+    }
+
+    @Override
+    public BatchStatement writeCQL( final ApplicationScope collectionScope, final UniqueValue value,
+                           final int timeToLive  ){
+
+
+        Preconditions.checkNotNull( value, "value is required" );
+
+        BatchStatement batch = new BatchStatement();
+
+        Using ttl = null;
+        if(timeToLive > 0){
+
+            ttl = QueryBuilder.ttl(timeToLive);
+
+        }
+
+        final Id entityId = value.getEntityId();
+        final UUID entityVersion = value.getEntityVersion();
+        final Field<?> field = value.getField();
+
+        ValidationUtils.verifyIdentity( entityId );
+        ValidationUtils.verifyVersion( entityVersion );
+
+        final EntityVersion ev = new EntityVersion( entityId, entityVersion );
+        final UniqueFieldEntry uniqueFieldEntry = new UniqueFieldEntry( entityVersion, field );
+
+        ByteBuffer partitionKey = getPartitionKey(collectionScope.getApplication(), value.getEntityId().getType(),
+            field.getTypeName().toString(), field.getName(), field.getValue());
+
+        ByteBuffer logPartitionKey = getLogPartitionKey(collectionScope.getApplication(), value.getEntityId());
+
+
+        if(ttl != null) {
+
+            Statement uniqueValueStatement = QueryBuilder.insertInto(TABLE_UNIQUE_VALUES)
+                .value("key", partitionKey)
+                .value("column1", serializeUniqueValueColumn(ev))
+                .value("value", DataType.serializeValue(COL_VALUE, ProtocolVersion.NEWEST_SUPPORTED))
+                .using(ttl);
+
+            batch.add(uniqueValueStatement);
+
+
+        }else{
+
+            Statement uniqueValueStatement = QueryBuilder.insertInto(TABLE_UNIQUE_VALUES)
+                .value("key", partitionKey)
+                .value("column1", serializeUniqueValueColumn(ev))
+                .value("value", DataType.serializeValue(COL_VALUE, ProtocolVersion.NEWEST_SUPPORTED));
+
+            batch.add(uniqueValueStatement);
+
+        }
+
+        // we always want to retain the log entry, so never write with the TTL
+        Statement uniqueValueLogStatement = QueryBuilder.insertInto(TABLE_UNIQUE_VALUES_LOG)
+            .value("key", logPartitionKey)
+            .value("column1", serializeUniqueValueLogColumn(uniqueFieldEntry))
+            .value("value", DataType.serializeValue(COL_VALUE, ProtocolVersion.NEWEST_SUPPORTED));
+
+        batch.add(uniqueValueLogStatement);
+
+
+
+        return batch;
+
+        /**
+         *  @Override
+        public void doLookup( final ColumnListMutation<EntityVersion> colMutation ) {
+        colMutation.putColumn( ev, COL_VALUE );
+        }
+
+
+         @Override
+         public void doLog( final ColumnListMutation<UniqueFieldEntry> colMutation ) {
+         colMutation.putColumn( uniqueFieldEntry, COL_VALUE );
+         }
+         */
     }
 
 
@@ -236,18 +346,26 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     @Override
     public UniqueValueSet load( final ApplicationScope colScope, final String type, final Collection<Field> fields )
         throws ConnectionException {
-        return load( colScope, ConsistencyLevel.valueOf( cassandraFig.getAstyanaxReadCL() ), type, fields );
+        return load( colScope, com.netflix.astyanax.model.ConsistencyLevel.valueOf( cassandraFig.getAstyanaxReadCL() ), type, fields );
     }
 
 
     @Override
-    public UniqueValueSet load( final ApplicationScope appScope, final ConsistencyLevel consistencyLevel,
+    public UniqueValueSet load( final ApplicationScope appScope, final com.netflix.astyanax.model.ConsistencyLevel consistencyLevel,
                                 final String type, final Collection<Field> fields ) throws ConnectionException {
 
         Preconditions.checkNotNull( fields, "fields are required" );
         Preconditions.checkArgument( fields.size() > 0, "More than 1 field must be specified" );
 
+        return loadCQL(appScope, com.datastax.driver.core.ConsistencyLevel.LOCAL_QUORUM, type, fields);
 
+        //return loadLegacy( appScope, type, fields);
+
+    }
+
+
+    private UniqueValueSet loadLegacy(final ApplicationScope appScope,
+                                      final String type, final Collection<Field> fields) throws ConnectionException {
         final List<ScopedRowKey<FieldKey>> keys = new ArrayList<>( fields.size() );
 
         final Id applicationId = appScope.getApplication();
@@ -265,16 +383,16 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
         final UniqueValueSetImpl uniqueValueSet = new UniqueValueSetImpl( fields.size() );
 
-        Iterator<Row<ScopedRowKey<FieldKey>, EntityVersion>> results =
-            keyspace.prepareQuery( CF_UNIQUE_VALUES ).setConsistencyLevel( consistencyLevel ).getKeySlice( keys )
-                    .withColumnRange( new RangeBuilder().setLimit( 1 ).build() ).execute().getResult().iterator();
+        Iterator<com.netflix.astyanax.model.Row<ScopedRowKey<FieldKey>, EntityVersion>> results =
+            keyspace.prepareQuery( CF_UNIQUE_VALUES ).setConsistencyLevel(com.netflix.astyanax.model.ConsistencyLevel.CL_LOCAL_QUORUM ).getKeySlice( keys )
+                .withColumnRange( new RangeBuilder().setLimit( 1 ).build() ).execute().getResult().iterator();
 
 
         while ( results.hasNext() )
 
         {
 
-            final Row<ScopedRowKey<FieldKey>, EntityVersion> unique = results.next();
+            final com.netflix.astyanax.model.Row<ScopedRowKey<FieldKey>, EntityVersion> unique = results.next();
 
 
             final Field field = parseRowKey( unique.getKey() );
@@ -296,7 +414,110 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
         }
 
         return uniqueValueSet;
+
     }
+
+    private UniqueValueSet loadCQL( final ApplicationScope appScope, final com.datastax.driver.core.ConsistencyLevel consistencyLevel,
+                                final String type, final Collection<Field> fields ) throws ConnectionException {
+
+        Preconditions.checkNotNull( fields, "fields are required" );
+        Preconditions.checkArgument( fields.size() > 0, "More than 1 field must be specified" );
+
+
+        final Id applicationId = appScope.getApplication();
+
+        // row key = app UUID + app type + entityType + field type + field name + field value
+
+        List<ByteBuffer> partitionKeys = new ArrayList<>( fields.size() );
+        for ( Field field : fields ) {
+
+            //log.info(Bytes.toHexString(getPartitionKey(applicationId, type, field.getTypeName().toString(), field.getName(), field.getValue())));
+
+            partitionKeys.add(getPartitionKey(applicationId, type, field.getTypeName().toString(), field.getName(), field.getValue()));
+
+        }
+
+        final UniqueValueSetImpl uniqueValueSet = new UniqueValueSetImpl( fields.size() );
+
+        final Clause inKey = QueryBuilder.in("key", partitionKeys );
+
+        final Statement statement = QueryBuilder.select().all().from(TABLE_UNIQUE_VALUES)
+            .where(inKey)
+            .setConsistencyLevel(com.datastax.driver.core.ConsistencyLevel.LOCAL_QUORUM);
+
+        final ResultSet resultSet = session.execute(statement);
+
+
+        Iterator<com.datastax.driver.core.Row> results = resultSet.iterator();
+
+
+        while( results.hasNext() ){
+
+            final com.datastax.driver.core.Row unique = results.next();
+            ByteBuffer partitionKey = unique.getBytes("key");
+            ByteBuffer column = unique.getBytesUnsafe("column1");
+
+            List<Object> keyContents = deserializePartitionKey(partitionKey);
+            List<Object> columnContents = deserializeUniqueValueColumn(column);
+
+            Field field = null;
+            FieldTypeName fieldType;
+            String name;
+            String value;
+            if(this instanceof UniqueValueSerializationStrategyV2Impl) {
+
+                 fieldType = FieldTypeName.valueOf((String) keyContents.get(3));
+                 name = (String) keyContents.get(4);
+                 value = (String) keyContents.get(5);
+
+            }else{
+
+                fieldType = FieldTypeName.valueOf((String) keyContents.get(5));
+                name = (String) keyContents.get(6);
+                value = (String) keyContents.get(7);
+
+            }
+
+            switch ( fieldType ) {
+                case BOOLEAN:
+                    field = new BooleanField( name, Boolean.parseBoolean( value ) );
+                    break;
+                case DOUBLE:
+                    field = new DoubleField( name, Double.parseDouble( value ) );
+                    break;
+                case FLOAT:
+                    field = new FloatField( name, Float.parseFloat( value ) );
+                    break;
+                case INTEGER:
+                    field =  new IntegerField( name, Integer.parseInt( value ) );
+                    break;
+                case LONG:
+                    field = new LongField( name, Long.parseLong( value ) );
+                    break;
+                case STRING:
+                    field = new StringField( name, value );
+                    break;
+                case UUID:
+                    field = new UUIDField( name, UUID.fromString( value ) );
+                    break;
+            }
+
+            final EntityVersion entityVersion = new EntityVersion(
+                new SimpleId((UUID)columnContents.get(1), (String)columnContents.get(2)), (UUID)columnContents.get(0));
+
+
+            final UniqueValueImpl uniqueValue =
+              new UniqueValueImpl( field, entityVersion.getEntityId(), entityVersion.getEntityVersion() );
+
+            uniqueValueSet.addValue(uniqueValue);
+
+        }
+
+        return uniqueValueSet;
+
+    }
+
+
 
 
     @Override
@@ -378,7 +599,13 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     @Override
     public Collection<TableDefinition> getTables() {
 
-        return Collections.emptyList();
+        final TableDefinition uniqueValues = getUniqueValuesTable();
+
+        final TableDefinition uniqueValuesLog = getEntityUniqueLogTable();
+
+
+        return Arrays.asList( uniqueValues, uniqueValuesLog );
+
     }
 
 
@@ -386,6 +613,12 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
      * Get the column family for the unique fields
      */
     protected abstract MultiTenantColumnFamily<ScopedRowKey<FieldKey>, EntityVersion> getUniqueValuesCF();
+
+
+    /**
+     * Get the CQL table definition for the unique values log table
+     */
+    protected abstract TableDefinition getUniqueValuesTable();
 
 
     /**
@@ -405,10 +638,32 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     protected abstract Field parseRowKey(final ScopedRowKey<FieldKey> rowKey);
 
 
-    /**
-     * Get the column family for the unique field CF
-     */
+    protected abstract List<Object> deserializePartitionKey(ByteBuffer bb);
+
+
+    protected abstract Object serializeUniqueValueLogColumn(UniqueFieldEntry fieldEntry);
+
+    protected abstract ByteBuffer getPartitionKey(Id applicationId, String entityType, String fieldType, String fieldName, Object fieldValue );
+
+    protected abstract ByteBuffer getLogPartitionKey(final Id applicationId, final Id uniqueValueId);
+
+    protected abstract ByteBuffer serializeUniqueValueColumn(EntityVersion entityVersion);
+
+    protected abstract List<Object> deserializeUniqueValueColumn(ByteBuffer bb);
+
+
+
+
+
+        /**
+         * Get the column family for the unique field CF
+         */
     protected abstract MultiTenantColumnFamily<ScopedRowKey<EntityKey>, UniqueFieldEntry> getEntityUniqueLogCF();
+
+    /**
+     * Get the CQL table definition for the unique values log table
+     */
+    protected abstract TableDefinition getEntityUniqueLogTable();
 
     /**
      * Generate a key that is compatible with the column family

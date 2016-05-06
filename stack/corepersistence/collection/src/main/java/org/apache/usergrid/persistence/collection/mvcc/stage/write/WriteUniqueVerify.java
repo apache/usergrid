@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,14 +73,20 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
     protected final SerializationFig serializationFig;
 
     protected final Keyspace keyspace;
+
+    protected final Session session;
+
     private final CassandraConfig cassandraFig;
 
 
     @Inject
     public WriteUniqueVerify( final UniqueValueSerializationStrategy uniqueValueSerializiationStrategy,
-                              final SerializationFig serializationFig, final Keyspace keyspace, final CassandraConfig cassandraFig ) {
+                              final SerializationFig serializationFig, final Keyspace keyspace,
+                              final CassandraConfig cassandraFig, final Session session ) {
+
         this.keyspace = keyspace;
         this.cassandraFig = cassandraFig;
+        this.session = session;
 
         Preconditions.checkNotNull( uniqueValueSerializiationStrategy, "uniqueValueSerializationStrategy is required" );
         Preconditions.checkNotNull( serializationFig, "serializationFig is required" );
@@ -101,7 +109,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
         final ApplicationScope scope = ioevent.getEntityCollection();
 
-        final MutationBatch batch = keyspace.prepareMutationBatch();
+        final BatchStatement batch = new BatchStatement();
         //allocate our max size, worst case
         final List<Field> uniqueFields = new ArrayList<>( entity.getFields().size() );
 
@@ -119,9 +127,8 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
             final UniqueValue written = new UniqueValueImpl( field, mvccEntity.getId(), mvccEntity.getVersion() );
 
             // use TTL in case something goes wrong before entity is finally committed
-            final MutationBatch mb = uniqueValueStrat.write( scope, written, serializationFig.getTimeout() );
+            batch.add(uniqueValueStrat.writeCQL( scope, written, serializationFig.getTimeout() ));
 
-            batch.mergeShallow( mb );
             uniqueFields.add(field);
         }
 
@@ -131,12 +138,8 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
         }
 
         //perform the write
-        try {
-            batch.execute();
-        }
-        catch ( ConnectionException ex ) {
-            throw new RuntimeException( "Unable to write to cassandra", ex );
-        }
+        session.execute(batch);
+
 
         // use simple thread pool to verify fields in parallel
         ConsistentReplayCommand cmd = new ConsistentReplayCommand(uniqueValueStrat,cassandraFig,scope, entity.getId().getType(), uniqueFields,entity);
