@@ -46,6 +46,9 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         this.cassandraFig = cassandraFig;
         this.cluster = buildCluster();
 
+        // always initialize the keyspaces
+        this.createOrUpdateKeyspace();
+
         logger.info("Initialized datastax cluster client. Hosts={}, Idle Timeout={}s,  Pool Timeout={}s",
             cluster.getMetadata().getAllHosts().toString(),
             cluster.getConfiguration().getPoolingOptions().getIdleTimeoutSeconds(),

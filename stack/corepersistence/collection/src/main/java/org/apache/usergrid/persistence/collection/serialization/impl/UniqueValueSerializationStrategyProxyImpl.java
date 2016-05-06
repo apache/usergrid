@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
+import com.datastax.driver.core.BatchStatement;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
@@ -67,38 +68,20 @@ public class UniqueValueSerializationStrategyProxyImpl implements UniqueValueSer
 
 
     @Override
-    public MutationBatch write( final ApplicationScope applicationScope, final UniqueValue uniqueValue ) {
+    public BatchStatement writeCQL(final ApplicationScope applicationScope, final UniqueValue uniqueValue,
+                                   final int timeToLive ){
+
         final MigrationRelationship<UniqueValueSerializationStrategy> migration = getMigrationRelationShip();
 
         if ( migration.needsMigration() ) {
-            final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
+            migration.from.writeCQL( applicationScope, uniqueValue, timeToLive );
+            migration.to.writeCQL( applicationScope, uniqueValue, timeToLive );
 
-            aggregateBatch.mergeShallow( migration.from.write( applicationScope, uniqueValue ) );
-            aggregateBatch.mergeShallow( migration.to.write( applicationScope, uniqueValue ) );
-
-            return aggregateBatch;
         }
 
-        return migration.to.write( applicationScope, uniqueValue );
+        return migration.to.writeCQL( applicationScope, uniqueValue, timeToLive );
     }
 
-
-    @Override
-    public MutationBatch write( final ApplicationScope applicationScope, final UniqueValue uniqueValue,
-                                final int timeToLive ) {
-        final MigrationRelationship<UniqueValueSerializationStrategy> migration = getMigrationRelationShip();
-
-        if ( migration.needsMigration() ) {
-            final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
-
-            aggregateBatch.mergeShallow( migration.from.write( applicationScope, uniqueValue, timeToLive ) );
-            aggregateBatch.mergeShallow( migration.to.write( applicationScope, uniqueValue, timeToLive ) );
-
-            return aggregateBatch;
-        }
-
-        return migration.to.write( applicationScope, uniqueValue, timeToLive );
-    }
 
 
     @Override

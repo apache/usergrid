@@ -20,6 +20,8 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 import java.util.UUID;
 
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,11 +69,14 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
 
     private final MvccEntitySerializationStrategy entityStrat;
 
+    private final Session session;
+
 
     @Inject
     public WriteCommit( final MvccLogEntrySerializationStrategy logStrat,
                         final MvccEntitySerializationStrategy entryStrat,
-                        final UniqueValueSerializationStrategy uniqueValueStrat) {
+                        final UniqueValueSerializationStrategy uniqueValueStrat,
+                        final Session session) {
 
         Preconditions.checkNotNull( logStrat, "MvccLogEntrySerializationStrategy is required" );
         Preconditions.checkNotNull( entryStrat, "MvccEntitySerializationStrategy is required" );
@@ -80,6 +85,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         this.logEntryStrat = logStrat;
         this.entityStrat = entryStrat;
         this.uniqueValueStrat = uniqueValueStrat;
+        this.session = session;
     }
 
 
@@ -103,6 +109,8 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
 
         final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.COMMITTED, MvccLogEntry.State.COMPLETE );
 
+
+
         MutationBatch logMutation = logEntryStrat.write( applicationScope, startEntry );
 
         // now get our actual insert into the entity data
@@ -112,21 +120,23 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         logMutation.mergeShallow( entityMutation );
 
         // re-write the unique values but this time with no TTL
+        final BatchStatement uniqueBatch = new BatchStatement();
+
         for ( Field field : EntityUtils.getUniqueFields(mvccEntity.getEntity().get()) ) {
 
                 UniqueValue written  = new UniqueValueImpl( field,
                     entityId,version);
 
-                MutationBatch mb = uniqueValueStrat.write(applicationScope,  written );
+                uniqueBatch.add(uniqueValueStrat.writeCQL(applicationScope,  written, -1 ));
 
                 logger.debug("Finalizing {} unique value {}", field.getName(), field.getValue().toString());
 
-                // merge into our existing mutation batch
-                logMutation.mergeShallow( mb );
+
         }
 
         try {
             logMutation.execute();
+            session.execute(uniqueBatch);
         }
         catch ( ConnectionException e ) {
             logger.error( "Failed to execute write asynchronously ", e );

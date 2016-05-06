@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.UUID;
 
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.Session;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -64,6 +66,8 @@ public abstract class UniqueValueSerializationStrategyImplTest {
     @Rule
     public MigrationManagerRule migrationManagerRule;
 
+    @Inject
+    private Session session;
 
     private UniqueValueSerializationStrategy strategy;
 
@@ -91,7 +95,9 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
         UUID version = UUIDGenerator.newTimeUUID();
         UniqueValue stored = new UniqueValueImpl( field, entityId, version );
-        strategy.write( scope, stored ).execute();
+        //strategy.write( scope, stored ).execute();
+        BatchStatement batch = strategy.writeCQL(scope, stored, -1);
+        session.execute(batch);
 
         UniqueValueSet fields = strategy.load( scope, entityId.getType(), Collections.<Field>singleton( field ) );
 
@@ -127,7 +133,9 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
         UUID version = UUIDGenerator.newTimeUUID();
         UniqueValue stored = new UniqueValueImpl( field, entityId, version );
-        strategy.write( scope, stored, 5 ).execute();
+        //strategy.write( scope, stored, 5 ).execute();
+        BatchStatement batch = strategy.writeCQL(scope, stored, 5);
+        session.execute(batch);
 
         Thread.sleep( 1000 );
 
@@ -179,7 +187,10 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
         UUID version = UUIDGenerator.newTimeUUID();
         UniqueValue stored = new UniqueValueImpl( field, entityId, version );
-        strategy.write( scope, stored ).execute();
+
+        //strategy.write( scope, stored ).execute();
+        BatchStatement batch = strategy.writeCQL( scope, stored, -1);
+        session.execute(batch);
 
         strategy.delete( scope, stored ).execute();
 
@@ -207,8 +218,9 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         Id entityId = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
         UUID version = UUIDGenerator.newTimeUUID();
         UniqueValue stored = new UniqueValueImpl( field, entityId, version );
-        strategy.write( scope, stored ).execute();
-
+        //strategy.write( scope, stored ).execute();
+        BatchStatement batch = strategy.writeCQL( scope, stored, -1);
+        session.execute(batch);
 
         UniqueValueSet fields = strategy.load( scope, entityId.getType(), Collections.<Field>singleton( field ) );
 
@@ -278,9 +290,13 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         UniqueValue version1Field1Value = new UniqueValueImpl( version1Field1, entityId, version1 );
         UniqueValue version1Field2Value = new UniqueValueImpl( version1Field2, entityId, version1 );
 
-        final MutationBatch batch = strategy.write( scope, version1Field1Value );
-        batch.mergeShallow( strategy.write( scope, version1Field2Value ) );
+        //final MutationBatch batch = strategy.write( scope, version1Field1Value );
+        //batch.mergeShallow( strategy.write( scope, version1Field2Value ) );
 
+        final BatchStatement batch = new BatchStatement();
+
+        batch.add(strategy.writeCQL( scope, version1Field1Value, -1));
+        batch.add(strategy.writeCQL( scope, version1Field2Value, -1));
 
         //write V2 of everything
         final UUID version2 = UUIDGenerator.newTimeUUID();
@@ -292,10 +308,15 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         UniqueValue version2Field1Value = new UniqueValueImpl( version2Field1, entityId, version2 );
         UniqueValue version2Field2Value = new UniqueValueImpl( version2Field2, entityId, version2 );
 
-        batch.mergeShallow( strategy.write( scope, version2Field1Value ) );
-        batch.mergeShallow( strategy.write( scope, version2Field2Value ) );
+        //batch.mergeShallow( strategy.write( scope, version2Field1Value ) );
+        //batch.mergeShallow( strategy.write( scope, version2Field2Value ) );
 
-        batch.execute();
+        batch.add(strategy.writeCQL( scope, version2Field1Value, -1));
+        batch.add(strategy.writeCQL( scope, version2Field2Value, -1));
+
+        session.execute(batch);
+
+        //batch.execute();
 
 
         UniqueValueSet fields = strategy.load( scope, entityId.getType(), Arrays.<Field>asList( version1Field1, version1Field2 ) );
