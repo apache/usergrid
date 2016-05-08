@@ -42,7 +42,8 @@ public class EntityVersion {
         return entityVersion;
     }
 
-    public boolean equals( Object o ) {
+    @Override
+    public boolean equals( final Object o ) {
 
         if ( o == null || !(o instanceof EntityVersion) ) {
             return false;
@@ -60,5 +61,12 @@ public class EntityVersion {
 
         return true;
     }
-    
+
+    @Override
+    public int hashCode() {
+        int result = entityId.hashCode();
+        result = 31 * result + entityVersion.hashCode();
+        return result;
+    }
+
 }

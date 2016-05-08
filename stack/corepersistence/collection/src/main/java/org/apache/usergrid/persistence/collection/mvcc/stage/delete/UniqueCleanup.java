@@ -26,6 +26,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +65,7 @@ public class UniqueCleanup
 
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
     private final Keyspace keyspace;
+    private final Session session;
 
     private final SerializationFig serializationFig;
 
@@ -70,12 +73,14 @@ public class UniqueCleanup
     @Inject
     public UniqueCleanup( final SerializationFig serializationFig,
                           final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                          final Keyspace keyspace, final MetricsFactory metricsFactory ) {
+                          final Keyspace keyspace, final MetricsFactory metricsFactory,
+                          final Session session ) {
 
         this.serializationFig = serializationFig;
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.keyspace = keyspace;
         this.uniqueCleanupTimer = metricsFactory.getTimer( UniqueCleanup.class, "uniquecleanup.base" );
+        this.session = session;
     }
 
 
@@ -127,22 +132,20 @@ public class UniqueCleanup
                             //roll them up
 
                         .doOnNext( uniqueValues -> {
-                            final MutationBatch uniqueCleanupBatch = keyspace.prepareMutationBatch();
+
+                            final BatchStatement uniqueCleanupBatch = new BatchStatement();
 
 
                             for ( UniqueValue value : uniqueValues ) {
                                 logger
                                     .debug( "Deleting value:{} from application scope: {} ", value, applicationScope );
                                 uniqueCleanupBatch
-                                    .mergeShallow( uniqueValueSerializationStrategy.delete( applicationScope, value ) );
+                                    .add( uniqueValueSerializationStrategy.deleteCQL( applicationScope, value ) );
                             }
 
-                            try {
-                                uniqueCleanupBatch.execute();
-                            }
-                            catch ( ConnectionException e ) {
-                                throw new RuntimeException( "Unable to execute batch mutation", e );
-                            }
+
+                            session.execute(uniqueCleanupBatch);
+
                         } ).lastOrDefault( Collections.emptyList() ).map( list -> mvccEntityCollectionIoEvent );
 
                 return ObservableTimer.time( uniqueValueCleanup, uniqueCleanupTimer );

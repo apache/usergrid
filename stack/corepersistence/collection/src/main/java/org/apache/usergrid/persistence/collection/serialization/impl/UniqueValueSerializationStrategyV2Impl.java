@@ -40,7 +40,6 @@ import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.field.Field;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -171,30 +170,18 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
     }
 
 
-
-    @Override
-    protected TypeField createUniqueValueKey( final Id applicationId,  final String type, final Field field) {
-        return new TypeField(type,field);
-    }
-
-
-    @Override
-    protected Field parseRowKey( final ScopedRowKey<TypeField> rowKey ) {
-        return rowKey.getKey().getField();
-    }
-
     @Override
     protected List<Object> deserializePartitionKey(ByteBuffer bb){
 
 
         /**
-         *  List<Object> keys = new ArrayList<>(6);
-         keys.add(0, appUUID); // UUID
-         keys.add(1, applicationType); // String
-         keys.add(2, entityType); // String
-         keys.add(3, fieldType); // String
-         keys.add(4, fieldName); // String
-         keys.add(5, fieldValueString); // String
+         *   List<Object> keys = new ArrayList<>(6);
+             keys.add(0, appUUID); // UUID
+             keys.add(1, applicationType); // String
+             keys.add(2, entityType); // String
+             keys.add(3, fieldType); // String
+             keys.add(4, fieldName); // String
+             keys.add(5, fieldValueString); // String
 
          */
 
@@ -215,23 +202,23 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
     }
 
     @Override
-    protected Object serializeUniqueValueLogColumn(UniqueFieldEntry fieldEntry){
+    protected ByteBuffer serializeUniqueValueLogColumn(UniqueFieldEntry fieldEntry){
 
         /**
-         *         final UUID version = value.getVersion();
-         final Field<?> field = value.getField();
+         *   final UUID version = value.getVersion();
+             final Field<?> field = value.getField();
 
-         final FieldTypeName fieldType = field.getTypeName();
-         final String fieldValue = field.getValue().toString().toLowerCase();
+             final FieldTypeName fieldType = field.getTypeName();
+             final String fieldValue = field.getValue().toString().toLowerCase();
 
 
-         DynamicComposite composite = new DynamicComposite(  );
+             DynamicComposite composite = new DynamicComposite(  );
 
-         //we want to sort ascending to descending by version
-         composite.addComponent( version,  UUID_SERIALIZER, ColumnTypes.UUID_TYPE_REVERSED);
-         composite.addComponent( field.getName(), STRING_SERIALIZER );
-         composite.addComponent( fieldValue, STRING_SERIALIZER );
-         composite.addComponent( fieldType.name() , STRING_SERIALIZER);
+             //we want to sort ascending to descending by version
+             composite.addComponent( version,  UUID_SERIALIZER, ColumnTypes.UUID_TYPE_REVERSED);
+             composite.addComponent( field.getName(), STRING_SERIALIZER );
+             composite.addComponent( fieldValue, STRING_SERIALIZER );
+             composite.addComponent( fieldType.name() , STRING_SERIALIZER);
          */
 
         // values are serialized as strings, not sure why, and always lower cased
@@ -250,7 +237,7 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
             fieldEntry.getField().getTypeName().name().length();
 
         // we always need to add length for the 2 byte comparator short,  2 byte length short and 1 byte equality
-        size += keys.size()*65;
+        size += keys.size()*5;
 
         // uuid type comparator is longest, ensure we allocate buffer using the max size to avoid overflow
         size += keys.size()*comparator.length();
@@ -322,15 +309,15 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
     protected ByteBuffer serializeUniqueValueColumn(EntityVersion entityVersion){
 
         /**
-         *         final Id entityId = ev.getEntityId();
-         final UUID entityUuid = entityId.getUuid();
-         final String entityType = entityId.getType();
+         *   final Id entityId = ev.getEntityId();
+             final UUID entityUuid = entityId.getUuid();
+             final String entityType = entityId.getType();
 
-         CompositeBuilder builder = Composites.newDynamicCompositeBuilder();
+             CompositeBuilder builder = Composites.newDynamicCompositeBuilder();
 
-         builder.addUUID( entityVersion );
-         builder.addUUID( entityUuid );
-         builder.addString(entityType );
+             builder.addUUID( entityVersion );
+             builder.addUUID( entityUuid );
+             builder.addString(entityType );
          */
 
         String comparator = "UTF8Type";
@@ -403,7 +390,49 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
             }else if(count ==1){
                 stuff.add(new UUID(data.getLong(), data.getLong()));
             }else{
-                stuff.add(DataType.text().deserialize(data.duplicate(), ProtocolVersion.NEWEST_SUPPORTED));
+                stuff.add(DataType.text().deserialize(data.slice(), ProtocolVersion.NEWEST_SUPPORTED));
+            }
+
+            byte equality = bb.get(); // we don't use this but take the equality byte off the buffer
+
+            count++;
+        }
+
+        return stuff;
+
+    }
+
+    @Override
+    protected List<Object> deserializeUniqueValueLogColumn(ByteBuffer bb){
+
+
+        /**
+         *   List<Object> keys = new ArrayList<>(4);
+             keys.add(fieldEntry.getVersion());
+             keys.add(fieldEntry.getField().getName());
+             keys.add(fieldValueString);
+             keys.add(fieldEntry.getField().getTypeName().name());
+         */
+
+        List<Object> stuff = new ArrayList<>();
+        int count = 0;
+        while(bb.hasRemaining()){
+
+            // the comparator info is different for the UUID reversed type vs. UTF8 type
+            if(count ==0){
+                bb.getShort(); // take the reversed comparator byte off
+            }else {
+                ByteBuffer comparator = CQLUtils.getWithShortLength(bb);
+            }
+
+            ByteBuffer data = CQLUtils.getWithShortLength(bb);
+
+
+            // first composite is a UUID, rest are strings
+            if(count == 0) {
+                stuff.add(new UUID(data.getLong(), data.getLong()));
+            }else{
+                stuff.add(DataType.text().deserialize(data.slice(), ProtocolVersion.NEWEST_SUPPORTED));
             }
 
             byte equality = bb.get(); // we don't use this but take the equality byte off the buffer

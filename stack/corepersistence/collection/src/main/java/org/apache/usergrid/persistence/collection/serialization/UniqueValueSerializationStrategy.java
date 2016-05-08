@@ -41,23 +41,14 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
 
 
     /**
-     * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
-     *
-     * @param applicationScope scope
-     * @param uniqueValue Object to be written
-     *
-     * @return MutatationBatch that encapsulates operation, caller may or may not execute.
-     */
-
-    /**
-     * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
+     * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds. -1 is the same as no ttl
+     * (lives forever)
      *
      * @param applicationScope scope
      * @param uniqueValue Object to be written
      * @param timeToLive How long object should live in seconds.  -1 implies store forever
-     * @return MutatationBatch that encapsulates operation, caller may or may not execute.
+     * @return BatchStatement that encapsulates CQL statements, caller may or may not execute.
      */
-
     BatchStatement writeCQL(ApplicationScope applicationScope, UniqueValue uniqueValue, int timeToLive );
 
     /**
@@ -103,9 +94,9 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
      *
      * @param applicationScope The scope of the application
      * @param uniqueValue Object to be deleted.
-     * @return MutatationBatch that encapsulates operation, caller may or may not execute.
+     * @return BatchStatement that encapsulates the CQL statements, caller may or may not execute.
      */
-    MutationBatch delete( ApplicationScope applicationScope, UniqueValue uniqueValue );
+    BatchStatement deleteCQL( ApplicationScope applicationScope, UniqueValue uniqueValue);
 
 
 }
