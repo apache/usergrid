@@ -101,6 +101,10 @@
                     <artifactId>snappy-java</artifactId>
                     <groupId>org.xerial.snappy</groupId>
                 </exclusion>
+                <exclusion>
+                    <groupId>net.jpountz.lz4</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 

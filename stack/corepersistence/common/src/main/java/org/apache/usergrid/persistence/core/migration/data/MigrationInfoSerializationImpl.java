@@ -27,6 +27,7 @@ import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.UTF8Type;
 
 import org.apache.usergrid.persistence.core.astyanax.*;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.migration.util.AstayanxUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -204,5 +205,11 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
                 new MultiTenantColumnFamilyDefinition( CF_MIGRATION_INFO, BytesType.class.getSimpleName(),
                         UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName(),
                         MultiTenantColumnFamilyDefinition.CacheOption.KEYS ) );
+    }
+
+    @Override
+    public Collection<TableDefinition> getTables() {
+
+        return Collections.emptyList();
     }
 }

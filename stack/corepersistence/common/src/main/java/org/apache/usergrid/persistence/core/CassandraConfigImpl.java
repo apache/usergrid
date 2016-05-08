@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.astyanax;
+package org.apache.usergrid.persistence.core;
 
 
 import java.beans.PropertyChangeEvent;
@@ -41,17 +41,29 @@ public class CassandraConfigImpl implements CassandraConfig {
     private int[] shardSettings;
     private ConsistencyLevel consistentCl;
 
+    // DataStax driver's CL
+    private com.datastax.driver.core.ConsistencyLevel dataStaxReadCl;
+    private com.datastax.driver.core.ConsistencyLevel dataStaxWriteCl;
+    private com.datastax.driver.core.ConsistencyLevel dataStaxReadConsistentCl;
+
+
 
     @Inject
     public CassandraConfigImpl( final CassandraFig cassandraFig ) {
 
-        this.readCl = ConsistencyLevel.valueOf( cassandraFig.getReadCL() );
+        this.readCl = ConsistencyLevel.valueOf( cassandraFig.getAstyanaxReadCL() );
 
-        this.writeCl = ConsistencyLevel.valueOf( cassandraFig.getWriteCL() );
+        this.writeCl = ConsistencyLevel.valueOf( cassandraFig.getAstyanaxWriteCL() );
 
         this.shardSettings = parseShardSettings( cassandraFig.getShardValues() );
 
-        this.consistentCl = ConsistencyLevel.valueOf(cassandraFig.getConsistentReadCL());
+        this.consistentCl = ConsistencyLevel.valueOf(cassandraFig.getAstyanaxConsistentReadCL());
+
+        this.dataStaxReadCl = com.datastax.driver.core.ConsistencyLevel.valueOf( cassandraFig.getReadCl());
+
+        this.dataStaxReadConsistentCl = com.datastax.driver.core.ConsistencyLevel.valueOf( cassandraFig.getReadClConsistent());
+
+        this.dataStaxWriteCl = com.datastax.driver.core.ConsistencyLevel.valueOf( cassandraFig.getWriteCl() );
 
         //add the listeners to update the values
         cassandraFig.addPropertyChangeListener( new PropertyChangeListener() {
@@ -59,11 +71,11 @@ public class CassandraConfigImpl implements CassandraConfig {
             public void propertyChange( final PropertyChangeEvent evt ) {
                 final String propName = evt.getPropertyName();
 
-                if ( CassandraFig.READ_CL.equals( propName ) ) {
+                if ( CassandraFig.ASTYANAX_READ_CL.equals( propName ) ) {
                     readCl = ConsistencyLevel.valueOf( evt.getNewValue().toString() );
                 }
 
-                else if ( CassandraFig.WRITE_CL.equals( propName ) ) {
+                else if ( CassandraFig.ASTYANAX_WRITE_CL.equals( propName ) ) {
                     writeCl = ConsistencyLevel.valueOf( evt.getNewValue().toString() );
                 }
                 else if (CassandraFig.SHARD_VALUES.equals(propName)){
@@ -87,6 +99,21 @@ public class CassandraConfigImpl implements CassandraConfig {
     @Override
     public ConsistencyLevel getWriteCL() {
         return writeCl;
+    }
+
+    @Override
+    public com.datastax.driver.core.ConsistencyLevel getDataStaxReadCl() {
+        return dataStaxReadCl;
+    }
+
+    @Override
+    public com.datastax.driver.core.ConsistencyLevel getDataStaxWriteCl() {
+        return dataStaxWriteCl;
+    }
+
+    @Override
+    public com.datastax.driver.core.ConsistencyLevel getDataStaxReadConsistentCl() {
+        return dataStaxReadConsistentCl;
     }
 
 

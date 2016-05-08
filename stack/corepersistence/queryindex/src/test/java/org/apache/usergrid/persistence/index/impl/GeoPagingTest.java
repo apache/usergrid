@@ -25,7 +25,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 import java.util.*;
 
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.junit.Before;

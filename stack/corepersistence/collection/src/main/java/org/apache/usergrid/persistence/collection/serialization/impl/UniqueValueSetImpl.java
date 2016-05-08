@@ -37,7 +37,11 @@ public class UniqueValueSetImpl implements UniqueValueSet {
 
 
     public void addValue(UniqueValue value){
-        values.put( value.getField().getName(), value );
+        values.putIfAbsent( value.getField().getName(), value );
+        // ^^ putIfAbsent important here as CQL returns column values differently than Asytanax/thrift due to CQL not
+        //    having a 'column range' for each row slice and all columns are returned. We don't want to overwrite the
+        //    first column values retrieved
+
     }
 
     @Override

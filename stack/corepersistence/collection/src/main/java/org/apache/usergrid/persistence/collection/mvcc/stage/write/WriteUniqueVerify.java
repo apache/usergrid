@@ -23,6 +23,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.Session;
+import com.netflix.hystrix.HystrixCommandProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +39,7 @@ import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -46,9 +50,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.model.ConsistencyLevel;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
@@ -66,19 +68,27 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
     private final UniqueValueSerializationStrategy uniqueValueStrat;
 
-    public static int uniqueVerifyPoolSize = 100;
+    private static int uniqueVerifyPoolSize = 100;
+
+    private static int uniqueVerifyTimeoutMillis= 5000;
 
     protected final SerializationFig serializationFig;
 
     protected final Keyspace keyspace;
+
+    protected final Session session;
+
     private final CassandraConfig cassandraFig;
 
 
     @Inject
     public WriteUniqueVerify( final UniqueValueSerializationStrategy uniqueValueSerializiationStrategy,
-                              final SerializationFig serializationFig, final Keyspace keyspace, final CassandraConfig cassandraFig ) {
+                              final SerializationFig serializationFig, final Keyspace keyspace,
+                              final CassandraConfig cassandraFig, final Session session ) {
+
         this.keyspace = keyspace;
         this.cassandraFig = cassandraFig;
+        this.session = session;
 
         Preconditions.checkNotNull( uniqueValueSerializiationStrategy, "uniqueValueSerializationStrategy is required" );
         Preconditions.checkNotNull( serializationFig, "serializationFig is required" );
@@ -101,7 +111,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
         final ApplicationScope scope = ioevent.getEntityCollection();
 
-        final MutationBatch batch = keyspace.prepareMutationBatch();
+        final BatchStatement batch = new BatchStatement();
         //allocate our max size, worst case
         final List<Field> uniqueFields = new ArrayList<>( entity.getFields().size() );
 
@@ -119,9 +129,8 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
             final UniqueValue written = new UniqueValueImpl( field, mvccEntity.getId(), mvccEntity.getVersion() );
 
             // use TTL in case something goes wrong before entity is finally committed
-            final MutationBatch mb = uniqueValueStrat.write( scope, written, serializationFig.getTimeout() );
+            batch.add(uniqueValueStrat.writeCQL( scope, written, serializationFig.getTimeout() ));
 
-            batch.mergeShallow( mb );
             uniqueFields.add(field);
         }
 
@@ -131,12 +140,8 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
         }
 
         //perform the write
-        try {
-            batch.execute();
-        }
-        catch ( ConnectionException ex ) {
-            throw new RuntimeException( "Unable to write to cassandra", ex );
-        }
+        session.execute(batch);
+
 
         // use simple thread pool to verify fields in parallel
         ConsistentReplayCommand cmd = new ConsistentReplayCommand(uniqueValueStrat,cassandraFig,scope, entity.getId().getType(), uniqueFields,entity);
@@ -174,25 +179,21 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
         @Override
         protected Map<String, Field> run() throws Exception {
-            return executeStrategy(fig.getReadCL());
+            return executeStrategy(fig.getDataStaxReadCl());
         }
 
         @Override
         protected Map<String, Field> getFallback() {
             // fallback with same CL as there are many reasons the 1st execution failed, not just due to consistency problems
-            return executeStrategy(fig.getReadCL());
+            return executeStrategy(fig.getDataStaxReadCl());
         }
 
         public Map<String, Field> executeStrategy(ConsistencyLevel consistencyLevel){
             //allocate our max size, worst case
             //now get the set of fields back
             final UniqueValueSet uniqueValues;
-            try {
-                uniqueValues = uniqueValueSerializationStrategy.load( scope, consistencyLevel, type,  uniqueFields );
-            }
-            catch ( ConnectionException e ) {
-                throw new RuntimeException( "Unable to read from cassandra", e );
-            }
+
+            uniqueValues = uniqueValueSerializationStrategy.load( scope, consistencyLevel, type,  uniqueFields );
 
             final Map<String, Field> uniquenessViolations = new HashMap<>( uniqueFields.size() );
 
@@ -221,8 +222,10 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
     /**
      * Command group used for realtime user commands
      */
-    public static final HystrixCommand.Setter
-        REPLAY_GROUP = HystrixCommand.Setter.withGroupKey(
-            HystrixCommandGroupKey.Factory.asKey( "uniqueVerify" ) ).andThreadPoolPropertiesDefaults(
-                HystrixThreadPoolProperties.Setter().withCoreSize( uniqueVerifyPoolSize ) );
+    private static final HystrixCommand.Setter
+        REPLAY_GROUP = HystrixCommand.Setter.withGroupKey( HystrixCommandGroupKey.Factory.asKey( "uniqueVerify" ) )
+        .andThreadPoolPropertiesDefaults(
+            HystrixThreadPoolProperties.Setter().withCoreSize( uniqueVerifyPoolSize ) )
+        .andCommandPropertiesDefaults(
+            HystrixCommandProperties.Setter().withExecutionTimeoutInMilliseconds(uniqueVerifyTimeoutMillis));
 }

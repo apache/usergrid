@@ -18,6 +18,8 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,14 +53,17 @@ public class RollbackAction implements Action1<Throwable> {
 
     private final UniqueValueSerializationStrategy uniqueValueStrat;
     private final MvccLogEntrySerializationStrategy logEntryStrat;
+    private final Session session;
 
 
     @Inject
-    public RollbackAction(MvccLogEntrySerializationStrategy logEntryStrat,
-                           UniqueValueSerializationStrategy uniqueValueStrat ) {
+    public RollbackAction( final MvccLogEntrySerializationStrategy logEntryStrat,
+                           final UniqueValueSerializationStrategy uniqueValueStrat,
+                           final Session session ) {
 
         this.uniqueValueStrat = uniqueValueStrat;
         this.logEntryStrat = logEntryStrat;
+        this.session = session;
     }
 
 
@@ -72,6 +77,7 @@ public class RollbackAction implements Action1<Throwable> {
 
             // one batch to handle rollback
             MutationBatch rollbackMb = null;
+            final BatchStatement uniqueDeleteBatch = new BatchStatement();
             final Optional<Entity> entity = mvccEntity.getEntity();
 
             if ( entity.isPresent() ) {
@@ -83,45 +89,17 @@ public class RollbackAction implements Action1<Throwable> {
                         UniqueValue toDelete =
                                 new UniqueValueImpl( field, entity.get().getId(), mvccEntity.getVersion() );
 
-                        MutationBatch deleteMb = uniqueValueStrat.delete(scope,  toDelete );
+                        uniqueDeleteBatch.add(uniqueValueStrat.deleteCQL(scope,  toDelete ));
 
-                        if ( rollbackMb == null ) {
-                            rollbackMb = deleteMb;
-                        }
-                        else {
-                            rollbackMb.mergeShallow( deleteMb );
-                        }
                     }
                 }
 
-
-                if ( rollbackMb != null ) {
-                    try {
-                        rollbackMb.execute();
-                    }
-                    catch ( ConnectionException ex ) {
-                        throw new RuntimeException( "Error rolling back changes", ex );
-                    }
-                }
+                // execute the batch statements for deleting unique field entries
+                session.execute(uniqueDeleteBatch);
 
                 logEntryStrat.delete( scope, entity.get().getId(), mvccEntity.getVersion() );
             }
         }
     }
 
-
-    class FieldDeleteResult {
-
-        private final String name;
-
-
-        public FieldDeleteResult( String name ) {
-            this.name = name;
-        }
-
-
-        public String getName() {
-            return this.name;
-        }
-    }
 }
