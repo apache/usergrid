@@ -361,32 +361,10 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
 
     @Override
-    public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
-
-        final MultiTenantColumnFamilyDefinition uniqueLookupCF =
-            new MultiTenantColumnFamilyDefinition( CF_UNIQUE_VALUES, BytesType.class.getSimpleName(),
-                ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName(),
-                MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
-
-        final MultiTenantColumnFamilyDefinition uniqueLogCF =
-            new MultiTenantColumnFamilyDefinition( CF_ENTITY_UNIQUE_VALUE_LOG, BytesType.class.getSimpleName(),
-                ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName(),
-                MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
-
-        return Arrays.asList( uniqueLookupCF, uniqueLogCF );
-    }
+    public abstract Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies();
 
     @Override
-    public Collection<TableDefinition> getTables() {
-
-        final TableDefinition uniqueValues = getUniqueValuesTable();
-
-        final TableDefinition uniqueValuesLog = getEntityUniqueLogTable();
-
-
-        return Arrays.asList( uniqueValues, uniqueValuesLog );
-
-    }
+    public abstract Collection<TableDefinition> getTables();
 
 
     /**

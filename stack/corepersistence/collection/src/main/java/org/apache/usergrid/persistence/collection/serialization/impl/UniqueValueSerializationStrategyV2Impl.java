@@ -58,10 +58,10 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
     private static final Map<String, DataType.Name> UNIQUE_VALUES_COLUMNS =
         new HashMap<String, DataType.Name>() {{
             put( "key", DataType.Name.BLOB );
-            put( "column1", DataType.Name.BLOB );
+            put( "column1", DataType.Name.CUSTOM );
             put( "value", DataType.Name.BLOB ); }};
     private static final Map<String, String> UNIQUE_VALUES_CLUSTERING_ORDER =
-        new HashMap<String, String>(){{ put( "column1", "ASC" ); }};
+        new HashMap<String, String>(){{ put( "column1", "ASC" );}};
 
 
     private static final String UNIQUE_VALUES_LOG_TABLE = CQLUtils.quote("Entity_Unique_Values_V2");
@@ -70,10 +70,10 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
     private static final Map<String, DataType.Name> UNIQUE_VALUES_LOG_COLUMNS =
         new HashMap<String, DataType.Name>() {{
             put( "key", DataType.Name.BLOB );
-            put( "column1", DataType.Name.BLOB );
+            put( "column1", DataType.Name.CUSTOM );
             put( "value", DataType.Name.BLOB ); }};
     private static final Map<String, String> UNIQUE_VALUES_LOG_CLUSTERING_ORDER =
-        new HashMap<String, String>(){{ put( "column1", "ASC" ); }};
+        new HashMap<String, String>(){{ put( "column1", "ASC" );}};
 
     private final static TableDefinition uniqueValues =
         new TableDefinition( UNIQUE_VALUES_TABLE, UNIQUE_VALUES_PARTITION_KEYS, UNIQUE_VALUES_COLUMN_KEYS,
@@ -134,14 +134,22 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
                 ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName(),
                 MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
 
-        return Arrays.asList( uniqueLookupCF, uniqueLogCF );
+        return Collections.emptyList();
+
+        //return Arrays.asList(uniqueLookupCF, uniqueLogCF);
     }
 
     @Override
     public Collection<TableDefinition> getTables() {
 
+        final TableDefinition uniqueValues = getUniqueValuesTable();
+
+        final TableDefinition uniqueValuesLog = getEntityUniqueLogTable();
+
 
         return Arrays.asList( uniqueValues, uniqueValuesLog );
+
+        //return Collections.emptyList();
 
     }
 
