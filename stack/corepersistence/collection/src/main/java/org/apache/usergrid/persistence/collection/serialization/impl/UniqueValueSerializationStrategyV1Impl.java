@@ -202,7 +202,7 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
             fieldEntry.getField().getTypeName().name().length();
 
         // we always need to add length for the 2 byte comparator short,  2 byte length short and 1 byte equality
-        size += keys.size()*65;
+        size += keys.size()*5;
 
         // uuid type comparator is longest, ensure we allocate buffer using the max size to avoid overflow
         size += keys.size()*comparator.length();
