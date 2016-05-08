@@ -18,6 +18,7 @@
  */
 package org.apache.usergrid.persistence.core.datastax;
 
+import com.datastax.driver.core.DataType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -51,6 +52,8 @@ public class CQLUtils {
     static String COMMA = ",";
     static String PAREN_LEFT = "(";
     static String PAREN_RIGHT = ")";
+
+    static String COMPOSITE_TYPE = "'org.apache.cassandra.db.marshal.DynamicCompositeType(a=>org.apache.cassandra.db.marshal.AsciiType,A=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.AsciiType),b=>org.apache.cassandra.db.marshal.BytesType,B=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.BytesType),i=>org.apache.cassandra.db.marshal.IntegerType,I=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.IntegerType),l=>org.apache.cassandra.db.marshal.LongType,L=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.LongType),s=>org.apache.cassandra.db.marshal.UTF8Type,S=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.UTF8Type),t=>org.apache.cassandra.db.marshal.TimeUUIDType,T=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.TimeUUIDType),u=>org.apache.cassandra.db.marshal.UUIDType,U=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.UUIDType),x=>org.apache.cassandra.db.marshal.LexicalUUIDType,X=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.LexicalUUIDType))'";
 
     @Inject
     public CQLUtils ( final CassandraFig cassandraFig ){
@@ -145,7 +148,14 @@ public class CQLUtils {
     public static String spaceSeparatedKeyValue(Map<String, ?> columns){
 
         StringJoiner columnsSchema = new StringJoiner(",");
-        columns.forEach( (key, value) -> columnsSchema.add(key+" "+String.valueOf(value)));
+        columns.forEach( (key, value) -> {
+
+            if( value == DataType.Name.CUSTOM ){
+                columnsSchema.add(key+" "+COMPOSITE_TYPE);
+            }else {
+                columnsSchema.add(key + " " + String.valueOf(value));
+            }
+        });
 
         return columnsSchema.toString();
 
