@@ -125,19 +125,19 @@ public class UniqueValueSerializationStrategyProxyImpl implements UniqueValueSer
 
 
     @Override
-    public MutationBatch delete( final ApplicationScope applicationScope, final UniqueValue uniqueValue ) {
+    public BatchStatement deleteCQL( final ApplicationScope applicationScope, final UniqueValue uniqueValue ) {
         final MigrationRelationship<UniqueValueSerializationStrategy> migration = getMigrationRelationShip();
 
         if ( migration.needsMigration() ) {
-            final MutationBatch aggregateBatch = keyspace.prepareMutationBatch();
+            final BatchStatement batch = new BatchStatement();
 
-            aggregateBatch.mergeShallow( migration.from.delete( applicationScope, uniqueValue ) );
-            aggregateBatch.mergeShallow( migration.to.delete( applicationScope, uniqueValue ) );
+            batch.add(migration.from.deleteCQL( applicationScope, uniqueValue ) );
+            batch.add(migration.to.deleteCQL( applicationScope, uniqueValue ) );
 
-            return aggregateBatch;
+            return batch;
         }
 
-        return migration.to.delete( applicationScope, uniqueValue );
+        return migration.to.deleteCQL( applicationScope, uniqueValue );
     }
 
 

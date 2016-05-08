@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.collection.impl;
 
 import java.util.concurrent.ExecutionException;
 
+import com.datastax.driver.core.Session;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.cache.EntityCacheFig;
@@ -75,6 +76,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
     private final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy;
     private final Keyspace keyspace;
+    private final Session session;
     private final MetricsFactory metricsFactory;
     private final RxTaskScheduler rxTaskScheduler;
 
@@ -89,7 +91,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                 entitySerializationStrategy, uniqueValueSerializationStrategy,
                                 mvccLogEntrySerializationStrategy, keyspace,
                                 metricsFactory, serializationFig,
-                                rxTaskScheduler, scope );
+                                rxTaskScheduler, scope, session );
 
                             return target;
                         }
@@ -107,7 +109,9 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                                final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
                                                final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
                                                final Keyspace keyspace, final EntityCacheFig entityCacheFig,
-                                               final MetricsFactory metricsFactory, @CollectionExecutorScheduler  final RxTaskScheduler rxTaskScheduler ) {
+                                               final MetricsFactory metricsFactory,
+                                               @CollectionExecutorScheduler  final RxTaskScheduler rxTaskScheduler,
+                                               final Session session ) {
 
         this.writeStart = writeStart;
         this.writeVerifyUnique = writeVerifyUnique;
@@ -125,6 +129,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
         this.keyspace = keyspace;
         this.metricsFactory = metricsFactory;
         this.rxTaskScheduler = rxTaskScheduler;
+        this.session = session;
     }
     @Override
     public EntityCollectionManager createCollectionManager(ApplicationScope applicationScope) {

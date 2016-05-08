@@ -25,6 +25,7 @@ import java.util.Map;
 
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.Session;
+import com.netflix.hystrix.HystrixCommandProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +69,9 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
     private final UniqueValueSerializationStrategy uniqueValueStrat;
 
-    public static int uniqueVerifyPoolSize = 100;
+    private static int uniqueVerifyPoolSize = 100;
+
+    private static int uniqueVerifyTimeoutMillis= 5000;
 
     protected final SerializationFig serializationFig;
 
@@ -224,8 +227,10 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
     /**
      * Command group used for realtime user commands
      */
-    public static final HystrixCommand.Setter
-        REPLAY_GROUP = HystrixCommand.Setter.withGroupKey(
-            HystrixCommandGroupKey.Factory.asKey( "uniqueVerify" ) ).andThreadPoolPropertiesDefaults(
-                HystrixThreadPoolProperties.Setter().withCoreSize( uniqueVerifyPoolSize ) );
+    private static final HystrixCommand.Setter
+        REPLAY_GROUP = HystrixCommand.Setter.withGroupKey( HystrixCommandGroupKey.Factory.asKey( "uniqueVerify" ) )
+        .andThreadPoolPropertiesDefaults(
+            HystrixThreadPoolProperties.Setter().withCoreSize( uniqueVerifyPoolSize ) )
+        .andCommandPropertiesDefaults(
+            HystrixCommandProperties.Setter().withExecutionTimeoutInMilliseconds(uniqueVerifyTimeoutMillis));
 }

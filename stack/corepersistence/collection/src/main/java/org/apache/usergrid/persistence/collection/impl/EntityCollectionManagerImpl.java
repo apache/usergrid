@@ -26,6 +26,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.Session;
 import com.netflix.astyanax.model.ConsistencyLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +66,6 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.codahale.metrics.Timer;
@@ -72,7 +73,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.OperationResult;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.ColumnFamily;
@@ -81,7 +81,6 @@ import com.netflix.astyanax.serializers.StringSerializer;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action0;
 
 
 /**
@@ -114,6 +113,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     private final Keyspace keyspace;
+    private final Session session;
     private final Timer writeTimer;
     private final Timer deleteTimer;
     private final Timer fieldIdTimer;
@@ -136,7 +136,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                                         final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
                                         final Keyspace keyspace, final MetricsFactory metricsFactory,
                                         final SerializationFig serializationFig, final RxTaskScheduler rxTaskScheduler,
-                                        @Assisted final ApplicationScope applicationScope ) {
+                                        @Assisted final ApplicationScope applicationScope,
+                                        final Session session) {
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
         this.uniqueCleanup = uniqueCleanup;
@@ -157,6 +158,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.markCommit = markCommit;
 
         this.keyspace = keyspace;
+        this.session = session;
 
 
         this.applicationScope = applicationScope;
@@ -347,8 +349,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 //Load a entity for each entityId we retrieved.
                 final EntitySet entitySet = entitySerializationStrategy.load( applicationScope, entityIds, startTime );
 
-                //now loop through and ensure the entities are there.
-                final MutationBatch deleteBatch = keyspace.prepareMutationBatch();
+                final BatchStatement uniqueDeleteBatch = new BatchStatement();
 
                 final MutableFieldSet response = new MutableFieldSet( fields1.size() );
 
@@ -357,9 +358,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                     //bad unique value, delete this, it's inconsistent
                     if ( entity == null || !entity.getEntity().isPresent() ) {
-                        final MutationBatch valueDelete =
-                            uniqueValueSerializationStrategy.delete( applicationScope, expectedUnique );
-                        deleteBatch.mergeShallow( valueDelete );
+                        uniqueDeleteBatch.add(
+                            uniqueValueSerializationStrategy.deleteCQL( applicationScope, expectedUnique ));
                         continue;
                     }
 
@@ -371,8 +371,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 }
 
                 //TODO: explore making this an Async process
-                //We'll repair it again if we have to
-                deleteBatch.execute();
+                session.execute(uniqueDeleteBatch);
 
                 return response;
             }

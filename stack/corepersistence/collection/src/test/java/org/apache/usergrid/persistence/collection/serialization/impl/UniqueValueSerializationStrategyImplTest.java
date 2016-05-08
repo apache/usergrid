@@ -192,7 +192,10 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         BatchStatement batch = strategy.writeCQL( scope, stored, -1);
         session.execute(batch);
 
-        strategy.delete( scope, stored ).execute();
+
+        //strategy.delete( scope, stored ).execute();
+        BatchStatement deleteBatch = strategy.deleteCQL(scope, stored);
+        session.execute(deleteBatch);
 
         UniqueValueSet fields = strategy.load( scope, entityId.getType(), Collections.<Field>singleton( field ) );
 
