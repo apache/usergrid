@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Iterator;
 
 import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.ConsistencyLevel;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
@@ -40,28 +41,21 @@ import org.apache.usergrid.persistence.model.field.Field;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.model.ConsistencyLevel;
 
 
 @Singleton
 public class UniqueValueSerializationStrategyProxyImpl implements UniqueValueSerializationStrategy {
 
 
-    protected final Keyspace keyspace;
     private final VersionedMigrationSet<UniqueValueSerializationStrategy> versions;
     private final MigrationInfoCache migrationInfoCache;
 
 
     @Inject
-    public UniqueValueSerializationStrategyProxyImpl( final Keyspace keyspace,
-                                                      final VersionedMigrationSet<UniqueValueSerializationStrategy>
+    public UniqueValueSerializationStrategyProxyImpl( final VersionedMigrationSet<UniqueValueSerializationStrategy>
                                                           allVersions,
                                                       final MigrationInfoCache migrationInfoCache ) {
 
-        this.keyspace = keyspace;
         this.migrationInfoCache = migrationInfoCache;
         this.versions = allVersions;
     }
@@ -86,7 +80,7 @@ public class UniqueValueSerializationStrategyProxyImpl implements UniqueValueSer
 
     @Override
     public UniqueValueSet load( final ApplicationScope applicationScope, final String type,
-                                final Collection<Field> fields ) throws ConnectionException {
+                                final Collection<Field> fields ) {
 
         final MigrationRelationship<UniqueValueSerializationStrategy> migration = getMigrationRelationShip();
 
@@ -100,7 +94,7 @@ public class UniqueValueSerializationStrategyProxyImpl implements UniqueValueSer
 
     @Override
     public UniqueValueSet load( final ApplicationScope applicationScope, final ConsistencyLevel consistencyLevel,
-                                final String type, final Collection<Field> fields ) throws ConnectionException {
+                                final String type, final Collection<Field> fields ) {
 
         final MigrationRelationship<UniqueValueSerializationStrategy> migration = getMigrationRelationShip();
 

@@ -33,26 +33,18 @@ import org.apache.usergrid.persistence.model.field.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.cassandra.db.marshal.BytesType;
 
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.core.CassandraFig;
-import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
-import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
-import com.netflix.astyanax.ColumnListMutation;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 
 /**
@@ -66,28 +58,17 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     public static final String UUID_TYPE_REVERSED = "UUIDType(reversed=true)";
 
 
-
-    private final MultiTenantColumnFamily<ScopedRowKey<FieldKey>, EntityVersion>
-        CF_UNIQUE_VALUES;
-
-
-    private final MultiTenantColumnFamily<ScopedRowKey<EntityKey>, UniqueFieldEntry>
-        CF_ENTITY_UNIQUE_VALUE_LOG ;
-
     private final String TABLE_UNIQUE_VALUES;
     private final String TABLE_UNIQUE_VALUES_LOG;
 
-
     private final Map COLUMNS_UNIQUE_VALUES;
     private final Map COLUMNS_UNIQUE_VALUES_LOG;
-
 
 
     public static final int COL_VALUE = 0x0;
 
 
     private final SerializationFig serializationFig;
-    protected final Keyspace keyspace;
     private final CassandraFig cassandraFig;
 
     private final Session session;
@@ -97,22 +78,18 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     /**
      * Construct serialization strategy for keyspace.
      *
-     * @param keyspace Keyspace in which to store Unique Values.
      * @param cassandraFig The cassandra configuration
      * @param serializationFig The serialization configuration
      */
-    public UniqueValueSerializationStrategyImpl( final Keyspace keyspace, final CassandraFig cassandraFig,
+    public UniqueValueSerializationStrategyImpl( final CassandraFig cassandraFig,
                                                  final SerializationFig serializationFig,
-                                                 final Session session, final CassandraConfig cassandraConfig) {
-        this.keyspace = keyspace;
+                                                 final Session session,
+                                                 final CassandraConfig cassandraConfig) {
         this.cassandraFig = cassandraFig;
         this.serializationFig = serializationFig;
 
         this.session = session;
         this.cassandraConfig = cassandraConfig;
-
-        CF_UNIQUE_VALUES = getUniqueValuesCF();
-        CF_ENTITY_UNIQUE_VALUE_LOG = getEntityUniqueLogCF();
 
         TABLE_UNIQUE_VALUES = getUniqueValuesTable().getTableName();
         TABLE_UNIQUE_VALUES_LOG = getEntityUniqueLogTable().getTableName();
@@ -242,27 +219,27 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
     @Override
     public UniqueValueSet load( final ApplicationScope colScope, final String type, final Collection<Field> fields )
-        throws ConnectionException {
-        return load( colScope, com.netflix.astyanax.model.ConsistencyLevel.valueOf( cassandraFig.getAstyanaxReadCL() ), type, fields );
+         {
+        return load( colScope, ConsistencyLevel.valueOf( cassandraFig.getReadCl() ), type, fields );
     }
 
 
     @Override
-    public UniqueValueSet load( final ApplicationScope appScope, final com.netflix.astyanax.model.ConsistencyLevel consistencyLevel,
-                                final String type, final Collection<Field> fields ) throws ConnectionException {
+    public UniqueValueSet load( final ApplicationScope appScope,
+                                final ConsistencyLevel consistencyLevel,
+                                final String type, final Collection<Field> fields ) {
 
         Preconditions.checkNotNull( fields, "fields are required" );
         Preconditions.checkArgument( fields.size() > 0, "More than 1 field must be specified" );
 
-        return loadCQL(appScope, com.datastax.driver.core.ConsistencyLevel.LOCAL_QUORUM, type, fields);
-
-        //return loadLegacy( appScope, type, fields);
+        return loadCQL(appScope, consistencyLevel, type, fields);
 
     }
 
 
-    private UniqueValueSet loadCQL( final ApplicationScope appScope, final com.datastax.driver.core.ConsistencyLevel consistencyLevel,
-                                final String type, final Collection<Field> fields ) throws ConnectionException {
+    private UniqueValueSet loadCQL( final ApplicationScope appScope,
+                                    final ConsistencyLevel consistencyLevel,
+                                    final String type, final Collection<Field> fields ) {
 
         Preconditions.checkNotNull( fields, "fields are required" );
         Preconditions.checkArgument( fields.size() > 0, "More than 1 field must be specified" );
@@ -287,7 +264,7 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
         final Statement statement = QueryBuilder.select().all().from(TABLE_UNIQUE_VALUES)
             .where(inKey)
-            .setConsistencyLevel(com.datastax.driver.core.ConsistencyLevel.LOCAL_QUORUM);
+            .setConsistencyLevel(consistencyLevel);
 
         final ResultSet resultSet = session.execute(statement);
 
@@ -366,13 +343,6 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     @Override
     public abstract Collection<TableDefinition> getTables();
 
-
-    /**
-     * Get the column family for the unique fields
-     */
-    protected abstract MultiTenantColumnFamily<ScopedRowKey<FieldKey>, EntityVersion> getUniqueValuesCF();
-
-
     /**
      * Get the CQL table definition for the unique values log table
      */
@@ -395,25 +365,10 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
 
 
-
-
-        /**
-         * Get the column family for the unique field CF
-         */
-    protected abstract MultiTenantColumnFamily<ScopedRowKey<EntityKey>, UniqueFieldEntry> getEntityUniqueLogCF();
-
     /**
      * Get the CQL table definition for the unique values log table
      */
     protected abstract TableDefinition getEntityUniqueLogTable();
-
-    /**
-     * Generate a key that is compatible with the column family
-     *
-     * @param applicationId The applicationId
-     * @param uniqueValueId The uniqueValue
-     */
-    protected abstract EntityKey createEntityUniqueLogKey(final Id applicationId,  final Id uniqueValueId );
 
 
     public class AllUniqueFieldsIterator implements Iterable<UniqueValue>, Iterator<UniqueValue> {

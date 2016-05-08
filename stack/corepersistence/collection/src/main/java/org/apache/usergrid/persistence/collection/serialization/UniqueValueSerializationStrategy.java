@@ -22,16 +22,12 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import com.datastax.driver.core.BatchStatement;
-import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueSerializationStrategyImpl;
+import com.datastax.driver.core.ConsistencyLevel;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
-
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.model.ConsistencyLevel;
 
 
 /**
@@ -60,9 +56,8 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
      *
      * @return UniqueValueSet containing fields from the collection that exist in cassandra
      *
-     * @throws ConnectionException on error connecting to Cassandra
      */
-    UniqueValueSet load( ApplicationScope applicationScope, String type, Collection<Field> fields ) throws ConnectionException;
+    UniqueValueSet load( ApplicationScope applicationScope, String type, Collection<Field> fields );
 
     /**
     * Load UniqueValue that matches field from collection or null if that value does not exist.
@@ -72,10 +67,9 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
     * @param type The type the unique value exists within
     * @param fields Field name/value to search for
     * @return UniqueValueSet containing fields from the collection that exist in cassandra
-    * @throws ConnectionException on error connecting to Cassandra
     */
-    UniqueValueSet load( ApplicationScope applicationScope, ConsistencyLevel consistencyLevel, String type,
-                         Collection<Field> fields ) throws ConnectionException;
+    UniqueValueSet load(ApplicationScope applicationScope, ConsistencyLevel consistencyLevel, String type,
+                        Collection<Field> fields );
 
 
     /**
@@ -96,7 +90,7 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
      * @param uniqueValue Object to be deleted.
      * @return BatchStatement that encapsulates the CQL statements, caller may or may not execute.
      */
-    BatchStatement deleteCQL( ApplicationScope applicationScope, UniqueValue uniqueValue);
+    BatchStatement deleteCQL( ApplicationScope applicationScope, UniqueValue uniqueValue );
 
 
 }

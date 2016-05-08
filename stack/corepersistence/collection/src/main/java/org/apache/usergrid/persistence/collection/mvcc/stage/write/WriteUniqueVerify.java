@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.Session;
 import com.netflix.hystrix.HystrixCommandProperties;
 import org.slf4j.Logger;
@@ -49,9 +50,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.model.ConsistencyLevel;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
@@ -180,25 +179,21 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
         @Override
         protected Map<String, Field> run() throws Exception {
-            return executeStrategy(fig.getReadCL());
+            return executeStrategy(fig.getDataStaxReadCl());
         }
 
         @Override
         protected Map<String, Field> getFallback() {
             // fallback with same CL as there are many reasons the 1st execution failed, not just due to consistency problems
-            return executeStrategy(fig.getReadCL());
+            return executeStrategy(fig.getDataStaxReadCl());
         }
 
         public Map<String, Field> executeStrategy(ConsistencyLevel consistencyLevel){
             //allocate our max size, worst case
             //now get the set of fields back
             final UniqueValueSet uniqueValues;
-            try {
-                uniqueValues = uniqueValueSerializationStrategy.load( scope, consistencyLevel, type,  uniqueFields );
-            }
-            catch ( ConnectionException e ) {
-                throw new RuntimeException( "Unable to read from cassandra", e );
-            }
+
+            uniqueValues = uniqueValueSerializationStrategy.load( scope, consistencyLevel, type,  uniqueFields );
 
             final Map<String, Field> uniquenessViolations = new HashMap<>( uniqueFields.size() );
 
