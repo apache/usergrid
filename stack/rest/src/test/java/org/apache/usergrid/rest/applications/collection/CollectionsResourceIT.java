@@ -136,7 +136,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         try {
 
-            this.pathResource( getOrgAppPath( "testcollections/_indexes" ) ).post( false, payload,
+            this.pathResource( getOrgAppPath( "testcollections/_index" ) ).post( false, payload,
                 new QueryParameters().addParam( "grant_type", "client_credentials" ).addParam( "client_id",
                     String.valueOf( ( ( Map ) appCredentials.get( "credentials" ) ).get( "client_id" ) ) )
                                      .addParam( "client_secret", String.valueOf(
@@ -167,7 +167,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        Entity thing = this.app().collection( "testCollections" ).collection( "_indexes" ).post( payload );
+        Entity thing = this.app().collection( "testCollections" ).collection( "_index" ).post( payload );
         refreshIndex();
 
 
@@ -206,10 +206,11 @@ public class CollectionsResourceIT extends AbstractRestIT {
         //to prove that the entity exists
 
         //next part is to delete the schema then reindex it and it should work.
-        this.app().collection( "testCollections" ).collection( "_indexes" ).delete();
+        this.app().collection( "testCollections" ).collection( "_index" ).delete();
         refreshIndex();
 
-        this.app().collection( "testCollections" ).collection( "_reindex" ).post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
+        this.app().collection( "testCollections" ).collection( "_reindex" )
+            .post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
         refreshIndex();
 
 
@@ -244,7 +245,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Post index to the collection metadata
         try {
-            this.app().collection( "testCollections" ).collection( "_indexes" ).post( payload );
+            this.app().collection( "testCollections" ).collection( "_index" ).post( payload );
             fail();
         }catch(BadRequestException bre){
             //this is expected.
@@ -258,7 +259,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingMap);
 
         try {
-            this.app().collection( "testCollections" ).collection( "_indexes" ).post( payload );
+            this.app().collection( "testCollections" ).collection( "_index" ).post( payload );
             fail();
         }catch(BadRequestException bre){
             //this is expected.
@@ -268,7 +269,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         try {
-            this.app().collection( "testCollections" ).collection( "_indexes" ).post( payload );
+            this.app().collection( "testCollections" ).collection( "_index" ).post( payload );
         }catch(BadRequestException bre){
             fail( "This shouldn't fail" );
         }
@@ -291,7 +292,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        Entity thing = this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        Entity thing = this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
 
@@ -365,12 +366,13 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        Entity thing = this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        Entity thing = this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
 
         //Reindex and verify that the entity only has field one index.
-        this.app().collection( "testCollection" ).collection( "_reindex" ).post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
+        this.app().collection( "testCollection" ).collection( "_reindex" )
+            .post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
 
         for(int i = 0; i < 10; i++) {
             String query = "one ='value"+ i + "'";
@@ -415,7 +417,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        Entity thing = this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        Entity thing = this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
         Collection collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
@@ -430,7 +432,8 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
 
         //Reindex and verify that the entity only has field one index.
-        this.app().collection( "testCollection" ).collection( "_reindex" ).post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
+        this.app().collection( "testCollection" ).collection( "_reindex" )
+            .post(true,clientSetup.getSuperuserToken(),ApiResponse.class,null,null,false);
 
 
         indexingArray.add( "one" );
@@ -442,7 +445,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
 
         collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
 
@@ -494,7 +497,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
         //Create test collection with a test entity that is partially indexed.
@@ -536,7 +539,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
         Map<String,Object> arrayFieldsForTesting = new HashMap<>();
@@ -586,7 +589,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
         Map<String,Object> arrayFieldsForTesting = new HashMap<>();
@@ -629,7 +632,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
         Map<String,Object> arrayFieldsForTestingSelectiveIndexing = new HashMap<>();
@@ -684,7 +687,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
         Map<String,Object> arrayFieldsForTestingSelectiveIndexing = new HashMap<>();
@@ -735,7 +738,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_indexes" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
         refreshIndex();
 
         //Create test collection with a test entity that is partially indexed.
@@ -958,7 +961,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         String randomizer = RandomStringUtils.randomAlphanumeric(10);
         String collectionName = "col_" + randomizer;
-        app().collection( collectionName ).collection( "_indexes" ).post( payload );
+        app().collection( collectionName ).collection( "_index" ).post( payload );
         refreshIndex();
 
         // was the no-index wildcard saved and others ignored?
@@ -989,4 +992,108 @@ public class CollectionsResourceIT extends AbstractRestIT {
             .get( new QueryParameters().setQuery( "select * where color='magenta'" ) ).iterator();
         assertFalse( getByQuery.hasNext() );
     }
+
+
+    /**
+     * Test that indexed entities can be connected to un-indexed Entities and connections still work.
+     */
+    @Test
+    public void testIndexedEntityToUnindexedEntityConnections() {
+
+        // create entities in an un-indexed collection
+
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "!" );
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+
+        String randomizer = RandomStringUtils.randomAlphanumeric(10);
+        String unIndexedCollectionName = "col_" + randomizer;
+        app().collection( unIndexedCollectionName ).collection( "_index" ).post( payload );
+        refreshIndex();
+
+        String entityName1 = "unindexed1";
+        Entity unindexed1 = this.app().collection( unIndexedCollectionName )
+            .post( new Entity().withProp("name", entityName1).withProp( "color", "violet" ) );
+
+        String entityName2 = "unindexed2";
+        Entity unindexed2 = this.app().collection( unIndexedCollectionName )
+            .post( new Entity().withProp("name", entityName2).withProp( "color", "violet" ) );
+
+        // create an indexed entity
+
+        String indexedCollection = "col_" + randomizer;
+        String indexedEntityName = "indexedEntity";
+        Entity indexedEntity = this.app().collection( indexedCollection )
+            .post( new Entity().withProp("name", indexedEntityName).withProp( "color", "orange" ) );
+
+        // create connections from indexed entity to un-indexed entities
+
+        app().collection(indexedCollection).entity(indexedEntity).connection("likes").entity(unindexed1).post();
+        app().collection(indexedCollection).entity(indexedEntity).connection("likes").entity(unindexed2).post();
+
+        Collection connectionsByGraph = app().collection( indexedCollection )
+            .entity(indexedEntity).connection( "likes" ).get();
+        assertEquals( 2, connectionsByGraph.getNumOfEntities() );
+
+        Collection connectionsByQuery = app().collection( indexedCollection )
+            .entity(indexedEntity).connection( "likes" )
+            .get( new QueryParameters().setQuery( "select * where color='violet'" ));
+        assertEquals( 0, connectionsByQuery.getNumOfEntities() );
+
+    }
+
+
+    /**
+     * Test that index entities can be connected to un-indexed Entities and connections still work.
+     */
+    @Test
+    public void testUnindexedEntityToIndexedEntityConnections() {
+
+        // create two entities in an indexed collection
+
+        String randomizer = RandomStringUtils.randomAlphanumeric(10);
+        String indexedCollection = "col_" + randomizer;
+        String indexedEntityName = "indexedEntity";
+
+        Entity indexedEntity1 = this.app().collection( indexedCollection )
+            .post( new Entity().withProp("name", indexedEntityName + "_1").withProp( "color", "orange" ) );
+
+        Entity indexedEntity2 = this.app().collection( indexedCollection )
+            .post( new Entity().withProp("name", indexedEntityName + "_2").withProp( "color", "orange" ) );
+
+        // create an un-indexed entity
+
+        ArrayList<String> indexingArray = new ArrayList<>(  );
+        indexingArray.add( "!" );
+        Entity payload = new Entity();
+        payload.put( "fields", indexingArray);
+
+        String unIndexedCollectionName = "col_" + randomizer;
+        app().collection( unIndexedCollectionName ).collection( "_index" ).post( payload );
+        refreshIndex();
+
+        String entityName1 = "unindexed1";
+        Entity unindexed1 = this.app().collection( unIndexedCollectionName )
+            .post( new Entity().withProp("name", entityName1).withProp( "color", "violet" ) );
+
+        // create connections from un-indexed entity to indexed entities
+
+        app().collection(unIndexedCollectionName).entity(unindexed1).connection("likes").entity(indexedEntity1).post();
+        app().collection(unIndexedCollectionName).entity(unindexed1).connection("likes").entity(indexedEntity2).post();
+
+        // should be able to get connections via graph from un-indexed to index
+
+        Collection connectionsByGraph = app().collection( indexedCollection )
+            .entity(unindexed1).connection( "likes" ).get();
+        assertEquals( 2, connectionsByGraph.getNumOfEntities() );
+
+        // should not be able to get connections via query from unindexed to indexed
+
+        Collection connectionsByQuery = app().collection( indexedCollection )
+            .entity(unindexed1).connection( "likes" )
+            .get( new QueryParameters().setQuery( "select * where color='orange'" ));
+        assertEquals( 0, connectionsByQuery.getNumOfEntities() );
+    }
+
 }
