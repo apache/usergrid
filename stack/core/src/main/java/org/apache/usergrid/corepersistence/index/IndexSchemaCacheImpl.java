@@ -19,6 +19,7 @@ package org.apache.usergrid.corepersistence.index;
 
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +50,7 @@ public class IndexSchemaCacheImpl implements IndexSchemaCache {
         this.mapManager = mapManager;
         indexSchemaCache = CacheBuilder.newBuilder()
             .maximumSize( indexSchemaCacheFig.getCacheSize() )
-            //.expireAfterWrite( indexSchemaCacheFig.getCacheTimeout(), TimeUnit.MILLISECONDS ) <-- I don't think we want this to expire that quickly.
+            .expireAfterWrite( indexSchemaCacheFig.getCacheTimeout(), TimeUnit.MILLISECONDS )
             .build( new CacheLoader<String, Optional<Map>>() {
                 @Override
                 public Optional<Map> load( final String collectionName ) throws Exception {
