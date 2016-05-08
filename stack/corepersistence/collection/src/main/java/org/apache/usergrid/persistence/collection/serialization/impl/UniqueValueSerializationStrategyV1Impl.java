@@ -26,17 +26,12 @@ import java.util.*;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.Session;
-import org.apache.cassandra.db.marshal.BytesType;
 
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.impl.util.LegacyScopeUtils;
 import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.CassandraFig;
-import org.apache.usergrid.persistence.core.astyanax.ColumnTypes;
-import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
-import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -44,7 +39,6 @@ import org.apache.usergrid.persistence.model.field.Field;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.netflix.astyanax.Keyspace;
 
 
 /**
@@ -88,92 +82,45 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
             UNIQUE_VALUES_LOG_COLUMNS, TableDefinition.CacheOption.KEYS, UNIQUE_VALUES_LOG_CLUSTERING_ORDER);
 
 
-    private static final CollectionScopedRowKeySerializer<Field> ROW_KEY_SER =
-        new CollectionScopedRowKeySerializer<>( UniqueFieldRowKeySerializer.get() );
-
-    private static final EntityVersionSerializer ENTITY_VERSION_SER = new EntityVersionSerializer();
-
-    private static final MultiTenantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Field>>, EntityVersion>
-        CF_UNIQUE_VALUES = new MultiTenantColumnFamily<>( "Unique_Values", ROW_KEY_SER, ENTITY_VERSION_SER );
-
-
-    private static final IdRowCompositeSerializer ID_SER = IdRowCompositeSerializer.get();
-
-
-    private static final CollectionScopedRowKeySerializer<Id> ENTITY_ROW_KEY_SER =
-        new CollectionScopedRowKeySerializer<>( ID_SER );
-
-
-    private static final MultiTenantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UniqueFieldEntry>
-        CF_ENTITY_UNIQUE_VALUE_LOG =
-        new MultiTenantColumnFamily<>( "Entity_Unique_Values", ENTITY_ROW_KEY_SER, UniqueFieldEntrySerializer.get() );
-
 
     /**
      * Construct serialization strategy for keyspace.
      *
-     * @param keyspace Keyspace in which to store Unique Values.
      * @param cassandraFig The cassandra configuration
      * @param serializationFig The serialization configuration
      */
     @Inject
-    public UniqueValueSerializationStrategyV1Impl(final Keyspace keyspace, final CassandraFig cassandraFig,
-                                                  final SerializationFig serializationFig,
-                                                  final Session session,
-                                                  final CassandraConfig cassandraConfig) {
-        super( keyspace, cassandraFig, serializationFig, session, cassandraConfig );
+    public UniqueValueSerializationStrategyV1Impl( final CassandraFig cassandraFig,
+                                                   final SerializationFig serializationFig,
+                                                   final Session session,
+                                                   final CassandraConfig cassandraConfig) {
+        super( cassandraFig, serializationFig, session, cassandraConfig );
     }
 
 
     @Override
     public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
 
-        final MultiTenantColumnFamilyDefinition uniqueLookupCF =
-            new MultiTenantColumnFamilyDefinition( CF_UNIQUE_VALUES, BytesType.class.getSimpleName(),
-                ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName(),
-                MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
+        return Collections.emptyList();
 
-        final MultiTenantColumnFamilyDefinition uniqueLogCF =
-            new MultiTenantColumnFamilyDefinition( CF_ENTITY_UNIQUE_VALUE_LOG, BytesType.class.getSimpleName(),
-                ColumnTypes.DYNAMIC_COMPOSITE_TYPE, BytesType.class.getSimpleName(),
-                MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
-
-        //return Collections.emptyList();
-
-        return Arrays.asList(uniqueLookupCF, uniqueLogCF);
     }
 
     @Override
     public Collection<TableDefinition> getTables() {
 
         final TableDefinition uniqueValues = getUniqueValuesTable();
-
         final TableDefinition uniqueValuesLog = getEntityUniqueLogTable();
 
-
-        //return Arrays.asList( uniqueValues, uniqueValuesLog );
-
-        return Collections.emptyList();
+        return Arrays.asList( uniqueValues, uniqueValuesLog );
 
     }
 
 
-    @Override
-    protected MultiTenantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Field>>, EntityVersion> getUniqueValuesCF() {
-        return CF_UNIQUE_VALUES;
-    }
 
     @Override
     protected TableDefinition getUniqueValuesTable(){
 
         return uniqueValues;
-    }
-
-
-    @Override
-    protected MultiTenantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UniqueFieldEntry>
-    getEntityUniqueLogCF() {
-        return CF_ENTITY_UNIQUE_VALUE_LOG;
     }
 
 
@@ -460,24 +407,6 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
 
         return stuff;
 
-    }
-
-
-
-    @Override
-    protected CollectionPrefixedKey<Id> createEntityUniqueLogKey( final Id applicationId,
-                                                                  final Id uniqueValueId ) {
-
-
-        final String collectionName = LegacyScopeUtils.getCollectionScopeNameFromEntityType( uniqueValueId.getType() );
-
-
-        final CollectionPrefixedKey<Id> collectionPrefixedEntityKey =
-            new CollectionPrefixedKey<>( collectionName, applicationId, uniqueValueId );
-
-
-
-        return collectionPrefixedEntityKey;
     }
 
 

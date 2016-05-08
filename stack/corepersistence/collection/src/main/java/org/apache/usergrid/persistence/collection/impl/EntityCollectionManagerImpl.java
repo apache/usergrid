@@ -296,15 +296,11 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     public Observable<Id> getIdField( final String type, final Field field ) {
         final List<Field> fields = Collections.singletonList( field );
         final Observable<Id> idObservable = Observable.from( fields ).map( field1 -> {
-            try {
-                final UniqueValueSet set = uniqueValueSerializationStrategy.load( applicationScope, type, fields );
-                final UniqueValue value = set.getValue( field1.getName() );
-                return value == null ? null : value.getEntityId();
-            }
-            catch ( ConnectionException e ) {
-                logger.error( "Failed to getIdField", e );
-                throw new RuntimeException( e );
-            }
+
+            final UniqueValueSet set = uniqueValueSerializationStrategy.load( applicationScope, type, fields );
+            final UniqueValue value = set.getValue( field1.getName() );
+            return value == null ? null : value.getEntityId();
+
         } );
 
         return ObservableTimer.time( idObservable, fieldIdTimer );
@@ -317,68 +313,63 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     @Override
     public Observable<FieldSet> getEntitiesFromFields( final String type, final Collection<Field> fields ) {
         final Observable<FieldSet> fieldSetObservable = Observable.just( fields ).map( fields1 -> {
-            try {
 
-                final UUID startTime = UUIDGenerator.newTimeUUID();
+            final UUID startTime = UUIDGenerator.newTimeUUID();
 
-                //Get back set of unique values that correspond to collection of fields
-                UniqueValueSet set = uniqueValueSerializationStrategy.load( applicationScope, type, fields1 );
+            //Get back set of unique values that correspond to collection of fields
+            UniqueValueSet set = uniqueValueSerializationStrategy.load( applicationScope, type, fields1 );
 
-                //Short circuit if we don't have any uniqueValues from the given fields.
-                if ( !set.iterator().hasNext() ) {
-                    return new MutableFieldSet( 0 );
-                }
-
-
-                //loop through each field, and construct an entity load
-                List<Id> entityIds = new ArrayList<>( fields1.size() );
-                List<UniqueValue> uniqueValues = new ArrayList<>( fields1.size() );
-
-                for ( final Field expectedField : fields1 ) {
-
-                    UniqueValue value = set.getValue( expectedField.getName() );
-
-                    if ( value == null ) {
-                        logger.debug( "Field does not correspond to a unique value" );
-                    }
-
-                    entityIds.add( value.getEntityId() );
-                    uniqueValues.add( value );
-                }
-
-                //Load a entity for each entityId we retrieved.
-                final EntitySet entitySet = entitySerializationStrategy.load( applicationScope, entityIds, startTime );
-
-                final BatchStatement uniqueDeleteBatch = new BatchStatement();
-
-                final MutableFieldSet response = new MutableFieldSet( fields1.size() );
-
-                for ( final UniqueValue expectedUnique : uniqueValues ) {
-                    final MvccEntity entity = entitySet.getEntity( expectedUnique.getEntityId() );
-
-                    //bad unique value, delete this, it's inconsistent
-                    if ( entity == null || !entity.getEntity().isPresent() ) {
-                        uniqueDeleteBatch.add(
-                            uniqueValueSerializationStrategy.deleteCQL( applicationScope, expectedUnique ));
-                        continue;
-                    }
-
-                    //TODO, we need to validate the property in the entity matches the property in the unique value
-
-
-                    //else add it to our result set
-                    response.addEntity( expectedUnique.getField(), entity );
-                }
-
-                //TODO: explore making this an Async process
-                session.execute(uniqueDeleteBatch);
-
-                return response;
+            //Short circuit if we don't have any uniqueValues from the given fields.
+            if ( !set.iterator().hasNext() ) {
+                return new MutableFieldSet( 0 );
             }
-            catch ( ConnectionException e ) {
-                logger.error( "Failed to getIdField", e );
-                throw new RuntimeException( e );
+
+
+            //loop through each field, and construct an entity load
+            List<Id> entityIds = new ArrayList<>( fields1.size() );
+            List<UniqueValue> uniqueValues = new ArrayList<>( fields1.size() );
+
+            for ( final Field expectedField : fields1 ) {
+
+                UniqueValue value = set.getValue( expectedField.getName() );
+
+                if ( value == null ) {
+                    logger.debug( "Field does not correspond to a unique value" );
+                }
+
+                entityIds.add( value.getEntityId() );
+                uniqueValues.add( value );
             }
+
+            //Load a entity for each entityId we retrieved.
+            final EntitySet entitySet = entitySerializationStrategy.load( applicationScope, entityIds, startTime );
+
+            final BatchStatement uniqueDeleteBatch = new BatchStatement();
+
+            final MutableFieldSet response = new MutableFieldSet( fields1.size() );
+
+            for ( final UniqueValue expectedUnique : uniqueValues ) {
+                final MvccEntity entity = entitySet.getEntity( expectedUnique.getEntityId() );
+
+                //bad unique value, delete this, it's inconsistent
+                if ( entity == null || !entity.getEntity().isPresent() ) {
+                    uniqueDeleteBatch.add(
+                        uniqueValueSerializationStrategy.deleteCQL( applicationScope, expectedUnique ));
+                    continue;
+                }
+
+                //TODO, we need to validate the property in the entity matches the property in the unique value
+
+
+                //else add it to our result set
+                response.addEntity( expectedUnique.getField(), entity );
+            }
+
+            //TODO: explore making this an Async process
+            session.execute(uniqueDeleteBatch);
+
+            return response;
+
         } );
 
 
