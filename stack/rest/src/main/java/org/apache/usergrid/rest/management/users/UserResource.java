@@ -111,6 +111,10 @@ public class UserResource extends AbstractContextResource {
         String username = string( json.remove( "username" ) );
         String name = string( json.remove( "name" ) );
 
+        if ( "me".equals( username ) ) {
+            throw new IllegalArgumentException( "Username 'me' is reserved" );
+        }
+
         management.updateAdminUser( user, username, name, email, json );
 
         ApiResponse response = createApiResponse();
