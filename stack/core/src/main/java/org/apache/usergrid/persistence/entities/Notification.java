@@ -308,12 +308,13 @@ public class Notification extends TypedEntity {
             this.statistics.put("sent", sent);
             this.statistics.put("errors", errors);
         } else {
-            if(this.statistics.get( "sent" ) instanceof Integer){
-                this.statistics.put( "sent", sent + (Integer) this.statistics.get( "sent" ) );
-                this.statistics.put( "errors", errors + (Integer) this.statistics.get( "errors" ) );
-            }
-            else if (this.statistics.get( "sent" ) instanceof Long ) {
+            //Don't need to account for integers here because this is only called internally
+            //We won't ever need to call updateStatistics for a postedNotification as that only happens once
+            //after the notification is completed.
+            if (this.statistics.get( "sent" ) instanceof Long ) {
                 this.statistics.put( "sent", sent + (Long) this.statistics.get( "sent" ) );
+            }
+            if( this.statistics.get( "errors" ) instanceof Long){
                 this.statistics.put( "errors", errors + (Long) this.statistics.get( "errors" ) );
             }
         }

@@ -1118,7 +1118,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         Map statistics = new HashMap<>(  );
         statistics.put( "sent",1 );
-        statistics.put( "errors",0 );
+        statistics.put( "errors",2 );
 
         Entity payload = new Entity();
         payload.put("debug", false);
