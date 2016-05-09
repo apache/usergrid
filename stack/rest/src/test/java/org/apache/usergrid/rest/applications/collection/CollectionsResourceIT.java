@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
@@ -1112,7 +1111,6 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         ApiResponse notifierNode = this.pathResource(getOrgAppPath("notifier")).post(ApiResponse.class,notifier);
 
-        UUID uuid = UUIDUtils.newTimeUUID();
         // create user
 
         Map payloads = new HashMap<>(  );
@@ -1132,14 +1130,21 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "statistics",statistics);
 
 
-
-
-        ApiResponse user = this.app().collection("notifications/"+ UUIDUtils.newTimeUUID()).put(null,payload );
+        this.app().collection("notifications/"+ UUIDUtils.newTimeUUID()).post(payload );
         this.refreshIndex();
 
         Collection user2 = this.app().collection("notifications").get();
 
         assertEquals(1,user2.getNumOfEntities());
 
+        this.app().collection("notifications/"+ UUIDUtils.newTimeUUID()).put(null,payload );
+        this.refreshIndex();
+
+        user2 = this.app().collection("notifications").get();
+
+        assertEquals(2,user2.getNumOfEntities());
+
     }
+
+
 }
