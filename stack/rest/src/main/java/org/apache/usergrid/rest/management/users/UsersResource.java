@@ -127,6 +127,10 @@ public class UsersResource extends AbstractContextResource {
             throw new IllegalArgumentException( "email form parameter is required" );
         }
 
+        if ( "me".equals( username ) ) {
+            throw new IllegalArgumentException( "Username 'me' is reserved" );
+        }
+
         // if username not provided, email will be used
         logger.info( "Create user: {}", (StringUtils.isNotBlank(username) ? username : email) );
 
