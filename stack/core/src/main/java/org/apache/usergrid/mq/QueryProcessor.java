@@ -19,7 +19,6 @@ package org.apache.usergrid.mq;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,15 +26,11 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.commons.collections.comparators.ComparatorChain;
-
 import org.apache.usergrid.mq.Query.FilterOperator;
 import org.apache.usergrid.mq.Query.FilterPredicate;
 import org.apache.usergrid.mq.Query.SortPredicate;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.utils.NumberUtils;
-
-import static org.apache.usergrid.mq.Query.SortDirection.DESCENDING;
 
 
 public class QueryProcessor {

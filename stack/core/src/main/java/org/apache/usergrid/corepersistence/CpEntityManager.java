@@ -36,7 +36,6 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.apache.usergrid.persistence.collection.EntitySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -73,6 +72,7 @@ import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -2785,10 +2785,11 @@ public class CpEntityManager implements EntityManager {
                 }
             }
 
-            //doesn't allow the mutator to be ignored.
-            counterUtils.addEventCounterMutations( null, applicationId, event, timestamp );
-
             incrementEntityCollection( "events", timestamp );
+//            //doesn't allow the mutator to be ignored.
+//            counterUtils.addEventCounterMutations( null, applicationId, event, timestamp );
+//
+//            incrementEntityCollection( "events", timestamp );
 
             return entity;
         }

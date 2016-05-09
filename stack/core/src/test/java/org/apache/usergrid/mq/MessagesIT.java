@@ -17,10 +17,6 @@
 package org.apache.usergrid.mq;
 
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -48,7 +44,6 @@ public class MessagesIT extends AbstractCoreIT {
     }
 
 
-    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1116. ")
     @Test
     public void testMessages() throws Exception {
         logger.info( "MessagesIT.testMessages" );
@@ -117,61 +112,6 @@ public class MessagesIT extends AbstractCoreIT {
 //        assertEquals( new Long( 3 ), counters.get( "/foo/bar/" ) );
     }
 
-
-    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1116. ")
-    @Test
-    public void testSubscriberSearch() throws Exception {
-        QueueManager qm = app.getQm();
-
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put( "foo", "alpha" );
-        Queue q = qm.updateQueue( "/foo/1/", properties );
-        logger.info( JsonUtils.mapToFormattedJsonString( q ) );
-
-        q = qm.getQueue( "/foo/1/" );
-        logger.info( JsonUtils.mapToFormattedJsonString( q ) );
-        assertEquals( "alpha", q.getStringProperty( "foo" ) );
-
-        properties = new HashMap<String, Object>();
-        properties.put( "foo", "bravo" );
-        q = qm.updateQueue( "/foo/2/", properties );
-        logger.info( JsonUtils.mapToFormattedJsonString( q ) );
-
-        properties = new HashMap<String, Object>();
-        properties.put( "foo", "charlie" );
-        q = qm.updateQueue( "/foo/3/", properties );
-        logger.info( JsonUtils.mapToFormattedJsonString( q ) );
-
-        qm.subscribeToQueue( "/pubtest/", "/foo/1/" );
-        qm.subscribeToQueue( "/pubtest/", "/foo/2/" );
-        qm.subscribeToQueue( "/pubtest/", "/foo/3/" );
-
-        QueueSet results = qm.searchSubscribers( "/pubtest/", Query.findForProperty( "foo", "bravo" ) );
-        logger.info( JsonUtils.mapToFormattedJsonString( results ) );
-        assertEquals( 1, results.size() );
-
-        properties = new HashMap<String, Object>();
-        properties.put( "foo", "delta" );
-        q = qm.updateQueue( "/foo/2/", properties );
-        logger.info( JsonUtils.mapToFormattedJsonString( q ) );
-
-        results = qm.searchSubscribers( "/pubtest/", Query.findForProperty( "foo", "bravo" ) );
-        logger.info( JsonUtils.mapToFormattedJsonString( results ) );
-        assertEquals( 0, results.size() );
-
-        results = qm.searchSubscribers( "/pubtest/", Query.findForProperty( "foo", "delta" ) );
-        logger.info( JsonUtils.mapToFormattedJsonString( results ) );
-        assertEquals( 1, results.size() );
-
-        qm.unsubscribeFromQueue( "/pubtest/", "/foo/2/" );
-
-        results = qm.searchSubscribers( "/pubtest/", Query.findForProperty( "foo", "delta" ) );
-        logger.info( JsonUtils.mapToFormattedJsonString( results ) );
-        assertEquals( 0, results.size() );
-    }
-
-
-    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1116. ")
     @Test
     public void testConsumer() throws Exception {
         logger.info( "Creating messages" );
@@ -213,8 +153,6 @@ public class MessagesIT extends AbstractCoreIT {
         }
     }
 
-
-    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1116. ")
     @Test
     public void testTransactions() throws Exception {
         QueueManager qm = app.getQm();
