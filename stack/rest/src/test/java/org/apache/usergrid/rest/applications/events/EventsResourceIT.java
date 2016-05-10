@@ -17,26 +17,22 @@
 package org.apache.usergrid.rest.applications.events;
 
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import javax.ws.rs.core.MediaType;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import java.io.IOException;
-
-import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource.model.Collection;
-import org.apache.usergrid.rest.test.resource.model.Token;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import org.junit.Ignore;
 
 
 public class EventsResourceIT extends AbstractRestIT {
@@ -45,7 +41,6 @@ public class EventsResourceIT extends AbstractRestIT {
 
 
     @Test
-    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1118. Events not working yet")
     public void testEventPostandGet() throws IOException {
 
         Map<String, Object> payload = new LinkedHashMap<String, Object>();
@@ -108,23 +103,25 @@ public class EventsResourceIT extends AbstractRestIT {
             collection = this.app().collection( "events" )
                 .get();
 
-            assertEquals("Expected Advertising", advertising, ((Map<String, Object>) ((Map<String, Object>) collection.getResponse().getProperties().get("messages")).get(0)).get("uuid").toString());
+            assertEquals("Expected Advertising", advertising, ((Map)((ArrayList) collection.getResponse().getProperties().get("messages" )).get(0 ) ).get("uuid" ).toString());
             lastId = collection.getResponse().getProperties().get("last").toString();
         }
 
         // check sales event in queue
-        collection = this.app().collection( "events" )
-            .get();
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "last",lastId );
+
+        collection = this.app().collection( "events" ).get(queryParameters);
 
 
-        assertEquals( "Expected Sales", sales,((Map<String, Object>) ((Map<String, Object>) collection.getResponse().getProperties().get("messages")).get(0)).get("uuid").toString());
+        assertEquals( "Expected Sales", sales,((Map<String, Object>) ((ArrayList) collection.getResponse().getProperties().get("messages")).get(0)).get("uuid").toString());
         lastId = collection.getResponse().getProperties().get("last").toString();
 
 
         // check marketing event in queue
-        collection = this.app().collection( "events" )
-            .get();
+        queryParameters.addParam( "last",lastId );
+        collection = this.app().collection( "events" ).get(queryParameters);
 
-        assertEquals( "Expected Marketing", marketing, ((Map<String, Object>) ((Map<String, Object>) collection.getResponse().getProperties().get("messages")).get(0)).get("uuid").toString());
+        assertEquals( "Expected Marketing", marketing, ((Map<String, Object>) ((ArrayList) collection.getResponse().getProperties().get("messages")).get(0)).get("uuid").toString());
     }
 }

@@ -17,18 +17,7 @@
 package org.apache.usergrid.rest.applications.events;
 
 
-import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
-import org.apache.usergrid.mq.QueuePosition;
-import org.apache.usergrid.mq.QueueQuery;
-import org.apache.usergrid.mq.QueueResults;
-import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.rest.applications.ApplicationResource;
-import org.apache.usergrid.rest.applications.ServiceResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
@@ -36,6 +25,20 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import org.apache.usergrid.mq.QueuePosition;
+import org.apache.usergrid.mq.QueueQuery;
+import org.apache.usergrid.mq.QueueResults;
+import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.rest.applications.ApplicationResource;
+import org.apache.usergrid.rest.applications.ServiceResource;
+
+import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 
 
 @Component("org.apache.usergrid.rest.applications.events.EventsResource")
@@ -55,6 +58,7 @@ public class EventsResource extends ServiceResource {
 
     @GET
     @JSONP
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public QueueResults executeQueueGet(
         @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {

@@ -38,6 +38,7 @@ import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
+import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.AbstractEntity;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityFactory;
@@ -125,6 +126,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final ConnectionService connectionService;
     private final GraphManagerFactory graphManagerFactory;
     private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+    private final QueueManagerFactory queueManagerFactory;
+
 
     public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
                                    final Injector injector ) {
@@ -141,6 +144,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.collectionService = injector.getInstance( CollectionService.class );
         this.connectionService = injector.getInstance( ConnectionService.class );
         this.indexSchemaCacheFactory = injector.getInstance( IndexSchemaCacheFactory.class );
+
+        this.queueManagerFactory = injector.getInstance( QueueManagerFactory.class );
 
         //this line always needs to be last due to the temporary cicular dependency until spring is removed
 
@@ -202,7 +207,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private EntityManager _getEntityManager( UUID applicationId ) {
         EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache,
-            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService,indexSchemaCacheFactory, applicationId );
+            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService,indexSchemaCacheFactory,queueManagerFactory, applicationId );
 
         return em;
     }
