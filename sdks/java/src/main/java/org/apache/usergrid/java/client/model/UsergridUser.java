@@ -76,7 +76,7 @@ public class UsergridUser extends UsergridEntity {
     @Nullable public String getPassword() { return this.password; }
     public void setPassword(@Nullable final String password) { this.password = password; }
 
-    @Nullable public String setPicture() { return this.picture; }
+    @Nullable public String getPicture() { return this.picture; }
     public void setPicture(@Nullable final String picture) { this.picture = picture; }
 
     public boolean isActivated() { return this.activated; }
