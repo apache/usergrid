@@ -140,6 +140,7 @@ public class UsergridRequest {
         this.data = data;
         this.headers = headers;
         this.query = query;
+        this.auth = auth;
         this.pathSegments = pathSegments;
     }
 
@@ -153,7 +154,7 @@ public class UsergridRequest {
     }
 
     @NotNull
-    private HttpUrl constructUrl() {
+    protected HttpUrl constructUrl() {
         String url = this.baseUrl;
         if( this.query != null ) {
             url += this.query.build();
@@ -172,7 +173,7 @@ public class UsergridRequest {
         return urlBuilder.build();
     }
 
-    private void addHeaders(@NotNull final Request.Builder requestBuilder) {
+    protected void addHeaders(@NotNull final Request.Builder requestBuilder) {
         requestBuilder.addHeader("User-Agent", UsergridRequestManager.USERGRID_USER_AGENT);
         if (this.auth != null ) {
             String accessToken = this.auth.getAccessToken();
@@ -188,7 +189,7 @@ public class UsergridRequest {
     }
 
     @Nullable
-    private RequestBody constructRequestBody() {
+    protected RequestBody constructRequestBody() {
         RequestBody requestBody = null;
         if (method == UsergridHttpMethod.POST || method == UsergridHttpMethod.PUT) {
             String jsonString = "";
