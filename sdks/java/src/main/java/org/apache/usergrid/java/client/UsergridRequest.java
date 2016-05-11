@@ -157,12 +157,12 @@ public class UsergridRequest {
     protected HttpUrl constructUrl() {
         String url = this.baseUrl;
         if( this.query != null ) {
-            url += this.query.build();
+            url += this.query.build(false);
         }
         HttpUrl.Builder urlBuilder = HttpUrl.parse(url).newBuilder();
         if( this.pathSegments != null ) {
             for( String path : this.pathSegments ) {
-                urlBuilder.addPathSegment(path);
+                urlBuilder.addPathSegments(path);
             }
         }
         if( this.parameters != null ) {
