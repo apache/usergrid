@@ -103,6 +103,8 @@ public class UsergridEntity {
     @NotNull public JsonNode toJsonObjectValue() {
         return toJsonNode(this);
     }
+    @SuppressWarnings("unchecked")
+    @NotNull public Map<String,?> toMapValue() { return entityUpdateMapper.convertValue(this,Map.class); }
 
     @JsonIgnore
     public boolean isUser() { return (this instanceof UsergridUser || this.getType().equalsIgnoreCase(UsergridUser.USER_ENTITY_TYPE)); }
