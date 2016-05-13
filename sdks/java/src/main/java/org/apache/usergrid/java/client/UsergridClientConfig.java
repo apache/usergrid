@@ -37,6 +37,9 @@ public class UsergridClientConfig {
 
     @Nullable public UsergridAppAuth appAuth = null;
 
+    @SuppressWarnings("unused")
+    private UsergridClientConfig() {}
+
     public UsergridClientConfig(@NotNull final String orgId, @NotNull final String appId) {
         this.orgId = orgId;
         this.appId = appId;

@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.java.client.auth;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -42,7 +43,11 @@ public class UsergridAppAuth extends UsergridAuth {
         return credentials;
     }
 
-    public UsergridAppAuth(@NotNull final String clientId, @NotNull final String clientSecret) {
+    public UsergridAppAuth() {
+        this("","");
+    }
+
+    public UsergridAppAuth(@JsonProperty("clientId") @NotNull final String clientId, @JsonProperty("clientSecret") @NotNull final String clientSecret) {
         super();
         this.clientId = clientId;
         this.clientSecret = clientSecret;

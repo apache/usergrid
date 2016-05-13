@@ -100,11 +100,12 @@ public class UsergridEntity {
     @NotNull @Override public String toString() {
         return toJsonString(this);
     }
+    @NotNull public String toPrettyString() { return toPrettyJsonString(this); }
     @NotNull public JsonNode toJsonObjectValue() {
         return toJsonNode(this);
     }
     @SuppressWarnings("unchecked")
-    @NotNull public Map<String,?> toMapValue() { return entityUpdateMapper.convertValue(this,Map.class); }
+    @NotNull public Map<String,?> toMapValue() { return toMap(this); }
 
     @JsonIgnore
     public boolean isUser() { return (this instanceof UsergridUser || this.getType().equalsIgnoreCase(UsergridUser.USER_ENTITY_TYPE)); }

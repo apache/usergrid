@@ -183,9 +183,17 @@ public class UsergridResponse {
 
     @NotNull
     public static UsergridResponse fromException(@Nullable final UsergridClient client, @NotNull final Exception ex) {
-        UsergridResponse response = new UsergridResponse();
+        final UsergridResponse response = new UsergridResponse();
         response.client = client;
-        response.responseError = new UsergridResponseError(ex.getClass().toString(), ex.getMessage(), ex.getCause().toString());
+        final UsergridResponseError responseError = new UsergridResponseError();
+        responseError.setErrorDescription(ex.getMessage());
+        if( ex.getClass() != null ) {
+            responseError.setErrorName(ex.getClass().toString());
+        }
+        if( ex.getCause() != null ) {
+            responseError.setErrorException(ex.getCause().toString());
+        }
+        response.responseError = responseError;
         return response;
     }
 
