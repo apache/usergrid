@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.java.client.auth;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,12 +31,12 @@ public class UsergridAuth {
 
     public UsergridAuth() { }
 
-    public UsergridAuth(@Nullable final String accessToken) {
+    public UsergridAuth(@JsonProperty("accessToken") @Nullable final String accessToken) {
         this.usingToken = true;
         setAccessToken(accessToken);
     }
 
-    public UsergridAuth(@Nullable final String accessToken, @Nullable final Long expiry) {
+    public UsergridAuth(@JsonProperty("accessToken") @Nullable final String accessToken, @JsonProperty("expiry") @Nullable final Long expiry) {
         this.usingToken = true;
         setAccessToken(accessToken);
         setExpiry(expiry);

@@ -28,6 +28,8 @@ public class UsergridException extends RuntimeException {
     }
     public void setResponseCode(final int responseCode) { this.responseCode = responseCode; }
 
+    private UsergridException() {}
+
     public UsergridException(@NotNull final String message) {
         super(message);
     }

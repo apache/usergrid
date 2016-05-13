@@ -80,6 +80,8 @@ public class UsergridRequest {
     public String[] getPathSegments() { return pathSegments; }
     public void setPathSegments(@Nullable final String[] pathSegments) { this.pathSegments = pathSegments; }
 
+    private UsergridRequest() {}
+
     public UsergridRequest(@NotNull final UsergridHttpMethod method,
                            @NotNull final MediaType contentType,
                            @NotNull final String url,

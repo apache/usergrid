@@ -82,8 +82,26 @@ public final class JsonUtils {
     }
 
     @NotNull
+    public static String toPrettyJsonString(@NotNull final Object obj) {
+        try {
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
+        } catch (JsonGenerationException e) {
+            throw new UsergridException("Unable to generate json", e);
+        } catch (JsonMappingException e) {
+            throw new UsergridException("Unable to map json", e);
+        } catch (IOException e) {
+            throw new UsergridException("IO error", e);
+        }
+    }
+
+    @NotNull
     public static JsonNode toJsonNode(@NotNull final Object obj) {
         return mapper.convertValue(obj, JsonNode.class);
+    }
+
+    @NotNull
+    public static Map toMap(@NotNull final Object obj) {
+        return mapper.convertValue(obj,Map.class);
     }
 
     @NotNull

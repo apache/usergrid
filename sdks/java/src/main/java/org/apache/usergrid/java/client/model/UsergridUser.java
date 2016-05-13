@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.java.client.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.usergrid.java.client.Usergrid;
 import org.apache.usergrid.java.client.UsergridClient;
@@ -85,8 +86,8 @@ public class UsergridUser extends UsergridEntity {
     public boolean isDisabled() { return this.disabled; }
     public void setDisabled(final boolean disabled) { this.disabled = disabled; }
 
-    @Nullable public UsergridUserAuth getUserAuth() { return this.userAuth; }
-    public void setUserAuth(@Nullable final UsergridUserAuth userAuth) { this.userAuth = userAuth; }
+    @JsonIgnore @Nullable public UsergridUserAuth getUserAuth() { return this.userAuth; }
+    @JsonIgnore public void setUserAuth(@Nullable final UsergridUserAuth userAuth) { this.userAuth = userAuth; }
 
     @Nullable
     public String uuidOrUsername() {
