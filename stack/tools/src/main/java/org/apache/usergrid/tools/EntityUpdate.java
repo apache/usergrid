@@ -132,7 +132,8 @@ public class EntityUpdate extends ToolBase {
 
         Results results = entityManager.searchCollection( entityManager.getApplicationRef(), collectionName, query );
 
-        PagingResultsIterator itr = new PagingResultsIterator( results, Query.Level.ALL_PROPERTIES );
+        PagingResultsIterator itr =
+                new PagingResultsIterator( results, Query.Level.ALL_PROPERTIES, Query.Level.ALL_PROPERTIES );
 
         long count = 0;
 

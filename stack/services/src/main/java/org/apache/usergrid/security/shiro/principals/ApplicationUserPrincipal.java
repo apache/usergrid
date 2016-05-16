@@ -33,12 +33,14 @@ import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.security.shiro.Realm;
 import org.apache.usergrid.security.shiro.UsergridAuthorizationInfo;
 import org.apache.usergrid.security.shiro.credentials.AccessTokenCredentials;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
+import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getSubject;
 
 
 public class ApplicationUserPrincipal extends UserPrincipal {
@@ -94,13 +96,10 @@ public class ApplicationUserPrincipal extends UserPrincipal {
 
         grant( info, getPermissionFromPath( applicationId, "access" ) );
 
-                /*
-                 * grant(info, principal, getPermissionFromPath(applicationId,
-                 * "get,put,post,delete", "/users/${user}",
-                 * "/users/${user}/feed", "/users/${user}/activities",
-                 * "/users/${user}/groups", "/users/${user}/following/*",
-                 * "/users/${user}/following/user/*"));
-                 */
+        if ( SubjectUtils.getUser() != null ) {
+            // ensure that the /org/app/users/me end-point always works for logged in user
+            grant( info, "applications:get:" + applicationId + ":/users/" + SubjectUtils.getUser().getUuid() );
+        }
 
         EntityManager em = emf.getEntityManager( applicationId );
         try {

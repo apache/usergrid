@@ -37,7 +37,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.*;
 
-import static org.apache.usergrid.rest.management.ManagementResource.USERGRID_CENTRAL_URL;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_CENTRAL_URL;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
 
