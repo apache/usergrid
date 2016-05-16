@@ -16,11 +16,7 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,6 +109,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final ApplicationIdCache applicationIdCache;
     //private final IndexSchemaCache indexSchemaCache;
 
+    Application managementApp = null;
+
     private ManagerCache managerCache;
 
     private CassandraService cassandraService;
@@ -126,8 +124,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final GraphManagerFactory graphManagerFactory;
     private final IndexSchemaCacheFactory indexSchemaCacheFactory;
 
-    public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
-                                   final Injector injector ) {
+    public static final String MANAGEMENT_APP_MAX_RETRIES= "management.app.max.retries";
+
+
+    public CpEntityManagerFactory(
+        final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector ) {
 
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
@@ -142,12 +143,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.connectionService = injector.getInstance( ConnectionService.class );
         this.indexSchemaCacheFactory = injector.getInstance( IndexSchemaCacheFactory.class );
 
-        //this line always needs to be last due to the temporary cicular dependency until spring is removed
+        // this line always needs to be last due to the temporary circular dependency until spring is removed
 
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
 
-
+        initMgmtAppInternal();
     }
 
 
@@ -164,21 +165,61 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private void initMgmtAppInternal() {
 
+        Properties properties = cassandraService.getProperties();
+
+        Integer maxRetries;
+        try {
+            Object maxRetriesObject = properties.get( MANAGEMENT_APP_MAX_RETRIES ).toString();
+            maxRetries = Integer.parseInt( maxRetriesObject.toString() );
+        } catch ( NumberFormatException nfe ) {
+            maxRetries = 20;
+        }
+
         EntityManager em = getEntityManager(getManagementAppId());
+
+        int retryCount = 0;
+
+        while ( managementApp != null && retryCount++ <= maxRetries ) {
+
+            try {
+                managementApp = em.getApplication();
+
+                if ( managementApp == null ) {
+
+                    logger.warn( "Management application not found, attempting creation" );
+
+                    Map mgmtAppProps = new HashMap<String, Object>();
+                    mgmtAppProps.put( PROPERTY_NAME, CassandraService.MANAGEMENT_APPLICATION );
+                    em.create( getManagementAppId(), TYPE_APPLICATION, mgmtAppProps );
+                    managementApp = em.getApplication();
+                }
+
+            } catch ( Throwable t ) {
+                logger.warn("Error getting or creating management application after " + retryCount + " retries", t);
+            }
+        }
+
         indexService.queueInitializeApplicationIndex(CpNamingUtils.getApplicationScope(getManagementAppId()));
 
-        try {
-            if ( em.getApplication() == null ) {
-                logger.info("Creating management application");
-                Map mgmtAppProps = new HashMap<String, Object>();
-                mgmtAppProps.put(PROPERTY_NAME, CassandraService.MANAGEMENT_APPLICATION);
-                em.create( getManagementAppId(), TYPE_APPLICATION, mgmtAppProps);
-                em.getApplication();
-            }
-
-        } catch (Exception ex) {
-            throw new RuntimeException("Fatal error creating management application", ex);
+        if ( managementApp == null ) {
+            throw new RuntimeException("FATAL ERROR: Failed to get or create management app");
         }
+    }
+
+
+    public Application getManagementApplication() {
+
+        Application ret = null;
+        EntityManager em = getEntityManager(getManagementAppId());
+        try {
+            ret = em.getApplication();
+            managementApp = ret;
+
+        } catch (Exception e) {
+            logger.warn("Error getting management app, returning cached copy version");
+        }
+
+        return managementApp;
     }
 
 
@@ -201,9 +242,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private EntityManager _getEntityManager( UUID applicationId ) {
-        EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache,
-            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService,indexSchemaCacheFactory, applicationId );
-
+        EntityManager em = new CpEntityManager(
+            this,
+            cassandraService,
+            counterUtils,
+            indexService,
+            managerCache,
+            metricsFactory,
+            entityManagerFig,
+            graphManagerFactory,
+            collectionService,
+            connectionService,
+            indexSchemaCacheFactory,
+            applicationId );
         return em;
     }
 
@@ -215,7 +266,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public Entity createApplicationV2(
-        String orgName, String name, UUID applicationId, Map<String, Object> properties, boolean forMigration) throws Exception {
+        String orgName, String name, UUID applicationId, Map<String, Object> properties, boolean forMigration)
+        throws Exception {
 
         String appName = buildAppName( orgName, name );
 
@@ -317,8 +369,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // find application_info for application to delete
 
-        migrateAppInfo(applicationId, CpNamingUtils.APPLICATION_INFO, CpNamingUtils.DELETED_APPLICATION_INFOS, CpNamingUtils.DELETED_APPLICATION_INFO).toBlocking()
-            .lastOrDefault( null );
+        migrateAppInfo(
+            applicationId, CpNamingUtils.APPLICATION_INFO, CpNamingUtils.DELETED_APPLICATION_INFOS,
+            CpNamingUtils.DELETED_APPLICATION_INFO).toBlocking().lastOrDefault( null );
     }
 
     //TODO: return status for restore
@@ -360,9 +413,13 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
      * @return
      * @throws Exception
      */
-    private Observable migrateAppInfo(final UUID applicationUUID,  final String deleteTypeName, final String createCollectionName, final String createTypeName ) throws Exception {
+    private Observable migrateAppInfo(
+        final UUID applicationUUID,  final String deleteTypeName, final String createCollectionName,
+        final String createTypeName ) throws Exception {
 
-        final ApplicationScope managementAppScope = CpNamingUtils.getApplicationScope(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        final ApplicationScope managementAppScope =
+            CpNamingUtils.getApplicationScope(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+
         final EntityManager managementEm = getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
         //the application id we will be removing
@@ -417,7 +474,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         final Id managementAppId = CpNamingUtils.getManagementApplicationId();
         final EntityIndex aei = getManagementIndex();
         final GraphManager managementGraphManager = managerCache.getGraphManager(managementAppScope);
-        final Edge createEdge = CpNamingUtils.createCollectionEdge(managementAppId, createCollectionName, createApplicationId);
+        final Edge createEdge =
+            CpNamingUtils.createCollectionEdge(managementAppId, createCollectionName, createApplicationId);
 
         final Observable createNodeGraph = managementGraphManager.writeEdge(createEdge);
 
