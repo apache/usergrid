@@ -283,7 +283,7 @@ public class NamedResource implements UrlResource {
 
         if (useBasicAuthentication) {
             HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
-                                                                         .credentials("superuser", "superpassword").build();
+                .credentials("superuser", "superpassword").build();
             return resource.register(feature).request()
                            .accept(MediaType.APPLICATION_JSON)
                            .post(javax.ws.rs.client.Entity.json(entity), gt);
@@ -341,6 +341,12 @@ public class NamedResource implements UrlResource {
         WebTarget resource = getTarget(useToken);
         return resource.request().put(
             javax.ws.rs.client.Entity.entity(data, type), ApiResponse.class);
+    }
+
+    public ApiResponse put(boolean useToken, org.apache.usergrid.rest.test.resource.model.Entity entity ) {
+        WebTarget resource = getTarget(useToken);
+        return resource.request().put(
+            javax.ws.rs.client.Entity.entity(entity, MediaType.APPLICATION_JSON_TYPE), ApiResponse.class);
     }
 
     public ApiResponse put(byte[] data, MediaType type) {

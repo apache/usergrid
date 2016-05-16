@@ -409,9 +409,10 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 logger.debug( "PathPermissionsFilter.authorize" );
             }
 
-            final String PATH_MSG =
-                "---- Checked permissions for path --------------------------------------------\n" + "Requested path: {} \n"
-                    + "Requested action: {} \n" + "Requested permission: {} \n" + "Permitted: {} \n";
+            final String PATH_MSG = "---- Checked permissions for path --------------------------------------------\n"
+                + "Requested path: {} \n"
+                + "Requested action: {} \n" + "Requested permission: {} \n"
+                + "Permitted: {} \n";
 
             ApplicationInfo application = null;
 
@@ -449,6 +450,12 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 String path = request.getUriInfo().getPath().toLowerCase().replace(applicationName, "");
                 String perm =  getPermissionFromPath( em.getApplicationRef().getUuid(), operation, path );
 
+                if ( "/users/me".equals( path ) ) {
+                    // shortcut the permissions checking, the "me" end-point is always allowed
+                    logger.debug("Allowing {} access to /users/me", getSubject().toString() );
+                    return;
+                }
+
                 boolean permitted = currentUser.isPermitted( perm );
                 if ( logger.isDebugEnabled() ) {
                     logger.debug( PATH_MSG, path, operation, perm, permitted );
@@ -461,7 +468,6 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                     logger.debug("Checked subject {} for perm {}", subject != null ? subject.toString() : "", perm);
                     logger.debug("------------------------------------------------------------------------------");
                 }
-
 
             } catch (Exception e){
                 throw mappableSecurityException( "unauthorized",

@@ -544,11 +544,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // Always make sure the database schema is initialized
         getSetup().initSchema();
 
-        // Make sure the management application is created
-        initMgmtAppInternal();
-
         // Roll the new 2.x Migration classes to the latest version supported
         getSetup().runDataMigration();
+
+        // Make sure the management application is created
+        initMgmtAppInternal();
 
         // Ensure management app is initialized
         getSetup().initMgmtApp();
