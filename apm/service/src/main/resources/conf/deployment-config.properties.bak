@@ -1,0 +1,16 @@
+# AWS Credentials- These values currently are defined in pom.xml per profile
+AWSAccessKey=${aws.access.key}
+AWSSecretKey=${aws.secret.key}
+AWSEnvironment=${aws.environment}
+AWSSQSAccount=${aws.sqs.account}
+AWSS3ConfigBucket=${aws.s3.config.bucket}
+AWSS3LogsBucket=${aws.s3.logs.bucket}
+AWSS3CrashFolder=${aws.s3.crash.folder}
+EnableMetricsInjestor=${metrics.injestor}
+UsergridRESTInternalURL=${usergrid.rest.url}
+#In minute. Default is 0
+TimeBufferForChartData=${chart.time.buffer}
+#In seconds. Default is 60s
+MetricsInjestorTimeInterval=${metrics.injestor.time.interval}
+#Comma separated White list of IP address using CIDR such as 10.11.12.13/20,24.25.36.27/16
+IpAddressWhiteList=${ip.address.whitelist}

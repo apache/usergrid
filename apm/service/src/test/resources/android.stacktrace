@@ -1,0 +1,25 @@
+Package: org.wordpress.android
+Version: 30
+Android: 3.1
+Manufacturer: HTC
+Model: HTC PG09410
+Date: Mon Aug 13 08:36:26 CDT 2012
+
+java.lang.RuntimeException: Unable to start activity ComponentInfo{org.wordpress.android/org.wordpress.android.viewComments}: java.lang.NullPointerException
+	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:1944)
+	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:1965)
+	at android.app.ActivityThread.access$1500(ActivityThread.java:134)
+	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1110)
+	at android.os.Handler.dispatchMessage(Handler.java:99)
+	at android.os.Looper.loop(Looper.java:152)
+	at android.app.ActivityThread.main(ActivityThread.java:4606)
+	at java.lang.reflect.Method.invokeNative(Native Method)
+	at java.lang.reflect.Method.invoke(Method.java:491)
+	at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:841)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:599)
+	at dalvik.system.NativeStart.main(Native Method)
+Caused by: java.lang.NullPointerException
+	at org.wordpress.android.viewComments.onCreate(viewComments.java:41)
+	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1072)
+	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:1908)
+	... 11 more

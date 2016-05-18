@@ -1,0 +1,21 @@
+Package: com.apigee.mobileanalyticssdkexplorer
+Version: 8
+Android: 4.2.1
+Manufacturer: samsung
+Model: Galaxy Nexus
+Date: Fri Jul 19 14:00:33 CDT 2013
+
+java.lang.NullPointerException
+	at com.apigee.mobileanalyticssdkexplorer.LogsFragment.forceCrash(LogsFragment.java:201)
+	at com.apigee.mobileanalyticssdkexplorer.LogsFragment$5.onClick(LogsFragment.java:189)
+	at android.view.View.performClick(View.java:4202)
+	at android.view.View$PerformClick.run(View.java:17340)
+	at android.os.Handler.handleCallback(Handler.java:725)
+	at android.os.Handler.dispatchMessage(Handler.java:92)
+	at android.os.Looper.loop(Looper.java:137)
+	at android.app.ActivityThread.main(ActivityThread.java:5039)
+	at java.lang.reflect.Method.invokeNative(Native Method)
+	at java.lang.reflect.Method.invoke(Method.java:511)
+	at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:793)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:560)
+	at dalvik.system.NativeStart.main(Native Method)
