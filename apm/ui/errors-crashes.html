@@ -1,0 +1,324 @@
+<demo-data></demo-data>
+<div ng-init="errorsCrashesSetup()">
+<div id="intro-errors-crashes"><page-title icon="&#9889;" title="Errors &amp; Crashes"></page-title></div>
+
+<div class="page-filters">
+  <span ng-include="'performance/includes/time-filters.html'"></span>
+</div>
+
+
+
+<!-- errors and crashes total row -->
+<div id="popupHolder"></div>
+<div id="pointPopupTemp">
+<div id="pointPopup" class="hide" style="position:absolute" ng-mousedown="popup.startMoving(event);" ng-mouseup="popup.stopMoving();">
+  <h3><i class="pictogram sub">&#9889;</i><span></span></h3><a class="pull-right" ng-click="hidePopup($event)">Close</a>
+  <div class="content">
+
+  </div>
+  <div class="footer">
+    <a ng-click="scrollTo('logs')">View all logs</a>
+  </div>
+</div>
+</div>
+
+<section class="row-fluid">
+
+
+
+</section>
+<section class="row-fluid">
+
+<div ng-class="ecDetailedView.value == 1 ? 'span8' : 'span12'">
+
+  <h2 class="title with-icons">{{selectedChartCriteria.chartName}}  <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('overview graph')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_overview_graph}}" tooltip-placement="right">(?)</a> <div class="pull-right">
+    <a ng-if="selectedChartCriteria.chartName === 'Overview'" ng-click="convertChartType('convertLineChart')"><i class="pictogram">&#128200;</i>line</a>
+    <a ng-if="selectedChartCriteria.chartName === 'Overview'" ng-click="convertChartType('convertAreaChart')"><i class="pictogram">&#128318;</i>area</a></div></h2>
+
+  <div id="intro-overview-nochart" ng-include="'performance/includes/no-data.html'" ng-if="!chartDataPresent"></div>
+
+  <div id="intro-overview-chart" class="main-chart-holder" ng-if="chartDataPresent">
+
+  <chart id="ecTotals" class="anim-chart"
+         chartdata="ecCharts.totals"
+         type="column"></chart>
+  </div>
+  <!--errors and crashes only (combined view)-->
+  <div class="row-fluid summary-data errors-crashes" ng-show="ecDetailedView.value === 1">
+
+    <div class="span6">
+      <infobox datasrc="ecCharts.summary.totalAppErrors"
+               currentcompare="ecCharts.summary.currentCompare"
+               title="Total App Errors"
+               class="errors"></infobox>
+    </div>
+
+    <div class="span6">
+      <infobox datasrc="ecCharts.summary.totalCrashes"
+               currentcompare="ecCharts.summary.currentCompare"
+               title="Total Crashes"
+               class="crashes"></infobox>
+    </div>
+
+  </div>
+
+  <!--errors only-->
+  <div class="row-fluid summary-data errors" ng-if="ecDetailedView.value === 2">
+
+    <div class="span4">
+      <infobox datasrc="ecCharts.summary.totalCriticalErrors"
+               currentcompare="ecCharts.summary.currentCompare"
+               title="Total Critical"
+               class="critical"></infobox>
+    </div>
+
+    <div class="span4">
+      <infobox datasrc="ecCharts.summary.totalErrors"
+               currentcompare="ecCharts.summary.currentCompare"
+               title="Total Errors"
+               class="errors"></infobox>
+    </div>
+
+    <div class="span4">
+      <infobox datasrc="ecCharts.summary.totalWarnings"
+               currentcompare="ecCharts.summary.currentCompare"
+               title="Total Warnings"
+               class="warnings"></infobox>
+    </div>
+  </div>
+
+  <!--crashes only-->
+  <div class="row-fluid summary-data crashes" ng-if="ecDetailedView.value === 3">
+
+
+
+    <div class="span12">
+      <infobox datasrc="ecCharts.summary.totalCrashes"
+               currentcompare="ecCharts.summary.currentCompare"
+               title="Total Crashes"
+               class="crashes"></infobox>
+    </div>
+
+
+  </div>
+
+</div>
+
+<div id="intro-crash-summary" class="span4 crash-summary" ng-if="ecDetailedView.value === 1">
+  <h2 class="title">Crash Summary (Top 5)  <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('crash summary')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_crash_summary}}" tooltip-placement="right">(?)</a></h2>
+
+  <div class="row-fluid" style="text-align:center">
+
+
+      <ul class="crashes-pie span12 info-details unstyled">
+        <li class="small">App Version</li>
+
+
+      <li style="width:250px;margin:10px auto 0 auto;">
+        <chart id="appVersion"
+               class="anim-chart"
+               chartdata="ecCharts.appVersion.chart"
+               type="pie" style="height:260px"
+               titleicon="&#9889;"
+               titleiconclass="chart"
+               titlecolor="rgba(255,3,3,0.5)"
+               titleimagetop="-6%"
+               titleimageleft="-2%"></chart>
+      </li>
+
+      </ul>
+
+      <ul class="crashes-pie span12 info-details unstyled">
+        <li class="small">Platforms</li>
+
+
+      <li style="width:250px;margin:10px auto 0 auto;">
+        <chart id="appVersion"
+               class="anim-chart"
+               chartdata="ecCharts.devicePlatform.chart"
+               type="pie" style="height:260px"
+               titleicon="&#9889;"
+               titleiconclass="chart"
+               titlecolor="rgba(255,3,3,0.5)"
+               titleimagetop="-6%"
+               titleimageleft="-2%"></chart>
+      </li>
+      </ul>
+
+  </div>
+</div>
+
+</section>
+<section class="row-fluid" ng-if="ecDetailedView.value === 1">
+  <div id="intro-crash-drilldown" class="span12 pareto-charts">
+
+    <div ng-class="row-fluid">
+
+      <div id="deviceModelCrashes1" ng-if="rawLogs.rawDataType === 'logRawData'" class="span6">
+        <h2 class="title">Crashes by Device Models  <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('crashes by model')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_crashes_by_model}}" tooltip-placement="right">(?)</a></h2>
+
+        <chart id="deviceModels1"
+               class="anim-chart"
+               chartdata="ecCharts.deviceModels"
+               type="column"
+                height="300"></chart>
+
+      </div>
+
+
+      <div ng-if="rawLogs.rawDataType === 'logRawData'" class="span6">
+        <h2 class="title">Crashes by OS Versions  <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('crashes by os')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_crashes_by_os}}" tooltip-placement="right">(?)</a></h2>
+
+        <chart id="platformVersions"
+               class="anim-chart"
+               chartdata="ecCharts.platformVersions"
+               type="column"
+               height="300"></chart>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<balloon direction="south" ng-if="!chartDataPresent && logDataPresent">
+  Scroll down to see log data sent by your SDK.
+</balloon>
+
+<section class="row-fluid">
+  <div class="span12">
+
+    <!--http://blogs.lessthandot.com/index.php/WebDev/UIDevelopment/AJAX/angularjs-and-ng-grid-->
+    <a name="logs"></a>
+    <div class="row-fluid log-search" ng-controller="RawLogCtrl">
+      <div class="span12">
+        <div id="intro-raw-logs">
+          <h2 ng-show="rawLogs.rawDataType === 'logRawData'" class="title">Raw Log Search <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('raw_logs')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_raw_logs}}" tooltip-placement="right">(?)</a></h2>
+
+          <h2 ng-hide="rawLogs.rawDataType === 'logRawData'" class="title">Crash Log Search <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('raw_logs')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_raw_logs}}" tooltip-placement="right">(?)</a></h2>
+
+          <form ng-switch="rawLogs.rawDataType">
+
+            <div class="input-append span8">
+
+              <input ng-show="rawLogs.rawDataType === 'logRawData'" type="text" placeholder="log search..."
+                     ng-model="rawLogSearch.logMessage" class="input-xxlarge" ng-change="loadMoreLogs()">
+              <input ng-hide="rawLogs.rawDataType === 'logRawData'" type="text" placeholder="crash log search..."
+                     ng-model="rawLogSearch.crashSummary" class="input-xxlarge" ng-change="loadMoreLogs()">
+              <button type="button" class="btn" ng-click="rawLogSearchShowAdv=!rawLogSearchShowAdv">{{rawLogSearchShowAdv ? 'Hide' : 'Show'}} Advanced</button>
+
+            </div>
+          </div>
+          <div class="span4 text-right" ng-if="rawLogs.rawData.length === 100 || rawLogSearch.pageNumber > 0">
+            {{rawLogSearch.pageNumber === 0 ? 1 : rawLogSearch.pageNumber * 100}} - {{rawLogSearch.pageNumber === 0 ? (1 * rawLogs.rawData.length) : (rawLogSearch.pageNumber + 1) * rawLogs.rawData.length}}
+            <a class="btn btn-primary toolbar" ng-disabled="rawLogSearch.pageNumber === 0" ng-click="rawLogSearch.pageNumber > 0 ? prevPage() : ''"><i class="pictogram">&#59229;</i></a>
+            <a class="btn btn-primary toolbar" ng-disabled="rawLogs.rawData.length !== 100" ng-click="rawLogs.rawData.length === 100 ? nextPage() : ''"><i class="pictogram">&#59230;</i></a>
+          </div>
+        </form>
+        <form class="form-inline adv-rawlog-form" ng-show="rawLogSearchShowAdv">
+          <br style="clear:both"/>
+          <div class="input-prepend">
+            <span class="add-on">Tag</span>
+            <input class="input-small" type="text" ng-model="rawLogSearch.tag"
+                   ng-attr-placeholder="{{rawLogs.rawData[0].tag}}..." ng-change="loadMoreLogs()">
+          </div>
+          <div class="input-prepend" ng-show="rawLogs.rawDataType === 'logRawData'">
+            <span class="add-on">Log Level</span>
+            <input class="input-mini" type="text" ng-model="rawLogSearch.logLevel"
+                   ng-attr-placeholder="{{rawLogs.rawData[0].logLevel}}..." ng-change="loadMoreLogs()">
+          </div>
+          <div class="input-prepend">
+            <span class="add-on">Device Model</span>
+            <input class="input-small" type="text" ng-model="rawLogSearch.deviceModel"
+                   ng-attr-placeholder="{{rawLogs.rawData[0].deviceModel}}..." ng-change="loadMoreLogs()">
+          </div>
+          <div class="input-prepend">
+            <span class="add-on">Platform</span>
+            <input class="input-small" type="text" ng-model="rawLogSearch.devicePlatform"
+                   ng-attr-placeholder="{{rawLogs.rawData[0].devicePlatform}}..." ng-change="loadMoreLogs()">
+          </div>
+          <div class="input-prepend">
+            <span class="add-on">OS Version</span>
+            <input class="input-small" type="text" ng-model="rawLogSearch.deviceOperatingSystem"
+                   ng-attr-placeholder="{{rawLogs.rawData[0].deviceOperatingSystem}}..." ng-change="loadMoreLogs()">
+          </div>
+          <div class="input-prepend">
+            <span class="add-on">Device ID</span>
+            <input class="input-small" type="text" ng-model="rawLogSearch.deviceId"
+                   ng-attr-placeholder="{{rawLogs.rawData[0].deviceId}}..." ng-change="loadMoreLogs()">
+          </div>
+          <button type="submit" class="btn"
+                  ng-click="rawLogSearch.tag='';rawLogSearch.deviceModel='';rawLogSearch.devicePlatform='';rawLogSearch.deviceOperatingSystem='';rawLogSearch.deviceId='';loadMoreLogs()">
+            Clear All Advanced
+          </button>
+        </form>
+        <table class="table table-striped table-bordered raw-log-table">
+          <thead>
+          <tr>
+            <th class="log-time-header"><div class="raw-data-text">Time</div></th>
+            <th class="message-header"><div class="raw-data-text">Message</div>
+
+
+            </th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr  ng-repeat="log in rawLogs.rawData | orderBy:'timeStamp':true  | rawLogFilter:rawLogSearch:['logMessage','crashSummary']">
+            <td class="log-time-holder">
+              <div>
+              <span ng-class="rawLogs.rawDataType === 'logRawData' ? 'log-time1' : 'log-time2'">{{log.timeStamp | date:'M-dd-yyyy HH:mm:ss'}}</span>
+            <span ng-if="rawLogs.rawDataType === 'logRawData'" class="log-level {{log.logLevel}}">
+                {{log.logLevel === 'D' ? 'Debug' : ''}}
+                {{log.logLevel === 'A' ? 'Assert' : ''}}
+                {{log.logLevel === 'I' ? 'Info' : ''}}
+                {{log.logLevel === 'W' ? 'Warn' : ''}}
+                {{log.logLevel === 'E' ? 'Error' : ''}}
+
+              </span>
+              </div>
+            </td>
+            <td >
+              <span ng-if="rawLogs.rawDataType === 'logRawData'">{{log.logMessage}}</span>
+              <span ng-if="rawLogs.rawDataType !== 'logRawData'">{{log.crashSummary ? log.crashSummary : 'No crash summary available'}}</span>
+
+              <div class="row-meta">
+                <span ng-show="rawLogs.rawDataType === 'logRawData'">
+                  <span class="label">Tag:</span>
+                  <span class="value">{{log.tag}}</span>
+                  <span class="label">Network Type:</span>
+                  <span class="value">{{log.networkType}}</span>
+                  <span class="label">Carrier:</span>
+                  <span class="value">{{log.networkCarrier}}</span>
+                </span>
+                <span class="label">Device ID:</span>
+                <span class="value">{{log.deviceId}}</span>
+                <span class="label">Platform:</span>
+                <span class="value">{{log.devicePlatform}}</span>
+                <span class="label">OS:</span>
+                <span class="value">{{log.deviceOperatingSystem}}</span>
+                <span class="label">Device Model:</span>
+                <span class="value">{{log.deviceModel}}</span>
+                <span class="value" ng-hide="rawLogs.rawDataType === 'logRawData'"><a ng-href="{{log.crashLogUrl}}">Download Crash Log</a></span>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+        <div class="row-fluid">
+          <div class="input-append span8">
+
+
+          </div>
+          <div class="span4 text-right" ng-if="rawLogs.rawData.length === 100 || rawLogSearch.pageNumber > 0">
+            {{rawLogSearch.pageNumber === 0 ? 1 : rawLogSearch.pageNumber * 100}} - {{rawLogSearch.pageNumber === 0 ? (1 * rawLogs.rawData.length) : (rawLogSearch.pageNumber + 1) * rawLogs.rawData.length}}
+            <a class="btn btn-primary toolbar" ng-disabled="rawLogSearch.pageNumber === 0" ng-click="rawLogSearch.pageNumber > 0 ? prevPage() : ''"><i class="pictogram">&#59229;</i></a>
+            <a class="btn btn-primary toolbar" ng-disabled="rawLogs.rawData.length !== 100" ng-click="rawLogs.rawData.length === 100 ? nextPage() : ''"><i class="pictogram">&#59230;</i></a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+</div>

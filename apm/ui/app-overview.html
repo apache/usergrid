@@ -1,0 +1,376 @@
+<demo-data></demo-data>
+
+<div ng:include="'performance/includes/time-filters.html'"></div>
+
+<div ng-controller="PerformanceCtrl" ng-init="appOverviewSetup()">
+<!-- crash errors row -->
+<section class="row-fluid errors-crashes">
+    <div class="span6">
+
+        <ul class="span2 info-details unstyled">
+            <li class="title">Top 5 Crash Causes</li>
+            <li class="secondary">15 Total</li>
+            <li class="tertiary">38 users affected</li>
+        </ul>
+
+        <div class="span10 top-5-crash info-box">
+            <div class="info-container">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th class="graph-row">Cause</th>
+                        <th class="count">Total</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td class="graph-row">
+                            <div class="bar">message</div>
+                        </td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="graph-row">
+                            <div class="bar">message</div>
+                        </td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="graph-row">
+                            <div class="bar">message</div>
+                        </td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="graph-row">
+                            <div class="bar">message</div>
+                        </td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="graph-row">
+                            <div class="bar">message</div>
+                        </td>
+                        <td class="count">134</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="span6">
+
+        <ul class="span2 info-details unstyled">
+            <li class="title">Top 5 Errors</li>
+            <li class="secondary">120 Total</li>
+            <li class="tertiary">200 users affected</li>
+        </ul>
+
+        <div class="span10 top-5-crash info-box">
+            <div class="info-container">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th class="graph-row">Cause</th>
+                        <th class="count">Total</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td class="graph-row">
+                            <div class="bar">message</div>
+                        </td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="graph-row">
+                            <div class="bar">message</div>
+                        </td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="graph-row">
+                            <div class="bar">message</div>
+                        </td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="graph-row">
+                            <div class="bar">message</div>
+                        </td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="graph-row">
+                            <div class="bar">message</div>
+                        </td>
+                        <td class="count">134</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- api row -->
+<section class="row-fluid api-issues">
+    <div class="span6">
+
+        <ul class="span2 info-details unstyled">
+            <li class="title">Slow APIs</li>
+            <li class="secondary">Above 2000ms</li>
+        </ul>
+
+        <div class="span10 slow-apis info-box">
+            <div class="info-container">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th class="normal-row">URL</th>
+                        <th class="count">Response Time</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td class="normal-row">message</td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="normal-row">message</td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="normal-row">message</td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="normal-row">message</td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="normal-row">message</td>
+                        <td class="count">134</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="span6">
+
+        <ul class="span2 info-details unstyled">
+            <li class="title">API Errors</li>
+            <li class="secondary">Abnormal Status Codes</li>
+        </ul>
+
+        <div class="span10 api-errors info-box">
+            <div class="info-container">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th class="normal-row">URL</th>
+                        <th class="count">Status Code</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td class="normal-row">message</td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="normal-row">message</td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="normal-row">message</td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="normal-row">message</td>
+                        <td class="count">134</td>
+                    </tr>
+                    <tr>
+                        <td class="normal-row">message</td>
+                        <td class="count">134</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+
+<!-- app usage row -->
+<section class="row-fluid api-issues">
+    <div class="span6">
+
+        <ul class="span2 info-details unstyled">
+            <li class="title">App Usage</li>
+            <li class="secondary">By Version</li>
+        </ul>
+
+        <div class="span10 app-usage-content">
+            <chart id="appVersions" value='{{appOverviewCharts.appVersions}}' type="pie"
+                   style="max-width: 50%;height:250px"></chart>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>App Version</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td class="graph-row">
+                        <div class="bar"></div>
+                        1.0.0
+                    </td>
+                    <td class="count">12%</td>
+                </tr>
+                <tr>
+                    <td class="graph-row">
+                        <div class="bar"></div>
+                        1.1.1
+                    </td>
+                    <td class="count">22%</td>
+                </tr>
+                <tr>
+                    <td class="graph-row">
+                        <div class="bar"></div>
+                        1.2.0
+                    </td>
+                    <td class="count">63%</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <div class="span6">
+
+        <ul class="span2 info-details unstyled">
+            <li class="title">App Usage</li>
+            <li class="secondary">By Platform</li>
+        </ul>
+
+        <div class="span10 app-usage-content">
+            <chart id="platformVersions" value='{{appOverviewCharts.platformVersions}}' type="pie"
+                   style="max-width: 50%;height:250px"></chart>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Platform</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td class="graph-row">
+                        <div class="bar"></div>
+                        Firefox OS
+                    </td>
+                    <td class="count">12%</td>
+                </tr>
+                <tr>
+                    <td class="graph-row">
+                        <div class="bar"></div>
+                        Android
+                    </td>
+                    <td class="count">22%</td>
+                </tr>
+                <tr>
+                    <td class="graph-row">
+                        <div class="bar"></div>
+                        iOS
+                    </td>
+                    <td class="count">63%</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</section>
+
+<!-- trouble makers row -->
+<section class="row-fluid trouble-makers">
+    <div class="span12">
+
+        <ul class="span2 info-details fixed unstyled">
+            <li class="title">Trouble Makers</li>
+            <li class="secondary">Problematic Devices, Networks, and OSs</li>
+        </ul>
+
+        <div class="span10">
+            <div class="row-fluid">
+                <div class="span12">
+
+                    <section class="span4">
+                        <h5>Problematic Devices</h5>
+                        <table class="table">
+                            <tbody>
+                            <tr>
+                                <td class="tablet-icon">HTC One</td>
+                                <td class="phone-icon">Nexus One</td>
+                            </tr>
+                            <tr>
+                                <td class="phone-icon">HTC Evo</td>
+                                <td class="tablet-icon">Galaxy Tab</td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                    </section>
+
+                    <section class="span4">
+                        <h5>Slowest Carriers</h5>
+                        <ol class="asc-light slow-carriers grow">
+                            <li>Verizon</li>
+                            <li>Sprint</li>
+                            <li>TMobile</li>
+                            <li>AT&amp;T</li>
+                        </ol>
+                    </section>
+
+                    <section class="span4">
+                        <h5>Problematic OS Versions</h5>
+                        <ol class="asc-light prob-os">
+                            <li>Android 2.3</li>
+                            <li>Android 2.3</li>
+                            <li>Android 2.3</li>
+                            <li>Android 2.3</li>
+                        </ol>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- sessions sparklines row -->
+<section class="row-fluid trouble-makers">
+    <div class="span12">
+
+        <ul class="span2 info-details fixed unstyled">
+            <li class="title">Sessions</li>
+            <li class="secondary">Over Past Hour</li>
+        </ul>
+
+        <div class="span10">
+            <span class="span12 sessions-bar"></span>
+        </div>
+
+    </div>
+</section>
+
+</div>
+
+

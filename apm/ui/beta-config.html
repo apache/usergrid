@@ -1,0 +1,114 @@
+<div>
+    <page-title icon="&#59190;" title="Beta Testing Configs"></page-title>
+
+
+      <div class="row-fluid" >
+
+        <div class="span12">
+
+          <form class="form-horizontal configs">
+            <div class="control-group">
+              <slidecheckbox label="Enable Device Level Override" data="configData.deviceLevelOverrideEnabled"></slidecheckbox>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Selected Device Ids:</label>
+              <div class="controls">
+                <input id="add-device"  ng-model="newDevice"/>&nbsp;<a title="Add Device" ng-click="updateFilter(newDevice,'deviceIdFilters','DEVICE_ID');newDevice=null;"><i class="pictogram">&#8862;</i></a>
+                <div style="margin-top:3px;width:50%;">
+                  <span style="margin-right:10px;display:inline-block;" ng-repeat="s in configData['deviceIdFilters'] track by $index"><a title="Remove Device" ng-click="$parent.configData['deviceIdFilters'].splice($index, 1);"><i class="pictogram">&#10062;</i></a>{{s.filterValue}}</span>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label">Selected Phone Numbers (Android):</label>
+              <div class="controls">
+                <input id="add-number"  ng-model="newNumber"/>&nbsp;<a title="Add Number" ng-click="updateFilter(newNumber,'deviceNumberFilters','DEVICE_NUMBER');newNumber=null;"><i class="pictogram">&#8862;</i></a>
+                <div style="margin-top:3px;width:50%;">
+                  <span style="margin-right:10px;display:inline-block;" ng-repeat="s in configData['deviceNumberFilters'] track by $index"><a title="Remove Number" ng-click="$parent.configData['deviceNumberFilters'].splice($index, 1);"><i class="pictogram">&#10062;</i></a>{{s.filterValue}}</span>
+                </div>
+              </div>
+            </div>
+
+            <h2 class="title">Monitoring Configs</h2>
+
+            <div class="control-group">
+              <slidecheckbox label="Enable Log Capturing" data="configData.deviceLevelAppConfig.enableLogMonitoring"></slidecheckbox>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Log Capture Levels</label>
+              <div class="controls">
+                <select ng-model="betaLogLevel" ng-options="l.label for l in logLevels" ng-change="updateLogLevel(betaLogLevel,'deviceLevelAppConfig')"></select>
+              </div>
+            </div>
+            <div class="control-group">
+              <slidecheckbox label="Enable Network Monitoring" data="configData.deviceLevelAppConfig.networkMonitoringEnabled"></slidecheckbox>
+            </div>
+            <div class="control-group">
+              <slidecheckbox label="Enable Device Data Capture" data="configData.deviceLevelAppConfig.deviceIdCaptureEnabled"></slidecheckbox>
+            </div>
+            <div class="control-group">
+
+              <slidecheckbox label="Read Location" data="configData.deviceLevelAppConfig.locationCaptureEnabled"></slidecheckbox>
+
+              <slidecheckbox label="Read IMEI" data="configData.deviceLevelAppConfig.imeicaptureEnabled"></slidecheckbox>
+
+              <slidecheckbox label="Read Device Model" data="configData.deviceLevelAppConfig.deviceModelCaptureEnabled"></slidecheckbox>
+
+              <slidecheckbox label="Read Network Carrier" data="configData.deviceLevelAppConfig.networkCarrierCaptureEnabled"></slidecheckbox>
+
+              <slidecheckbox label="Read Apigee Device ID" data="configData.deviceLevelAppConfig.deviceIdCaptureEnabled"></slidecheckbox>
+
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="inputUploadInt">Data Upload Interval (in Seconds)</label>
+              <div class="controls">
+                <input type="text" id="inputUploadInt" ng-model="configData.deviceLevelAppConfig.agentUploadIntervalInSeconds">
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="inputSampRate">Sampling Rate (in Percentage)</label>
+              <div class="controls">
+                <input type="text" id="inputSampRate" ng-model="configData.deviceLevelAppConfig.samplingRate">
+              </div>
+            </div>
+            <div class="control-group">
+              <slidecheckbox label="Upload When Roaming" data="configData.deviceLevelAppConfig.enableUploadWhenRoaming"></slidecheckbox>
+            </div>
+            <div class="control-group">
+              <slidecheckbox label="Upload When Not on WIFI" data="configData.deviceLevelAppConfig.enableUploadWhenMobile"></slidecheckbox>
+            </div>
+
+            <h2 class="title">Application Specific Configs</h2>
+              <div class="row-fluid"  >
+                  <div class="span3" style="margin-right: 12px;">Tag</div>
+                  <div class="span3" style="margin-right: 15px;">Key</div>
+                  <div class="span3">Value</div>
+              </div>
+            <div class="form-inline" ng-repeat="config in deviceLevelConfigParameters">
+              <input name="category" type="text" class="input-large" ng-model="config.tag" required>
+              <input name="key" type="text" class="input-large" ng-model="config.paramKey"  required> =
+              <input name="value" type="text" class="input-large" ng-model="config.paramValue" required>
+              <span class="hide">{{config.index = ($index + 1)}}</span>
+              <button class="btn" ng-click="addRemoveConfig(config,'deviceLevelConfigParameters')" ng-show="deviceLevelConfigParameters.length != ($index + 1)">-</button>
+              <button class="btn" ng-click="addRemoveConfig(config,'deviceLevelConfigParameters')" ng-show="deviceLevelConfigParameters.length == ($index + 1)">+</button>
+            </div>
+            <hr/>
+            <button type="submit" class="btn btn-primary " ng-click="saveData('deviceLevelConfigParameters')">Save Changes</button>
+
+          </form>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+
+
+</div>
+
+

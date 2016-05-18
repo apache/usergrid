@@ -1,0 +1,15 @@
+<div id="demo-data-ctrl" ng-if="dataVals.showDemoBar" ng-cloak class="demo-holder">
+  <div class="alert alert-demo alert-animate">
+    <div class="toggle">
+      <input type="checkbox" class="check" ng-model="dataVals.demoData">
+      <b class="b switch"></b>
+      <b class="b track"></b>
+    </div>
+
+    <div class="demo-text">
+      <i class="pictogram">{{dataVals.demoData ? '&#128165;' : '&#59141;'}}</i>You are currently viewing <span class="bold">{{dataVals.demoData ? 'demo data' : 'live data for your ' + currentApp + ' app'}}</span>.
+    </div>
+
+    <div class="demo-holder-content">DEMO MODE {{dataVals.demoData ? 'ON' : 'OFF'}}</div>
+  </div>
+</div>

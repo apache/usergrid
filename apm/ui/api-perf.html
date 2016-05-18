@@ -1,0 +1,198 @@
+<demo-data></demo-data>
+<div id="intro-api-perf"><page-title icon="&#128200;" title="API Performance"></page-title></div>
+
+<div class="page-filters">
+  <span ng-include="'performance/includes/time-filters.html'"></span>
+</div>
+
+<div ng-init="apiPerfSetup()">
+  <section class="row-fluid">
+
+  </section>
+  <!-- errors and crashes total row -->
+  <section class="row-fluid api-perf-charts">
+
+    <div class="span6">
+
+      <h2 class="title chart">Avg Response Time <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('response time')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_response_time}}" tooltip-placement="right">(?)</a></h2>
+
+      <div id="intro-response-time-nochart" ng-include="'performance/includes/no-data.html'" ng-if="!chartDataPresent"></div>
+
+      <div id="intro-response-time-chart" class="main-chart-holder" ng-if="chartDataPresent">
+      <chart id="requestTime" class="anim-chart" ng-if="selectedChartCriteria.chartCriteriaId === 1"
+             chartdata="perfCharts.requestTimes"
+             type="line"
+             xAxisLabel="return Highcharts.dateFormat('%a, %H:%M', this.value);"
+             xAxisStep="3"></chart>
+
+      <chart id="requestTimeBar" class="anim-chart" ng-if="selectedChartCriteria.chartCriteriaId > 1"
+             chartdata="perfCharts.requestTimes"
+             type="column" class="bar"></chart>
+       </div>
+    </div>
+
+    <div class="span6">
+
+      <h2 class="title chart">Total Requests <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('total requests')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_total_requests}}" tooltip-placement="right">(?)</a></h2>
+
+      <div id="intro-total-requests-nochart" ng-include="'performance/includes/no-data.html'" ng-if="!chartDataPresent"></div>
+
+      <div id="intro-total-requests-chart" class="main-chart-holder" ng-if="chartDataPresent">
+      <chart id="requests" class="anim-chart" ng-if="selectedChartCriteria.chartCriteriaId === 1"
+             chartdata="perfCharts.requests"
+             type="line"
+             xAxisLabel="return Highcharts.dateFormat('%a, %H:%M', this.value);"
+             xAxisStep="3"></chart>
+
+      <chart id="requestsBar" class="anim-chart" ng-if="selectedChartCriteria.chartCriteriaId > 1"
+             chartdata="perfCharts.requests"
+             type="column" class="bar"></chart>
+      </div>
+    </div>
+
+
+
+
+
+
+  </section>
+
+  <section class="row-fluid">
+
+    <div class="span12 perf-summary-data">
+
+      <div class="span3">
+        <infobox datasrc="perfCharts.summary.avgLatency"
+                 currentcompare="perfCharts.summary.currentCompare"
+                 title="Avg Response Time"
+                 class="response-time"></infobox>
+      </div>
+
+      <div class="span3">
+        <infobox datasrc="perfCharts.summary.maxLatency"
+                 currentcompare="perfCharts.summary.currentCompare"
+                 title="Max Response Time"
+                 class="request-time"></infobox>
+      </div>
+
+      <div class="span3">
+        <infobox datasrc="perfCharts.summary.totalRequests"
+                 currentcompare="perfCharts.summary.currentCompare"
+                 title="Network Requests"
+                 class="requests"></infobox>
+      </div>
+
+      <div class="span3">
+        <infobox datasrc="perfCharts.summary.totalErrors"
+                 currentcompare="perfCharts.summary.currentCompare"
+                 title="Network Errors"
+                 class="errors"></infobox>
+      </div>
+
+
+    </div>
+
+  </section>
+
+  <balloon direction="south" ng-if="!chartDataPresent && logDataPresent">
+    Scroll down to see log data sent by your SDK.
+  </balloon>
+
+  <section class="row-fluid">
+    <div class="span12 pareto-charts">
+
+      <div class="row-fluid log-search" ng-controller="RawLogCtrl">
+
+        <div class="span12">
+          <div id="intro-raw-logs">
+            <h2 class="title">Network API Search  <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('raw logs')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_raw_logs}}" tooltip-placement="right">(?)</a></h2>
+            <form>
+              <div class="input-append span8">
+              <input type="text" placeholder="e.g. apigee.com..." ng-model="rawLogSearch.url"
+                     class=" input-xxlarge" ng-change="loadMoreLogs()">
+              <button type="button" class="btn" ng-click="rawLogSearchShowAdv=!rawLogSearchShowAdv">Advanced</button>
+              </div>
+              <div class="span4 text-right" ng-if="rawLogs.length === 100 || rawLogSearch.pageNumber > 0">
+                {{rawLogSearch.pageNumber === 0 ? 1 : rawLogSearch.pageNumber * 100}} - {{rawLogSearch.pageNumber === 0 ? (1 * rawLogs.length) : (rawLogSearch.pageNumber + 1) * rawLogs.length}}
+                <a class="btn btn-primary toolbar" ng-disabled="rawLogSearch.pageNumber === 0" ng-click="rawLogSearch.pageNumber > 0 ? prevPage() : ''"><i class="pictogram">&#59229;</i></a>
+                <a class="btn btn-primary toolbar" ng-disabled="rawLogs.length !== 100" ng-click="rawLogs.length === 100 ? nextPage() : ''"><i class="pictogram">&#59230;</i></a>
+              </div>
+            </form>
+            <form class="form-inline adv-rawlog-form" ng-show="rawLogSearchShowAdv">
+              <br style="clear:both"/>
+              <div class="input-prepend">
+                <span class="add-on">Status Code:</span>
+                <input class="input-small" type="text"  ng-model="rawLogSearch.httpStatusCode" ng-change="loadMoreLogs()">
+              </div>
+              <div class="input-prepend">
+                <span class="add-on">Resp. Time > </span>
+                <input class="input-small" type="text"  ng-model="rawLogSearch.latency" ng-change="loadMoreLogs()">
+              </div>
+              <div class="input-prepend">
+                <span class="add-on">Network Type</span>
+                <input class="input-small" type="text"  ng-model="rawLogSearch.networkType" ng-change="loadMoreLogs()">
+              </div>
+              <div class="input-prepend">
+                <span class="add-on">Carrier</span>
+                <input class="input-small" type="text"  ng-model="rawLogSearch.networkCarrier" ng-change="loadMoreLogs()">
+              </div>
+              <div class="input-prepend">
+                <span class="add-on">Platform</span>
+                <input class="input-small" type="text"  ng-model="rawLogSearch.devicePlatform" ng-change="loadMoreLogs()">
+              </div>
+              <button type="submit" class="btn" ng-click="rawLogSearch.httpStatusCode='';rawLogSearch.latency='';rawLogSearch.networkType='';rawLogSearch.networkCarrier='';rawLogSearch.devicePlatform='';loadMoreLogs()">Clear All Advanced</button>
+            </form>
+          </div>
+          <table class="table table-striped table-bordered raw-log-table">
+            <thead>
+            <tr>
+              <th>Time</th>
+              <th>Message</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="log in rawLogs | orderBy:'timeStamp':true | rawLogFilter:rawLogSearch:['url']:['latency']">
+              <td class="log-time-holder">
+                <div>
+                  <span class="{{rawLogs.rawDataType === 'logRawData' ? 'log-time1' : 'log-time2'}}">{{log.timeStamp | date:'M-dd-yyyy HH:mm:ss'}}</span>
+                  </div>
+              </td>
+              <td>
+                <span>{{log.url}}</span>
+                <div class="row-meta">
+                  <span class="label">Status Code:</span>
+                  <span class="value">{{log.httpStatusCode}}</span>
+                  <span class="label">Response Time:</span>
+                  <span class="value">{{log.latency}}</span>
+                  <span class="label">Network Type:</span>
+                  <span class="value">{{log.networkType}}</span>
+                  <span class="label">Carrier:</span>
+                  <span class="value">{{log.networkCarrier}}</span>
+                  <span class="label">Platform:</span>
+                  <span class="value">{{log.devicePlatform}}</span>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+          <div class="row-fluid">
+            <div class="input-append span8">
+
+
+            </div>
+            <div class="span4 text-right" ng-if="rawLogs.length === 100 || rawLogSearch.pageNumber > 0">
+              {{rawLogSearch.pageNumber === 0 ? 1 : rawLogSearch.pageNumber * 100}} - {{rawLogSearch.pageNumber === 0 ? (1 * rawLogs.length) : (rawLogSearch.pageNumber + 1) * rawLogs.length}}
+              <a class="btn btn-primary toolbar" ng-disabled="rawLogSearch.pageNumber === 0" ng-click="rawLogSearch.pageNumber > 0 ? prevPage() : ''"><i class="pictogram">&#59229;</i></a>
+              <a class="btn btn-primary toolbar" ng-disabled="rawLogs.length !== 100" ng-click="rawLogs.length === 100 ? nextPage() : ''"><i class="pictogram">&#59230;</i></a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+

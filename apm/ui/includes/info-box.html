@@ -1,0 +1,11 @@
+<ul class="info-details unstyled">
+  <li class="title small">{{title}} <a class="help_tooltip" ng-mouseover="$root.help.sendTooltipGA(title)" ng-show="$root.help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{$root.help.tooltip[tooltipName]}}" tooltip-placement="right">(?)</a></li>
+  <li class="top-5-crash info-box">
+    <div class="summary-container {{datasrc.color}}">
+      {{datasrc.label}}
+      <div class="compare-data" ng-show="currentcompare != 'NOW'">
+        <span ng-class="currentcompare">({{currentcompare == 'YESTERDAY' && 'Yesterday' || 'Last Week'}}) {{datasrc.value}}</span>
+      </div>
+    </div>
+  </li>
+</ul>

@@ -1,0 +1,100 @@
+<div>
+
+    <page-title icon="&#59146;" title="A/B Testing Configs"></page-title>
+
+    <div class="row-fluid" >
+
+        <div class="span12">
+          <form class="form-horizontal configs">
+          <div class="control-group">
+            <slidecheckbox label="Enable A/B Testing" data="configData.abtestingOverrideEnabled"></slidecheckbox>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="inputApplyTo">Apply to </label>
+            <div class="controls">
+              <input type="text" id="inputApplyTo" class="input-mini" ng-model="configData.abtestingPercentage"> % of Devices
+            </div>
+          </div>
+          
+          
+          <h2 class="title">Monitoring Configs</h2>
+
+
+            <div class="control-group">
+              <slidecheckbox label="Enable Log Capturing" data="configData.abtestingAppConfig.enableLogMonitoring"></slidecheckbox>
+            </div>
+            <div class="control-group">
+              <label class="control-label">Log Capture Levels</label>
+              <div class="controls">
+                <select ng-model="abLogLevel" ng-options="l.label for l in logLevels" ng-change="updateLogLevel(abLogLevel,'abtestingAppConfig')"></select>
+              </div>
+            </div>
+            <div class="control-group">
+              <slidecheckbox label="Enable Network Monitoring" data="configData.abtestingAppConfig.networkMonitoringEnabled"></slidecheckbox>
+            </div>
+            <div class="control-group">
+              <slidecheckbox label="Enable Device Data Capture" data="configData.abtestingAppConfig.sessionDataCaptureEnabled"></slidecheckbox>
+            </div>
+            <div class="control-group">
+
+              <slidecheckbox label="Read Location" data="configData.abtestingAppConfig.locationCaptureEnabled"></slidecheckbox>
+
+              <slidecheckbox label="Read IMEI" data="configData.abtestingAppConfig.imeicaptureEnabled"></slidecheckbox>
+
+              <slidecheckbox label="Read Device Model" data="configData.abtestingAppConfig.deviceModelCaptureEnabled"></slidecheckbox>
+
+              <slidecheckbox label="Read Network Carrier" data="configData.abtestingAppConfig.networkCarrierCaptureEnabled"></slidecheckbox>
+
+              <slidecheckbox label="Read Apigee Device ID" data="configData.abtestingAppConfig.deviceIdCaptureEnabled"></slidecheckbox>
+
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="inputUploadInt">Data Upload Interval (in Seconds)</label>
+              <div class="controls">
+                <input type="text" id="inputUploadInt" ng-model="configData.abtestingAppConfig.agentUploadIntervalInSeconds">
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="inputSampRate">Sampling Rate (in Percentage)</label>
+              <div class="controls">
+                <input type="text" id="inputSampRate" ng-model="configData.abtestingAppConfig.samplingRate">
+              </div>
+            </div>
+            <div class="control-group">
+              <slidecheckbox label="Upload When Roaming" data="configData.abtestingAppConfig.enableUploadWhenRoaming"></slidecheckbox>
+            </div>
+            <div class="control-group">
+              <slidecheckbox label="Upload When Not on WIFI" data="configData.abtestingAppConfig.enableUploadWhenMobile"></slidecheckbox>
+            </div>
+
+            <h2 class="title">Application Specific Configs</h2>
+              <div class="row-fluid"  >
+                  <div class="span3" style="margin-right: 12px;">Tag</div>
+                  <div class="span3" style="margin-right: 15px;">Key</div>
+                  <div class="span3">Value</div>
+              </div>
+            <div class="form-inline" ng-repeat="config in abConfigParameters">
+              <input name="category" type="text" class="input-large" ng-model="config.tag" required>
+              <input name="key" type="text" class="input-large" ng-model="config.paramKey"  required> =
+              <input name="value" type="text" class="input-large" ng-model="config.paramValue" required>
+              <span class="hide">{{config.index = ($index + 1)}}</span>
+              <button class="btn" ng-click="addRemoveConfig(config,'abConfigParameters')" ng-show="abConfigParameters.length != ($index + 1)">-</button>
+              <button class="btn" ng-click="addRemoveConfig(config,'abConfigParameters')" ng-show="abConfigParameters.length == ($index + 1)">+</button>
+            </div>
+            <hr/>
+            <button type="submit" class="btn btn-primary " ng-click="saveData('abConfigParameters')">Save Changes</button>
+          </form>
+
+        </div>
+
+
+      </div>
+
+
+
+
+
+</div>
+
+

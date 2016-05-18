@@ -1,0 +1,41 @@
+<div>
+
+<section class="row-fluid">
+
+  <div class="span12">
+
+    <h2 class="chart-title">{{configData.appName}}</h2>
+
+    <div class="row-fluid" >
+
+      <div class="span6">
+
+        <form class="form-horizontal">
+          <div class="control-group">
+            <label class="control-label" for="inputAppId">App ID</label>
+            <div class="controls">
+              <input type="text" id="inputAppId" ng-model="configData.instaOpsApplicationId">
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" ng-model="configData.monitoringDisabled"> monitoringDisabled
+              </label>
+              <button type="submit" class="btn">Sign in</button>
+            </div>
+          </div>
+        </form>
+
+      </div>
+
+
+    </div>
+
+  </div>
+
+</section>
+
+</div>
+
+
