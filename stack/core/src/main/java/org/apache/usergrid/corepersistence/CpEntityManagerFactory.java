@@ -102,13 +102,14 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private Setup setup = null;
 
+    EntityManager managementAppEntityManager = null;
+
     // cache of already instantiated entity managers
-    private LoadingCache<UUID, EntityManager> entityManagers
-        = CacheBuilder.newBuilder().maximumSize(100).build(new CacheLoader<UUID, EntityManager>() {
-            public EntityManager load(UUID appId) { // no checked exception
-                return _getEntityManager(appId);
-            }
-        });
+    private final String ENTITY_MANAGER_CACHE_SIZE = "entity.manager.cache.size";
+    private final LoadingCache<UUID, EntityManager> entityManagers;
+
+
+
 
     private final ApplicationIdCache applicationIdCache;
     //private final IndexSchemaCache indexSchemaCache;
@@ -142,12 +143,67 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.connectionService = injector.getInstance( ConnectionService.class );
         this.indexSchemaCacheFactory = injector.getInstance( IndexSchemaCacheFactory.class );
 
-        //this line always needs to be last due to the temporary cicular dependency until spring is removed
+        // this line always needs to be last due to the temporary circular dependency until spring is removed
 
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
 
 
+        int entityManagerCacheSize = 100;
+        try {
+            entityManagerCacheSize = Integer.parseInt(
+                cassandraService.getProperties().getProperty( ENTITY_MANAGER_CACHE_SIZE, "100" ));
+        } catch ( Exception e ) {
+            logger.error("Error parsing " + ENTITY_MANAGER_CACHE_SIZE + " using " + entityManagerCacheSize, e );
+        }
+
+        entityManagers = CacheBuilder.newBuilder()
+            .maximumSize(entityManagerCacheSize)
+            .build(new CacheLoader<UUID, EntityManager>() {
+
+            public EntityManager load( UUID appId ) { // no checked exception
+
+                // get entity manager and ensure it can get its own application
+
+                EntityManager entityManager = _getEntityManager( appId );
+                Application app = null;
+                Exception exception = null;
+                try {
+                    app = entityManager.getApplication();
+                } catch (Exception e) {
+                    exception = e;
+                }
+
+                // the management app is a special case
+
+                if ( CpNamingUtils.MANAGEMENT_APPLICATION_ID.equals( appId ) ) {
+
+                    if ( app != null ) {
+
+                        // we successfully fetched up the management app, cache it for a rainy day
+                        managementAppEntityManager = entityManager;
+
+                    } else if ( managementAppEntityManager != null ) {
+
+                        // failed to fetch management app, use cached one
+                        entityManager = managementAppEntityManager;
+
+                    } else {
+
+                        // fetch failed and we have nothing cached, we must be bootstrapping
+                        logger.info("managementAppEntityManager is null, bootstrapping in progress");
+                    }
+
+                } else { // not the management app, so blow up if app cannot be fetched
+
+                    if (app == null) {
+                        throw new RuntimeException( "Error getting application " + appId, exception );
+                    }
+                }
+
+                return entityManager;
+            }
+        });
     }
 
 
