@@ -27,7 +27,9 @@ import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.model.field.DistanceField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
+import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,12 +125,26 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                                 if (mappings.size() > 0) {
                                     Map<String,Field> fieldMap = new HashMap<String, Field>(mappings.size());
                                     rx.Observable.from(mappings)
-                                        .filter(mapping -> entity.getFieldMap().containsKey(mapping.getSourceFieldName()))
+
+                                        .filter(mapping -> {
+                                            if ( entity.getFieldMap().containsKey(mapping.getSourceFieldName())) {
+                                                return true;
+                                            }
+                                            String[] parts = mapping.getSourceFieldName().split("\\.");
+                                            return nestedFieldCheck( parts, entity.getFieldMap() );
+                                        })
+
                                         .doOnNext(mapping -> {
                                             Field field = entity.getField(mapping.getSourceFieldName());
-                                            field.setName(mapping.getTargetFieldName());
-                                            fieldMap.put(mapping.getTargetFieldName(),field);
-                                        }).toBlocking().last();
+                                            if ( field != null ) {
+                                                field.setName( mapping.getTargetFieldName() );
+                                                fieldMap.put( mapping.getTargetFieldName(), field );
+                                            } else {
+                                                String[] parts = mapping.getSourceFieldName().split("\\.");
+                                                nestedFieldSet( fieldMap, parts, entity.getFieldMap() );
+                                            }
+                                        }).toBlocking().lastOrDefault(null);
+
                                     entity.setFieldMap(fieldMap);
                                 }
                                 return entityFilterResult;
@@ -144,6 +160,41 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
     }
 
 
+    private void nestedFieldSet( Map<String, Field> result, String[] parts, Map<String, Field> fieldMap) {
+        if ( parts.length > 0 ) {
+            if ( fieldMap.containsKey( parts[0] )) {
+                Field field = fieldMap.get( parts[0] );
+                if ( field instanceof EntityObjectField ) {
+                    EntityObjectField eof = (EntityObjectField)field;
+                    if ( result.get( parts[0] ) == null ) {
+                        result.put( parts[0], new EntityObjectField( parts[0], new EntityObject() ) );
+                    }
+                    nestedFieldSet(
+                        ((EntityObjectField)result.get( parts[0] )).getValue().getFieldMap(),
+                        Arrays.copyOfRange(parts, 1, parts.length),
+                        eof.getValue().getFieldMap());
+                } else {
+                    result.put( parts[0], field );
+                }
+            }
+        }
+    }
+
+
+    private boolean nestedFieldCheck( String[] parts, Map<String, Field> fieldMap) {
+        if ( parts.length > 0 ) {
+            if ( fieldMap.containsKey( parts[0] )) {
+                Field field = fieldMap.get( parts[0] );
+                if ( field instanceof EntityObjectField ) {
+                    EntityObjectField eof = (EntityObjectField)field;
+                    return nestedFieldCheck( Arrays.copyOfRange(parts, 1, parts.length), eof.getValue().getFieldMap());
+                } else {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
 
     /**
