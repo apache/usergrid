@@ -476,6 +476,7 @@ public class IndexIT extends AbstractCoreIT {
             put("data", new HashMap() {{
                 put("xfactor", 5.1);
                 put("rando", "bar");
+                put("mondo", "2000");
             }});
         }};
         em.create("names", entity1);
@@ -486,6 +487,7 @@ public class IndexIT extends AbstractCoreIT {
             put("data", new HashMap() {{
                 put("xfactor", 5.1);
                 put("rando", "bar");
+                put("mondo", "2001");
             }});
         }};
         em.create("names", entity2);
@@ -518,7 +520,7 @@ public class IndexIT extends AbstractCoreIT {
 
         {
             //  query for only one bogus field name should return empty entities
-            Query query = Query.fromQL( "select data.rando where status = 'pickled'" );
+            Query query = Query.fromQL( "select data.rando,data.mondo where status = 'pickled'" );
             Results r = em.searchCollection( em.getApplicationRef(), "names", query );
             assertTrue( r.getEntities() != null && r.getEntities().size() == 2 );
 
@@ -526,6 +528,7 @@ public class IndexIT extends AbstractCoreIT {
 
             assertNotNull( first.getProperty("data") );
             assertEquals( ((Map<String, Object>)first.getProperty("data")).get("rando"), "bar" );
+            assertEquals( ((Map<String, Object>)first.getProperty("data")).get("mondo"), "2001" );
 
             assertTrue( first.getDynamicProperties().size() == 2 );
         }
