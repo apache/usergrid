@@ -52,9 +52,9 @@ import rx.Observable;
 
 
 /**
- * Loads entities from an incoming CandidateResult emissions into entities, then streams them on
- * performs internal buffering for efficiency.  Note that all entities may not be emitted if our load crosses page boundaries.  It is up to the
- * collector to determine when to stop streaming entities.
+ * Loads entities from an incoming CandidateResult emissions into entities, then streams them on performs internal
+ * buffering for efficiency.  Note that all entities may not be emitted if our load crosses page boundaries.
+ * It is up to the collector to determine when to stop streaming entities.
  */
 public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate>, FilterResult<Entity>> {
 
@@ -93,11 +93,12 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
 
-        final EntityIndex applicationIndex =
-            entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
+        final EntityIndex applicationIndex = entityIndexFactory
+            .createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
         //buffer them to get a page size we can make 1 network hop
-        final Observable<FilterResult<Entity>> searchIdSetObservable = candidateResultsObservable.buffer( pipelineContext.getLimit() )
+        final Observable<FilterResult<Entity>> searchIdSetObservable =
+            candidateResultsObservable.buffer( pipelineContext.getLimit() )
 
             //load them
             .flatMap( candidateResults -> {
@@ -198,7 +199,8 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
 
 
     /**
-     * Our collector to collect entities.  Not quite a true collector, but works within our operational flow as this state is mutable and difficult to represent functionally
+     * Our collector to collect entities.  Not quite a true collector, but works within our operational
+     * flow as this state is mutable and difficult to represent functionally
      */
     private static final class EntityVerifier {
 
