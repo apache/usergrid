@@ -182,16 +182,34 @@ public class ShiroCache<K, V> implements Cache<K,V> {
     /** key is the user UUID in string form + class name of key */
     private String getKeyString( K key ) {
 
+        // both authc and authz caches use same column family
+        // make sure keys unique to key type
+        String keyClass = key.getClass().getSimpleName();
+
+        // if we can't get a user UUID or access token, then we have a guest
+        String ret = keyClass + "_guest";
+
         if ( key instanceof SimplePrincipalCollection) {
             SimplePrincipalCollection spc = (SimplePrincipalCollection)key;
 
+            // principal is a user, use UUID as cache key
             if ( spc.getPrimaryPrincipal() instanceof UserPrincipal) {
                 UserPrincipal p = (UserPrincipal) spc.getPrimaryPrincipal();
-                return p.getUser().getUuid().toString();
+                ret = p.getUser().getUuid().toString() + "_" + keyClass;
+            }
+
+            else if ( spc.getPrimaryPrincipal() instanceof PrincipalIdentifier ) {
+                PrincipalIdentifier p = (PrincipalIdentifier)spc.getPrimaryPrincipal();
+
+                // principal is not user, try to get something unique as cache key
+                if ( p.getAccessTokenCredentials() != null ) {
+                    ret = p.getAccessTokenCredentials().getToken() + "_" + keyClass;
+
+                }
             }
         }
 
-        return key.toString() + "_" + key.getClass().getSimpleName();
+        return ret;
     }
 
 }
