@@ -182,16 +182,56 @@ public class ShiroCache<K, V> implements Cache<K,V> {
     /** key is the user UUID in string form + class name of key */
     private String getKeyString( K key ) {
 
+        String ret = null;
+
+        final String typeName = typeRef.getType().getTypeName();
+
         if ( key instanceof SimplePrincipalCollection) {
+
             SimplePrincipalCollection spc = (SimplePrincipalCollection)key;
 
             if ( spc.getPrimaryPrincipal() instanceof UserPrincipal) {
+
+                // principal is a user, use UUID as cache key
                 UserPrincipal p = (UserPrincipal) spc.getPrimaryPrincipal();
-                return p.getUser().getUuid().toString();
+                ret = p.getUser().getUuid().toString() + "_" + typeName;
             }
+
+            else if ( spc.getPrimaryPrincipal() instanceof PrincipalIdentifier ) {
+
+                // principal is not user, try to get something unique as cache key
+                PrincipalIdentifier p = (PrincipalIdentifier) spc.getPrimaryPrincipal();
+                if (p.getAccessTokenCredentials() != null) {
+                    ret = p.getAccessTokenCredentials().getToken() + "_" + typeName;
+                } else {
+                    ret = p.getApplicationId() + "_" + typeName;
+                }
+            }
+
+        } else if ( key instanceof ApplicationGuestPrincipal ) {
+            ApplicationGuestPrincipal agp = (ApplicationGuestPrincipal) key;
+            ret = agp.getApplicationId() + "_" + typeName;
+
+        } else if ( key instanceof ApplicationPrincipal ) {
+            ApplicationPrincipal ap = (ApplicationPrincipal) key;
+            ret = ap.getApplicationId() + "_" + typeName;
+
+        } else if ( key instanceof OrganizationPrincipal ) {
+            OrganizationPrincipal op = (OrganizationPrincipal) key;
+            ret = op.getOrganizationId() + "_" + typeName;
+
+        } else if ( key instanceof UserPrincipal ) {
+            UserPrincipal up = (UserPrincipal)key;
+            ret = up.getUser().getUuid() + "_" + typeName;
         }
 
-        return key.toString() + "_" + key.getClass().getSimpleName();
+        if ( ret == null) {
+            String msg = "Unknown key type: " + key.getClass().getSimpleName();
+            logger.error(msg);
+            throw new RuntimeException(msg);
+        }
+
+        return ret;
     }
 
 }
