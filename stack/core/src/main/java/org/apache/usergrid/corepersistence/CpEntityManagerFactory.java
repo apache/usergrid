@@ -175,12 +175,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
                 if ( CpNamingUtils.MANAGEMENT_APPLICATION_ID.equals( appId ) ) {
 
-                    if ( app != null ) {
+                    if ( app != null && entityManager != null ) {
 
                         // we successfully fetched up the management app, cache it for a rainy day
                         managementAppEntityManager = entityManager;
 
-                    } else if ( managementAppEntityManager != null ) {
+                    } else if ( entityManager == null && managementAppEntityManager != null ) {
 
                         // failed to fetch management app, use cached one
                         entityManager = managementAppEntityManager;
@@ -214,47 +214,22 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-
     private void initMgmtAppInternal() {
 
-        Properties properties = cassandraService.getProperties();
-
-        Integer maxRetries;
-        try {
-            Object maxRetriesObject = properties.get( MANAGEMENT_APP_MAX_RETRIES ).toString();
-            maxRetries = Integer.parseInt( maxRetriesObject.toString() );
-        } catch ( NumberFormatException nfe ) {
-            maxRetries = 20;
-        }
-
         EntityManager em = getEntityManager(getManagementAppId());
-
-        int retryCount = 0;
-
-        while ( managementApp != null && retryCount++ <= maxRetries ) {
-
-            try {
-                managementApp = em.getApplication();
-
-                if ( managementApp == null ) {
-
-                    logger.warn( "Management application not found, attempting creation" );
-
-                    Map mgmtAppProps = new HashMap<String, Object>();
-                    mgmtAppProps.put( PROPERTY_NAME, CassandraService.MANAGEMENT_APPLICATION );
-                    em.create( getManagementAppId(), TYPE_APPLICATION, mgmtAppProps );
-                    managementApp = em.getApplication();
-                }
-
-            } catch ( Throwable t ) {
-                logger.warn("Error getting or creating management application after " + retryCount + " retries", t);
-            }
-        }
-
         indexService.queueInitializeApplicationIndex(CpNamingUtils.getApplicationScope(getManagementAppId()));
 
-        if ( managementApp == null ) {
-            throw new RuntimeException("FATAL ERROR: Failed to get or create management app");
+        try {
+            if ( em.getApplication() == null ) {
+                logger.info("Creating management application");
+                Map mgmtAppProps = new HashMap<String, Object>();
+                mgmtAppProps.put(PROPERTY_NAME, CassandraService.MANAGEMENT_APPLICATION);
+                em.create( getManagementAppId(), TYPE_APPLICATION, mgmtAppProps);
+                em.getApplication();
+            }
+
+        } catch (Exception ex) {
+            throw new RuntimeException("Fatal error creating management application", ex);
         }
     }
 
