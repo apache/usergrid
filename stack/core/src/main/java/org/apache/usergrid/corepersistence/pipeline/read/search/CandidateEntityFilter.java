@@ -163,17 +163,19 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
 
     private void nestedFieldSet( Map<String, Field> result, String[] parts, Map<String, Field> fieldMap) {
         if ( parts.length > 0 ) {
+
             if ( fieldMap.containsKey( parts[0] )) {
                 Field field = fieldMap.get( parts[0] );
                 if ( field instanceof EntityObjectField ) {
                     EntityObjectField eof = (EntityObjectField)field;
-                    if ( result.get( parts[0] ) == null ) {
-                        result.put( parts[0], new EntityObjectField( parts[0], new EntityObject() ) );
-                    }
+                    result.putIfAbsent( parts[0], new EntityObjectField( parts[0], new EntityObject() ) );
+
+                    // recursion
                     nestedFieldSet(
                         ((EntityObjectField)result.get( parts[0] )).getValue().getFieldMap(),
                         Arrays.copyOfRange(parts, 1, parts.length),
                         eof.getValue().getFieldMap());
+
                 } else {
                     result.put( parts[0], field );
                 }
@@ -184,11 +186,15 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
 
     private boolean nestedFieldCheck( String[] parts, Map<String, Field> fieldMap) {
         if ( parts.length > 0 ) {
+
             if ( fieldMap.containsKey( parts[0] )) {
                 Field field = fieldMap.get( parts[0] );
                 if ( field instanceof EntityObjectField ) {
                     EntityObjectField eof = (EntityObjectField)field;
+
+                    // recursion
                     return nestedFieldCheck( Arrays.copyOfRange(parts, 1, parts.length), eof.getValue().getFieldMap());
+
                 } else {
                     return true;
                 }

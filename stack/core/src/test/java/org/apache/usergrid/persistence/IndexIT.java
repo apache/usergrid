@@ -528,7 +528,7 @@ public class IndexIT extends AbstractCoreIT {
             assertTrue( first.getDynamicProperties().size() == 3 );
         }
 
-        // multiple nested fields with one doubly-nesed field
+        // multiple nested fields with one doubly-nested field
         {
             Query query = Query.fromQL( "select data.rando, data.mondo, data.misc.range where status = 'pickled'" );
             Results r = em.searchCollection( em.getApplicationRef(), "names", query );
