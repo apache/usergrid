@@ -12,9 +12,9 @@ import org.apache.usergrid.apm.service.NetworkTestData;
 import org.apache.usergrid.apm.service.StatelessComplexEventProcessingService;
 import org.drools.runtime.conf.ClockTypeOption;
 
-import com.ideawheel.common.model.ClientMetricsEnvelope;
-import com.ideawheel.common.model.ClientSessionMetrics;
-import com.ideawheel.portal.model.SummarySessionMetrics;
+import org.apache.usergrid.apm.model.ClientMetricsEnvelope;
+import org.apache.usergrid.apm.model.ClientSessionMetrics;
+import org.apache.usergrid.apm.model.SummarySessionMetrics;
 
 import junit.framework.TestCase;
 

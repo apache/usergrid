@@ -5,8 +5,8 @@ import java.util.Calendar;
 import junit.framework.TestCase;
 
 import org.apache.usergrid.apm.service.charts.filter.TimeRangeFilter;
-import com.ideawheel.portal.model.ChartCriteria.LastX;
-import com.ideawheel.portal.model.MetricsChartCriteria;
+import org.apache.usergrid.apm.model.ChartCriteria.LastX;
+import org.apache.usergrid.apm.model.MetricsChartCriteria;
 
 public class TimeRangeFilterTest extends TestCase {
 

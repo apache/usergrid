@@ -17,11 +17,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 
 import com.apigee.apm.rest.AppDetailsForAPM;
-import com.ideawheel.common.model.ApigeeMobileAPMConstants;
-import com.ideawheel.common.model.App;
-import com.ideawheel.common.model.AppConfigCustomParameter;
-import com.ideawheel.common.model.AppConfigOverrideFilter;
-import com.ideawheel.common.model.ApplicationConfigurationModel;
+import org.apache.usergrid.apm.model.ApigeeMobileAPMConstants;
+import org.apache.usergrid.apm.model.App;
+import org.apache.usergrid.apm.model.AppConfigCustomParameter;
+import org.apache.usergrid.apm.model.AppConfigOverrideFilter;
+import org.apache.usergrid.apm.model.ApplicationConfigurationModel;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;

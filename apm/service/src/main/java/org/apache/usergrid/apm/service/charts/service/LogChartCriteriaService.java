@@ -11,7 +11,7 @@ import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 
 import org.apache.usergrid.apm.service.charts.filter.AppsFilter;
-import com.ideawheel.portal.model.LogChartCriteria;
+import org.apache.usergrid.apm.model.LogChartCriteria;
 import org.apache.usergrid.apm.service.ServiceFactory;
 
 public class LogChartCriteriaService

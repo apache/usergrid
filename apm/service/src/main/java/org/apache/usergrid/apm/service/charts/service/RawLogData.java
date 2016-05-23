@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import com.ideawheel.portal.model.LogChartCriteria;
+import org.apache.usergrid.apm.model.LogChartCriteria;
 
 public class RawLogData extends RawData 
 {

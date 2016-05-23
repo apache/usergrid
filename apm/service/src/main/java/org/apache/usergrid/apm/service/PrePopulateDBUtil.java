@@ -1,9 +1,9 @@
 package org.apache.usergrid.apm.service;
 
-import com.ideawheel.portal.model.DeviceModel;
-import com.ideawheel.portal.model.DevicePlatform;
-import com.ideawheel.portal.model.NetworkCarrier;
-import com.ideawheel.portal.model.NetworkSpeed;
+import org.apache.usergrid.apm.model.DeviceModel;
+import org.apache.usergrid.apm.model.DevicePlatform;
+import org.apache.usergrid.apm.model.NetworkCarrier;
+import org.apache.usergrid.apm.model.NetworkSpeed;
 
 public class PrePopulateDBUtil
 {

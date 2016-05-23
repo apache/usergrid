@@ -21,14 +21,14 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.transform.Transformers;
 
-import com.ideawheel.common.model.ClientSessionMetrics;
+import org.apache.usergrid.apm.model.ClientSessionMetrics;
 import org.apache.usergrid.apm.service.charts.service.AggregatedSessionData;
 import org.apache.usergrid.apm.service.charts.service.AttributeValueChartData;
 import org.apache.usergrid.apm.service.charts.service.SessionMetricsChartUtil;
 import org.apache.usergrid.apm.service.charts.service.SqlOrderGroupWhere;
-import com.ideawheel.portal.model.CompactSessionMetrics;
-import com.ideawheel.portal.model.SessionChartCriteria;
-import com.ideawheel.portal.model.SummarySessionMetrics;
+import org.apache.usergrid.apm.model.CompactSessionMetrics;
+import org.apache.usergrid.apm.model.SessionChartCriteria;
+import org.apache.usergrid.apm.model.SummarySessionMetrics;
 
 public class SessionDBServiceImpl implements SessionDBService
 {

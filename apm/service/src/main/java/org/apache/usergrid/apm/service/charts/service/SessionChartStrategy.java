@@ -8,9 +8,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.apache.usergrid.apm.service.charts.filter.SpecialTimeFilter;
-import com.ideawheel.portal.model.CompactSessionMetrics;
-import com.ideawheel.portal.model.SessionChartCriteria;
-import com.ideawheel.portal.model.ChartCriteria.PeriodType;
+import org.apache.usergrid.apm.model.CompactSessionMetrics;
+import org.apache.usergrid.apm.model.SessionChartCriteria;
+import org.apache.usergrid.apm.model.ChartCriteria.PeriodType;
 import org.apache.usergrid.apm.service.ServiceFactory;
 
 public class SessionChartStrategy

@@ -7,7 +7,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
-import com.ideawheel.portal.model.ChartCriteria;
+import org.apache.usergrid.apm.model.ChartCriteria;
 
 
 public class EndPeriodFilter implements SimpleHibernateFilter {

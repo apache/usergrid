@@ -6,8 +6,8 @@ import junit.framework.TestCase;
 
 import org.apache.usergrid.apm.service.charts.service.SessionMetricsChartUtil;
 import org.apache.usergrid.apm.service.charts.service.SqlOrderGroupWhere;
-import com.ideawheel.portal.model.ChartCriteria.LastX;
-import com.ideawheel.portal.model.SessionChartCriteria;
+import org.apache.usergrid.apm.model.ChartCriteria.LastX;
+import org.apache.usergrid.apm.model.SessionChartCriteria;
 import org.apache.usergrid.apm.service.ServiceFactory;
 
 

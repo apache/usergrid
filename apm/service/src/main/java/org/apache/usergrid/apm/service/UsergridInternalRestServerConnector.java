@@ -14,8 +14,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import com.ideawheel.common.model.App;
-import com.ideawheel.common.model.AppConfigCustomParameter;
+import org.apache.usergrid.apm.model.App;
+import org.apache.usergrid.apm.model.AppConfigCustomParameter;
 
 
 

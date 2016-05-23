@@ -3,10 +3,10 @@ package org.apache.usergrid.apm.service.service;
 import java.io.File;
 import java.util.Calendar;
 
-import com.ideawheel.portal.model.ChartCriteria.LastX;
-import com.ideawheel.portal.model.LogChartCriteria;
-import com.ideawheel.portal.model.MetricsChartCriteria;
-import com.ideawheel.portal.model.SessionChartCriteria;
+import org.apache.usergrid.apm.model.ChartCriteria.LastX;
+import org.apache.usergrid.apm.model.LogChartCriteria;
+import org.apache.usergrid.apm.model.MetricsChartCriteria;
+import org.apache.usergrid.apm.model.SessionChartCriteria;
 import org.apache.usergrid.apm.service.ApplicationService;
 import org.apache.usergrid.apm.service.ServiceFactory;
 

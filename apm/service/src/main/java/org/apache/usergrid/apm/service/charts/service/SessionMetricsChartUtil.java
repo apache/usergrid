@@ -16,7 +16,7 @@ import org.apache.usergrid.apm.service.charts.filter.NetworkTypeFilter;
 import org.apache.usergrid.apm.service.charts.filter.SavedChartsFilter;
 import org.apache.usergrid.apm.service.charts.filter.SpecialTimeFilter;
 import org.apache.usergrid.apm.service.charts.filter.StartPeriodFilter;
-import com.ideawheel.portal.model.SessionChartCriteria;
+import org.apache.usergrid.apm.model.SessionChartCriteria;
 
 public class SessionMetricsChartUtil {
 

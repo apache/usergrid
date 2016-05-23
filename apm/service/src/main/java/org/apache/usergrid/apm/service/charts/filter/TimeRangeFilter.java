@@ -7,8 +7,8 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
-import com.ideawheel.portal.model.ChartCriteria;
-import com.ideawheel.portal.model.ChartCriteria.PeriodType;
+import org.apache.usergrid.apm.model.ChartCriteria;
+import org.apache.usergrid.apm.model.ChartCriteria.PeriodType;
 import org.apache.usergrid.apm.service.DeploymentConfig;
 
 public class TimeRangeFilter implements SimpleHibernateFilter {

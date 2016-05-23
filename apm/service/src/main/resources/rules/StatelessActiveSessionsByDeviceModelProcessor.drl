@@ -2,11 +2,11 @@
 package SessionProcessor
 
 #list any import classes here.
-import com.ideawheel.common.model.ClientLog;
-import com.ideawheel.common.model.ClientSessionMetrics;
-import com.ideawheel.portal.model.SummarySessionMetrics;
-import com.ideawheel.portal.model.CompactSessionMetrics;
-import com.ideawheel.portal.model.ChartCriteria;
+import org.apache.usergrid.apm.model.ClientLog;
+import org.apache.usergrid.apm.model.ClientSessionMetrics;
+import org.apache.usergrid.apm.model.SummarySessionMetrics;
+import org.apache.usergrid.apm.model.CompactSessionMetrics;
+import org.apache.usergrid.apm.model.ChartCriteria;
 
 import java.util.List;
 import java.util.TreeSet;

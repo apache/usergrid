@@ -4,9 +4,9 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.ideawheel.common.model.ApigeeMobileAPMConstants;
-import com.ideawheel.common.model.ApplicationConfigurationModel;
-import com.ideawheel.common.model.App;
+import org.apache.usergrid.apm.model.ApigeeMobileAPMConstants;
+import org.apache.usergrid.apm.model.ApplicationConfigurationModel;
+import org.apache.usergrid.apm.model.App;
 import org.apache.usergrid.apm.service.ServiceFactory;
 
 

@@ -13,7 +13,7 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerUtils;
 
-import com.ideawheel.common.model.App;
+import org.apache.usergrid.apm.model.App;
 
 
 

@@ -20,7 +20,7 @@ import org.apache.usergrid.apm.service.charts.filter.SavedChartsFilter;
 import org.apache.usergrid.apm.service.charts.filter.SpecialTimeFilter;
 import org.apache.usergrid.apm.service.charts.filter.StartPeriodFilter;
 import org.apache.usergrid.apm.service.charts.filter.TimeRangeFilter;
-import com.ideawheel.portal.model.LogChartCriteria;
+import org.apache.usergrid.apm.model.LogChartCriteria;
 
 
 public class LogChartUtil {

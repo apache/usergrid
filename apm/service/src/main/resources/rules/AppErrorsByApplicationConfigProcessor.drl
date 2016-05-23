@@ -1,13 +1,13 @@
 #created on: Apr 14, 2011
 package ClientLogMetricsCreator
 
-import com.ideawheel.portal.model.*;
-import com.ideawheel.common.model.*;
+import org.apache.usergrid.apm.model.*;
+import org.apache.usergrid.apm.model.*;
 import java.util.*;
 import org.apache.usergrid.apm.service.charts.service.SessionChartCriteriaService;
 import org.apache.usergrid.apm.service.charts.service.NetworkMetricsChartCriteriaService;
 import org.apache.usergrid.apm.service.charts.service.LogChartCriteriaService;
-import com.ideawheel.common.model.App;
+import org.apache.usergrid.apm.model.App;
 
 global org.apache.commons.logging.Log log;
 

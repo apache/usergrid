@@ -27,12 +27,12 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
-import com.ideawheel.common.model.ApigeeMobileAPMConstants;
-import com.ideawheel.common.model.App;
-import com.ideawheel.common.model.ClientLog;
-import com.ideawheel.common.model.ClientMetricsEnvelope;
-import com.ideawheel.common.model.ClientNetworkMetrics;
-import com.ideawheel.common.model.ClientSessionMetrics;
+import org.apache.usergrid.apm.model.ApigeeMobileAPMConstants;
+import org.apache.usergrid.apm.model.App;
+import org.apache.usergrid.apm.model.ClientLog;
+import org.apache.usergrid.apm.model.ClientMetricsEnvelope;
+import org.apache.usergrid.apm.model.ClientNetworkMetrics;
+import org.apache.usergrid.apm.model.ClientSessionMetrics;
 
 
 import com.thoughtworks.xstream.XStream;

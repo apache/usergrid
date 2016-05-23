@@ -1,6 +1,6 @@
 package org.apache.usergrid.apm.service.charts.service;
 
-import com.ideawheel.portal.model.ChartCriteria;
+import org.apache.usergrid.apm.model.ChartCriteria;
 
 public class RawCriteria<T extends ChartCriteria>
 {

@@ -5,8 +5,8 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.apache.usergrid.apm.service.charts.service.NetworkMetricsChartCriteriaService;
-import com.ideawheel.portal.model.ChartCriteria.LastX;
-import com.ideawheel.portal.model.MetricsChartCriteria;
+import org.apache.usergrid.apm.model.ChartCriteria.LastX;
+import org.apache.usergrid.apm.model.MetricsChartCriteria;
 import org.apache.usergrid.apm.service.ServiceFactory;
 
 public class NetworkMetricsChartCriteriaTest extends TestCase {

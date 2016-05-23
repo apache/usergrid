@@ -5,9 +5,9 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.ideawheel.portal.model.LogChartCriteria;
-import com.ideawheel.portal.model.MetricsChartCriteria;
-import com.ideawheel.portal.model.SessionChartCriteria;
+import org.apache.usergrid.apm.model.LogChartCriteria;
+import org.apache.usergrid.apm.model.MetricsChartCriteria;
+import org.apache.usergrid.apm.model.SessionChartCriteria;
 
 
 public class ChartServiceImpl implements ChartService {

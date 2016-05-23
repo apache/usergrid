@@ -10,10 +10,10 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import com.ideawheel.portal.model.DeviceModel;
-import com.ideawheel.portal.model.DevicePlatform;
-import com.ideawheel.portal.model.NetworkCarrier;
-import com.ideawheel.portal.model.NetworkSpeed;
+import org.apache.usergrid.apm.model.DeviceModel;
+import org.apache.usergrid.apm.model.DevicePlatform;
+import org.apache.usergrid.apm.model.NetworkCarrier;
+import org.apache.usergrid.apm.model.NetworkSpeed;
 
 /**
  * Scheduler that periodically checks if new environment values such as network carrier, device models have been added in

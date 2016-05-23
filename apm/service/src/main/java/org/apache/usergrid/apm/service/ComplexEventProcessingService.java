@@ -22,13 +22,13 @@ import org.drools.runtime.conf.ClockTypeOption;
 import org.drools.runtime.rule.WorkingMemoryEntryPoint;
 import org.drools.time.SessionClock;
 
-import com.ideawheel.common.model.ActiveURLs;
-import com.ideawheel.common.model.ClientLog;
-import com.ideawheel.common.model.ClientMetricsEnvelope;
-import com.ideawheel.portal.model.CompactClientLog;
-import com.ideawheel.portal.model.CompactNetworkMetrics;
-import com.ideawheel.portal.model.CompactSessionMetrics;
-import com.ideawheel.portal.model.SummarySessionMetrics;
+import org.apache.usergrid.apm.model.ActiveURLs;
+import org.apache.usergrid.apm.model.ClientLog;
+import org.apache.usergrid.apm.model.ClientMetricsEnvelope;
+import org.apache.usergrid.apm.model.CompactClientLog;
+import org.apache.usergrid.apm.model.CompactNetworkMetrics;
+import org.apache.usergrid.apm.model.CompactSessionMetrics;
+import org.apache.usergrid.apm.model.SummarySessionMetrics;
 
 public class ComplexEventProcessingService {
 

@@ -8,8 +8,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.apache.usergrid.apm.service.charts.filter.SpecialTimeFilter;
-import com.ideawheel.portal.model.CompactClientLog;
-import com.ideawheel.portal.model.LogChartCriteria;
+import org.apache.usergrid.apm.model.CompactClientLog;
+import org.apache.usergrid.apm.model.LogChartCriteria;
 import org.apache.usergrid.apm.service.ServiceFactory;
 
 public class LogChartStrategy

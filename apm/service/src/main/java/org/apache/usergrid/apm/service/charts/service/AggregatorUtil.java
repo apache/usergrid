@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 
-import com.ideawheel.common.model.ApigeeMobileAPMConstants;
+import org.apache.usergrid.apm.model.ApigeeMobileAPMConstants;
 
 public class AggregatorUtil
 {

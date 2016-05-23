@@ -6,11 +6,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 
-import com.ideawheel.common.model.ClientNetworkMetrics;
+import org.apache.usergrid.apm.model.ClientNetworkMetrics;
 import org.apache.usergrid.apm.service.charts.service.AggregatedNetworkData;
 import org.apache.usergrid.apm.service.charts.service.NetworkMetricsRawCriteria;
-import com.ideawheel.portal.model.CompactNetworkMetrics;
-import com.ideawheel.portal.model.MetricsChartCriteria;
+import org.apache.usergrid.apm.model.CompactNetworkMetrics;
+import org.apache.usergrid.apm.model.MetricsChartCriteria;
 
 
 

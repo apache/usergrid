@@ -10,11 +10,11 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.ideawheel.common.model.App;
-import com.ideawheel.common.model.ClientLog;
+import org.apache.usergrid.apm.model.App;
+import org.apache.usergrid.apm.model.ClientLog;
 import org.apache.usergrid.apm.service.util.AsyncMailer;
 import org.apache.usergrid.apm.service.util.Email;
-import com.ideawheel.portal.model.CrashLogDetails;
+import org.apache.usergrid.apm.model.CrashLogDetails;
 
 public class AlarmService {
 

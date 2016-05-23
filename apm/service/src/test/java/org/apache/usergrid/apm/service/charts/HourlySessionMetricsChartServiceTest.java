@@ -11,10 +11,10 @@ import junit.framework.TestCase;
 
 import org.apache.usergrid.apm.service.charts.service.AggregatedSessionData;
 import org.apache.usergrid.apm.service.charts.service.SessionMetricsChartDTO;
-import com.ideawheel.portal.model.ChartCriteria.PeriodType;
-import com.ideawheel.portal.model.CompactSessionMetrics;
-import com.ideawheel.portal.model.SessionChartCriteria;
-import com.ideawheel.portal.model.SummarySessionMetrics;
+import org.apache.usergrid.apm.model.ChartCriteria.PeriodType;
+import org.apache.usergrid.apm.model.CompactSessionMetrics;
+import org.apache.usergrid.apm.model.SessionChartCriteria;
+import org.apache.usergrid.apm.model.SummarySessionMetrics;
 import org.apache.usergrid.apm.service.EnvironmentOverrideValueUpdater;
 import org.apache.usergrid.apm.service.ServiceFactory;
 import org.apache.usergrid.apm.service.SessionDBService;

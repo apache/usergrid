@@ -8,8 +8,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.apache.usergrid.apm.service.charts.filter.SpecialTimeFilter;
-import com.ideawheel.portal.model.CompactNetworkMetrics;
-import com.ideawheel.portal.model.MetricsChartCriteria;
+import org.apache.usergrid.apm.model.CompactNetworkMetrics;
+import org.apache.usergrid.apm.model.MetricsChartCriteria;
 import org.apache.usergrid.apm.service.ServiceFactory;
 
 public class NetworkChartStrategy {

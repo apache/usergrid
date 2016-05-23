@@ -2,7 +2,7 @@ package org.apache.usergrid.apm.service.charts.service;
 
 import java.util.List;
 
-import com.ideawheel.portal.model.MetricsChartCriteria;
+import org.apache.usergrid.apm.model.MetricsChartCriteria;
 
 public interface ChartStrategy {
 	

@@ -11,8 +11,8 @@ import org.apache.usergrid.apm.service.ServiceFactory;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 
-import com.ideawheel.common.model.ApigeeMobileAPMConstants;
-import com.ideawheel.common.model.ClientLog;
+import org.apache.usergrid.apm.model.ApigeeMobileAPMConstants;
+import org.apache.usergrid.apm.model.ClientLog;
 ;
 
 public class LogDBServiceTest extends TestCase {

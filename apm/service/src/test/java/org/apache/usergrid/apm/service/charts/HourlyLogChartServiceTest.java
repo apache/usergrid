@@ -6,11 +6,11 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.ideawheel.common.model.ClientLog;
+import org.apache.usergrid.apm.model.ClientLog;
 import org.apache.usergrid.apm.service.charts.service.LogChartDTO;
 import org.apache.usergrid.apm.service.charts.service.LogRawCriteria;
-import com.ideawheel.portal.model.CompactClientLog;
-import com.ideawheel.portal.model.LogChartCriteria;
+import org.apache.usergrid.apm.model.CompactClientLog;
+import org.apache.usergrid.apm.model.LogChartCriteria;
 import org.apache.usergrid.apm.service.LogDBService;
 import org.apache.usergrid.apm.service.LogTestData;
 import org.apache.usergrid.apm.service.ServiceFactory;

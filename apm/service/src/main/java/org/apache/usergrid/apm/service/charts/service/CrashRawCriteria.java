@@ -1,6 +1,6 @@
 package org.apache.usergrid.apm.service.charts.service;
 
-import com.ideawheel.portal.model.LogChartCriteria;
+import org.apache.usergrid.apm.model.LogChartCriteria;
 
 public class CrashRawCriteria extends RawCriteria<LogChartCriteria>
 {

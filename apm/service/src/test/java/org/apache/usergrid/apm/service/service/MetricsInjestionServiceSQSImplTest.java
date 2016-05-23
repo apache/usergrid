@@ -8,7 +8,7 @@ import junit.framework.TestCase;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.GetQueueAttributesRequest;
 import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
-import com.ideawheel.common.model.App;
+import org.apache.usergrid.apm.model.App;
 import org.apache.usergrid.apm.service.*;
 ;
 

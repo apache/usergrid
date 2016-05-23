@@ -8,10 +8,10 @@ import java.util.UUID;
 import java.util.Vector;
 
 
-import com.ideawheel.common.model.ApigeeMobileAPMConstants;
+import org.apache.usergrid.apm.model.ApigeeMobileAPMConstants;
 
-import com.ideawheel.portal.model.SessionChartCriteria;
-import com.ideawheel.portal.model.SummarySessionMetrics;
+import org.apache.usergrid.apm.model.SessionChartCriteria;
+import org.apache.usergrid.apm.model.SummarySessionMetrics;
 
 public class SummarySessionTestData
 {

@@ -21,7 +21,7 @@ import org.apache.usergrid.apm.service.charts.filter.SavedChartsFilter;
 import org.apache.usergrid.apm.service.charts.filter.SpecialTimeFilter;
 import org.apache.usergrid.apm.service.charts.filter.TimeRangeFilter;
 import org.apache.usergrid.apm.service.charts.filter.UrlFilter;
-import com.ideawheel.portal.model.MetricsChartCriteria;
+import org.apache.usergrid.apm.model.MetricsChartCriteria;
 
 public class NetworkMetricsChartUtil {
 	private static final Log log = LogFactory.getLog(NetworkMetricsChartUtil.class);

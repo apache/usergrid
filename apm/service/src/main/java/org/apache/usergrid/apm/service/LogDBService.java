@@ -17,14 +17,14 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.transform.Transformers;
 
-import com.ideawheel.common.model.ClientLog;
+import org.apache.usergrid.apm.model.ClientLog;
 import org.apache.usergrid.apm.service.charts.filter.TimeRangeFilter;
 import org.apache.usergrid.apm.service.charts.service.AggregatedLogData;
 import org.apache.usergrid.apm.service.charts.service.LogChartUtil;
 import org.apache.usergrid.apm.service.charts.service.LogRawCriteria;
 import org.apache.usergrid.apm.service.charts.service.SqlOrderGroupWhere;
-import com.ideawheel.portal.model.CompactClientLog;
-import com.ideawheel.portal.model.LogChartCriteria;
+import org.apache.usergrid.apm.model.CompactClientLog;
+import org.apache.usergrid.apm.model.LogChartCriteria;
 
 public class LogDBService {
 

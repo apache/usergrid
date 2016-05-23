@@ -4,7 +4,7 @@ import junit.framework.TestCase;
 
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.DeleteQueueRequest;
-import com.ideawheel.common.model.App;
+import org.apache.usergrid.apm.model.App;
 import org.apache.usergrid.apm.service.AWSUtil;
 import org.apache.usergrid.apm.service.ApplicationServiceImpl;
 import org.apache.usergrid.apm.service.DeploymentConfig;

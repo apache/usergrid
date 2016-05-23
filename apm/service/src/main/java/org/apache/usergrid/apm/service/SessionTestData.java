@@ -8,11 +8,11 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.Vector;
 
-import com.ideawheel.common.model.ApigeeMobileAPMConstants;
-import com.ideawheel.common.model.ClientSessionMetrics;
-import com.ideawheel.portal.model.ChartCriteria.SamplePeriod;
-import com.ideawheel.portal.model.CompactSessionMetrics;
-import com.ideawheel.portal.model.SessionChartCriteria;
+import org.apache.usergrid.apm.model.ApigeeMobileAPMConstants;
+import org.apache.usergrid.apm.model.ClientSessionMetrics;
+import org.apache.usergrid.apm.model.ChartCriteria.SamplePeriod;
+import org.apache.usergrid.apm.model.CompactSessionMetrics;
+import org.apache.usergrid.apm.model.SessionChartCriteria;
 
 public class SessionTestData
 {

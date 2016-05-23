@@ -16,16 +16,16 @@ import org.apache.commons.logging.LogFactory;
 import org.drools.runtime.StatefulKnowledgeSession;
 import org.drools.time.SessionPseudoClock;
 
-import com.ideawheel.common.model.ApigeeMobileAPMConstants;
-import com.ideawheel.common.model.App;
-import com.ideawheel.common.model.ApplicationConfigurationModel;
-import com.ideawheel.common.model.ClientLog;
-import com.ideawheel.common.model.ClientMetricsEnvelope;
-import com.ideawheel.common.model.ClientNetworkMetrics;
-import com.ideawheel.common.model.ClientSessionMetrics;
-import com.ideawheel.portal.model.ChartCriteria.SamplePeriod;
-import com.ideawheel.portal.model.CompactNetworkMetrics;
-import com.ideawheel.portal.model.MetricsChartCriteria;
+import org.apache.usergrid.apm.model.ApigeeMobileAPMConstants;
+import org.apache.usergrid.apm.model.App;
+import org.apache.usergrid.apm.model.ApplicationConfigurationModel;
+import org.apache.usergrid.apm.model.ClientLog;
+import org.apache.usergrid.apm.model.ClientMetricsEnvelope;
+import org.apache.usergrid.apm.model.ClientNetworkMetrics;
+import org.apache.usergrid.apm.model.ClientSessionMetrics;
+import org.apache.usergrid.apm.model.ChartCriteria.SamplePeriod;
+import org.apache.usergrid.apm.model.CompactNetworkMetrics;
+import org.apache.usergrid.apm.model.MetricsChartCriteria;
 //import org.hsqldb.util.CSVWriter;
 
 public class NetworkTestData

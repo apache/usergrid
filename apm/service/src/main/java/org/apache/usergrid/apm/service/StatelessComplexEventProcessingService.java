@@ -33,15 +33,15 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
-import com.ideawheel.common.model.ClientLog;
-import com.ideawheel.common.model.ClientMetricsEnvelope;
-import com.ideawheel.common.model.ClientNetworkMetrics;
-import com.ideawheel.common.model.ClientSessionMetrics;
+import org.apache.usergrid.apm.model.ClientLog;
+import org.apache.usergrid.apm.model.ClientMetricsEnvelope;
+import org.apache.usergrid.apm.model.ClientNetworkMetrics;
+import org.apache.usergrid.apm.model.ClientSessionMetrics;
 import org.apache.usergrid.apm.service.charts.service.NetworkMetricsChartCriteriaService;
-import com.ideawheel.portal.model.CompactClientLog;
-import com.ideawheel.portal.model.CompactNetworkMetrics;
-import com.ideawheel.portal.model.CompactSessionMetrics;
-import com.ideawheel.portal.model.SummarySessionMetrics;
+import org.apache.usergrid.apm.model.CompactClientLog;
+import org.apache.usergrid.apm.model.CompactNetworkMetrics;
+import org.apache.usergrid.apm.model.CompactSessionMetrics;
+import org.apache.usergrid.apm.model.SummarySessionMetrics;
 
 public class StatelessComplexEventProcessingService {
 

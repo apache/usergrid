@@ -6,7 +6,7 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.apache.usergrid.apm.service.charts.service.NetworkMetricsChartDTO;
-import com.ideawheel.portal.model.MetricsChartCriteria;
+import org.apache.usergrid.apm.model.MetricsChartCriteria;
 import org.apache.usergrid.apm.service.NetworkMetricsDBService;
 import org.apache.usergrid.apm.service.NetworkTestData;
 import org.apache.usergrid.apm.service.ServiceFactory;

@@ -2,9 +2,9 @@ package com.apigee.apm.rest;
 
 import java.util.Calendar;
 
-import com.ideawheel.common.model.ApigeeMobileAPMConstants;
-import com.ideawheel.portal.model.ChartCriteria;
-import com.ideawheel.portal.model.ChartCriteria.PeriodType;
+import org.apache.usergrid.apm.model.ApigeeMobileAPMConstants;
+import org.apache.usergrid.apm.model.ChartCriteria;
+import org.apache.usergrid.apm.model.ChartCriteria.PeriodType;
 
 public class ApmUtil {
 	

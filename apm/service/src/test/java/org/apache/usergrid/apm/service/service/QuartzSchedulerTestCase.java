@@ -11,7 +11,7 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 
-import com.ideawheel.common.model.App;
+import org.apache.usergrid.apm.model.App;
 ;
 
 /**

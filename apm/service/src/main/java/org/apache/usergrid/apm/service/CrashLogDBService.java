@@ -18,7 +18,7 @@ import org.hibernate.criterion.Order;
 import org.apache.usergrid.apm.service.charts.filter.TimeRangeFilter;
 import org.apache.usergrid.apm.service.charts.service.CrashChartUtil;
 import org.apache.usergrid.apm.service.charts.service.CrashRawCriteria;
-import com.ideawheel.portal.model.CrashLogDetails;
+import org.apache.usergrid.apm.model.CrashLogDetails;
 
 public class CrashLogDBService {
 

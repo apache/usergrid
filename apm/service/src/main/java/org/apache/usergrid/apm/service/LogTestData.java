@@ -7,11 +7,11 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.Vector;
 
-import com.ideawheel.common.model.ClientLog;
-import com.ideawheel.common.model.ApigeeMobileAPMConstants;
-import com.ideawheel.portal.model.ChartCriteria.SamplePeriod;
-import com.ideawheel.portal.model.CompactClientLog;
-import com.ideawheel.portal.model.LogChartCriteria;
+import org.apache.usergrid.apm.model.ClientLog;
+import org.apache.usergrid.apm.model.ApigeeMobileAPMConstants;
+import org.apache.usergrid.apm.model.ChartCriteria.SamplePeriod;
+import org.apache.usergrid.apm.model.CompactClientLog;
+import org.apache.usergrid.apm.model.LogChartCriteria;
 
 public class LogTestData
 {

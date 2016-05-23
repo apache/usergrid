@@ -1,7 +1,7 @@
 #created on: Apr 14, 2011
 package ClientLogMetricsCreator
 
-import com.ideawheel.portal.model.*;
+import org.apache.usergrid.apm.model.*;
 import com.org.common.model.*;
 import java.util.*;
 import org.apache.usergrid.apm.service.charts.service.SessionChartCriteriaService;

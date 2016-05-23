@@ -2,7 +2,7 @@ package org.apache.usergrid.apm.service.service;
 
 import java.util.Calendar;
 
-import com.ideawheel.common.model.App;
+import org.apache.usergrid.apm.model.App;
 
 import junit.framework.TestCase;
 import org.apache.usergrid.apm.service.MetricsInjestionService;

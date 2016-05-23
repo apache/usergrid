@@ -5,11 +5,11 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 
-import com.ideawheel.common.model.App;
-import com.ideawheel.portal.model.DeviceModel;
-import com.ideawheel.portal.model.DevicePlatform;
-import com.ideawheel.portal.model.NetworkCarrier;
-import com.ideawheel.portal.model.NetworkSpeed;
+import org.apache.usergrid.apm.model.App;
+import org.apache.usergrid.apm.model.DeviceModel;
+import org.apache.usergrid.apm.model.DevicePlatform;
+import org.apache.usergrid.apm.model.NetworkCarrier;
+import org.apache.usergrid.apm.model.NetworkSpeed;
 
 /**
  * 

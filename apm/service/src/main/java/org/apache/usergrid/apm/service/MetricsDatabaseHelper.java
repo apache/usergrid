@@ -15,12 +15,12 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.ProjectionList;
 
-import com.ideawheel.common.model.ClientNetworkMetrics;
+import org.apache.usergrid.apm.model.ClientNetworkMetrics;
 import org.apache.usergrid.apm.service.charts.filter.AppsFilter;
 import org.apache.usergrid.apm.service.charts.filter.DateIntervalFilter;
 import org.apache.usergrid.apm.service.charts.filter.UrlFilter;
 import org.apache.usergrid.apm.service.charts.service.NetworkMetricsChartUtil;
-import com.ideawheel.portal.model.MetricsChartCriteria;
+import org.apache.usergrid.apm.model.MetricsChartCriteria;
 
 public class MetricsDatabaseHelper {
 

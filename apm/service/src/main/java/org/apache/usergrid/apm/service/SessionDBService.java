@@ -9,12 +9,12 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.ProjectionList;
 
-import com.ideawheel.common.model.ClientSessionMetrics;
+import org.apache.usergrid.apm.model.ClientSessionMetrics;
 import org.apache.usergrid.apm.service.charts.service.AggregatedSessionData;
 import org.apache.usergrid.apm.service.charts.service.AttributeValueChartData;
-import com.ideawheel.portal.model.CompactSessionMetrics;
-import com.ideawheel.portal.model.SessionChartCriteria;
-import com.ideawheel.portal.model.SummarySessionMetrics;
+import org.apache.usergrid.apm.model.CompactSessionMetrics;
+import org.apache.usergrid.apm.model.SessionChartCriteria;
+import org.apache.usergrid.apm.model.SummarySessionMetrics;
 
 
 public interface SessionDBService

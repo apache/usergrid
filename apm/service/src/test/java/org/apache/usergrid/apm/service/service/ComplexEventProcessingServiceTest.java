@@ -16,7 +16,7 @@ import org.apache.usergrid.apm.service.ServiceFactory;
 import org.drools.runtime.conf.ClockTypeOption;
 import org.drools.time.SessionPseudoClock;
 
-import com.ideawheel.common.model.ClientMetricsEnvelope;
+import org.apache.usergrid.apm.model.ClientMetricsEnvelope;
 
 import org.apache.usergrid.apm.service.charts.service.SessionChartCriteriaService;
 

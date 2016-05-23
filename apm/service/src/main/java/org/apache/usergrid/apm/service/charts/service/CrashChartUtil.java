@@ -11,7 +11,7 @@ import org.hibernate.criterion.Restrictions;
 
 import org.apache.usergrid.apm.service.charts.filter.AppsFilter;
 import org.apache.usergrid.apm.service.charts.filter.TimeRangeFilter;
-import com.ideawheel.portal.model.LogChartCriteria;
+import org.apache.usergrid.apm.model.LogChartCriteria;
 
 
 public class CrashChartUtil {

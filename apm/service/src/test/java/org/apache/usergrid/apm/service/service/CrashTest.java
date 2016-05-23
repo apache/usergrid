@@ -8,13 +8,13 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
-import com.ideawheel.common.model.ClientLog;
+import org.apache.usergrid.apm.model.ClientLog;
 import org.apache.usergrid.apm.service.CrashUtil;
 import org.apache.usergrid.apm.service.ServiceFactory;
 import org.apache.usergrid.apm.service.crashlogparser.AndroidCrashLogParser;
 import org.apache.usergrid.apm.service.crashlogparser.CrashLogParser;
 import org.apache.usergrid.apm.service.crashlogparser.iOSCrashLogParser;
-import com.ideawheel.portal.model.CrashLogDetails;
+import org.apache.usergrid.apm.model.CrashLogDetails;
 
 import junit.framework.TestCase;
 

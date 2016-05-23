@@ -4,8 +4,8 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.ideawheel.portal.model.ChartCriteria.LastX;
-import com.ideawheel.portal.model.LogChartCriteria;
+import org.apache.usergrid.apm.model.ChartCriteria.LastX;
+import org.apache.usergrid.apm.model.LogChartCriteria;
 import org.apache.usergrid.apm.service.ServiceFactory;
 
 

@@ -32,13 +32,13 @@ import com.amazonaws.services.sqs.model.DeleteQueueRequest;
 import com.amazonaws.services.sqs.model.GetQueueAttributesRequest;
 import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
 import com.amazonaws.services.sqs.model.SetQueueAttributesRequest;
-import com.ideawheel.common.model.App;
+import org.apache.usergrid.apm.model.App;
 import org.apache.usergrid.apm.service.util.AsyncMailer;
 import org.apache.usergrid.apm.service.util.Email;
-import com.ideawheel.portal.model.DeviceModel;
-import com.ideawheel.portal.model.DevicePlatform;
-import com.ideawheel.portal.model.NetworkCarrier;
-import com.ideawheel.portal.model.NetworkSpeed;
+import org.apache.usergrid.apm.model.DeviceModel;
+import org.apache.usergrid.apm.model.DevicePlatform;
+import org.apache.usergrid.apm.model.NetworkCarrier;
+import org.apache.usergrid.apm.model.NetworkSpeed;
 import com.thoughtworks.xstream.XStream;
 
 
