@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="0Ca-En-eac">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10117" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="0Ca-En-eac">
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
@@ -30,7 +30,7 @@
         <!--Chit-Chat-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController title="Chit-Chat" id="BYZ-38-t0r" customClass="LoginViewController" customModule="SDKSample" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Chit-Chat" id="BYZ-38-t0r" customClass="LoginViewController" customModule="ActivityFeed" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
                         <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
@@ -39,7 +39,7 @@
                         <rect key="frame" x="0.0" y="64" width="414" height="672"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Password" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="AUv-4K-02z" userLabel="Password Text Field" customClass="FormTextField" customModule="SDKSample" customModuleProvider="target">
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Password" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="AUv-4K-02z" userLabel="Password Text Field" customClass="FormTextField" customModule="ActivityFeed" customModuleProvider="target">
                                 <rect key="frame" x="55" y="221" width="305" height="30"/>
                                 <color key="backgroundColor" red="0.98039215686274506" green="0.98039215686274506" blue="0.98039215686274506" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
@@ -56,7 +56,7 @@
                                     <outlet property="nextResponderField" destination="Pj4-c5-WOw" id="ndL-qj-xzY"/>
                                 </connections>
                             </textField>
-                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Username" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Z6O-sS-NMx" customClass="FormTextField" customModule="SDKSample" customModuleProvider="target">
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Username" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Z6O-sS-NMx" customClass="FormTextField" customModule="ActivityFeed" customModuleProvider="target">
                                 <rect key="frame" x="54" y="183" width="305" height="30"/>
                                 <color key="backgroundColor" red="0.98431372549019602" green="0.98431372549019602" blue="0.98431372549019602" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
@@ -142,7 +142,7 @@
         <!--Chat-->
         <scene sceneID="xKw-pF-1VK">
             <objects>
-                <viewController storyboardIdentifier="Chat" id="e2L-gy-keG" customClass="MessageViewController" customModule="SDKSample" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="Chat" id="e2L-gy-keG" customClass="MessageViewController" customModule="ActivityFeed" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="l0J-tj-N8R"/>
                         <viewControllerLayoutGuide type="bottom" id="aRQ-i9-bBv"/>
@@ -171,7 +171,7 @@
         <!--Follow-->
         <scene sceneID="L1J-vW-kjp">
             <objects>
-                <viewController id="dZf-Pa-FEf" customClass="FollowViewController" customModule="SDKSample" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="dZf-Pa-FEf" customClass="FollowViewController" customModule="ActivityFeed" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="bqC-DA-7jl"/>
                         <viewControllerLayoutGuide type="bottom" id="WfX-kG-aQR"/>
@@ -191,7 +191,7 @@
                                     <action selector="addFollowerButtonTouched:" destination="dZf-Pa-FEf" eventType="touchUpInside" id="yuv-da-ArK"/>
                                 </connections>
                             </button>
-                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Username" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="30w-Hq-z3n" customClass="FormTextField" customModule="SDKSample" customModuleProvider="target">
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Username" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="30w-Hq-z3n" customClass="FormTextField" customModule="ActivityFeed" customModuleProvider="target">
                                 <rect key="frame" x="55" y="229" width="305" height="30"/>
                                 <color key="backgroundColor" red="0.98431372549999996" green="0.98431372549999996" blue="0.98431372549999996" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
@@ -236,7 +236,7 @@
         <!--Create Account-->
         <scene sceneID="KTq-tk-yrN">
             <objects>
-                <viewController title="Create Account" id="bnr-oZ-e0h" customClass="RegisterViewController" customModule="SDKSample" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Create Account" id="bnr-oZ-e0h" customClass="RegisterViewController" customModule="ActivityFeed" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="54e-JK-PBR"/>
                         <viewControllerLayoutGuide type="bottom" id="JWP-YK-0Zj"/>
@@ -245,7 +245,7 @@
                         <rect key="frame" x="0.0" y="64" width="414" height="672"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Name" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="X55-Ni-6OO" customClass="FormTextField" customModule="SDKSample" customModuleProvider="target">
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Name" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="X55-Ni-6OO" customClass="FormTextField" customModule="ActivityFeed" customModuleProvider="target">
                                 <rect key="frame" x="55" y="112" width="305" height="30"/>
                                 <color key="backgroundColor" red="0.98431372549999996" green="0.98431372549999996" blue="0.98431372549999996" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
@@ -262,7 +262,7 @@
                                     <outlet property="nextResponderField" destination="T7U-9G-AS6" id="HUF-el-scZ"/>
                                 </connections>
                             </textField>
-                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Username" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="T7U-9G-AS6" userLabel="Username Text Field" customClass="FormTextField" customModule="SDKSample" customModuleProvider="target">
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Username" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="T7U-9G-AS6" userLabel="Username Text Field" customClass="FormTextField" customModule="ActivityFeed" customModuleProvider="target">
                                 <rect key="frame" x="55" y="150" width="305" height="30"/>
                                 <color key="backgroundColor" red="0.98431372549999996" green="0.98431372549999996" blue="0.98431372549999996" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
@@ -279,7 +279,7 @@
                                     <outlet property="nextResponderField" destination="Fbi-gF-0jQ" id="sjv-Dm-5GL"/>
                                 </connections>
                             </textField>
-                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Email" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Fbi-gF-0jQ" customClass="FormTextField" customModule="SDKSample" customModuleProvider="target">
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Email" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Fbi-gF-0jQ" customClass="FormTextField" customModule="ActivityFeed" customModuleProvider="target">
                                 <rect key="frame" x="55" y="188" width="305" height="30"/>
                                 <color key="backgroundColor" red="0.98431372549999996" green="0.98431372549999996" blue="0.98431372549999996" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
@@ -296,7 +296,7 @@
                                     <outlet property="nextResponderField" destination="3wi-7s-j5P" id="eE7-9Y-L0t"/>
                                 </connections>
                             </textField>
-                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Password" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="3wi-7s-j5P" userLabel="Password Text Field" customClass="FormTextField" customModule="SDKSample" customModuleProvider="target">
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Password" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="3wi-7s-j5P" userLabel="Password Text Field" customClass="FormTextField" customModule="ActivityFeed" customModuleProvider="target">
                                 <rect key="frame" x="55" y="226" width="305" height="30"/>
                                 <color key="backgroundColor" red="0.98431372549999996" green="0.98431372549999996" blue="0.98431372549999996" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>

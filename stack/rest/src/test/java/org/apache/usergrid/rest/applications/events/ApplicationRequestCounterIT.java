@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 
 import static org.junit.Assert.assertEquals;
@@ -60,6 +61,53 @@ public class ApplicationRequestCounterIT extends AbstractRestIT {
 
         //Since it was accessed twice above.
         assertEquals( 2, ( ( LinkedHashMap ) ( ( ArrayList)counters.get( "values" )).get( 0 )).get( "value" ));
+
+    }
+
+    @Test
+    public void testDecrementingEntityCounters() throws Exception {
+
+        //Create test collection with test entity that is full text indexed.
+        int numberOfEntitiesToCreate = 10;
+
+        Entity[] entities = new Entity[numberOfEntitiesToCreate];
+        Entity testEntity = new Entity();
+        for(int i = 0; i < numberOfEntitiesToCreate; i++){
+            testEntity.put( "one","value"+i );
+            testEntity.put( "two","valuetwo"+i );
+            entities[i]= this.app().collection( "testCollection" ).post( testEntity );
+        }
+
+        //get default application
+       // ApiResponse defaultApp = org().app( clientSetup.getAppName() ).get();
+
+        QueryParameters queryParameters = new QueryParameters();
+        queryParameters.addParam( "resolution", "all" ).addParam( "counter", "application.collection.testcollections" );
+        Collection countersResponse = org().app( clientSetup.getAppName() ).collection( "counters" ).get( queryParameters ,true );
+
+        assertNotNull( countersResponse );
+        ArrayList counterValues = ( ArrayList ) countersResponse.getResponse().getProperties().get( "counters" );
+        LinkedHashMap counters = ( LinkedHashMap ) counterValues.get( 0 );
+        assertEquals( "application.collection.testcollections", counters.get( "name" ) );
+
+        //Since it was accessed twice above.
+        assertEquals( 10, ( ( LinkedHashMap ) ( ( ArrayList)counters.get( "values" )).get( 0 )).get( "value" ));
+
+        for(int i = 0; i < numberOfEntitiesToCreate; i++){
+            this.app().collection( "testCollection" ).entity( entities[i] ).delete( );
+        }
+        
+        queryParameters.addParam( "resolution", "all" ).addParam( "counter", "application.collection.testcollections" );
+        countersResponse = org().app( clientSetup.getAppName() ).collection( "counters" ).get( queryParameters ,true );
+
+        assertNotNull( countersResponse );
+        counterValues = ( ArrayList ) countersResponse.getResponse().getProperties().get( "counters" );
+        counters = ( LinkedHashMap ) counterValues.get( 0 );
+        assertEquals( "application.collection.testcollections", counters.get( "name" ) );
+
+        //Since it was accessed twice above.
+        assertEquals( 0, ( ( LinkedHashMap ) ( ( ArrayList)counters.get( "values" )).get( 0 )).get( "value" ));
+
 
     }
 }

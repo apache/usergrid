@@ -14,12 +14,12 @@
     <a title="UsergridClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">UsergridSDK Docs</a> (100% documented)</p>
+        <p><a href="../index.html"> Docs</a> (100% documented)</p>
       </div>
     </header>
     <div class="content-wrapper">
       <p id="breadcrumbs">
-        <a href="../index.html">UsergridSDK Reference</a>
+        <a href="../index.html"> Reference</a>
         <img id="carat" src="../img/carat.png" />
         UsergridClient Class Reference
       </p>
@@ -92,7 +92,7 @@
             <a href="../Enums.html">Enums</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Enums/UsergridAuthFallback.html">UsergridAuthFallback</a>
+                <a href="../Enums/UsergridAuthMode.html">UsergridAuthMode</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/UsergridDeviceProperties.html">UsergridDeviceProperties</a>
@@ -117,6 +117,14 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/UsergridUserProperties.html">UsergridUserProperties</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/NSDate.html">NSDate</a>
               </li>
             </ul>
           </li>
@@ -285,6 +293,33 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:vC11UsergridSDK14UsergridClient12clientAppURLSS"></a>
+                    <a name="//apple_ref/swift/Property/clientAppURL" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC11UsergridSDK14UsergridClient12clientAppURLSS">clientAppURL</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The constructed URL string based on the <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>&rsquo;s <code><a href="../Classes/UsergridClient.html#/s:vC11UsergridSDK14UsergridClient7baseUrlSS">baseUrl</a></code>, <code><a href="../Classes/UsergridClient.html#/s:vC11UsergridSDK14UsergridClient5orgIdSS">orgId</a></code>, and <code><a href="../Classes/UsergridClient.html#/s:vC11UsergridSDK14UsergridClient5appIdSS">appId</a></code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">clientAppURL</span> <span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">return</span> <span class="s">"</span><span class="se">\(</span><span class="n">baseUrl</span><span class="se">)</span><span class="s">/</span><span class="se">\(</span><span class="n">orgId</span><span class="se">)</span><span class="s">/</span><span class="se">\(</span><span class="n">appId</span><span class="se">)</span><span class="s">"</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:vC11UsergridSDK14UsergridClient28persistCurrentUserInKeychainSb"></a>
                     <a name="//apple_ref/swift/Property/persistCurrentUserInKeychain" class="dashAnchor"></a>
                     <a class="token" href="#/s:vC11UsergridSDK14UsergridClient28persistCurrentUserInKeychainSb">persistCurrentUserInKeychain</a>
@@ -393,9 +428,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:vC11UsergridSDK14UsergridClient12authFallbackOS_20UsergridAuthFallback"></a>
-                    <a name="//apple_ref/swift/Property/authFallback" class="dashAnchor"></a>
-                    <a class="token" href="#/s:vC11UsergridSDK14UsergridClient12authFallbackOS_20UsergridAuthFallback">authFallback</a>
+                    <a name="/s:vC11UsergridSDK14UsergridClient8authModeOS_16UsergridAuthMode"></a>
+                    <a name="//apple_ref/swift/Property/authMode" class="dashAnchor"></a>
+                    <a class="token" href="#/s:vC11UsergridSDK14UsergridClient8authModeOS_16UsergridAuthMode">authMode</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -403,14 +438,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The <code><a href="../Enums/UsergridAuthFallback.html">UsergridAuthFallback</a></code> value used to determine what type of token will be sent, if any.</p>
+                        <p>The <code><a href="../Enums/UsergridAuthMode.html">UsergridAuthMode</a></code> value used to determine what type of token will be sent, if any.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">authFallback</span><span class="p">:</span> <span class="kt">UsergridAuthFallback</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">authMode</span><span class="p">:</span> <span class="kt">UsergridAuthMode</span></code></pre>
 
                         </div>
                       </div>
@@ -431,9 +466,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClientcFMS0_FT5orgIdSS5appIdSS_S0_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClientcFT5orgIdSS5appIdSS_S0_"></a>
                     <a name="//apple_ref/swift/Method/init(orgId:appId:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClientcFMS0_FT5orgIdSS5appIdSS_S0_">init(orgId:appId:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClientcFT5orgIdSS5appIdSS_S0_">init(orgId:appId:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -496,9 +531,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClientcFMS0_FT5orgIdSS5appIdSS7baseUrlSS_S0_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClientcFT5orgIdSS5appIdSS7baseUrlSS_S0_"></a>
                     <a name="//apple_ref/swift/Method/init(orgId:appId:baseUrl:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClientcFMS0_FT5orgIdSS5appIdSS7baseUrlSS_S0_">init(orgId:appId:baseUrl:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClientcFT5orgIdSS5appIdSS7baseUrlSS_S0_">init(orgId:appId:baseUrl:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -574,9 +609,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClientcFMS0_FT13configurationCS_20UsergridClientConfig_S0_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClientcFT13configurationCS_20UsergridClientConfig_S0_"></a>
                     <a name="//apple_ref/swift/Method/init(configuration:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClientcFMS0_FT13configurationCS_20UsergridClientConfig_S0_">init(configuration:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClientcFT13configurationCS_20UsergridClientConfig_S0_">init(configuration:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -637,9 +672,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClientcFMS0_FT5coderCSo7NSCoder_GSqS0__"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClientcFT5coderCSo7NSCoder_GSqS0__"></a>
                     <a name="//apple_ref/swift/Method/init(coder:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClientcFMS0_FT5coderCSo7NSCoder_GSqS0__">init(coder:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClientcFT5coderCSo7NSCoder_GSqS0__">init(coder:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -689,9 +724,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient15encodeWithCoderFS0_FCSo7NSCoderT_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient15encodeWithCoderFCSo7NSCoderT_"></a>
                     <a name="//apple_ref/swift/Method/encodeWithCoder(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient15encodeWithCoderFS0_FCSo7NSCoderT_">encodeWithCoder(_:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient15encodeWithCoderFCSo7NSCoderT_">encodeWithCoder(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -747,9 +782,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient14applyPushTokenFS0_FTCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient14applyPushTokenFTCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/applyPushToken(_:notifierID:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient14applyPushTokenFS0_FTCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">applyPushToken(_:notifierID:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient14applyPushTokenFTCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">applyPushToken(_:notifierID:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -820,9 +855,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient14applyPushTokenFS0_FTCS_14UsergridDevice9pushTokenCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient14applyPushTokenFTCS_14UsergridDevice9pushTokenCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/applyPushToken(_:pushToken:notifierID:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient14applyPushTokenFS0_FTCS_14UsergridDevice9pushTokenCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">applyPushToken(_:pushToken:notifierID:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient14applyPushTokenFTCS_14UsergridDevice9pushTokenCSo6NSData10notifierIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">applyPushToken(_:pushToken:notifierID:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -917,9 +952,47 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient9usingAuthFS0_FCS_12UsergridAuthDS0_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient15authForRequestsFT_GSqCS_12UsergridAuth_"></a>
+                    <a name="//apple_ref/swift/Method/authForRequests()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient15authForRequestsFT_GSqCS_12UsergridAuth_">authForRequests()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Determines the <code><a href="../Classes/UsergridAuth.html">UsergridAuth</a></code> object that will be used for all outgoing requests made.</p>
+
+<p>If there is a valid temporary <code><a href="../Classes/UsergridAuth.html">UsergridAuth</a></code> set by the functions <code>usingAuth</code> or <code>usingToken</code> it will return that.</p>
+
+<p>If there is a <code><a href="../Classes/UsergridUser.html">UsergridUser</a></code> logged in and the token of that user is valid then it will return that.</p>
+
+<p>Otherwise, if the <code><a href="../Classes/UsergridClient.html#/s:vC11UsergridSDK14UsergridClient8authModeOS_16UsergridAuthMode">authMode</a></code> is <code>.App</code>, and the <code><a href="../Classes/UsergridAppAuth.html">UsergridAppAuth</a></code> of the client is set and the token is valid it will return that.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">authForRequests</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">UsergridAuth</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The <code><a href="../Classes/UsergridAuth.html">UsergridAuth</a></code> if one is found or nil if not.</p>
+
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:FC11UsergridSDK14UsergridClient9usingAuthFCS_12UsergridAuthDS0_"></a>
                     <a name="//apple_ref/swift/Method/usingAuth(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient9usingAuthFS0_FCS_12UsergridAuthDS0_">usingAuth(_:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient9usingAuthFCS_12UsergridAuthDS0_">usingAuth(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -971,9 +1044,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient10usingTokenFS0_FSSDS0_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient10usingTokenFSSDS0_"></a>
                     <a name="//apple_ref/swift/Method/usingToken(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient10usingTokenFS0_FSSDS0_">usingToken(_:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient10usingTokenFSSDS0_">usingToken(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1025,9 +1098,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient15authenticateAppFS0_FTGSqFT4authGSqCS_15UsergridAppAuth_5errorGSqCS_21UsergridResponseError__T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient15authenticateAppFTGSqFT4authGSqCS_15UsergridAppAuth_5errorGSqCS_21UsergridResponseError__T___T_"></a>
                     <a name="//apple_ref/swift/Method/authenticateApp(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient15authenticateAppFS0_FTGSqFT4authGSqCS_15UsergridAppAuth_5errorGSqCS_21UsergridResponseError__T___T_">authenticateApp(_:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient15authenticateAppFTGSqFT4authGSqCS_15UsergridAppAuth_5errorGSqCS_21UsergridResponseError__T___T_">authenticateApp(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1072,9 +1145,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient15authenticateAppFS0_FTCS_15UsergridAppAuth10completionGSqFT4authGSqS1__5errorGSqCS_21UsergridResponseError__T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient15authenticateAppFTCS_15UsergridAppAuth10completionGSqFT4authGSqS1__5errorGSqCS_21UsergridResponseError__T___T_"></a>
                     <a name="//apple_ref/swift/Method/authenticateApp(_:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient15authenticateAppFS0_FTCS_15UsergridAppAuth10completionGSqFT4authGSqS1__5errorGSqCS_21UsergridResponseError__T___T_">authenticateApp(_:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient15authenticateAppFTCS_15UsergridAppAuth10completionGSqFT4authGSqS1__5errorGSqCS_21UsergridResponseError__T___T_">authenticateApp(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1132,9 +1205,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient16authenticateUserFS0_FTCS_16UsergridUserAuth10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqCS_21UsergridResponseError__T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient16authenticateUserFTCS_16UsergridUserAuth10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqCS_21UsergridResponseError__T___T_"></a>
                     <a name="//apple_ref/swift/Method/authenticateUser(_:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient16authenticateUserFS0_FTCS_16UsergridUserAuth10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqCS_21UsergridResponseError__T___T_">authenticateUser(_:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient16authenticateUserFTCS_16UsergridUserAuth10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqCS_21UsergridResponseError__T___T_">authenticateUser(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1192,9 +1265,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient16authenticateUserFS0_FTCS_16UsergridUserAuth16setAsCurrentUserSb10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqCS_21UsergridResponseError__T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient16authenticateUserFTCS_16UsergridUserAuth16setAsCurrentUserSb10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqCS_21UsergridResponseError__T___T_"></a>
                     <a name="//apple_ref/swift/Method/authenticateUser(_:setAsCurrentUser:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient16authenticateUserFS0_FTCS_16UsergridUserAuth16setAsCurrentUserSb10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqCS_21UsergridResponseError__T___T_">authenticateUser(_:setAsCurrentUser:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient16authenticateUserFTCS_16UsergridUserAuth16setAsCurrentUserSb10completionGSqFT4authGSqS1__4userGSqCS_12UsergridUser_5errorGSqCS_21UsergridResponseError__T___T_">authenticateUser(_:setAsCurrentUser:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1265,9 +1338,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient13resetPasswordFS0_FTCS_12UsergridUser3oldSS3newSS10completionGSqFT5errorGSqCS_21UsergridResponseError_10didSucceedSb_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient13resetPasswordFTCS_12UsergridUser3oldSS3newSS10completionGSqFT5errorGSqCS_21UsergridResponseError_10didSucceedSb_T___T_"></a>
                     <a name="//apple_ref/swift/Method/resetPassword(_:old:new:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient13resetPasswordFS0_FTCS_12UsergridUser3oldSS3newSS10completionGSqFT5errorGSqCS_21UsergridResponseError_10didSucceedSb_T___T_">resetPassword(_:old:new:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient13resetPasswordFTCS_12UsergridUser3oldSS3newSS10completionGSqFT5errorGSqCS_21UsergridResponseError_10didSucceedSb_T___T_">resetPassword(_:old:new:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1275,7 +1348,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Changes the give <code><a href="../Classes/UsergridUser.html">UsergridUser</a></code>&rsquo;s current password with the shared instance of <code><a href="../Classes/UsergridClient.html">UsergridClient</a></code>.</p>
+                        <p>Changes the given <code><a href="../Classes/UsergridUser.html">UsergridUser</a></code>&rsquo;s current password.</p>
 
                       </div>
                       <div class="declaration">
@@ -1351,9 +1424,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient17logoutCurrentUserFS0_FTGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient17logoutCurrentUserFTGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/logoutCurrentUser(_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient17logoutCurrentUserFS0_FTGSqFT8responseCS_16UsergridResponse_T___T_">logoutCurrentUser(_:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient17logoutCurrentUserFTGSqFT8responseCS_16UsergridResponse_T___T_">logoutCurrentUser(_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1398,9 +1471,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient19logoutUserAllTokensFS0_FTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient19logoutUserAllTokensFTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/logoutUserAllTokens(_:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient19logoutUserAllTokensFS0_FTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">logoutUserAllTokens(_:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient19logoutUserAllTokensFTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">logoutUserAllTokens(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1445,9 +1518,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient10logoutUserFS0_FTSS5tokenGSqSS_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient10logoutUserFTSS5tokenGSqSS_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/logoutUser(_:token:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient10logoutUserFS0_FTSS5tokenGSqSS_10completionGSqFT8responseCS_16UsergridResponse_T___T_">logoutUser(_:token:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient10logoutUserFTSS5tokenGSqSS_10completionGSqFT8responseCS_16UsergridResponse_T___T_">logoutUser(_:token:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1505,9 +1578,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient11sendRequestFS0_FTCS_15UsergridRequest10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient11sendRequestFTCS_15UsergridRequest10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/sendRequest(_:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient11sendRequestFS0_FTCS_15UsergridRequest10completionGSqFT8responseCS_16UsergridResponse_T___T_">sendRequest(_:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient11sendRequestFTCS_15UsergridRequest10completionGSqFT8responseCS_16UsergridResponse_T___T_">sendRequest(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1582,9 +1655,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient3GETFS0_FTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient3GETFTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/GET(_:uuidOrName:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3GETFS0_FTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">GET(_:uuidOrName:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3GETFTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">GET(_:uuidOrName:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1655,9 +1728,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient3GETFS0_FTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient3GETFTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/GET(_:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3GETFS0_FTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">GET(_:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3GETFTSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">GET(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1715,9 +1788,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient3GETFS0_FTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient3GETFTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/GET(_:queryCompletion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3GETFS0_FTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_">GET(_:queryCompletion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3GETFTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_">GET(_:queryCompletion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1786,9 +1859,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTSS10uuidOrNameSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient3PUTFTSS10uuidOrNameSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/PUT(_:uuidOrName:jsonBody:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTSS10uuidOrNameSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:uuidOrName:jsonBody:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3PUTFTSS10uuidOrNameSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:uuidOrName:jsonBody:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1872,9 +1945,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient3PUTFTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/PUT(_:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3PUTFTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1932,9 +2005,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient3PUTFTSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/PUT(_:jsonBody:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:jsonBody:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3PUTFTSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:jsonBody:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2011,9 +2084,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTCS_13UsergridQuery8jsonBodyGVSs10DictionarySSPSs9AnyObject__15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient3PUTFTCS_13UsergridQuery8jsonBodyGVs10DictionarySSPs9AnyObject__15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/PUT(_:jsonBody:queryCompletion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3PUTFS0_FTCS_13UsergridQuery8jsonBodyGVSs10DictionarySSPSs9AnyObject__15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:jsonBody:queryCompletion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient3PUTFTCS_13UsergridQuery8jsonBodyGVs10DictionarySSPs9AnyObject__15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_">PUT(_:jsonBody:queryCompletion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2101,9 +2174,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/POST(_:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2163,9 +2236,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTGSaCS_14UsergridEntity_18entitiesCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFTGSaCS_14UsergridEntity_18entitiesCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/POST(_:entitiesCompletion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTGSaCS_14UsergridEntity_18entitiesCompletionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:entitiesCompletion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFTGSaCS_14UsergridEntity_18entitiesCompletionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:entitiesCompletion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2229,9 +2302,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFTSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/POST(_:jsonBody:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:jsonBody:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFTSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:jsonBody:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2302,9 +2375,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTSS10jsonBodiesGSaGVSs10DictionarySSPSs9AnyObject___10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFTSS10jsonBodiesGSaGVs10DictionarySSPs9AnyObject___10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/POST(_:jsonBodies:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTSS10jsonBodiesGSaGVSs10DictionarySSPSs9AnyObject___10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:jsonBodies:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFTSS10jsonBodiesGSaGVs10DictionarySSPs9AnyObject___10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:jsonBodies:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2375,9 +2448,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTSS4nameSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient4POSTFTSS4nameSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/POST(_:name:jsonBody:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFS0_FTSS4nameSS8jsonBodyGVSs10DictionarySSPSs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:name:jsonBody:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient4POSTFTSS4nameSS8jsonBodyGVs10DictionarySSPs9AnyObject__10completionGSqFT8responseCS_16UsergridResponse_T___T_">POST(_:name:jsonBody:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2472,9 +2545,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient6DELETEFS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient6DELETEFTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/DELETE(_:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient6DELETEFS0_FTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient6DELETEFTCS_14UsergridEntity10completionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2538,9 +2611,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient6DELETEFS0_FTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient6DELETEFTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/DELETE(_:queryCompletion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient6DELETEFS0_FTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:queryCompletion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient6DELETEFTCS_13UsergridQuery15queryCompletionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:queryCompletion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2604,9 +2677,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient6DELETEFS0_FTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient6DELETEFTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/DELETE(_:uuidOrName:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient6DELETEFS0_FTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:uuidOrName:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient6DELETEFTSS10uuidOrNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">DELETE(_:uuidOrName:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2688,9 +2761,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient7connectFS0_FTCS_14UsergridEntity12relationshipSS2toS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient7connectFTCS_14UsergridEntity12relationshipSS2toS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/connect(_:relationship:to:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient7connectFS0_FTCS_14UsergridEntity12relationshipSS2toS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_">connect(_:relationship:to:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient7connectFTCS_14UsergridEntity12relationshipSS2toS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_">connect(_:relationship:to:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2774,9 +2847,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient7connectFS0_FTSS8entityIDSS12relationshipSS6toTypeSS6toNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient7connectFTSS8entityIDSS12relationshipSS6toTypeSS6toNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/connect(_:entityID:relationship:toType:toName:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient7connectFS0_FTSS8entityIDSS12relationshipSS6toTypeSS6toNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">connect(_:entityID:relationship:toType:toName:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient7connectFTSS8entityIDSS12relationshipSS6toTypeSS6toNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">connect(_:entityID:relationship:toType:toName:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2886,9 +2959,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient7connectFS0_FTSS8entityIDSS12relationshipSS6toTypeGSqSS_4toIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient7connectFTSS8entityIDSS12relationshipSS6toTypeGSqSS_4toIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/connect(_:entityID:relationship:toType:toID:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient7connectFS0_FTSS8entityIDSS12relationshipSS6toTypeGSqSS_4toIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">connect(_:entityID:relationship:toType:toID:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient7connectFTSS8entityIDSS12relationshipSS6toTypeGSqSS_4toIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">connect(_:entityID:relationship:toType:toID:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2998,9 +3071,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient10disconnectFS0_FTCS_14UsergridEntity12relationshipSS4fromS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient10disconnectFTCS_14UsergridEntity12relationshipSS4fromS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/disconnect(_:relationship:from:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient10disconnectFS0_FTCS_14UsergridEntity12relationshipSS4fromS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_">disconnect(_:relationship:from:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient10disconnectFTCS_14UsergridEntity12relationshipSS4fromS1_10completionGSqFT8responseCS_16UsergridResponse_T___T_">disconnect(_:relationship:from:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -3084,9 +3157,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient10disconnectFS0_FTSS8entityIDSS12relationshipSS8fromTypeSS8fromNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient10disconnectFTSS8entityIDSS12relationshipSS8fromTypeSS8fromNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/disconnect(_:entityID:relationship:fromType:fromName:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient10disconnectFS0_FTSS8entityIDSS12relationshipSS8fromTypeSS8fromNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">disconnect(_:entityID:relationship:fromType:fromName:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient10disconnectFTSS8entityIDSS12relationshipSS8fromTypeSS8fromNameSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">disconnect(_:entityID:relationship:fromType:fromName:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -3196,9 +3269,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient10disconnectFS0_FTSS8entityIDSS12relationshipSS8fromTypeGSqSS_6fromIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient10disconnectFTSS8entityIDSS12relationshipSS8fromTypeGSqSS_6fromIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/disconnect(_:entityID:relationship:fromType:fromID:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient10disconnectFS0_FTSS8entityIDSS12relationshipSS8fromTypeGSqSS_6fromIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">disconnect(_:entityID:relationship:fromType:fromID:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient10disconnectFTSS8entityIDSS12relationshipSS8fromTypeGSqSS_6fromIDSS10completionGSqFT8responseCS_16UsergridResponse_T___T_">disconnect(_:entityID:relationship:fromType:fromID:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -3308,9 +3381,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient14getConnectionsFS0_FTOS_17UsergridDirection6entityCS_14UsergridEntity12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient14getConnectionsFTOS_17UsergridDirection6entityCS_14UsergridEntity12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/getConnections(_:entity:relationship:query:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient14getConnectionsFS0_FTOS_17UsergridDirection6entityCS_14UsergridEntity12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_">getConnections(_:entity:relationship:query:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient14getConnectionsFTOS_17UsergridDirection6entityCS_14UsergridEntity12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_">getConnections(_:entity:relationship:query:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -3325,7 +3398,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getConnections</span><span class="p">(</span><span class="nv">direction</span><span class="p">:</span><span class="kt">UsergridDirection</span><span class="p">,</span> <span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">query</span><span class="p">:</span><span class="kt">UsergridQuery</span><span class="p">?,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getConnections</span><span class="p">(</span><span class="nv">direction</span><span class="p">:</span><span class="kt">UsergridDirection</span><span class="p">,</span> <span class="nv">entity</span><span class="p">:</span><span class="kt">UsergridEntity</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">query</span><span class="p">:</span><span class="kt">UsergridQuery</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -3394,9 +3467,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient14getConnectionsFS0_FTOS_17UsergridDirection4typeSS10uuidOrNameSS12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient14getConnectionsFTOS_17UsergridDirection4typeSS10uuidOrNameSS12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/getConnections(_:type:uuidOrName:relationship:query:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient14getConnectionsFS0_FTOS_17UsergridDirection4typeSS10uuidOrNameSS12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_">getConnections(_:type:uuidOrName:relationship:query:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient14getConnectionsFTOS_17UsergridDirection4typeSS10uuidOrNameSS12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_">getConnections(_:type:uuidOrName:relationship:query:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -3411,7 +3484,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getConnections</span><span class="p">(</span><span class="nv">direction</span><span class="p">:</span><span class="kt">UsergridDirection</span><span class="p">,</span> <span class="nv">type</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">uuidOrName</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">query</span><span class="p">:</span><span class="kt">UsergridQuery</span><span class="p">?,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getConnections</span><span class="p">(</span><span class="nv">direction</span><span class="p">:</span><span class="kt">UsergridDirection</span><span class="p">,</span> <span class="nv">type</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">uuidOrName</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">query</span><span class="p">:</span><span class="kt">UsergridQuery</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -3506,9 +3579,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient14getConnectionsFS0_FTOS_17UsergridDirection4uuidSS12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient14getConnectionsFTOS_17UsergridDirection4uuidSS12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/getConnections(_:uuid:relationship:query:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient14getConnectionsFS0_FTOS_17UsergridDirection4uuidSS12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_">getConnections(_:uuid:relationship:query:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient14getConnectionsFTOS_17UsergridDirection4uuidSS12relationshipSS5queryGSqCS_13UsergridQuery_10completionGSqFT8responseCS_16UsergridResponse_T___T_">getConnections(_:uuid:relationship:query:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -3523,7 +3596,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getConnections</span><span class="p">(</span><span class="nv">direction</span><span class="p">:</span><span class="kt">UsergridDirection</span><span class="p">,</span> <span class="nv">uuid</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">query</span><span class="p">:</span><span class="kt">UsergridQuery</span><span class="p">?,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+                          <pre class="highlight"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getConnections</span><span class="p">(</span><span class="nv">direction</span><span class="p">:</span><span class="kt">UsergridDirection</span><span class="p">,</span> <span class="nv">uuid</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">relationship</span><span class="p">:</span><span class="kt">String</span><span class="p">,</span> <span class="nv">query</span><span class="p">:</span><span class="kt">UsergridQuery</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span><span class="kt">UsergridResponseCompletion</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -3616,9 +3689,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient11uploadAssetFS0_FTCS_14UsergridEntity5assetCS_13UsergridAsset8progressGSqFT13bytesFinishedVSs5Int6413bytesExpectedS3__T__10completionGSqFT8responseCS_16UsergridResponse5assetGSqS2__5errorGSqSS__T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient11uploadAssetFTCS_14UsergridEntity5assetCS_13UsergridAsset8progressGSqFT13bytesFinishedVs5Int6413bytesExpectedS3__T__10completionGSqFT5assetGSqS2__8responseCS_16UsergridResponse_T___T_"></a>
                     <a name="//apple_ref/swift/Method/uploadAsset(_:asset:progress:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient11uploadAssetFS0_FTCS_14UsergridEntity5assetCS_13UsergridAsset8progressGSqFT13bytesFinishedVSs5Int6413bytesExpectedS3__T__10completionGSqFT8responseCS_16UsergridResponse5assetGSqS2__5errorGSqSS__T___T_">uploadAsset(_:asset:progress:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient11uploadAssetFTCS_14UsergridEntity5assetCS_13UsergridAsset8progressGSqFT13bytesFinishedVs5Int6413bytesExpectedS3__T__10completionGSqFT5assetGSqS2__8responseCS_16UsergridResponse_T___T_">uploadAsset(_:asset:progress:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -3702,9 +3775,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:FC11UsergridSDK14UsergridClient13downloadAssetFS0_FTCS_14UsergridEntity11contentTypeSS8progressGSqFT13bytesFinishedVSs5Int6413bytesExpectedS2__T__10completionGSqFT5assetGSqCS_13UsergridAsset_5errorGSqSS__T___T_"></a>
+                    <a name="/s:FC11UsergridSDK14UsergridClient13downloadAssetFTCS_14UsergridEntity11contentTypeSS8progressGSqFT13bytesFinishedVs5Int6413bytesExpectedS2__T__10completionGSqFT5assetGSqCS_13UsergridAsset_5errorGSqCS_21UsergridResponseError__T___T_"></a>
                     <a name="//apple_ref/swift/Method/downloadAsset(_:contentType:progress:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient13downloadAssetFS0_FTCS_14UsergridEntity11contentTypeSS8progressGSqFT13bytesFinishedVSs5Int6413bytesExpectedS2__T__10completionGSqFT5assetGSqCS_13UsergridAsset_5errorGSqSS__T___T_">downloadAsset(_:contentType:progress:completion:)</a>
+                    <a class="token" href="#/s:FC11UsergridSDK14UsergridClient13downloadAssetFTCS_14UsergridEntity11contentTypeSS8progressGSqFT13bytesFinishedVs5Int6413bytesExpectedS2__T__10completionGSqFT5assetGSqCS_13UsergridAsset_5errorGSqCS_21UsergridResponseError__T___T_">downloadAsset(_:contentType:progress:completion:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -3790,7 +3863,7 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2016 <a class="link" href="https://github.com/apache/usergrid/tree/master/sdks/swift" target="_blank" rel="external">Robert Walsh</a>. All rights reserved. (Last updated: 2016-02-15)</p>
+          <p>&copy; 2016 <a class="link" href="" target="_blank" rel="external"></a>. All rights reserved. (Last updated: 2016-04-14)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.5.0</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
