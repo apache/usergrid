@@ -11,7 +11,7 @@
     <name>Apache Usergrid Mobile APM (App Performance Monitoring)</name>
     <url>http://usergrid.apache.org</url>
 
-    <!-- update -->
+    <!--TODO: update -->
 
     <scm>
         <connection>scm:git:https:///</connection>

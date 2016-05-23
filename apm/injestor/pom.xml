@@ -47,13 +47,13 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.ideawheel</groupId>
-			<artifactId>portal-model</artifactId>
+            <groupId>org.apache.usergrid.apm</groupId>
+            <artifactId>model</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.ideawheel</groupId>
-			<artifactId>portal-service</artifactId>
+            <groupId>org.apache.usergrid.apm</groupId>
+            <artifactId>service</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
