@@ -184,51 +184,69 @@ public class ShiroCache<K, V> implements Cache<K,V> {
 
         String ret = null;
 
-        final String typeName = typeRef.getType().getTypeName();
+        Throwable throwable = null;
 
-        if ( key instanceof SimplePrincipalCollection) {
+        String errorMessage = null;
 
-            SimplePrincipalCollection spc = (SimplePrincipalCollection)key;
+        try {
 
-            if ( spc.getPrimaryPrincipal() instanceof UserPrincipal) {
+            final String typeName = typeRef.getType().getTypeName();
 
-                // principal is a user, use UUID as cache key
-                UserPrincipal p = (UserPrincipal) spc.getPrimaryPrincipal();
-                ret = p.getUser().getUuid().toString() + "_" + typeName;
-            }
+            if (key instanceof SimplePrincipalCollection) {
 
-            else if ( spc.getPrimaryPrincipal() instanceof PrincipalIdentifier ) {
+                SimplePrincipalCollection spc = (SimplePrincipalCollection) key;
 
-                // principal is not user, try to get something unique as cache key
-                PrincipalIdentifier p = (PrincipalIdentifier) spc.getPrimaryPrincipal();
-                if (p.getAccessTokenCredentials() != null) {
-                    ret = p.getAccessTokenCredentials().getToken() + "_" + typeName;
+                if (spc.getPrimaryPrincipal() instanceof UserPrincipal) {
+
+                    // principal is a user, use UUID as cache key
+                    UserPrincipal p = (UserPrincipal) spc.getPrimaryPrincipal();
+                    ret = p.getUser().getUuid().toString() + "_" + typeName;
+
+                } else if (spc.getPrimaryPrincipal() instanceof PrincipalIdentifier) {
+
+                    // principal is not user, try to get something unique as cache key
+                    PrincipalIdentifier p = (PrincipalIdentifier) spc.getPrimaryPrincipal();
+                    if (p.getAccessTokenCredentials() != null) {
+                        ret = p.getAccessTokenCredentials().getToken() + "_" + typeName;
+                    } else {
+                        ret = p.getApplicationId() + "_" + typeName;
+                    }
+
                 } else {
-                    ret = p.getApplicationId() + "_" + typeName;
+                    errorMessage = "Unknown principal type: " + key.getClass().getSimpleName();
                 }
+
+            } else if (key instanceof ApplicationGuestPrincipal) {
+                ApplicationGuestPrincipal agp = (ApplicationGuestPrincipal) key;
+                ret = agp.getApplicationId() + "_" + typeName;
+
+            } else if (key instanceof ApplicationPrincipal) {
+                ApplicationPrincipal ap = (ApplicationPrincipal) key;
+                ret = ap.getApplicationId() + "_" + typeName;
+
+            } else if (key instanceof OrganizationPrincipal) {
+                OrganizationPrincipal op = (OrganizationPrincipal) key;
+                ret = op.getOrganizationId() + "_" + typeName;
+
+            } else if (key instanceof UserPrincipal) {
+                UserPrincipal up = (UserPrincipal) key;
+                ret = up.getUser().getUuid() + "_" + typeName;
+
+            } else {
+                errorMessage = "Unknown key type: " + key.getClass().getSimpleName();
             }
 
-        } else if ( key instanceof ApplicationGuestPrincipal ) {
-            ApplicationGuestPrincipal agp = (ApplicationGuestPrincipal) key;
-            ret = agp.getApplicationId() + "_" + typeName;
-
-        } else if ( key instanceof ApplicationPrincipal ) {
-            ApplicationPrincipal ap = (ApplicationPrincipal) key;
-            ret = ap.getApplicationId() + "_" + typeName;
-
-        } else if ( key instanceof OrganizationPrincipal ) {
-            OrganizationPrincipal op = (OrganizationPrincipal) key;
-            ret = op.getOrganizationId() + "_" + typeName;
-
-        } else if ( key instanceof UserPrincipal ) {
-            UserPrincipal up = (UserPrincipal)key;
-            ret = up.getUser().getUuid() + "_" + typeName;
+        } catch ( Throwable t ) {
+            throwable = t;
         }
 
-        if ( ret == null) {
-            String msg = "Unknown key type: " + key.getClass().getSimpleName();
-            logger.error(msg);
-            throw new RuntimeException(msg);
+        if ( throwable != null ) {
+            errorMessage = "Error generating cache key for key type " + key.getClass().getSimpleName();
+            throw new CacheException( errorMessage, throwable );
+        }
+
+        if ( ret == null ) {
+            throw new CacheException( errorMessage );
         }
 
         return ret;
