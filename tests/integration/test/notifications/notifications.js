@@ -283,11 +283,11 @@ module.exports = {
                                 // wait a second before proceeding
                                 done();
 
-                            }, 1000);
+                            }, 2000);
 
                     });
 
-                }, 1000)
+                }, 1500)
 
 
             })
@@ -310,11 +310,11 @@ module.exports = {
                                 // wait a second before proceeding
                                 done();
 
-                            }, 1000);
+                            }, 2000);
 
                     });
 
-                }, 1000);
+                }, 1500);
 
 
             })
@@ -337,11 +337,11 @@ module.exports = {
                             // wait a second before proceeding
                             done();
 
-                        }, 1000);
+                        }, 2000);
 
                     });
 
-                }, 1000);
+                }, 1500);
 
             })
 

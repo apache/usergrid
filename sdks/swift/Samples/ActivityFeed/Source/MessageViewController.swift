@@ -40,7 +40,7 @@ class MessageViewController : SLKTextViewController {
         commonInit()
     }
 
-    required init!(coder decoder: NSCoder!) {
+    required init(coder decoder: NSCoder) {
         super.init(coder: decoder)
         commonInit()
     }
@@ -71,7 +71,7 @@ class MessageViewController : SLKTextViewController {
     func reloadMessages() {
         UsergridManager.getFeedMessages { (response) -> Void in
             self.messageEntities = response.entities as? [ActivityEntity] ?? []
-            self.tableView.reloadData()
+            self.tableView!.reloadData()
         }
     }
 
@@ -84,8 +84,8 @@ class MessageViewController : SLKTextViewController {
         self.textInputbar.maxCharCount = 256
         self.textInputbar.editorTitle.textColor = UIColor.darkGrayColor()
 
-        self.tableView.separatorStyle = .None
-        self.tableView.registerClass(MessageTableViewCell.self, forCellReuseIdentifier:MessageViewController.MESSAGE_CELL_IDENTIFIER)
+        self.tableView!.separatorStyle = .None
+        self.tableView!.registerClass(MessageTableViewCell.self, forCellReuseIdentifier:MessageViewController.MESSAGE_CELL_IDENTIFIER)
     }
 
     override func didPressRightButton(sender: AnyObject!) {
@@ -97,13 +97,13 @@ class MessageViewController : SLKTextViewController {
                 let rowAnimation: UITableViewRowAnimation = self.inverted ? .Bottom : .Top
                 let scrollPosition: UITableViewScrollPosition = self.inverted ? .Bottom : .Top
 
-                self.tableView.beginUpdates()
+                self.tableView!.beginUpdates()
                 self.messageEntities.insert(messageEntity, atIndex: 0)
-                self.tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: rowAnimation)
-                self.tableView.endUpdates()
+                self.tableView!.insertRowsAtIndexPaths([indexPath], withRowAnimation: rowAnimation)
+                self.tableView!.endUpdates()
 
-                self.tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: scrollPosition, animated: true)
-                self.tableView.reloadRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+                self.tableView!.scrollToRowAtIndexPath(indexPath, atScrollPosition: scrollPosition, animated: true)
+                self.tableView!.reloadRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
 
                 self.sendEntitiesToWatch(self.messageEntities)
             }
@@ -111,7 +111,7 @@ class MessageViewController : SLKTextViewController {
         super.didPressRightButton(sender)
     }
 
-    override func keyForTextCaching() -> String! {
+    override func keyForTextCaching() -> String? {
         return NSBundle.mainBundle().bundleIdentifier
     }
 
@@ -149,11 +149,11 @@ class MessageViewController : SLKTextViewController {
     }
 
     func messageCellForRowAtIndexPath(indexPath:NSIndexPath) -> MessageTableViewCell {
-        let cell = self.tableView.dequeueReusableCellWithIdentifier(MessageViewController.MESSAGE_CELL_IDENTIFIER) as! MessageTableViewCell
+        let cell = self.tableView!.dequeueReusableCellWithIdentifier(MessageViewController.MESSAGE_CELL_IDENTIFIER) as! MessageTableViewCell
         self.populateCell(cell, feedEntity: self.messageEntities[indexPath.row])
 
         cell.indexPath = indexPath
-        cell.transform = self.tableView.transform
+        cell.transform = self.tableView!.transform
 
         return cell
     }
@@ -176,7 +176,7 @@ class MessageViewController : SLKTextViewController {
         let pointSize = MessageTableViewCell.defaultFontSize
         let attributes = [NSFontAttributeName:UIFont.boldSystemFontOfSize(pointSize),NSParagraphStyleAttributeName:paragraphStyle]
 
-        let width: CGFloat = CGRectGetWidth(self.tableView.frame) - MessageTableViewCell.kMessageTableViewCellAvatarHeight - 25
+        let width: CGFloat = CGRectGetWidth(self.tableView!.frame) - MessageTableViewCell.kMessageTableViewCellAvatarHeight - 25
 
         let titleBounds = messageUsername.boundingRectWithSize(CGSize(width: width, height: CGFloat.max), options: .UsesLineFragmentOrigin, attributes: attributes, context: nil)
         let bodyBounds = messageText.boundingRectWithSize(CGSize(width: width, height: CGFloat.max), options: .UsesLineFragmentOrigin, attributes: attributes, context: nil)
