@@ -53,7 +53,7 @@ final class UsergridRequestManager {
 
         self.session = NSURLSession(configuration:  config,
                                     delegate:       UsergridSessionDelegate(),
-                                    delegateQueue:  NSOperationQueue.mainQueue())
+                                    delegateQueue:  nil)
     }
 
     deinit {
@@ -62,7 +62,10 @@ final class UsergridRequestManager {
 
     func performRequest(request:UsergridRequest, completion:UsergridResponseCompletion?) {
         session.dataTaskWithRequest(request.buildNSURLRequest()) { [weak self] (data, response, error) -> Void in
-            completion?(response: UsergridResponse(client:self?.client, data: data, response: response as? NSHTTPURLResponse, error: error))
+            let response = UsergridResponse(client:self?.client, data: data, response: response as? NSHTTPURLResponse, error: error)
+            dispatch_async(dispatch_get_main_queue()) {
+                completion?(response: response)
+            }
         }.resume()
     }
 }
@@ -71,7 +74,7 @@ final class UsergridRequestManager {
 // MARK: - Authentication -
 extension UsergridRequestManager {
 
-    static func getTokenAndExpiryFromResponseJSON(jsonDict:[String:AnyObject]) -> (String?,NSDate?) {
+    static func getTokenAndExpiryFromResponseJSON(jsonDict:[String:AnyObject]) -> (token:String?,expiry:NSDate?) {
         var token: String? = nil
         var expiry: NSDate? = nil
         if let accessToken = jsonDict["access_token"] as? String {
@@ -79,7 +82,7 @@ extension UsergridRequestManager {
         }
         if let expiresIn = jsonDict["expires_in"] as? Int {
             let expiresInAdjusted = expiresIn - 5000
-            expiry = NSDate(timeIntervalSinceNow: Double(expiresInAdjusted))
+            expiry = NSDate(timeIntervalSinceNow: NSTimeInterval(expiresInAdjusted))
         }
         return (token,expiry)
     }
@@ -87,27 +90,30 @@ extension UsergridRequestManager {
     func performUserAuthRequest(userAuth:UsergridUserAuth, request:UsergridRequest, completion:UsergridUserAuthCompletionBlock?) {
         session.dataTaskWithRequest(request.buildNSURLRequest()) { (data, response, error) -> Void in
             let dataAsJSON = try! NSJSONSerialization.JSONObjectWithData(data!, options: NSJSONReadingOptions.MutableContainers)
+
+            var createdUser: UsergridUser? = nil
+            var responseError: UsergridResponseError? = nil
+
             if let jsonDict = dataAsJSON as? [String:AnyObject] {
                 let tokenAndExpiry = UsergridRequestManager.getTokenAndExpiryFromResponseJSON(jsonDict)
-                userAuth.accessToken = tokenAndExpiry.0
-                userAuth.expiry = tokenAndExpiry.1
+                userAuth.accessToken = tokenAndExpiry.token
+                userAuth.expiry = tokenAndExpiry.expiry
 
-                var user: UsergridUser?
                 if let userDict = jsonDict[UsergridUser.USER_ENTITY_TYPE] as? [String:AnyObject] {
-                    if let createdUser = UsergridEntity.entity(jsonDict: userDict) as? UsergridUser {
-                        createdUser.auth = userAuth
-                        user = createdUser
+                    if let newUser = UsergridEntity.entity(jsonDict: userDict) as? UsergridUser {
+                        newUser.auth = userAuth
+                        createdUser = newUser
                     }
                 }
-                if let createdUser = user {
-                    completion?(auth: userAuth, user:createdUser, error: nil)
-                } else {
-                    let error = UsergridResponseError(jsonDictionary: jsonDict) ?? UsergridResponseError(errorName: "Auth Failed.", errorDescription: "Error Description: \(error?.localizedDescription).")
-                    completion?(auth: userAuth, user:nil, error:error)
+                if createdUser == nil {
+                    responseError = UsergridResponseError(jsonDictionary: jsonDict) ?? UsergridResponseError(errorName: "Auth Failed.", errorDescription: "Error Description: \(error?.localizedDescription).")
                 }
             } else {
-                let error = UsergridResponseError(errorName: "Auth Failed.", errorDescription: "Error Description: \(error?.localizedDescription).")
-                completion?(auth: userAuth, user:nil, error: error)
+                responseError = UsergridResponseError(errorName: "Auth Failed.", errorDescription: "Error Description: \(error?.localizedDescription).")
+            }
+
+            dispatch_async(dispatch_get_main_queue()) {
+                completion?(auth: userAuth, user: createdUser, error: responseError)
             }
         }.resume()
     }
@@ -115,14 +121,19 @@ extension UsergridRequestManager {
     func performAppAuthRequest(appAuth: UsergridAppAuth, request: UsergridRequest, completion: UsergridAppAuthCompletionBlock?) {
         session.dataTaskWithRequest(request.buildNSURLRequest()) { (data, response, error) -> Void in
             let dataAsJSON = try! NSJSONSerialization.JSONObjectWithData(data!, options: NSJSONReadingOptions.MutableContainers)
+
+            var responseError: UsergridResponseError? = nil
+
             if let jsonDict = dataAsJSON as? [String:AnyObject] {
                 let tokenAndExpiry = UsergridRequestManager.getTokenAndExpiryFromResponseJSON(jsonDict)
-                appAuth.accessToken = tokenAndExpiry.0
-                appAuth.expiry = tokenAndExpiry.1
-                completion?(auth: appAuth, error: nil)
+                appAuth.accessToken = tokenAndExpiry.token
+                appAuth.expiry = tokenAndExpiry.expiry
             } else {
-                let error = UsergridResponseError(errorName: "Auth Failed.", errorDescription: "Error Description: \(error?.localizedDescription).")
-                completion?(auth: nil, error: error)
+                responseError = UsergridResponseError(errorName: "Auth Failed.", errorDescription: "Error Description: \(error?.localizedDescription).")
+            }
+
+            dispatch_async(dispatch_get_main_queue()) {
+                completion?(auth: appAuth, error: responseError)
             }
         }.resume()
     }
@@ -134,11 +145,17 @@ extension UsergridRequestManager {
     func performAssetDownload(contentType:String, usergridRequest:UsergridRequest, progress: UsergridAssetRequestProgress? = nil, completion:UsergridAssetDownloadCompletion? = nil) {
         let downloadTask = session.downloadTaskWithRequest(usergridRequest.buildNSURLRequest())
         let requestWrapper = UsergridAssetRequestWrapper(session: self.session, sessionTask: downloadTask, progress: progress)  { (request) -> Void in
+            var asset: UsergridAsset? = nil
+            var responseError: UsergridResponseError? = nil
+
             if let assetData = request.responseData where assetData.length > 0 {
-                let asset = UsergridAsset(data: assetData, contentType: contentType)
-                completion?(asset: asset, error:nil)
+                asset = UsergridAsset(data: assetData, contentType: contentType)
             } else {
-                completion?(asset: nil, error: "Downloading asset failed.  No data was recieved.")
+                responseError = UsergridResponseError(errorName: "Download Failed.", errorDescription: "Downloading asset failed.  No data was recieved.")
+            }
+
+            dispatch_async(dispatch_get_main_queue()) {
+                completion?(asset: asset, error: responseError)
             }
         }
         self.sessionDelegate.addRequestDelegate(requestWrapper.sessionTask, requestWrapper:requestWrapper)
@@ -148,7 +165,10 @@ extension UsergridRequestManager {
     func performAssetUpload(usergridRequest:UsergridAssetUploadRequest, progress:UsergridAssetRequestProgress? = nil, completion: UsergridAssetUploadCompletion? = nil) {
         let uploadTask = session.uploadTaskWithRequest(usergridRequest.buildNSURLRequest(), fromData: usergridRequest.multiPartHTTPBody)
         let requestWrapper = UsergridAssetRequestWrapper(session: self.session, sessionTask: uploadTask, progress: progress)  { [weak self] (request) -> Void in
-            completion?(response: UsergridResponse(client: self?.client, data: request.responseData, response: request.response as? NSHTTPURLResponse, error: request.error),asset:usergridRequest.asset,error:nil)
+            let response = UsergridResponse(client: self?.client, data: request.responseData, response: request.response as? NSHTTPURLResponse, error: request.error)
+            dispatch_async(dispatch_get_main_queue()) {
+                completion?(asset: usergridRequest.asset, response: response)
+            }
         }
         self.sessionDelegate.addRequestDelegate(requestWrapper.sessionTask, requestWrapper:requestWrapper)
         requestWrapper.sessionTask.resume()

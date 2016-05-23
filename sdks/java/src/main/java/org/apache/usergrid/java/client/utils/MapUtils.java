@@ -16,24 +16,21 @@
  */
 package org.apache.usergrid.java.client.utils;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MapUtils {
+@SuppressWarnings("unused")
+public final class MapUtils {
 
-	public static <T> Map<String, T> newMapWithoutKeys(Map<String, T> map,
-			List<String> keys) {
-		Map<String, T> newMap = null;
-		if (map != null) {
-			newMap = new HashMap<String, T>(map);
-		} else {
-			newMap = new HashMap<String, T>();
-		}
-		for (String key : keys) {
-			newMap.remove(key);
-		}
-		return newMap;
-	}
-
+    @NotNull
+    public static <T> Map<String, T> newMapWithoutKeys(@NotNull  final Map<String, T> map, @NotNull final List<String> keys) {
+        Map<String, T> newMap = new HashMap<>();
+        for (String key : keys) {
+            newMap.remove(key);
+        }
+        return newMap;
+    }
 }
