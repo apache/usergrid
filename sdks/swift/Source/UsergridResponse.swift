@@ -95,11 +95,11 @@ public class UsergridResponse: NSObject {
     public var hasNextPage: Bool { return self.cursor != nil }
 
     /// The string value.
-    public var stringValue : String? {
+    public var stringValue : String {
         if let responseJSON = self.responseJSON {
-            return NSString(data: try! NSJSONSerialization.dataWithJSONObject(responseJSON, options: .PrettyPrinted), encoding: NSUTF8StringEncoding) as? String
+            return NSString(data: try! NSJSONSerialization.dataWithJSONObject(responseJSON, options: .PrettyPrinted), encoding: NSUTF8StringEncoding) as? String ?? ""
         } else {
-            return error?.description
+            return error?.description ?? ""
         }
     }
 

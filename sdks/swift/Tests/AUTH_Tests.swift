@@ -29,27 +29,41 @@ import XCTest
 
 class AUTH_Tests: XCTestCase {
 
-    let testAuthClient = UsergridClient(orgId: ClientCreationTests.orgId, appId: "sdk.demo")
-    let clientAuth = UsergridAppAuth(clientId: "b3U6THNcevskEeOQZLcUROUUVA", clientSecret: "b3U6RZHYznP28xieBzQPackFPmmnevU")
+    var appAuth: UsergridAppAuth!
+    var userAuth: UsergridUserAuth!
+
     private static let collectionName = "publicevent"
     private static let entityUUID = "fa015eaa-fe1c-11e3-b94b-63b29addea01"
 
+    override func setUp() {
+        super.setUp()
+        appAuth = UsergridAppAuth(clientId: "b3U6THNcevskEeOQZLcUROUUVA", clientSecret: "b3U6RZHYznP28xieBzQPackFPmmnevU")
+        userAuth = UsergridUserAuth(username: "username", password: "password")
+        Usergrid.initSharedInstance(orgId:ClientCreationTests.orgId, appId: "sdk.demo")
+    }
+
+    override func tearDown() {
+        Usergrid._sharedClient = nil
+        super.tearDown()
+    }
+
     func test_CLIENT_AUTH() {
 
-        let authExpect = self.expectationWithDescription("\(__FUNCTION__)")
-        testAuthClient.authFallback = .App
-        testAuthClient.authenticateApp(clientAuth) { [weak self] (auth,error) in
-
+        let authExpect = self.expectationWithDescription("\(#function)")
+        Usergrid.authMode = .App
+        Usergrid.authenticateApp(appAuth) { auth,error in
+            XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNil(error)
-            XCTAssertNotNil(self?.testAuthClient.appAuth)
+            XCTAssertNotNil(Usergrid.appAuth)
 
-            if let appAuth = self?.testAuthClient.appAuth {
+            if let appAuth = Usergrid.appAuth {
 
                 XCTAssertNotNil(appAuth.accessToken)
                 XCTAssertNotNil(appAuth.expiry)
+                XCTAssertNotNil(appAuth.isValid)
 
-                self?.testAuthClient.GET(AUTH_Tests.collectionName) { (response) in
-
+                Usergrid.GET(AUTH_Tests.collectionName) { (response) in
+                    XCTAssertTrue(NSThread.isMainThread())
                     XCTAssertNotNil(response)
                     XCTAssertTrue(response.hasNextPage)
                     XCTAssertEqual(response.entities!.count, 10)
@@ -57,10 +71,62 @@ class AUTH_Tests: XCTestCase {
                     
                     authExpect.fulfill()
                 }
-            } else {
-                authExpect.fulfill()
             }
         }
-        self.waitForExpectationsWithTimeout(20, handler: nil)
+        self.waitForExpectationsWithTimeout(100, handler: nil)
     }
+
+    func test_DESTROY_AUTH() {
+        let auth = UsergridAuth(accessToken: "YWMt91Q2YtWaEeW_Ki2uDueMEwAAAVMUTVSPeOdX-oradxdqirEFz5cPU3GWybs")
+
+        XCTAssertTrue(auth.isValid)
+        XCTAssertNotNil(auth.accessToken)
+        XCTAssertNil(auth.expiry)
+
+        auth.destroy()
+
+        XCTAssertFalse(auth.isValid)
+        XCTAssertNil(auth.accessToken)
+        XCTAssertNil(auth.expiry)
+    }
+
+    func test_APP_AUTH_NSCODING() {
+
+        appAuth.accessToken = "YWMt91Q2YtWaEeW_Ki2uDueMEwAAAVMUTVSPeOdX-oradxdqirEFz5cPU3GWybs"
+        appAuth.expiry = NSDate.distantFuture()
+
+        let authCodingData = NSKeyedArchiver.archivedDataWithRootObject(appAuth)
+        let newInstanceFromData = NSKeyedUnarchiver.unarchiveObjectWithData(authCodingData) as? UsergridAppAuth
+
+        XCTAssertNotNil(newInstanceFromData)
+
+        if let newInstance = newInstanceFromData {
+            XCTAssertTrue(appAuth.isValid)
+            XCTAssertTrue(newInstance.isValid)
+            XCTAssertEqual(appAuth.clientId,newInstance.clientId)
+            XCTAssertEqual(appAuth.accessToken,newInstance.accessToken)
+            XCTAssertEqual(appAuth.expiry,newInstance.expiry)
+        }
+    }
+
+    func test_USER_AUTH_NSCODING() {
+
+        userAuth.accessToken = "YWMt91Q2YtWaEeW_Ki2uDueMEwAAAVMUTVSPeOdX-oradxdqirEFz5cPU3GWybs"
+        userAuth.expiry = NSDate.distantFuture()
+
+        let authCodingData = NSKeyedArchiver.archivedDataWithRootObject(userAuth)
+        let newInstanceFromData = NSKeyedUnarchiver.unarchiveObjectWithData(authCodingData) as? UsergridUserAuth
+
+        XCTAssertNotNil(newInstanceFromData)
+
+        if let newInstance = newInstanceFromData {
+            XCTAssertTrue(userAuth.isValid)
+            XCTAssertTrue(newInstance.isValid)
+            XCTAssertEqual(userAuth.username,newInstance.username)
+            XCTAssertEqual(userAuth.accessToken,newInstance.accessToken)
+            XCTAssertEqual(userAuth.expiry,newInstance.expiry)
+        }
+    }
+
+
 }
