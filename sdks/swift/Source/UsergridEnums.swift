@@ -27,26 +27,28 @@
 import Foundation
 
 /**
-An enumeration that is used to determine what the `UsergridClient` will fallback to depending on certain authorization conditions.
+An enumeration that is used to determine what the `UsergridClient` will use for authorization.
 */
-@objc public enum UsergridAuthFallback : Int {
+@objc public enum UsergridAuthMode : Int {
 
     // MARK: - Values -
 
     /**
-    If a non-expired user auth token exists in `UsergridClient.currentUser`, this token is used to authenticate all API calls.
-
     If the API call fails, the activity is treated as a failure with an appropriate HTTP status code.
-
-    If a non-expired user auth token does not exist, all API calls will be made unauthenticated.
     */
     case None
+
     /**
-    If a non-expired user auth token exists in `UsergridClient.currentUser`, this token is used to authenticate all API calls.
+     If a non-expired `UsergridUserAuth` exists in `UsergridClient.currentUser`, this token is used to authenticate all API calls.
 
-    If the API call fails, the activity is treated as a failure with an appropriate HTTP status code (This behavior is identical to authFallback=.None).
+     If the API call fails, the activity is treated as a failure with an appropriate HTTP status code (This behavior is identical to authMode=.None).
+     */
+    case User
 
-    If a non-expired user auth does not exist, all API calls will be made using stored app auth.
+    /**
+    If a non-expired `UsergridAppAuth` exists in `UsergridClient.appAuth`, this token is used to authenticate all API calls.
+
+    If the API call fails, the activity is treated as a failure with an appropriate HTTP status code (This behavior is identical to authMode=.None).
     */
     case App
 }
@@ -406,7 +408,7 @@ let USER_PICTURE = "picture"
 
 let DEVICE_MODEL = "deviceModel"
 let DEVICE_PLATFORM = "devicePlatform"
-let DEVICE_OSVERSION = "devicePlatform"
+let DEVICE_OSVERSION = "deviceOSVersion"
 
 let ASSET_IMAGE_PNG = "image/png"
 let ASSET_IMAGE_JPEG = "image/jpeg"

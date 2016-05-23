@@ -33,7 +33,7 @@ public interface IndexSchemaCacheFig extends GuicyFig {
     int getCacheSize();
 
     @Key( "usergrid.index_schema_cache_timeout_ms" )
-    @Default( "60000" )
+    @Default( "15000" )
     int getCacheTimeout();
 
 }
