@@ -37,6 +37,9 @@ import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getPermissio
 public class AdminUserPrincipal extends UserPrincipal {
     private static final Logger logger = LoggerFactory.getLogger(AdminUserPrincipal.class);
 
+    /**
+     * Needed for Jackson, do not remove
+     */
     public AdminUserPrincipal() {
     }
 

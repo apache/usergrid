@@ -123,7 +123,6 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
             featureContext.register( ApplicationFilter.class );
         }
         else if ( am.isAnnotationPresent( RequireOrganizationAccess.class ) ) {
-
             featureContext.register( OrganizationFilter.class );
         }
         else if ( am.isAnnotationPresent( RequireSystemAccess.class ) ) {
@@ -414,12 +413,32 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 "---- Checked permissions for path --------------------------------------------\n" + "Requested path: {} \n"
                     + "Requested action: {} \n" + "Requested permission: {} \n" + "Permitted: {} \n";
 
-            ApplicationInfo application;
+            ApplicationInfo application = null;
 
             try {
 
                 application = management.getApplicationInfo( getApplicationIdentifier() );
                 EntityManager em = emf.getEntityManager( application.getId() );
+
+                if ( SubjectUtils.isAnonymous() ) {
+                    Map<String, String> roles = null;
+                    try {
+                        roles = em.getRoles();
+                        if (logger.isTraceEnabled()) {
+                            logger.trace("found roles {}", roles);
+                        }
+                    }
+                    catch ( Exception e ) {
+                        logger.error( "Unable to retrieve roles", e );
+                    }
+                    if ( ( roles != null ) && roles.containsKey( "guest" ) ) {
+                        loginApplicationGuest( application );
+                    }
+                    else {
+                        throw mappableSecurityException( "unauthorized", "No application guest access authorized" );
+                    }
+                }
+
                 Subject currentUser = SubjectUtils.getSubject();
 
                 if ( currentUser == null ) {
@@ -434,12 +453,6 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 if ( logger.isDebugEnabled() ) {
                     logger.debug( PATH_MSG, path, operation, perm, permitted );
                 }
-
-                if(!permitted){
-                    // throwing this so we can raise a proper mapped REST exception
-                    throw new Exception("Subject not permitted");
-                }
-
 
                 SubjectUtils.checkPermission( perm );
                 Subject subject = SubjectUtils.getSubject();

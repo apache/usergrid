@@ -34,7 +34,9 @@ public class ApplicationPrincipal extends PrincipalIdentifier {
 
     ApplicationInfo application;
 
-
+    /**
+     * Needed for Jackson, do not remove
+     */
     public ApplicationPrincipal() {}
 
     public ApplicationPrincipal( ApplicationInfo application ) {

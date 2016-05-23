@@ -34,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,9 +69,8 @@ import com.google.inject.Inject;
  * Simple implementation of the shard.  Uses a local Guava shard with a timeout.  If a value is not present in the
  * shard, it will need to be searched via cassandra.
  */
+@Singleton
 public class NodeShardCacheImpl implements NodeShardCache {
-
-    private static final Logger logger = LoggerFactory.getLogger( NodeShardCacheImpl.class );
 
     /**
      * Only cache shards that have < 10k groups.  This is an arbitrary amount, and may change with profiling and
@@ -164,14 +164,22 @@ public class NodeShardCacheImpl implements NodeShardCache {
         final CacheKey key = new CacheKey( scope, directedEdgeMeta );
         CacheEntry entry;
 
-        try {
-            entry = this.graphs.get( key );
-        }
-        catch ( ExecutionException e ) {
-            throw new GraphRuntimeException( "Unable to load shard key for graph", e );
+        if( graphFig.getShardReadCacheEnabled() ) {
+
+            try {
+                entry = this.graphs.get(key);
+            } catch (ExecutionException e) {
+                throw new GraphRuntimeException("Unable to load shard key for graph", e);
+            }
+
+        } else {
+
+            entry = new CacheEntry(nodeShardAllocation.getShards( key.scope, Optional.<Shard>absent(), key.directedEdgeMeta ));
+
         }
 
         Iterator<ShardEntryGroup> iterator = entry.getShards( maxTimestamp );
+
 
         if ( iterator == null ) {
             return Collections.<ShardEntryGroup>emptyList().iterator();
@@ -180,6 +188,13 @@ public class NodeShardCacheImpl implements NodeShardCache {
         return iterator;
     }
 
+    @Override
+    public void invalidate( final ApplicationScope scope, final DirectedEdgeMeta directedEdgeMeta ){
+
+        final CacheKey cacheKey = new CacheKey(scope, directedEdgeMeta);
+        graphs.invalidate(cacheKey);
+
+    }
 
     /**
      * This is a race condition.  We could re-init the shard while another thread is reading it.  This is fine, the read

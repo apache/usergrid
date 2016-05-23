@@ -34,8 +34,13 @@
     <!--
     <bean id="cacheManager" class="org.apache.shiro.cache.MemoryConstrainedCacheManager"/>
     -->
+    <bean id="injector"
+          class="org.apache.usergrid.corepersistence.GuiceFactory">
+    </bean>
+
     <bean id="cacheManager" class="org.apache.usergrid.security.shiro.ShiroCacheManager">
-        <property name="properties" ref="properties"/>
+        <constructor-arg name="injector" ref="injector"/>
+        <constructor-arg name="properties" ref="properties"/>
     </bean>
 
     <bean id="realm" class="org.apache.usergrid.security.shiro.Realm">
@@ -63,9 +68,7 @@
         <property name="entityManagerFactory" ref="entityManagerFactory"/>
     </bean>
 
-    <bean id="injector"
-          class="org.apache.usergrid.corepersistence.GuiceFactory">
-    </bean>
+
 
     <bean id="managementService" class="org.apache.usergrid.management.cassandra.ManagementServiceImpl">
         <property name="saltProvider" ref="saltProvider"/>

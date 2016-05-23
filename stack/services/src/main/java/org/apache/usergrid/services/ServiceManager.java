@@ -295,7 +295,6 @@ public class ServiceManager {
             if(logger.isTraceEnabled()){
                 logger.trace("Could not find class", e1);
             }
-
         }
         return null;
     }

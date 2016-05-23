@@ -319,6 +319,12 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public TokenInfo getTokenInfo( String token ) throws Exception {
+        return getTokenInfo(token, true);
+    }
+
+
+    @Override
+    public TokenInfo getTokenInfo( String token, boolean updateAccessTime ) throws Exception {
 
         UUID uuid = getUUIDForToken( token );
 
@@ -340,27 +346,29 @@ public class TokenServiceImpl implements TokenService {
             }
         }
 
-        //update the token
-        long now = currentTimeMillis();
+        if (updateAccessTime) {
+            //update the token
+            long now = currentTimeMillis();
 
-        long maxTokenTtl = getMaxTtl( TokenCategory.getFromBase64String( token ), tokenInfo.getPrincipal() );
+            long maxTokenTtl = getMaxTtl(TokenCategory.getFromBase64String(token), tokenInfo.getPrincipal());
 
-        Mutator<UUID> batch = createMutator( cassandra.getUsergridApplicationKeyspace(), ue );
+            Mutator<UUID> batch = createMutator(cassandra.getUsergridApplicationKeyspace(), ue);
 
-        HColumn<String, Long> col =
-                createColumn( TOKEN_ACCESSED, now, calcTokenTime( tokenInfo.getExpiration( maxTokenTtl ) ),
-                        se, le );
-        batch.addInsertion( uuid, TOKENS_CF, col );
+            HColumn<String, Long> col =
+                    createColumn(TOKEN_ACCESSED, now, calcTokenTime(tokenInfo.getExpiration(maxTokenTtl)),
+                            se, le);
+            batch.addInsertion(uuid, TOKENS_CF, col);
 
-        long inactive = now - tokenInfo.getAccessed();
-        if ( inactive > tokenInfo.getInactive() ) {
-            col = createColumn( TOKEN_INACTIVE, inactive, calcTokenTime( tokenInfo.getExpiration( maxTokenTtl ) ),
-                    se, le );
-            batch.addInsertion( uuid, TOKENS_CF, col );
-            tokenInfo.setInactive( inactive );
+            long inactive = now - tokenInfo.getAccessed();
+            if (inactive > tokenInfo.getInactive()) {
+                col = createColumn(TOKEN_INACTIVE, inactive, calcTokenTime(tokenInfo.getExpiration(maxTokenTtl)),
+                        se, le);
+                batch.addInsertion(uuid, TOKENS_CF, col);
+                tokenInfo.setInactive(inactive);
+            }
+
+            batch.execute();
         }
-
-        batch.execute();
 
         return tokenInfo;
     }

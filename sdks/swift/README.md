@@ -742,7 +742,7 @@ Usergrid.uploadAsset(entity,
                      progress: { bytesFinished, bytesExpected in
                         // Monitor the upload progress
                      },
-                     completion: { response, asset, error in
+                     completion: { asset, response in
                         // The asset is now uploaded to Usergrid and entity.asset == asset
 })
 ```

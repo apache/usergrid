@@ -29,25 +29,35 @@ import XCTest
 
 class CONNECTION_Tests: XCTestCase {
 
-    let testAuthClient = UsergridClient(orgId:ClientCreationTests.orgId, appId: "sdk.demo")
     let clientAuth = UsergridAppAuth(clientId: "b3U6THNcevskEeOQZLcUROUUVA", clientSecret: "b3U6RZHYznP28xieBzQPackFPmmnevU")
     private static let collectionName = "publicevent"
 
+    override func setUp() {
+        super.setUp()
+        Usergrid.initSharedInstance(orgId:ClientCreationTests.orgId, appId: "sdk.demo")
+    }
+
+    override func tearDown() {
+        Usergrid._sharedClient = nil
+        super.tearDown()
+    }
+
     func test_CLIENT_AUTH() {
 
-        let authExpect = self.expectationWithDescription("\(__FUNCTION__)")
-        testAuthClient.authFallback = .App
-        testAuthClient.authenticateApp(clientAuth) { [weak self] (auth,error) in
+        let authExpect = self.expectationWithDescription("\(#function)")
+        Usergrid.authMode = .App
+        Usergrid.authenticateApp(clientAuth) { auth,error in
+            XCTAssertTrue(NSThread.isMainThread())
             XCTAssertNil(error)
-            XCTAssertNotNil(self?.testAuthClient.appAuth)
+            XCTAssertNotNil(Usergrid.appAuth)
 
-            if let appAuth = self?.testAuthClient.appAuth {
+            if let appAuth = Usergrid.appAuth {
 
                 XCTAssertNotNil(appAuth.accessToken)
                 XCTAssertNotNil(appAuth.expiry)
 
-                self?.testAuthClient.GET(CONNECTION_Tests.collectionName) { (response) in
-
+                Usergrid.GET(CONNECTION_Tests.collectionName) { (response) in
+                    XCTAssertTrue(NSThread.isMainThread())
                     XCTAssertNotNil(response)
                     XCTAssertTrue(response.ok)
                     XCTAssertTrue(response.hasNextPage)
@@ -57,19 +67,27 @@ class CONNECTION_Tests: XCTestCase {
                     let entityToConnect = response.entities![1]
                     XCTAssertEqual(entity.type, CONNECTION_Tests.collectionName)
 
-                    entity.connect(self!.testAuthClient,relationship:"likes", toEntity: entityToConnect) { (response) -> Void in
+                    entity.connect("likes", toEntity: entityToConnect) { (response) -> Void in
+                        XCTAssertTrue(NSThread.isMainThread())
                         XCTAssertNotNil(response)
                         XCTAssertTrue(response.ok)
-                        entity.getConnections(self!.testAuthClient, direction:.Out, relationship: "likes", query:nil) { (response) -> Void in
+
+                        entity.getConnections(.Out, relationship: "likes", query:nil) { (response) -> Void in
+                            XCTAssertTrue(NSThread.isMainThread())
                             XCTAssertNotNil(response)
                             XCTAssertTrue(response.ok)
+
                             let connectedEntity = response.first!
                             XCTAssertNotNil(connectedEntity)
                             XCTAssertEqual(connectedEntity.uuidOrName, entityToConnect.uuidOrName)
-                            entity.disconnect(self!.testAuthClient, relationship: "likes", fromEntity: connectedEntity) { (response) -> Void in
+
+                            entity.disconnect("likes", fromEntity: connectedEntity) { (response) -> Void in
+                                XCTAssertTrue(NSThread.isMainThread())
                                 XCTAssertNotNil(response)
                                 XCTAssertTrue(response.ok)
-                                entity.getConnections(self!.testAuthClient, direction:.Out, relationship: "likes", query:nil) { (response) -> Void in
+
+                                entity.getConnections(.Out, relationship: "likes", query:nil) { (response) -> Void in
+                                    XCTAssertTrue(NSThread.isMainThread())
                                     XCTAssertNotNil(response)
                                     XCTAssertTrue(response.ok)
                                     authExpect.fulfill()

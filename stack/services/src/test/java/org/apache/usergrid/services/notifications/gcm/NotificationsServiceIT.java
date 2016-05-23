@@ -19,14 +19,19 @@ package org.apache.usergrid.services.notifications.gcm;
 import com.google.android.gcm.server.Constants;
 import com.google.android.gcm.server.InvalidRequestException;
 import net.jcip.annotations.NotThreadSafe;
+
+import org.apache.usergrid.ServiceApplication;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.entities.*;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
+import org.apache.usergrid.services.ServiceResults;
 import org.apache.usergrid.services.notifications.*;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import org.apache.usergrid.services.ServiceAction;
@@ -106,7 +111,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     public void after() {
         if (listener != null) {
             listener.stop();
-            listener = null;
         }
     }
 
@@ -167,6 +171,63 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         checkReceipts(notification, 1);
     }
 
+    @Test
+    public void singlePushNotificationMapPayload() throws Exception {
+
+        app.clear();
+        Map<String, Object> topLevel = new HashMap<>();
+        Map<String, String> mapPayload = new HashMap<String, String>(){{
+            put("key1", "value1");
+            put("key2", "value2");
+
+        }};
+        topLevel.put("enabler", mapPayload);
+        Map<String, Object> payloads = new HashMap<>(1);
+        payloads.put(notifier.getUuid().toString(), topLevel);
+        app.put("payloads", payloads);
+        app.put("queued", System.currentTimeMillis());
+        app.put("debug", true);
+        app.put("expire", System.currentTimeMillis() + 300000); // add 5 minutes to current time
+
+        Entity e = app.testRequest(ServiceAction.POST, 1, "devices", device1.getUuid(), "notifications").getEntity();
+        app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
+
+        Notification notification = app.getEntityManager().get(e.getUuid(), Notification.class);
+
+        //assertEquals(
+        //    notification.getPayloads().get(notifier.getUuid().toString()),
+        //    payload);
+
+        // perform push //
+        notification = notificationWaitForComplete(notification);
+        checkReceipts(notification, 1);
+    }
+
+    @Test
+    public void singlePushNotificationNoReceipts() throws Exception {
+
+        app.clear();
+        String payload = "Hello, World!";
+        Map<String, String> payloads = new HashMap<String, String>(1);
+        payloads.put(notifier.getUuid().toString(), payload);
+        app.put("payloads", payloads);
+        app.put("queued", System.currentTimeMillis());
+        app.put("debug", true);
+        app.put("saveReceipts",false );
+        app.put("expire", System.currentTimeMillis() + 300000); // add 5 minutes to current time
+
+        Entity e = app.testRequest(ServiceAction.POST, 1, "devices", device1.getUuid(), "notifications").getEntity();
+        app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
+
+        Notification notification = app.getEntityManager().get(e.getUuid(), Notification.class);
+        assertEquals(
+            notification.getPayloads().get(notifier.getUuid().toString()),
+            payload);
+
+        // perform push //
+        notification = notificationWaitForComplete(notification);
+        checkReceipts(notification, 0);
+    }
 
     @Test
     public void singlePushNotificationHighPriority() throws Exception {
@@ -247,6 +308,78 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         notification = notificationWaitForComplete(notification);
         checkReceipts(notification, 1);
     }
+
+    @Ignore("turn this on and run individually when you want to verify. there is an issue with the aggregate counter, because of all the other tests"
+        + "AND, there is an issue with the batcher where we have to turn it up/down to see the results in time. ")
+    @Test
+    public void singlePushNotificationWithCounters() throws Exception {
+
+        long ts = System.currentTimeMillis() - ( 24 * 60 * 60 * 1000 );
+        app.clear();
+        String payload = "Hello, World!";
+        Map<String, String> payloads = new HashMap<String, String>(1);
+        payloads.put(notifier.getUuid().toString(), payload);
+        app.put("payloads", payloads);
+        app.put("queued", System.currentTimeMillis());
+        app.put("debug", false);
+        app.put("expire", System.currentTimeMillis() + 300000); // add 5 minutes to current time
+
+        Entity e = app.testRequest(ServiceAction.POST, 1, "devices", device1.getUuid(), "notifications").getEntity();
+        app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
+
+        Notification notification = app.getEntityManager().get(e.getUuid(), Notification.class);
+        assertEquals(
+            notification.getPayloads().get(notifier.getUuid().toString()),
+            payload);
+
+        // perform push //
+        notification = notificationWaitForComplete(notification);
+        //        checkReceipts(notification, 1);
+
+
+        verifyNotificationCounter( notification,"completed",ts,1 );
+        verifyNotificationCounter( notification,"failed",ts, 0 );
+
+
+
+
+    }
+
+    public void verifyNotificationCounter(Notification notification,String status,Long timestamp, int expected){
+
+        Results countersResults = app.getEntityManager().getAggregateCounters( null,null,null,"counters.notifications."+notification.getUuid()+"."+status,
+            CounterResolution.ALL,timestamp,System.currentTimeMillis(),false ) ;
+
+        assertEquals( 1, countersResults.getCounters().size() );
+        if(expected > 0) {
+            assertEquals( expected, countersResults.getCounters().get( 0 ).getValues().get( 0 ).getValue() );
+        }else if (expected == 0){
+            assertEquals( 0,countersResults.getCounters().get( 0 ).getValues().size());
+        }
+
+        LocalDateTime localDateTime = LocalDateTime.now();
+        StringBuilder currentDate = new StringBuilder(  );
+        currentDate.append( "counters.notifications.aggregate."+status+"." );
+        currentDate.append( localDateTime.getYear()+"." );
+        currentDate.append( localDateTime.getMonth()+"." );
+        currentDate.append( localDateTime.getDayOfMonth()); //+"." );
+
+        countersResults = app.getEntityManager().getAggregateCounters( null,null,null,currentDate.toString(),
+            CounterResolution.ALL,timestamp,System.currentTimeMillis(),false ) ;
+
+        //checks to see that it exists
+        assertEquals( 1, countersResults.getCounters().size() );
+        if(expected > 0) {
+            assertEquals( expected, countersResults.getCounters().get( 0 ).getValues().get( 0 ).getValue() );
+
+        }
+        else if (expected == 0){
+            assertEquals( 0,countersResults.getCounters().get( 0 ).getValues().size());
+        }
+
+    }
+
+
 
     @Test
     public void singlePushNotificationMultipleDevices() throws Exception {

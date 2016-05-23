@@ -44,6 +44,8 @@ public interface IndexProcessorFig extends GuicyFig {
 
     String REINDEX_BUFFER_SIZE = "elasticsearch.reindex.buffer_size";
 
+    String REINDEX_CONCURRENCY_FACTOR = "elasticsearch.reindex.concurrency.factor";
+
 
     /**
      * Set the amount of time to wait when Elasticsearch rejects a requests before
@@ -75,7 +77,7 @@ public interface IndexProcessorFig extends GuicyFig {
     /**
      * The number of worker threads used to read index write requests from the queue.
      */
-    @Default("16")
+    @Default("8")
     @Key(ELASTICSEARCH_WORKER_COUNT)
     int getWorkerCount();
 
@@ -88,9 +90,16 @@ public interface IndexProcessorFig extends GuicyFig {
     @Key(ELASTICSEARCH_QUEUE_IMPL)
     String getQueueImplementation();
 
-    @Default("1000")
+    @Default("100")
     @Key(REINDEX_BUFFER_SIZE)
     int getReindexBufferSize();
+
+    /**
+     * The number of parallel buffers during re-index that can be processed
+     */
+    @Default("10")
+    @Key(REINDEX_CONCURRENCY_FACTOR)
+    int getReindexConcurrencyFactor();
 
     /**
      * Flag to resolve the LOCAL queue implementation service synchronously.

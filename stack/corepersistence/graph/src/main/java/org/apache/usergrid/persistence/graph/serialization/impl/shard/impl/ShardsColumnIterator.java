@@ -1,14 +1,33 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
+import org.apache.usergrid.persistence.core.astyanax.MultiRowColumnIterator;
+import org.apache.usergrid.persistence.core.astyanax.MultiRowShardColumnIterator;
+import org.apache.usergrid.persistence.core.shard.SmartShard;
+import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.astyanax.MultiRowColumnIterator;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 
@@ -41,15 +60,19 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
 
     private final ConsistencyLevel consistencyLevel;
 
+    private final boolean smartShardSeekEnabled;
+
 
     public ShardsColumnIterator(final EdgeSearcher<R, C, T> searcher,
                                 final MultiTenantColumnFamily<ScopedRowKey<R>, C> cf, final Keyspace keyspace,
-                                final ConsistencyLevel consistencyLevel, final int pageSize ) {
+                                final ConsistencyLevel consistencyLevel, final int pageSize,
+                                final boolean smartShardSeekEnabled) {
         this.searcher = searcher;
         this.cf = cf;
         this.keyspace = keyspace;
         this.pageSize = pageSize;
         this.consistencyLevel = consistencyLevel;
+        this.smartShardSeekEnabled = smartShardSeekEnabled;
     }
 
 
@@ -92,32 +115,35 @@ public class ShardsColumnIterator<R, C, T> implements Iterator<T> {
             logger.trace("Starting shards column iterator");
         }
 
-
-        /**
-         * If the edge is present, we need to being seeking from this
-         */
-
         final RangeBuilder rangeBuilder = new RangeBuilder().setLimit( pageSize );
 
 
-        //set the range into the search
+        // set the range into the search
         searcher.buildRange( rangeBuilder );
 
 
+        if(smartShardSeekEnabled){
 
-        /**
-         * Get our list of slices
-         */
-        final List<ScopedRowKey<R>> rowKeys = searcher.getRowKeys();
+            // get the rows keys and their corresponding 'shardEnd' that we will seek from
+            final List<SmartShard> rowKeysWithShardEnd = searcher.getRowKeysWithShardEnd();
 
-        if (logger.isTraceEnabled()) {
-            logger.trace("Searching with row keys {}", rowKeys);
+            final boolean ascending = searcher.getOrder() == SearchByEdgeType.Order.ASCENDING;
+
+            currentColumnIterator = new MultiRowShardColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher,
+                searcher.getComparator(), pageSize, rowKeysWithShardEnd, ascending, searcher.getLastTimestamp() );
+
+        }else{
+
+
+            final List<ScopedRowKey<R>> rowKeys = searcher.getRowKeys();
+
+            currentColumnIterator = new MultiRowColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher,
+                searcher.getComparator(), rowKeys, pageSize );
+
+
         }
-
-        currentColumnIterator = new MultiRowColumnIterator<>( keyspace, cf,  consistencyLevel, searcher, searcher, searcher.getComparator(), rowKeys, pageSize);
-
-
 
 
     }
+
 }

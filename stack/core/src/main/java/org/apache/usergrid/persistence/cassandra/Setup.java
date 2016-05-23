@@ -16,39 +16,29 @@
 
 package org.apache.usergrid.persistence.cassandra;
 
-import java.util.UUID;
-
 public interface Setup {
 
     /**
-     * Initialize all configuration for the system setup. Creates keyspaces, and elasticsearch indexes
+     * Initialize all configuration for the system setup. Creates keyspaces and elasticsearch indexes
      * @throws Exception
      */
-    void initSubsystems() throws Exception;
+    void initSchema() throws Exception;
 
-    /**
-     * Setup the management keyspaces
-     * @throws Exception
-     */
-    void setupSystemKeyspace() throws Exception;
-
-    /**
-     * Setup the application keyspaces
-     * @throws Exception
-     */
-    void setupStaticKeyspace() throws Exception;
-
-    /**
-     * Returns true if both keyspaces exist
-     * @return
-     */
-    boolean keyspacesExist();
 
     /**
      * Bootstrap the root application to allow the system to function.
      * @throws Exception
      */
-    void createDefaultApplications() throws Exception;
+    void initMgmtApp() throws Exception;
 
-    void setupApplicationKeyspace( UUID applicationId, String appName ) throws Exception;
+
+    /**
+     *
+     * Separate interface for triggering the data migration to role new 2.x Migration classes to the latest
+     *
+     * @throws Exception
+     */
+    void runDataMigration() throws Exception;
+
+
 }

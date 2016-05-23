@@ -168,8 +168,10 @@ public class TaskExecutorFactory {
 
         @Override
         public void rejectedExecution( final Runnable r, final ThreadPoolExecutor executor ) {
-            logger.warn( "{} task queue full, rejecting task {} and running in thread {}", poolName, r,
-                Thread.currentThread().getName() );
+            if(logger.isDebugEnabled()) {
+                logger.debug("{} task queue full, rejecting task {} and running in thread {}", poolName, r,
+                    Thread.currentThread().getName());
+            }
 
             //We've decided we want to have a "caller runs" policy, to just invoke the task when rejected
 
@@ -191,7 +193,9 @@ public class TaskExecutorFactory {
 
         @Override
         public void rejectedExecution( final Runnable r, final ThreadPoolExecutor executor ) {
-            logger.warn( "{} task queue full, dropping task {}", poolName, r );
+            if(logger.isDebugEnabled()) {
+                logger.warn("{} task queue full, dropping task {}", poolName, r);
+            }
         }
     }
 }

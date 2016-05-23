@@ -211,6 +211,7 @@ public class RolesService extends AbstractCollectionService {
         em.grantRolePermission(roleName, permission);
         ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
         scopedCache.invalidate();
+        localShiroCache.invalidateAll();
         return getApplicationRolePermissions( roleName );
     }
 
@@ -219,6 +220,7 @@ public class RolesService extends AbstractCollectionService {
         em.revokeRolePermission( roleName, permission );
         ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
         scopedCache.invalidate();
+        localShiroCache.invalidateAll();
         return getApplicationRolePermissions( roleName );
     }
 
