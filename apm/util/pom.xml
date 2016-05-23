@@ -51,7 +51,7 @@
 						<manifest>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>lib/</classpathPrefix>
-							<mainClass>com.ideawheel.portal.util.DemoAppDataPopulator</mainClass>
+							<mainClass>org.apache.usergrid.apm.util.DemoAppDataPopulator</mainClass>
 							<!-- <addDefaultImplementationEntries>true</addDefaultImplementationEntries> -->
 						</manifest>
 					</archive>
