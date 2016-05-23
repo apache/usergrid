@@ -257,9 +257,9 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
     }
 
     /**
-     *  Return a key that Rx can use for determining a distinct edge.  Build a string containing the hash code
-     *  of the source, target, and type to ensure uniqueness rather than the int sum of the hash codes.  Edge
-     *  timestamp is specifically left out as edges with the same source,target,type but different timestamps
+     *  Return a key that Rx can use for determining a distinct edge.  Build a string containing the UUID
+     *  of the source and target nodes, with the type to ensure uniqueness rather than the int sum of the hash codes.
+     *  Edge timestamp is specifically left out as edges with the same source,target,type but different timestamps
      *  are considered duplicates.
      */
     private class EdgeDistinctKey implements Func1<Edge,String> {
@@ -267,22 +267,22 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
         @Override
         public String call(Edge edge) {
 
-            return buildDistinctKey(edge.getSourceNode().hashCode(), edge.getTargetNode().hashCode(),
-                edge.getType().hashCode());
+            return buildDistinctKey(edge.getSourceNode().getUuid().toString(), edge.getTargetNode().getUuid().toString(),
+                edge.getType().toLowerCase());
         }
     }
 
-    protected static String buildDistinctKey(final int sourceHash, final int targetHash, final int typeHash){
+    protected static String buildDistinctKey(final String sourceNode, final String targetNode, final String type){
 
         final String DISTINCT_KEY_SEPARATOR = ":";
         StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder
-            .append(sourceHash)
+            .append(sourceNode)
             .append(DISTINCT_KEY_SEPARATOR)
-            .append(targetHash)
+            .append(targetNode)
             .append(DISTINCT_KEY_SEPARATOR)
-            .append(typeHash);
+            .append(type);
 
         return stringBuilder.toString();
 

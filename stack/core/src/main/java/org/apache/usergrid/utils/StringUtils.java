@@ -17,6 +17,7 @@
 package org.apache.usergrid.utils;
 
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
 
 import org.apache.commons.io.IOUtils;
@@ -168,5 +169,12 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
             logger.error( "Error getting file from classpath: {}", filePath, e );
         }
         return null;
+    }
+
+    public static String readableByteSize(long size) {
+        if(size <= 0) return "0";
+        final String[] units = new String[] { "B", "kB", "MB", "GB", "TB" };
+        int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
+        return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
 }

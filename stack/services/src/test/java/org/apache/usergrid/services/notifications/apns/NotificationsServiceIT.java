@@ -129,7 +129,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     public void after() throws Exception {
         if(listener != null) {
             listener.stop();
-            listener = null;
         }
     }
 
@@ -161,6 +160,32 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         notification = notificationWaitForComplete(notification);
         checkReceipts(notification, 1);
 
+    }
+
+    @Test
+    public void singlePushNotificationNoReceipts() throws Exception {
+
+        app.clear();
+        String payload = "Hello, World!";
+        Map<String, String> payloads = new HashMap<String, String>(1);
+        payloads.put(notifier.getUuid().toString(), payload);
+        app.put("payloads", payloads);
+        app.put("queued", System.currentTimeMillis());
+        app.put("debug", true);
+        app.put("saveReceipts",false );
+        app.put("expire", System.currentTimeMillis() + 300000); // add 5 minutes to current time
+
+        Entity e = app.testRequest(ServiceAction.POST, 1, "devices", device1.getUuid(), "notifications").getEntity();
+        app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
+
+        Notification notification = app.getEntityManager().get(e.getUuid(), Notification.class);
+        assertEquals(
+            notification.getPayloads().get(notifier.getUuid().toString()),
+            payload);
+
+        // perform push //
+        notification = notificationWaitForComplete(notification);
+        checkReceipts(notification, 0);
     }
 
     @Test
@@ -683,8 +708,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         final int NUM_DEVICES = 50;
         // perform push //
-        int oldBatchSize = listener.getBatchSize();
-        listener.setBatchSize(10);
+        int oldBatchSize = QueueListener.MAX_TAKE;
 
         app.clear();
         app.put("name", UUID.randomUUID().toString());
@@ -724,7 +748,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         try {
             notificationWaitForComplete(notification);
         } finally {
-            listener.setBatchSize( oldBatchSize);
+            //noop
         }
 
         // check receipts //

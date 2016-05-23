@@ -278,7 +278,6 @@ module.exports = {
                         function (err, notification) {
                             should(err).be.null;
                             notification.should.not.be.null;
-                            notification.expectedCount.should.be.equal(1);
                             setTimeout(function() {
 
                                 // wait a second before proceeding
@@ -306,7 +305,6 @@ module.exports = {
                         function (err, notification) {
                             should(err).be.null;
                             notification.should.not.be.null;
-                            notification.expectedCount.should.be.equal(1);
                             setTimeout(function() {
 
                                 // wait a second before proceeding
@@ -334,9 +332,6 @@ module.exports = {
 
                             should(err).be.null;
                             notification.should.not.be.null;
-                            // we set up 2 groups of the same 5 users.  if duplicate filtering is working,
-                            // we'll only have 5 expected
-                            notification.expectedCount.should.be.equal(5);
                         setTimeout(function() {
 
                             // wait a second before proceeding

@@ -269,7 +269,7 @@ public class GraphManagerImpl implements GraphManager {
 
 
         final Observable<Id> nodeObservable =
-            Observable.just( inputNode ).map( node -> nodeSerialization.getMaxVersion( scope, inputNode ) ).takeWhile(
+            Observable.just( inputNode ).map( node -> nodeSerialization.getMaxVersion( scope, node ) ).takeWhile(
                 maxTimestamp -> maxTimestamp.isPresent() )
 
                 //map our delete listener

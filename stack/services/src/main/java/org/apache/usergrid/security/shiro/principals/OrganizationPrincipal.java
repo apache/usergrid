@@ -40,7 +40,9 @@ public class OrganizationPrincipal extends PrincipalIdentifier {
 
     OrganizationInfo organization;
 
-
+    /**
+     * Needed for Jackson, do not remove
+     */
     public OrganizationPrincipal() {
     }
 

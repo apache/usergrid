@@ -16,6 +16,9 @@
 package org.apache.usergrid.corepersistence;
 
 
+import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
+import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFig;
 import org.apache.usergrid.locking.guice.LockModule;
 import org.apache.usergrid.persistence.cache.guice.CacheModule;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -128,6 +131,7 @@ public class CoreModule extends AbstractModule {
 
         bind( ManagerCache.class ).to( CpManagerCache.class );
         bind( ApplicationIdCacheFactory.class );
+        bind( IndexSchemaCacheFactory.class );
 
 
         /**
@@ -176,6 +180,8 @@ public class CoreModule extends AbstractModule {
 
 
         install( new GuicyFigModule( ApplicationIdCacheFig.class ) );
+
+        install( new GuicyFigModule( IndexSchemaCacheFig.class ) );
 
         install( new GuicyFigModule( EntityManagerFig.class ) );
 

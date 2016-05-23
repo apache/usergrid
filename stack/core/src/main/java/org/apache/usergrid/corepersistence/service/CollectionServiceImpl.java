@@ -29,6 +29,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
 
 
@@ -69,6 +70,28 @@ public class CollectionServiceImpl implements CollectionService {
         else {
             results = pipelineBuilder.searchCollection( collectionName, query.get(),search.getEntityType()).loadEntities();
         }
+
+
+        return results.build();
+    }
+
+    @Override
+    public Observable<ResultsPage<Id>> searchCollectionIds(final CollectionSearch search ) {
+
+
+        final ApplicationScope applicationScope = search.getApplicationScope();
+        final String collectionName = search.getCollectionName();
+        final Optional<String> query = search.getQuery();
+
+        final IdBuilder pipelineBuilder =
+            pipelineBuilderFactory.create( applicationScope ).withCursor( search.getCursor() )
+                .withLimit( search.getLimit() ).fromId( search.getCollectionOwnerId() );
+
+
+        final IdBuilder results;
+
+
+        results = pipelineBuilder.traverseCollection( collectionName );
 
 
         return results.build();

@@ -517,7 +517,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
         //Set the default TTL of the application to a date far in the future
         final MapUtils.HashMapBuilder<String, String> map =
             new MapUtils.HashMapBuilder<String, String>().map( "accesstokenttl", "31536000000" );
-        this.app().getTarget( false )
+        this.app().getTarget(true, clientSetup.getSuperuserToken())
             .queryParam( "access_token", token )
             .request()
             .accept( MediaType.APPLICATION_JSON )

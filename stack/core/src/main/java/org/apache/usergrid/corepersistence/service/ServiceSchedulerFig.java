@@ -50,7 +50,7 @@ public interface ServiceSchedulerFig extends GuicyFig {
 
 
 
-    @Default("100")
+    @Default("50")
     @Key( SERVICE_IMPORT_THREADS)
     int getImportThreadPoolSize();
 

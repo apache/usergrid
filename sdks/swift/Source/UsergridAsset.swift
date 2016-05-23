@@ -35,10 +35,10 @@ import MobileCoreServices
 public typealias UsergridAssetRequestProgress = (bytesFinished:Int64, bytesExpected: Int64) -> Void
 
 /// The completion block used in `UsergridAsset` are finished uploading.
-public typealias UsergridAssetUploadCompletion = (response:UsergridResponse,asset:UsergridAsset?, error: String?) -> Void
+public typealias UsergridAssetUploadCompletion = (asset:UsergridAsset?, response: UsergridResponse) -> Void
 
 /// The completion block used in `UsergridAsset` are finished downloading.
-public typealias UsergridAssetDownloadCompletion = (asset:UsergridAsset?, error: String?) -> Void
+public typealias UsergridAssetDownloadCompletion = (asset:UsergridAsset?, error: UsergridResponseError?) -> Void
 
 /**
 As Usergrid supports storing binary assets, the SDKs are designed to make uploading assets easier and more robust. Attaching, uploading, and downloading assets is handled by the `UsergridEntity` class.
@@ -47,7 +47,7 @@ Unless defined, whenever possible, the content-type will be inferred from the da
 */
 public class UsergridAsset: NSObject, NSCoding {
 
-    private static let DEFAULT_FILE_NAME = "file"
+    internal static let DEFAULT_FILE_NAME = "file"
 
     // MARK: - Instance Properties -
 
@@ -95,7 +95,7 @@ public class UsergridAsset: NSObject, NSCoding {
 
     - returns: A new instance of `UsergridAsset` if the data can be gathered from the passed in `UIImage`, otherwise nil.
     */
-    public convenience init?(fileName:String? = UsergridAsset.DEFAULT_FILE_NAME, image:UIImage, imageContentType:UsergridImageContentType = .Png) {
+    public convenience init?(filename:String? = UsergridAsset.DEFAULT_FILE_NAME, image:UIImage, imageContentType:UsergridImageContentType = .Png) {
         var imageData: NSData?
         switch(imageContentType) {
             case .Png :
@@ -104,7 +104,7 @@ public class UsergridAsset: NSObject, NSCoding {
                 imageData = UIImageJPEGRepresentation(image, 1.0)
         }
         if let assetData = imageData {
-            self.init(filename:fileName,data:assetData,contentType:imageContentType.stringValue)
+            self.init(filename:filename,data:assetData,contentType:imageContentType.stringValue)
         } else {
             self.init(filename:"",data:NSData(),contentType:"")
             return nil
@@ -121,9 +121,9 @@ public class UsergridAsset: NSObject, NSCoding {
 
     - returns: A new instance of `UsergridAsset` if the data can be gathered from the passed in `NSURL`, otherwise nil.
     */
-    public convenience init?(fileName:String? = UsergridAsset.DEFAULT_FILE_NAME, fileURL:NSURL, contentType:String? = nil) {
-        if fileURL.isFileReferenceURL(), let assetData = NSData(contentsOfURL: fileURL) {
-            var fileNameToUse = fileName
+    public convenience init?(filename:String? = UsergridAsset.DEFAULT_FILE_NAME, fileURL:NSURL, contentType:String? = nil) {
+        if fileURL.fileURL, let assetData = NSData(contentsOfURL: fileURL) {
+            var fileNameToUse = filename
             if fileNameToUse != UsergridAsset.DEFAULT_FILE_NAME, let inferredFileName = fileURL.lastPathComponent {
                 fileNameToUse = inferredFileName
             }
@@ -135,7 +135,7 @@ public class UsergridAsset: NSObject, NSCoding {
                 return nil
             }
         } else {
-            print("Usergrid Error: fileURL parameter must be a file reference URL.")
+            print("Usergrid Error: fileURL parameter must be a file URL.")
             self.init(filename:"",data:NSData(),contentType:"")
             return nil
         }

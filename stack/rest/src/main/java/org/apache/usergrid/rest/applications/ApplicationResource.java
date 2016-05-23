@@ -82,7 +82,7 @@ import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst
         MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
         "application/ecmascript", "text/jscript"
 })
-public class ApplicationResource extends ServiceResource {
+public class ApplicationResource extends CollectionResource {
 
     public static final Logger logger = LoggerFactory.getLogger( ApplicationResource.class );
 
