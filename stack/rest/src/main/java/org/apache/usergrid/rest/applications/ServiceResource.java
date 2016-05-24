@@ -646,8 +646,8 @@ public class ServiceResource extends AbstractContextResource {
 
     private void checkServiceParams() {
         for( ServiceParameter param : this.getServiceParameters()){
-            if(Identifier.from(param) == null){
-                throw new IllegalArgumentException("Not a valid Notifier identifier. " + param.toString() + "Only alpha Numeric characters are supported.");
+            if(Identifier.from(param.toString()) == null){
+                throw new IllegalArgumentException("Not a valid Notifier identifier. " + param.toString() + " Only alpha Numeric characters are supported in the urlPath.");
             }
         }
     }

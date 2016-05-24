@@ -380,16 +380,16 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         //Entity name according to the expected regex.
         Entity entity4 = new Entity();
-        entity4.put("name", "errName@r");
+        entity4.put("name", "errName.-r");
         entity4.put("property1", "propertyValue1");
 
         //Post Entity
         try {
             this.app().collection("testCollection").post(entity4);
             entity = this.app().collection("testCollections").entity("errName.-r").get();
-            assertTrue(entity.get("name").equals("errName-11"));
+            assertTrue(entity.get("name").equals("errName.-r"));
             entity = this.app().collection("testCollection").entity("errName.-r").put(payload1);
-            assertTrue(entity.get("name").equals("errName-11"));
+            assertTrue(entity.get("name").equals("errName.-r"));
             ApiResponse response = this.app().collection("testCollection").entity("errName.-r").delete();
         }
         catch (Exception e){
