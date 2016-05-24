@@ -68,10 +68,6 @@ public class ServiceManager {
     public static final String APPLICATION_REQUESTS_PER = APPLICATION_REQUESTS + ".";
     public static final String IMPL = "Impl";
 
-    public static final String SERVICE_MANAGER_RETRY_INTERVAL = "service.manager.retry.interval";
-
-    public static final String SERVICE_MANAGER_MAX_RETRIES= "service.manager.max.retries";
-
     private Application application;
 
     private UUID applicationId;
