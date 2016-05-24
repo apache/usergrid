@@ -16,11 +16,7 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,16 +98,16 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private Setup setup = null;
 
+    EntityManager managementAppEntityManager = null;
+
     // cache of already instantiated entity managers
-    private LoadingCache<UUID, EntityManager> entityManagers
-        = CacheBuilder.newBuilder().maximumSize(100).build(new CacheLoader<UUID, EntityManager>() {
-            public EntityManager load(UUID appId) { // no checked exception
-                return _getEntityManager(appId);
-            }
-        });
+    private final String ENTITY_MANAGER_CACHE_SIZE = "entity.manager.cache.size";
+    private final LoadingCache<UUID, EntityManager> entityManagers;
 
     private final ApplicationIdCache applicationIdCache;
     //private final IndexSchemaCache indexSchemaCache;
+
+    Application managementApp = null;
 
     private ManagerCache managerCache;
 
@@ -126,8 +122,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final GraphManagerFactory graphManagerFactory;
     private final IndexSchemaCacheFactory indexSchemaCacheFactory;
 
-    public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
-                                   final Injector injector ) {
+    public static final String MANAGEMENT_APP_MAX_RETRIES= "management.app.max.retries";
+
+
+    public CpEntityManagerFactory(
+        final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector ) {
 
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
@@ -142,12 +141,66 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.connectionService = injector.getInstance( ConnectionService.class );
         this.indexSchemaCacheFactory = injector.getInstance( IndexSchemaCacheFactory.class );
 
-        //this line always needs to be last due to the temporary cicular dependency until spring is removed
+        // this line always needs to be last due to the temporary circular dependency until spring is removed
 
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
 
+        int entityManagerCacheSize = 100;
+        try {
+            entityManagerCacheSize = Integer.parseInt(
+                cassandraService.getProperties().getProperty( ENTITY_MANAGER_CACHE_SIZE, "100" ));
+        } catch ( Exception e ) {
+            logger.error("Error parsing " + ENTITY_MANAGER_CACHE_SIZE + " using " + entityManagerCacheSize, e );
+        }
 
+        entityManagers = CacheBuilder.newBuilder()
+            .maximumSize(entityManagerCacheSize)
+            .build(new CacheLoader<UUID, EntityManager>() {
+
+            public EntityManager load( UUID appId ) { // no checked exception
+
+                // get entity manager and ensure it can get its own application
+
+                EntityManager entityManager = _getEntityManager( appId );
+                Application app = null;
+                Exception exception = null;
+                try {
+                    app = entityManager.getApplication();
+                } catch (Exception e) {
+                    exception = e;
+                }
+
+                // the management app is a special case
+
+                if ( CpNamingUtils.MANAGEMENT_APPLICATION_ID.equals( appId ) ) {
+
+                    if ( app != null && entityManager != null ) {
+
+                        // we successfully fetched up the management app, cache it for a rainy day
+                        managementAppEntityManager = entityManager;
+
+                    } else if ( entityManager == null && managementAppEntityManager != null ) {
+
+                        // failed to fetch management app, use cached one
+                        entityManager = managementAppEntityManager;
+
+                    } else {
+
+                        // fetch failed and we have nothing cached, we must be bootstrapping
+                        logger.info("managementAppEntityManager is null, bootstrapping in progress");
+                    }
+
+                } else { // not the management app, so blow up if app cannot be fetched
+
+                    if (app == null) {
+                        throw new RuntimeException( "Error getting application " + appId, exception );
+                    }
+                }
+
+                return entityManager;
+            }
+        });
     }
 
 
@@ -159,7 +212,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public CassandraService getCassandraService() {
         return cassandraService;
     }
-
 
 
     private void initMgmtAppInternal() {
@@ -182,6 +234,22 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
+    public Application getManagementApplication() {
+
+        Application ret = null;
+        EntityManager em = getEntityManager(getManagementAppId());
+        try {
+            ret = em.getApplication();
+            managementApp = ret;
+
+        } catch (Exception e) {
+            logger.warn("Error getting management app, returning cached copy version");
+        }
+
+        return managementApp;
+    }
+
+
     private Observable<EntityIdScope> getAllEntitiesObservable(){
       return injector.getInstance( Key.get(new TypeLiteral< MigrationDataProvider<EntityIdScope>>(){})).getData();
     }
@@ -201,9 +269,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private EntityManager _getEntityManager( UUID applicationId ) {
-        EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache,
-            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService,indexSchemaCacheFactory, applicationId );
-
+        EntityManager em = new CpEntityManager(
+            this,
+            cassandraService,
+            counterUtils,
+            indexService,
+            managerCache,
+            metricsFactory,
+            entityManagerFig,
+            graphManagerFactory,
+            collectionService,
+            connectionService,
+            indexSchemaCacheFactory,
+            applicationId );
         return em;
     }
 
@@ -215,7 +293,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public Entity createApplicationV2(
-        String orgName, String name, UUID applicationId, Map<String, Object> properties, boolean forMigration) throws Exception {
+        String orgName, String name, UUID applicationId, Map<String, Object> properties, boolean forMigration)
+        throws Exception {
 
         String appName = buildAppName( orgName, name );
 
@@ -317,8 +396,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         // find application_info for application to delete
 
-        migrateAppInfo(applicationId, CpNamingUtils.APPLICATION_INFO, CpNamingUtils.DELETED_APPLICATION_INFOS, CpNamingUtils.DELETED_APPLICATION_INFO).toBlocking()
-            .lastOrDefault( null );
+        migrateAppInfo(
+            applicationId, CpNamingUtils.APPLICATION_INFO, CpNamingUtils.DELETED_APPLICATION_INFOS,
+            CpNamingUtils.DELETED_APPLICATION_INFO).toBlocking().lastOrDefault( null );
     }
 
     //TODO: return status for restore
@@ -360,9 +440,13 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
      * @return
      * @throws Exception
      */
-    private Observable migrateAppInfo(final UUID applicationUUID,  final String deleteTypeName, final String createCollectionName, final String createTypeName ) throws Exception {
+    private Observable migrateAppInfo(
+        final UUID applicationUUID,  final String deleteTypeName, final String createCollectionName,
+        final String createTypeName ) throws Exception {
 
-        final ApplicationScope managementAppScope = CpNamingUtils.getApplicationScope(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+        final ApplicationScope managementAppScope =
+            CpNamingUtils.getApplicationScope(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
+
         final EntityManager managementEm = getEntityManager(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
         //the application id we will be removing
@@ -417,7 +501,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         final Id managementAppId = CpNamingUtils.getManagementApplicationId();
         final EntityIndex aei = getManagementIndex();
         final GraphManager managementGraphManager = managerCache.getGraphManager(managementAppScope);
-        final Edge createEdge = CpNamingUtils.createCollectionEdge(managementAppId, createCollectionName, createApplicationId);
+        final Edge createEdge =
+            CpNamingUtils.createCollectionEdge(managementAppId, createCollectionName, createApplicationId);
 
         final Observable createNodeGraph = managementGraphManager.writeEdge(createEdge);
 

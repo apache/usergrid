@@ -68,9 +68,6 @@ public class ServiceManager {
     public static final String APPLICATION_REQUESTS_PER = APPLICATION_REQUESTS + ".";
     public static final String IMPL = "Impl";
 
-    public static final String SERVICE_MANAGER_RETRY_INTERVAL = "service.manager.retry.interval";
-
-    public static final String SERVICE_MANAGER_MAX_RETRIES= "service.manager.max.retries";
 
     private Application application;
 
@@ -99,69 +96,27 @@ public class ServiceManager {
         this.qm = qm;
         this.properties = properties;
 
-        Integer retryInterval;
-        try {
-            Object retryIntervalObject = properties.get( SERVICE_MANAGER_RETRY_INTERVAL ).toString();
-            retryInterval = Integer.parseInt( retryIntervalObject.toString() );
-        } catch ( NumberFormatException nfe ) {
-            retryInterval = 15000;
-        }
-
-        Integer maxRetries;
-        try {
-            Object maxRetriesObject = properties.get( SERVICE_MANAGER_MAX_RETRIES ).toString();
-            maxRetries = Integer.parseInt( maxRetriesObject.toString() );
-        } catch ( NumberFormatException nfe ) {
-            maxRetries = 5;
-        }
-
         if ( em != null ) {
-
             try {
-                int retryCount = 0;
-                boolean appNotFound = true;
-
-                while ( appNotFound && retryCount <= maxRetries ) {
-
-                    application = em.getApplication();
-
-                    if ( application != null ) {
-                        appNotFound = false;
-                        applicationId = application.getUuid();
-
-                    } else {
-                        // Cassandra may be alive but responding very slowly, let's wait and retry
-                        logger.error("STARTUP PROBLEM: Cannot get application by UUID. Will retry in {} seconds #{}",
-                            retryInterval/1000, retryCount);
-                        Thread.sleep( retryInterval );
-                        retryCount++;
-                    }
-                }
-
-                if ( application == null ) {
-                    Exception e = new RuntimeException(
-                        "STARTUP FAILURE: application id {" + em.getApplicationId()
-                            + "} is returning null after " + retryCount + " retries" );
+                application = em.getApplication();
+                if(application == null){
+                    Exception e = new RuntimeException("application id {"+em.getApplicationId()+"} is returning null");
+                    logger.error("Failed to get application",e);
                     throw e;
                 }
-
-            } catch ( RuntimeException re ) {
-                logger.error( "ServiceManager init failure", re );
-                throw re;
-
-            } catch ( Exception e ) {
+                applicationId = application.getUuid();
+            }
+            catch ( Exception e ) {
                 logger.error( "ServiceManager init failure", e );
                 throw new RuntimeException( e );
             }
         }
-
         if ( properties != null ) {
             String packages = properties.getProperty( SERVICE_PACKAGE_PREFIXES );
             if ( !StringUtils.isEmpty( packages ) ) {
                 setServicePackagePrefixes( packages );
             }
         }
-
         return this;
     }
 
