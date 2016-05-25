@@ -174,17 +174,17 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         int maxRetries = 1000;
         int retries = 0;
         boolean managementAppFound = false;
-        Set<Class> seenBefore = new HashSet<>(100);
         while ( !managementAppFound && retries++ < maxRetries ) {
             try {
                 getEntityManager( getManagementAppId() ).getApplication();
                 managementAppFound = true;
 
             } catch ( Throwable t ) {
-                if ( seenBefore.contains( t.getClass() )) { // don't log full stack trace if we've seen same before
-                    logger.error("Error {} getting management app on try {}", t.getClass().getSimpleName(), retries);
+                String msg = "Error " + t.getClass() + " getting management app on try " + retries;
+                if ( logger.isDebugEnabled() ) {
+                    logger.error( msg, t);
                 } else {
-                    logger.error("Error getting management app on try {}", t.getClass().getSimpleName(), t);
+                    logger.error(msg);
                 }
             }
         }

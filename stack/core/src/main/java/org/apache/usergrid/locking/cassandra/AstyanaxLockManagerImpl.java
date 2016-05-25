@@ -37,9 +37,7 @@ import org.apache.usergrid.persistence.core.astyanax.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
@@ -50,8 +48,8 @@ public class AstyanaxLockManagerImpl implements LockManager {
 
 
     private final CassandraFig cassandraFig;
-    private final Keyspace keyspace;
-    private final ColumnFamily columnFamily;
+    private Keyspace keyspace;
+    private ColumnFamily columnFamily;
     private static final int MINIMUM_LOCK_EXPIRATION = 60000; // 1 minute
 
     @Inject
@@ -59,14 +57,28 @@ public class AstyanaxLockManagerImpl implements LockManager {
                                    CassandraCluster cassandraCluster ) throws ConnectionException {
 
         this.cassandraFig = cassandraFig;
-        this.keyspace = cassandraCluster.getLocksKeyspace();
 
-        createLocksKeyspace();
+        // hold up construction until we can create the column family
+        int maxRetries = 1000;
+        int retries = 0;
+        boolean famReady = false;
+        while ( !famReady && retries++ < maxRetries ) {
+            try {
+                keyspace = cassandraCluster.getLocksKeyspace();
+                createLocksKeyspace();
+                columnFamily = createLocksColumnFamily();
+                famReady = true;
 
-        this.columnFamily = createLocksColumnFamily();
-
-
-
+            } catch ( Throwable t ) {
+                String msg = "Error " + t.getClass().getSimpleName() + " creating locks keyspace try " + retries;
+                if ( logger.isDebugEnabled() ) {
+                    logger.error( msg, t );
+                } else {
+                    logger.error( msg );
+                }
+                try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
+            }
+        }
 
     }
 
