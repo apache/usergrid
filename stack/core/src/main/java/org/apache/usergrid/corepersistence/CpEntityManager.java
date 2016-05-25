@@ -36,7 +36,6 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +48,24 @@ import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.AggregateCounter;
+import org.apache.usergrid.persistence.AggregateCounterSet;
+import org.apache.usergrid.persistence.CollectionRef;
+import org.apache.usergrid.persistence.ConnectedEntityRef;
+import org.apache.usergrid.persistence.ConnectionRef;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityFactory;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.IndexBucketLocator;
+import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Query.Level;
+import org.apache.usergrid.persistence.RelationManager;
+import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.SimpleRoleRef;
+import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.cassandra.ApplicationCF;
 import org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
@@ -214,9 +230,6 @@ public class CpEntityManager implements EntityManager {
 
     private EntityCollectionManager ecm;
 
-    private CpEntityManagerFactory emf;
-
-
     //    /** Short-term cache to keep us from reloading same Entity during single request. */
 //    private LoadingCache<EntityScope, org.apache.usergrid.persistence.model.entity.Entity> entityCache;
 
@@ -229,8 +242,7 @@ public class CpEntityManager implements EntityManager {
      * @param metricsFactory
      * @param applicationId
      */
-    public CpEntityManager(final CpEntityManagerFactory emf,
-                           final CassandraService cass,
+    public CpEntityManager( final CassandraService cass,
                            final CounterUtils counterUtils,
                            final AsyncEventService indexService,
                            final ManagerCache managerCache,
@@ -242,7 +254,6 @@ public class CpEntityManager implements EntityManager {
                            final IndexSchemaCacheFactory indexSchemaCacheFactory,
                            final UUID applicationId ) {
 
-        this.emf = emf;
         this.entityManagerFig = entityManagerFig;
 
         Preconditions.checkNotNull( cass, "cass must not be null" );
@@ -258,6 +269,8 @@ public class CpEntityManager implements EntityManager {
         this.graphManagerFactory = graphManagerFactory;
         this.connectionService = connectionService;
         this.collectionService = collectionService;
+
+
 
         this.managerCache = managerCache;
         this.applicationId = applicationId;
