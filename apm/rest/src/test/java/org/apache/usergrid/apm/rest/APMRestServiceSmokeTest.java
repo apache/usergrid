@@ -1,4 +1,4 @@
-package com.ideawheel.portal.rest;
+package org.apache.usergrid.apm.rest;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,7 +16,7 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 
-import com.apigee.apm.rest.AppDetailsForAPM;
+import org.apache.usergrid.apm.rest.AppDetailsForAPM;
 import org.apache.usergrid.apm.model.ApigeeMobileAPMConstants;
 import org.apache.usergrid.apm.model.App;
 import org.apache.usergrid.apm.model.AppConfigCustomParameter;

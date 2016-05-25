@@ -1,4 +1,4 @@
-package com.apigee.apm.rest;
+package org.apache.usergrid.apm.rest;
 
 import java.util.Date;
 import java.util.UUID;
