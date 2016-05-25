@@ -23,6 +23,8 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import com.netflix.astyanax.connectionpool.exceptions.BadRequestException;
+import org.apache.cassandra.exceptions.InvalidRequestException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
@@ -124,54 +126,79 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.connectionService = injector.getInstance( ConnectionService.class );
         this.indexSchemaCacheFactory = injector.getInstance( IndexSchemaCacheFactory.class );
 
+        Properties properties = cassandraService.getProperties();
+
+        entityManagers = createEntityManagerCache( properties );
+
+        checkManagementApp( properties );
+
+        // this line always needs to be last due to the temporary circular dependency until spring is removed
+        applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class)
+            .getInstance( getManagementEntityManager() );
+    }
+
+
+    private LoadingCache<UUID, EntityManager> createEntityManagerCache(Properties properties) {
+
         int entityManagerCacheSize = 100;
         try {
-            entityManagerCacheSize = Integer.parseInt(
-                cassandraService.getProperties().getProperty( ENTITY_MANAGER_CACHE_SIZE, "100" ));
+            entityManagerCacheSize = Integer.parseInt( properties.getProperty( ENTITY_MANAGER_CACHE_SIZE, "100" ));
         } catch ( Exception e ) {
-            logger.error("Error parsing " + ENTITY_MANAGER_CACHE_SIZE + " using " + entityManagerCacheSize, e );
+            logger.error("Error parsing " + ENTITY_MANAGER_CACHE_SIZE + ". Will use " + entityManagerCacheSize, e );
         }
 
-        entityManagers = CacheBuilder.newBuilder()
+        return CacheBuilder.newBuilder()
             .maximumSize(entityManagerCacheSize)
             .build(new CacheLoader<UUID, EntityManager>() {
 
-            public EntityManager load( UUID appId ) { // no checked exception
+                public EntityManager load( UUID appId ) { // no checked exception
 
-                // create new entity manager and pre-fetch its application
-                EntityManager entityManager = _getEntityManager( appId );
-                Application app = null;
-                Exception exception = null;
-                try {
-                    app = entityManager.getApplication();
-                } catch (Exception e) {
-                    exception = e;
-                }
-
-                // the management app is a special case
-
-                if ( CpNamingUtils.MANAGEMENT_APPLICATION_ID.equals( appId ) ) {
-
-                    if ( app != null ) {
-                        // we successfully fetched up the management app, cache it for a rainy day
-                        managementAppEntityManager = entityManager;
-
-                    } else if ( managementAppEntityManager != null ) {
-                        // failed to fetch management app, use cached one
-                        entityManager = managementAppEntityManager;
+                    // create new entity manager and pre-fetch its application
+                    EntityManager entityManager = _getEntityManager( appId );
+                    Application app = null;
+                    Throwable throwable = null;
+                    try {
+                        app = entityManager.getApplication();
+                    } catch (Throwable t) {
+                        throwable = t;
                     }
-                }
 
-                if (app == null) {
-                    throw new RuntimeException( "Error getting application " + appId, exception );
-                }
+                    // the management app is a special case
 
-                return entityManager;
-            }
-        });
+                    if ( CpNamingUtils.MANAGEMENT_APPLICATION_ID.equals( appId ) ) {
+
+                        if ( app != null ) {
+                            // we successfully fetched up the management app, cache it for a rainy day
+                            managementAppEntityManager = entityManager;
+
+                        } else if ( managementAppEntityManager != null ) {
+                            // failed to fetch management app, use cached one
+                            entityManager = managementAppEntityManager;
+                        }
+                    }
+
+                    if ( app == null && throwable != null && throwable.getCause() instanceof BadRequestException) {
+                        // probably means schema has not been created yet
+                    } else {
+                        throw new RuntimeException( "Error getting application " + appId, throwable );
+                    }
+
+                    return entityManager;
+                }
+            });
+    }
+
+
+    private void checkManagementApp(Properties properties) {
+        int maxRetries = 100;
+        try {
+            maxRetries = Integer.parseInt( properties.getProperty( MANAGEMENT_APP_MAX_RETRIES, "100" ));
+
+        } catch ( Exception e ) {
+            logger.error("Error parsing " + MANAGEMENT_APP_MAX_RETRIES + ". Will use " + maxRetries, e );
+        }
 
         // hold up construction until we can access the management app
-        int maxRetries = 1000;
         int retries = 0;
         boolean managementAppFound = false;
         while ( !managementAppFound && retries++ < maxRetries ) {
@@ -186,6 +213,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 } else {
                     logger.error(msg);
                 }
+                try { Thread.sleep( 1000 ); } catch (InterruptedException ignored) {}
             }
         }
 
@@ -193,10 +221,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             // exception here will prevent WAR from being deployed
             throw new RuntimeException( "Unable to get management app after " + retries + " retries" );
         }
-
-        // this line always needs to be last due to the temporary circular dependency until spring is removed
-        applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class)
-            .getInstance( getManagementEntityManager() );
     }
 
 
@@ -240,8 +264,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         try {
             return entityManagers.get( applicationId );
         }
-        catch ( Exception ex ) {
-            logger.error("Error getting oldAppInfo manager", ex);
+        catch ( Throwable t ) {
+            logger.error("Error getting entity manager", t);
         }
         return _getEntityManager(applicationId);
     }

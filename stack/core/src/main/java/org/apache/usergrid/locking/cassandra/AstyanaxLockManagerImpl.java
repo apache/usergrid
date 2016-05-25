@@ -52,6 +52,7 @@ public class AstyanaxLockManagerImpl implements LockManager {
     private ColumnFamily columnFamily;
     private static final int MINIMUM_LOCK_EXPIRATION = 60000; // 1 minute
 
+
     @Inject
     public AstyanaxLockManagerImpl(CassandraFig cassandraFig,
                                    CassandraCluster cassandraCluster ) throws ConnectionException {
@@ -59,7 +60,7 @@ public class AstyanaxLockManagerImpl implements LockManager {
         this.cassandraFig = cassandraFig;
 
         // hold up construction until we can create the column family
-        int maxRetries = 1000;
+        int maxRetries = cassandraFig.getLockManagerInitRetries();
         int retries = 0;
         boolean famReady = false;
         while ( !famReady && retries++ < maxRetries ) {
@@ -76,7 +77,7 @@ public class AstyanaxLockManagerImpl implements LockManager {
                 } else {
                     logger.error( msg );
                 }
-                try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
+                try { Thread.sleep( cassandraFig.getLockManagerInitInterval() ); } catch (InterruptedException ignored) {}
             }
         }
 
