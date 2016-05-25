@@ -17,29 +17,32 @@
 package org.apache.usergrid.services;
 
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import org.apache.commons.lang.StringUtils;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 import org.apache.usergrid.batch.service.SchedulerService;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.mq.QueueManager;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.services.ServiceParameter.IdParameter;
 import org.apache.usergrid.services.applications.ApplicationsService;
 import org.apache.usergrid.services.exceptions.UndefinedServiceEntityTypeException;
 import org.apache.usergrid.utils.ListUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
 
-import java.lang.reflect.Modifier;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang.StringUtils;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
 import static org.apache.usergrid.utils.InflectionUtils.pluralize;
