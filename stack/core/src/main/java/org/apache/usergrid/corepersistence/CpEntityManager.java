@@ -243,16 +243,16 @@ public class CpEntityManager implements EntityManager {
      * @param applicationId
      */
     public CpEntityManager( final CassandraService cass,
-                           final CounterUtils counterUtils,
-                           final AsyncEventService indexService,
-                           final ManagerCache managerCache,
-                           final MetricsFactory metricsFactory,
-                           final EntityManagerFig entityManagerFig,
-                           final GraphManagerFactory graphManagerFactory,
-                           final CollectionService collectionService,
-                           final ConnectionService connectionService,
-                           final IndexSchemaCacheFactory indexSchemaCacheFactory,
-                           final UUID applicationId ) {
+                            final CounterUtils counterUtils,
+                            final AsyncEventService indexService,
+                            final ManagerCache managerCache,
+                            final MetricsFactory metricsFactory,
+                            final EntityManagerFig entityManagerFig,
+                            final GraphManagerFactory graphManagerFactory,
+                            final CollectionService collectionService,
+                            final ConnectionService connectionService,
+                            final IndexSchemaCacheFactory indexSchemaCacheFactory,
+                            final UUID applicationId ) {
 
         this.entityManagerFig = entityManagerFig;
 
