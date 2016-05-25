@@ -742,9 +742,6 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Application getApplication() throws Exception {
         if ( application == null ) {
-            if ( CpNamingUtils.MANAGEMENT_APPLICATION_ID.equals( applicationId )) {
-                return emf.getManagementApplication();
-            }
             application = get( applicationId, Application.class );
         }
         return application;

@@ -141,11 +141,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.connectionService = injector.getInstance( ConnectionService.class );
         this.indexSchemaCacheFactory = injector.getInstance( IndexSchemaCacheFactory.class );
 
-        // this line always needs to be last due to the temporary circular dependency until spring is removed
-
-        this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
-            getManagementEntityManager() );
-
         int entityManagerCacheSize = 100;
         try {
             entityManagerCacheSize = Integer.parseInt(
@@ -160,8 +155,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
             public EntityManager load( UUID appId ) { // no checked exception
 
-                // get entity manager and ensure it can get its own application
-
+                // create new entity manager and pre-fetch its application
                 EntityManager entityManager = _getEntityManager( appId );
                 Application app = null;
                 Exception exception = null;
@@ -175,32 +169,51 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
                 if ( CpNamingUtils.MANAGEMENT_APPLICATION_ID.equals( appId ) ) {
 
-                    if ( app != null && entityManager != null ) {
-
+                    if ( app != null ) {
                         // we successfully fetched up the management app, cache it for a rainy day
                         managementAppEntityManager = entityManager;
 
-                    } else if ( entityManager == null && managementAppEntityManager != null ) {
-
+                    } else if ( managementAppEntityManager != null ) {
                         // failed to fetch management app, use cached one
                         entityManager = managementAppEntityManager;
-
-                    } else {
-
-                        // fetch failed and we have nothing cached, we must be bootstrapping
-                        logger.info("managementAppEntityManager is null, bootstrapping in progress");
                     }
+                }
 
-                } else { // not the management app, so blow up if app cannot be fetched
-
-                    if (app == null) {
-                        throw new RuntimeException( "Error getting application " + appId, exception );
-                    }
+                if (app == null) {
+                    throw new RuntimeException( "Error getting application " + appId, exception );
                 }
 
                 return entityManager;
             }
         });
+
+        // hold up construction until we can access the management app
+        int maxRetries = 1000;
+        int retries = 0;
+        boolean managementAppFound = false;
+        Set<Class> seenBefore = new HashSet<>(100);
+        while ( !managementAppFound && retries++ < maxRetries ) {
+            try {
+                getEntityManager( getManagementAppId() ).getApplication();
+                managementAppFound = true;
+
+            } catch ( Throwable t ) {
+                if ( seenBefore.contains( t.getClass() )) { // don't log full stack trace if we've seen same before
+                    logger.error("Error {} getting management app on try {}", t.getClass().getSimpleName(), retries);
+                } else {
+                    logger.error("Error getting management app on try {}", t.getClass().getSimpleName(), t);
+                }
+            }
+        }
+
+        if ( !managementAppFound ) {
+            // exception here will prevent WAR from being deployed
+            throw new RuntimeException( "Unable to get management app after " + retries + " retries" );
+        }
+
+        // this line always needs to be last due to the temporary circular dependency until spring is removed
+        applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class)
+            .getInstance( getManagementEntityManager() );
     }
 
 
@@ -234,26 +247,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    public Application getManagementApplication() {
-
-        Application ret = null;
-        EntityManager em = getEntityManager(getManagementAppId());
-        try {
-            ret = em.getApplication();
-            managementApp = ret;
-
-        } catch (Exception e) {
-            logger.warn("Error getting management app, returning cached copy version");
-        }
-
-        return managementApp;
-    }
-
-
     private Observable<EntityIdScope> getAllEntitiesObservable(){
       return injector.getInstance( Key.get(new TypeLiteral< MigrationDataProvider<EntityIdScope>>(){})).getData();
     }
-
 
 
     @Override
