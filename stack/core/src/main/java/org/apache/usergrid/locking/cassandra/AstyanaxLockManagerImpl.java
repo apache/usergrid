@@ -22,6 +22,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.connectionpool.exceptions.NoAvailableHostsException;
+import com.netflix.astyanax.connectionpool.exceptions.PoolTimeoutException;
 import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
 import com.netflix.astyanax.ddl.KeyspaceDefinition;
 import com.netflix.astyanax.model.ColumnFamily;
@@ -63,6 +65,7 @@ public class AstyanaxLockManagerImpl implements LockManager {
         int maxRetries = cassandraFig.getLockManagerInitRetries();
         int retries = 0;
         boolean famReady = false;
+        Set<Class> seenBefore = new HashSet<>(10);
         while ( !famReady && retries++ < maxRetries ) {
             try {
                 keyspace = cassandraCluster.getLocksKeyspace();
@@ -71,13 +74,21 @@ public class AstyanaxLockManagerImpl implements LockManager {
                 famReady = true;
 
             } catch ( Throwable t ) {
-                String msg = "Error " + t.getClass().getSimpleName() + " creating locks keyspace try " + retries;
-                if ( logger.isDebugEnabled() ) {
+                final String msg;
+                if ( t instanceof PoolTimeoutException || t instanceof NoAvailableHostsException) {
+                    msg = retries + ": Cannot connect to Cassandra (" + t.getClass().getSimpleName() + ")";
+                } else {
+                    msg = retries + ": Error (" + t.getClass().getSimpleName() + ") tries=" + retries;
+                }
+                if ( !seenBefore.contains( t.getClass() ) ) {
                     logger.error( msg, t );
                 } else {
                     logger.error( msg );
                 }
-                try { Thread.sleep( cassandraFig.getLockManagerInitInterval() ); } catch (InterruptedException ignored) {}
+                seenBefore.add( t.getClass() );
+                try {
+                    Thread.sleep( cassandraFig.getLockManagerInitInterval() );
+                } catch (InterruptedException ignored) {}
             }
         }
 
