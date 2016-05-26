@@ -3,7 +3,7 @@ package SessionProcessor
 
 #list any import classes here.
 import org.apache.usergrid.apm.model.ClientLog;
-import com.ideawheel.common.org.ClientSessionMetrics;
+import org.apache.usergrid.apm.model.ClientSessionMetrics;
 import org.apache.usergrid.apm.model.SummarySessionMetrics;
 import org.apache.usergrid.apm.model.CompactSessionMetrics;
 import org.apache.usergrid.apm.model.ChartCriteria;

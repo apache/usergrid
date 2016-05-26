@@ -27,15 +27,15 @@
 
 
 		<mapping class="org.apache.usergrid.apm.model.ClientNetworkMetrics" />
-		<mapping class="com.ideawheel.portal.model.CompactNetworkMetrics" />
+		<mapping class="org.apache.usergrid.apm.model.CompactNetworkMetrics" />
 
 		<mapping class="org.apache.usergrid.apm.model.ClientSessionMetrics" />
-		<mapping class="com.ideawheel.portal.model.CompactSessionMetrics" />
-		<mapping class="com.ideawheel.portal.model.SummarySessionMetrics" />
+		<mapping class="org.apache.usergrid.apm.model.CompactSessionMetrics" />
+		<mapping class="org.apache.usergrid.apm.model.SummarySessionMetrics" />
 
 		<mapping class="org.apache.usergrid.apm.model.ClientLog" />
-		<mapping class="com.ideawheel.portal.model.CompactClientLog" />
-		<mapping class="com.ideawheel.portal.model.CrashLogDetails" />
+		<mapping class="org.apache.usergrid.apm.model.CompactClientLog" />
+		<mapping class="org.apache.usergrid.apm.model.CrashLogDetails" />
 	
 
 	</session-factory>

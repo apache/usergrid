@@ -28,14 +28,14 @@
 
 		<mapping class="org.apache.usergrid.apm.model.App" />
 
-		<mapping class="com.ideawheel.portal.model.MetricsChartCriteria" />
-		<mapping class="com.ideawheel.portal.model.SessionChartCriteria" />
-		<mapping class="com.ideawheel.portal.model.LogChartCriteria" />
+		<mapping class="org.apache.usergrid.apm.model.MetricsChartCriteria" />
+		<mapping class="org.apache.usergrid.apm.model.SessionChartCriteria" />
+		<mapping class="org.apache.usergrid.apm.model.LogChartCriteria" />
 
-		<mapping class="com.ideawheel.portal.model.DeviceModel" />
-		<mapping class="com.ideawheel.portal.model.DevicePlatform" />
-		<mapping class="com.ideawheel.portal.model.NetworkCarrier" />
-		<mapping class="com.ideawheel.portal.model.NetworkSpeed" />
+		<mapping class="org.apache.usergrid.apm.model.DeviceModel" />
+		<mapping class="org.apache.usergrid.apm.model.DevicePlatform" />
+		<mapping class="org.apache.usergrid.apm.model.NetworkCarrier" />
+		<mapping class="org.apache.usergrid.apm.model.NetworkSpeed" />
 
 	</session-factory>
 </hibernate-configuration>
