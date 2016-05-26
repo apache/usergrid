@@ -20,11 +20,10 @@ import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
-import com.netflix.astyanax.connectionpool.exceptions.BadRequestException;
-import org.apache.cassandra.exceptions.InvalidRequestException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
@@ -39,6 +38,7 @@ import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
@@ -68,6 +68,7 @@ import java.util.*;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
+import static org.apache.usergrid.persistence.Schema.initLock;
 
 
 /**
@@ -107,7 +108,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final GraphManagerFactory graphManagerFactory;
     private final IndexSchemaCacheFactory indexSchemaCacheFactory;
 
-    public static final String MANAGEMENT_APP_MAX_RETRIES= "management.app.max.retries";
+    public static final String MANAGEMENT_APP_INIT_MAXRETRIES= "management.app.init.max-retries";
+    public static final String MANAGEMENT_APP_INIT_INTERVAL = "management.app.init.interval";
 
 
     public CpEntityManagerFactory(
@@ -177,11 +179,18 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                         }
                     }
 
-                    if ( app == null && throwable != null && throwable.getCause() instanceof BadRequestException) {
-                        // probably means schema has not been created yet
+                    final boolean missingKeyspace;
+                    if ( throwable instanceof CollectionRuntimeException ) {
+                        CollectionRuntimeException cre = (CollectionRuntimeException) throwable;
+                        missingKeyspace = cre.isMissingKeyspace();
                     } else {
-                        throw new RuntimeException( "Error getting application " + appId, throwable );
+                        missingKeyspace = false;
                     }
+
+                    if ( app == null && !missingKeyspace ) {
+                        throw new RuntimeException( "Error getting application " + appId, throwable );
+
+                    } // else keyspace is missing because setup/bootstrap not done yet
 
                     return entityManager;
                 }
@@ -190,34 +199,77 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private void checkManagementApp(Properties properties) {
+
         int maxRetries = 100;
         try {
-            maxRetries = Integer.parseInt( properties.getProperty( MANAGEMENT_APP_MAX_RETRIES, "100" ));
+            maxRetries = Integer.parseInt( properties.getProperty( MANAGEMENT_APP_INIT_MAXRETRIES, "100" ));
 
         } catch ( Exception e ) {
-            logger.error("Error parsing " + MANAGEMENT_APP_MAX_RETRIES + ". Will use " + maxRetries, e );
+            logger.error("Error parsing " + MANAGEMENT_APP_INIT_MAXRETRIES + ". Will use " + maxRetries, e );
+        }
+
+        int interval = 1000;
+        try {
+            interval = Integer.parseInt( properties.getProperty( MANAGEMENT_APP_INIT_INTERVAL, "1000" ));
+
+        } catch ( Exception e ) {
+            logger.error("Error parsing " + MANAGEMENT_APP_INIT_INTERVAL + ". Will use " + maxRetries, e );
         }
 
         // hold up construction until we can access the management app
         int retries = 0;
         boolean managementAppFound = false;
+        boolean bootstrapping = false;
+        Set<Class> seenBefore = new HashSet<>(10);
         while ( !managementAppFound && retries++ < maxRetries ) {
             try {
-                getEntityManager( getManagementAppId() ).getApplication();
+                // bypass entity manager cache and get managementApp
+                managementApp = _getEntityManager( getManagementAppId() ).getApplication();
                 managementAppFound = true;
 
             } catch ( Throwable t ) {
-                String msg = "Error " + t.getClass() + " getting management app on try " + retries;
-                if ( logger.isDebugEnabled() ) {
+
+                if ( t instanceof CollectionRuntimeException ) {
+                    CollectionRuntimeException cre = (CollectionRuntimeException)t;
+                    if ( cre.isMissingKeyspace() ) {
+                        // we're bootstrapping, ignore this and continue
+                        bootstrapping = true;
+                        break;
+                    }
+                }
+                Throwable cause = t;
+
+                // there was an error, be as informative as possible
+                StringBuilder sb = new StringBuilder();
+                sb.append(retries).append(": Error (");
+
+                if ( t instanceof UncheckedExecutionException ) {
+                    UncheckedExecutionException uee = (UncheckedExecutionException)t;
+                    if ( uee.getCause() instanceof RuntimeException ) {
+                        cause = uee.getCause().getCause();
+                        sb.append(cause.getClass().getSimpleName()).append(") ")
+                          .append(uee.getCause().getMessage());
+                    } else {
+                        cause = uee.getCause();
+                        sb.append(cause.getClass().getSimpleName()).append(") ").append(t.getMessage());
+                    }
+                } else {
+                    sb.append(t.getCause().getClass().getSimpleName()).append(") ").append(t.getMessage());
+                }
+
+                String msg = sb.toString();
+                if ( !seenBefore.contains( cause.getClass() ) ) {
                     logger.error( msg, t);
                 } else {
                     logger.error(msg);
                 }
-                try { Thread.sleep( 1000 ); } catch (InterruptedException ignored) {}
+                seenBefore.add( cause.getClass() );
+
+                try { Thread.sleep( interval ); } catch (InterruptedException ignored) {}
             }
         }
 
-        if ( !managementAppFound ) {
+        if ( !managementAppFound && !bootstrapping ) {
             // exception here will prevent WAR from being deployed
             throw new RuntimeException( "Unable to get management app after " + retries + " retries" );
         }
@@ -323,8 +375,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         // Ensure the management application is initialized
         initMgmtAppInternal();
 
-        EntityManager managementEm = getEntityManager( getManagementAppId() );
-        EntityManager appEm = getEntityManager(applicationId);
+        // Get entity managers by bypassing the entity manager cache because it expects apps to already exist
+        final EntityManager managementEm = _getEntityManager( getManagementAppId() );
+        EntityManager appEm = _getEntityManager(applicationId);
 
         final String appName = buildAppName(organizationName, name);
 
