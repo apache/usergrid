@@ -17,6 +17,13 @@
 # limitations under the License.
 #---------------------------------------------------------------------------
 
+if [[ $# < "1" ]]; then
+    echo "Must specify version on command line"
+    exit -1;
+fi
+
+echo "Building binary distribution using version" $1
+
 # Attempt to build Java SDK, Portal, Stack and Tools
 
 pushd ../sdks/java
@@ -34,4 +41,5 @@ mvn -DskipTests=true clean install
 popd
 
 # assemble binary release
-#mvn clean install
+mvn -DreleaseVersion=$1 clean install
+

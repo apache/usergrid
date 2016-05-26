@@ -328,8 +328,10 @@ public class TokenServiceImpl implements TokenService {
 
         UUID uuid = getUUIDForToken( token );
 
+        long ssoTtl = 1000000L; // TODO: property for this
+
         if ( uuid == null ) {
-            return null;
+            return isSSOEnabled() ? validateExternalToken( token, ssoTtl ) : null;
         }
 
         TokenInfo tokenInfo;

@@ -21,47 +21,50 @@
 <assembly>
     <id>binary</id>
     <formats>
-        <format>zip</format>
         <format>tar.gz</format>
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
+
+    <!-- Include individual files -->
 
     <files>
         
         <!-- Legal and Documentation -->
         <file>
             <source>../CHANGELOG</source>
-            <outputDirectory>${artifact.artifactId}-${artifact.version}</outputDirectory>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}</outputDirectory>
         </file> 
         <file>
             <source>../LICENSE</source>
-            <outputDirectory>${artifact.artifactId}-${artifact.version}</outputDirectory>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}</outputDirectory>
         </file> 
         <file>
             <source>../NOTICE</source>
-            <outputDirectory>${artifact.artifactId}-${artifact.version}</outputDirectory>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}</outputDirectory>
         </file> 
         
         <!-- Stack -->
         <file>
             <source>../stack/rest/target/ROOT.war</source>
-            <outputDirectory>${artifact.artifactId}-${artifact.version}/stack</outputDirectory>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}/stack</outputDirectory>
         </file>
         
-        <!-- Tools -->
+	<!-- Tools adds about 100mb to the download so let's omit it for now.
         <file>
-            <source>../stack/tools/target/usergrid-tools-2.1.0-SNAPSHOT.jar</source>
-            <outputDirectory>${artifact.artifactId}-${artifact.version}/tools</outputDirectory>
-        </file>
+            <source>../stack/tools/target/usergrid-tools-2.1.1-SNAPSHOT.jar</source>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}/tools</outputDirectory>
+        </file> -->
         
     </files>
+
+    <!-- Include Portal and SDK directory trees -->
 
     <fileSets>
 
         <!-- Portal and source (HTML5/JavaScript and Angular) -->
         <fileSet>
             <directory>../portal</directory>
-            <outputDirectory>${artifact.artifactId}-${artifact.version}/portal</outputDirectory>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}/portal</outputDirectory>
             <excludes>
                 <exclude>%ant[**/.idea/**]</exclude>
                 <exclude>%ant[**/node_modules/**]</exclude>
@@ -74,7 +77,7 @@
         <!-- HTML5/JavaScript SDK and source -->
         <fileSet>
             <directory>../sdks/html5-javascript</directory> 
-            <outputDirectory>${artifact.artifactId}-${artifact.version}/sdks/html5-javascript</outputDirectory>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}/sdks/html5-javascript</outputDirectory>
             <excludes>
                 <exclude>%ant[**/.idea/**]</exclude>
             </excludes>
@@ -83,7 +86,7 @@
         <!-- Java SDK and source -->
         <fileSet>
             <directory>../sdks/java</directory>
-            <outputDirectory>${artifact.artifactId}-${artifact.version}/sdks/java</outputDirectory>
+            <outputDirectory>${artifact.artifactId}-${releaseVersion}/sdks/java</outputDirectory>
             <excludes>
                 <exclude>%ant[**/.idea/**]</exclude>
                 <exclude>%ant[**/target/classes/**]</exclude>

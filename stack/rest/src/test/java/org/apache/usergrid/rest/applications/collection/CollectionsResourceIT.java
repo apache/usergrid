@@ -18,20 +18,12 @@ package org.apache.usergrid.rest.applications.collection;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
-
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.entities.Application;
-
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.*;
 import org.apache.usergrid.rest.test.resource.model.Collection;
-import org.apache.usergrid.rest.test.resource.model.Credentials;
-import org.apache.usergrid.rest.test.resource.model.Entity;
-import org.apache.usergrid.rest.test.resource.model.QueryParameters;
-import org.apache.usergrid.rest.test.resource.model.Token;
-import org.apache.usergrid.services.ServiceParameter;
-
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -39,13 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.core.MediaType;
-
 import java.io.IOException;
 import java.util.*;
-
-import org.apache.commons.lang.NullArgumentException;
 
 import static org.junit.Assert.*;
 
@@ -276,6 +263,139 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
     }
 
+    /**
+     * Verfiy put throws 400 if the entity in the url path contains special characters. (supported : [a-zA-Z0-9_\\-./ ]*)
+     * @throws Exception
+     */
+    @Test
+    public void putEntityNameWIthSpecialCharacters() throws Exception {
+
+        //Entity name other than that expected in the regex.
+        Entity payload = new Entity();
+        payload.put("name", "errName!!");
+        payload.put("property1", "propertyValue1");
+
+        //Post Entity
+        Entity entity = this.app().collection("testCollection").post(payload);
+
+        //400 on get
+        try{
+            this.app().collection("testCollections/errName!!").get();
+        }
+        catch (BadRequestException e){
+            assertEquals(e.getResponse().getStatus(),400);
+        }
+
+        Entity payload1 = new Entity();
+
+        payload1.put("property2", "propertyValue2");
+
+        //400 on put
+        try{
+            this.app().collection( "testCollection" ).entity( "errName!!" ).put( payload1 );
+        }
+        catch (BadRequestException e){
+            assertEquals(e.getResponse().getStatus(),400);
+        }
+
+        //400 on delete
+        try{
+            this.app().collection( "testCollection" ).entity( "errName!!" ).delete();
+        }
+        catch (BadRequestException e){
+            assertEquals(e.getResponse().getStatus(),400);
+        }
+
+        Entity payload2 = new Entity();
+        payload2.put("name", "errName:[503]");
+        payload2.put("property1", "propertyValue1");
+
+        //Post Entity
+        entity = this.app().collection("testCollection").post(payload2);
+
+        //400 on get
+        try{
+            this.app().collection("testCollections/errName:[503]").get();
+        }
+        catch (BadRequestException e){
+            assertEquals(e.getResponse().getStatus(),400);
+        }
+
+
+        //400 on put
+        try{
+            this.app().collection( "testCollection" ).entity( "errName:[503]" ).put( payload1 );
+        }
+        catch (BadRequestException e){
+            assertEquals(e.getResponse().getStatus(),400);
+        }
+
+        //400 on delete
+        try{
+            this.app().collection( "testCollection" ).entity( "errName:[503]" ).delete();
+        }
+        catch (BadRequestException e){
+            assertEquals(e.getResponse().getStatus(),400);
+        }
+
+
+        //Entity name according to the expected regex.
+        Entity entity2 = new Entity();
+        entity2.put("name", "errName11");
+        entity2.put("property1", "propertyValue1");
+
+        //Post Entity
+        try {
+            this.app().collection("testCollection").post(entity2);
+            entity = this.app().collection("testCollections").entity("errName11").get();
+            assertTrue(entity.get("name").equals("errName11"));
+            entity = this.app().collection("testCollection").entity("errName11").put(payload1);
+            assertTrue(entity.get("name").equals("errName11"));
+
+            //delete
+            this.app().collection("testCollection").entity("errName11").delete();
+        }
+        catch (Exception e){
+            assertTrue("PUT/GET/DELETE can not throw exception.",false);
+        }
+
+        //Entity name according to the expected regex.
+        Entity entity3 = new Entity();
+        entity3.put("name", "errName-11");
+        entity3.put("property1", "propertyValue1");
+
+        //Post Entity
+        try {
+            this.app().collection("testCollection").post(entity3);
+            entity = this.app().collection("testCollections").entity("errName-11").get();
+            assertTrue(entity.get("name").equals("errName-11"));
+            entity = this.app().collection("testCollection").entity("errName-11").put(payload1);
+            assertTrue(entity.get("name").equals("errName-11"));
+            ApiResponse response = this.app().collection("testCollection").entity("errName-11").delete();
+        }
+        catch (Exception e){
+            assertTrue("PUT/GET/DELETE can not throw exception.",false);
+        }
+
+
+        //Entity name according to the expected regex.
+        Entity entity4 = new Entity();
+        entity4.put("name", "errName.-r");
+        entity4.put("property1", "propertyValue1");
+
+        //Post Entity
+        try {
+            this.app().collection("testCollection").post(entity4);
+            entity = this.app().collection("testCollections").entity("errName.-r").get();
+            assertTrue(entity.get("name").equals("errName.-r"));
+            entity = this.app().collection("testCollection").entity("errName.-r").put(payload1);
+            assertTrue(entity.get("name").equals("errName.-r"));
+            ApiResponse response = this.app().collection("testCollection").entity("errName.-r").delete();
+        }
+        catch (Exception e){
+            assertTrue("PUT/GET/DELETE can not throw exception.",false);
+        }
+    }
 
     @Test
     public void postCollectionSchemaWithWildcardIndexAll() throws Exception {

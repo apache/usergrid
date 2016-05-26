@@ -51,7 +51,7 @@ public class UsergridClient: NSObject, NSCoding {
     public var baseUrl : String { return config.baseUrl }
 
     /// The constructed URL string based on the `UsergridClient`'s `baseUrl`, `orgId`, and `appId`.
-    internal var clientAppURL : String { return "\(baseUrl)/\(orgId)/\(appId)" }
+    public var clientAppURL : String { return "\(baseUrl)/\(orgId)/\(appId)" }
 
     /// Whether or not the current user will be saved and restored from the keychain.
     public var persistCurrentUserInKeychain: Bool {
@@ -78,16 +78,16 @@ public class UsergridClient: NSObject, NSCoding {
     /// The temporary `UsergridAuth` object that is set when calling the `UsergridClient.usingAuth()` method.
     private var tempAuth: UsergridAuth? = nil
 
-    /// The application level `UsergridAppAuth` object.  Can be set manually but must call `authenticateApp` to retrive token.
+    /// The application level `UsergridAppAuth` object.  Can be set manually but must call `authenticateApp` to retrieve token.
     public var appAuth: UsergridAppAuth? {
         get { return config.appAuth }
         set(auth) { config.appAuth = auth }
     }
 
-    /// The `UsergridAuthFallback` value used to determine what type of token will be sent, if any.
-    public var authFallback: UsergridAuthFallback {
-        get { return config.authFallback }
-        set(fallback) { config.authFallback = fallback }
+    /// The `UsergridAuthMode` value used to determine what type of token will be sent, if any.
+    public var authMode: UsergridAuthMode {
+        get { return config.authMode }
+        set(mode) { config.authMode = mode }
     }
 
     // MARK: - Initialization -
@@ -196,7 +196,12 @@ public class UsergridClient: NSObject, NSCoding {
     */
     public func applyPushToken(device: UsergridDevice, pushToken: NSData, notifierID: String, completion: UsergridResponseCompletion? = nil) {
         device.applyPushToken(pushToken, notifierID: notifierID)
-        device.save(self, completion: completion)
+        self.PUT("devices", jsonBody: device.jsonObjectValue) { (response) in
+            if let responseEntity = response.entity {
+                device.copyInternalsFromEntity(responseEntity)
+            }
+            completion?(response: response)
+        }
     }
 
     // MARK: - Authorization and User Management -
@@ -208,19 +213,33 @@ public class UsergridClient: NSObject, NSCoding {
 
     If there is a `UsergridUser` logged in and the token of that user is valid then it will return that.
 
-    Otherwise, if the `authFallback` is `.App`, and the `UsergridAppAuth` of the client is set and the token is valid it will return that.
+    Otherwise, if the `authMode` is `.App`, and the `UsergridAppAuth` of the client is set and the token is valid it will return that.
 
     - returns: The `UsergridAuth` if one is found or nil if not.
     */
-    internal func authForRequests() -> UsergridAuth? {
+    public func authForRequests() -> UsergridAuth? {
         var usergridAuth: UsergridAuth?
-        if let tempAuth = self.tempAuth where tempAuth.isValid {
-            usergridAuth = tempAuth
+        if let tempAuth = self.tempAuth {
+            if tempAuth.isValid {
+                usergridAuth = tempAuth
+            }
             self.tempAuth = nil
-        } else if let userAuth = self.userAuth where userAuth.isValid {
-            usergridAuth = userAuth
-        } else if self.authFallback == .App, let appAuth = self.appAuth where appAuth.isValid {
-            usergridAuth = appAuth
+        } else {
+            switch(self.authMode) {
+                case .User:
+                    if let userAuth = self.userAuth where userAuth.isValid {
+                        usergridAuth = userAuth
+                    }
+                    break
+                case .App:
+                    if let appAuth = self.appAuth where appAuth.isValid {
+                        usergridAuth = appAuth
+                    }
+                    break
+                case .None:
+                    usergridAuth = nil
+                    break
+            }
         }
         return usergridAuth
     }
@@ -319,7 +338,7 @@ public class UsergridClient: NSObject, NSCoding {
     }
 
     /**
-     Changes the give `UsergridUser`'s current password with the shared instance of `UsergridClient`.
+     Changes the given `UsergridUser`'s current password.
 
      - parameter user:       The user.
      - parameter old:        The old password.
@@ -357,13 +376,7 @@ public class UsergridClient: NSObject, NSCoding {
             return
         }
 
-        self.logoutUser(uuidOrUsername, token: token) { (response) -> Void in
-            if response.ok || response.error?.errorName == "auth_bad_access_token" {
-                self.currentUser?.auth = nil
-                self.currentUser = nil
-            }
-            completion?(response: response)
-        }
+        self.logoutUser(uuidOrUsername, token: token)
     }
 
     /**
@@ -396,7 +409,16 @@ public class UsergridClient: NSObject, NSCoding {
                                       paths: paths,
                                       auth: self.authForRequests(),
                                       queryParams: queryParams)
-        self.sendRequest(request, completion: completion)
+
+        self.sendRequest(request) { response in
+            if uuidOrUsername == self.currentUser?.uuidOrUsername { // Check to see if this user is the currentUser
+                if response.ok || response.error?.errorName == "auth_bad_access_token" { // If the logout was successful or if we have a bad token reset things.
+                    self.currentUser?.auth = nil
+                    self.currentUser = nil
+                }
+            }
+            completion?(response: response)
+        }
     }
 
     // MARK: - Generic Request Methods -
@@ -807,7 +829,7 @@ public class UsergridClient: NSObject, NSCoding {
     - parameter query:        The optional query.
     - parameter completion:   The optional completion block that will be called once the request has completed.
     */
-    public func getConnections(direction:UsergridDirection, entity:UsergridEntity, relationship:String, query:UsergridQuery?, completion:UsergridResponseCompletion? = nil) {
+    public func getConnections(direction:UsergridDirection, entity:UsergridEntity, relationship:String, query:UsergridQuery? = nil, completion:UsergridResponseCompletion? = nil) {
         guard let uuidOrName = entity.uuidOrName
         else {
             completion?(response: UsergridResponse(client: self, errorName: "Invalid Entity Get Connections Attempt.", errorDescription: "The entity must have a `uuid` or `name` assigned."))
@@ -826,7 +848,7 @@ public class UsergridClient: NSObject, NSCoding {
      - parameter query:            The optional query.
      - parameter completion:       The optional completion block that will be called once the request has completed.
      */
-    public func getConnections(direction:UsergridDirection, type:String, uuidOrName:String, relationship:String, query:UsergridQuery?, completion:UsergridResponseCompletion? = nil) {
+    public func getConnections(direction:UsergridDirection, type:String, uuidOrName:String, relationship:String, query:UsergridQuery? = nil, completion:UsergridResponseCompletion? = nil) {
         let request = UsergridRequest(method: .Get,
                                       baseUrl: self.clientAppURL,
                                       paths: [type, uuidOrName, direction.connectionValue, relationship],
@@ -844,7 +866,7 @@ public class UsergridClient: NSObject, NSCoding {
      - parameter query:        The optional query.
      - parameter completion:   The optional completion block that will be called once the request has completed.
      */
-    public func getConnections(direction:UsergridDirection, uuid:String, relationship:String, query:UsergridQuery?, completion:UsergridResponseCompletion? = nil) {
+    public func getConnections(direction:UsergridDirection, uuid:String, relationship:String, query:UsergridQuery? = nil, completion:UsergridResponseCompletion? = nil) {
         let request = UsergridRequest(method: .Get,
             baseUrl: self.clientAppURL,
             paths: [uuid, direction.connectionValue, relationship],
@@ -869,9 +891,14 @@ public class UsergridClient: NSObject, NSCoding {
                                                       auth: self.authForRequests(),
                                                       asset: asset)
 
-        _requestManager.performAssetUpload(assetRequest, progress: progress) { [weak entity] (response, asset, error) -> Void in
-            entity?.asset = asset
-            completion?(response: response, asset: asset, error: error)
+        _requestManager.performAssetUpload(assetRequest, progress: progress) { asset, response in
+            if response.ok {
+                entity.asset = asset
+                if let responseEntityFileMetaData = response.entity?.fileMetaData {
+                    entity.fileMetaData = responseEntityFileMetaData
+                }
+            }
+            completion?(asset: asset, response: response)
         }
     }
 
@@ -886,7 +913,7 @@ public class UsergridClient: NSObject, NSCoding {
     public func downloadAsset(entity:UsergridEntity, contentType:String, progress:UsergridAssetRequestProgress? = nil, completion:UsergridAssetDownloadCompletion? = nil) {
         guard entity.hasAsset
         else {
-            completion?(asset: nil, error: "Entity does not have an asset attached.")
+            completion?(asset: nil, error: UsergridResponseError(errorName: "Download asset failed.", errorDescription: "Entity does not have an asset attached."))
             return
         }
 

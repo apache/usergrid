@@ -27,12 +27,12 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.QueryUtils;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.applications.assets.AssetsResource;
 import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
-import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.services.*;
 import org.apache.usergrid.services.assets.data.AssetUtils;
@@ -63,8 +63,8 @@ import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_USE
 @Component
 @Scope("prototype")
 @Produces({
-        MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
-        "application/ecmascript", "text/jscript"
+    MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
+    "application/ecmascript", "text/jscript"
 })
 public class ServiceResource extends AbstractContextResource {
 
@@ -72,7 +72,7 @@ public class ServiceResource extends AbstractContextResource {
     private static final String FILE_FIELD_NAME = "file";
 
 
-   // @Autowired
+    // @Autowired
     private BinaryStore binaryStore;
 
     @Autowired
@@ -163,7 +163,7 @@ public class ServiceResource extends AbstractContextResource {
 
 
     public static List<ServiceParameter> addQueryParams( List<ServiceParameter> parameters, UriInfo ui )
-            throws Exception {
+        throws Exception {
 
         MultivaluedMap<String, String> params = ui.getQueryParameters();
         if ( params != null && params.size() > 0) {
@@ -204,7 +204,7 @@ public class ServiceResource extends AbstractContextResource {
 
     @Path(RootResource.ENTITY_ID_PATH)
     public AbstractContextResource addIdParameter( @Context UriInfo ui, @PathParam("entityId") PathSegment entityId )
-            throws Exception {
+        throws Exception {
 
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.addIdParameter" );
@@ -222,7 +222,7 @@ public class ServiceResource extends AbstractContextResource {
 
     @Path("{itemName}")
     public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )
-            throws Exception {
+        throws Exception {
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.addNameParameter" );
             logger.trace( "Current segment is {}", itemName.getPath() );
@@ -246,7 +246,7 @@ public class ServiceResource extends AbstractContextResource {
 
 
     public ServiceResults executeServiceGetRequestForSchema(UriInfo ui, ApiResponse response, ServiceAction action,
-                                                             ServicePayload payload) throws Exception {
+                                                            ServicePayload payload) throws Exception {
 
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.executeServiceRequest" );
@@ -259,6 +259,8 @@ public class ServiceResource extends AbstractContextResource {
         boolean returnInboundConnections = true;
         boolean returnOutboundConnections = true;
 
+        checkServiceParams();
+
         addQueryParams( getServiceParameters(), ui );
 
         ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
@@ -269,7 +271,7 @@ public class ServiceResource extends AbstractContextResource {
 
         AbstractCollectionService abstractCollectionService = new AbstractCollectionService();
 
-       // abstractCollectionService
+        // abstractCollectionService
         ServiceResults results = abstractCollectionService.getCollectionSchema( r );
 
         //        ServiceResults results = r.execute();
@@ -300,7 +302,7 @@ public class ServiceResource extends AbstractContextResource {
     }
 
     public ServiceResults executeServicePostRequestForSchema(UriInfo ui, ApiResponse response, ServiceAction action,
-                                                         ServicePayload payload) throws Exception {
+                                                             ServicePayload payload) throws Exception {
 
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.executeServiceRequest" );
@@ -370,14 +372,14 @@ public class ServiceResource extends AbstractContextResource {
 
         // connection info can be blocked only for GETs
         if (action == ServiceAction.GET) {
-           if ("none".equalsIgnoreCase(connectionQueryParm)) {
-               returnInboundConnections = false;
-               returnOutboundConnections = false;
-           } else if ("in".equalsIgnoreCase(connectionQueryParm)) {
+            if ("none".equalsIgnoreCase(connectionQueryParm)) {
+                returnInboundConnections = false;
+                returnOutboundConnections = false;
+            } else if ("in".equalsIgnoreCase(connectionQueryParm)) {
                 returnInboundConnections = true;
-               returnOutboundConnections = false;
-           } else if ("out".equalsIgnoreCase(connectionQueryParm)) {
-               returnInboundConnections = false;
+                returnOutboundConnections = false;
+            } else if ("out".equalsIgnoreCase(connectionQueryParm)) {
+                returnInboundConnections = false;
                 returnOutboundConnections = true;
             } else if ("all".equalsIgnoreCase(connectionQueryParm)) {
                 returnInboundConnections = true;
@@ -392,12 +394,12 @@ public class ServiceResource extends AbstractContextResource {
                 OrganizationConfig orgConfig =
                     management.getOrganizationConfigForApplication(services.getApplicationId());
                 String defaultConnectionQueryParm =
-                        orgConfig.getProperty(OrganizationConfigProps.ORGPROPERTIES_DEFAULT_CONNECTION_PARAM);
+                    orgConfig.getProperty(OrganizationConfigProps.ORGPROPERTIES_DEFAULT_CONNECTION_PARAM);
                 returnInboundConnections =
                     (defaultConnectionQueryParm.equals("in")) || (defaultConnectionQueryParm.equals("all"));
                 returnOutboundConnections =
                     (defaultConnectionQueryParm.equals("out")) || (defaultConnectionQueryParm.equals("all"));
-           }
+            }
         }
 
         boolean collectionGet = false;
@@ -444,8 +446,8 @@ public class ServiceResource extends AbstractContextResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML, "application/javascript"})
     @JSONP
     public ApiResponse executeGet( @Context UriInfo ui,
-                                       @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
+                                   @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
 
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.executeGet" );
@@ -456,6 +458,8 @@ public class ServiceResource extends AbstractContextResource {
         response.setAction( "get" );
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
+
+        checkServiceParams();
 
         executeServiceRequest( ui, response, ServiceAction.GET, null );
 
@@ -495,7 +499,7 @@ public class ServiceResource extends AbstractContextResource {
      * See above.
      */
     public ApiResponse executePostWithObject( @Context UriInfo ui, Object json,
-            @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+                                              @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.executePostWithMap" );
@@ -521,7 +525,7 @@ public class ServiceResource extends AbstractContextResource {
      * See above.
      */
     public ApiResponse executePutWithMap( @Context UriInfo ui, Map<String, Object> json,
-            @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+                                          @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         ApiResponse response = createApiResponse();
         response.setAction( "put" );
@@ -530,6 +534,8 @@ public class ServiceResource extends AbstractContextResource {
         response.setParams( ui.getQueryParameters() );
 
         ServicePayload payload = getPayload( json );
+
+        checkServiceParams();
 
         executeServiceRequest( ui, response, ServiceAction.PUT, payload );
 
@@ -543,7 +549,7 @@ public class ServiceResource extends AbstractContextResource {
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executePost( @Context UriInfo ui, String body,
-            @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+                                    @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.executePost: body = {}", body );
@@ -578,8 +584,8 @@ public class ServiceResource extends AbstractContextResource {
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executePut( @Context UriInfo ui, String body,
-                                       @QueryParam("callback") @DefaultValue("callback") String callback )
-            throws Exception {
+                                   @QueryParam("callback") @DefaultValue("callback") String callback )
+        throws Exception {
 
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.executePut" );
@@ -587,6 +593,8 @@ public class ServiceResource extends AbstractContextResource {
 
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> json = mapper.readValue( body, mapTypeReference );
+
+        checkServiceParams();
 
         return executePutWithMap(ui, json, callback);
     }
@@ -611,13 +619,15 @@ public class ServiceResource extends AbstractContextResource {
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
 
+        checkServiceParams();
+
         ServiceResults sr = executeServiceRequest( ui, response, ServiceAction.DELETE, null );
 
         // if we deleted an entity (and not a connection or collection) then
         // we may need to clean up binary asset data associated with that entity
 
         if (    !sr.getResultsType().equals( ServiceResults.Type.CONNECTION )
-             && !sr.getResultsType().equals( ServiceResults.Type.COLLECTION )) {
+            && !sr.getResultsType().equals( ServiceResults.Type.COLLECTION )) {
 
             for ( Entity entity : sr.getEntities() ) {
                 if ( entity.getProperty( AssetUtils.FILE_METADATA ) != null ) {
@@ -632,6 +642,14 @@ public class ServiceResource extends AbstractContextResource {
         }
 
         return response;
+    }
+
+    private void checkServiceParams() {
+        for( ServiceParameter param : this.getServiceParameters()){
+            if(Identifier.from(param.toString()) == null){
+                throw new IllegalArgumentException("Not a valid Notifier identifier. " + param.toString() + " Only alpha Numeric characters are supported in the urlPath.");
+            }
+        }
     }
 
     //    TODO Temporarily removed until we test further
@@ -718,8 +736,8 @@ public class ServiceResource extends AbstractContextResource {
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executeMultiPartPost( @Context UriInfo ui,
-                                                 @QueryParam("callback") @DefaultValue("callback") String callback,
-                                                 FormDataMultiPart multiPart ) throws Exception {
+                                             @QueryParam("callback") @DefaultValue("callback") String callback,
+                                             FormDataMultiPart multiPart ) throws Exception {
 
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.executeMultiPartPost" );
@@ -734,12 +752,15 @@ public class ServiceResource extends AbstractContextResource {
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse executeMultiPartPut( @Context UriInfo ui,
-                                                @QueryParam("callback") @DefaultValue("callback") String callback,
-                                                FormDataMultiPart multiPart ) throws Exception {
+                                            @QueryParam("callback") @DefaultValue("callback") String callback,
+                                            FormDataMultiPart multiPart ) throws Exception {
 
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.executeMultiPartPut" );
         }
+
+        checkServiceParams();
+
         return executeMultiPart( ui, callback, multiPart, ServiceAction.PUT );
     }
 
@@ -747,7 +768,7 @@ public class ServiceResource extends AbstractContextResource {
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     private ApiResponse executeMultiPart( UriInfo ui, String callback, FormDataMultiPart multiPart,
-                                              ServiceAction serviceAction ) throws Exception {
+                                          ServiceAction serviceAction ) throws Exception {
 
         //needed for testing
         if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
@@ -960,8 +981,8 @@ public class ServiceResource extends AbstractContextResource {
 
         Long lastModified = ( Long ) fileMetadata.get( AssetUtils.LAST_MODIFIED );
         Response.ResponseBuilder responseBuilder =
-                Response.ok( inputStream ).type( ( String ) fileMetadata.get( AssetUtils.CONTENT_TYPE ) )
-                        .lastModified( new Date( lastModified ) );
+            Response.ok( inputStream ).type( ( String ) fileMetadata.get( AssetUtils.CONTENT_TYPE ) )
+                .lastModified( new Date( lastModified ) );
 
         if ( fileMetadata.get( AssetUtils.E_TAG ) != null ) {
             responseBuilder.tag( ( String ) fileMetadata.get( AssetUtils.E_TAG ) );
