@@ -27,12 +27,12 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.QueryUtils;
+import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.applications.assets.AssetsResource;
 import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
-import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.services.*;
 import org.apache.usergrid.services.assets.data.AssetUtils;
@@ -259,6 +259,8 @@ public class ServiceResource extends AbstractContextResource {
         boolean returnInboundConnections = true;
         boolean returnOutboundConnections = true;
 
+        checkServiceParams();
+
         addQueryParams( getServiceParameters(), ui );
 
         ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
@@ -457,6 +459,8 @@ public class ServiceResource extends AbstractContextResource {
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
 
+        checkServiceParams();
+
         executeServiceRequest( ui, response, ServiceAction.GET, null );
 
         return response;
@@ -531,6 +535,8 @@ public class ServiceResource extends AbstractContextResource {
 
         ServicePayload payload = getPayload( json );
 
+        checkServiceParams();
+
         executeServiceRequest( ui, response, ServiceAction.PUT, payload );
 
         return response;
@@ -588,6 +594,8 @@ public class ServiceResource extends AbstractContextResource {
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> json = mapper.readValue( body, mapTypeReference );
 
+        checkServiceParams();
+
         return executePutWithMap(ui, json, callback);
     }
 
@@ -611,6 +619,8 @@ public class ServiceResource extends AbstractContextResource {
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
 
+        checkServiceParams();
+
         ServiceResults sr = executeServiceRequest( ui, response, ServiceAction.DELETE, null );
 
         // if we deleted an entity (and not a connection or collection) then
@@ -632,6 +642,14 @@ public class ServiceResource extends AbstractContextResource {
         }
 
         return response;
+    }
+
+    private void checkServiceParams() {
+        for( ServiceParameter param : this.getServiceParameters()){
+            if(Identifier.from(param.toString()) == null){
+                throw new IllegalArgumentException("Not a valid Notifier identifier. " + param.toString() + " Only alpha Numeric characters are supported in the urlPath.");
+            }
+        }
     }
 
     //    TODO Temporarily removed until we test further
@@ -740,6 +758,9 @@ public class ServiceResource extends AbstractContextResource {
         if(logger.isTraceEnabled()){
             logger.trace( "ServiceResource.executeMultiPartPut" );
         }
+
+        checkServiceParams();
+
         return executeMultiPart( ui, callback, multiPart, ServiceAction.PUT );
     }
 
