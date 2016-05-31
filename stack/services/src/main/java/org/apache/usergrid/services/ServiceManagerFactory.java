@@ -23,6 +23,8 @@ import java.util.UUID;
 
 import com.google.inject.Injector;
 import org.apache.usergrid.locking.Lock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -35,6 +37,7 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 
 
 public class ServiceManagerFactory implements ApplicationContextAware {
+    private static final Logger logger = LoggerFactory.getLogger( ServiceManagerFactory.class );
 
     private ApplicationContext applicationContext;
 
@@ -59,6 +62,15 @@ public class ServiceManagerFactory implements ApplicationContextAware {
 
 
     public ServiceManager getServiceManager( UUID applicationId ) {
+
+        // additional logging to help debug https://issues.apache.org/jira/browse/USERGRID-1291
+        if ( emf == null ) {
+            logger.error("EntityManagerFactory is null");
+        }
+        if ( qmf == null ) {
+            logger.error("QueueManagerFactory is null");
+        }
+
         EntityManager em = null;
         if ( emf != null ) {
             em = emf.getEntityManager( applicationId );

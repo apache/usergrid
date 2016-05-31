@@ -38,4 +38,9 @@ public class NoOpLockManagerImpl implements LockManager {
     public Lock createLock( UUID applicationId, String... path ) {
         return new NoOpLockImpl();
     }
+
+    @Override
+    public void setup() {
+        // no op
+    }
 }
