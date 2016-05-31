@@ -50,6 +50,7 @@ public class AstyanaxLockManagerImpl implements LockManager {
 
 
     private final CassandraFig cassandraFig;
+    private final CassandraCluster cassandraCluster;
     private Keyspace keyspace;
     private ColumnFamily columnFamily;
     private static final int MINIMUM_LOCK_EXPIRATION = 60000; // 1 minute
@@ -60,38 +61,19 @@ public class AstyanaxLockManagerImpl implements LockManager {
                                    CassandraCluster cassandraCluster ) throws ConnectionException {
 
         this.cassandraFig = cassandraFig;
+        this.cassandraCluster = cassandraCluster;
+    }
 
-        // hold up construction until we can create the column family
-        int maxRetries = cassandraFig.getLockManagerInitRetries();
-        int retries = 0;
-        boolean famReady = false;
-        Set<Class> seenBefore = new HashSet<>(10);
-        while ( !famReady && retries++ < maxRetries ) {
-            try {
-                keyspace = cassandraCluster.getLocksKeyspace();
-                createLocksKeyspace();
-                columnFamily = createLocksColumnFamily();
-                famReady = true;
 
-            } catch ( Throwable t ) {
-                final String msg;
-                if ( t instanceof PoolTimeoutException || t instanceof NoAvailableHostsException) {
-                    msg = retries + ": Cannot connect to Cassandra (" + t.getClass().getSimpleName() + ")";
-                } else {
-                    msg = retries + ": Error (" + t.getClass().getSimpleName() + ") tries=" + retries;
-                }
-                if ( !seenBefore.contains( t.getClass() ) ) {
-                    logger.error( msg, t );
-                } else {
-                    logger.error( msg );
-                }
-                seenBefore.add( t.getClass() );
-                try {
-                    Thread.sleep( cassandraFig.getLockManagerInitInterval() );
-                } catch (InterruptedException ignored) {}
-            }
+    @Override
+    public void setup() {
+        try {
+            keyspace = cassandraCluster.getLocksKeyspace();
+            createLocksKeyspace();
+            columnFamily = createLocksColumnFamily();
+        } catch (ConnectionException e) {
+            throw new RuntimeException( "Error setting up locks keyspace and column family", e );
         }
-
     }
 
 

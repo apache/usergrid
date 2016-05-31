@@ -33,6 +33,7 @@ import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
+import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
@@ -107,6 +108,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final ConnectionService connectionService;
     private final GraphManagerFactory graphManagerFactory;
     private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+    private final LockManager lockManager;
 
     public static final String MANAGEMENT_APP_INIT_MAXRETRIES= "management.app.init.max-retries";
     public static final String MANAGEMENT_APP_INIT_INTERVAL = "management.app.init.interval";
@@ -127,6 +129,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.collectionService = injector.getInstance( CollectionService.class );
         this.connectionService = injector.getInstance( ConnectionService.class );
         this.indexSchemaCacheFactory = injector.getInstance( IndexSchemaCacheFactory.class );
+        this.lockManager = injector.getInstance( LockManager.class );
 
         Properties properties = cassandraService.getProperties();
 
@@ -166,7 +169,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                     }
 
                     // the management app is a special case
-
                     if ( CpNamingUtils.MANAGEMENT_APPLICATION_ID.equals( appId ) ) {
 
                         if ( app != null ) {
@@ -179,12 +181,20 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                         }
                     }
 
+                    // missing keyspace means we have not done bootstrap yet
                     final boolean missingKeyspace;
                     if ( throwable instanceof CollectionRuntimeException ) {
                         CollectionRuntimeException cre = (CollectionRuntimeException) throwable;
                         missingKeyspace = cre.isMissingKeyspace();
                     } else {
                         missingKeyspace = false;
+                    }
+
+                    // work around for https://issues.apache.org/jira/browse/USERGRID-1291
+                    // throw exception so that we do not cache 
+                    // TODO: determine how application name can intermittently be null
+                    if ( app != null && app.getName() == null ) {
+                        throw new RuntimeException( "Name is null for application " + appId, throwable );
                     }
 
                     if ( app == null && !missingKeyspace ) {
@@ -645,6 +655,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     @Override
     public void setup() throws Exception {
         getSetup().initSchema();
+        lockManager.setup();
     }
 
 

@@ -96,6 +96,14 @@ public class ServiceManager {
         this.qm = qm;
         this.properties = properties;
 
+        // additional logging to help debug https://issues.apache.org/jira/browse/USERGRID-1291
+        if ( em == null ) {
+            logger.error("EntityManager is null");
+        }
+        if ( qm == null ) {
+            logger.error("QueueManager is null");
+        }
+
         if ( em != null ) {
             try {
                 application = em.getApplication();
