@@ -1,0 +1,6 @@
+<ExtractVariables name="ExtractVars_CrashReports">
+    <VariablePrefix>max</VariablePrefix>
+    <URIPath>
+        <Pattern>/{org}/{app}/apm/crashLogs/{filename}</Pattern>
+    </URIPath>
+</ExtractVariables>

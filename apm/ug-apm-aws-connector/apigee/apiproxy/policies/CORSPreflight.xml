@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<AssignMessage enabled="true" continueOnError="false" async="false" name="CORSPreflight">
+    <DisplayName>CORSPreflight</DisplayName>
+    <Set>
+        <Headers>
+            <Header name='Access-Control-Allow-Origin'>{request.header.Origin}</Header>
+            <Header name='Access-Control-Allow-Methods'>POST, GET, OPTIONS, PUT, DELETE</Header>
+            <Header name='Access-Control-Allow-Headers'>Accept, Content-Type, Authorization, Origin,X-Apigee-Client-Device-Id,X-Apigee-Client-Session-Id,X-Apigee-Client-Org-Name,X-Apigee-Client-App-Name,X-Apigee-Client-Request-Id</Header>
+            <Header name='Access-Control-Allow-Credentials'>true</Header> 
+        </Headers>
+        <StatusCode>200</StatusCode>
+        <ReasonPhrase>OK</ReasonPhrase>
+    </Set>    
+    <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+    <AssignTo createNew="true" transport="http" type="response"></AssignTo>
+</AssignMessage>

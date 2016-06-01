@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<AssignMessage enabled="true" continueOnError="false" async="false" name="AssignMessage_VerifyOrg">
+    <DisplayName>AssignMessage for VerifyOrg</DisplayName>
+    <FaultRules/>
+    <Properties/>  
+    <Set>
+        <Path>/{max.org}/{max.app}/</Path>
+        <Verb>GET</Verb>
+    </Set>   
+    <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+    <AssignTo createNew="true" transport="http" type="request">request_verifyorg</AssignTo>
+</AssignMessage>
+

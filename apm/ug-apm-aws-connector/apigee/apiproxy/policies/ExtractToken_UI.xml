@@ -1,0 +1,9 @@
+<ExtractVariables name="ExtractToken_UI">
+    <VariablePrefix>max</VariablePrefix>
+    <Header name="Authorization">
+        <Pattern>Bearer {headertoken}</Pattern>
+    </Header>
+    <URIPath>
+        <Pattern>/{org}/{app}/apm/*/*</Pattern>
+    </URIPath>
+</ExtractVariables>

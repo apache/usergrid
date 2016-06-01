@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<RaiseFault name="RaiseFault_MissingAccessToken">
+ <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+ <FaultResponse>
+   <Set>
+     <StatusCode>401</StatusCode>
+     <Payload contentType="application/json" variablePrefix="%" variableSuffix="#">
+        {
+         "error": "missing_access_token"
+        }
+    </Payload>
+   </Set>
+ </FaultResponse>
+</RaiseFault>

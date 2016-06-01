@@ -1,0 +1,8 @@
+<ServiceCallout name="VerifyOrg" continueOnError="true">
+    <Request clearPayload="false" variable="request_verifyorg" />
+    <Response>response_verifyorg</Response>
+    <HTTPTargetConnection>
+       	<!-- <URL>http://pjha-ug.elasticbeanstalk.com/</URL> -->
+       	<URL>http://internal-usergrid.elb.amazonaws.com/</URL>
+    </HTTPTargetConnection>
+</ServiceCallout>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<AssignMessage enabled="true" continueOnError="false" async="false" name="CORS">
+    <DisplayName>CORS</DisplayName>
+    <FaultRules/>
+    <Properties/>  
+    <Set>
+        <Headers>
+            <Header name='Access-Control-Allow-Origin'>{request.header.Origin}</Header>
+            <Header name='x-apigee-serverprocessingtime'>{max.responsetime}</Header>
+        </Headers>
+    </Set>    
+    <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+    <AssignTo createNew="false" transport="http" type="request"></AssignTo>
+</AssignMessage>

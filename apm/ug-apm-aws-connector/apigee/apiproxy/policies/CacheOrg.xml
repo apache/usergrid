@@ -1,0 +1,13 @@
+<PopulateCache name="CacheOrg">
+    <CacheResource>appservices-cache</CacheResource>
+    <Source>appservices.error</Source>
+    <Scope>Proxy</Scope>
+    <CacheKey>
+        <Prefix>org-exists</Prefix>
+        <KeyFragment ref="max.org" />
+        <KeyFragment ref="max.app" />
+    </CacheKey>
+     <ExpirySettings>
+        <TimeoutInSec>3600</TimeoutInSec>
+     </ExpirySettings>
+</PopulateCache>

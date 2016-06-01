@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<TargetEndpoint name="MAXRestServer">
+    <Description>mAX REST server</Description>
+    <FaultRules/>
+    <Flows/>
+    <HTTPTargetConnection>
+        <Properties/>
+        <URL>http://internal-elb-apm-tomcat.com/</URL>
+    </HTTPTargetConnection>
+</TargetEndpoint>

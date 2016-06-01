@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ProxyEndpoint name="default">
+    <Description>Proxy for Usergrid and APM API and UI</Description>
+    <FaultRules>
+        <FaultRule name="default">
+            <Step>
+                <Condition>(request.verb != "OPTIONS") and (request.header.Origin != null) and (response.header.Access-Control-Allow-Origin == null)</Condition>
+                <Name>CORS</Name>
+            </Step>
+        </FaultRule>
+    </FaultRules>
+    <PreFlow name="PreFlow">        
+    </PreFlow>
+    <PostFlow name="PostFlow">
+        <Response>
+            <Step>
+                <Name>GetResponseTime</Name>
+            </Step>
+            <Step>
+                <Condition>(request.verb != "OPTIONS") and (request.header.Origin != null) and (response.header.Access-Control-Allow-Origin == null)</Condition>
+                <Name>CORS</Name>
+            </Step>
+            <Step>
+                <Condition>(request.verb == "OPTIONS")</Condition>
+                <Name>CORSPreflight</Name>
+            </Step>
+            <Step>
+                <!-- Request is not a valid CORS request without the Origin header.  Ensure we honor
+                     that and don't send any CORS headers when request header Origin is not present -->
+                <Condition>(request.header.Origin == null)</Condition>
+                <Name>RemoveCORSHeaders</Name>
+            </Step>
+        </Response>
+        <Request>
+            <Step>
+                <Name>extract-org-and-app-ids</Name>
+            </Step>
+            <Step>
+                <Name>collect-org-and-app-ids</Name>
+            </Step>
+        </Request>
+    </PostFlow>
+    <Flows>
+        <Flow name="apigeeMobileconfig">
+            <Description/>
+            <Request>
+                <Step>
+                    <Name>ExtractVars_apigeeMobileConfig</Name>
+                </Step>
+                <Step>
+                    <Name>CacheMobileConfig2</Name>
+                </Step>
+            </Request>
+            <Response/>
+            <Condition>(proxy.pathsuffix MatchesPath "/*/*/apm/apigeeMobileConfig") and (request.verb = "GET")</Condition>
+        </Flow>
+        <Flow name="{org}/{app}/apm/crashLogs/{crashFileName} ">
+            <Description>Put Crash Logs</Description>
+            <Request>
+                <Step>
+                    <Name>ExtractVars_CrashReports</Name>
+                </Step>
+                <Step>
+                    <Name>VerifyOrgFromCache</Name>
+                </Step>
+                <Step>
+                    <Condition>lookupcache.VerifyOrgFromCache.cachehit is false</Condition>
+                    <Name>AssignMessage_VerifyOrg</Name>
+                </Step>
+                <Step>
+                    <Condition>lookupcache.VerifyOrgFromCache.cachehit is false</Condition>
+                    <Name>VerifyOrg</Name>
+                </Step>
+                <Step>
+                    <Condition>lookupcache.VerifyOrgFromCache.cachehit is false</Condition>
+                    <Name>ExtractError</Name>
+                </Step>
+                <Step>
+                    <Condition>lookupcache.VerifyOrgFromCache.cachehit is false and appservices.error is null</Condition>
+                    <Name>AppSvcPublicApp</Name>
+                </Step>
+                <Step>
+                    <Condition>lookupcache.VerifyOrgFromCache.cachehit is false</Condition>
+                    <Name>CacheOrg</Name>
+                </Step>
+                <Step>
+                    <Condition>appservices.error=="organization_application_not_found"</Condition>
+                    <Name>RaiseFault</Name>
+                </Step>
+            </Request>
+            <Response>
+                <Step>
+                    <Name>AssignPayload_S3Response</Name>
+                </Step>
+            </Response>
+            <Condition>(proxy.pathsuffix MatchesPath "/*/*/apm/crashLogs/*") and (request.verb = "PUT")</Condition>
+        </Flow>
+        <Flow name="{org}/{app}/apm/apmMetrics">
+            <Description>Put apm Metrics</Description>
+            <Request>
+                <Step>
+                    <Name>maxSampling</Name>
+                </Step>
+                <Step>
+                    <Name>ExtractVars_ApmMetrics</Name>
+                </Step>
+                <Step>
+                    <Name>VerifyOrgFromCache</Name>
+                </Step>
+                <Step>
+                    <Condition>lookupcache.VerifyOrgFromCache.cachehit is false</Condition>
+                    <Name>AssignMessage_VerifyOrg</Name>
+                </Step>
+                <Step>
+                    <Condition>lookupcache.VerifyOrgFromCache.cachehit is false</Condition>
+                    <Name>VerifyOrg</Name>
+                </Step>
+                <Step>
+                    <Condition>lookupcache.VerifyOrgFromCache.cachehit is false</Condition>
+                    <Name>ExtractError</Name>
+                </Step>
+                <Step>
+                    <Condition>lookupcache.VerifyOrgFromCache.cachehit is false and appservices.error is null</Condition>
+                    <Name>AppSvcPublicApp</Name>
+                </Step>
+                <Step>
+                    <Condition>lookupcache.VerifyOrgFromCache.cachehit is false</Condition>
+                    <Name>CacheOrg</Name>
+                </Step>
+                <Step>
+                    <Condition>appservices.error=="organization_application_not_found"</Condition>
+                    <Name>RaiseFault</Name>
+                </Step>
+            </Request>
+            <Response>
+                <Step>
+                    <Name>AssignPayload_SQSResponse</Name>
+                </Step>
+            </Response>
+            <Condition>(proxy.pathsuffix MatchesPath "/*/*/apm/apmMetrics") and (request.verb = "POST")</Condition>
+        </Flow>
+        <Flow name="myOrg/myApp/apm/[session|log|network]ChartCriteria/{appId}">
+            <Description>UI Get Chart Criteria</Description>
+            <Request>
+                <Step>
+                    <Name>ExtractToken_UI</Name>
+                </Step>
+                <Step>
+                    <Condition>not (request.queryparam.access_token is null)</Condition>
+                    <Name>AssignMessage_VerifyQueryToken</Name>
+                </Step>
+                <Step>
+                    <Condition>not (max.headertoken is null)</Condition>
+                    <Name>AssignMessage_VerifyHeaderToken</Name>
+                </Step>
+                <Step>
+                    <Condition>(request.queryparam.access_token is null) and (max.headertoken is null)</Condition>
+                    <Name>RaiseFault_MissingAccessToken</Name>
+                </Step>
+                <Step>
+                    <Name>VerifyToken</Name>
+                </Step>
+                <Step>
+                    <Name>ExtractError_TokenErrors</Name>
+                </Step>
+                <Step>
+                    <Condition>not (appservices.error is null)</Condition>
+                    <Name>RaiseFault</Name>
+                </Step>
+            </Request>
+            <Response/>
+            <Condition>(proxy.pathsuffix MatchesPath "/*/*/apm/*ChartCriteria/*") and (request.verb = "GET")</Condition>
+        </Flow>
+        <Flow name="myOrg/myApp/apm/[session|log|network]ChartData/{appId}">
+            <Description>UI Get Chart Data</Description>
+            <Request>
+                <Step>
+                    <Name>ExtractToken_UI</Name>
+                </Step>
+                <Step>
+                    <Condition>not (request.queryparam.access_token is null)</Condition>
+                    <Name>AssignMessage_VerifyQueryToken</Name>
+                </Step>
+                <Step>
+                    <Condition>not (max.headertoken is null)</Condition>
+                    <Name>AssignMessage_VerifyHeaderToken</Name>
+                </Step>
+                <Step>
+                    <Condition>(request.queryparam.access_token is null) and (max.headertoken is null)</Condition>
+                    <Name>RaiseFault_MissingAccessToken</Name>
+                </Step>
+                <Step>
+                    <Name>VerifyToken</Name>
+                </Step>
+                <Step>
+                    <Name>ExtractError_TokenErrors</Name>
+                </Step>
+                <Step>
+                    <Condition>not (appservices.error is null)</Condition>
+                    <Name>RaiseFault</Name>
+                </Step>
+            </Request>
+            <Response/>
+            <Condition>(proxy.pathsuffix MatchesPath "/*/*/apm/*ChartData/*") and (request.verb = "GET")</Condition>
+        </Flow>
+        <Flow name="myOrg/myApp/apm/[session|log|network|crash]RawData/{appId}">
+            <Description>UI Get Raw Data</Description>
+            <Request>
+                <Step>
+                    <Name>ExtractToken_UI</Name>
+                </Step>
+                <Step>
+                    <Condition>not (request.queryparam.access_token is null)</Condition>
+                    <Name>AssignMessage_VerifyQueryToken</Name>
+                </Step>
+                <Step>
+                    <Condition>not (max.headertoken is null)</Condition>
+                    <Name>AssignMessage_VerifyHeaderToken</Name>
+                </Step>
+                <Step>
+                    <Condition>(request.queryparam.access_token is null) and (max.headertoken is null)</Condition>
+                    <Name>RaiseFault_MissingAccessToken</Name>
+                </Step>
+                <Step>
+                    <Name>VerifyToken</Name>
+                </Step>
+                <Step>
+                    <Name>ExtractError_TokenErrors</Name>
+                </Step>
+                <Step>
+                    <Condition>not (appservices.error is null)</Condition>
+                    <Name>RaiseFault</Name>
+                </Step>
+            </Request>
+            <Condition>(proxy.pathsuffix MatchesPath "/*/*/apm/*RawData/*") and (request.verb = "GET")</Condition>
+            <Response/>
+        </Flow>       
+        <Flow name="UsergridPassthrough">
+            <Description>UsergridPassthrough</Description>
+            <Request>
+                <Step>
+                    <Name>extract-org-and-app-ids</Name>
+                </Step>
+            </Request>
+            <Response/>
+        </Flow>
+    </Flows>
+    <HTTPProxyConnection>
+        <BasePath>/</BasePath>
+        <Properties/>
+        <VirtualHost>default</VirtualHost>
+        <VirtualHost>secure</VirtualHost>
+    </HTTPProxyConnection>   
+    <RouteRule name="APM Chart Criteria">
+        <Condition>(proxy.pathsuffix MatchesPath "/*/*/apm/*ChartCriteria/*") and (request.verb = "GET")</Condition>
+        <TargetEndpoint>MAXRestServer</TargetEndpoint>
+    </RouteRule>
+    <RouteRule name="APM Chart Data">
+        <Condition>(proxy.pathsuffix MatchesPath "/*/*/apm/*ChartData/*") and (request.verb = "GET")</Condition>
+        <TargetEndpoint>MAXRestServer</TargetEndpoint>
+    </RouteRule>
+    <RouteRule name="APM Raw Data">
+        <Condition>(proxy.pathsuffix MatchesPath "/*/*/apm/*RawData/*") and (request.verb = "GET")</Condition>
+        <TargetEndpoint>MAXRestServer</TargetEndpoint>
+    </RouteRule>
+    <RouteRule name="AWSS3">
+        <Condition>(proxy.pathsuffix MatchesPath "/*/*/apm/crashLogs/*") and (request.verb = "PUT")</Condition>
+        <TargetEndpoint>AWSS3</TargetEndpoint>
+    </RouteRule>
+    <RouteRule name="AWSSQS">
+        <Condition>(proxy.pathsuffix MatchesPath "/*/*/apm/apmMetrics") and (request.verb = "POST")</Condition>
+        <TargetEndpoint>AWSSQS</TargetEndpoint>
+    </RouteRule>
+    
+    <RouteRule name="default">
+        <TargetEndpoint>default</TargetEndpoint>
+    </RouteRule>
+</ProxyEndpoint>

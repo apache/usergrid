@@ -1,0 +1,10 @@
+<ExtractVariables name="ExtractError_TokenErrors">
+	<Source clearPayload="false">response_verifytoken</Source>
+    <VariablePrefix>appservices</VariablePrefix>
+    <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+     <JSONPayload>
+        <Variable name="error" type="string">
+            <JSONPath>$.error</JSONPath>
+        </Variable>
+    </JSONPayload>
+</ExtractVariables>

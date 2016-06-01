@@ -1,0 +1,10 @@
+<LookupCache enabled="true" continueOnError="false" async="false" name="VerifyOrgFromCache">
+    <CacheResource>appservices-cache</CacheResource>
+    <AssignTo>appservices.error</AssignTo>
+    <Scope>Proxy</Scope>
+    <CacheKey>
+        <Prefix>org-exists</Prefix>
+        <KeyFragment ref="max.org" />
+        <KeyFragment ref="max.app" />
+    </CacheKey>
+</LookupCache>

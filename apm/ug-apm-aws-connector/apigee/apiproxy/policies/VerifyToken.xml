@@ -1,0 +1,7 @@
+<ServiceCallout name="VerifyToken" continueOnError="true">
+    <Request clearPayload="false" variable="request_verifytoken" />
+    <Response>response_verifytoken</Response>
+    <HTTPTargetConnection>
+       	<URL>http://internal-usergrid.us-east-1.elb.amazonaws.com/</URL>
+    </HTTPTargetConnection>
+</ServiceCallout>
