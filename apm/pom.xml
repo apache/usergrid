@@ -310,5 +310,6 @@
         <module>injestor</module>
         <module>util</module>
         <module>rest</module>
+        <module>usergrid-apm-wiring</module>
     </modules>
 </project>

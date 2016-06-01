@@ -1,4 +1,4 @@
-package com.apigee.apm;
+package org.apache.usergrid.apm.wiring;
 
 import java.util.Date;
 import java.util.UUID;
@@ -9,7 +9,7 @@ import java.util.UUID;
  * 
  */
 
-public class AppDetailsForAPM {
+public class UsergridApmIntegrationAppDetailsForAPM {
 
     UUID orgUUID;
     String orgName;

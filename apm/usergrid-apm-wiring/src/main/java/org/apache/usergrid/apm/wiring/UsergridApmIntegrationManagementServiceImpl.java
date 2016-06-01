@@ -1,4 +1,4 @@
-package com.apigee.apm;
+package org.apache.usergrid.apm.wiring;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Date;
@@ -27,16 +27,16 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 
-public class ApigeeManagementServiceImpl extends ManagementServiceImpl {
+public class UsergridApmIntegrationManagementServiceImpl extends ManagementServiceImpl {
 
-    public ApigeeManagementServiceImpl(Injector injector) {
+    public UsergridApmIntegrationManagementServiceImpl(Injector injector) {
         super(injector);
     }
 
     private static final String USERGRID_USER_LOGIN_URL = "usergrid.user.login.url";
 
     private static final Logger logger = LoggerFactory
-            .getLogger(ApigeeManagementServiceImpl.class);
+            .getLogger(UsergridApmIntegrationManagementServiceImpl.class);
 
     @Override
     public ApplicationInfo createApplication(UUID organizationId,
@@ -90,9 +90,9 @@ public class ApigeeManagementServiceImpl extends ManagementServiceImpl {
     public Object registerAppWithAPM(OrganizationInfo orgInfo,
             ApplicationInfo appInfo) throws Exception {
         String jsonApmAppConfig = null;
-        if (ApigeeApmConfig.getAPMConfig().isApmEnabled()) {
+        if (UsergridApmIntegrationConfig.getAPMConfig().isApmEnabled()) {
             logger.info("APM functionality is enabled so going to register new app with Apigee APM");
-            AppDetailsForAPM appDetails = new AppDetailsForAPM();
+            UsergridApmIntegrationAppDetailsForAPM appDetails = new UsergridApmIntegrationAppDetailsForAPM();
             appDetails.setOrgUUID(orgInfo.getUuid());
             appDetails.setOrgName(orgInfo.getName());
             appDetails.setAppUUID(appInfo.getId());
@@ -121,7 +121,7 @@ public class ApigeeManagementServiceImpl extends ManagementServiceImpl {
                 em.setProperty(
                         new SimpleEntityRef(Application.ENTITY_TYPE, appInfo
                                 .getId()),
-                        ApigeeMobileAPMConstants.APIGEE_MOBILE_APM_CONFIG_JSON_KEY,
+                        UsergridApmIntegrationMobileAPMConstants.APIGEE_MOBILE_APM_CONFIG_JSON_KEY,
                         jsonApmAppConfig);
                 Application appEntity = em.getApplication();
                 // appEntity.setProperty("apigeeMobileConfig",
@@ -129,7 +129,7 @@ public class ApigeeManagementServiceImpl extends ManagementServiceImpl {
                 // em.updateApplication(appEntity);
                 logger.info("APM stuff in Application Entity "
                         + appEntity
-                                .getProperty(ApigeeMobileAPMConstants.APIGEE_MOBILE_APM_CONFIG_JSON_KEY));
+                                .getProperty(UsergridApmIntegrationMobileAPMConstants.APIGEE_MOBILE_APM_CONFIG_JSON_KEY));
             }
         } else {
             logger.info("APM aka mAX functionality is NOT enabled in this deployment");
@@ -137,9 +137,9 @@ public class ApigeeManagementServiceImpl extends ManagementServiceImpl {
         return jsonApmAppConfig;
     }
 
-    private String registerAppWithApigeeAPM(AppDetailsForAPM appDetails)
+    private String registerAppWithApigeeAPM(UsergridApmIntegrationAppDetailsForAPM appDetails)
             throws Exception {
-        ApigeeApmConfig apmConfig = ApigeeApmConfig.getAPMConfig();
+        UsergridApmIntegrationConfig apmConfig = UsergridApmIntegrationConfig.getAPMConfig();
 
         // example url:
         // http://apigeeapmdev.elasticbeanstalk.com/org/app/apm/appConfig
@@ -202,7 +202,7 @@ public class ApigeeManagementServiceImpl extends ManagementServiceImpl {
                                                  // to send crash notification
                                                  // on APM.
         else
-            return ApigeeMobileAPMConstants.APIGEE_APM_ADMIN_DEFAULT_EMAIL_ADDRESS;
+            return UsergridApmIntegrationMobileAPMConstants.APIGEE_APM_ADMIN_DEFAULT_EMAIL_ADDRESS;
 
     }
 

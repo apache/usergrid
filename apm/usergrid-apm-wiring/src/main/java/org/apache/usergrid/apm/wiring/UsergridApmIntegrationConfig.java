@@ -1,4 +1,4 @@
-package com.apigee.apm;
+package org.apache.usergrid.apm.wiring;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -7,11 +7,11 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class ApigeeApmConfig {
+public class UsergridApmIntegrationConfig {
 
-    private static final Log log = LogFactory.getLog(ApigeeApmConfig.class);
+    private static final Log log = LogFactory.getLog(UsergridApmIntegrationConfig.class);
     private static Properties deploymentConfigProperties = null;
-    private static ApigeeApmConfig apmConfig = null;
+    private static UsergridApmIntegrationConfig apmConfig = null;
 
     private boolean apmEnabled = false;
 
@@ -19,14 +19,14 @@ public class ApigeeApmConfig {
 
     protected String apigeeFreeAPMServerUrl;
 
-    private ApigeeApmConfig() {
+    private UsergridApmIntegrationConfig() {
 
     }
 
-    public static ApigeeApmConfig getAPMConfig() {
+    public static UsergridApmIntegrationConfig getAPMConfig() {
         if (apmConfig != null)
             return apmConfig;
-        apmConfig = new ApigeeApmConfig();
+        apmConfig = new UsergridApmIntegrationConfig();
         deploymentConfigProperties = new Properties();
         try {
             deploymentConfigProperties.load(Thread.currentThread()
@@ -74,7 +74,7 @@ public class ApigeeApmConfig {
     }
 
     public static void main(String[] args) {
-        ApigeeApmConfig conf = ApigeeApmConfig.getAPMConfig();
+        UsergridApmIntegrationConfig conf = UsergridApmIntegrationConfig.getAPMConfig();
 
         System.out.println(conf.getEnvironment());
         System.out.println(conf.getApigeeFreeAPMServerUrl());

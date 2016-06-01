@@ -1,6 +1,6 @@
-package com.apigee.apm;
+package org.apache.usergrid.apm.wiring;
 
-public class ApigeeMobileAPMConstants {
+public class UsergridApmIntegrationMobileAPMConstants {
 
     // Different App Config Types
     public static final String CONFIG_TYPE_DEFAULT = "Default";
