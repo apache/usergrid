@@ -31,7 +31,9 @@ we recommended that Ops copies these props file to lib folder of tomcat. It's re
 put these files in service/src/main/resources. You can see example of these files under portal-service/src/test/resources
 
 `hibernate-analytics.cfg.xml` : make sure to update DB connection, username and password properties
+
 `hibernate-app-management.cfg.xml` : make sure to update DB connection, username and password properties)
+
 `deployment-config.properties` :  make sure to update AWS keys, SQS account number, S3 bucket, enable/disable injestor	
 
 **Deploy**	
@@ -49,9 +51,13 @@ Verify the application is running at :
  
  ** Complete end to end deployment**
  
- - System diagram at https://docs.google.com/a/apigee.com/drawings/d/12xnFhXGPYqbXeo6ths3GFESY7GGTg7zKzBnTgtBqMJA/edit
+ - System diagram 
  
- -Have a running Usergrid configured with App Montoring. When a new app gets created, Usergrid makes a REST call to APM
+ ![System Diagram ](/Usergrid-APM-Architecture.png)
+ 
+ 
+ 
+ -Have a running Usergrid configured with APM. When a new app gets created, Usergrid makes a REST call to APM
  to register a new app. During crash log parsing, APM makes a REST call to Usergrid to find who to send email notification too. [More details to be added]
  
  
