@@ -161,6 +161,13 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
     }
 
 
+    /**
+     * Sets field in result map with support for nested fields via recursion.
+     *
+     * @param result The result map of filtered fields
+     * @param parts The parts of the field name (more than one if field is nested)
+     * @param fieldMap Map of fields of the object
+     */
     private void nestedFieldSet( Map<String, Field> result, String[] parts, Map<String, Field> fieldMap) {
         if ( parts.length > 0 ) {
 
@@ -184,6 +191,12 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
     }
 
 
+    /**
+     * Check to see if field should be included in filtered result with support for nested fields via recursion.
+     *
+     * @param parts The parts of the field name (more than one if field is nested)
+     * @param fieldMap Map of fields of the object
+     */
     private boolean nestedFieldCheck( String[] parts, Map<String, Field> fieldMap) {
         if ( parts.length > 0 ) {
 

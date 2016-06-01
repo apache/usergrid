@@ -19,10 +19,7 @@
 package org.apache.usergrid.persistence.model.field.value;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.usergrid.persistence.model.field.Field;
 
@@ -41,11 +38,19 @@ public class EntityObject implements Serializable {
     @JsonIgnore
     private long size;
 
+    // field names are treated in case-insensitive way by design
+    static class CaseInsensitiveComparator implements Comparator<String> {
+        public int compare(String o1, String o2) {
+            return o1.compareToIgnoreCase(o2);
+        }
+    }
+    public static final CaseInsensitiveComparator INSTANCE = new CaseInsensitiveComparator();
+
     /**
      * Fields the users can set
      */
     @JsonTypeInfo( use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class" )
-    private final Map<String, Field> fields = new HashMap<String, Field>();
+    private Map<String, Field> fields = new TreeMap<String, Field>(INSTANCE);
 
     /**
      * Add the field, return the old one if it existed
