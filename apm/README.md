@@ -53,7 +53,7 @@ Verify the application is running at :
  
  - System diagram 
  
- ![System Diagram ](/Usergrid-APM-Architecture.png)
+ ![System Diagram ](Usergrid-APM-Architecture.png)
  
  
  
