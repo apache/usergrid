@@ -1,4 +1,4 @@
-Developers Getting Started for Usergrid App Performance Monitoring (APM) also known as Usergrid Mobile Analytics.
+For Developers Getting Started with Usergrid App Performance Monitoring (APM) also known as Usergrid Mobile Analytics.
 
 **Pre-requisites:**
 - Able to build Usergrid from source.
@@ -18,12 +18,14 @@ Developers Getting Started for Usergrid App Performance Monitoring (APM) also kn
    `mvn clean install -DskipTests`
 - To do a build with tests
 	`mvn clean install`	
+
 Build produces two wars. One for injestor named `usergrid-apm-injestor`   and one for REST services named `usergrid-apm-rest`.
 `usergrid-apm-rest.war` is a superset of `usergrid-apm-injestor.war` so for local testing, you only need to deploy REST .war file and it will
 work as injestor too as long as properties file (see below) is set correctly. In production, recommendation is to have separate server instances
 for injestor and REST servers.
 	
 **Properties file**
+
 All together 3 props file need to be in classpath. To ease with .war deployments across different planets and avoid confusion with Ops, 
 we recommended that Ops copies these props file to lib folder of tomcat. It's recommended to do the same while testing locally or you can
 put these files in service/src/main/resources. You can see example of these files under portal-service/src/test/resources
@@ -33,6 +35,7 @@ put these files in service/src/main/resources. You can see example of these file
 `deployment-config.properties` :  make sure to update AWS keys, SQS account number, S3 bucket, enable/disable injestor	
 
 **Deploy**	
+
 - Verify that 3 properties files are present in tomcat's lib folder.
 -Rename the .war from `rest/target/usergrid-apm-rest.war` to ROOT.war and deploy it to Tomcat with Injestor enabled in
 `deployment-config.properties` file. You should not see any error in catalina.out 
@@ -45,6 +48,7 @@ Verify the application is running at :
  This takes care of App Monitoring deployment
  
  ** Complete end to end deployment**
+ 
  - System diagram at https://docs.google.com/a/apigee.com/drawings/d/12xnFhXGPYqbXeo6ths3GFESY7GGTg7zKzBnTgtBqMJA/edit
  
  -Have a running Usergrid configured with App Montoring. When a new app gets created, Usergrid makes a REST call to APM
