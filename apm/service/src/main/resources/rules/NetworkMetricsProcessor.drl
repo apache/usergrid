@@ -1,0 +1,133 @@
+#created on: Apr 14, 2011
+package NetworkMetricsProcessor
+
+import org.apache.usergrid.apm.model.*;
+import org.apache.usergrid.apm.model.*;
+import java.util.*;
+import org.apache.usergrid.apm.service.charts.service.SessionChartCriteriaService;
+import org.apache.usergrid.apm.service.charts.service.NetworkMetricsChartCriteriaService;
+import org.apache.usergrid.apm.service.charts.service.LogChartCriteriaService;
+
+
+global org.apache.commons.logging.Log log;
+
+global	List dirtySummarySessionMetrics;	
+global	List dirtyCompactClientLog;
+global	List dirtyCompactSessionMetrics;
+global	List dirtyCompactNetworkMetrics;
+
+global SessionChartCriteriaService sessionChartCriteriaService;
+global NetworkMetricsChartCriteriaService networkMetricsChartCriteriaService;
+global LogChartCriteriaService logChartCriteriaService;
+
+dialect "java"
+
+declare ClientNetworkMetrics
+    @role( event )
+    @timestamp(timeStamp)
+    @expires( 30m )
+end
+
+
+declare CompactNetworkMetrics
+    @role( event )
+    @timestamp(timeStamp)
+    @expires( 120m )
+end
+
+rule "CompactNetworkMetricsGenerator"
+when
+ $nm : ClientNetworkMetrics(endMinute != null) from entry-point "clientNetworkMetricsStream"
+ not (exists (CompactNetworkMetrics(appId == $nm.appId,endMinute == $nm.endMinute) from entry-point "compactNetworkMetricsStream"))
+then
+ log.info("Detected new ClientNetworkMetrics to trigger trigger new CompactNetworkMetricsGenerator : " +  $nm.getEndMinute() + " AppID: " + $nm.getAppId() + " latency : " + $nm.getLatency() ); 
+   
+ CompactNetworkMetrics metric = new CompactNetworkMetrics();
+ metric.setTimeStamp(new Date( $nm.getEndMinute() * 1000 * 60));
+ metric.setAppId($nm.getAppId());
+ metric.setSamplePeriod(ChartCriteria.SamplePeriod.MINUTE);
+ Long id = networkMetricsChartCriteriaService.getDefaultChartCriteriaByName( $nm.getAppId(), NetworkMetricsChartCriteriaService.NETWORK_OVERVIEW).getId();
+ metric.setChartCriteriaId(id);
+ 
+ entryPoints["compactNetworkMetricsStream"].insert(metric);
+end
+
+
+rule "CompactNetworkMetricsCalculator"
+   salience -200
+   no-loop true
+when
+ $metric : CompactNetworkMetrics() from entry-point "compactNetworkMetricsStream" 
+ $sumNumSamples : Number() 
+	from accumulate (ClientNetworkMetrics(appId == $metric.appId, endMinute == $metric.endMinute, $numSamples : numSamples )
+		from entry-point "clientNetworkMetricsStream" , sum($numSamples))
+ $sumNumErrors : Number() 
+	from accumulate (ClientNetworkMetrics(appId == $metric.appId, endMinute == $metric.endMinute, $numErrors : numErrors )
+		from entry-point "clientNetworkMetricsStream" , sum($numErrors))
+ $sumLatency : Number() 
+	from accumulate (ClientNetworkMetrics(appId == $metric.appId, endMinute == $metric.endMinute, $latency : latency )
+		from entry-point "clientNetworkMetricsStream" , sum($latency))
+ $minLatency : Number() 
+	from accumulate (ClientNetworkMetrics(appId == $metric.appId, endMinute == $metric.endMinute, $latency : latency )
+		from entry-point "clientNetworkMetricsStream" , min($latency))
+ $maxLatency : Number() 
+	from accumulate (ClientNetworkMetrics(appId == $metric.appId, endMinute == $metric.endMinute, $latency : latency )
+		from entry-point "clientNetworkMetricsStream" , max($latency))	
+ $sumServerLatency : Number() 
+	from accumulate (ClientNetworkMetrics(appId == $metric.appId, endMinute == $metric.endMinute, $latency : serverProcessingTime )
+		from entry-point "clientNetworkMetricsStream" , sum($latency))
+ $minServerLatency : Number() 
+	from accumulate (ClientNetworkMetrics(appId == $metric.appId, endMinute == $metric.endMinute, $latency : serverProcessingTime )
+		from entry-point "clientNetworkMetricsStream" , min($latency))
+ $maxServerLatency : Number() 
+	from accumulate (ClientNetworkMetrics(appId == $metric.appId, endMinute == $metric.endMinute, $latency : serverProcessingTime )
+		from entry-point "clientNetworkMetricsStream" , max($latency))		
+then
+
+ log.debug("CompactNetworkMetricsCalculator : $numSamples | $numErrors |  $sumLatency | $minLatency | $maxLatency "
+ 	+ $sumNumSamples + "|" 
+ 	+ $sumNumErrors + "|" 
+ 	+ $sumLatency + "|" 
+ 	+ $minLatency + "|" 
+ 	+ $maxLatency );
+
+ modify($metric) {
+ 	setNumSamples(new Long($sumNumSamples.longValue())),
+ 	setNumErrors(new Long($sumNumErrors.longValue())),
+ 	setSumLatency(new Long($sumLatency.longValue())),
+ 	setMinLatency(new Long($minLatency.longValue())),
+ 	setMaxLatency(new Long($maxLatency.longValue())), 
+ 	setSumServerLatency(new Long($sumServerLatency.longValue())),
+ 	setMinServerLatency(new Long($minServerLatency.longValue())),
+ 	setMaxServerLatency(new Long($maxServerLatency.longValue()))	
+ }
+end
+
+
+
+// Note that only metrics that have changed will get impacted.
+rule "PersistModifiedCompactNetworkMetricsStream"
+   salience -500
+when
+ $metric : CompactNetworkMetrics() from entry-point "compactNetworkMetricsStream"
+then
+ log.info("Marking CompactNetworkMetrics dirty " + $metric.getId() + " Output " + $metric.toString());
+ dirtyCompactNetworkMetrics.add($metric);
+end
+
+/*
+Need to see if the accumulate logic can be streamlined as mentioned in
+http://docs.jboss.org/drools/release/5.2.0.CR1/droolsjbpm-introduction-docs/html/ch02.html Section 2.1.1.1 Multi-function Accumulates
+rule "CompactNetworkMetricsCalculator"
+   salience -200
+   no-loop true
+when
+ $metric : CompactNetworkMetrics() from entry-point "compactNetworkMetricsStream" 
+ accumulate (ClientNetworkMetrics(appId == $metric.appId, endMinute == $metric.endMinute))
+ 	 $sumNumSamples : sum($numSamples )
+ 	 $minLat : min($minLatency)
+
+
+*/
+
+

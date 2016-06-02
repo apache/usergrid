@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<TargetEndpoint name="AWSS3">
+    <Description>AWS S3 target endpoint</Description>
+    <FaultRules>
+        <FaultRule name="S3Errors">
+          <Step>
+            <Name>AssignPayload_S3Error</Name>
+          </Step>
+        </FaultRule>
+    </FaultRules>
+    <PreFlow>
+    	<Request>
+    		<Step><Name>PythonDisablePathSuffix</Name></Step>
+            <Step><Name>AssignPayloadForS3</Name></Step>
+    	</Request>	
+    </PreFlow>	
+    <Flows/>
+    <HTTPTargetConnection>
+        <Properties/>
+        <URL>https://s3.amazonaws.com/<<ENTER-BUCKET-NAME>>/ug-max-customers/crashLogs/{max.org}_{max.app}/{max.filename}</URL>
+    </HTTPTargetConnection>
+</TargetEndpoint>

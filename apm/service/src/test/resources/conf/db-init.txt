@@ -1,0 +1,7 @@
+device-model=htc-inspire,droid,iphone3,iphone4
+device-platform=android-honeycomb,android-gingerbread,iOS3,iOS4
+network-carriers=att,verizon,sprint,t-mobile
+network-speed=2G,3G,4G,CDMA,WIFI
+root-user=admin
+root-pwd=adminPassword
+root-email=prabhat@apigee.com

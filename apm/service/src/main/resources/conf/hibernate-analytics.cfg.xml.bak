@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD//EN"
+                                         "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+	<session-factory>		
+		<property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>		
+		<property name="hibernate.connection.url">${db.analytics.connectionURL}</property>
+		<property name="hibernate.connection.username">${db.username}</property>
+		<property name="hibernate.connection.password">${db.password}</property>
+		<property name="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
+		<!-- c3p0 connection pool stuff -->
+		<property name="hibernate.connection.provider_class">org.hibernate.connection.C3P0ConnectionProvider</property>
+		<property name="hibernate.c3p0.idle_test_period">100</property> <!-- seconds --> 		
+		<property name="hibernate.c3p0.min_size">2</property>
+		<property name="hibernate.c3p0.max_size">30</property>
+		<property name="hibernate.c3p0.timeout">1800</property> <!--  seconds-->		
+		<property name="hibernate.hbm2ddl.auto">none</property>
+		<property name="hibernate.show_sql">false</property>
+		<!--<property name="format_sql">true</property> -->
+		<property name="hibernate.cache.use_query_cache">false</property>
+		<property name="hibernate.cache.use_second_level_cache">false</property>
+		<property name="hibernate.jdbc.batch_size">20</property>
+		<property name="hibernate.current_session_context_class">org.hibernate.context.ThreadLocalSessionContext</property>
+
+
+		<mapping class="org.apache.usergrid.apm.model.ClientNetworkMetrics" />
+		<mapping class="com.ideawheel.portal.model.CompactNetworkMetrics" />
+		
+		<mapping class="org.apache.usergrid.apm.model.ClientSessionMetrics" />
+		<mapping class="com.ideawheel.portal.model.CompactSessionMetrics" />
+		<mapping class="com.ideawheel.portal.model.SummarySessionMetrics" />		
+		
+		<mapping class="org.apache.usergrid.apm.model.ClientLog" />
+		<mapping class="com.ideawheel.portal.model.CompactClientLog" />
+		<mapping class="com.ideawheel.portal.model.CrashLogDetails" />
+
+	
+	</session-factory>
+</hibernate-configuration>

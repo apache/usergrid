@@ -1,0 +1,146 @@
+#created on: Apr 14, 2011
+package ClientLogMetricsCreator
+
+import org.apache.usergrid.apm.model.*;
+import com.org.common.model.*;
+import java.util.*;
+import org.apache.usergrid.apm.service.charts.service.SessionChartCriteriaService;
+import org.apache.usergrid.apm.service.charts.service.NetworkMetricsChartCriteriaService;
+import org.apache.usergrid.apm.service.charts.service.LogChartCriteriaService;
+
+global org.apache.commons.logging.Log log;
+
+global	List dirtySummarySessionMetrics;	
+global	List dirtyCompactClientLog;
+global	List dirtyCompactSessionMetrics;
+global	List dirtyCompactNetworkMetrics;
+		
+
+global SessionChartCriteriaService sessionChartCriteriaService;
+global NetworkMetricsChartCriteriaService networkMetricsChartCriteriaService;
+global LogChartCriteriaService logChartCriteriaService;
+
+
+
+dialect "java"
+
+declare AppErrorsApplicationVersionType
+	type: String
+end
+
+
+rule "AppErrorsApplicationVersionTypeRule"
+	no-loop true
+when 
+	$log : ClientLog( $applicationVersion : applicationVersion ) from entry-point "clientLogStream"
+	not (exists AppErrorsApplicationVersionType(type == $applicationVersion))
+then
+	//For some reason, insertLogical does not work - NOTE: Fixed in Drools 5.2 <- Need to fix
+	insert( new AppErrorsApplicationVersionType($applicationVersion));
+end
+
+
+
+rule "CompactClientLogGenerator_ByApplicationVersion"
+when
+ $applicationVersion : AppErrorsApplicationVersionType();
+ $log : ClientLog(endMinute != null, applicationVersion == $applicationVersion.type) from entry-point "clientLogStream"
+ not (exists (CompactClientLog(appId == $log.appId,endMinute == $log.endMinute,
+ applicationVersion == $applicationVersion.type ) from entry-point "compactClientLogStream_ByApplicationVersion"))
+then
+ log.info("Deteced new ClientLog to trigger trigger new CompactClientLogGenerator_ByApplicationVersion : " +  $log.getEndMinute() + " AppID: " + $log.getAppId());
+ log.info("AppId : " + $log.getAppId() + " ClientLog end Minute : " + $log.getEndMinute()
+ + "Application Version : " + $applicationVersion.getType()
+ );
+   
+ CompactClientLog metric = new CompactClientLog();
+ metric.setTimeStamp(new Date( $log.getEndMinute() * 1000 * 60));
+ metric.setAppId($log.getAppId());
+ metric.setSamplePeriod(ChartCriteria.SamplePeriod.MINUTE);
+ metric.setApplicationVersion($applicationVersion.getType());
+ Long id = 1L;
+ id = logChartCriteriaService.getDefaultChartCriteriaByName( $log.getAppId(),LogChartCriteriaService.APP_ERRORS_BY_APP_VERSION).getId();
+ metric.setChartCriteriaId(id);
+ 
+ entryPoints["compactClientLogStream_ByApplicationVersion"].insert(metric);
+end
+
+/*
+* Note: the time window corresponds for CompactClientLog corresponds to the 
+* expiry time of ClientLog. This is to ensure that calculation stops after 5 minutes of the
+* current time.
+*/
+rule "CompactClientLogCalculator_ByApplicationVersion"
+   salience -200
+   no-loop true
+when
+ $metric : CompactClientLog() from entry-point "compactClientLogStream_ByApplicationVersion" 
+ $assertCount : Number() 
+	from accumulate (ClientLog(appId == $metric.appId,logLevel == "A", endMinute == $metric.endMinute, 
+		$metric.applicationVersion == applicationVersion )
+			from entry-point "clientLogStream" , count("1"))
+ $errorCount : Number() 
+	from accumulate (ClientLog(appId == $metric.appId,logLevel == "E", endMinute == $metric.endMinute, 
+		$metric.applicationVersion == applicationVersion  )
+		from entry-point "clientLogStream" , count("1"))
+ $warnCount : Number() 
+	from accumulate (ClientLog(appId == $metric.appId,logLevel == "W", endMinute == $metric.endMinute, 
+		$metric.applicationVersion == applicationVersion  )
+		from entry-point "clientLogStream" , count("1"))
+ $infoCount : Number() 
+	from accumulate (ClientLog(appId == $metric.appId,logLevel == "I", endMinute == $metric.endMinute, 
+		$metric.applicationVersion == applicationVersion  )
+		from entry-point "clientLogStream" , count("1"))
+ $verboseCount : Number() 
+	from accumulate (ClientLog(appId == $metric.appId,logLevel == "V", endMinute == $metric.endMinute, 
+		$metric.applicationVersion == applicationVersion  )
+		from entry-point "clientLogStream" , count("1"))
+ $errorAndAboveCount : Number() 
+	from accumulate (ClientLog(appId == $metric.appId,logLevel == "A" || logLevel=="E", endMinute == $metric.endMinute, 
+		$metric.applicationVersion == applicationVersion  )
+		from entry-point "clientLogStream" , count("1"))	
+$crashCount:Number() 
+	from accumulate (ClientLog(appId == $metric.appId,logLevel == "A", tag == "CRASH", endMinute == $metric.endMinute, 
+		$metric.applicationVersion == applicationVersion )
+		from entry-point "clientLogStream" , count("1"))			
+then
+
+ log.info("CompactClientLogCalculator : $assertCount | $errorCount |  $warnCount | $infoCount | $verboseCount | $errorAndAboveCount: "
+ 	+ $assertCount + "|" 
+ 	+ $errorCount + "|" 
+ 	+ $warnCount + "|" 
+ 	+ $infoCount + "|" 
+ 	+ $verboseCount + "|"  	
+ 	+ $errorAndAboveCount + "|"
+ 	+ $crashCount
+ 	);
+
+ modify($metric){
+ 	setAssertCount(new Long($assertCount.longValue())),
+ 	setErrorCount(new Long($errorCount.longValue())),
+ 	setWarnCount(new Long($warnCount.longValue())),
+ 	setInfoCount(new Long($infoCount.longValue())),
+ 	setVerboseCount(new Long($verboseCount.longValue())),
+ 	setErrorAndAboveCount(new Long($errorAndAboveCount.longValue())),
+ 	setCrashCount(new Long($crashCount.longValue()))
+ }
+end		
+
+
+// This should be when the logs are save to file
+// Note that only metrics that have changed will get impacted.
+rule "PersistModifiedCompactClientLogStream_ByApplicationVersion"
+   salience -500
+when
+ $metric : CompactClientLog() from entry-point "compactClientLogStream_ByApplicationVersion"
+then
+ log.info("Marking CompactClientLog dirty " + $metric.getId() + " Output " + $metric.toString());
+ dirtyCompactClientLog.add($metric);
+end
+
+
+
+
+
+
+

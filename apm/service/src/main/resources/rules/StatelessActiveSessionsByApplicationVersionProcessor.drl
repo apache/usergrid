@@ -1,0 +1,116 @@
+#created on: Jul 7, 2011
+package SessionProcessor
+
+#list any import classes here.
+import org.apache.usergrid.apm.model.ClientLog;
+import org.apache.usergrid.apm.model.ClientSessionMetrics;
+import org.apache.usergrid.apm.model.SummarySessionMetrics;
+import org.apache.usergrid.apm.model.CompactSessionMetrics;
+import org.apache.usergrid.apm.model.ChartCriteria;
+
+import java.util.List;
+import java.util.TreeSet;
+import java.util.Date;
+import org.apache.usergrid.apm.service.charts.service.SessionChartCriteriaService;
+import org.apache.usergrid.apm.service.charts.service.NetworkMetricsChartCriteriaService;
+import org.apache.usergrid.apm.service.charts.service.LogChartCriteriaService;
+
+global org.apache.commons.logging.Log log;
+
+global	List dirtySummarySessionMetrics;	
+global	List dirtyCompactClientLog;
+global	List dirtyCompactSessionMetrics;
+global	List dirtyCompactNetworkMetrics;
+		
+
+global SessionChartCriteriaService sessionChartCriteriaService;
+global NetworkMetricsChartCriteriaService networkMetricsChartCriteriaService;
+global LogChartCriteriaService logChartCriteriaService;
+
+
+global Long appId;
+
+dialect "java"
+
+
+declare ApplicationVersionType
+	type: String
+end
+
+
+
+
+rule "ApplicationVersionTypeRule"
+	no-loop true
+when 
+	$ssm : SummarySessionMetrics( $applicationVersion : applicationVersion ) from entry-point "summarySessionMetricsStream"
+	not (exists ApplicationVersionType(type == $applicationVersion))
+then
+	//For some reason, insertLogical does not work - NOTE: Fixed in Drools 5.2 <- Need to fix
+	insert( new ApplicationVersionType($applicationVersion));
+end
+
+
+/*
+* Generates new csm whenever it sees a new $ssm
+*/
+
+rule "CompactSessionMetricsGenerator_SessionsByApplicationVersion"
+   salience -100
+when
+  $applicationVersion : ApplicationVersionType();
+  $minute : Long() from entry-point "modifiedMinutesStream"
+then
+  log.info("Detected new SummarySessionMetrics to trigger new CompactSessionMetricsGeneratorByApplicationVersion");
+  log.info("AppId : " + appId + "Model : " + $applicationVersion.getType() + " SummarySession Start Minute : " + $minute);
+  CompactSessionMetrics csm = new CompactSessionMetrics();
+  csm.setAppId(appId);
+  csm.setTimeStamp(new Date( $minute * 1000 * 60));
+  csm.setApplicationVersion($applicationVersion.getType());
+  log.info("csm Timestamp : " + csm.getTimeStamp());
+  Long id = 1L;
+  id = sessionChartCriteriaService.getDefaultChartCriteriaByName( appId,SessionChartCriteriaService.ACTIVE_SESSION_BY_APP_VERSION).getId();
+  log.info("Setting Chart Criteria ID : " + id);  
+  csm.setChartCriteriaId(id);
+  csm.setSamplePeriod(ChartCriteria.SamplePeriod.MINUTE);
+  entryPoints["compactSessionMetricsStream_SessionsByApplicationVersion"].insert(csm);
+end
+
+rule "CompactSessionMetricsCalculator_SessionsByApplicationVersion"
+  salience -200
+  no-loop true
+when
+ $applicationVersion : ApplicationVersionType($type : type)
+ $csm: CompactSessionMetrics($applicationVersion.type == applicationVersion, $end : endMinute) from entry-point "compactSessionMetricsStream_SessionsByApplicationVersion"
+ $sessionCount : Number() 
+	from accumulate (SummarySessionMetrics(appId == $csm.appId, $sessionLength : sessionLength,
+		applicationVersion == $applicationVersion.type, 
+		$csm.endMinute >= prevEndMinute, $csm.endMinute < endMinute  ) 
+		from entry-point "summarySessionMetricsStream", count(null))
+ $sumSessionLength : Number() 
+	from accumulate (SummarySessionMetrics(appId == $csm.appId, $sessionLength : sessionLength,
+		applicationVersion == $applicationVersion.type , 
+		$csm.endMinute >= prevEndMinute,$startMinute : startMinute, $csm.endMinute < endMinute) 
+		from entry-point "summarySessionMetricsStream", sum($end - $startMinute))
+then
+  if($sessionCount != null && $sumSessionLength != null)
+  {
+    log.info("CompactSessionMetricsCalculator_SessionsByApplicationVersion triggered. AppID : " + $csm.getAppId() + 
+       "Model : " + $applicationVersion.getType() + " Minute : " + $csm.getEndMinute() + " TS : " + $csm.getTimeStamp()); 
+  	log.info("Count : " + $sessionCount.longValue());
+  	log.info("SumSumLength in seconds : " + $sumSessionLength.longValue());
+  	modify($csm){
+  		setSessionCount($sessionCount.longValue()),
+  		setSumSessionLength($sumSessionLength.longValue()*60*1000) //store in milliseconds
+ 	}
+  }
+end
+
+rule "PersistModifiedCompactSessionMetrics_SessionsByApplicationVersion"
+   salience -500
+when
+ $metric : CompactSessionMetrics() from entry-point "compactSessionMetricsStream_SessionsByApplicationVersion"
+then
+ log.info("Marking compactSessionMetricsStream_SessionsByApplicationVersion dirty " + $metric.getId() + " Output " + $metric.toString());
+ dirtyCompactSessionMetrics.add($metric);
+end

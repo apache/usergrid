@@ -1,0 +1,115 @@
+#created on: Jul 7, 2011
+package SessionProcessor
+
+#list any import classes here.
+import org.apache.usergrid.apm.model.ClientLog;
+import org.apache.usergrid.apm.model.ClientSessionMetrics;
+import org.apache.usergrid.apm.model.SummarySessionMetrics;
+import org.apache.usergrid.apm.model.CompactSessionMetrics;
+import org.apache.usergrid.apm.model.ChartCriteria;
+
+import java.util.List;
+import java.util.TreeSet;
+import java.util.Date;
+import org.apache.usergrid.apm.service.charts.service.SessionChartCriteriaService;
+import org.apache.usergrid.apm.service.charts.service.NetworkMetricsChartCriteriaService;
+import org.apache.usergrid.apm.service.charts.service.LogChartCriteriaService;
+
+global org.apache.commons.logging.Log log;
+
+global	List dirtySummarySessionMetrics;	
+global	List dirtyCompactClientLog;
+global	List dirtyCompactSessionMetrics;
+global	List dirtyCompactNetworkMetrics;
+		
+
+global SessionChartCriteriaService sessionChartCriteriaService;
+global NetworkMetricsChartCriteriaService networkMetricsChartCriteriaService;
+global LogChartCriteriaService logChartCriteriaService;
+
+
+global Long appId;
+
+dialect "java"
+
+
+
+declare DevicePlatformType
+	type: String
+end
+
+rule "DevicePlatformTypeRule"
+	no-loop true
+when 
+	$ssm : SummarySessionMetrics( $devicePlatform : devicePlatform ) from entry-point "summarySessionMetricsStream"
+	not (exists DevicePlatformType(type == $devicePlatform))
+then
+	//For some reason, insertLogical does not work - NOTE: Fixed in Drools 5.2 <- Need to fix
+	insert( new DevicePlatformType($devicePlatform));
+end
+
+
+/*
+* Generates new csm whenever it sees a new $ssm
+*/
+
+rule "CompactSessionMetricsGenerator_SessionsByDevicePlatform"
+   salience -100
+when
+  $platform : DevicePlatformType();
+  $minute : Long() from entry-point "modifiedMinutesStream"
+then
+  log.info("Detected new SummarySessionMetrics to trigger new CompactSessionMetricsGeneratorByDevicePlatform");
+  log.info("AppId : " + appId + "Platform : " + $platform.getType() + " SummarySession Start Minute : " + $minute);
+  CompactSessionMetrics csm = new CompactSessionMetrics();
+  csm.setAppId(appId);
+  csm.setTimeStamp(new Date( $minute * 1000 * 60));
+  csm.setDevicePlatform($platform.getType());
+  log.info("csm Timestamp : " + csm.getTimeStamp());
+  Long id = 1L;
+  id = sessionChartCriteriaService.getDefaultChartCriteriaByName( appId,SessionChartCriteriaService.ACTIVE_SESSIONS_BY_DEVICE_PLATFORM).getId();
+  log.info("Setting Chart Criteria ID : " + id);  
+  csm.setChartCriteriaId(id);
+  csm.setSamplePeriod(ChartCriteria.SamplePeriod.MINUTE);
+  entryPoints["compactSessionMetricsStream_SessionsByDevicePlatform"].insert(csm);
+end
+
+rule "CompactSessionMetricsCalculatorByDevicePlatform_SessionsByDevicePlatform"
+  salience -200
+  no-loop true
+when
+ $platform : DevicePlatformType($type : type)
+ $csm: CompactSessionMetrics($platform.type == devicePlatform, $end : endMinute) from entry-point "compactSessionMetricsStream_SessionsByDevicePlatform"
+ $sessionCount : Number() 
+	from accumulate (SummarySessionMetrics(appId == $csm.appId, $sessionLength : sessionLength,
+		devicePlatform == $platform.type, 
+		$csm.endMinute >= prevEndMinute, $csm.endMinute < endMinute  ) 
+		from entry-point "summarySessionMetricsStream", count(null))
+ $sumSessionLength : Number() 
+	from accumulate (SummarySessionMetrics(appId == $csm.appId, $sessionLength : sessionLength,
+		devicePlatform == $platform.type , 
+		$csm.endMinute >= prevEndMinute, $startMinute : startMinute, $csm.endMinute < endMinute) 
+		from entry-point "summarySessionMetricsStream", sum($end - $startMinute))
+then
+  if($sessionCount != null && $sumSessionLength != null)
+  {
+    log.info("CompactSessionMetricsCalculatorByDevicePlatform_SessionsByDevicePlatform triggered. AppID : " + $csm.getAppId() + 
+       "Platform : " + $platform.getType() + " Minute : " + $csm.getEndMinute() + " TS : " + $csm.getTimeStamp()); 
+  	log.info("Count : " + $sessionCount.longValue());
+  	log.info("SumSumLength in seconds : " + $sumSessionLength.longValue());
+  	modify($csm){
+  		setSessionCount($sessionCount.longValue()),
+  		setSumSessionLength($sumSessionLength.longValue()*60*1000) //store in milliseconds
+ 	}
+  }
+end
+
+rule "PersistModifiedCompactSessionMetrics_SessionsByDevicePlatform"
+   salience -500
+when
+ $metric : CompactSessionMetrics() from entry-point "compactSessionMetricsStream_SessionsByDevicePlatform"
+then
+ log.info("Marking compactSessionMetricsStream_SessionsByDevicePlatform dirty " + $metric.getId() + " Output " + $metric.toString());
+ dirtyCompactSessionMetrics.add($metric);
+end
+

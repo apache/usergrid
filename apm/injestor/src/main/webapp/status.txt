@@ -1,0 +1,1 @@
+It means injestor version project.version is deployed. This does not confirm that injestor is running properly. Verify that by looking into server logs.

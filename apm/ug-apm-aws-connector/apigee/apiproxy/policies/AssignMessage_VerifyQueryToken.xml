@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<AssignMessage enabled="true" continueOnError="false" async="false" name="AssignMessage_VerifyQueryToken">
+    <DisplayName>AssignMessage for VerifyToken</DisplayName>
+    <FaultRules/>
+    <Properties/>  
+    <Set>
+    	<QueryParams>
+    		<QueryParam name="access_token">{request.queryparam.access_token}</QueryParam>	
+    	</QueryParams>	
+        <Path>/management/orgs/{max.org}/apps/{max.app}</Path>
+        <Verb>GET</Verb>
+    </Set>   
+    <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+    <AssignTo createNew="true" transport="http" type="request">request_verifytoken</AssignTo>
+</AssignMessage>
+

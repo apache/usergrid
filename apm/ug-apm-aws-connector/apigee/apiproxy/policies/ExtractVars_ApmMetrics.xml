@@ -1,0 +1,6 @@
+<ExtractVariables name="ExtractVars_ApmMetrics">
+    <VariablePrefix>max</VariablePrefix>
+    <URIPath>
+        <Pattern>/{org}/{app}/apm/apmMetrics</Pattern>
+    </URIPath>
+</ExtractVariables>

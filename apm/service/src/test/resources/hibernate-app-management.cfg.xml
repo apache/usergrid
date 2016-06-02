@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD//EN"
+                                         "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+	<session-factory>
+		<!-- for jboss <property name="connection.datasource">java:IdeaWheelDS</property> 
+			for tomcat <property name="connection.datasource">java:comp/env/jdbc/ideawheelDb</property> -->
+		<property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+		<!-- <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/ideawheel?rewriteBatchedStatements=true</property> 
+			<property name="hibernate.connection.url">jdbc:mysql://ideawheel.ck0mw2jbysdo.us-east-1.rds.amazonaws.com:3306/ideawheel?rewriteBatchedStatements=true</property> -->
+		<property name="hibernate.connection.url">${db.connectionURL}</property>
+		<property name="hibernate.connection.username">${db.username}</property>
+		<property name="hibernate.connection.password">${db.password}</property>
+		<property name="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
+		<!-- c3p0 connection pool stuff -->
+		<property name="hibernate.connection.provider_class">org.hibernate.connection.C3P0ConnectionProvider</property>
+		<property name="hibernate.c3p0.min_size">2</property>
+		<property name="hibernate.c3p0.max_size">30</property>
+		<property name="hibernate.c3p0.timeout">1800</property>
+		<property name="hibernate.hbm2ddl.auto">create-drop</property>
+		<property name="hibernate.show_sql">true</property>
+		<!--<property name="format_sql">true</property> -->
+		<property name="hibernate.cache.use_query_cache">false</property>
+		<property name="hibernate.cache.use_second_level_cache">false</property>
+		<property name="hibernate.jdbc.batch_size">20</property>
+		<property name="hibernate.current_session_context_class">org.hibernate.context.ThreadLocalSessionContext</property>
+
+
+		<mapping class="org.apache.usergrid.apm.model.App" />
+
+		<mapping class="org.apache.usergrid.apm.model.MetricsChartCriteria" />
+		<mapping class="org.apache.usergrid.apm.model.SessionChartCriteria" />
+		<mapping class="org.apache.usergrid.apm.model.LogChartCriteria" />
+
+		<mapping class="org.apache.usergrid.apm.model.DeviceModel" />
+		<mapping class="org.apache.usergrid.apm.model.DevicePlatform" />
+		<mapping class="org.apache.usergrid.apm.model.NetworkCarrier" />
+		<mapping class="org.apache.usergrid.apm.model.NetworkSpeed" />
+
+	</session-factory>
+</hibernate-configuration>

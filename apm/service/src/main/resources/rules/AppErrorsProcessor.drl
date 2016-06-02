@@ -1,0 +1,158 @@
+#created on: Apr 14, 2011
+package AppErrorsProcessor
+
+import org.apache.usergrid.apm.model.*;
+import org.apache.usergrid.apm.model.*;
+import java.util.*;
+import org.apache.usergrid.apm.service.charts.service.SessionChartCriteriaService;
+import org.apache.usergrid.apm.service.charts.service.NetworkMetricsChartCriteriaService;
+import org.apache.usergrid.apm.service.charts.service.LogChartCriteriaService;
+
+global org.apache.commons.logging.Log log;
+
+global	List dirtySummarySessionMetrics;	
+global	List dirtyCompactClientLog;
+global	List dirtyCompactSessionMetrics;
+global	List dirtyCompactNetworkMetrics;
+		
+
+global SessionChartCriteriaService sessionChartCriteriaService;
+global NetworkMetricsChartCriteriaService networkMetricsChartCriteriaService;
+global LogChartCriteriaService logChartCriteriaService;
+
+
+
+dialect "java"
+
+declare ClientLog
+    @role( event )
+    @timestamp(timeStamp)
+    @expires( 30m )
+end
+
+
+declare CompactClientLog
+    @role( event )
+    @timestamp(timeStamp)
+    @expires( 120m )
+end
+
+rule "CompactClientLogGenerator"
+when
+ $log : ClientLog(endMinute != null) from entry-point "clientLogStream"
+ not (exists (CompactClientLog(appId == $log.appId,endMinute == $log.endMinute) from entry-point "compactClientLogStream"))
+then
+ log.info("Deteced new ClientLog to trigger trigger new CompactClientLogGenerator : " +  $log.getEndMinute() + " AppID: " + $log.getAppId());
+ log.info("AppId : " + $log.getAppId() + " ClientLog end Minute : " + $log.getEndMinute());
+   
+ CompactClientLog metric = new CompactClientLog();
+ metric.setTimeStamp(new Date( $log.getEndMinute() * 1000 * 60));
+ metric.setAppId($log.getAppId());
+ metric.setSamplePeriod(ChartCriteria.SamplePeriod.MINUTE);
+ Long id = 1L;
+ id = logChartCriteriaService.getDefaultChartCriteriaByName( $log.getAppId(),LogChartCriteriaService.LOG_ERRORS).getId();
+ metric.setChartCriteriaId(id);
+ 
+ entryPoints["compactClientLogStream"].insert(metric);
+end
+
+/*
+* Note: the time window corresponds for CompactClientLog corresponds to the 
+* expiry time of ClientLog. This is to ensure that calculation stops after 5 minutes of the
+* current time.
+
+rule "CompactClientLogCalculator"
+   salience -200
+   no-loop true
+when
+ $metric : CompactClientLog() from entry-point "compactClientLogStream"
+ //$stream : ClientLog(appId == $metric.appId,logLevel == "E", endMinute == $metric.endMinute ) from entry-point "clientLogStream" 
+ $errorCount : Number()	from accumulate (ClientLog(appId == $metric.appId,logLevel == "E", endMinute == $metric.endMinute) from entry-point "clientLogStream" , count("1"))
+then
+// if($metric.getEndMinute() != null && $count != null)
+// {
+ log.info("CompactClientLogCalculator : $assertCount | $errorCount |  $warnCount | $infoCount | $verboseCount | $errorAndAboveCount: "
+ 	+ $errorCount
+ 	);
+
+
+ //modify($metric){
+ 	//setAssertCount(new Long($assertCount.longValue())),
+// 	setErrorCount(new Long($errorCount.longValue()))
+ 	//setWarnCount(new Long($warnCount.longValue())),
+ 	//setInfoCount(new Long($infoCount.longValue())),
+ 	//setVerboseCount(new Long($verboseCount.longValue())),
+ 	//setErrorAndAboveCount(new Long($errorAndAboveCount.longValue()))
+// }
+ 
+end
+*/
+
+
+rule "CompactClientLogCalculator"
+   salience -200
+   no-loop true
+when
+ $metric : CompactClientLog() from entry-point "compactClientLogStream" 
+ $assertCount : Number() 
+	from accumulate (ClientLog(appId == $metric.appId,logLevel == "A", endMinute == $metric.endMinute )
+		from entry-point "clientLogStream" , count("1"))
+ $errorCount : Number() 
+	from accumulate (ClientLog(appId == $metric.appId,logLevel == "E", endMinute == $metric.endMinute )
+		from entry-point "clientLogStream" , count("1"))
+ $warnCount : Number() 
+	from accumulate (ClientLog(appId == $metric.appId,logLevel == "W", endMinute == $metric.endMinute )
+		from entry-point "clientLogStream" , count("1"))
+ $infoCount : Number() 
+	from accumulate (ClientLog(appId == $metric.appId,logLevel == "I", endMinute == $metric.endMinute )
+		from entry-point "clientLogStream" , count("1"))
+ $verboseCount : Number() 
+	from accumulate (ClientLog(appId == $metric.appId,logLevel == "V", endMinute == $metric.endMinute )
+		from entry-point "clientLogStream" , count("1"))
+ $errorAndAboveCount : Number() 
+	from accumulate (ClientLog(appId == $metric.appId,logLevel == "E" || logLevel == "A", endMinute == $metric.endMinute )
+		from entry-point "clientLogStream" , count("1"))		
+ $crashCount:Number() 
+		from accumulate (ClientLog(appId == $metric.appId,logLevel == "A", tag == "CRASH", endMinute == $metric.endMinute )
+		from entry-point "clientLogStream" , count("1"))			
+then
+
+ log.info("CompactClientLogCalculator : $assertCount | $errorCount |  $warnCount | $infoCount | $verboseCount | $errorAndAboveCount: "
+ 	+ $assertCount + "|" 
+ 	+ $errorCount + "|" 
+ 	+ $warnCount + "|" 
+ 	+ $infoCount + "|" 
+ 	+ $verboseCount + "|"  	
+ 	+ $errorAndAboveCount + "|"
+ 	+ $crashCount
+ 	);
+
+ modify($metric){
+ 	setAssertCount(new Long($assertCount.longValue())),
+ 	setErrorCount(new Long($errorCount.longValue())),
+ 	setWarnCount(new Long($warnCount.longValue())),
+ 	setInfoCount(new Long($infoCount.longValue())),
+ 	setVerboseCount(new Long($verboseCount.longValue())),
+ 	setErrorAndAboveCount(new Long($errorAndAboveCount.longValue())),
+ 	setCrashCount(new Long($crashCount.longValue()))
+ }
+end
+
+
+// This should be when the logs are save to file
+// Note that only metrics that have changed will get impacted.
+rule "PersistModifiedCompactClientLogStream"
+   salience -500
+when
+ $metric : CompactClientLog() from entry-point "compactClientLogStream"
+then
+ log.info("Marking CompactClientLog dirty " + $metric.getId() + " Output " + $metric.toString());
+ dirtyCompactClientLog.add($metric);
+end
+
+
+
+
+
+
+

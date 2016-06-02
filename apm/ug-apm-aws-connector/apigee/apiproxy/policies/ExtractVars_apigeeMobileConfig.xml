@@ -1,0 +1,6 @@
+<ExtractVariables name="ExtractVars_apigeeMobileConfig">
+    <VariablePrefix>max</VariablePrefix>
+    <URIPath>
+        <Pattern>/{org}/{app}/apm/apigeeMobileConfig</Pattern>
+    </URIPath>
+</ExtractVariables>

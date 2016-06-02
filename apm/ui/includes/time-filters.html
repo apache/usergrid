@@ -1,0 +1,45 @@
+<!-- filtering -->
+
+  <div id="intro-filters" style="width:725px">
+    <!-- custom errors-crashes filtering -->
+    <div class="btn-group" ng-if="ecHideChartFilters === true">
+      <a class="btn dropdown-toggle filter-selector action" data-toggle="dropdown">
+        <span class="filter-ec">{{ecDetailedView.label}}</span>
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu">
+        <li ng-repeat="detailedView in ecDetailedViewList" class="filterItem"><a ng-click="changeEcDetailedView(detailedView)">{{detailedView.label}}</a></li>
+      </ul>
+    </div>  
+    <!--common/global monitoring filters-->
+    <div class="btn-group" ng-if="ecHideChartFilters !== true || ecDetailChartFilters === true">
+      <a class="btn dropdown-toggle filter-selector" data-toggle="dropdown">
+        <span class="filter-label">{{selectedChartCriteria.chartName}}</span>
+        <span class="caret"></span>
+      </a>
+      <ul class="dropdown-menu" chart-filter="chartCriteria">
+      </ul>
+    </div>
+    <div class="btn-group">
+      <a class="btn dropdown-toggle filter-selector" data-toggle="dropdown">
+        <span class="filter-label">{{selectedtimefilter.label}}</span>
+        <span class="caret"></span>
+      </a>    
+      <ul class="dropdown-menu" time-filter="timeFilters">
+      </ul>
+    </div>  
+    <div class="btn-group compare" ng-class="(currentCompare === 'LAST_WEEK') ? 'selected' : ''">
+      <a class="btn filter-selector" ng-click="compare('LAST_WEEK',false)">
+        <span class="filter-label"><i class="pictogram">&#57347;</i>Compare Last Week</span>
+      </a>
+    </div>
+    <div class="btn-group compare" ng-class="(currentCompare === 'YESTERDAY') ? 'selected' : ''">
+      <a class="btn filter-selector" ng-click="compare('YESTERDAY',false)">
+        <span class="filter-label"><i class="pictogram">&#57347;</i>Compare Yesterday</span>
+      </a>
+    </div>   
+    <a class="help_tooltip" ng-mouseover="help.sendTooltipGA('graph filters')" ng-show="help.helpTooltipsEnabled" href="#" ng-attr-tooltip="{{tooltip_graph_filters}}" tooltip-placement="right">(?)</a> 
+  </div>
+  <div class="pull-right auto-update-container">
+    <a class="auto-updates" ng-show="showAutoRefresh && !hideAutoupdate" ng-click="toggleAutoUpdate()"><i ng-if="autoUpdate !== null" class="pictogram title" style="width:13px">&#9632;</i><i ng-if="autoUpdate === null" class="pictogram title" style="width:13px">&#9654;</i> Turn auto updates <span ng-if="autoUpdate !== null">off ({{autoUpdateTimer}})</span><span ng-if="autoUpdate === null">on</span></a>
+  </div>

@@ -1,0 +1,9 @@
+# Enable Disable APM
+ApigeeAPMEnabled=true
+
+# Deployment environment
+DeploymentEnvironment=ug-max-dit
+
+# Note the trailing slash. It's internal ELB URL for mAX REST Server.
+ApmRestServerUrl=http://dlb9.us-west-2.elb.amazonaws.com/
+

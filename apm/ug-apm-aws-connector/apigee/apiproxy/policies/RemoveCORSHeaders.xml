@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<AssignMessage enabled="true" continueOnError="false" async="false" name="RemoveCORSHeaders">
+    <Remove>
+        <Headers>
+            <Header name='Access-Control-Allow-Origin'/>
+            <Header name='Access-Control-Expose-Headers'/>
+            <Header name='Access-Control-Max-Age'/>
+            <Header name='Access-Control-Allow-Credentials'/>
+            <Header name='Access-Control-Allow-Methods'/>
+            <Header name='Access-Control-Allow-Headers'/>
+        </Headers>
+    </Remove>
+    <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+</AssignMessage>

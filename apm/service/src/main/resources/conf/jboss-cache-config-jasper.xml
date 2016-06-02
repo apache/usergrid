@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<jbosscache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:jboss:jbosscache-core:config:3.2">
+
+    <eviction wakeUpInterval="2000">
+        <default algorithmClass="org.jboss.cache.eviction.LRUAlgorithm" eventQueueSize="200000">
+            <property name="maxNodes" value="1000"/>
+        </default>	
+    </eviction>
+
+</jbosscache>

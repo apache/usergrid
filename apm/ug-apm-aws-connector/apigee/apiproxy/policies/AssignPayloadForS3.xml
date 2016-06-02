@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<AssignMessage enabled="true" continueOnError="false" async="false" name="AssignPayloadForS3">
+    <DisplayName>Adding Headers for S3</DisplayName>
+    <FaultRules/>
+    <Properties/>  
+    <Add>
+        <Headers>
+        	<Header name='x-amz-acl'>bucket-owner-full-control</Header>
+        	<Header name='content-type'>text/plain</Header>
+        </Headers>
+    </Add>   
+    <Set>
+        <Verb>PUT</Verb>
+        <Payload contentType='text/plain'>{message.content}</Payload>
+    </Set>  
+    <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+    <AssignTo createNew="true" transport="http" type="request"></AssignTo>
+</AssignMessage>
+

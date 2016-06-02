@@ -1,0 +1,117 @@
+#created on: Jul 7, 2011
+package SessionProcessor
+
+#list any import classes here.
+import org.apache.usergrid.apm.model.ClientLog;
+import org.apache.usergrid.apm.model.ClientSessionMetrics;
+import org.apache.usergrid.apm.model.SummarySessionMetrics;
+import org.apache.usergrid.apm.model.CompactSessionMetrics;
+import org.apache.usergrid.apm.model.ChartCriteria;
+
+
+import java.util.List;
+import java.util.TreeSet;
+import java.util.Date;
+import java.util.Set;
+import org.apache.usergrid.apm.service.charts.service.SessionChartCriteriaService;
+import org.apache.usergrid.apm.service.charts.service.NetworkMetricsChartCriteriaService;
+import org.apache.usergrid.apm.service.charts.service.LogChartCriteriaService;
+
+global org.apache.commons.logging.Log log;
+
+global	List dirtySummarySessionMetrics;	
+global	List dirtyCompactClientLog;
+global	List dirtyCompactSessionMetrics;
+global	List dirtyCompactNetworkMetrics;
+		
+
+global SessionChartCriteriaService sessionChartCriteriaService;
+global NetworkMetricsChartCriteriaService networkMetricsChartCriteriaService;
+global LogChartCriteriaService logChartCriteriaService;
+
+global Long appId;
+
+dialect "java"
+
+declare SummarySessionMetrics
+    @role( event )
+    @timestamp(sessionStartTime)
+    @expires( 2h )
+end
+
+
+declare CompactSessionMetrics
+    @role( event )
+    @timestamp(timeStamp)
+    @expires( 2h )
+end
+
+
+/*
+* Generates new csm whenever it sees a new $ssm
+*/
+
+rule "CompactSessionMetricsGenerator"
+   salience -100
+when
+  $minute : Long() from entry-point "modifiedMinutesStream"
+//  not (exists (CompactSessionMetrics(endMinute == $minute) from entry-point "compactSessionMetricsStream"))
+  //not (exists (CompactSessionMetrics(appId == 0) from entry-point "compactSessionMetricsStream"))
+then
+  log.info("Detected new SummarySessionMetrics to trigger new CompactSessionMetricsCreation");
+  //log.info("AppId : " + 1L + " SummarySession Start Minute : " + 1L);
+  //log.info("SummarySession Timestamp : " + $ssm.getSessionStartTime() + " SummarySession Start Minute : " + $ssm.getStartMinute());  
+  
+  CompactSessionMetrics csm = new CompactSessionMetrics();
+  csm.setAppId(appId);
+  csm.setTimeStamp(new Date( $minute * 1000 * 60));
+  log.info("csm Timestamp : " + csm.getTimeStamp());
+  Long id = 1L;
+  id = sessionChartCriteriaService.getDefaultChartCriteriaByName( appId,SessionChartCriteriaService.ACTIVE_USERS_SESSION).getId();
+  log.info("Setting Chart Criteria ID : " + id);  
+  csm.setChartCriteriaId(id);
+  csm.setSamplePeriod(ChartCriteria.SamplePeriod.MINUTE);
+  entryPoints["compactSessionMetricsStream"].insert(csm);
+end
+
+
+rule "CompactSessionMetricsCalculator"
+  salience -200
+  no-loop true
+when
+ $csm: CompactSessionMetrics($end:endMinute) from entry-point "compactSessionMetricsStream"
+ $sessionCount : Number() 
+	from accumulate (SummarySessionMetrics(appId == $csm.appId, $sessionLength : sessionLength, 
+		$csm.endMinute >= prevEndMinute, $csm.endMinute < endMinute  ) 
+		from entry-point "summarySessionMetricsStream", count(null))
+ $sumSessionLength : Number() 
+	from accumulate (SummarySessionMetrics(appId == $csm.appId, $sessionLength : sessionLength, 
+		$csm.endMinute >= prevEndMinute, $startMinute : startMinute, $csm.endMinute < endMinute) 
+		from entry-point "summarySessionMetricsStream", sum($end - $startMinute))
+then
+  if($sessionCount != null && $sumSessionLength != null)
+  {
+    log.info("CompactSessionMetricsCalculator triggered. AppID : " + $csm.getAppId() + 
+       " Minute : " + $csm.getEndMinute() + " TS : " + $csm.getTimeStamp()); 
+  	log.info("Count : " + $sessionCount.longValue());
+  	log.info("SumSumLength in seconds : " + $sumSessionLength.longValue());
+  	modify($csm){
+  		setSessionCount($sessionCount.longValue()),
+  		setSumSessionLength($sumSessionLength.longValue()*60*1000) //store in milliseconds
+ 	}
+  }
+end
+
+
+// This should be when the logs are save to file
+// Note that only metrics that have changed will get impacted.
+
+rule "PersistModifiedCompactSessionMetrics"
+   salience -500
+when
+ $metric : CompactSessionMetrics() from entry-point "compactSessionMetricsStream"
+then
+ log.info("Marking CompactCompactSessionMetrics dirty " + $metric.getId() + " Output " + $metric.toString());
+ dirtyCompactSessionMetrics.add($metric);
+end
+

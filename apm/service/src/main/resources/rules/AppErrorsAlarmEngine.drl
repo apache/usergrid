@@ -1,0 +1,75 @@
+#created on: Apr 14, 2011
+package AppErrorsAlarmEngine
+
+import org.apache.usergrid.apm.model.*;
+import org.apache.usergrid.apm.model.*;
+import java.util.*;
+import org.apache.usergrid.apm.service.charts.service.SessionChartCriteriaService;
+import org.apache.usergrid.apm.service.charts.service.NetworkMetricsChartCriteriaService;
+import org.apache.usergrid.apm.service.charts.service.LogChartCriteriaService;
+import org.apache.usergrid.apm.service.AlarmService;
+import org.apache.usergrid.apm.service.util.AsyncMailer;
+
+global org.apache.commons.logging.Log log;
+
+global	List dirtySummarySessionMetrics;	
+global	List dirtyCompactClientLog;
+global	List dirtyCompactSessionMetrics;
+global	List dirtyCompactNetworkMetrics;
+		
+
+global SessionChartCriteriaService sessionChartCriteriaService;
+global NetworkMetricsChartCriteriaService networkMetricsChartCriteriaService;
+global LogChartCriteriaService logChartCriteriaService;
+global AlarmService alarmService;
+
+global Long appId;
+
+dialect "java"
+
+declare ClientLog
+    @role( event )
+    @timestamp(timeStamp)
+    @expires( 30m )
+end
+
+
+declare CompactClientLog
+    @role( event )
+    @timestamp(timeStamp)
+    @expires( 120m )
+end
+
+
+declare AppErrorsAppIds
+	type: Long
+end
+
+rule "AppErrorsAppIdsRule"
+	no-loop true
+when 
+	$log : ClientLog( $appId : appId ) from entry-point "clientLogStream"
+	not (exists AppErrorsAppIds(type == $appId))
+then
+	//For some reason, insertLogical does not work - NOTE: Fixed in Drools 5.2 <- Need to fix
+	insert( new AppErrorsAppIds($appId));
+end
+
+
+rule "SimpleAlarm"
+   salience -600
+   no-loop true
+when
+ AppErrorsAppIds($appId : type);
+ $assertLogs : ArrayList(size > 0) from collect (ClientLog(logLevel == "A", appId == $appId) from entry-point "clientLogStream")                    
+then
+
+ log.info("Detected critical errors for " + $appId);
+ alarmService.sendCriticalErrors($assertLogs, $appId);
+end
+
+
+
+
+
+

@@ -1,0 +1,28 @@
+<div class="main-chart-holder no-data">
+  <bsmodal id="needHelp"
+           title="Need Help?"
+           close="hideModal"
+           closelabel="Cancel"
+           extrabutton="needHelpDialog"
+           extrabuttonlabel="Get Help"
+           ng-cloak>
+    <p>Do you want to contact support? Support will get in touch with you as soon as possible.</p>
+  </bsmodal>
+  <div class="no-data-msg" >
+    <div class="waiting" ng-if="chartDataWaiting">
+      <div class="bars" id="bar1"></div>
+      <div class="bars" id="bar2"></div>
+      <div class="bars" id="bar3"></div>
+    </div>
+    <div ng-if="!chartDataPresent && !chartDataWaiting && !logDataPresent">
+    <div class="content">
+      No data detected for this time range.
+    </div>
+    <button ng-click="showModal('needHelp')" ng-if="performance.showHelpButton" class="btn glow">I have installed the SDK and need help!</button>
+    <div class="content" style="margin: 10px 0 10px 0" ng-if="performance.showHelpButton">
+      or
+    </div>
+    <button ng-click="toggleDemoData()" onclick="this.disabled=true" class="btn btn-primary action">View demo data</button>
+    </div>
+  </div>
+</div>

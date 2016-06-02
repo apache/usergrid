@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<AssignMessage enabled="true" continueOnError="false" async="false" name="AssignPayloadForSQS">
+    <DisplayName>AssignMessage for SQS</DisplayName>
+    <FaultRules/>
+    <Properties/>  
+    <Set>
+        <Verb>POST</Verb>
+        <Payload contentType='application/x-www-form-urlencoded'>Action=SendMessage&amp;MessageBody={message.content}</Payload>
+    </Set>   
+    <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+    <AssignTo createNew="false" transport="http" type="request"></AssignTo>
+</AssignMessage>
+

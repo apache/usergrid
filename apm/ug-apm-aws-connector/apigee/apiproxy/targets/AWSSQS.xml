@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<TargetEndpoint name="AWSSQS">
+    <Description>AWS SQS target endpoint</Description>
+    <FaultRules>
+        <FaultRule name="SQSErrors">
+          <Step>
+            <Name>AssignPayload_SQSError</Name>
+          </Step>
+        </FaultRule>
+    </FaultRules>
+    <PreFlow>
+    	<Request>
+    		<Step><Name>PythonDisablePathSuffix</Name></Step>
+            <Step><Name>URLEncodePayload</Name></Step>
+    		<Step><Name>AssignPayloadForSQS</Name></Step>
+    	</Request>	
+    </PreFlow>	
+    <Flows/>
+    <HTTPTargetConnection>
+        <Properties/>
+        <URL>https://sqs.us-east-1.amazonaws.com/<<AWS-ACCOUNT-NUMBER>>/queue-prefix_apm_{max.org}_{max.app}</URL>
+    </HTTPTargetConnection>
+</TargetEndpoint>

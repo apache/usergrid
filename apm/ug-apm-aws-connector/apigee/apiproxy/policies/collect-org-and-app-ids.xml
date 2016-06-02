@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<StatisticsCollector async="false" continueOnError="true" enabled="true" name="collect-org-and-app-ids">
+    <DisplayName>Collect org and app ids</DisplayName>
+    <FaultRules/>
+    <Properties/>
+    <Statistics>
+        <Statistic name="orgid" ref="orgid" type="STRING">unknown</Statistic>
+        <Statistic name="appid" ref="appid" type="STRING">unknown</Statistic>
+    </Statistics>
+</StatisticsCollector>

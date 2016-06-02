@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<TargetEndpoint name="default">
+    <Description>App Services REST Server</Description>
+    <FaultRules>
+        <FaultRule name="default">
+            <Step>
+                <Condition>(request.verb != "OPTIONS") and (request.header.Origin != null) and (response.header.Access-Control-Allow-Origin == null)</Condition>
+                <Name>CORS</Name>
+            </Step>
+        </FaultRule>
+    </FaultRules>
+   
+    <PreFlow/>
+    <Flows>
+        <Flow name="apigeeMobileconfig">
+            <Description/>
+            <Request/>
+            <Response>
+                <Step>
+                    <FaultRules/>
+                    <Name>CacheMobileConfig2</Name>
+                </Step>
+            </Response>
+            <Condition>(proxy.pathsuffix MatchesPath "/*/*/apm/apigeeMobileConfig") and (request.verb = "GET")</Condition>
+        </Flow>
+    </Flows>
+    <PostFlow/>
+    <HTTPTargetConnection>
+        <Properties/>
+        <URL>http://internal-elb-usergrid-tomcat.elb.amazonaws.com/</URL>
+    </HTTPTargetConnection>
+</TargetEndpoint>
