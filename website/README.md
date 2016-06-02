@@ -42,7 +42,7 @@ To test locally, you can use the autocompiler (will build changes on every reque
     
 ## 3. Publish your changes to the site    
 
-Run the nanoc compiler to generate the . It is configured via the ``nanoc.yaml`` to place website files into the ``content`` directory at the top 
+Run the nanoc compiler to generate the HTML for the website. It is configured via the ``nanoc.yaml`` to place website files into the ``content`` directory at the top 
 
     $ nanoc compile
 
