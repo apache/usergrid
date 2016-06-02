@@ -46,9 +46,6 @@ public class UsergridDevice : UsergridEntity {
 
     // MARK: - Instance Properties -
 
-    /// Property helper method for the `UsergridDevice` objects `uuid`.
-    override public var uuid: String! { return super[UsergridEntityProperties.UUID.stringValue] as! String }
-
     /// Property helper method for the `UsergridDevice` objects device model.
     public var model: String { return super[UsergridDeviceProperties.Model.stringValue] as! String }
 
@@ -107,6 +104,44 @@ public class UsergridDevice : UsergridEntity {
      */
     public override func encodeWithCoder(aCoder: NSCoder) {
         super.encodeWithCoder(aCoder)
+    }
+
+    /**
+     Performs a PUT (or POST if no UUID is found) on the `UsergridDevice` using the shared instance of `UsergridClient`.
+     
+     If this device is equal to `UsergridDevice.sharedDevice` it will also update the shared device on the keychain.
+
+     - parameter completion: An optional completion block that, if successful, will contain the updated/saved `UsergridEntity` object.
+     */
+    public override func save(completion: UsergridResponseCompletion? = nil) {
+        self.save(Usergrid.sharedInstance, completion: completion)
+    }
+
+
+    /**
+     Performs a PUT (or POST if no UUID is found) on the `UsergridDevice`.
+
+     If this device is equal to `UsergridDevice.sharedDevice` it will also update the shared device on the keychain.
+
+     - parameter client:     The client to use when saving.
+     - parameter completion: An optional completion block that, if successful, will contain the updated/saved `UsergridEntity` object.
+     */
+    public override func save(client: UsergridClient, completion: UsergridResponseCompletion? = nil) {
+        super.save(client) { (response) in
+            if( response.ok ) {
+                if( self == UsergridDevice.sharedDevice || self.isEqualToEntity(UsergridDevice.sharedDevice)) {
+                    UsergridDevice.saveSharedDeviceToKeychain()
+                }
+            }
+            completion?(response:response)
+        }
+    }
+
+    /**
+     Saves the `UsergridDevice.sharedDevice` to the keychain.
+     */
+    public static func saveSharedDeviceToKeychain() {
+        UsergridDevice.saveSharedDeviceKeychainItem(UsergridDevice.sharedDevice)
     }
 
     /**

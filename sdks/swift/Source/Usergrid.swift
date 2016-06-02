@@ -27,7 +27,7 @@
 import Foundation
 
 /// The version number for the Usergrid Swift SDK.
-public let UsergridSDKVersion = "2.1.0"
+public let UsergridSDKVersion = "2.1.1"
 
 /**
  The `Usergrid` class acts as a static shared instance manager for the `UsergridClient` class.
@@ -87,10 +87,10 @@ public class Usergrid: NSObject {
         set(auth) { Usergrid.sharedInstance.appAuth = auth }
     }
 
-    /// The `UsergridAuthFallback` value used to determine what type of token will be sent of the shared instance of `UsergridClient`, if any.
-    public static var authFallback: UsergridAuthFallback {
-        get { return Usergrid.sharedInstance.authFallback }
-        set(authFallback) { Usergrid.sharedInstance.authFallback = authFallback }
+    /// The `UsergridAuthMode` value used to determine what type of token will be sent of the shared instance of `UsergridClient`, if any.
+    public static var authMode: UsergridAuthMode {
+        get { return Usergrid.sharedInstance.authMode }
+        set(mode) { Usergrid.sharedInstance.authMode = mode }
     }
 
     // MARK: - Initialization -
@@ -206,7 +206,7 @@ public class Usergrid: NSObject {
 
     If there is a `UsergridUser` logged in and the token of that user is valid then it will return that.
 
-    Otherwise, if the `authFallback` is `.App`, and the `UsergridAppAuth` of the client is set and the token is valid it will return that.
+    Otherwise, if the `authMode` is `.App`, and the `UsergridAppAuth` of the client is set and the token is valid it will return that.
 
     - returns: The `UsergridAuth` if one is found or nil if not.
     */
@@ -255,7 +255,19 @@ public class Usergrid: NSObject {
     }
 
     /**
-    Logs out the current user of the shared instance locally and remotely.
+     Changes the given `UsergridUser`'s current password with the shared instance of `UsergridClient`.
+
+     - parameter user:       The user.
+     - parameter old:        The old password.
+     - parameter new:        The new password.
+     - parameter completion: The optional completion block.
+     */
+    public static func resetPassword(user: UsergridUser, old:String, new:String, completion:UsergridUserResetPasswordCompletion? = nil) {
+        Usergrid.sharedInstance.resetPassword(user, old: old, new: new, completion: completion)
+    }
+
+    /**
+    Logs out the current user of the shared instance locally and remotely using the shared instance of `UsergridClient`.
 
     - parameter completion: The completion block that will be called after logout has completed.
     */
@@ -566,7 +578,7 @@ public class Usergrid: NSObject {
     - parameter relationship: The relationship.
     - parameter completion:   The completion block that will be called once the request has completed.
     */
-    public static func getConnections(direction:UsergridDirection, entity:UsergridEntity, relationship:String, query:UsergridQuery?, completion:UsergridResponseCompletion? = nil) {
+    public static func getConnections(direction:UsergridDirection, entity:UsergridEntity, relationship:String, query:UsergridQuery? = nil, completion:UsergridResponseCompletion? = nil) {
         Usergrid.sharedInstance.getConnections(direction, entity: entity, relationship: relationship, query:query, completion: completion)
     }
 
@@ -580,7 +592,7 @@ public class Usergrid: NSObject {
      - parameter query:            The optional query.
      - parameter completion:       The completion block that will be called once the request has completed.
      */
-    public static func getConnections(direction:UsergridDirection, type:String, uuidOrName:String, relationship:String, query:UsergridQuery?, completion:UsergridResponseCompletion? = nil) {
+    public static func getConnections(direction:UsergridDirection, type:String, uuidOrName:String, relationship:String, query:UsergridQuery? = nil, completion:UsergridResponseCompletion? = nil) {
         Usergrid.sharedInstance.getConnections(direction, type: type, uuidOrName: uuidOrName, relationship: relationship, query:query, completion: completion)
     }
 
@@ -593,7 +605,7 @@ public class Usergrid: NSObject {
      - parameter query:        The optional query.
      - parameter completion:   The optional completion block that will be called once the request has completed.
      */
-    public static func getConnections(direction:UsergridDirection, uuid:String, relationship:String, query:UsergridQuery?, completion:UsergridResponseCompletion? = nil) {
+    public static func getConnections(direction:UsergridDirection, uuid:String, relationship:String, query:UsergridQuery? = nil, completion:UsergridResponseCompletion? = nil) {
         Usergrid.sharedInstance.getConnections(direction, uuid: uuid, relationship: relationship, query: query, completion: completion)
     }
 
