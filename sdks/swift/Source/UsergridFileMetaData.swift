@@ -70,7 +70,7 @@ public class UsergridFileMetaData : NSObject,NSCoding {
         self.lastModifiedTimeStamp = fileMetaDataJSON["last-modified"] as? Int ?? 0
 
         if self.lastModifiedTimeStamp > 0 {
-            self.lastModifiedDate = NSDate(utcTimeStamp: self.lastModifiedTimeStamp.description)
+            self.lastModifiedDate = NSDate(milliseconds: self.lastModifiedTimeStamp.description)
         } else {
             self.lastModifiedDate = nil
         }
@@ -93,7 +93,7 @@ public class UsergridFileMetaData : NSObject,NSCoding {
         self.lastModifiedTimeStamp = aDecoder.decodeIntegerForKey("last-modified") ?? 0
 
         if self.lastModifiedTimeStamp > 0 {
-            self.lastModifiedDate = NSDate(utcTimeStamp: self.lastModifiedTimeStamp.description)
+            self.lastModifiedDate = NSDate(milliseconds: self.lastModifiedTimeStamp.description)
         } else {
             self.lastModifiedDate = nil
         }

@@ -104,7 +104,7 @@ public class UsergridAuth : NSObject, NSCoding {
 
     - parameter aDecoder: The decoder.
 
-    - returns: A decoded `UsergridUser` object.
+    - returns: A decoded `UsergridAuth` object.
     */
     required public init?(coder aDecoder: NSCoder) {
         self.accessToken = aDecoder.decodeObjectForKey("accessToken") as? String
@@ -177,7 +177,7 @@ public class UsergridUserAuth : UsergridAuth {
 
     - parameter aDecoder: The decoder.
 
-    - returns: A decoded `UsergridUser` object.
+    - returns: A decoded `UsergridUserAuth` object.
     */
     required public init?(coder aDecoder: NSCoder) {
         guard let username = aDecoder.decodeObjectForKey("username") as? String,
@@ -247,7 +247,7 @@ public class UsergridAppAuth : UsergridAuth {
 
     - parameter aDecoder: The decoder.
 
-    - returns: A decoded `UsergridUser` object.
+    - returns: A decoded `UsergridAppAuth` object.
     */
     required public init?(coder aDecoder: NSCoder) {
         guard let clientId = aDecoder.decodeObjectForKey("clientId") as? String,
