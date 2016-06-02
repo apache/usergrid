@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.rest.applications.queries;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.rest.test.resource.model.Collection;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
@@ -34,6 +35,9 @@ public class SelectMappingsQueryTest extends QueryTestBase {
     private static final Logger logger = LoggerFactory.getLogger(OrderByTest.class);
 
 
+    /**
+     * Select field mappings may include nested entity fields.
+     */
     @Test
     public void testNestedSelectFieldNames() throws Exception {
 
@@ -64,42 +68,67 @@ public class SelectMappingsQueryTest extends QueryTestBase {
 
 
     /**
-     * Shows that field names are case-insensitive.
-     * If you define two fields with same name but different cases, behavior is undefined.
+     * When entity posted with two duplicate names with different cases, last one wins.
      */
     @Test
-    public void testFieldNameCaseSensitivity() throws Exception {
+    public void testMixedCaseDupField() throws Exception {
 
-        int numberOfEntities = 10;
         String collectionName = "things";
 
-        Entity[] entities = new Entity[numberOfEntities];
-        Entity props = new Entity();
+        String value = RandomStringUtils.randomAlphabetic( 20 );
+        String otherValue = RandomStringUtils.randomAlphabetic( 20 );
 
-        for (int i = 0; i < numberOfEntities; i++) {
-            props.put("testProp", "a");
-            props.put("testprop", "b");
-            entities[i] = app().collection(collectionName).post(props);
-        }
+        // create entity with testProp=value
+        Entity entity = new Entity()
+            .withProp( "testProp", value )
+            .withProp( "TESTPROP", otherValue);
+        app().collection( collectionName ).post( entity );
         refreshIndex();
 
-        {
-            QueryParameters params = new QueryParameters()
-                .setQuery( "select * where testProp = 'b'" );
-            Collection things = this.app().collection( "things" ).get( params );
+        // testProp and TESTPROP should now have otherValue
 
-            // if field names were case sensitive, this would fail
-            assertEquals( numberOfEntities, things.getNumOfEntities() );
-        }
+        QueryParameters params = new QueryParameters()
+            .setQuery( "select * where testProp='" + otherValue + "'" );
+        Collection things = this.app().collection( "things" ).get( params );
+        assertEquals( 1, things.getNumOfEntities() );
 
-        {
-            QueryParameters params = new QueryParameters()
-                .setQuery( "select * where testprop='b'" );
-            Collection things = this.app().collection( "things" ).get( params );
-
-            assertEquals( numberOfEntities, things.getNumOfEntities() );
-        }
-
+        params = new QueryParameters()
+            .setQuery( "select * where TESTPROP='" + otherValue + "'" );
+        things = app().collection( "things" ).get( params );
+        assertEquals( 1, things.getNumOfEntities() );
     }
 
+
+    /**
+     * Field named testProp can be over-written by field named TESTPROP.
+     */
+    @Test
+    public void testFieldOverride() throws Exception {
+
+        String collectionName = "things";
+
+        // create entity with testProp=value
+        String value = RandomStringUtils.randomAlphabetic( 20 );
+        Entity entity = new Entity().withProp( "testProp", value );
+        app().collection( collectionName ).post( entity );
+        refreshIndex();
+
+        // override with TESTPROP=newValue
+        String newValue = RandomStringUtils.randomAlphabetic( 20 );
+        entity = new Entity().withProp( "TESTPROP", newValue );
+        app().collection( collectionName ).post( entity );
+        refreshIndex();
+
+        // testProp and TESTPROP should now have newValue
+
+        QueryParameters params = new QueryParameters()
+            .setQuery( "select * where testProp='" + newValue + "'" );
+        Collection things = this.app().collection( "things" ).get( params );
+        assertEquals( 1, things.getNumOfEntities() );
+
+        params = new QueryParameters()
+            .setQuery( "select * where TESTPROP='" + newValue + "'" );
+        things = app().collection( "things" ).get( params );
+        assertEquals( 1, things.getNumOfEntities() );
+    }
 }
