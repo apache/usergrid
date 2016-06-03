@@ -103,7 +103,7 @@ public class SelectMappingsQueryTest extends QueryTestBase {
      * Field named testProp can be over-written by field named TESTPROP.
      */
     @Test
-    public void testFieldOverride() throws Exception {
+    public void testFieldOverride1() throws Exception {
 
         String collectionName = "things";
 
@@ -119,7 +119,7 @@ public class SelectMappingsQueryTest extends QueryTestBase {
         app().collection( collectionName ).post( entity );
         refreshIndex();
 
-        // testProp and TESTPROP should now have newValue
+        // testProp and TESTPROP should new be queryable by new value
 
         QueryParameters params = new QueryParameters()
             .setQuery( "select * where testProp='" + newValue + "'" );
@@ -131,4 +131,38 @@ public class SelectMappingsQueryTest extends QueryTestBase {
         things = app().collection( "things" ).get( params );
         assertEquals( 1, things.getNumOfEntities() );
     }
+
+    /**
+     * Field named testProp can be over-written by field named TESTPROP.
+     */
+    @Test
+    public void testFieldOverride2() throws Exception {
+
+        String collectionName = "things";
+
+        // create entity with TESTPROP=value
+        String value = RandomStringUtils.randomAlphabetic( 20 );
+        Entity entity = new Entity().withProp( "TESTPROP", value );
+        app().collection( collectionName ).post( entity );
+        refreshIndex();
+
+        // override with testProp=newValue
+        String newValue = RandomStringUtils.randomAlphabetic( 20 );
+        entity = new Entity().withProp( "testProp", newValue );
+        app().collection( collectionName ).post( entity );
+        refreshIndex();
+
+        // testProp and TESTPROP should new be queryable by new value
+
+        QueryParameters params = new QueryParameters()
+            .setQuery( "select * where testProp='" + newValue + "'" );
+        Collection things = this.app().collection( "things" ).get( params );
+        assertEquals( 1, things.getNumOfEntities() );
+
+        params = new QueryParameters()
+            .setQuery( "select * where TESTPROP='" + newValue + "'" );
+        things = app().collection( "things" ).get( params );
+        assertEquals( 1, things.getNumOfEntities() );
+    }
+
 }
