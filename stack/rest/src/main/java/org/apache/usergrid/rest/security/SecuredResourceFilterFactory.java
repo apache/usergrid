@@ -450,7 +450,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 String path = request.getUriInfo().getPath().toLowerCase().replace(applicationName, "");
                 String perm =  getPermissionFromPath( em.getApplicationRef().getUuid(), operation, path );
 
-                if ( "/users/me".equals( path ) ) {
+                if ( "/users/me".equals( path ) && request.getMethod().equalsIgnoreCase( "get" )) {
                     // shortcut the permissions checking, the "me" end-point is always allowed
                     logger.debug("Allowing {} access to /users/me", getSubject().toString() );
                     return;
