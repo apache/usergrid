@@ -57,7 +57,7 @@ public class CollectionRuntimeException extends RuntimeException {
         this.applicationScope = scope;
     }
 
-    public boolean isMissingKeyspace() {
+    public boolean isBootstrapping() {
         if ( getCause() instanceof BadRequestException ) {
             BadRequestException bre = (BadRequestException)getCause();
             String msg = bre.getMessage();
