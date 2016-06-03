@@ -69,7 +69,6 @@ import java.util.*;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
-import static org.apache.usergrid.persistence.Schema.initLock;
 
 
 /**
@@ -178,26 +177,27 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                         } else if ( managementAppEntityManager != null ) {
                             // failed to fetch management app, use cached one
                             entityManager = managementAppEntityManager;
+                            logger.error("Failed to fetch management app");
                         }
                     }
 
                     // missing keyspace means we have not done bootstrap yet
-                    final boolean missingKeyspace;
+                    final boolean isBootstrapping;
                     if ( throwable instanceof CollectionRuntimeException ) {
                         CollectionRuntimeException cre = (CollectionRuntimeException) throwable;
-                        missingKeyspace = cre.isMissingKeyspace();
+                        isBootstrapping = cre.isBootstrapping();
                     } else {
-                        missingKeyspace = false;
+                        isBootstrapping = false;
                     }
 
                     // work around for https://issues.apache.org/jira/browse/USERGRID-1291
-                    // throw exception so that we do not cache 
+                    // throw exception so that we do not cache
                     // TODO: determine how application name can intermittently be null
                     if ( app != null && app.getName() == null ) {
                         throw new RuntimeException( "Name is null for application " + appId, throwable );
                     }
 
-                    if ( app == null && !missingKeyspace ) {
+                    if ( app == null && !isBootstrapping ) {
                         throw new RuntimeException( "Error getting application " + appId, throwable );
 
                     } // else keyspace is missing because setup/bootstrap not done yet
@@ -241,7 +241,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
                 if ( t instanceof CollectionRuntimeException ) {
                     CollectionRuntimeException cre = (CollectionRuntimeException)t;
-                    if ( cre.isMissingKeyspace() ) {
+                    if ( cre.isBootstrapping() ) {
                         // we're bootstrapping, ignore this and continue
                         bootstrapping = true;
                         break;
