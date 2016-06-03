@@ -22,6 +22,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.connectionpool.exceptions.NoAvailableHostsException;
+import com.netflix.astyanax.connectionpool.exceptions.PoolTimeoutException;
 import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
 import com.netflix.astyanax.ddl.KeyspaceDefinition;
 import com.netflix.astyanax.model.ColumnFamily;
@@ -37,9 +39,7 @@ import org.apache.usergrid.persistence.core.astyanax.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
@@ -50,24 +50,30 @@ public class AstyanaxLockManagerImpl implements LockManager {
 
 
     private final CassandraFig cassandraFig;
-    private final Keyspace keyspace;
-    private final ColumnFamily columnFamily;
+    private final CassandraCluster cassandraCluster;
+    private Keyspace keyspace;
+    private ColumnFamily columnFamily;
     private static final int MINIMUM_LOCK_EXPIRATION = 60000; // 1 minute
+
 
     @Inject
     public AstyanaxLockManagerImpl(CassandraFig cassandraFig,
                                    CassandraCluster cassandraCluster ) throws ConnectionException {
 
         this.cassandraFig = cassandraFig;
-        this.keyspace = cassandraCluster.getLocksKeyspace();
-
-        createLocksKeyspace();
-
-        this.columnFamily = createLocksColumnFamily();
+        this.cassandraCluster = cassandraCluster;
+    }
 
 
-
-
+    @Override
+    public void setup() {
+        try {
+            keyspace = cassandraCluster.getLocksKeyspace();
+            createLocksKeyspace();
+            columnFamily = createLocksColumnFamily();
+        } catch (ConnectionException e) {
+            throw new RuntimeException( "Error setting up locks keyspace and column family", e );
+        }
     }
 
 
