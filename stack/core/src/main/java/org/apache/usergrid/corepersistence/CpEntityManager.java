@@ -36,7 +36,6 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.apache.usergrid.persistence.collection.EntitySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -48,6 +47,9 @@ import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.mq.Message;
+import org.apache.usergrid.mq.QueueManager;
+import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.AggregateCounter;
 import org.apache.usergrid.persistence.AggregateCounterSet;
 import org.apache.usergrid.persistence.CollectionRef;
@@ -73,6 +75,7 @@ import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -185,6 +188,7 @@ public class CpEntityManager implements EntityManager {
     private final EntityManagerFig entityManagerFig;
     private Application application;
 
+    public QueueManagerFactory queueManagerFactory;
 
     private final ManagerCache managerCache;
 
@@ -252,6 +256,7 @@ public class CpEntityManager implements EntityManager {
                             final CollectionService collectionService,
                             final ConnectionService connectionService,
                             final IndexSchemaCacheFactory indexSchemaCacheFactory,
+                            final QueueManagerFactory queueManagerFactory,
                             final UUID applicationId ) {
 
         this.entityManagerFig = entityManagerFig;
@@ -316,6 +321,9 @@ public class CpEntityManager implements EntityManager {
 
         // set to false for now
         this.skipAggregateCounters = false;
+
+        this.queueManagerFactory = queueManagerFactory;
+
     }
 
 
@@ -1515,6 +1523,22 @@ public class CpEntityManager implements EntityManager {
         }
 
         return entity;
+    }
+
+    public Message storeEventAsMessage( Mutator<ByteBuffer> m, Event event, long timestamp ) {
+
+        counterUtils.addEventCounterMutations( m, applicationId, event, timestamp );
+
+        QueueManager q = queueManagerFactory.getQueueManager( applicationId );
+
+        Message message = new Message();
+        message.setType( "event" );
+        message.setCategory( event.getCategory() );
+        message.setStringProperty( "message", event.getMessage() );
+        message.setTimestamp( timestamp );
+        q.postToQueue( "events", message );
+
+        return message;
     }
 
 
@@ -2785,10 +2809,13 @@ public class CpEntityManager implements EntityManager {
                 }
             }
 
-            //doesn't allow the mutator to be ignored.
-            counterUtils.addEventCounterMutations( null, applicationId, event, timestamp );
+            Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
 
+            Message message = storeEventAsMessage( batch, event, timestamp );
             incrementEntityCollection( "events", timestamp );
+            entity.setUuid( message.getUuid() );
+
+            batch.execute();
 
             return entity;
         }

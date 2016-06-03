@@ -18,7 +18,16 @@
 package org.apache.usergrid.persistence;
 
 
-import net.jcip.annotations.NotThreadSafe;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.entities.Event;
@@ -29,16 +38,8 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.ImmediateCounterRule;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import net.jcip.annotations.NotThreadSafe;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -59,9 +60,6 @@ public class CounterIT extends AbstractCoreIT {
         super();
     }
 
-
-    @Ignore( "Pending https://issues.apache.org/jira/browse/USERGRID-1120. ")
-    // needs to have elasticsearch refreshes implemented
     @Test
     public void testIncrementAndDecrement() throws Exception {
 

@@ -21,9 +21,9 @@ package org.apache.usergrid.persistence;
 
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 
+import org.apache.usergrid.mq.QueueManagerFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
@@ -60,6 +60,10 @@ public class PersistenceModule extends AbstractModule {
         final Provider<EntityManagerFactory> emfProvider = SpringIntegration.fromSpring( EntityManagerFactory.class, "entityManagerFactory" );
 
         bind( EntityManagerFactory.class ).toProvider(  emfProvider );
+
+        final Provider<QueueManagerFactory> qmfProvider = SpringIntegration.fromSpring( QueueManagerFactory.class, "queueManagerFactory" );
+        bind( QueueManagerFactory.class ).toProvider(  qmfProvider );
+
     }
 
 
