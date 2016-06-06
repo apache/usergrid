@@ -385,22 +385,28 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     response.addEntity( expectedUnique.getField(), entity );
                 }
 
-                deleteBatch.execute();
+                if ( deleteBatch.getRowCount() > 0 ) {
 
-                // optionally sleep after read repair as some tasks immediately try to write after the delete
-                if ( serializationFig.getReadRepairDelay() > 0 ){
+                    deleteBatch.execute();
 
-                    try {
+                    // optionally sleep after read repair as some tasks immediately try to write after the delete
+                    if ( serializationFig.getReadRepairDelay() > 0 ){
 
-                        Thread.sleep(Math.min(serializationFig.getReadRepairDelay(), 200L));
+                        try {
 
-                    } catch (InterruptedException e) {
+                            Thread.sleep(Math.min(serializationFig.getReadRepairDelay(), 200L));
 
-                        // do nothing if sleep fails; log and continue on
-                        logger.warn("Sleep during unique value read repair failed.");
+                        } catch (InterruptedException e) {
+
+                            // do nothing if sleep fails; log and continue on
+                            logger.warn("Sleep during unique value read repair failed.");
+                        }
+
                     }
 
                 }
+
+
 
                 return response;
             }
