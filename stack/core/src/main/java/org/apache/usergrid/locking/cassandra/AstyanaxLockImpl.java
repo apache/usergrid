@@ -67,7 +67,7 @@ public class AstyanaxLockImpl implements Lock {
             count.incrementAndGet();
 
         } catch (Exception e) {
-            throw new UGLockException("Unable to acquire lock with id: " + lock.getLockId());
+            throw new UGLockException("Unable to acquire lock with id: " + lock.getLockId(), e);
         }
     }
 
