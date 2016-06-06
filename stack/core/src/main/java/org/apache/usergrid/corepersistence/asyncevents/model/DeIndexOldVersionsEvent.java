@@ -21,6 +21,8 @@ package org.apache.usergrid.corepersistence.asyncevents.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 
+import java.util.UUID;
+
 
 /**
  * An index event de-indexing documents for Entity versions older than the provided Entity
@@ -31,12 +33,16 @@ public final class DeIndexOldVersionsEvent extends AsyncEvent {
     @JsonProperty
     protected EntityIdScope entityIdScope;
 
+    @JsonProperty
+    protected UUID markedVersion;
+
     public DeIndexOldVersionsEvent() {
     }
 
-    public DeIndexOldVersionsEvent(String sourceRegion, EntityIdScope entityIdScope) {
+    public DeIndexOldVersionsEvent(String sourceRegion, EntityIdScope entityIdScope, UUID markedVersion) {
         super(sourceRegion);
         this.entityIdScope = entityIdScope;
+        this.markedVersion = markedVersion;
     }
 
 
@@ -46,5 +52,9 @@ public final class DeIndexOldVersionsEvent extends AsyncEvent {
      */
     public EntityIdScope getEntityIdScope() {
         return entityIdScope;
+    }
+
+    public UUID getMarkedVersion() {
+        return  markedVersion;
     }
 }

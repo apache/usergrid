@@ -20,17 +20,16 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
-import rx.observables.ConnectableObservable;
 
 
 /**
@@ -71,18 +70,28 @@ public interface IndexService {
     Observable<IndexOperationMessage> deleteIndexEdge(final ApplicationScope applicationScope, final Edge edge);
 
 
-
-
     /**
-     * Delete all indexes with the specified entityId
+     * De-index all documents with the specified entityId and versions provided.  This will also remove any documents
+     * where the entity is a source/target node ( index docs where this entityId is a part of connections).
      *
      * @param applicationScope
      * @param entityId
+     * @param markedVersion
      * @return
      */
-    Observable<IndexOperationMessage> deleteEntityIndexes(final ApplicationScope applicationScope, final Id entityId,
-                                                         final UUID markedVersion);
+    Observable<IndexOperationMessage> deIndexEntity(final ApplicationScope applicationScope, final Id entityId,
+                                                    final UUID markedVersion, final List<UUID> allVersionsBeforeMarked);
 
 
+    /**
+     * De-index all documents with the specified entityId and versions of the entityId provided
+     *
+     * @param applicationScope
+     * @param entityId
+     * @param markedVersion
+     * @return
+     */
+    Observable<IndexOperationMessage> deIndexOldVersions(final ApplicationScope applicationScope, final Id entityId,
+                                                         final List<UUID> versions, UUID markedVersion);
 
 }

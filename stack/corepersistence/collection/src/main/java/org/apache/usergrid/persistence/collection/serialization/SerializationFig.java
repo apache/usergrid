@@ -57,4 +57,9 @@ public interface SerializationFig extends GuicyFig {
     @Key ( "usergrid.uniqueverify.poolsize" )
     @Default( "150" )
     int getUniqueVerifyPoolSize();
+
+
+    @Key ( "collection.readrepair.delay" )
+    @Default( "0" ) // in milliseconds
+    int getReadRepairDelay();
 }
