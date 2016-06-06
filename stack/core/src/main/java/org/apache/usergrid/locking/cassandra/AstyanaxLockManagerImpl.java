@@ -62,13 +62,13 @@ public class AstyanaxLockManagerImpl implements LockManager {
 
         this.cassandraFig = cassandraFig;
         this.cassandraCluster = cassandraCluster;
+        this.keyspace = cassandraCluster.getLocksKeyspace();
     }
 
 
     @Override
     public void setup() {
         try {
-            keyspace = cassandraCluster.getLocksKeyspace();
             createLocksKeyspace();
             columnFamily = createLocksColumnFamily();
         } catch (ConnectionException e) {
@@ -78,7 +78,7 @@ public class AstyanaxLockManagerImpl implements LockManager {
 
 
     @Override
-    public Lock createLock(final UUID applicationId, final String... path ){
+    public Lock createLock(final UUID applicationId, final String... path ) {
 
         String lockPath = LockPathBuilder.buildPath( applicationId, path );
 
@@ -114,7 +114,7 @@ public class AstyanaxLockManagerImpl implements LockManager {
 
 
         ColumnPrefixDistributedRowLock<String> lock =
-            new ColumnPrefixDistributedRowLock<>(keyspace, columnFamily, lockPath)
+            new ColumnPrefixDistributedRowLock<>(keyspace, getLocksColumnFamily(), lockPath)
                 .expireLockAfter( lockExpiration, TimeUnit.MILLISECONDS)
                 .withConsistencyLevel(consistencyLevel);
 
@@ -124,56 +124,75 @@ public class AstyanaxLockManagerImpl implements LockManager {
     }
 
 
+    private ColumnFamily getLocksColumnFamily() {
+
+        if ( columnFamily == null ) {
+
+            columnFamily = ColumnFamily.newColumnFamily(
+                CF_NAME, StringSerializer.get(), StringSerializer.get() );
+
+            if ( logger.isDebugEnabled() ) {
+
+                try {
+                    final KeyspaceDefinition kd = keyspace.describeKeyspace();
+                    final ColumnFamilyDefinition cfd = kd.getColumnFamily( columnFamily.getName() );
+                    Map<String, Object> options = new HashMap<>( 1 );
+                    options.put( "gc_grace_seconds", cfd.getGcGraceSeconds() );
+                    options.put( "caching", cfd.getCaching() );
+                    options.put( "compaction_strategy", cfd.getCompactionStrategy() );
+                    options.put( "compaction_strategy_options", cfd.getCompactionStrategyOptions() );
+                    logger.debug( "Locks column family {} exists with options: {}", cfd.getName(), options);
+
+                } catch ( ConnectionException ce ) {
+                    logger.warn("Error connecting to Cassandra for debug column family info", ce);
+                }
+            }
+        }
+
+        return columnFamily;
+    }
+
 
     private ColumnFamily createLocksColumnFamily() throws ConnectionException {
 
-        ColumnFamily<String, String> CF_LOCKS = ColumnFamily.newColumnFamily(
+        ColumnFamily<String, String> cflocks = ColumnFamily.newColumnFamily(
             CF_NAME, StringSerializer.get(), StringSerializer.get() );
 
-        final KeyspaceDefinition keyspaceDefinition = keyspace.describeKeyspace();
-        final ColumnFamilyDefinition existing =
-            keyspaceDefinition.getColumnFamily( CF_LOCKS.getName() );
+        final KeyspaceDefinition kd = keyspace.describeKeyspace();
+        final ColumnFamilyDefinition cfdef = kd.getColumnFamily( cflocks.getName() );
 
+        if ( cfdef == null ) {
 
-        if ( existing != null ) {
+            // create only if does not already exist
 
-            Map<String, Object> existingOptions = new HashMap<>(1);
-            existingOptions.put("gc_grace_seconds", existing.getGcGraceSeconds());
-            existingOptions.put("caching", existing.getCaching());
-            existingOptions.put("compaction_strategy", existing.getCompactionStrategy());
-            existingOptions.put("compaction_strategy_options", existing.getCompactionStrategyOptions());
+            MultiTenantColumnFamilyDefinition mtcfd = new MultiTenantColumnFamilyDefinition(
+                cflocks,
+                BytesType.class.getSimpleName(),
+                UTF8Type.class.getSimpleName(),
+                BytesType.class.getSimpleName(),
+                MultiTenantColumnFamilyDefinition.CacheOption.ALL
+            );
 
-            logger.info( "Locks column family {} exists with options: {}", existing.getName(),
-                existingOptions.toString() );
+            Map<String, Object> cfOptions = mtcfd.getOptions();
 
-            return CF_LOCKS;
+            // Additionally set the gc grace low
+            cfOptions.put( "gc_grace_seconds", 60 );
+
+            keyspace.createColumnFamily( mtcfd.getColumnFamily(), cfOptions );
+
+            logger.info( "Created column family {}", mtcfd.getOptions() );
+
+            cflocks = mtcfd.getColumnFamily();
+
+        } else {
+            return getLocksColumnFamily();
         }
 
-        MultiTenantColumnFamilyDefinition columnFamilyDefinition = new MultiTenantColumnFamilyDefinition(
-            CF_LOCKS,
-            BytesType.class.getSimpleName(),
-            UTF8Type.class.getSimpleName(),
-            BytesType.class.getSimpleName(),
-            MultiTenantColumnFamilyDefinition.CacheOption.ALL
-        );
-
-        Map<String, Object> cfOptions = columnFamilyDefinition.getOptions();
-
-        // Additionally set the gc grace low
-        cfOptions.put("gc_grace_seconds", 60);
-
-
-        keyspace.createColumnFamily( columnFamilyDefinition.getColumnFamily() , cfOptions );
-
-        logger.info( "Created column family {}", columnFamilyDefinition.getOptions() );
-
-        return columnFamilyDefinition.getColumnFamily();
+        return cflocks;
     }
 
 
     private void createLocksKeyspace() throws ConnectionException {
-
-
 
         ImmutableMap.Builder<String, Object> strategyOptions = getKeySpaceProps();
 
