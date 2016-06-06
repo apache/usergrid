@@ -20,16 +20,14 @@
 package org.apache.usergrid.corepersistence.pipeline.cursor;
 
 
-import java.util.Base64;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import com.fasterxml.jackson.core.Base64Variant;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -76,12 +74,12 @@ public class RequestCursor {
      * Deserialize from the cursor as json nodes
      */
     private Map<Integer, JsonNode> fromCursor( final String cursor ) throws CursorParseException {
+        if(cursor.isEmpty()){
+            throw new IllegalArgumentException("cursor cannot be empty");
+        }
+
         try {
-
-
-
             JsonNode jsonNode = CursorSerializerUtil.fromString( cursor );
-
 
             Preconditions
                 .checkArgument( jsonNode.size() <= MAX_CURSOR_COUNT, " You cannot have more than " + MAX_CURSOR_COUNT + " cursors" );
