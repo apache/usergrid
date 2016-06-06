@@ -37,7 +37,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.rest.RootResource;
+import org.apache.usergrid.rest.management.ManagementResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -129,9 +131,19 @@ public class UsersResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "create user" );
 
+        final boolean centralSSOEnabled =
+                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+
         UserInfo user = null;
         if ( invite ) {
             user = management.getAdminUserByEmail( email );
+        }
+
+        if ( centralSSOEnabled && user == null){
+
+            throw new IllegalArgumentException( "Admin User "+ email + " not found and must be " +
+                    "created using the central account service.");
+
         }
 
         if ( user == null ) {
