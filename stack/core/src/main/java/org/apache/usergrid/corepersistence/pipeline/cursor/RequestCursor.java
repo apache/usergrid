@@ -35,6 +35,10 @@ import java.util.Map;
  */
 public class RequestCursor {
 
+    /**
+     * Arbitrary number, just meant to keep us from having a DOS issue
+     */
+    private static final int MAX_SIZE = 1024;
 
     private static final int MAX_CURSOR_COUNT = 100;
 
@@ -74,9 +78,15 @@ public class RequestCursor {
      * Deserialize from the cursor as json nodes
      */
     private Map<Integer, JsonNode> fromCursor( final String cursor ) throws CursorParseException {
-        if(cursor.isEmpty()){
-            throw new IllegalArgumentException("cursor cannot be empty");
-        }
+
+
+        Preconditions.checkArgument( cursor != null, "Cursor cannot be null");
+
+        Preconditions.checkArgument( cursor.length() <= MAX_SIZE,
+            "Your cursor must be less than " + MAX_SIZE + " chars in length" );
+
+        Preconditions.checkArgument( !cursor.isEmpty(), "Cursor cannot have an empty value");
+
 
         try {
             JsonNode jsonNode = CursorSerializerUtil.fromString( cursor );
@@ -95,8 +105,11 @@ public class RequestCursor {
 
             return cursors;
         }
+        catch ( IllegalArgumentException ie ){
+            throw new IllegalArgumentException("Provided cursor has an invalid format and cannot be parsed.");
+        }
         catch ( Exception e ) {
-            throw new CursorParseException( "Unable to serialize cursor", e );
+            throw new CursorParseException( "Unable to deserialize cursor", e );
         }
     }
 }
