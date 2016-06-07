@@ -24,14 +24,10 @@ import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.exceptions.ManagementException;
-import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
-import org.apache.usergrid.rest.management.ManagementResource;
-import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,15 +38,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
-import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isPermittedAccessToOrganization;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_CENTRAL_URL;
 
 
 @Component( "org.apache.usergrid.rest.management.organizations.OrganizationsResource" )
@@ -196,11 +186,11 @@ public class OrganizationsResource extends AbstractContextResource {
                                              Map<String, Object> orgProperties, String callback ) throws Exception {
 
         final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
 
         if ( externalTokensEnabled ) {
             throw new IllegalArgumentException( "Organization / Admin Users must be created via " +
-                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_CENTRAL_URL ) );
         }
 
         Preconditions

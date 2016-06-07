@@ -54,7 +54,7 @@ public class LocalShiroCache<K, V> {
         }
 
         this.cache = CacheBuilder.newBuilder()
-            .maximumSize(Math.max(1000,configuredMaxSize))
+            .maximumSize(Math.min(1000,configuredMaxSize))
             .expireAfterWrite(ttl, TimeUnit.SECONDS).build();
 
     }
