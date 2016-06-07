@@ -14,31 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.java.client.response;
+package org.apache.usergrid.client;
 
-import java.util.UUID;
+import org.apache.usergrid.java.client.Usergrid;
+import org.apache.usergrid.java.client.auth.UsergridAppAuth;
+import org.junit.Before;
+import org.junit.Test;
 
-public class QueueInfo {
+public class UsergridTestCase {
 
-	String path;
-	UUID queue;
-
-	public QueueInfo() {
-	}
-
-	public String getPath() {
-		return path;
-	}
-
-	public void setPath(String path) {
-		this.path = path;
-	}
-
-	public UUID getQueue() {
-		return queue;
-	}
-
-	public void setQueue(UUID queue) {
-		this.queue = queue;
-	}
+    @Test
+    public void initialize() {
+        Usergrid.initSharedInstance(SDKTestConfiguration.ORG_NAME, SDKTestConfiguration.APP_NAME, SDKTestConfiguration.USERGRID_URL);
+    }
 }

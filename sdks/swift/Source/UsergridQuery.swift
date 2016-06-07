@@ -528,7 +528,7 @@ public class UsergridQuery : NSObject,NSCopying {
             urlAppend += "\(UsergridQuery.CURSOR)=\(cursorString)"
         }
         
-        var requirementsString = self.constructRequirementString()
+        var requirementsString = UsergridQuery.SELECT_ALL + UsergridQuery.SPACE + self.constructRequirementString()
         let orderByString = self.constructOrderByString()
         if !orderByString.isEmpty {
             requirementsString += orderByString
@@ -577,6 +577,7 @@ public class UsergridQuery : NSObject,NSCopying {
     private static let ORDER_BY = "order by"
     private static let QL = "ql"
     private static let QUESTION_MARK = "?"
+    private static let SELECT_ALL = "select *"
     private static let SPACE = " "
     private static let WITHIN = "within"
     
