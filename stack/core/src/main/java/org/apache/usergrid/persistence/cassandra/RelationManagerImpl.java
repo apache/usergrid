@@ -58,6 +58,7 @@ import org.apache.usergrid.persistence.query.ir.result.CollectionSearchVisitorFa
 import org.apache.usergrid.persistence.query.ir.result.ConnectionResultsLoaderFactory;
 import org.apache.usergrid.persistence.query.ir.result.ConnectionSearchVisitorFactory;
 import org.apache.usergrid.persistence.query.ir.result.ConnectionTypesIterator;
+import org.apache.usergrid.persistence.query.ir.result.ScanColumn;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.IndexUtils;
 import org.apache.usergrid.utils.MapUtils;
@@ -1676,7 +1677,7 @@ public class RelationManagerImpl implements RelationManager {
             }
             em.delete( itemRef );
             return;
-        }
+    }
 
         Entity itemEntity = em.get( itemRef );
 
@@ -1790,6 +1791,36 @@ public class RelationManagerImpl implements RelationManager {
         //        SearchCollectionVisitor visitor = new SearchCollectionVisitor( this, qp );
 
         return qp.getResults( collectionSearchVisitorFactory );
+    }
+
+
+    public List<ScanColumn> searchRawCollection( String collectionName, Query query ) throws Exception {
+        if ( query == null ) {
+            query = new Query();
+        }
+
+        headEntity = em.validate( headEntity );
+
+        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collectionName );
+
+        query.setEntityType( collection.getType() );
+
+        final CollectionResultsLoaderFactory factory = new CollectionResultsLoaderFactory();
+
+        // we have something to search with, visit our tree and evaluate the
+        // results
+        QueryProcessor qp = new QueryProcessor( em, executorService, query, collection, factory );
+
+        CollectionSearchVisitorFactory collectionSearchVisitorFactory =
+                new CollectionSearchVisitorFactory( cass, indexBucketLocator, qp, applicationId, headEntity,
+                        collectionName );
+        //        SearchCollectionVisitor visitor = new SearchCollectionVisitor( this, qp );
+
+        return qp.getRawColumnResults( collectionSearchVisitorFactory );
+    }
+
+    public EntityRef returnHeadEntity(){
+        return headEntity;
     }
 
 
