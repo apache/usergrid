@@ -533,7 +533,7 @@ public class CpEntityManager implements EntityManager {
 
             // queue up an event to clean-up older versions than this one from the index
             if (entityManagerFig.getDeindexOnUpdate()) {
-                indexService.queueDeIndexOldVersion( applicationScope, entityId );
+                indexService.queueDeIndexOldVersion( applicationScope, cpEntity.getId(), cpEntity.getVersion());
             }
         }
     }

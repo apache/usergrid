@@ -38,4 +38,9 @@ public interface LockManager {
      * @throws UGLockException if the lock cannot be acquired
      */
     public Lock createLock( final UUID applicationId, final String... path );
+
+    /**
+     * Setup lock persistence mechanism.
+     */
+    public void setup();
 }

@@ -21,12 +21,12 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.index.impl.IndexOperation;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -78,9 +78,11 @@ public interface EventBuilder {
      * Find all versions of the entity older than the latest and de-index them.
      * @param applicationScope
      * @param entityId
+     * @param markedVersion
      * @return
      */
-    Observable<IndexOperationMessage> deIndexOlderVersions(ApplicationScope applicationScope, Id entityId );
+    Observable<IndexOperationMessage> deIndexOldVersions( ApplicationScope applicationScope,
+                                                          Id entityId, UUID markedVersion );
 
     /**
      * A bean to hold both our observables so the caller can choose the subscription mechanism.  Note that

@@ -27,7 +27,9 @@ import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.model.field.DistanceField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
+import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.Field;
+import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,9 +52,9 @@ import rx.Observable;
 
 
 /**
- * Loads entities from an incoming CandidateResult emissions into entities, then streams them on
- * performs internal buffering for efficiency.  Note that all entities may not be emitted if our load crosses page boundaries.  It is up to the
- * collector to determine when to stop streaming entities.
+ * Loads entities from an incoming CandidateResult emissions into entities, then streams them on performs internal
+ * buffering for efficiency.  Note that all entities may not be emitted if our load crosses page boundaries.
+ * It is up to the collector to determine when to stop streaming entities.
  */
 public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate>, FilterResult<Entity>> {
 
@@ -91,11 +93,12 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
 
-        final EntityIndex applicationIndex =
-            entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
+        final EntityIndex applicationIndex = entityIndexFactory
+            .createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
         //buffer them to get a page size we can make 1 network hop
-        final Observable<FilterResult<Entity>> searchIdSetObservable = candidateResultsObservable.buffer( pipelineContext.getLimit() )
+        final Observable<FilterResult<Entity>> searchIdSetObservable =
+            candidateResultsObservable.buffer( pipelineContext.getLimit() )
 
             //load them
             .flatMap( candidateResults -> {
@@ -123,12 +126,26 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                                 if (mappings.size() > 0) {
                                     Map<String,Field> fieldMap = new HashMap<String, Field>(mappings.size());
                                     rx.Observable.from(mappings)
-                                        .filter(mapping -> entity.getFieldMap().containsKey(mapping.getSourceFieldName()))
+
+                                        .filter(mapping -> {
+                                            if ( entity.getFieldMap().containsKey(mapping.getSourceFieldName())) {
+                                                return true;
+                                            }
+                                            String[] parts = mapping.getSourceFieldName().split("\\.");
+                                            return nestedFieldCheck( parts, entity.getFieldMap() );
+                                        })
+
                                         .doOnNext(mapping -> {
                                             Field field = entity.getField(mapping.getSourceFieldName());
-                                            field.setName(mapping.getTargetFieldName());
-                                            fieldMap.put(mapping.getTargetFieldName(),field);
-                                        }).toBlocking().last();
+                                            if ( field != null ) {
+                                                field.setName( mapping.getTargetFieldName() );
+                                                fieldMap.put( mapping.getTargetFieldName(), field );
+                                            } else {
+                                                String[] parts = mapping.getSourceFieldName().split("\\.");
+                                                nestedFieldSet( fieldMap, parts, entity.getFieldMap() );
+                                            }
+                                        }).toBlocking().lastOrDefault(null);
+
                                     entity.setFieldMap(fieldMap);
                                 }
                                 return entityFilterResult;
@@ -144,10 +161,65 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
     }
 
 
+    /**
+     * Sets field in result map with support for nested fields via recursion.
+     *
+     * @param result The result map of filtered fields
+     * @param parts The parts of the field name (more than one if field is nested)
+     * @param fieldMap Map of fields of the object
+     */
+    private void nestedFieldSet( Map<String, Field> result, String[] parts, Map<String, Field> fieldMap) {
+        if ( parts.length > 0 ) {
+
+            if ( fieldMap.containsKey( parts[0] )) {
+                Field field = fieldMap.get( parts[0] );
+                if ( field instanceof EntityObjectField ) {
+                    EntityObjectField eof = (EntityObjectField)field;
+                    result.putIfAbsent( parts[0], new EntityObjectField( parts[0], new EntityObject() ) );
+
+                    // recursion
+                    nestedFieldSet(
+                        ((EntityObjectField)result.get( parts[0] )).getValue().getFieldMap(),
+                        Arrays.copyOfRange(parts, 1, parts.length),
+                        eof.getValue().getFieldMap());
+
+                } else {
+                    result.put( parts[0], field );
+                }
+            }
+        }
+    }
 
 
     /**
-     * Our collector to collect entities.  Not quite a true collector, but works within our operational flow as this state is mutable and difficult to represent functionally
+     * Check to see if field should be included in filtered result with support for nested fields via recursion.
+     *
+     * @param parts The parts of the field name (more than one if field is nested)
+     * @param fieldMap Map of fields of the object
+     */
+    private boolean nestedFieldCheck( String[] parts, Map<String, Field> fieldMap) {
+        if ( parts.length > 0 ) {
+
+            if ( fieldMap.containsKey( parts[0] )) {
+                Field field = fieldMap.get( parts[0] );
+                if ( field instanceof EntityObjectField ) {
+                    EntityObjectField eof = (EntityObjectField)field;
+
+                    // recursion
+                    return nestedFieldCheck( Arrays.copyOfRange(parts, 1, parts.length), eof.getValue().getFieldMap());
+
+                } else {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    /**
+     * Our collector to collect entities.  Not quite a true collector, but works within our operational
+     * flow as this state is mutable and difficult to represent functionally
      */
     private static final class EntityVerifier {
 

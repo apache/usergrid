@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.apache.usergrid.rest.test.resource.model.Collection;
@@ -34,6 +35,7 @@ import javax.ws.rs.ClientErrorException;
 import java.io.IOException;
 import java.util.*;
 
+import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.*;
 
 
@@ -1057,4 +1059,49 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
 
     }
+
+
+    @Test
+    public void testBeingAbleToRetreiveMigratedValues() throws Exception {
+
+
+        Entity notifier = new Entity().chainPut("name", "mynotifier").chainPut("provider", "noop");
+
+        ApiResponse notifierNode = this.pathResource(getOrgAppPath("notifier")).post(ApiResponse.class,notifier);
+
+        // create user
+
+        Map payloads = new HashMap<>(  );
+        payloads.put( "mynotifier","hello world" );
+
+        Map statistics = new HashMap<>(  );
+        statistics.put( "sent",1 );
+        statistics.put( "errors",2 );
+
+        Entity payload = new Entity();
+        payload.put("debug", false);
+        payload.put( "expectedCount",0 );
+        payload.put( "finished",1438279671229L);
+        payload.put( "payloads",payloads);
+        payload.put( "priority","normal");
+        payload.put( "state","FINISHED");
+        payload.put( "statistics",statistics);
+
+
+        this.app().collection("notifications/"+ UUIDUtils.newTimeUUID()).post(payload );
+        this.refreshIndex();
+
+        Collection user2 = this.app().collection("notifications").get();
+
+        assertEquals(1,user2.getNumOfEntities());
+
+        this.app().collection("notifications/"+ UUIDUtils.newTimeUUID()).put(null,payload );
+        this.refreshIndex();
+
+        user2 = this.app().collection("notifications").get();
+
+        assertEquals(2,user2.getNumOfEntities());
+
+    }
+
 }
