@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -461,4 +462,101 @@ public class IndexIT extends AbstractCoreIT {
 
 
     }
+
+    @Test
+    public void testSelectMappings() throws Exception {
+
+        UUID applicationId = app.getId();
+
+        EntityManager em = setup.getEmf().getEntityManager(applicationId);
+
+        Map<String, Object> entity1 = new HashMap<String, Object>() {{
+            put("name","name_1");
+            put("status", "pickled");
+            put("data", new HashMap() {{
+                put("xfactor", 5.1);
+                put("rando", "bar");
+                put("mondo", "2000");
+                put("frosting", "chocolate");
+                put("misc", new HashMap() {{
+                    put("range", "open");
+                }});
+            }});
+        }};
+        em.create("names", entity1);
+
+        Map<String, Object> entity2 = new HashMap<String, Object>() {{
+            put("name","name_2");
+            put("status", "pickled");
+            put("data", new HashMap() {{
+                put("xfactor", 5.1);
+                put("rando", "bar");
+                put("mondo", "2001");
+                put("frosting", "orange");
+                put("misc", new HashMap() {{
+                    put("range", "open");
+                }});
+            }});
+        }};
+        em.create("names", entity2);
+
+        app.refreshIndex();
+
+        // simple single-field select mapping
+        {
+            Query query = Query.fromQL("select status where status = 'pickled'");
+            Results r = em.searchCollection( em.getApplicationRef(), "names", query );
+            assertTrue(r.getEntities() != null && r.getEntities().size() == 2);
+            Entity first =  r.getEntities().get(0);
+            assertTrue(first.getDynamicProperties().size() == 2);
+        }
+
+        // simple single-field plus nested field select mapping
+        {
+            Query query = Query.fromQL( "select status, data.rando where data.rando = 'bar'" );
+            Results r = em.searchCollection( em.getApplicationRef(), "names", query );
+            assertTrue( r.getEntities() != null && r.getEntities().size() == 2 );
+
+            Entity first = r.getEntities().get( 0 );
+
+            assertNotNull( first.getProperty("status") );
+            assertEquals( first.getProperty("status"), "pickled" );
+
+            assertNotNull( first.getProperty("data") );
+            assertEquals( ((Map<String, Object>)first.getProperty("data")).get("rando"), "bar" );
+
+            assertTrue( first.getDynamicProperties().size() == 3 );
+        }
+
+        // multiple nested fields with one doubly-nested field
+        {
+            Query query = Query.fromQL( "select data.rando, data.mondo, data.misc.range where status = 'pickled'" );
+            Results r = em.searchCollection( em.getApplicationRef(), "names", query );
+            assertTrue( r.getEntities() != null && r.getEntities().size() == 2 );
+
+            Entity first = r.getEntities().get( 0 );
+
+            Map<String, Object> data = ((Map<String, Object>)first.getProperty("data"));
+            assertNotNull( data );
+            assertEquals( data.get("rando"), "bar" );
+            assertEquals( data.get("mondo"), "2001" );
+            assertNull( data.get("frosting") );
+
+            Map<String, Object> misc = (Map<String, Object>)data.get("misc");
+            assertEquals( misc.get("range"), "open" );
+
+            assertTrue( first.getDynamicProperties().size() == 2 );
+        }
+
+        //  query for one bogus field name should return empty entities
+        {
+            Query query = Query.fromQL( "select data.bogusfieldname where status = 'pickled'" );
+            Results r = em.searchCollection( em.getApplicationRef(), "names", query );
+            assertTrue( r.getEntities() != null && r.getEntities().size() == 2 );
+            Entity first = r.getEntities().get( 0 );
+            assertTrue( first.getDynamicProperties().size() == 1 );
+        }
+
+    }
+
 }

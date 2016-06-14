@@ -40,12 +40,6 @@ public class CursorSerializerUtil {
 
     private static final ObjectMapper MAPPER = new ObjectMapper( SMILE_FACTORY );
 
-    /**
-     * Aritrary number, just meant to keep us from having a DOS issue
-     */
-    private static final int MAX_SIZE = 1024;
-
-
     public static ObjectMapper getMapper() {
         return MAPPER;
     }
@@ -74,9 +68,6 @@ public class CursorSerializerUtil {
      * Parse the base64 encoded binary string
      */
     public static JsonNode fromString( final String base64EncodedJson ) {
-
-        Preconditions.checkArgument( base64EncodedJson.length() <= MAX_SIZE,
-            "Your cursor must be less than " + MAX_SIZE + " chars in length" );
 
         final byte[] data = Base64.getUrlDecoder().decode( base64EncodedJson );
 

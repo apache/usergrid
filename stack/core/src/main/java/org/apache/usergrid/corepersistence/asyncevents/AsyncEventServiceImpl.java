@@ -584,11 +584,11 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
 
     @Override
-    public void queueDeIndexOldVersion(final ApplicationScope applicationScope, final Id entityId) {
+    public void queueDeIndexOldVersion(final ApplicationScope applicationScope, final Id entityId, UUID markedVersion) {
 
         // queue the de-index of old versions to the topic so cleanup happens in all regions
         offerTopic( new DeIndexOldVersionsEvent( queueFig.getPrimaryRegion(),
-            new EntityIdScope( applicationScope, entityId)) );
+            new EntityIdScope( applicationScope, entityId), markedVersion) );
 
     }
 
@@ -596,10 +596,11 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     public IndexOperationMessage handleDeIndexOldVersionEvent ( final DeIndexOldVersionsEvent deIndexOldVersionsEvent){
 
 
-        ApplicationScope applicationScope = deIndexOldVersionsEvent.getEntityIdScope().getApplicationScope();
-        Id entityId = deIndexOldVersionsEvent.getEntityIdScope().getId();
+        final ApplicationScope applicationScope = deIndexOldVersionsEvent.getEntityIdScope().getApplicationScope();
+        final Id entityId = deIndexOldVersionsEvent.getEntityIdScope().getId();
+        final UUID markedVersion = deIndexOldVersionsEvent.getMarkedVersion();
 
-        return eventBuilder.deIndexOlderVersions( applicationScope, entityId )
+        return eventBuilder.deIndexOldVersions( applicationScope, entityId, markedVersion )
             .toBlocking().lastOrDefault(null);
 
 

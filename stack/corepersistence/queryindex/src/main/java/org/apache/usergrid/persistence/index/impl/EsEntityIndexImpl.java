@@ -533,7 +533,9 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
 
     @Override
-    public CandidateResults getAllEntityVersionsBeforeMarkedVersion( final Id entityId, final UUID markedVersion ) {
+    public CandidateResults getNodeDocsOlderThanMarked(final Id entityId, final UUID markedVersion ) {
+
+        // TODO: investigate if functionality via iterator so a caller can page the deletion until all is gone
 
         Preconditions.checkNotNull( entityId, "entityId cannot be null" );
         Preconditions.checkNotNull(markedVersion, "markedVersion cannot be null");
@@ -544,12 +546,8 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         final long markedTimestamp = markedVersion.timestamp();
 
-        // never let the limit be less than 2 as there are potential indefinite paging issues
-        final int searchLimit = Math.max(2, indexFig.getVersionQueryLimit());
-
-        // this query will find the document for the entity itself
-        final QueryBuilder entityQuery = QueryBuilders
-            .termQuery(IndexingUtils.ENTITY_ID_FIELDNAME, IndexingUtils.entityId(entityId));
+        // never let this fetch more than 100 to save memory
+        final int searchLimit = Math.min(100, indexFig.getVersionQueryLimit());
 
         // this query will find all the documents where this entity is a source/target node
         final QueryBuilder nodeQuery = QueryBuilders
@@ -562,49 +560,25 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
             long queryTimestamp = 0L;
 
-            while(true){
+            QueryBuilder timestampQuery =  QueryBuilders
+                .rangeQuery(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME)
+                .gte(queryTimestamp)
+                .lt(markedTimestamp);
 
-                QueryBuilder timestampQuery =  QueryBuilders
-                    .rangeQuery(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME)
-                    .gte(queryTimestamp)
-                    .lte(markedTimestamp);
+            QueryBuilder finalQuery = QueryBuilders
+                .boolQuery()
+                .must(timestampQuery)
+                .must(nodeQuery);
 
-                QueryBuilder entityQueryWithTimestamp = QueryBuilders
-                    .boolQuery()
-                    .must(entityQuery)
-                    .must(timestampQuery);
-
-                QueryBuilder finalQuery = QueryBuilders
-                    .boolQuery()
-                    .should(entityQueryWithTimestamp)
-                    .should(nodeQuery)
-                    .minimumNumberShouldMatch(1);
-
-                searchResponse = srb
-                    .setQuery(finalQuery)
-                    .setSize(searchLimit)
-                    .execute()
-                    .actionGet();
-
-                int responseSize = searchResponse.getHits().getHits().length;
-                if(responseSize == 0){
-                    break;
-                }
-
-                candidates = aggregateScrollResults(candidates, searchResponse, markedVersion);
-
-                // update queryTimestamp to be the timestamp of the last entity returned from the query
-                queryTimestamp = (long) searchResponse
-                    .getHits().getAt(responseSize - 1)
-                    .getSource().get(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME);
+            searchResponse = srb
+                .setQuery(finalQuery)
+                .setSize(searchLimit)
+                .execute()
+                .actionGet();
 
 
-                if(responseSize < searchLimit){
+            candidates = aggregateScrollResults(candidates, searchResponse, markedVersion);
 
-                    break;
-                }
-
-            }
         }
         catch ( Throwable t ) {
             logger.error( "Unable to communicate with Elasticsearch", t.getMessage() );

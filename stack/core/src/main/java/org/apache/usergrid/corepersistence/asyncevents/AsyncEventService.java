@@ -27,6 +27,8 @@ import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+import java.util.UUID;
+
 
 /**
  * Low level queue service for events in the entity.  These events are fire and forget, and will always be asynchronous
@@ -83,11 +85,11 @@ public interface AsyncEventService extends ReIndexAction {
     void queueIndexOperationMessage( final IndexOperationMessage indexOperationMessage );
 
     /**
-     *
      * @param applicationScope
      * @param entityId
+     * @param markedVersion
      */
-    void queueDeIndexOldVersion(final ApplicationScope applicationScope, final Id entityId);
+    void queueDeIndexOldVersion(final ApplicationScope applicationScope, final Id entityId, UUID markedVersion);
 
     /**
      * current queue depth
