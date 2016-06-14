@@ -56,12 +56,6 @@ public class Realm extends AuthorizingRealm {
     private TokenService tokens;
 
 
-    @Value( "${" + PROPERTIES_SYSADMIN_LOGIN_ALLOWED + "}" )
-    private boolean superUserEnabled;
-    @Value( "${" + AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_NAME + ":admin}" )
-    private String superUser;
-
-
     public Realm() {
         setCredentialsMatcher(new AllowAllCredentialsMatcher());
         setPermissionResolver(new CustomPermissionResolver());
