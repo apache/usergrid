@@ -129,17 +129,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
         this.collectionService = injector.getInstance( CollectionService.class );
         this.connectionService = injector.getInstance( ConnectionService.class );
-
         this.collectionSettingsCacheFactory = injector.getInstance( CollectionSettingsCacheFactory.class );
+
+        Properties properties = cassandraService.getProperties();
+        this.entityManagers = createEntityManagerCache( properties );
 
         AkkaFig akkaFig = injector.getInstance( AkkaFig.class );
 
-        // this line always needs to be last due to the temporary cicular dependency until spring is removed
-        this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
-            getManagementEntityManager() );
+
+        logger.info("EntityManagerFactoring starting...");
 
         if ( akkaFig.getAkkaEnabled() ) {
             try {
+                logger.info("Akka cluster starting...");
                 this.uniqueValuesService = injector.getInstance( UniqueValuesService.class );
                 this.uniqueValuesService.start();
             } catch (Throwable t) {
@@ -149,9 +151,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
         this.lockManager = injector.getInstance( LockManager.class );
 
-        Properties properties = cassandraService.getProperties();
 
-        entityManagers = createEntityManagerCache( properties );
+
+        // this line always needs to be last due to the temporary cicular dependency until spring is removed
+        this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
+            getManagementEntityManager() );
 
         checkManagementApp( properties );
     }
