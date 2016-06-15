@@ -61,7 +61,7 @@ public class ApplicationQueueManagerCache{
         }
 
         this.cache = CacheBuilder.newBuilder()
-            .maximumSize(Math.max(1000,configuredMaxSize))
+            .maximumSize(Math.min(1000,configuredMaxSize))
             .expireAfterWrite(ttl, TimeUnit.MINUTES)
             .removalListener(new RemovalListener<UUID, ApplicationQueueManager>() {
                 @Override

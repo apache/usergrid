@@ -192,6 +192,10 @@ public class UsersResource extends ServiceResource {
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> json = mapper.readValue( body, mapTypeReference );
 
+        if ( "me".equals( json.get("username") ) ) {
+            throw new IllegalArgumentException( "Username 'me' is reserved" );
+        }
+
         User user = getUser();
         if ( user == null ) {
             return executePost( ui, body, callback );
@@ -233,6 +237,11 @@ public class UsersResource extends ServiceResource {
 
         if ( json instanceof Map ) {
             @SuppressWarnings("unchecked") Map<String, Object> map = ( Map<String, Object> ) json;
+
+            if ( "me".equals( map.get("username") ) ) {
+                throw new IllegalArgumentException( "Username 'me' is reserved" );
+            }
+
             password = ( String ) map.get( "password" );
             map.remove( "password" );
             pin = ( String ) map.get( "pin" );
