@@ -39,6 +39,8 @@ import org.apache.usergrid.services.ServiceResults;
 import com.google.common.collect.BiMap;
 import rx.Observable;
 
+import javax.ws.rs.core.UriInfo;
+
 
 public interface ManagementService {
 
@@ -268,7 +270,9 @@ public interface ManagementService {
 
 	boolean verifyAdminUserPassword( UUID userId, String password ) throws Exception;
 
-	UserInfo verifyAdminUserPasswordCredentials( String name, String password ) throws Exception;
+	UserInfo verifyAdminUserPasswordCredentialsOnly( String name, String password ) throws Exception;
+
+	UserInfo verifyAdminUserPasswordCredentials( String name, String password, UriInfo uriInfo ) throws Exception;
 
 	UserInfo verifyMongoCredentials( String name, String nonce, String key ) throws Exception;
 
