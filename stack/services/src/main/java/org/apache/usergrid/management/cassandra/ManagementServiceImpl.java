@@ -27,7 +27,6 @@ import com.google.inject.Injector;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.shiro.UnavailableSecurityManagerException;
-import org.apache.shiro.authc.ExcessiveAttemptsException;
 import org.apache.usergrid.corepersistence.service.AggregationService;
 import org.apache.usergrid.corepersistence.service.AggregationServiceFactory;
 import org.apache.usergrid.corepersistence.service.ApplicationService;
@@ -77,7 +76,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import rx.Observable;
 
-import javax.ws.rs.core.UriInfo;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.Map.Entry;
@@ -359,13 +357,13 @@ public class ManagementServiceImpl implements ManagementService {
             logger.warn( "Test app creation disabled" );
         }
 
-        if ( superuserShouldBeProvisioned() ) {
+        if ( superuserEnabled() ) {
             provisionSuperuser();
         }
     }
 
 
-    public boolean superuserShouldBeProvisioned() {
+    public boolean superuserEnabled() {
         boolean superuser_enabled = getBooleanProperty( PROPERTIES_SYSADMIN_LOGIN_ALLOWED );
         String superuser_username = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_NAME );
         String superuser_email = properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL );
@@ -1349,27 +1347,10 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public UserInfo verifyAdminUserPasswordCredentials( String name, String password, UriInfo uriInfo ) throws Exception {
-        // uriInfo should not be null
-        Preconditions.checkArgument(uriInfo != null, "uriInfo parameter should not be null");
-
-        return verifyAdminUserPasswordCredentialsInternal(name, password, uriInfo);
-    }
-
-
-    @Override
-    public UserInfo verifyAdminUserPasswordCredentialsOnly( String name, String password ) throws Exception {
-        return verifyAdminUserPasswordCredentialsInternal(name, password, null);
-    }
-
-
-    private UserInfo verifyAdminUserPasswordCredentialsInternal( String name, String password, UriInfo uriInfo)
-            throws Exception {
-
-        // null UriInfo means assume not a localhost request
+    public UserInfo verifyAdminUserPasswordCredentials( String name, String password ) throws Exception {
 
         if(logger.isTraceEnabled()){
-            logger.trace("verifyAdminUserPasswordCredentialsInternal for {}", name);
+            logger.trace("verifyAdminUserPasswordCredentials for {}", name);
         }
 
         User user = findUserEntity( smf.getManagementAppId(), name );
@@ -1380,8 +1361,7 @@ public class ManagementServiceImpl implements ManagementService {
         if ( verify( smf.getManagementAppId(), user.getUuid(), password ) ) {
             UserInfo userInfo = getUserInfo( smf.getManagementAppId(), user );
 
-            boolean userIsSuperAdmin =
-                    properties.getSuperUser().isEnabled(uriInfo != null ? uriInfo.getBaseUri().getHost() : null)
+            boolean userIsSuperAdmin = properties.getSuperUser().isEnabled()
                 && properties.getSuperUser().getEmail().equals(userInfo.getEmail());
 
             boolean testUserEnabled = parseBoolean( properties.getProperty( PROPERTIES_SETUP_TEST_ACCOUNT ) );
@@ -1654,7 +1634,7 @@ public class ManagementServiceImpl implements ManagementService {
         Map<UUID, String> organizations;
 
         AccountCreationProps.SuperUser superUser = properties.getSuperUser();
-        if ( superUser.isEnabled(null) && superUser.getUsername().equals( user.getUsername() ) ) {
+        if ( superUser.isEnabled() && superUser.getUsername().equals( user.getUsername() ) ) {
             int maxOrganizations = this.getAccountCreationProps().getMaxOrganizationsForSuperUserLogin();
             organizations = buildOrgBiMap( getOrganizations( null, maxOrganizations ) );
         }

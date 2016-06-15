@@ -220,7 +220,7 @@ public class ManagementResource extends AbstractContextResource {
                 // do checking for different grant types
                 if ( GrantType.PASSWORD.toString().equals( grant_type ) ) {
                     try {
-                        user = management.verifyAdminUserPasswordCredentials( username, password, ui );
+                        user = management.verifyAdminUserPasswordCredentials( username, password );
 
                         if ( user != null ) {
                             if (logger.isTraceEnabled()) {
@@ -438,7 +438,7 @@ public class ManagementResource extends AbstractContextResource {
 
             UserInfo user = null;
             try {
-                user = management.verifyAdminUserPasswordCredentials( username, password, ui );
+                user = management.verifyAdminUserPasswordCredentials( username, password );
             }
             catch ( Exception e1 ) {
                 // intentionally empty
