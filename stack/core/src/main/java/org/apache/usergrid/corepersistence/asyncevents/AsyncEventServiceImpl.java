@@ -355,9 +355,12 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                     throw new Exception("Unknown EventType for message: "+ message.getStringBody().trim());
                 }
 
-                if( single.isEmpty() ){
-                    logger.warn("No index operation messages came back from event processing for msg {} ",
-                        message.getStringBody().trim());
+
+                if( !(event instanceof ElasticsearchIndexEvent)
+                    && !(event instanceof InitializeApplicationIndexEvent)
+                      && single.isEmpty() ){
+                        logger.warn("No index operation messages came back from event processing for msg: {} ",
+                            message.getStringBody().trim());
                 }
 
 
