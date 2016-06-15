@@ -117,6 +117,11 @@ public class UserResource extends ServiceResource {
         Map<String, Object> json = mapper.readValue( body, mapTypeReference );
 
         if ( json != null ) {
+
+            if ( "me".equals( json.get("username") ) ) {
+                throw new IllegalArgumentException( "Username 'me' is reserved" );
+            }
+
             json.remove( "password" );
             json.remove( "pin" );
         }
@@ -223,6 +228,10 @@ public class UserResource extends ServiceResource {
 
         if ( json == null ) {
             return null;
+        }
+
+        if ( "me".equals( json.get("username") ) ) {
+            throw new IllegalArgumentException( "Username 'me' is reserved" );
         }
 
         ApiResponse response = createApiResponse();

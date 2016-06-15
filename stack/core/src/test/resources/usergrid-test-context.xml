@@ -55,5 +55,6 @@
     <bean id="coreManager" class="org.apache.usergrid.persistence.CoreSchemaManager">
         <constructor-arg ref="setup"/>
         <constructor-arg ref="cassandraCluster"/>
+        <constructor-arg ref="injector"/>
     </bean>
 </beans>

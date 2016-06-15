@@ -96,7 +96,7 @@ public class Cli extends ToolBase {
                 applicationId = UUIDUtils.tryExtractUUID( s );
                 if ( applicationId == null ) {
                     try {
-                        applicationId = emf.lookupApplication( s.trim() ).get();
+                        applicationId = emf.lookupApplication( s.trim() );
                     }
                     catch ( Exception e ) {
                     }

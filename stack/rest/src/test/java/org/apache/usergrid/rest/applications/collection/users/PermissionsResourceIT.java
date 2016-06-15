@@ -17,21 +17,25 @@
 package org.apache.usergrid.rest.applications.collection.users;
 
 
-import java.util.List;
-import java.util.UUID;
-
 import net.jcip.annotations.NotThreadSafe;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.*;
-import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import org.apache.usergrid.utils.UUIDUtils;
-
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 
@@ -41,6 +45,7 @@ import static org.junit.Assert.*;
  */
 @NotThreadSafe
 public class PermissionsResourceIT extends AbstractRestIT {
+    private static final Logger logger = LoggerFactory.getLogger(PermissionsResourceIT.class);
 
     private static final String ROLE = "permtestrole";
 
@@ -562,18 +567,19 @@ public class PermissionsResourceIT extends AbstractRestIT {
      * @throws IOException
      */
     private void addPermission(  String rolename, String grant ) throws IOException {
-        //Create and post the permissions
+
+        // Create and post the permissions
         Entity props = new Entity().chainPut("permission", grant);
 
         this.app().collection("roles").entity(rolename).collection("permissions").post(props);
 
-        //Checks that the permissions were added correctly
+        // Checks that the permissions were added correctly
         Collection node = this.app().collection("roles").entity(rolename).collection("permissions").get();
 
         List<Object> data =(List) node.getResponse().getData();
 
-        for(Object o : data){
-            if(grant.equals(o.toString())){
+        for ( Object o : data ) {
+            if ( grant.equals(o.toString()) ) {
                 return;
             }
         }
@@ -581,5 +587,106 @@ public class PermissionsResourceIT extends AbstractRestIT {
         fail( String.format( "didn't find grant %s in the results", grant ) );
     }
 
+
+    @Test
+    public void testUsersMeAlwaysAvailable() {
+
+        // delete default roles/permissions from app
+
+        app().collection("roles").entity("default").delete();
+
+        // create an app user, get token (and switch context to that of user)
+
+        Token token = null;
+        try {
+            String password = "s3cr3t";
+            Entity newUser = app().collection( "users" ).post(
+                new User( "dave", "Dave Johnson", "dave@example.com", password ) );
+            token = app().token().post(
+                new Token( "password", (String)newUser.get("username") , password ));
+
+        } catch ( Exception e ) {
+            logger.error( "Error creating user and logging in: {}", e);
+        }
+        assertNotNull( token );
+
+        // user cannot post to a collection
+
+        try {
+            Map<String, Object> catMap = new HashMap<String, Object>() {{
+                put("name", "enzo");
+                put("color", "orange");
+            }};
+            app().collection( "cats" ).post( true, token, ApiResponse.class, catMap, null, false );
+            fail("Post should have failed");
+        } catch ( Exception expected ) {}
+
+        // but the /users/me end-point should work
+
+        Entity me = app().collection( "users" ).entity( "me" ).get();
+        assertNotNull( me );
+
+        try {
+            app().collection( "users" ).entity( "me" ).delete();
+            fail("Delete /users/me must fail");
+        } catch ( Exception expected ) {}
+    }
+
+
+    @Test
+    public void testAppUserNamedMeNotAllowed() {
+
+        // cannot create app user named me
+        try {
+            app().collection( "users" ).post( new User( "me", "it's me", "me@example.com", "me!" ) );
+            fail("Must not be able to create app user named me");
+        } catch ( BadRequestException expected ) {}
+
+        // cannot use update to rename app user to me
+        Entity user = app().collection( "users" ).post( new User( "dave", "Sneaky Me", "me@example.com", "me!" ) );
+        try {
+            app().collection( "users" ).entity( user ).put( new Entity().chainPut( "username", "me" ));
+            fail("Must not be able to update app user to name me");
+
+        } catch ( BadRequestException expected ) {}
+
+    }
+
+
+    @Test
+    public void testAdminUserNamedMeNotAllowed() {
+
+        // cannot create admin user named me
+        try {
+            Form form = new Form();
+            form.param( "username", "me" );
+            form.param( "email", "me@example.com");
+            form.param( "name", "me Me ME!");
+            form.param( "password", "me me 123" );
+            management().users().post( ApiResponse.class, form );
+
+            fail("Must not be able to create admin user named me");
+
+        } catch ( BadRequestException expected ) {}
+
+        // cannot use update to rename admin user to me
+        String randomString = RandomStringUtils.randomAlphanumeric( 10 );
+        String username = "user_" + randomString;
+        String password = "me me 123";
+        Form form = new Form();
+        form.param( "username", username );
+        form.param( "email", username + "@example.com");
+        form.param( "name", "Despicable me");
+        form.param( "password", password );
+        management().users().post( ApiResponse.class, form );
+        management().token().get( username, password );
+
+        try {
+            management().users().user( username ).put( true, new Entity().chainPut( "username", "me" ) );
+            fail("Must not be able to create admin user named me");
+
+        } catch ( BadRequestException e ) {}
+
+    }
 
 }

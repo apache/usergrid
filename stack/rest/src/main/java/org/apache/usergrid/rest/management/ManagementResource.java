@@ -53,6 +53,7 @@ import java.util.Map;
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.*;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_CENTRAL_URL;
 import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
@@ -88,7 +89,6 @@ public class ManagementResource extends AbstractContextResource {
 
     // usergrid configuration property names needed
     public static final String USERGRID_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
-    public static final String USERGRID_CENTRAL_URL =         "usergrid.central.url";
 
     MetricsFactory metricsFactory = null;
 
@@ -220,7 +220,7 @@ public class ManagementResource extends AbstractContextResource {
                 // do checking for different grant types
                 if ( GrantType.PASSWORD.toString().equals( grant_type ) ) {
                     try {
-                        user = management.verifyAdminUserPasswordCredentials( username, password );
+                        user = management.verifyAdminUserPasswordCredentials( username, password, ui );
 
                         if ( user != null ) {
                             if (logger.isTraceEnabled()) {
@@ -438,7 +438,7 @@ public class ManagementResource extends AbstractContextResource {
 
             UserInfo user = null;
             try {
-                user = management.verifyAdminUserPasswordCredentials( username, password );
+                user = management.verifyAdminUserPasswordCredentials( username, password, ui );
             }
             catch ( Exception e1 ) {
                 // intentionally empty

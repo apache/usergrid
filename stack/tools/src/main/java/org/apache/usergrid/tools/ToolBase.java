@@ -17,36 +17,27 @@
 package org.apache.usergrid.tools;
 
 
-import java.util.Properties;
-
+import me.prettyprint.hector.testutils.EmbeddedServerHelper;
+import org.apache.commons.cli.*;
+import org.apache.commons.lang.ClassUtils;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.cassandra.Setup;
+import org.apache.usergrid.services.ServiceManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.apache.usergrid.management.ManagementService;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.cassandra.Setup;
-import org.apache.usergrid.services.ServiceManagerFactory;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang.ClassUtils;
+import java.util.Properties;
 
-import me.prettyprint.hector.testutils.EmbeddedServerHelper;
-
+import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 
 /**
@@ -194,7 +185,8 @@ public abstract class ToolBase {
 
         Setup setup = ( (CpEntityManagerFactory) emf ).getSetup();
         logger.info( "Setting up Usergrid schema" );
-        setup.initSubsystems();
+        setup.initSchema();
+        setup.initMgmtApp();
         logger.info( "Usergrid schema setup" );
 
         logger.info( "Setting up Usergrid management services" );
@@ -252,8 +244,29 @@ public abstract class ToolBase {
 
 
     @Autowired
-    public void setProperties( Properties properties ) {
+    public void setProperties(Properties properties) {
         this.properties = properties;
+
+        logger.info( "Properties set: \n" +
+            "   cassandra.url: {}\n" +
+            "   cassandra.datacenter.local: {}\n" +
+            "   cassandra.username: {}\n" +
+            "   cassandra.password: {}\n" +
+            "   cassandra.keyspace.strategy: {}\n" +
+            "   cassandra.keyspace.application: {}\n" +
+            "   cassandra.lock.keyspace: {}\n" +
+            "   cassandra.keyspace.replication: {}\n" +
+            "   cassandra.connections: {}\n",
+            properties.get("cassandra.url"),
+            properties.get("cassandra.datacenter.local"),
+            properties.get("cassandra.username"),
+            properties.get("cassandra.password"),
+            properties.get("cassandra.keyspace.strategy"),
+            properties.get("cassandra.keyspace.application"),
+            properties.get("cassandra.lock.keyspace"),
+            properties.get("cassandra.keyspace.replication"),
+            properties.get("cassandra.connections")
+        );
     }
 
 
