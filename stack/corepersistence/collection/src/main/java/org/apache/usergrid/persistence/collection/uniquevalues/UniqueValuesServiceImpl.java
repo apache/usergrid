@@ -31,6 +31,7 @@ import akka.util.Timeout;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -52,6 +53,7 @@ import java.util.concurrent.TimeUnit;
 public class UniqueValuesServiceImpl implements UniqueValuesService {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValuesServiceImpl.class );
 
+    private final Injector injector;
     AkkaFig akkaFig;
     UniqueValuesTable table;
     private String hostname;
@@ -78,7 +80,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
 
     @Inject
-    public UniqueValuesServiceImpl( AkkaFig akkaFig, UniqueValuesTable table ) {
+    public UniqueValuesServiceImpl(Injector injector, AkkaFig akkaFig, UniqueValuesTable table ) {
+        this.injector = injector;
         this.akkaFig = akkaFig;
         this.table = table;
 
@@ -155,16 +158,25 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         // Create one actor system with request actor for each region
 
         if ( StringUtils.isEmpty( hostname )) {
-            throw new RuntimeException( "No value specified for akka.hostname");
+            throw new RuntimeException( "No value specified for " + AkkaFig.AKKA_HOSTNAME );
         }
 
         if ( StringUtils.isEmpty( currentRegion )) {
-            throw new RuntimeException( "No value specified for akka.region");
+            throw new RuntimeException( "No value specified for " + AkkaFig.AKKA_REGION );
+        }
+
+        if ( StringUtils.isEmpty( akkaFig.getRegionList() )) {
+            throw new RuntimeException( "No value specified for " + AkkaFig.AKKA_REGION_LIST );
+        }
+
+        if ( StringUtils.isEmpty( akkaFig.getRegionSeeds() )) {
+            throw new RuntimeException( "No value specified for " + AkkaFig.AKKA_REGION_SEEDS);
         }
 
         List regionList = Arrays.asList( akkaFig.getRegionList().toLowerCase().split(",") );
 
-        logger.info("Initializing Akka for hostname {} region {} regionList {}", hostname, currentRegion, regionList);
+        logger.info("Initializing Akka for hostname {} region {} regionList {} seeds {}",
+            hostname, currentRegion, regionList, akkaFig.getRegionSeeds() );
 
         String typesValue = akkaFig.getRegionTypes();
         String[] regionTypes = StringUtils.isEmpty( typesValue ) ? new String[0] : typesValue.split(",");
@@ -230,9 +242,13 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
                 // create cluster singleton supervisor for actor system
                 ClusterSingletonManagerSettings settings =
                         ClusterSingletonManagerSettings.create( system ).withRole("io");
+
+                // Akka.system().actorOf(Props.create(GuiceInjectedActor.class, INJECTOR,Retreiver.class))
+
                 system.actorOf( ClusterSingletonManager.props(
-                        Props.create( ClusterSingletonRouter.class, table ),
-                        PoisonPill.getInstance(), settings ), "uvRouter");
+                    //Props.create( ClusterSingletonRouter.class, table ),
+                    Props.create( GuiceActorProducer.class, injector, ClusterSingletonRouter.class),
+                    PoisonPill.getInstance(), settings ), "uvRouter");
             }
 
             // create proxy for sending messages to singleton
@@ -450,10 +466,12 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         } catch ( UniqueValueException e ) {
 
             for (Field field : entity.getFields()) {
-                try {
-                    cancelUniqueField( scope, entity, version, field, region );
-                } catch (Throwable ignored) {
-                    logger.debug( "Error canceling unique field", ignored );
+                if (field.isUnique()) {
+                    try {
+                        cancelUniqueField( scope, entity, version, field, region );
+                    } catch (Throwable ignored) {
+                        logger.debug( "Error canceling unique field", ignored );
+                    }
                 }
             }
             throw e;
@@ -480,10 +498,12 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         } catch ( UniqueValueException e ) {
 
             for (Field field : entity.getFields()) {
-                try {
-                    cancelUniqueField( scope, entity, version, field, region) ;
-                } catch (Throwable ignored) {
-                    logger.debug( "Error canceling unique field", ignored );
+                if (field.isUnique()) {
+                    try {
+                        cancelUniqueField( scope, entity, version, field, region );
+                    } catch (Throwable ex ) {
+                        logger.error( "Error canceling unique field", ex );
+                    }
                 }
             }
             throw e;
@@ -546,7 +566,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             throw new RuntimeException( "No request actor for type, cannot verify unique fields!" );
         }
 
-        UniqueValueActor.Confirmation request = new UniqueValueActor.Confirmation(
+        UniqueValueActor.Cancellation request = new UniqueValueActor.Cancellation(
             scope, entity.getId(), version, field );
 
         requestActor.tell( request, null );
