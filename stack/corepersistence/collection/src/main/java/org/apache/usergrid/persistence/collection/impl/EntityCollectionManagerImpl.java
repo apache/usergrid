@@ -371,6 +371,15 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                     //bad unique value, delete this, it's inconsistent
                     if ( entity == null || !entity.getEntity().isPresent() ) {
+
+                        if(logger.isTraceEnabled()) {
+                            logger.trace("Unique value [{}={}] does not have corresponding entity, executing " +
+                                "read repair to remove stale unique value entry",
+                                expectedUnique.getField().getName(),
+                                expectedUnique.getField().getValue().toString()
+                            );
+                        }
+
                         final MutationBatch valueDelete =
                             uniqueValueSerializationStrategy.delete( applicationScope, expectedUnique );
 
@@ -389,10 +398,16 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                     deleteBatch.execute();
 
+
                     // optionally sleep after read repair as some tasks immediately try to write after the delete
                     if ( serializationFig.getReadRepairDelay() > 0 ){
 
                         try {
+
+                            if(logger.isTraceEnabled()) {
+                                logger.trace("Sleeping {}ms after unique value read repair execution",
+                                    serializationFig.getReadRepairDelay());
+                            }
 
                             Thread.sleep(Math.min(serializationFig.getReadRepairDelay(), 200L));
 

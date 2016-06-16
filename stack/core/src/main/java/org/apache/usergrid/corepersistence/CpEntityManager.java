@@ -600,6 +600,11 @@ public class CpEntityManager implements EntityManager {
             }
         }
         catch ( WriteUniqueVerifyException wuve ) {
+
+            if(logger.isTraceEnabled()){
+                logger.trace("WriteUniqueVerifyException encountered during update of entity with id {}",
+                    cpEntity.getId().getUuid());
+            }
             handleWriteUniqueVerifyException( entity, wuve );
         }
 
@@ -2824,6 +2829,11 @@ public class CpEntityManager implements EntityManager {
 
         }
         catch ( WriteUniqueVerifyException wuve ) {
+
+            if(logger.isTraceEnabled()){
+                logger.trace("WriteUniqueVerifyException encountered during batchCreate of entity with id {}",
+                    cpEntity.getId().getUuid());
+            }
             handleWriteUniqueVerifyException( entity, wuve );
         }
 
