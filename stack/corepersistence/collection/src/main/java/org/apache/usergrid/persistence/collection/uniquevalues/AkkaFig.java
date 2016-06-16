@@ -24,8 +24,10 @@ import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
+import java.io.Serializable;
+
 @FigSingleton
-public interface AkkaFig extends GuicyFig {
+public interface AkkaFig extends GuicyFig, Serializable {
 
     String AKKA_ENABLED = "collection.akka.enabled";
 
@@ -59,28 +61,24 @@ public interface AkkaFig extends GuicyFig {
      * Hostname to be used in Akka configuration.
      */
     @Key(AKKA_HOSTNAME)
-    @Default("localhost")
     String getHostname();
 
     /**
      * local port to be used in Akka configuration.
      */
     @Key(AKKA_PORT)
-    @Default("2551")
     int getPort();
 
     /**
      * Local region to be used in Akka configuration.
      */
     @Key(AKKA_REGION)
-    @Default("us-east")
     String getRegion();
 
     /**
      * Comma separated list of regions known to cluster.
      */
     @Key(AKKA_REGION_LIST)
-    @Default("us-east")
     String getRegionList();
 
     /**
@@ -95,7 +93,6 @@ public interface AkkaFig extends GuicyFig {
      * Regions MUST be listed in the 'usergrid.queue.regionList'
      */
     @Key(AKKA_REGION_SEEDS)
-    @Default("us-east:localhost:2551")
     String getRegionSeeds();
 
     /**
@@ -103,7 +100,6 @@ public interface AkkaFig extends GuicyFig {
      * Comma-separated lists of region types each with format {region}:{type}
      */
     @Key(AKKA_UNIQUEVALUE_REGION_TYPES)
-    @Default("us-east:user")
     String getRegionTypes();
 
     /**
