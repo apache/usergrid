@@ -39,7 +39,7 @@ public class EntityObject implements Serializable {
     private long size;
 
     // field names are treated in case-insensitive way by design
-    static class CaseInsensitiveComparator implements Comparator<String> {
+    static class CaseInsensitiveComparator implements Comparator<String>, Serializable {
         public int compare(String o1, String o2) {
             return o1.compareToIgnoreCase(o2);
         }
