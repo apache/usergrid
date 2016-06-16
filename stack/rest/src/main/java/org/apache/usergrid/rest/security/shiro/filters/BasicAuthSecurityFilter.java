@@ -25,7 +25,6 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.Provider;
-import java.net.InetAddress;
 import java.security.Principal;
 import java.util.Map;
 
@@ -66,25 +65,11 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
         String sysadmin_login_password = properties.getProperty( "usergrid.sysadmin.login.password" );
         boolean sysadmin_login_allowed =
                 Boolean.parseBoolean( properties.getProperty( "usergrid.sysadmin.login.allowed" ) );
-        boolean sysadmin_localhost_only =
-                Boolean.parseBoolean( properties.getProperty( "usergrid.sysadmin.localhost.only", "false" ) );
-
-        boolean is_localhost = false;
-        try {
-            is_localhost = InetAddress.getByName(request.getUriInfo().getBaseUri().getHost()).isLoopbackAddress();
-        }
-        catch (Exception e) {
-            // won't treat as localhost
-        }
-        boolean password_match = password.equals( sysadmin_login_password );
-        if ( name.equals( sysadmin_login_name ) && (password_match || is_localhost)
-                && sysadmin_login_allowed && (is_localhost || !sysadmin_localhost_only)) {
+        if ( name.equals( sysadmin_login_name ) && password.equals( sysadmin_login_password )
+                && sysadmin_login_allowed ) {
             request.setSecurityContext( new SysAdminRoleAuthenticator() );
             if (logger.isTraceEnabled()) {
                 logger.trace("System administrator access allowed");
-                if (!password_match) {
-                    logger.trace("Allowed sysadmin password mismatch because accessing via localhost");
-                }
             }
         }
     }

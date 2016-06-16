@@ -66,9 +66,9 @@ public class AdminUserPrincipal extends UserPrincipal {
         ApplicationInfo application = null;
 
         boolean superUserEnabled = false;
-        final String sysadminLoginAllowedProp = management.getProperties().getProperty(
+        final String s = management.getProperties().getProperty(
             AccountCreationProps.PROPERTIES_SYSADMIN_LOGIN_ALLOWED);
-        if ( sysadminLoginAllowedProp != null && "true".equalsIgnoreCase(sysadminLoginAllowedProp.trim())) {
+        if ( s != null && "true".equalsIgnoreCase(s.trim())) {
             superUserEnabled = true;
         }
 

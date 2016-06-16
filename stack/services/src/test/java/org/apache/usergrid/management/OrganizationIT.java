@@ -103,7 +103,7 @@ public class OrganizationIT {
 
         setup.getEntityIndex().refresh(CpNamingUtils.MANAGEMENT_APPLICATION_ID);
 
-        UserInfo u = setup.getMgmtSvc().verifyAdminUserPasswordCredentialsOnly(
+        UserInfo u = setup.getMgmtSvc().verifyAdminUserPasswordCredentials(
             organization.getOwner().getUuid().toString(), "test" );
         assertNotNull( u );
 
