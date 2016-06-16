@@ -49,4 +49,13 @@ public final class ByteArrayField extends AbstractField<byte[]> {
     public final FieldTypeName getTypeName() {
         return FieldTypeName.BYTE_ARRAY;
     }
+
+    /**
+     * This type of field is never unique
+     */
+    @Override
+    public boolean isUnique() {
+        return false;
+    }
+
 }

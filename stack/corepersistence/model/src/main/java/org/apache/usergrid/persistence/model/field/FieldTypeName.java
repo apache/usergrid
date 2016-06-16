@@ -18,9 +18,6 @@ package org.apache.usergrid.persistence.model.field;/*
  */
 
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
-
 /**
  * Enum of all field types.  DO NOT change these names, they're used in persistence, and will result in
  * unique checks failing

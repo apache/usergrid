@@ -35,6 +35,13 @@ public final class NullField extends AbstractField<Object>{
     public NullField() {
     }
 
+    /**
+     * This type of field is never unique
+     */
+    @Override
+    public boolean isUnique() {
+        return false;
+    }
 
     @Override
     public final FieldTypeName getTypeName() {
