@@ -29,11 +29,13 @@ public class ReservationCache {
     private static final Logger logger = LoggerFactory.getLogger( RequestActor.class );
 
     Cache<String, UniqueValueActor.Reservation> cache;
+    long ttl;
 
     // use hokey old-style singleton because its not that easy to get Guice into an actor
     private static ReservationCache instance = null;
 
     ReservationCache( long ttl ) {
+        this.ttl = ttl;
         cache = CacheBuilder.newBuilder()
             .maximumSize(1000)
             .concurrencyLevel( 300 )
@@ -54,15 +56,18 @@ public class ReservationCache {
     }
 
     public UniqueValueActor.Reservation get( String rowKey ) {
+        if ( ttl == 0 ) { return null; }
         UniqueValueActor.Reservation res = cache.getIfPresent( rowKey );
         return res;
     }
 
     public void cacheReservation( UniqueValueActor.Reservation reservation ) {
+        if ( ttl == 0 ) { return; }
         cache.put( reservation.getConsistentHashKey(), reservation );
     }
 
     public void cancelReservation( UniqueValueActor.Cancellation cancellation ) {
+        if ( ttl == 0 ) { return; }
         cache.invalidate( cancellation.getConsistentHashKey() );
     }
 

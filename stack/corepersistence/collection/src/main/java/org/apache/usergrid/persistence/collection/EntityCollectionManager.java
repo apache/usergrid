@@ -51,9 +51,10 @@ public interface EntityCollectionManager {
      * @param entityId MarkCommit the entity as deleted.  Will not actually remove it from cassandra.  This operation will
      * also remove all unique properties for this entity
      *
+     * @param region
      * @return The observable of the id after the operation has completed
      */
-    Observable<Id> mark( Id entityId );
+    Observable<Id> mark(Id entityId, String region);
 
     /**
      * @param entityId The entity id to load.

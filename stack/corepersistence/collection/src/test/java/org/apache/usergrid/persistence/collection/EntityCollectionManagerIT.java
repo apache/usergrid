@@ -190,7 +190,7 @@ public class EntityCollectionManagerIT {
 
         assertEquals( "Same value", createReturned, loadReturned );
 
-        manager.mark( createReturned.getId() ).toBlocking().last();
+        manager.mark( createReturned.getId(), null ).toBlocking().last();
 
         loadObservable = manager.load( createReturned.getId() );
 

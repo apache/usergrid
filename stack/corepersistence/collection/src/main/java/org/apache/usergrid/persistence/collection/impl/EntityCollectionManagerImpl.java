@@ -214,14 +214,14 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
     @Override
-    public Observable<Id> mark( final Id entityId ) {
+    public Observable<Id> mark(final Id entityId, String region) {
 
         Preconditions.checkNotNull( entityId, "Entity id is required in this stage" );
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id is required in this stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
-        Observable<Id> o = Observable.just( new CollectionIoEvent<>( applicationScope, entityId ) ).map( markStart )
-            .doOnNext( markCommit ).compose( uniqueCleanup ).map(
+        Observable<Id> o = Observable.just( new CollectionIoEvent<>( applicationScope, entityId, region ) )
+            .map( markStart ).doOnNext( markCommit ).compose( uniqueCleanup ).map(
                 entityEvent -> entityEvent.getEvent().getId() );
 
         return ObservableTimer.time( o, deleteTimer );
