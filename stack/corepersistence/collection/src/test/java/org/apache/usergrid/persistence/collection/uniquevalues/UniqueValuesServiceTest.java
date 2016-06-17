@@ -56,6 +56,10 @@ public class UniqueValuesServiceTest {
 
     private static AtomicBoolean startedAkka = new AtomicBoolean( false );
 
+    int numThreads = 6;
+    int poolSize = 5;
+    int numUsers = 100;
+
     @Before
     public void initAkka() {
         if ( !startedAkka.getAndSet( true ) ) {
@@ -77,7 +81,6 @@ public class UniqueValuesServiceTest {
         final AtomicInteger successCounter = new AtomicInteger( 0 );
         final AtomicInteger errorCounter = new AtomicInteger( 0 );
 
-        int numUsers = 100;
         Multimap<String, Entity> usersCreated =
             generateDuplicateUsers( numUsers, successCounter, errorCounter );
 
@@ -110,12 +113,12 @@ public class UniqueValuesServiceTest {
         Multimap<String, Entity> usersCreated =
                 Multimaps.synchronizedListMultimap( ArrayListMultimap.create() );
 
-        ExecutorService execService = Executors.newFixedThreadPool( 10 );
+        ExecutorService execService = Executors.newFixedThreadPool( poolSize );
 
         for (int i = 0; i < numUsers; i++) {
 
             // multiple threads simultaneously trying to create a user with the same propertyName
-            for (int j = 0; j < 5; j++) {
+            for (int j = 0; j < numThreads; j++) {
                 String username = "user_" + i;
 
                 execService.submit( () -> {

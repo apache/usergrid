@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -35,6 +36,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.net.ConnectException;
 import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
@@ -65,13 +67,13 @@ public class UniqueValuesIT {
     public void testDuplicatePrevention() throws Exception {
 
         int numThreads = 6;
-        int poolsize = 40;
-        int numUsers = 100;
+        int poolSize = 40;
+        int numUsers = 400;
 
         Multimap<String, Form> usersCreated = Multimaps.synchronizedMultimap( HashMultimap.create() );
         Multimap<String, Form> dupsRejected = Multimaps.synchronizedMultimap( HashMultimap.create() );
 
-        ExecutorService execService = Executors.newFixedThreadPool( poolsize );
+        ExecutorService execService = Executors.newFixedThreadPool( poolSize );
 
         Client client = ClientBuilder.newClient();
 
@@ -81,13 +83,14 @@ public class UniqueValuesIT {
 
         final AtomicBoolean failed = new AtomicBoolean(false);
 
-        String randomizer = RandomStringUtils.randomAlphanumeric( 8 );
 
-        String[] targetHosts = {"http://localhost:8080","http://localhost:9090"};
+        String[] targetHosts = {"http://macsnoopdave2013:8080","http://macsnoopdave2010:9090"};
 
         for (int i = 0; i < numUsers; i++) {
 
             if ( failed.get() ) { break; }
+
+            String randomizer = RandomStringUtils.randomAlphanumeric( 8 );
 
             // multiple threads simultaneously trying to create a user with the same propertyName
             for (int j = 0; j < numThreads; j++) {
@@ -100,33 +103,44 @@ public class UniqueValuesIT {
                 execService.submit( () -> {
 
                     Form form = new Form();
-                    form.param( "name", username );
+                    //form.param( "name", username );
                     form.param( "username", username );
-                    form.param( "email", username + "@example.org" );
+                    form.param( "email",
+                        username + RandomStringUtils.randomAlphanumeric( 8 ) + "@example.org" );
                     form.param( "password", "s3cr3t" );
 
                     Timer.Context time = responses.time();
                     try {
                         WebTarget target = client.target( host ).path( "/management/users" );
 
-                        //logger.info("Posting user {} to host {}", propertyName, host);
+                        //logger.info("Posting user {} to host {}", username, host);
 
                         Response response = target.request()
                             .post( Entity.entity( form, MediaType.APPLICATION_FORM_URLENCODED ));
+
+                        String responseAsString = response.readEntity( String.class );
 
                         if ( response.getStatus() == 200 || response.getStatus() == 201 ) {
                             usersCreated.put( username, form );
                             successCounter.incrementAndGet();
 
-                        } else if ( response.getStatus() == 400 ) {
+                        } else if ( response.getStatus() == 400
+                                && responseAsString.contains("DuplicateUniquePropertyExistsException")) {
                             dupsRejected.put( username, form );
                             dupCounter.incrementAndGet();
 
                         } else {
-                            String responseAsString = response.readEntity( String.class );
                             logger.error("User creation failed status {} message {}",
-                                    response.getStatus(), responseAsString );
+                                response.getStatus(), responseAsString );
                             errorCounter.incrementAndGet();
+                        }
+
+                    } catch ( ProcessingException e ) {
+                        errorCounter.incrementAndGet();
+                        if ( e.getCause() instanceof ConnectException ) {
+                            logger.error("Error connecting to " + host);
+                        } else {
+                            logger.error( "Error", e );
                         }
 
                     } catch ( Exception e ) {
