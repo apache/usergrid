@@ -20,7 +20,6 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.cluster.pubsub.DistributedPubSub;
 import akka.cluster.pubsub.DistributedPubSubMediator;
-import com.google.inject.Inject;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -40,13 +39,16 @@ public class UniqueValueActor extends UntypedActor {
 
     final private ActorRef mediator = DistributedPubSub.get(getContext().system()).mediator();
 
+    private final UniqueValuesTable table;
+
     private int count = 0;
 
-    @Inject
-    UniqueValuesTable table;
 
+    public UniqueValueActor() {
 
-    public UniqueValueActor( ) {
+        // TODO: is there a way to avoid this ugly kludge? see also: ClusterSingletonRouter
+        this.table = UniqueValuesServiceImpl.injector.getInstance( UniqueValuesTable.class );
+        logger.info("UniqueValueActor {} is live with table {}", name, table);
     }
 
     @Override
