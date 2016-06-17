@@ -53,7 +53,8 @@ import java.util.concurrent.TimeUnit;
 public class UniqueValuesServiceImpl implements UniqueValuesService {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValuesServiceImpl.class );
 
-    private final Injector injector;
+    static Injector injector;
+
     AkkaFig akkaFig;
     UniqueValuesTable table;
     private String hostname;
@@ -61,7 +62,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     private String currentRegion;
 
     private Map<String, ActorRef> requestActorsByRegion;
-    private Map<String, String> regionsByType = new HashMap<>();
+
+    //private Map<String, String> regionsByType = new HashMap<>();
 
 //    private final MetricRegistry metrics = new MetricRegistry();
 //
@@ -76,19 +78,15 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
     private ReservationCache reservationCache;
 
-    private final boolean disableUniqueValues;
-
 
     @Inject
-    public UniqueValuesServiceImpl(Injector injector, AkkaFig akkaFig, UniqueValuesTable table ) {
-        this.injector = injector;
+    public UniqueValuesServiceImpl(Injector inj, AkkaFig akkaFig, UniqueValuesTable table ) {
+        injector = inj;
         this.akkaFig = akkaFig;
         this.table = table;
 
         ReservationCache.init( akkaFig.getUniqueValueCacheTtl() );
         this.reservationCache = ReservationCache.getInstance();
-
-        this.disableUniqueValues = false;
     }
 
 
@@ -124,9 +122,9 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     }
 
 
-    private Map<String, String> getRegionsByType() {
-        return regionsByType;
-    }
+//    private Map<String, String> getRegionsByType() {
+//        return regionsByType;
+//    }
 
 //    public Counter getDupCounter() {
 //        return dupCounter;
@@ -173,24 +171,28 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             throw new RuntimeException( "No value specified for " + AkkaFig.AKKA_REGION_SEEDS);
         }
 
+        if ( StringUtils.isEmpty( akkaFig.getAkkaAuthoritativeRegion() )) {
+            throw new RuntimeException( "No value specified for " + AkkaFig.AKKA_AUTHORITATIVE_REGION);
+        }
+
         List regionList = Arrays.asList( akkaFig.getRegionList().toLowerCase().split(",") );
 
         logger.info("Initializing Akka for hostname {} region {} regionList {} seeds {}",
             hostname, currentRegion, regionList, akkaFig.getRegionSeeds() );
 
-        String typesValue = akkaFig.getRegionTypes();
-        String[] regionTypes = StringUtils.isEmpty( typesValue ) ? new String[0] : typesValue.split(",");
-        for ( String regionType : regionTypes ) {
-            String[] parts = regionType.toLowerCase().split(":");
-            String typeRegion = parts[0];
-            String type = parts[1];
-
-            if ( !regionList.contains( typeRegion) ) {
-                throw new RuntimeException(
-                    "'collection.akka.region.seeds' references unknown region: " + typeRegion );
-            }
-            this.regionsByType.put( type, typeRegion );
-        }
+//        String typesValue = akkaFig.getRegionTypes();
+//        String[] regionTypes = StringUtils.isEmpty( typesValue ) ? new String[0] : typesValue.split(",");
+//        for ( String regionType : regionTypes ) {
+//            String[] parts = regionType.toLowerCase().split(":");
+//            String typeRegion = parts[0];
+//            String type = parts[1];
+//
+//            if ( !regionList.contains( typeRegion) ) {
+//                throw new RuntimeException(
+//                    "'collection.akka.region.seeds' references unknown region: " + typeRegion );
+//            }
+//            this.regionsByType.put( type, typeRegion );
+//        }
 
         final Map<String, ActorSystem> systemMap = new HashMap<>();
 
@@ -395,11 +397,12 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
                 String clusterRole = currentRegion.equals( region ) ? "io" : "client";
 
                 logger.info( "Config for region {} is:\n" +
-                    "poc Akka Hostname {}\n" +
-                    "poc Akka Seeds {}\n" +
-                    "poc Akka Port {}\n" +
-                    "poc UniqueValueActors per node {}",
-                    region, hostname, seeds, port, numInstancesPerNode );
+                    "   AkkaUV Hostname {}\n" +
+                    "   AkkaUV Seeds {}\n" +
+                    "   AkkaUV Port {}\n" +
+                    "   AkkaUV UniqueValueActors per node {}\n" +
+                    "   AkkaUV Authoritative Region {}",
+                    region, hostname, seeds, port, numInstancesPerNode, akkaFig.getAkkaAuthoritativeRegion() );
 
                 Map<String, Object> configMap = new HashMap<String, Object>() {{
                     put( "akka", new HashMap<String, Object>() {{
@@ -515,15 +518,10 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     private void reserveUniqueField(
         ApplicationScope scope, Entity entity, UUID version, Field field, String region ) throws UniqueValueException {
 
-        final ActorRef requestActor;
-        if ( region != null ) {
-            requestActor = getRequestActorsByRegion().get( region );
-        } else {
-            requestActor = lookupRequestActorForType( entity.getId().getType() );
-        }
+        final ActorRef requestActor = getRequestActorsByRegion().get( region );
 
         if ( requestActor == null ) {
-            throw new RuntimeException( "No request actor for region or type, cannot verify unique fields!" );
+            throw new RuntimeException( "No request actor for region " + region);
         }
 
         UniqueValueActor.Request request = new UniqueValueActor.Reservation(
@@ -544,7 +542,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     private void confirmUniqueField(
         ApplicationScope scope, Entity entity, UUID version, Field field, String region) throws UniqueValueException {
 
-        ActorRef requestActor = lookupRequestActorForType( entity.getId().getType() );
+        final ActorRef requestActor = getRequestActorsByRegion().get( region );
 
         if ( requestActor == null ) {
             throw new RuntimeException( "No request actor for type, cannot verify unique fields!" );
@@ -560,7 +558,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     private void cancelUniqueField(
         ApplicationScope scope, Entity entity, UUID version, Field field, String region ) throws UniqueValueException {
 
-        ActorRef requestActor = lookupRequestActorForType( entity.getId().getType() );
+        final ActorRef requestActor = getRequestActorsByRegion().get( region );
 
         if ( requestActor == null ) {
             throw new RuntimeException( "No request actor for type, cannot verify unique fields!" );
@@ -573,14 +571,14 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     }
 
 
-    private ActorRef lookupRequestActorForType( String type ) {
-        final String region = getRegionsByType().get( type );
-        ActorRef requestActor = getRequestActorsByRegion().get( region == null ? currentRegion : region );
-        if ( requestActor == null ) {
-            throw new RuntimeException( "No request actor available for region: " + region );
-        }
-        return requestActor;
-    }
+//    private ActorRef lookupRequestActorForType( String type ) {
+//        final String region = getRegionsByType().get( type );
+//        ActorRef requestActor = getRequestActorsByRegion().get( region == null ? currentRegion : region );
+//        if ( requestActor == null ) {
+//            throw new RuntimeException( "No request actor available for region: " + region );
+//        }
+//        return requestActor;
+//    }
 
 
     private void sendUniqueValueRequest(

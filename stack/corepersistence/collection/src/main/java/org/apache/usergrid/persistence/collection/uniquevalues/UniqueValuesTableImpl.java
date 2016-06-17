@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.collection.uniquevalues;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
@@ -35,6 +36,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 
+@Singleton
 public class UniqueValuesTableImpl implements UniqueValuesTable {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValuesTableImpl.class );
 
