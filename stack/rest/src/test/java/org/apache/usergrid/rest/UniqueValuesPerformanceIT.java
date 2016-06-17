@@ -63,7 +63,7 @@ public class UniqueValuesPerformanceIT {
     public void testBasicOperation() throws Exception {
 
         int numUsers = 1000;
-        int numThreads = 1000;
+        int numThreads = 100;
         int poolsize = 50;
 
         ExecutorService execService = Executors.newFixedThreadPool( poolsize );
@@ -75,7 +75,7 @@ public class UniqueValuesPerformanceIT {
 
         String randomizer = RandomStringUtils.randomAlphanumeric( 8 );
 
-        String[] targetHosts = {"http://localhost:8080","http://localhost:9090"};
+        String[] targetHosts = {"http://macsnoopdave2013:8080","http://macsnoopdave2010:9090"};
 
         final MetricRegistry metrics = new MetricRegistry();
         final Timer responses = metrics.timer( name( UniqueValuesPerformanceIT.class, "responses" ) );
