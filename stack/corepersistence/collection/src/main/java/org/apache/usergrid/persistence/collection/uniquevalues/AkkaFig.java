@@ -47,8 +47,7 @@ public interface AkkaFig extends GuicyFig, Serializable {
 
     String AKKA_UNIQUEVALUE_RESERVATION_TTL= "collection.akka.uniquevalue.reservation.ttl";
 
-    String AKKA_UNIQUEVALUE_REGION_TYPES = "collection.akka.uniquevalue.region.types";
-
+    String AKKA_AUTHORITATIVE_REGION = "collection.akka.uniquevalue.authoritative.region";
 
     /**
      * Use Akka or nah
@@ -96,11 +95,10 @@ public interface AkkaFig extends GuicyFig, Serializable {
     String getRegionSeeds();
 
     /**
-     * Authoritative regions may be specified for types
-     * Comma-separated lists of region types each with format {region}:{type}
+     * If no region specified for type, use the authoritative region
      */
-    @Key(AKKA_UNIQUEVALUE_REGION_TYPES)
-    String getRegionTypes();
+    @Key(AKKA_AUTHORITATIVE_REGION)
+    String getAkkaAuthoritativeRegion();
 
     /**
      * Unique Value cache TTL in seconds.

@@ -131,7 +131,11 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
 
         // akkaFig may be null when this is called from JUnit tests
         if ( akkaFig != null && akkaFig.getAkkaEnabled() ) {
-            confirmUniqueFieldsAkka( mvccEntity, version, applicationScope, ioEvent.getRegion() );
+            String region = ioEvent.getRegion();
+            if ( region == null ) {
+                region = akkaFig.getAkkaAuthoritativeRegion();
+            }
+            confirmUniqueFieldsAkka( mvccEntity, version, applicationScope, region );
         } else {
             confirmUniqueFields( mvccEntity, version, applicationScope, logMutation );
         }

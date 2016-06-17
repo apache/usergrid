@@ -80,7 +80,9 @@ import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 public class CpEntityManagerFactory implements EntityManagerFactory, ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManagerFactory.class );
+
     private final EntityManagerFig entityManagerFig;
+    private final AkkaFig akkaFig;
 
     private ApplicationContext applicationContext;
 
@@ -123,6 +125,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.injector = injector;
         this.reIndexService = injector.getInstance(ReIndexService.class);
         this.entityManagerFig = injector.getInstance(EntityManagerFig.class);
+        this.akkaFig = injector.getInstance( AkkaFig.class );
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
         this.indexService = injector.getInstance( AsyncEventService.class );
@@ -133,9 +136,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         Properties properties = cassandraService.getProperties();
         this.entityManagers = createEntityManagerCache( properties );
-
-        AkkaFig akkaFig = injector.getInstance( AkkaFig.class );
-
 
         logger.info("EntityManagerFactoring starting...");
 
@@ -354,9 +354,19 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     private EntityManager _getEntityManager( UUID applicationId ) {
 
-        EntityManager em = new CpEntityManager( cassandraService, counterUtils, indexService, managerCache,
-            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService,
-            collectionSettingsCacheFactory, applicationId );
+        EntityManager em = new CpEntityManager(
+            cassandraService,
+            counterUtils,
+            indexService,
+            managerCache,
+            metricsFactory,
+            akkaFig,
+            entityManagerFig,
+            graphManagerFactory,
+            collectionService,
+            connectionService,
+            collectionSettingsCacheFactory,
+            applicationId );
 
         return em;
     }

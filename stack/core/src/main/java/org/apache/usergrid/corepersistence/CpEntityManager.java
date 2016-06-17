@@ -43,6 +43,7 @@ import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
+import org.apache.usergrid.persistence.collection.uniquevalues.AkkaFig;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.*;
@@ -104,6 +105,8 @@ public class CpEntityManager implements EntityManager {
 
     private final UUID applicationId;
     private final EntityManagerFig entityManagerFig;
+    private final AkkaFig akkaFig;
+
     private Application application;
 
 
@@ -168,6 +171,7 @@ public class CpEntityManager implements EntityManager {
                             final AsyncEventService indexService,
                             final ManagerCache managerCache,
                             final MetricsFactory metricsFactory,
+                            final AkkaFig akkaFig,
                             final EntityManagerFig entityManagerFig,
                             final GraphManagerFactory graphManagerFactory,
                             final CollectionService collectionService,
@@ -176,6 +180,7 @@ public class CpEntityManager implements EntityManager {
                             final UUID applicationId ) {
 
         this.entityManagerFig = entityManagerFig;
+        this.akkaFig = akkaFig;
 
         Preconditions.checkNotNull( cass, "cass must not be null" );
         Preconditions.checkNotNull( counterUtils, "counterUtils must not be null" );
@@ -249,8 +254,7 @@ public class CpEntityManager implements EntityManager {
      */
     org.apache.usergrid.persistence.model.entity.Entity load( Id entityId ) {
 
-            return ecm .load( entityId ).toBlocking()
-                                       .lastOrDefault(null);
+            return ecm .load( entityId ).toBlocking().lastOrDefault(null);
 
     }
 
@@ -605,7 +609,8 @@ public class CpEntityManager implements EntityManager {
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
         //Step 1 & 2 of delete
-        return ecm.mark( entityId ).mergeWith( gm.markNode( entityId, createGraphOperationTimestamp() ) );
+        String region = this.lookupRegionForType( entityRef.getType() );
+        return ecm.mark( entityId, region ).mergeWith( gm.markNode( entityId, createGraphOperationTimestamp() ) );
 
     }
 
@@ -3058,6 +3063,8 @@ public class CpEntityManager implements EntityManager {
     private  String lookupRegionForType( String type ) {
 
         String region = null;
+
+        // get collection settings for type
         MapManager mm = getMapManagerForTypes();
         CollectionSettingsCache collectionSettingsCache = collectionSettingsCacheFactory.getInstance( mm );
         String collectionName = Schema.defaultCollectionName( type );
@@ -3068,6 +3075,7 @@ public class CpEntityManager implements EntityManager {
         if ( collectionSettings.isPresent() && collectionSettings.get().get("region") != null ) {
             region = collectionSettings.get().get("region").toString();
         }
+
         return region;
     }
 

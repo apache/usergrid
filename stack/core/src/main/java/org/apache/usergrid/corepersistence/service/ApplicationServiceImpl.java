@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
+import org.apache.usergrid.persistence.collection.uniquevalues.AkkaFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -60,7 +61,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
     private final MapManagerFactory mapManagerFactory;
     private final GraphManagerFactory graphManagerFactory;
     private final CollectionSettingsCacheFactory collectionSettingsCacheFactory;
-
+    private final AkkaFig akkaFig;
 
 
     @Inject
@@ -70,7 +71,8 @@ public class ApplicationServiceImpl  implements ApplicationService{
                                   EventBuilder eventBuilder,
                                   MapManagerFactory mapManagerFactory,
                                   GraphManagerFactory graphManagerFactory,
-                                  CollectionSettingsCacheFactory collectionSettingsCacheFactory
+                                  CollectionSettingsCacheFactory collectionSettingsCacheFactory,
+                                  AkkaFig akkaFig
     ){
 
         this.allEntityIdsObservable = allEntityIdsObservable;
@@ -80,6 +82,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
         this.mapManagerFactory = mapManagerFactory;
         this.graphManagerFactory = graphManagerFactory;
         this.collectionSettingsCacheFactory = collectionSettingsCacheFactory;
+        this.akkaFig = akkaFig;
     }
 
 
@@ -112,7 +115,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
         }
 
         countObservable = countObservable.map(id -> {
-            entityCollectionManager.mark((Id) id)
+            entityCollectionManager.mark((Id) id, null )
                 .mergeWith(graphManager.markNode((Id) id, createGraphOperationTimestamp())).toBlocking().last();
             return id;
         })
