@@ -213,6 +213,16 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
                 final Id returnedEntityId = uniqueValue.getEntityId();
 
                 if ( !entity.getId().equals(returnedEntityId) ) {
+
+                    if(logger.isTraceEnabled()) {
+                        logger.trace("Violation occurred when verifying unique value [{}={}]. Returned entity id [{}] " +
+                            "does not match expected entity id [{}]",
+                            field.getName(), field.getValue().toString(),
+                            returnedEntityId,
+                            entity.getId()
+                        );
+                    }
+
                     uniquenessViolations.put( field.getName(), field );
                 }
             }
