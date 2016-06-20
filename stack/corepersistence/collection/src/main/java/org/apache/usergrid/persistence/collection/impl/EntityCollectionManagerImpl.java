@@ -338,6 +338,20 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                 //Short circuit if we don't have any uniqueValues from the given fields.
                 if ( !set.iterator().hasNext() ) {
+
+                    fields1.forEach( field -> {
+
+                        if(logger.isTraceEnabled()){
+                            logger.trace("Requested field [{}={}] not found in unique value table",
+                                field.getName(), field.getValue().toString());
+                        }
+
+                    });
+
+                    if(logger.isTraceEnabled()) {
+                        logger.trace("No unique values found for requested fields, returning empty FieldSet");
+                    }
+
                     return new MutableFieldSet( 0 );
                 }
 
