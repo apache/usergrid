@@ -65,7 +65,6 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.codahale.metrics.Timer;
@@ -82,7 +81,6 @@ import com.netflix.astyanax.serializers.StringSerializer;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action0;
 
 
 /**
@@ -327,7 +325,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
      * Retrieves all entities that correspond to each field given in the Collection.
      */
     @Override
-    public Observable<FieldSet> getEntitiesFromFields( final String type, final Collection<Field> fields ) {
+    public Observable<FieldSet> getEntitiesFromFields(final String type, final Collection<Field> fields, boolean useReadRepair) {
         final Observable<FieldSet> fieldSetObservable = Observable.just( fields ).map( fields1 -> {
             try {
 
@@ -408,7 +406,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     response.addEntity( expectedUnique.getField(), entity );
                 }
 
-                if ( deleteBatch.getRowCount() > 0 ) {
+                if ( useReadRepair && deleteBatch.getRowCount() > 0 ) {
 
                     deleteBatch.execute();
 
@@ -434,7 +432,6 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     }
 
                 }
-
 
 
                 return response;

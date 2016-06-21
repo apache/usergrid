@@ -85,7 +85,7 @@ public class AbstractCollectionService extends AbstractService {
             nameProperty = "name";
         }
 
-        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name, true);
         if ( entity != null ) {
             entity = importEntity( request, entity );
         }
@@ -282,7 +282,7 @@ public class AbstractCollectionService extends AbstractService {
         }
 
        // EntityRef ref = em.getAlias( getEntityType(), name );
-        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name, true);
         if ( entity == null ) {
             // null entity ref means we tried to put a non-existing entity
             // before we create a new entity for it, we should check for permission
@@ -477,7 +477,7 @@ public class AbstractCollectionService extends AbstractService {
             return super.postItemByName( context, name );
         }
 
-        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name, true);
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
@@ -531,7 +531,7 @@ public class AbstractCollectionService extends AbstractService {
             return getItemByName( context, name );
         }
 
-        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name, true);
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }

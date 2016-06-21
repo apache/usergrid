@@ -853,10 +853,9 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public Entity getUniqueEntityFromAlias( String collectionType, String aliasType ){
+    public Entity getUniqueEntityFromAlias(String collectionType, String aliasType, boolean useReadRepair){
+
         String collName = Schema.defaultCollectionName( collectionType );
-
-
         String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
 
         Timer.Context repairedEntityGet = entGetRepairedEntityTimer.time();
@@ -867,7 +866,7 @@ public class CpEntityManager implements EntityManager {
         StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType.toString());
 
         Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
-            Inflector.getInstance().singularize( collectionType ), Arrays.<Field>asList( uniqueLookupRepairField ) );
+            Inflector.getInstance().singularize( collectionType ), Arrays.<Field>asList( uniqueLookupRepairField ), useReadRepair);
 
         if(fieldSetObservable == null){
 
@@ -901,7 +900,7 @@ public class CpEntityManager implements EntityManager {
         StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType);
 
         Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
-            Inflector.getInstance().singularize( collectionType ), Collections.singletonList(uniqueLookupRepairField));
+            Inflector.getInstance().singularize( collectionType ), Collections.singletonList(uniqueLookupRepairField), true);
 
         if(fieldSetObservable == null){
 
