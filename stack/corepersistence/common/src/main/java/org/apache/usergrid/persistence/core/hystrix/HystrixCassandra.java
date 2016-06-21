@@ -25,6 +25,7 @@ import com.netflix.astyanax.connectionpool.OperationResult;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
 
 
@@ -40,15 +41,17 @@ public class HystrixCassandra {
      * Command group used for realtime user commands
      */
     public static final HystrixCommand.Setter
-            USER_GROUP = HystrixCommand.Setter.withGroupKey(   HystrixCommandGroupKey.Factory.asKey( "user" ) ).andThreadPoolPropertiesDefaults(
-            HystrixThreadPoolProperties.Setter().withCoreSize( 300 ) );
+            USER_GROUP = HystrixCommand.Setter.withGroupKey(   HystrixCommandGroupKey.Factory.asKey( "user" ) )
+        .andThreadPoolPropertiesDefaults( HystrixThreadPoolProperties.Setter().withCoreSize( 300 ) )
+        .andCommandPropertiesDefaults( HystrixCommandProperties.Setter().withCircuitBreakerEnabled(false) );
 
     /**
      * Command group for asynchronous operations
      */
     public static final HystrixCommand.Setter
-            ASYNC_GROUP = HystrixCommand.Setter.withGroupKey( HystrixCommandGroupKey.Factory.asKey( "async" ) ).andThreadPoolPropertiesDefaults(
-            HystrixThreadPoolProperties.Setter().withCoreSize( 100 ) );
+            ASYNC_GROUP = HystrixCommand.Setter.withGroupKey( HystrixCommandGroupKey.Factory.asKey( "async" ) )
+        .andThreadPoolPropertiesDefaults( HystrixThreadPoolProperties.Setter().withCoreSize( 100 ) )
+        .andCommandPropertiesDefaults( HystrixCommandProperties.Setter().withCircuitBreakerEnabled(false) );
 
 
     /**
