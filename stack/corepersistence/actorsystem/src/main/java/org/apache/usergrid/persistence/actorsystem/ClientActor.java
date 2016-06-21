@@ -87,7 +87,7 @@ public class ClientActor extends UntypedActor {
             logger.debug("{} responding with status unknown", name);
             getSender().tell( new ErrorResponse("ClientActor not ready"), getSender() );
 
-        } if ( message instanceof StatusRequest ) {
+        } else if ( message instanceof StatusRequest ) {
             if ( ready ) {
                 getSender().tell( new StatusMessage( name, StatusMessage.Status.READY ), getSender() );
             } else {

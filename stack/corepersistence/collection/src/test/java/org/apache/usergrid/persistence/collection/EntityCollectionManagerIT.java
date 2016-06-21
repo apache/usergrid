@@ -64,7 +64,7 @@ import static org.junit.Assert.*;
 /** @author tnine */
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class EntityCollectionManagerIT {
+public class EntityCollectionManagerIT extends AbstractUniqueValueTest {
 
     @Inject
     private EntityCollectionManagerFactory factory;
@@ -88,19 +88,10 @@ public class EntityCollectionManagerIT {
     @Inject
     UniqueValuesService uniqueValuesService;
 
-    private static AtomicBoolean startedAkka = new AtomicBoolean( false );
 
     @Before
     public void initAkka() {
-        if ( !startedAkka.getAndSet( true ) ) {
-            actorSystemManager.registerRouterProducer( uniqueValuesService );
-            actorSystemManager.registerMessageType( UniqueValueActor.Request.class, "/user/uvProxy" );
-            actorSystemManager.registerMessageType( UniqueValueActor.Reservation.class, "/user/uvProxy" );
-            actorSystemManager.registerMessageType( UniqueValueActor.Cancellation.class, "/user/uvProxy" );
-            actorSystemManager.registerMessageType( UniqueValueActor.Confirmation.class, "/user/uvProxy" );
-            actorSystemManager.start( "127.0.0.1", 2554, "us-east" );
-            actorSystemManager.waitForRequestActors();
-        }
+        initAkka( 2555, actorSystemManager, uniqueValuesService );
     }
 
 
