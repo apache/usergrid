@@ -239,7 +239,6 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                 logger.info( "Config for region {} is:\n" +
                         "   Akka Hostname {}\n" +
                         "   Akka Seeds {}\n" +
-                        "   Akka Port {}\n" +
                         "   Akka UniqueValueActors per node {}\n" +
                         "   Akka Authoritative Region {}",
                     region, hostname, seeds, port, numInstancesPerNode, actorSystemFig.getAkkaAuthoritativeRegion() );
@@ -262,6 +261,8 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                                 }
                             }} );
                         }} );
+
+                        // TODO: allow RouterProducers to add in router-specific stuff like this:
                         put( "actor", new HashMap<String, Object>() {{
                             put( "deployment", new HashMap<String, Object>() {{
                                 put( "/uvRouter/singleton/router", new HashMap<String, Object>() {{
