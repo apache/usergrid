@@ -33,8 +33,6 @@ public interface ActorSystemFig extends GuicyFig, Serializable {
 
     String AKKA_HOSTNAME = "collection.akka.hostname";
 
-    String AKKA_PORT = "collection.akka.port";
-
     String AKKA_REGION = "collection.akka.region";
 
     String AKKA_REGION_LIST = "usergrid.queue.regionList"; // same region list used by queues
@@ -61,12 +59,6 @@ public interface ActorSystemFig extends GuicyFig, Serializable {
      */
     @Key(AKKA_HOSTNAME)
     String getHostname();
-
-    /**
-     * local port to be used in Akka configuration.
-     */
-    @Key(AKKA_PORT)
-    int getPort();
 
     /**
      * Local region to be used in Akka configuration.

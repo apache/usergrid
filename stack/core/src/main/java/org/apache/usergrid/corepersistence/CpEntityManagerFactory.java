@@ -36,12 +36,14 @@ import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueActor;
 import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
@@ -110,6 +112,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final ConnectionService connectionService;
     private final GraphManagerFactory graphManagerFactory;
     private final CollectionSettingsCacheFactory collectionSettingsCacheFactory;
+    private ActorSystemManager actorSystemManager;
     private UniqueValuesService uniqueValuesService;
     private final LockManager lockManager;
 
@@ -142,8 +145,18 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         if ( actorSystemFig.getAkkaEnabled() ) {
             try {
                 logger.info("Akka cluster starting...");
+
                 this.uniqueValuesService = injector.getInstance( UniqueValuesService.class );
-                // TODO: this.uniqueValuesService.start();
+                this.actorSystemManager = injector.getInstance( ActorSystemManager.class );
+
+                actorSystemManager.registerRouterProducer( uniqueValuesService );
+                actorSystemManager.registerMessageType( UniqueValueActor.Request.class, "/user/uvProxy" );
+                actorSystemManager.registerMessageType( UniqueValueActor.Reservation.class, "/user/uvProxy" );
+                actorSystemManager.registerMessageType( UniqueValueActor.Cancellation.class, "/user/uvProxy" );
+                actorSystemManager.registerMessageType( UniqueValueActor.Confirmation.class, "/user/uvProxy" );
+                actorSystemManager.start();
+                actorSystemManager.waitForRequestActors();
+
             } catch (Throwable t) {
                 logger.error("Error starting Akka", t);
                 throw t;
