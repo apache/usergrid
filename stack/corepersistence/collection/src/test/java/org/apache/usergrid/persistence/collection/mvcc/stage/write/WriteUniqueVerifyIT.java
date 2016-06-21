@@ -18,6 +18,9 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueActor;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,14 +72,24 @@ public class WriteUniqueVerifyIT {
     @Inject
     public EntityCollectionManagerFactory cmf;
 
+    @Inject
+    ActorSystemManager actorSystemManager;
+
+    @Inject
+    UniqueValuesService uniqueValuesService;
+
     private static AtomicBoolean startedAkka = new AtomicBoolean( false );
 
     @Before
     public void initAkka() {
         if ( !startedAkka.getAndSet( true ) ) {
-            ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
-            EntityCollectionManager manager = factory.createCollectionManager( context );
-            manager.startAkkaForTesting( "127.0.0.1", 2552, "us-east" );
+            actorSystemManager.registerRouterProducer( uniqueValuesService );
+            actorSystemManager.registerMessageType( UniqueValueActor.Request.class, "/user/uvProxy" );
+            actorSystemManager.registerMessageType( UniqueValueActor.Reservation.class, "/user/uvProxy" );
+            actorSystemManager.registerMessageType( UniqueValueActor.Cancellation.class, "/user/uvProxy" );
+            actorSystemManager.registerMessageType( UniqueValueActor.Confirmation.class, "/user/uvProxy" );
+            actorSystemManager.start( "127.0.0.1", 2554, "us-east" );
+            actorSystemManager.waitForRequestActors();
         }
     }
 

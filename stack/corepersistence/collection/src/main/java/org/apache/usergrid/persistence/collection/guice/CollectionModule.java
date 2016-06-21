@@ -20,6 +20,8 @@ package org.apache.usergrid.persistence.collection.guice;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemModule;
 import org.apache.usergrid.persistence.collection.uniquevalues.*;
 import org.safehaus.guicyfig.GuicyFigModule;
 
@@ -55,11 +57,11 @@ public abstract class CollectionModule extends AbstractModule {
     protected void configure() {
 
         // noinspection unchecked
-        install( new GuicyFigModule( AkkaFig.class ) );
         install( new GuicyFigModule( SerializationFig.class ) );
         install( new GuicyFigModule( CollectionSchedulerFig.class ) );
         install( new SerializationModule() );
         install( new ServiceModule() );
+        install( new ActorSystemModule() );
 
         // users of this module can add their own implemementations
         // create a guice factor for getting our collection manager

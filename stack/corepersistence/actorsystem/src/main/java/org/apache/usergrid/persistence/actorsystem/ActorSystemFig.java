@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection.uniquevalues;
+package org.apache.usergrid.persistence.actorsystem;
 
 
 import org.safehaus.guicyfig.Default;
@@ -27,7 +27,7 @@ import org.safehaus.guicyfig.Key;
 import java.io.Serializable;
 
 @FigSingleton
-public interface AkkaFig extends GuicyFig, Serializable {
+public interface ActorSystemFig extends GuicyFig, Serializable {
 
     String AKKA_ENABLED = "collection.akka.enabled";
 

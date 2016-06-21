@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.collection.uniquevalues;
+package org.apache.usergrid.persistence.actorsystem;
 
 import akka.actor.Actor;
 import akka.actor.IndirectActorProducer;

@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence.collection.uniquevalues;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheStats;
+import org.apache.usergrid.persistence.actorsystem.ClientActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 
 public class ReservationCache {
-    private static final Logger logger = LoggerFactory.getLogger( RequestActor.class );
+    private static final Logger logger = LoggerFactory.getLogger( ClientActor.class );
 
     Cache<String, UniqueValueActor.Reservation> cache;
     long ttl;

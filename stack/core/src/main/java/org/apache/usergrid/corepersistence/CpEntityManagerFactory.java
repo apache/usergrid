@@ -35,13 +35,13 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
-import org.apache.usergrid.persistence.collection.uniquevalues.AkkaFig;
 import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
@@ -82,7 +82,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManagerFactory.class );
 
     private final EntityManagerFig entityManagerFig;
-    private final AkkaFig akkaFig;
+    private final ActorSystemFig actorSystemFig;
 
     private ApplicationContext applicationContext;
 
@@ -125,7 +125,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.injector = injector;
         this.reIndexService = injector.getInstance(ReIndexService.class);
         this.entityManagerFig = injector.getInstance(EntityManagerFig.class);
-        this.akkaFig = injector.getInstance( AkkaFig.class );
+        this.actorSystemFig = injector.getInstance( ActorSystemFig.class );
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
         this.indexService = injector.getInstance( AsyncEventService.class );
@@ -139,11 +139,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         logger.info("EntityManagerFactoring starting...");
 
-        if ( akkaFig.getAkkaEnabled() ) {
+        if ( actorSystemFig.getAkkaEnabled() ) {
             try {
                 logger.info("Akka cluster starting...");
                 this.uniqueValuesService = injector.getInstance( UniqueValuesService.class );
-                this.uniqueValuesService.start();
+                // TODO: this.uniqueValuesService.start();
             } catch (Throwable t) {
                 logger.error("Error starting Akka", t);
                 throw t;
@@ -360,7 +360,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             indexService,
             managerCache,
             metricsFactory,
-            akkaFig,
+            actorSystemFig,
             entityManagerFig,
             graphManagerFactory,
             collectionService,

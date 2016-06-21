@@ -28,15 +28,12 @@ import akka.cluster.singleton.ClusterSingletonProxy;
 import akka.cluster.singleton.ClusterSingletonProxySettings;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
+import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -45,7 +42,8 @@ import org.slf4j.LoggerFactory;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 
-import java.util.*;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 
@@ -53,154 +51,27 @@ import java.util.concurrent.TimeUnit;
 public class UniqueValuesServiceImpl implements UniqueValuesService {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValuesServiceImpl.class );
 
-    static Injector injector;
-
-    AkkaFig akkaFig;
-    UniqueValuesTable table;
-    private String hostname;
-    private Integer port = null;
-    private String currentRegion;
-
-    private Map<String, ActorRef> requestActorsByRegion;
-
-    //private Map<String, String> regionsByType = new HashMap<>();
-
-//    private final MetricRegistry metrics = new MetricRegistry();
-//
-//    private final Timer getTimer     = metrics.timer( "get" );
-//    private final Timer   saveTimer    = metrics.timer( "save" );
-//
-//    private final Counter cacheCounter = metrics.counter( "cache" );
-//    private final Counter dupCounter   = metrics.counter( "duplicates" );
-//
-//    private final Timer   reservationTimer = metrics.timer( "reservation" );
-//    private final Timer   commitmentTimer  = metrics.timer( "commitment" );
-
+    static Injector          injector;
+    ActorSystemFig           actorSystemFig;
+    ActorSystemManager       actorSystemManager;
+    UniqueValuesTable        table;
     private ReservationCache reservationCache;
 
 
     @Inject
-    public UniqueValuesServiceImpl(Injector inj, AkkaFig akkaFig, UniqueValuesTable table ) {
+    public UniqueValuesServiceImpl(
+        Injector inj,
+        ActorSystemFig actorSystemFig,
+        ActorSystemManager actorSystemManager,
+        UniqueValuesTable table ) {
+
         injector = inj;
-        this.akkaFig = akkaFig;
+        this.actorSystemManager = actorSystemManager;
+        this.actorSystemFig = actorSystemFig;
         this.table = table;
 
-        ReservationCache.init( akkaFig.getUniqueValueCacheTtl() );
+        ReservationCache.init( actorSystemFig.getUniqueValueCacheTtl() );
         this.reservationCache = ReservationCache.getInstance();
-    }
-
-
-    /**
-     * Init Akka ActorSystems and wait for request actors to start.
-     */
-    public void start() {
-
-        this.hostname = akkaFig.getHostname();
-        this.currentRegion = akkaFig.getRegion();
-        this.port = null;
-
-        initAkka();
-        waitForRequestActors();
-    }
-
-
-    /**
-     * For testing purposes only; does not wait for request actors to start.
-     */
-    public void start( String hostname, Integer port, String currentRegion ) {
-
-        this.hostname = hostname;
-        this.currentRegion = currentRegion;
-        this.port = port;
-
-        initAkka();
-    }
-
-
-    private Map<String, ActorRef> getRequestActorsByRegion() {
-        return requestActorsByRegion;
-    }
-
-
-//    private Map<String, String> getRegionsByType() {
-//        return regionsByType;
-//    }
-
-//    public Counter getDupCounter() {
-//        return dupCounter;
-//    }
-//
-//    public Counter getCacheCounter() {
-//        return cacheCounter;
-//    }
-//
-//    public Timer getReservationTimer() {
-//        return reservationTimer;
-//    }
-//
-//    public Timer getCommitmentTimer() {
-//        return commitmentTimer;
-//    }
-//
-//    public Timer getSaveTimer() {
-//        return saveTimer;
-//    }
-//
-//    public Timer getGetTimer() {
-//        return getTimer;
-//    }
-
-    private void initAkka() {
-        logger.info("Initializing Akka");
-
-        // Create one actor system with request actor for each region
-
-        if ( StringUtils.isEmpty( hostname )) {
-            throw new RuntimeException( "No value specified for " + AkkaFig.AKKA_HOSTNAME );
-        }
-
-        if ( StringUtils.isEmpty( currentRegion )) {
-            throw new RuntimeException( "No value specified for " + AkkaFig.AKKA_REGION );
-        }
-
-        if ( StringUtils.isEmpty( akkaFig.getRegionList() )) {
-            throw new RuntimeException( "No value specified for " + AkkaFig.AKKA_REGION_LIST );
-        }
-
-        if ( StringUtils.isEmpty( akkaFig.getRegionSeeds() )) {
-            throw new RuntimeException( "No value specified for " + AkkaFig.AKKA_REGION_SEEDS);
-        }
-
-        if ( StringUtils.isEmpty( akkaFig.getAkkaAuthoritativeRegion() )) {
-            throw new RuntimeException( "No value specified for " + AkkaFig.AKKA_AUTHORITATIVE_REGION);
-        }
-
-        List regionList = Arrays.asList( akkaFig.getRegionList().toLowerCase().split(",") );
-
-        logger.info("Initializing Akka for hostname {} region {} regionList {} seeds {}",
-            hostname, currentRegion, regionList, akkaFig.getRegionSeeds() );
-
-//        String typesValue = akkaFig.getRegionTypes();
-//        String[] regionTypes = StringUtils.isEmpty( typesValue ) ? new String[0] : typesValue.split(",");
-//        for ( String regionType : regionTypes ) {
-//            String[] parts = regionType.toLowerCase().split(":");
-//            String typeRegion = parts[0];
-//            String type = parts[1];
-//
-//            if ( !regionList.contains( typeRegion) ) {
-//                throw new RuntimeException(
-//                    "'collection.akka.region.seeds' references unknown region: " + typeRegion );
-//            }
-//            this.regionsByType.put( type, typeRegion );
-//        }
-
-        final Map<String, ActorSystem> systemMap = new HashMap<>();
-
-        ActorSystem localSystem = createClusterSingletonProxies( readClusterSingletonConfigs(), systemMap );
-
-        createRequestActors( systemMap );
-
-        subscribeToReservations( localSystem, systemMap );
     }
 
 
@@ -216,246 +87,11 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     }
 
 
-    /**
-     * Create ActorSystem and ClusterSingletonProxy for every region.
-     * Create ClusterSingletonManager for the current region.
-     *
-     * @param configMap Configurations to be used to create ActorSystems
-     * @param systemMap Map of ActorSystems created by this method
-     *
-     * @return ActorSystem for this region.
-     */
-    private ActorSystem createClusterSingletonProxies(
-            Map<String, Config> configMap, Map<String, ActorSystem> systemMap ) {
-
-        ActorSystem localSystem = null;
-
-        for ( String region : configMap.keySet() ) {
-            Config config = configMap.get( region );
-
-            ActorSystem system = ActorSystem.create( "ClusterSystem", config );
-            systemMap.put( region, system );
-
-            // cluster singletons only run role "io" nodes and NOT on "client" nodes of other regions
-            if ( currentRegion.equals( region ) ) {
-
-                localSystem = system;
-
-                // create cluster singleton supervisor for actor system
-                ClusterSingletonManagerSettings settings =
-                        ClusterSingletonManagerSettings.create( system ).withRole("io");
-
-                // Akka.system().actorOf(Props.create(GuiceInjectedActor.class, INJECTOR,Retreiver.class))
-
-                system.actorOf( ClusterSingletonManager.props(
-                    //Props.create( ClusterSingletonRouter.class, table ),
-                    Props.create( GuiceActorProducer.class, injector, ClusterSingletonRouter.class),
-                    PoisonPill.getInstance(), settings ), "uvRouter");
-            }
-
-            // create proxy for sending messages to singleton
-            ClusterSingletonProxySettings proxySettings =
-                    ClusterSingletonProxySettings.create( system ).withRole("io");
-            system.actorOf( ClusterSingletonProxy.props( "/user/uvRouter", proxySettings ), "uvProxy" );
-        }
-
-        return localSystem;
-    }
-
-
-    /**
-     * Create RequestActor for each region.
-     *
-     * @param systemMap Map of regions to ActorSystems.
-     */
-    private void createRequestActors( Map<String, ActorSystem> systemMap ) {
-
-        requestActorsByRegion = new HashMap<>();
-
-        for ( String region : systemMap.keySet() ) {
-
-            logger.info("Creating request actor for region {}", region);
-
-            // Each RequestActor needs to know path to ClusterSingletonProxy and region
-            ActorRef requestActor = systemMap.get( region ).actorOf(
-                    Props.create( RequestActor.class, "/user/uvProxy" ), "requestActor" );
-
-            requestActorsByRegion.put( region, requestActor );
-        }
-    }
-
-
-    public void waitForRequestActors() {
-
-        for ( String region : requestActorsByRegion.keySet() ) {
-            ActorRef ra = requestActorsByRegion.get( region );
-            waitForRequestActor( ra );
-        }
-    }
-
-
-    private void waitForRequestActor( ActorRef ra ) {
-
-        logger.info( "Waiting on request actor {}...", ra.path() );
-
-        boolean started = false;
-        int retries = 0;
-        int maxRetries = 60;
-        while (retries < maxRetries) {
-            Timeout t = new Timeout( 10, TimeUnit.SECONDS );
-
-            Future<Object> fut = Patterns.ask( ra, new RequestActor.StatusRequest(), t );
-            try {
-                RequestActor.StatusMessage result = (RequestActor.StatusMessage) Await.result( fut, t.duration() );
-
-                if (result.status.equals( RequestActor.StatusMessage.Status.READY )) {
-                    started = true;
-                    break;
-                }
-                logger.info( "Waiting for request actor {} region {} ({}s)", ra.path(), currentRegion, retries );
-                Thread.sleep( 1000 );
-
-            } catch (Exception e) {
-                logger.error( "Error: Timeout waiting for requestActor" );
-            }
-            retries++;
-        }
-
-        if (started) {
-            logger.info( "RequestActor has started" );
-        } else {
-            throw new RuntimeException( "RequestActor did not start in time" );
-        }
-    }
-
-
-    /**
-     * Read configuration and create a Config for each region.
-     *
-     * @return Map of regions to Configs.
-     */
-    private Map<String, Config> readClusterSingletonConfigs() {
-
-        Map<String, Config> configs = new HashMap<>();
-
-        ListMultimap<String, String> seedsByRegion = ArrayListMultimap.create();
-
-        String[] regionSeeds = akkaFig.getRegionSeeds().split( "," );
-
-        logger.info("Found region {} seeds {}", regionSeeds.length, regionSeeds);
-
-        try {
-
-            if ( port != null ) {
-
-                // we are testing
-                String seed = "akka.tcp://ClusterSystem@" + hostname + ":" + port;
-                seedsByRegion.put( currentRegion, seed );
-                logger.info("Akka testing, only starting one seed");
-
-            } else {
-
-                for (String regionSeed : regionSeeds) {
-
-                    String[] parts = regionSeed.split( ":" );
-                    String region = parts[0];
-                    String hostname = parts[1];
-                    String regionPortString = parts[2];
-
-                    // all seeds in same region must use same port
-                    // we assume 0th seed has the right port
-                    final Integer regionPort;
-
-                    if (port == null) {
-                        regionPort = Integer.parseInt( regionPortString );
-                    } else {
-                        regionPort = port; // unless we are testing
-                    }
-
-                    String seed = "akka.tcp://ClusterSystem@" + hostname + ":" + regionPort;
-
-                    logger.info("Adding seed {} for region {}", seed, region );
-
-                    seedsByRegion.put( region, seed );
-                }
-
-                if (seedsByRegion.keySet().isEmpty()) {
-                    throw new RuntimeException(
-                        "No seeds listed in 'parsing collection.akka.region.seeds' property." );
-                }
-            }
-
-            int numInstancesPerNode = akkaFig.getUniqueValueActors();
-
-            for ( String region : seedsByRegion.keySet() ) {
-
-                List<String> seeds = seedsByRegion.get( region );
-                int lastColon = seeds.get(0).lastIndexOf(":") + 1;
-                final Integer regionPort = Integer.parseInt( seeds.get(0).substring( lastColon ));
-
-                // cluster singletons only run role "io" nodes and NOT on "client" nodes of other regions
-                String clusterRole = currentRegion.equals( region ) ? "io" : "client";
-
-                logger.info( "Config for region {} is:\n" +
-                    "   AkkaUV Hostname {}\n" +
-                    "   AkkaUV Seeds {}\n" +
-                    "   AkkaUV Port {}\n" +
-                    "   AkkaUV UniqueValueActors per node {}\n" +
-                    "   AkkaUV Authoritative Region {}",
-                    region, hostname, seeds, port, numInstancesPerNode, akkaFig.getAkkaAuthoritativeRegion() );
-
-                Map<String, Object> configMap = new HashMap<String, Object>() {{
-                    put( "akka", new HashMap<String, Object>() {{
-                        put( "remote", new HashMap<String, Object>() {{
-                            put( "netty.tcp", new HashMap<String, Object>() {{
-                                put( "hostname", hostname );
-                                put( "bind-hostname", hostname );
-                                put( "port", regionPort );
-                            }} );
-                        }} );
-                        put( "cluster", new HashMap<String, Object>() {{
-                            put( "max-nr-of-instances-per-node", numInstancesPerNode );
-                            put( "roles", Collections.singletonList(clusterRole) );
-                            put( "seed-nodes", new ArrayList<String>() {{
-                                for (String seed : seeds) {
-                                    add( seed );
-                                }
-                            }} );
-                        }} );
-                        put( "actor", new HashMap<String, Object>() {{
-                            put( "deployment", new HashMap<String, Object>() {{
-                                put( "/uvRouter/singleton/router", new HashMap<String, Object>() {{
-                                    put( "cluster", new HashMap<String, Object>() {{
-                                        //put( "roles", Collections.singletonList(role) );
-                                        put( "max-nr-of-instances-per-node", numInstancesPerNode );
-                                    }} );
-                                }} );
-                            }} );
-                        }} );
-                    }} );
-                }};
-
-                Config config = ConfigFactory
-                        .parseMap( configMap )
-                        .withFallback( ConfigFactory.parseString( "akka.cluster.roles = [io]" ) )
-                        .withFallback( ConfigFactory.load( "cluster-singleton" ) );
-
-                configs.put( region, config );
-            }
-
-        } catch ( Exception e ) {
-            throw new RuntimeException("Error 'parsing collection.akka.region.seeds' property", e );
-        }
-
-        return configs;
-    }
-
-
     @Override
     public void reserveUniqueValues(
         ApplicationScope scope, Entity entity, UUID version, String region ) throws UniqueValueException {
 
-        if ( this.getRequestActorsByRegion().isEmpty() ) {
+        if ( !actorSystemManager.isReady() ) {
             throw new RuntimeException("Unique values service not initialized, no request actors ready");
         }
 
@@ -487,7 +123,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     public void confirmUniqueValues(
         ApplicationScope scope, Entity entity, UUID version, String region ) throws UniqueValueException {
 
-        if ( this.getRequestActorsByRegion().isEmpty() ) {
+        if ( !actorSystemManager.isReady() ) {
             throw new RuntimeException("Unique values service not initialized, no request actors ready");
         }
 
@@ -518,7 +154,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     private void reserveUniqueField(
         ApplicationScope scope, Entity entity, UUID version, Field field, String region ) throws UniqueValueException {
 
-        final ActorRef requestActor = getRequestActorsByRegion().get( region );
+        final ActorRef requestActor = actorSystemManager.getClientActor( region );
 
         if ( requestActor == null ) {
             throw new RuntimeException( "No request actor for region " + region);
@@ -542,7 +178,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     private void confirmUniqueField(
         ApplicationScope scope, Entity entity, UUID version, Field field, String region) throws UniqueValueException {
 
-        final ActorRef requestActor = getRequestActorsByRegion().get( region );
+        final ActorRef requestActor = actorSystemManager.getClientActor( region );
 
         if ( requestActor == null ) {
             throw new RuntimeException( "No request actor for type, cannot verify unique fields!" );
@@ -558,7 +194,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     private void cancelUniqueField(
         ApplicationScope scope, Entity entity, UUID version, Field field, String region ) throws UniqueValueException {
 
-        final ActorRef requestActor = getRequestActorsByRegion().get( region );
+        final ActorRef requestActor = actorSystemManager.getClientActor( region );
 
         if ( requestActor == null ) {
             throw new RuntimeException( "No request actor for type, cannot verify unique fields!" );
@@ -616,7 +252,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
             } catch ( Exception e ) {
                 logger.debug("{} caused retry {} for entity {} rowkey {}",
-                        e.getClass().getSimpleName(), retries, entity.getId().getUuid(), request.getConsistentHashKey());
+                    e.getClass().getSimpleName(), retries, entity.getId().getUuid(), request.getConsistentHashKey());
             }
         }
 
@@ -633,5 +269,35 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             // should result in an HTTP 409 (conflict)
             throw new UniqueValueException( "Error property not unique", request.getField() );
         }
+    }
+
+
+    @Override
+    public void createClusterSingletonManager(ActorSystem system) {
+
+        // create cluster singleton supervisor for actor system
+        ClusterSingletonManagerSettings settings =
+            ClusterSingletonManagerSettings.create( system ).withRole("io");
+
+        system.actorOf( ClusterSingletonManager.props(
+            //Props.create( ClusterSingletonRouter.class, table ),
+            Props.create( GuiceActorProducer.class, injector, UniqueValuesRouter.class),
+            PoisonPill.getInstance(), settings ), "uvRouter");
+    }
+
+
+    @Override
+    public void createClusterSingletonProxy(ActorSystem system) {
+
+        ClusterSingletonProxySettings proxySettings =
+            ClusterSingletonProxySettings.create( system ).withRole("io");
+
+        system.actorOf( ClusterSingletonProxy.props( "/user/uvRouter", proxySettings ), "uvProxy" );
+    }
+
+
+    @Override
+    public void createLocalSystemActors( ActorSystem localSystem, Map<String, ActorSystem> systemMap ) {
+        subscribeToReservations( localSystem, systemMap );
     }
 }

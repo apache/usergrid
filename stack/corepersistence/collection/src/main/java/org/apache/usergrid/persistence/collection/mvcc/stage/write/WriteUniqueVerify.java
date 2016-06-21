@@ -29,6 +29,7 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.mvcc.entity.MvccValidationUtils;
@@ -38,7 +39,6 @@ import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
-import org.apache.usergrid.persistence.collection.uniquevalues.AkkaFig;
 import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueException;
 import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
@@ -65,7 +65,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
     private static final Logger logger = LoggerFactory.getLogger( WriteUniqueVerify.class );
 
-    AkkaFig akkaFig;
+    ActorSystemFig actorSystemFig;
     UniqueValuesService akkaUvService;
 
     private final UniqueValueSerializationStrategy uniqueValueStrat;
@@ -85,12 +85,12 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
                              final SerializationFig serializationFig,
                              final Keyspace keyspace,
                              final CassandraConfig cassandraFig,
-                             final AkkaFig akkaFig,
+                             final ActorSystemFig actorSystemFig,
                              final UniqueValuesService akkaUvService ) {
 
         this.keyspace = keyspace;
         this.cassandraFig = cassandraFig;
-        this.akkaFig = akkaFig;
+        this.actorSystemFig = actorSystemFig;
         this.akkaUvService = akkaUvService;
 
         Preconditions.checkNotNull( uniqueValueSerializiationStrategy, "uniqueValueSerializationStrategy is required" );
@@ -105,7 +105,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
     @Override
     public void call( final CollectionIoEvent<MvccEntity> ioevent ) {
-        if ( akkaFig != null && akkaFig.getAkkaEnabled() ) {
+        if ( actorSystemFig != null && actorSystemFig.getAkkaEnabled() ) {
             verifyUniqueFieldsAkka( ioevent );
         } else {
             verifyUniqueFields( ioevent );
@@ -124,7 +124,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
         String region = ioevent.getRegion();
         if ( region == null ) {
-            region = akkaFig.getAkkaAuthoritativeRegion();
+            region = actorSystemFig.getAkkaAuthoritativeRegion();
         }
         try {
             akkaUvService.reserveUniqueValues( applicationScope, entity, mvccEntity.getVersion(), region );
