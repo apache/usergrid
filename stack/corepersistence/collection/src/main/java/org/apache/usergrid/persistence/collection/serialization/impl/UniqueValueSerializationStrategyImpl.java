@@ -64,7 +64,7 @@ import com.netflix.astyanax.util.RangeBuilder;
 public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     implements UniqueValueSerializationStrategy {
 
-    private static final Logger log = LoggerFactory.getLogger( UniqueValueSerializationStrategyImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( UniqueValueSerializationStrategyImpl.class );
 
 
     private final MultiTenantColumnFamily<ScopedRowKey<FieldKey>, EntityVersion>
@@ -159,7 +159,7 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
 
             //we purposefully leave out TTL.  Worst case we issue deletes against tombstoned columns
-            //best case, we clean up an invalid secondary index entry when the log is used
+            //best case, we clean up an invalid secondary index entry when the logger is used
             @Override
             public void doLog( final ColumnListMutation<UniqueFieldEntry> colMutation ) {
                 colMutation.putColumn( uniqueFieldEntry, COL_VALUE );
@@ -225,8 +225,8 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
             ScopedRowKey.fromKey( applicationId, entityKey ) ) );
 
 
-        if ( log.isTraceEnabled() ) {
-            log.trace( "Writing unique value version={} name={} value={} ",
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Writing unique value version={} name={} value={} ",
                     uniqueValue.getEntityVersion(), uniqueValue.getField().getName(),
                     uniqueValue.getField().getValue()
                 );
@@ -295,6 +295,13 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
             final UniqueValueImpl uniqueValue =
                 new UniqueValueImpl( field, entityVersion.getEntityId(), entityVersion.getEntityVersion() );
+
+            if(logger.isTraceEnabled()){
+                logger.trace("Putting unique value [{}={}] into result set with entity id [{}] and entity version [{}]",
+                    field.getName(), field.getValue().toString(),
+                    entityVersion.getEntityId(),
+                    entityVersion.getEntityVersion());
+            }
 
             uniqueValueSet.addValue( uniqueValue );
         }

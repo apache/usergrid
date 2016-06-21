@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence.collection;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -118,27 +117,49 @@ public class EntityCollectionManagerIT {
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        {
-            Entity newEntity = new Entity( new SimpleId( "test" ) );
-            newEntity.setField( new IntegerField( "count", 5, true ) );
+        Entity entity = new Entity( new SimpleId( "test" ) );
+        entity.setField( new IntegerField( "count", 5, true ) );
 
-            Observable<Entity> observable = manager.write( newEntity );
-            Entity returned = observable.toBlocking().lastOrDefault( null );
+        Observable<Entity> firstWrite = manager.write( entity );
+
+        Entity newEntity = null;
+        Entity firstReturned = null;
+
+        for(int i=0; i<500; i++){
+
+
+            firstReturned = firstWrite.toBlocking().lastOrDefault( null );
+
         }
 
-        {
-            try {
-                Entity newEntity = new Entity( new SimpleId( "test" ) );
-                newEntity.setField( new IntegerField( "count", 5, true ) );
+//        try {
+//            //newEntity = new Entity( new SimpleId( "test" ) );
+//            //newEntity.setField( new IntegerField( "count", 5, true ) );
+//
+//            Observable<Entity> secondWrite = manager.write( entity );
+//            secondReturned = secondWrite.toBlocking().lastOrDefault( null );
+//
+//            //fail( "Write should have thrown an exception" );
+//        }
+//        catch ( Exception ex ) {
+//            WriteUniqueVerifyException e = ( WriteUniqueVerifyException ) ex;
+//            assertEquals( 1, e.getVioliations().size() );
+//        }
 
-                manager.write( newEntity ).toBlocking().last();
-                fail( "Write should have thrown an exception" );
-            }
-            catch ( Exception ex ) {
-                WriteUniqueVerifyException e = ( WriteUniqueVerifyException ) ex;
-                assertEquals( 1, e.getVioliations().size() );
-            }
-        }
+        // try fetching the original one again
+
+        assertEquals(entity.getId().getUuid(), firstReturned.getId().getUuid());
+        assertEquals(entity.getVersion(), firstReturned.getVersion());
+
+
+        //assertEquals(newEntity.getId().getUuid(), secondReturned.getId().getUuid());
+        //assertEquals(newEntity.getVersion(), secondReturned.getVersion());
+
+
+
+
+
+
     }
 
 
@@ -737,7 +758,7 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Version was assigned", createReturned.getVersion() );
 
         FieldSet fieldResults =
-            manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ) )
+            manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ), false)
                    .toBlocking().last();
 
         assertEquals( 1, fieldResults.size() );
@@ -754,7 +775,7 @@ public class EntityCollectionManagerIT {
 
         //try to load via the unique field, should have triggered repair
         final FieldSet results =
-            manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ) )
+            manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ), false)
                    .toBlocking().last();
 
 
