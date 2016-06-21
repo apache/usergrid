@@ -48,7 +48,7 @@ public class UniqueValueActor extends UntypedActor {
 
         // TODO: is there a way to avoid this ugly kludge? see also: ClusterSingletonRouter
         this.table = UniqueValuesServiceImpl.injector.getInstance( UniqueValuesTable.class );
-        logger.info("UniqueValueActor {} is live with table {}", name, table);
+        //logger.info("UniqueValueActor {} is live with table {}", name, table);
     }
 
     @Override

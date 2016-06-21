@@ -110,6 +110,7 @@ limitations under the License.
         <module>map</module>
         <module>queue</module>
         <module>cache</module>
+        <module>actorsystem</module>
     </modules>
 
     <build>

@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Uses a consistent hash to route Unique Value requests to UniqueValueActors.
  */
-public class ClusterSingletonRouter extends UntypedActor {
+public class UniqueValuesRouter extends UntypedActor {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValueActor.class );
 
     private final String name = RandomStringUtils.randomAlphanumeric( 4 );
@@ -39,7 +39,7 @@ public class ClusterSingletonRouter extends UntypedActor {
     private final ActorRef router;
 
     @Inject
-    public ClusterSingletonRouter( Injector injector ) {
+    public UniqueValuesRouter(Injector injector ) {
 
         router = getContext().actorOf(
             FromConfig.getInstance().props(Props.create(UniqueValueActor.class)), "router");
@@ -50,7 +50,7 @@ public class ClusterSingletonRouter extends UntypedActor {
             //FromConfig.getInstance().props( Props.create( GuiceActorProducer.class, injector, UniqueValueActor.class)),
             //"router" );
 
-        logger.info("ClusterSingletonRouter {} is live with injector {}", name, injector);
+        //logger.info("UniqueValuesRouter {} is live with injector {}", name, injector);
     }
 
     @Override
