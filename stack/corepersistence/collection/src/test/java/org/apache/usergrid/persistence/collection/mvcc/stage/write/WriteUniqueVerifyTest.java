@@ -18,48 +18,38 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import com.google.inject.Inject;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.AbstractUniqueValueTest;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueActor;
-import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Entity;
-
-import com.google.inject.Inject;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-
-import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class WriteUniqueVerifyTest {
+public class WriteUniqueVerifyTest extends AbstractUniqueValueTest {
 
     @Inject
     private EntityCollectionManagerFactory factory;
@@ -84,19 +74,10 @@ public class WriteUniqueVerifyTest {
     UniqueValuesService uniqueValuesService;
 
 
-    private static AtomicBoolean startedAkka = new AtomicBoolean( false );
-
     @Before
     public void initAkka() {
-        if ( !startedAkka.getAndSet( true ) ) {
-            actorSystemManager.registerRouterProducer( uniqueValuesService );
-            actorSystemManager.registerMessageType( UniqueValueActor.Request.class, "/user/uvProxy" );
-            actorSystemManager.registerMessageType( UniqueValueActor.Reservation.class, "/user/uvProxy" );
-            actorSystemManager.registerMessageType( UniqueValueActor.Cancellation.class, "/user/uvProxy" );
-            actorSystemManager.registerMessageType( UniqueValueActor.Confirmation.class, "/user/uvProxy" );
-            actorSystemManager.start( "127.0.0.1", 2554, "us-east" );
-            actorSystemManager.waitForRequestActors();
-        }
+        // each test class needs unique port number
+        initAkka( 2552, actorSystemManager, uniqueValuesService );
     }
 
 
@@ -119,7 +100,7 @@ public class WriteUniqueVerifyTest {
 
        newStage.call( new CollectionIoEvent<>( collectionScope, mvccEntity ) ) ;
 
-       //if we get here, it's a success.  We want to test no exceptions are thrown
+       // if we get here, it's a success.  We want to test no exceptions are thrown
 
         verify(batch, never()).execute();
     }

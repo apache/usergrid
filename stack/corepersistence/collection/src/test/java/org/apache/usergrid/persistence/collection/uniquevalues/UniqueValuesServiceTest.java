@@ -24,6 +24,7 @@ import com.google.common.collect.Multimaps;
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
+import org.apache.usergrid.persistence.collection.AbstractUniqueValueTest;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
@@ -58,7 +59,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class UniqueValuesServiceTest {
+public class UniqueValuesServiceTest extends AbstractUniqueValueTest {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValuesServiceTest.class );
 
     @Inject
@@ -77,24 +78,16 @@ public class UniqueValuesServiceTest {
     @Inject
     UniqueValuesService uniqueValuesService;
 
-    private static AtomicBoolean startedAkka = new AtomicBoolean( false );
 
     int numThreads = 6;
     int poolSize = 5;
-    int numUsers = 1;
+    int numUsers = 100;
 
 
     @Before
     public void initAkka() {
-        if ( !startedAkka.getAndSet( true ) ) {
-            actorSystemManager.registerRouterProducer( uniqueValuesService );
-            actorSystemManager.registerMessageType( UniqueValueActor.Request.class, "/user/uvProxy" );
-            actorSystemManager.registerMessageType( UniqueValueActor.Reservation.class, "/user/uvProxy" );
-            actorSystemManager.registerMessageType( UniqueValueActor.Cancellation.class, "/user/uvProxy" );
-            actorSystemManager.registerMessageType( UniqueValueActor.Confirmation.class, "/user/uvProxy" );
-            actorSystemManager.start( "127.0.0.1", 2554, "us-east" );
-            actorSystemManager.waitForRequestActors();
-        }
+        // each test class needs unique port number
+        initAkka( 2553, actorSystemManager, uniqueValuesService );
     }
 
 
