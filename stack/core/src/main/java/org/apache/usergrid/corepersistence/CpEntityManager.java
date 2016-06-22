@@ -37,13 +37,13 @@ import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.Query.Level;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.cassandra.*;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
-import org.apache.usergrid.persistence.collection.uniquevalues.AkkaFig;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.*;
@@ -105,7 +105,7 @@ public class CpEntityManager implements EntityManager {
 
     private final UUID applicationId;
     private final EntityManagerFig entityManagerFig;
-    private final AkkaFig akkaFig;
+    private final ActorSystemFig actorSystemFig;
 
     private Application application;
 
@@ -171,7 +171,7 @@ public class CpEntityManager implements EntityManager {
                             final AsyncEventService indexService,
                             final ManagerCache managerCache,
                             final MetricsFactory metricsFactory,
-                            final AkkaFig akkaFig,
+                            final ActorSystemFig actorSystemFig,
                             final EntityManagerFig entityManagerFig,
                             final GraphManagerFactory graphManagerFactory,
                             final CollectionService collectionService,
@@ -180,7 +180,7 @@ public class CpEntityManager implements EntityManager {
                             final UUID applicationId ) {
 
         this.entityManagerFig = entityManagerFig;
-        this.akkaFig = akkaFig;
+        this.actorSystemFig = actorSystemFig;
 
         Preconditions.checkNotNull( cass, "cass must not be null" );
         Preconditions.checkNotNull( counterUtils, "counterUtils must not be null" );

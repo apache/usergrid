@@ -16,29 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.guice;
+package org.apache.usergrid.persistence.actorsystem;
+
+import com.google.inject.AbstractModule;
+import org.safehaus.guicyfig.GuicyFigModule;
 
 
-import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
+public class ActorSystemModule extends AbstractModule {
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+    @Override
+    protected void configure() {
 
-/**
- * Created by russo on 8/27/15.
- */
-@Singleton
-public class SettingsValidationCluster {
+        install( new GuicyFigModule( ActorSystemFig.class ) );
 
-    @Inject
-    public SettingsValidationCluster(final ClusterFig clusterFig) {
-
-        final String configuredClusterName = clusterFig.getClusterName();
-        final String defaultCluster = ClusterFig.VALIDATION_DEFAULT_VALUE;
-
-        Preconditions.checkArgument(!configuredClusterName.equalsIgnoreCase(defaultCluster), ClusterFig.CLUSTER_NAME_PROPERTY + " property must be set.");
-
+        bind( ActorSystemManager.class ).to( ActorSystemManagerImpl.class );
     }
-
 }

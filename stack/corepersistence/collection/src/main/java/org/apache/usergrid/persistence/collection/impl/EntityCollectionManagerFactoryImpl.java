@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.collection.impl;
 
 import java.util.concurrent.ExecutionException;
 
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.cache.EntityCacheFig;
@@ -76,6 +77,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
     private final Keyspace keyspace;
     private final MetricsFactory metricsFactory;
     private final RxTaskScheduler rxTaskScheduler;
+    private final ActorSystemManager actorSystemManager;
     private final UniqueValuesService uniqueValuesService;
 
 
@@ -101,6 +103,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                 metricsFactory,
                                 serializationFig,
                                 rxTaskScheduler,
+                                actorSystemManager,
                                 uniqueValuesService,
                                 scope );
 
@@ -128,6 +131,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
             final EntityCacheFig entityCacheFig,
             final MetricsFactory metricsFactory, @CollectionExecutorScheduler
             final RxTaskScheduler rxTaskScheduler,
+            final ActorSystemManager actorSystemManager,
             final UniqueValuesService uniqueValuesService ) {
 
         this.writeStart = writeStart;
@@ -146,6 +150,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
         this.keyspace = keyspace;
         this.metricsFactory = metricsFactory;
         this.rxTaskScheduler = rxTaskScheduler;
+        this.actorSystemManager = actorSystemManager;
         this.uniqueValuesService = uniqueValuesService;
     }
 

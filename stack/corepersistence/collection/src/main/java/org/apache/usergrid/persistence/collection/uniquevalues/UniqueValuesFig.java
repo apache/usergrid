@@ -18,28 +18,15 @@
  */
 package org.apache.usergrid.persistence.collection.uniquevalues;
 
-
 import org.safehaus.guicyfig.Default;
 import org.safehaus.guicyfig.FigSingleton;
 import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
-
 import java.io.Serializable;
 
+
 @FigSingleton
-public interface AkkaFig extends GuicyFig, Serializable {
-
-    String AKKA_ENABLED = "collection.akka.enabled";
-
-    String AKKA_HOSTNAME = "collection.akka.hostname";
-
-    String AKKA_PORT = "collection.akka.port";
-
-    String AKKA_REGION = "collection.akka.region";
-
-    String AKKA_REGION_LIST = "usergrid.queue.regionList"; // same region list used by queues
-
-    String AKKA_REGION_SEEDS = "collection.akka.region.seeds";
+public interface UniqueValuesFig extends GuicyFig, Serializable {
 
     String AKKA_UNIQUEVALUE_ACTORS = "collection.akka.uniquevalue.actors";
 
@@ -47,38 +34,8 @@ public interface AkkaFig extends GuicyFig, Serializable {
 
     String AKKA_UNIQUEVALUE_RESERVATION_TTL= "collection.akka.uniquevalue.reservation.ttl";
 
-    String AKKA_AUTHORITATIVE_REGION = "collection.akka.uniquevalue.authoritative.region";
+    String AKKA_UNIQUEVALUE_INSTANCES_PER_NODE = "collection.akka.uniquevalue.instances-per-node";
 
-    /**
-     * Use Akka or nah
-     */
-    @Key(AKKA_ENABLED)
-    @Default("true")
-    boolean getAkkaEnabled();
-
-    /**
-     * Hostname to be used in Akka configuration.
-     */
-    @Key(AKKA_HOSTNAME)
-    String getHostname();
-
-    /**
-     * local port to be used in Akka configuration.
-     */
-    @Key(AKKA_PORT)
-    int getPort();
-
-    /**
-     * Local region to be used in Akka configuration.
-     */
-    @Key(AKKA_REGION)
-    String getRegion();
-
-    /**
-     * Comma separated list of regions known to cluster.
-     */
-    @Key(AKKA_REGION_LIST)
-    String getRegionList();
 
     /**
      * Number of UniqueValueActors to be started on each node
@@ -86,19 +43,6 @@ public interface AkkaFig extends GuicyFig, Serializable {
     @Key(AKKA_UNIQUEVALUE_ACTORS)
     @Default("300")
     int getUniqueValueActors();
-
-    /**
-     * Comma-separated lists of seeds each with format {region}:{hostname}:{port}.
-     * Regions MUST be listed in the 'usergrid.queue.regionList'
-     */
-    @Key(AKKA_REGION_SEEDS)
-    String getRegionSeeds();
-
-    /**
-     * If no region specified for type, use the authoritative region
-     */
-    @Key(AKKA_AUTHORITATIVE_REGION)
-    String getAkkaAuthoritativeRegion();
 
     /**
      * Unique Value cache TTL in seconds.
@@ -113,4 +57,11 @@ public interface AkkaFig extends GuicyFig, Serializable {
     @Key(AKKA_UNIQUEVALUE_RESERVATION_TTL)
     @Default("10")
     int getUniqueValueReservationTtl();
+
+    /**
+     * Number of actor instances to create on each.
+     */
+    @Key(AKKA_UNIQUEVALUE_INSTANCES_PER_NODE)
+    @Default("300")
+    int getUniqueValueInstancesPerNode();
 }

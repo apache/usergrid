@@ -28,10 +28,10 @@ import org.apache.usergrid.corepersistence.index.CollectionSettingsCacheFactory;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
-import org.apache.usergrid.persistence.collection.uniquevalues.AkkaFig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
@@ -61,7 +61,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
     private final MapManagerFactory mapManagerFactory;
     private final GraphManagerFactory graphManagerFactory;
     private final CollectionSettingsCacheFactory collectionSettingsCacheFactory;
-    private final AkkaFig akkaFig;
+    private final ActorSystemFig actorSystemFig;
 
 
     @Inject
@@ -72,7 +72,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
                                   MapManagerFactory mapManagerFactory,
                                   GraphManagerFactory graphManagerFactory,
                                   CollectionSettingsCacheFactory collectionSettingsCacheFactory,
-                                  AkkaFig akkaFig
+                                  ActorSystemFig actorSystemFig
     ){
 
         this.allEntityIdsObservable = allEntityIdsObservable;
@@ -82,7 +82,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
         this.mapManagerFactory = mapManagerFactory;
         this.graphManagerFactory = graphManagerFactory;
         this.collectionSettingsCacheFactory = collectionSettingsCacheFactory;
-        this.akkaFig = akkaFig;
+        this.actorSystemFig = actorSystemFig;
     }
 
 

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.collection.uniquevalues;
+package org.apache.usergrid.persistence.actorsystem;
 
 import akka.actor.ActorSelection;
 import akka.actor.Address;
@@ -23,36 +23,32 @@ import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
 import akka.cluster.Member;
 import akka.cluster.MemberStatus;
-import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 
 /**
  * Once notified of nodes, sends unique propertyValue requests to ClusterSingletonRouter via it's local proxy.
  */
-class RequestActor extends UntypedActor {
-    private static final Logger logger = LoggerFactory.getLogger( RequestActor.class );
+public class ClientActor extends UntypedActor {
+    private static final Logger logger = LoggerFactory.getLogger( ClientActor.class );
 
     private final String name = RandomStringUtils.randomAlphanumeric( 4 );
 
-    private final Set<Address> nodes = new HashSet<>();
-
-    private final Cluster cluster = Cluster.get(getContext().system());
-    private final String routerProxyPath;
+    private final Set<Address>       nodes = new HashSet<>();
+    private final Cluster            cluster = Cluster.get(getContext().system());
+    private final Map<Class, String> routersByMessageType;
 
     private boolean ready = false;
 
 
-    public RequestActor(String routerProxyPath ) {
-        this.routerProxyPath = routerProxyPath;
+    public ClientActor( Map<Class, String> routersByMessageType ) {
+        this.routersByMessageType = routersByMessageType;
     }
 
     // subscribe to cluster changes, MemberEvent
@@ -76,19 +72,20 @@ class RequestActor extends UntypedActor {
 
         int startSize = nodes.size();
 
-        if ( message instanceof UniqueValueActor.Request && ready ) {
+        String routerPath = routersByMessageType.get( message.getClass() );
+
+        if ( routerPath != null && ready ) {
 
             // just pick any node, the ClusterSingletonRouter will do the consistent hash routing
             List<Address> nodesList = new ArrayList<>( nodes );
             Address address = nodesList.get( ThreadLocalRandom.current().nextInt( nodesList.size() ) );
-            ActorSelection service = getContext().actorSelection( address + routerProxyPath );
+            ActorSelection service = getContext().actorSelection( address + routerPath );
             service.tell( message, getSender() );
 
-        } else if ( message instanceof UniqueValueActor.Request && !ready ) {
-            logger.debug("{} responding with status unknown", name);
+        } else if ( routerPath != null && !ready ) {
 
-            getSender().tell( new UniqueValueActor.Response(
-                    UniqueValueActor.Response.Status.ERROR ) , getSender() );
+            logger.debug("{} responding with status unknown", name);
+            getSender().tell( new ErrorResponse("ClientActor not ready"), getSender() );
 
         } else if ( message instanceof StatusRequest ) {
             if ( ready ) {
@@ -162,15 +159,20 @@ class RequestActor extends UntypedActor {
     /**
      * RequestAction responds to StatusRequests.
      */
-    static class StatusRequest implements Serializable { }
+    public static class StatusRequest implements Serializable { }
 
     /**
      * RequestActor responds with, and some times unilaterally sends StatusMessages.
      */
-    static class StatusMessage implements Serializable {
+    public static class StatusMessage implements Serializable {
         final String name;
+
+        public Status getStatus() {
+            return status;
+        }
+
         public enum Status { INITIALIZING, READY }
-        final Status status;
+        private final Status status;
         public StatusMessage(String name, Status status) {
             this.name = name;
             this.status = status;
@@ -182,5 +184,22 @@ class RequestActor extends UntypedActor {
             return status.equals( Status.READY );
         }
     }
+
+
+    public static class ErrorResponse implements Serializable {
+        private String message;
+        public ErrorResponse( String message ) {
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
+
 }
 

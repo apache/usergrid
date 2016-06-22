@@ -19,20 +19,17 @@
 package org.apache.usergrid.persistence.collection.uniquevalues;
 
 
+import org.apache.usergrid.persistence.actorsystem.RouterProducer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
 import java.util.UUID;
 
+
 /**
  * Service that reserves and confirms unique values.
  */
-public interface UniqueValuesService {
-
-    /**
-     * Initialize and start service.
-     */
-    void start();
+public interface UniqueValuesService extends RouterProducer {
 
     /**
      * Check that unique values are unique and reserve them for a limited time.
@@ -58,15 +55,4 @@ public interface UniqueValuesService {
      */
     void confirmUniqueValues( ApplicationScope scope, Entity entity, UUID version , String region )
         throws UniqueValueException;
-
-
-    /**
-     * For test purposes only.
-     */
-    void start( String hostname, Integer port, String region );
-
-    /**
-     * For test purposes only.
-     */
-    void waitForRequestActors();
 }
