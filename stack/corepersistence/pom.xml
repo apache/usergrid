@@ -219,6 +219,77 @@ limitations under the License.
                 <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
 
+            <!--<plugin>-->
+                <!--<groupId>org.apache.rat</groupId>-->
+                <!--<artifactId>apache-rat-plugin</artifactId>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<phase>verify</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>check</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+                <!--<configuration>-->
+                    <!--<excludes>-->
+                        <!--<exclude>**/Coverage.md</exclude>-->
+                        <!--<exclude>**/jacoco/**</exclude>-->
+                        <!--<exclude>**/README.md</exclude>-->
+                        <!--<exclude>**/CHANGES.txt</exclude>-->
+                        <!--<exclude>**/*.json</exclude>-->
+                        <!--<exclude>**/*.log</exclude>-->
+                        <!--<exclude>**/*.md5</exclude>-->
+                        <!--<exclude>**/*.opts</exclude>-->
+
+                        <!--&lt;!&ndash; git and IDE project files &ndash;&gt;-->
+                        <!--<exclude>**/.git/**</exclude>-->
+                        <!--<exclude>**/.gitignore</exclude>-->
+                        <!--<exclude>**/.idea/**</exclude>-->
+                        <!--<exclude>**/*.iml</exclude>-->
+                        <!--<exclude>**/*.log</exclude>-->
+                        <!--<exclude>**/nbactions.xml</exclude>-->
+                        <!--<exclude>**/nb-configuration.xml</exclude>-->
+                        <!--<exclude>**/.classpath/**</exclude>-->
+                        <!--<exclude>**/.project</exclude>-->
+                        <!--<exclude>**/.settings/**</exclude>-->
+
+                        <!--&lt;!&ndash; temporary build files &ndash;&gt;-->
+                        <!--<exclude>**/logs/**</exclude>-->
+                        <!--<exclude>**/docs/**</exclude>-->
+                        <!--<exclude>**/tmp/**</exclude>-->
+                        <!--<exclude>**/target/**</exclude>-->
+                        <!--<exclude>**/antlr3/**</exclude>-->
+                        <!--<exclude>**/META-INF/**</exclude>-->
+                        <!--<exclude>**/dependency-reduced-pom.xml</exclude>-->
+                        <!--<exclude>**/**QueryFilter.tokens</exclude>-->
+                        <!--<exclude>**/**QueryFilterLexer.java</exclude>-->
+                        <!--<exclude>**/**QueryFilterParser.java</exclude>-->
+                        <!--<exclude>**/**.conf</exclude>-->
+                        <!--<exclude>**/**.csv</exclude>-->
+                        <!--<exclude>**/aws.properties</exclude>-->
+                        <!--<exclude>**/tempExport*</exclude>-->
+                        <!--<exclude>loadtests/loadtest_setup.sh</exclude>-->
+                        <!--<exclude>loadtests/gatling/user-files/request-bodies/**</exclude>-->
+                        <!--<exclude>loadtests/.java-version</exclude>-->
+
+                        <!--&lt;!&ndash; gatling loadtest data files &ndash;&gt;-->
+                        <!--<exclude>loadtests/src/main/scala/org/apache/usergrid/datagenerators/datafiles/**.txt</exclude>-->
+                        <!--<exclude>loadtests/src/main/scala/org/apache/usergrid/datagenerators/**.txt</exclude>-->
+                        <!--<exclude>loadtests/src/test/resources/**.csv</exclude>-->
+
+                        <!--&lt;!&ndash; other &ndash;&gt;-->
+                        <!--<exclude>**/catalina_base/**</exclude>-->
+                        <!--<exclude>**/m2/**</exclude>-->
+                        <!--<exclude>**/*.asc</exclude>-->
+                        <!--<exclude>**/dummy.txt</exclude>-->
+                        <!--<exclude>**/cloudbees.xml</exclude>-->
+                        <!--<exclude>**/catalina_base/**</exclude>-->
+
+                    <!--</excludes>-->
+                <!--</configuration>-->
+
+            <!--</plugin>-->
+
         </plugins>
 
         <resources>
