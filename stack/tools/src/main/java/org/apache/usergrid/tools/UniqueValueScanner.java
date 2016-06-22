@@ -21,13 +21,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.UUID;
 
-import com.google.common.base.Optional;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.util.RangeBuilder;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
@@ -59,6 +57,9 @@ public class UniqueValueScanner extends ToolBase {
     private static final String ENTITY_TYPE_ARG = "entityType";
 
     private static final String ENTITY_NAME_ARG = "entityName";
+
+    private static final String ENTITY_FIELD_TYPE_ARG = "fieldType";
+
 
 
     //copied shamelessly from unique value serialization strat.
@@ -100,11 +101,16 @@ public class UniqueValueScanner extends ToolBase {
         options.addOption( collectionOption );
 
         Option specificEntityNameOption =
-            OptionBuilder.withArgName(ENTITY_NAME_ARG).hasArg().isRequired( true ).withDescription( "specific entity name" )
+            OptionBuilder.withArgName(ENTITY_NAME_ARG).hasArg().isRequired( false ).withDescription( "specific entity name" )
                 .create(ENTITY_NAME_ARG);
 
         options.addOption( specificEntityNameOption );
 
+        Option fieldTypeOption =
+            OptionBuilder.withArgName(ENTITY_FIELD_TYPE_ARG).hasArg().isRequired( false ).withDescription( "field type" )
+                .create(ENTITY_FIELD_TYPE_ARG);
+
+        options.addOption( fieldTypeOption );
 
         return options;
     }
@@ -126,14 +132,15 @@ public class UniqueValueScanner extends ToolBase {
             appToFilter = UUID.fromString(line.getOptionValue(APPLICATION_ARG));
         }
 
+        logger.info("Staring Tool: UniqueValueScanner");
 
-        logger.info("Starting entity unique scanner");
 
         keyspace = injector.getInstance(com.netflix.astyanax.Keyspace.class);
         mvccEntitySerializationStrategy = injector.getInstance(MvccEntitySerializationStrategy.class);
         uniqueValueSerializationStrategy = injector.getInstance(UniqueValueSerializationStrategy.class);
 
-
+        String fieldType =
+            line.getOptionValue(ENTITY_FIELD_TYPE_ARG) != null ?  line.getOptionValue(ENTITY_FIELD_TYPE_ARG)  : "name" ;
         String entityType = line.getOptionValue(ENTITY_TYPE_ARG);
         String entityName = line.getOptionValue(ENTITY_NAME_ARG);
 
@@ -149,15 +156,39 @@ public class UniqueValueScanner extends ToolBase {
                     "collection name).");
             }
 
+            logger.info("Running entity unique load only");
+
+
             //do stuff
             UniqueValueSet uniqueValueSet = uniqueValueSerializationStrategy.load(
                 new ApplicationScopeImpl( new SimpleId(appToFilter, "application" ) ),
                 entityType,
-                Collections.singletonList(new StringField( "name", entityName) ));
+                Collections.singletonList(new StringField( fieldType, entityName) ));
 
-            logger.info("Returned unique value set from serialization load = {}", uniqueValueSet);
+            StringBuilder stringBuilder = new StringBuilder();
+
+            stringBuilder.append("[");
+
+            uniqueValueSet.forEach( uniqueValue -> {
+
+
+                String entry = "fieldName="+uniqueValue.getField().getName()+
+                    ", fieldValue="+uniqueValue.getField().getValue()+
+                    ", uuid="+uniqueValue.getEntityId().getUuid()+
+                    ", type="+uniqueValue.getEntityId().getType()+
+                    ", version="+uniqueValue.getEntityVersion();
+                stringBuilder.append("{").append(entry).append("},");
+            });
+
+            stringBuilder.deleteCharAt(stringBuilder.length() -1);
+            stringBuilder.append("]");
+
+            logger.info("Returned unique value set from serialization load = {}", stringBuilder.toString());
 
         } else {
+
+            logger.info("Running entity unique scanner only");
+
 
             // scan through all unique values and log some info
 
@@ -181,7 +212,7 @@ public class UniqueValueScanner extends ToolBase {
                 String scopeType = row.getKey().getScope().getType();
                 UUID scopeUUID = row.getKey().getScope().getUuid();
 
-                if (!fieldName.equalsIgnoreCase("name") ||
+                if (!fieldName.equalsIgnoreCase(fieldType) ||
                     (finalAppToFilter != null && !finalAppToFilter.equals(scopeUUID))
                     ) {
                     // do nothing

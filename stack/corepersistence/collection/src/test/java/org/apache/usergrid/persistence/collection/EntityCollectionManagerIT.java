@@ -758,7 +758,7 @@ public class EntityCollectionManagerIT {
         assertNotNull( "Version was assigned", createReturned.getVersion() );
 
         FieldSet fieldResults =
-            manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ), false)
+            manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ), true)
                    .toBlocking().last();
 
         assertEquals( 1, fieldResults.size() );
@@ -775,7 +775,7 @@ public class EntityCollectionManagerIT {
 
         //try to load via the unique field, should have triggered repair
         final FieldSet results =
-            manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ), false)
+            manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ), true)
                    .toBlocking().last();
 
 

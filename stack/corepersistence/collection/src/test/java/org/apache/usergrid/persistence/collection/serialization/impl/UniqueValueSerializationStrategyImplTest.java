@@ -33,7 +33,6 @@ import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
-import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
@@ -338,6 +337,108 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         assertEquals( version1, allFieldsValue.getEntityVersion() );
 
         assertFalse(allFieldsWritten.hasNext());
+
+    }
+
+    /**
+     * Test that inserting duplicates always show the oldest entity UUID being returned (versions of that OK to change).
+     *
+     * @throws ConnectionException
+     * @throws InterruptedException
+     */
+    @Test
+    public void testWritingDuplicates() throws ConnectionException, InterruptedException {
+
+        ApplicationScope scope =
+            new ApplicationScopeImpl( new SimpleId( "organization" ) );
+
+        IntegerField field = new IntegerField( "count", 5 );
+        Id entityId1 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        Id entityId2 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+
+
+
+        UUID version1 = UUIDGenerator.newTimeUUID();
+        UUID version2 = UUIDGenerator.newTimeUUID();
+
+        UniqueValue stored1 = new UniqueValueImpl( field, entityId1, version2 );
+        UniqueValue stored2 = new UniqueValueImpl( field, entityId2,  version1 );
+
+
+        strategy.write( scope, stored1 ).execute();
+        strategy.write( scope, stored2 ).execute();
+
+        // load descending to get the older version of entity for this unique value
+        UniqueValueSet fields = strategy.load( scope, entityId1.getType(), Collections.<Field>singleton( field ));
+
+        UniqueValue retrieved = fields.getValue( field.getName() );
+
+        // validate that the first entity UUID is returned after inserting a duplicate mapping
+        assertEquals( stored1, retrieved );
+
+
+
+        UUID version3 = UUIDGenerator.newTimeUUID();
+        UniqueValue stored3 = new UniqueValueImpl( field, entityId2, version3);
+        strategy.write( scope, stored3 ).execute();
+
+        // load the values again, we should still only get back the original unique value
+        fields = strategy.load( scope, entityId1.getType(), Collections.<Field>singleton( field ));
+
+        retrieved = fields.getValue( field.getName() );
+
+        // validate that the first entity UUID is still returned after inserting duplicate with newer version
+        assertEquals( stored1, retrieved );
+
+
+        UUID version4 = UUIDGenerator.newTimeUUID();
+        UniqueValue stored4 = new UniqueValueImpl( field, entityId1, version4);
+        strategy.write( scope, stored4 ).execute();
+
+        // load the values again, now we should get the latest version of the original UUID written
+        fields = strategy.load( scope, entityId1.getType(), Collections.<Field>singleton( field ));
+
+        retrieved = fields.getValue( field.getName() );
+
+        // validate that the first entity UUID is still returned, but with the latest version
+        assertEquals( stored4, retrieved );
+
+    }
+
+    /**
+     * Test that inserting multiple versions of the same entity UUID result in the latest version being returned.
+     *
+     * @throws ConnectionException
+     * @throws InterruptedException
+     */
+    @Test
+    public void testMultipleVersionsSameEntity() throws ConnectionException, InterruptedException {
+
+        ApplicationScope scope =
+            new ApplicationScopeImpl( new SimpleId( "organization" ) );
+
+        IntegerField field = new IntegerField( "count", 5 );
+        Id entityId1 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+
+
+
+        UUID version1 = UUIDGenerator.newTimeUUID();
+        UUID version2 = UUIDGenerator.newTimeUUID();
+
+        UniqueValue stored1 = new UniqueValueImpl( field, entityId1, version1 );
+        UniqueValue stored2 = new UniqueValueImpl( field, entityId1,  version2 );
+
+
+        strategy.write( scope, stored1 ).execute();
+        strategy.write( scope, stored2 ).execute();
+
+        // load descending to get the older version of entity for this unique value
+        UniqueValueSet fields = strategy.load( scope, entityId1.getType(), Collections.<Field>singleton( field ));
+
+        UniqueValue retrieved = fields.getValue( field.getName() );
+        Assert.assertNotNull( retrieved );
+        assertEquals( stored2, retrieved );
+
 
     }
 
