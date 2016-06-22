@@ -501,9 +501,9 @@ public class CpRelationManager implements RelationManager {
     @Override
     public void removeFromCollection( String collectionName, EntityRef itemRef ) throws Exception {
 
-        // special handling for roles collection of the application
         if ( headEntity.getUuid().equals( applicationId ) ) {
             if ( collectionName.equals( COLLECTION_ROLES ) ) {
+                // special handling for roles collection of the application
                 Entity itemEntity = em.get( itemRef );
                 if ( itemEntity != null ) {
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
@@ -511,12 +511,12 @@ public class CpRelationManager implements RelationManager {
                     return;
                 }
             }
+            // handles normal app collection deletes
             em.delete( itemRef );
             return;
         }
 
-        // load the entity to be removed to the collection
-
+        // headEntity is not an application (used for management entities and entity collections like user devices)
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Loading entity to remove from collection {}:{} from app {}\n",
@@ -531,11 +531,25 @@ public class CpRelationManager implements RelationManager {
         GraphManager gm = managerCache.getGraphManager( applicationScope );
 
 
+        List<Edge> removedEdges = new ArrayList<>();
         //run our delete
         gm.loadEdgeVersions(
             CpNamingUtils.createEdgeFromCollectionName( cpHeadEntity.getId(), collectionName, memberEntity.getId() ) )
-          .flatMap(edge -> gm.markEdge(edge)).flatMap(edge -> gm.deleteEdge(edge)).toBlocking()
+                .flatMap(edge -> gm.markEdge(edge)).flatMap(edge -> gm.deleteEdge(edge))
+                .doOnNext(edge -> removedEdges.add(edge)).toBlocking()
           .lastOrDefault(null);
+
+        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collectionName );
+        if (collection != null && collection.getLinkedCollection() != null) {
+            // delete reverse edges
+            final String pluralType = InflectionUtils.pluralize( cpHeadEntity.getId().getType() );
+            gm.loadEdgeVersions(
+                    CpNamingUtils.createEdgeFromCollectionName( memberEntity.getId(), pluralType, cpHeadEntity.getId() ) )
+                    .flatMap(reverseEdge -> gm.markEdge(reverseEdge))
+                    .flatMap(reverseEdge -> gm.deleteEdge(reverseEdge))
+                    .doOnNext(reverseEdge -> removedEdges.add(reverseEdge))
+                    .toBlocking().lastOrDefault(null);
+        }
 
 
         /**
@@ -544,12 +558,10 @@ public class CpRelationManager implements RelationManager {
          */
 
 
-        //TODO: this should not happen here, needs to go to  SQS
-        //indexProducer.put(batch).subscribe();
-        if ( !skipIndexingForType( memberEntity.getId().getType() ) ) {
-
-            indexService.queueEntityDelete(applicationScope, memberEntity.getId());
-        }
+        // item not deindexed, only edges
+        removedEdges.forEach(edge -> {
+            indexService.queueDeleteEdge(applicationScope, edge);
+        });
 
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {

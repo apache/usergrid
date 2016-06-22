@@ -1580,7 +1580,8 @@ public class ManagementServiceImpl implements ManagementService {
 
         BiMap<UUID, String> organizations = HashBiMap.create();
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
-        Results results = em.getCollection(  new SimpleEntityRef( User.ENTITY_TYPE, userId ),
+        EntityRef userRef = new SimpleEntityRef(User.ENTITY_TYPE, userId);
+        Results results = em.getCollection(  userRef,
             Schema.COLLECTION_GROUPS, null, 1000, Level.ALL_PROPERTIES, false );
 
         do {
@@ -1592,10 +1593,17 @@ public class ManagementServiceImpl implements ManagementService {
                     path = path.toLowerCase();
                 }
 
-                try {
-                    organizations.put( entity.getUuid(), path );
-                } catch (IllegalArgumentException e) {
-                    logger.warn("Error adding {}:{} to BiMap: {}", entity.getUuid(), path, e.getMessage() );
+                // check that user is in users collection for org
+                EntityRef groupRef = new SimpleEntityRef(Group.ENTITY_TYPE, entity.getUuid());
+                if (em.isCollectionMember(groupRef, Schema.COLLECTION_USERS, userRef)) {
+                    try {
+                        organizations.put(entity.getUuid(), path);
+                    } catch (IllegalArgumentException e) {
+                        logger.warn("Error adding {}:{} to BiMap: {}", entity.getUuid(), path, e.getMessage());
+                    }
+                } else {
+                    // org doesn't know about user, so read repair
+                    em.removeFromCollection(userRef, Schema.COLLECTION_GROUPS, groupRef);
                 }
             }
 
@@ -1698,16 +1706,18 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
+        EntityRef orgRef = new SimpleEntityRef( Group.ENTITY_TYPE, organization.getUuid() );
+        EntityRef userRef = new SimpleEntityRef( User.ENTITY_TYPE, user.getUuid() );
 
-        if(em.getCollection(organization.getUuid() ,"users",Query.fromQL( "select * where uuid ="+user.getUuid() ),Level.IDS ).size() >0){
+
+        if(em.isCollectionMember(orgRef, Schema.COLLECTION_USERS, userRef)) {
             if(logger.isDebugEnabled()) {
                 logger.debug( "addAdminUserToOrganization - Found value: {} already in collection", user.getName() );
             }
             return;
         }
 
-        em.addToCollection(new SimpleEntityRef(Group.ENTITY_TYPE, organization.getUuid()), "users",
-            new SimpleEntityRef(User.ENTITY_TYPE, user.getUuid()));
+        em.addToCollection(orgRef, Schema.COLLECTION_USERS, userRef);
 
         invalidateManagementAppAuthCache();
 
@@ -1733,10 +1743,11 @@ public class ManagementServiceImpl implements ManagementService {
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
         try {
-            int size = em.getCollection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ),
-                    "users", null, 2, Level.IDS, false ).size();
+            Results collection = em.getCollection( new SimpleEntityRef( Group.ENTITY_TYPE, organizationId ),
+                    "users", null, 2, Level.IDS, false );
+            int size = collection.size();
 
-            if ( !force && size <= 1 ) {
+            if ( !force && (size == 0 || (size == 1 && collection.getId() == userId))) {
                 throw new Exception();
             }
         }

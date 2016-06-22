@@ -85,6 +85,8 @@ public class DevicesService extends AbstractCollectionService {
                                     for (EntityRef userDevice : userDevices) {
                                         if(userDevice.getUuid().equals(deviceRef.getUuid())) { //only remove the current device from user
                                             em.removeFromCollection(user, "devices", userDevice);
+                                            // TODO: may want to actually remove the device
+                                            // em.delete(userDevice);
                                         }
                                     }
                                     em.removeFromCollection(deviceRef, "users", user);
