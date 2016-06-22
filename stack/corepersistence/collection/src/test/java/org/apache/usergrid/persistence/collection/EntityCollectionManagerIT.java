@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.collection;
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.entity.Stage;
@@ -28,6 +29,8 @@ import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerial
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueActor;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.collection.util.EntityHelper;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.guicyfig.SetConfigTestBypass;
@@ -61,7 +64,7 @@ import static org.junit.Assert.*;
 /** @author tnine */
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class EntityCollectionManagerIT {
+public class EntityCollectionManagerIT extends AbstractUniqueValueTest {
 
     @Inject
     private EntityCollectionManagerFactory factory;
@@ -73,22 +76,22 @@ public class EntityCollectionManagerIT {
     @Inject
     private SerializationFig serializationFig;
 
-
     @Inject
     private UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
     @Inject
     private MvccEntitySerializationStrategy entitySerializationStrategy;
 
-    private static AtomicBoolean startedAkka = new AtomicBoolean( false );
+    @Inject
+    ActorSystemManager actorSystemManager;
+
+    @Inject
+    UniqueValuesService uniqueValuesService;
+
 
     @Before
     public void initAkka() {
-        if ( !startedAkka.getAndSet( true ) ) {
-            ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
-            EntityCollectionManager manager = factory.createCollectionManager( context );
-            manager.startAkkaForTesting( "127.0.0.1", 2551, "us-east" );
-        }
+        initAkka( 2555, actorSystemManager, uniqueValuesService );
     }
 
 

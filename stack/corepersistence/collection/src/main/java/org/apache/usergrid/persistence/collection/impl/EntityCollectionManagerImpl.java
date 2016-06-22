@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.netflix.astyanax.model.ConsistencyLevel;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.collection.serialization.impl.LogEntryIterator;
 import org.slf4j.Logger;
@@ -125,6 +126,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final RxTaskScheduler rxTaskScheduler;
 
     private final UniqueValuesService uniqueValuesService;
+    private final ActorSystemManager actorSystemManager;
 
 
     @Inject
@@ -144,6 +146,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                                         final MetricsFactory metricsFactory,
                                         final SerializationFig serializationFig,
                                         final RxTaskScheduler rxTaskScheduler,
+                                        ActorSystemManager actorSystemManager,
                                         UniqueValuesService uniqueValuesService,
                                         @Assisted final ApplicationScope applicationScope ) {
 
@@ -154,6 +157,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.serializationFig = serializationFig;
         this.rxTaskScheduler = rxTaskScheduler;
 
+        this.actorSystemManager = actorSystemManager;
         this.uniqueValuesService = uniqueValuesService;
 
         ValidationUtils.validateApplicationScope( applicationScope );
@@ -255,7 +259,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         Preconditions.checkNotNull( entityIds, "entityIds cannot be null" );
 
-        final Observable<EntitySet> entitySetObservable = Observable.create( new Observable.OnSubscribe<EntitySet>() {
+        final Observable<EntitySet> entitySetObservable =
+            Observable.create( new Observable.OnSubscribe<EntitySet>() {
 
             @Override
             public void call( final Subscriber<? super EntitySet> subscriber ) {
@@ -461,7 +466,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     public Observable<VersionSet> getLatestVersion( final Collection<Id> entityIds ) {
 
 
-        final Observable<VersionSet> observable =  Observable.create( new Observable.OnSubscribe<VersionSet>() {
+        final Observable<VersionSet> observable =
+            Observable.create( new Observable.OnSubscribe<VersionSet>() {
 
             @Override
             public void call( final Subscriber<? super VersionSet> subscriber ) {
@@ -505,18 +511,5 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         }
 
         return Health.RED;
-    }
-
-
-    @Override
-    public void startAkkaForTesting( String hostname, int port, String region ) {
-        try {
-            uniqueValuesService.start( hostname, port, region );
-            uniqueValuesService.waitForRequestActors();
-
-        } catch (Throwable t) {
-            logger.error("Error starting Akka", t);
-            throw t;
-        }
     }
 }

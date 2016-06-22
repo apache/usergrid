@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
@@ -41,12 +42,12 @@ public class UniqueValuesTableImpl implements UniqueValuesTable {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValuesTableImpl.class );
 
     final UniqueValueSerializationStrategy strat;
-    final AkkaFig akkaFig;
+    final UniqueValuesFig uniqueValuesFig;
 
     @Inject
-    public UniqueValuesTableImpl( final UniqueValueSerializationStrategy strat, AkkaFig akkaFig ) {
+    public UniqueValuesTableImpl( final UniqueValueSerializationStrategy strat, UniqueValuesFig uniqueValuesFig) {
         this.strat = strat;
-        this.akkaFig = akkaFig;
+        this.uniqueValuesFig = uniqueValuesFig;
     }
 
 
@@ -62,7 +63,7 @@ public class UniqueValuesTableImpl implements UniqueValuesTable {
     public void reserve( ApplicationScope scope, Id owner, UUID version, Field field ) throws ConnectionException {
 
         UniqueValue uv = new UniqueValueImpl( field, owner, version);
-        final MutationBatch write = strat.write( scope, uv, akkaFig.getUniqueValueReservationTtl() );
+        final MutationBatch write = strat.write( scope, uv, uniqueValuesFig.getUniqueValueReservationTtl() );
         write.execute();
     }
 

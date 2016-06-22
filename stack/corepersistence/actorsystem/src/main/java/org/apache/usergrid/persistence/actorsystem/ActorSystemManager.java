@@ -16,29 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.core.guice;
+package org.apache.usergrid.persistence.actorsystem;
 
 
-import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
+import akka.actor.ActorRef;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+public interface ActorSystemManager {
 
-/**
- * Created by russo on 8/27/15.
- */
-@Singleton
-public class SettingsValidationCluster {
+    void start();
 
-    @Inject
-    public SettingsValidationCluster(final ClusterFig clusterFig) {
+    void start(String hostname, Integer port, String currentRegion);
 
-        final String configuredClusterName = clusterFig.getClusterName();
-        final String defaultCluster = ClusterFig.VALIDATION_DEFAULT_VALUE;
+    void waitForRequestActors();
 
-        Preconditions.checkArgument(!configuredClusterName.equalsIgnoreCase(defaultCluster), ClusterFig.CLUSTER_NAME_PROPERTY + " property must be set.");
+    boolean isReady();
 
-    }
+    void registerRouterProducer( RouterProducer routerProducer );
 
+    void registerMessageType( Class messageType, String routerPath );
+
+    ActorRef getClientActor(String region );
 }

@@ -26,26 +26,11 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <description>The module for handling all scope I/O</description>
 
-    <artifactId>collection</artifactId>
-    <name>Usergrid Collection</name>
+    <name>Usergrid ActorSystem</name>
+    <artifactId>actorsystem</artifactId>
 
     <dependencies>
-
-        <!-- Google Guice Integration Test Injectors -->
-
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
-            <artifactId>common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
-            <artifactId>actorsystem</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>com.typesafe.akka</groupId>
@@ -83,7 +68,23 @@
             <version>2.4.0</version>
         </dependency>
 
-        <!-- tests -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>${guice.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.safehaus.guicyfig</groupId>
+            <artifactId>guicyfig</artifactId>
+            <version>${guicyfig.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.usergrid</groupId>
@@ -93,33 +94,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
-
-    <!--
-        <profiles>
-            <profile>
-                <id>jacoco</id>
-                <build>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-surefire-plugin</artifactId>
-                            <version>${surefire.plugin.version}</version>
-                            <configuration>
-                                <argLine>-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec</argLine>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </build>
-            </profile>
-        </profiles>
-    -->
 
 </project>

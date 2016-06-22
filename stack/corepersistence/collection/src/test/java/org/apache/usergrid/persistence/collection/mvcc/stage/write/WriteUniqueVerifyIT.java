@@ -18,6 +18,10 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
+import org.apache.usergrid.persistence.collection.AbstractUniqueValueTest;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueActor;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,7 +58,7 @@ import static org.junit.Assert.fail;
  */
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class WriteUniqueVerifyIT {
+public class WriteUniqueVerifyIT extends AbstractUniqueValueTest {
 
     @Inject
     private EntityCollectionManagerFactory factory;
@@ -69,16 +73,19 @@ public class WriteUniqueVerifyIT {
     @Inject
     public EntityCollectionManagerFactory cmf;
 
-    private static AtomicBoolean startedAkka = new AtomicBoolean( false );
+    @Inject
+    ActorSystemManager actorSystemManager;
+
+    @Inject
+    UniqueValuesService uniqueValuesService;
+
 
     @Before
     public void initAkka() {
-        if ( !startedAkka.getAndSet( true ) ) {
-            ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
-            EntityCollectionManager manager = factory.createCollectionManager( context );
-            manager.startAkkaForTesting( "127.0.0.1", 2552, "us-east" );
-        }
+        // each test class needs unique port number
+        initAkka( 2551, actorSystemManager, uniqueValuesService );
     }
+
 
     @Test
     public void testConflict() {
