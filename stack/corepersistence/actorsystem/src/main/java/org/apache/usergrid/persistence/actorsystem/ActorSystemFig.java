@@ -26,6 +26,7 @@ import org.safehaus.guicyfig.Key;
 
 import java.io.Serializable;
 
+
 @FigSingleton
 public interface ActorSystemFig extends GuicyFig, Serializable {
 
@@ -39,13 +40,10 @@ public interface ActorSystemFig extends GuicyFig, Serializable {
 
     String AKKA_REGION_SEEDS = "collection.akka.region.seeds";
 
-    String AKKA_UNIQUEVALUE_ACTORS = "collection.akka.uniquevalue.actors";
+    String AKKA_AUTHORITATIVE_REGION = "collection.akka.authoritative.region";
 
-    String AKKA_UNIQUEVALUE_CACHE_TTL = "collection.akka.uniquevalue.cache.ttl";
+    String AKKA_INSTANCES_PER_NODE = "collection.akka.instances-per-node";
 
-    String AKKA_UNIQUEVALUE_RESERVATION_TTL= "collection.akka.uniquevalue.reservation.ttl";
-
-    String AKKA_AUTHORITATIVE_REGION = "collection.akka.uniquevalue.authoritative.region";
 
     /**
      * Use Akka or nah
@@ -73,13 +71,6 @@ public interface ActorSystemFig extends GuicyFig, Serializable {
     String getRegionList();
 
     /**
-     * Number of UniqueValueActors to be started on each node
-     */
-    @Key(AKKA_UNIQUEVALUE_ACTORS)
-    @Default("300")
-    int getUniqueValueActors();
-
-    /**
      * Comma-separated lists of seeds each with format {region}:{hostname}:{port}.
      * Regions MUST be listed in the 'usergrid.queue.regionList'
      */
@@ -92,17 +83,11 @@ public interface ActorSystemFig extends GuicyFig, Serializable {
     @Key(AKKA_AUTHORITATIVE_REGION)
     String getAkkaAuthoritativeRegion();
 
-    /**
-     * Unique Value cache TTL in seconds.
-     */
-    @Key(AKKA_UNIQUEVALUE_CACHE_TTL)
-    @Default("10")
-    int getUniqueValueCacheTtl();
 
     /**
-     * Unique Value Reservation TTL in seconds.
+     * Number of actor instances to create on each node for each router.
      */
-    @Key(AKKA_UNIQUEVALUE_RESERVATION_TTL)
-    @Default("10")
-    int getUniqueValueReservationTtl();
+    @Key(AKKA_INSTANCES_PER_NODE)
+    @Default("300")
+    int getInstancesPerNode();
 }

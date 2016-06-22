@@ -42,12 +42,12 @@ public class UniqueValuesTableImpl implements UniqueValuesTable {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValuesTableImpl.class );
 
     final UniqueValueSerializationStrategy strat;
-    final ActorSystemFig actorSystemFig;
+    final UniqueValuesFig uniqueValuesFig;
 
     @Inject
-    public UniqueValuesTableImpl( final UniqueValueSerializationStrategy strat, ActorSystemFig actorSystemFig) {
+    public UniqueValuesTableImpl( final UniqueValueSerializationStrategy strat, UniqueValuesFig uniqueValuesFig) {
         this.strat = strat;
-        this.actorSystemFig = actorSystemFig;
+        this.uniqueValuesFig = uniqueValuesFig;
     }
 
 
@@ -63,7 +63,7 @@ public class UniqueValuesTableImpl implements UniqueValuesTable {
     public void reserve( ApplicationScope scope, Id owner, UUID version, Field field ) throws ConnectionException {
 
         UniqueValue uv = new UniqueValueImpl( field, owner, version);
-        final MutationBatch write = strat.write( scope, uv, actorSystemFig.getUniqueValueReservationTtl() );
+        final MutationBatch write = strat.write( scope, uv, uniqueValuesFig.getUniqueValueReservationTtl() );
         write.execute();
     }
 

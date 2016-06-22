@@ -59,6 +59,7 @@ public abstract class CollectionModule extends AbstractModule {
         // noinspection unchecked
         install( new GuicyFigModule( SerializationFig.class ) );
         install( new GuicyFigModule( CollectionSchedulerFig.class ) );
+        install( new GuicyFigModule( UniqueValuesFig.class ) );
         install( new SerializationModule() );
         install( new ServiceModule() );
         install( new ActorSystemModule() );
