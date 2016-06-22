@@ -223,7 +223,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                 }
             }
 
-            int numInstancesPerNode = actorSystemFig.getUniqueValueActors();
+            int numInstancesPerNode = actorSystemFig.getInstancesPerNode();
 
             // read config file once for each region
 
@@ -236,15 +236,16 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                 // cluster singletons only run role "io" nodes and NOT on "client" nodes of other regions
                 String clusterRole = currentRegion.equals( region ) ? "io" : "client";
 
-                logger.info( "Config for region {} is:\n" +
-                        "   Akka Hostname {}\n" +
-                        "   Akka Seeds {}\n" +
-                        "   Akka UniqueValueActors per node {}\n" +
-                        "   Akka Authoritative Region {}",
-                    region, hostname, seeds, port, numInstancesPerNode, actorSystemFig.getAkkaAuthoritativeRegion() );
+                logger.info( "Akka Config for region {} is:\n" +
+                        "   Hostname {}\n" +
+                        "   Seeds {}\n" +
+                        "   Authoritative Region {}\n",
+                    region, hostname, seeds, actorSystemFig.getAkkaAuthoritativeRegion() );
 
                 Map<String, Object> configMap = new HashMap<String, Object>() {{
+
                     put( "akka", new HashMap<String, Object>() {{
+
                         put( "remote", new HashMap<String, Object>() {{
                             put( "netty.tcp", new HashMap<String, Object>() {{
                                 put( "hostname", hostname );
@@ -252,8 +253,9 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                                 put( "port", regionPort );
                             }} );
                         }} );
+
                         put( "cluster", new HashMap<String, Object>() {{
-                            put( "max-nr-of-instances-per-node", numInstancesPerNode );
+                            put( "max-nr-of-instances-per-node", 300);
                             put( "roles", Collections.singletonList(clusterRole) );
                             put( "seed-nodes", new ArrayList<String>() {{
                                 for (String seed : seeds) {
@@ -262,24 +264,16 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                             }} );
                         }} );
 
-                        // TODO: allow RouterProducers to add in router-specific stuff like this:
-                        put( "actor", new HashMap<String, Object>() {{
-                            put( "deployment", new HashMap<String, Object>() {{
-                                put( "/uvRouter/singleton/router", new HashMap<String, Object>() {{
-                                    put( "cluster", new HashMap<String, Object>() {{
-                                        //put( "roles", Collections.singletonList(role) );
-                                        put( "max-nr-of-instances-per-node", numInstancesPerNode );
-                                    }} );
-                                }} );
-                            }} );
-                        }} );
                     }} );
                 }};
 
-                Config config = ConfigFactory
-                    .parseMap( configMap )
+                for ( RouterProducer routerProducer : routerProducers ) {
+                    routerProducer.addConfiguration( configMap );
+                }
+
+                Config config = ConfigFactory.parseMap( configMap )
                     .withFallback( ConfigFactory.parseString( "akka.cluster.roles = [io]" ) )
-                    .withFallback( ConfigFactory.load( "cluster-singleton" ) );
+                    .withFallback( ConfigFactory.load( "application.conf" ) );
 
                 configs.put( region, config );
             }

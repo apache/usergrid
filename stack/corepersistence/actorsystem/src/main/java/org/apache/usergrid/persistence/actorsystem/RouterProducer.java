@@ -19,7 +19,6 @@
 package org.apache.usergrid.persistence.actorsystem;
 
 import akka.actor.ActorSystem;
-
 import java.util.Map;
 
 
@@ -41,5 +40,10 @@ public interface RouterProducer {
      * Create other actors needed to support the router produced by the implementation.
      */
     void createLocalSystemActors( ActorSystem localSystem, Map<String, ActorSystem> systemMap );
+
+    /**
+     * Add configuration for the router to configuration map
+     */
+    void addConfiguration( Map<String, Object> configMap );
 
 }

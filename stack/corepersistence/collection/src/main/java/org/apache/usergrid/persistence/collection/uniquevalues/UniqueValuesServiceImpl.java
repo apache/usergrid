@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -52,7 +53,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValuesServiceImpl.class );
 
     static Injector          injector;
-    ActorSystemFig           actorSystemFig;
+    UniqueValuesFig          uniqueValuesFig;
     ActorSystemManager       actorSystemManager;
     UniqueValuesTable        table;
     private ReservationCache reservationCache;
@@ -61,16 +62,16 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     @Inject
     public UniqueValuesServiceImpl(
         Injector inj,
-        ActorSystemFig actorSystemFig,
+        UniqueValuesFig uniqueValuesFig,
         ActorSystemManager actorSystemManager,
         UniqueValuesTable table ) {
 
         injector = inj;
         this.actorSystemManager = actorSystemManager;
-        this.actorSystemFig = actorSystemFig;
+        this.uniqueValuesFig = uniqueValuesFig;
         this.table = table;
 
-        ReservationCache.init( actorSystemFig.getUniqueValueCacheTtl() );
+        ReservationCache.init( uniqueValuesFig.getUniqueValueCacheTtl() );
         this.reservationCache = ReservationCache.getInstance();
     }
 
@@ -299,5 +300,38 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     @Override
     public void createLocalSystemActors( ActorSystem localSystem, Map<String, ActorSystem> systemMap ) {
         subscribeToReservations( localSystem, systemMap );
+    }
+
+    @Override
+    public void addConfiguration(Map<String, Object> configMap) {
+
+        int numInstancesPerNode = uniqueValuesFig.getUniqueValueInstancesPerNode();
+
+        // TODO: will the below overwrite things other routers have added under "actor.deployment"?
+
+        Map<String, Object> akka = (Map<String, Object>)configMap.get("akka");
+
+        akka.put( "actor", new HashMap<String, Object>() {{
+            put( "deployment", new HashMap<String, Object>() {{
+                put( "/uvRouter/singleton/router", new HashMap<String, Object>() {{
+                    put( "router", "consistent-hashing-pool" );
+                    put( "cluster", new HashMap<String, Object>() {{
+                        put( "enabled", "on" );
+                        put( "allow-local-routees", "on" );
+                        put( "user-role", "io" );
+                        put( "max-nr-of-instances-per-node", numInstancesPerNode );
+                        put( "failure-detector", new HashMap<String, Object>() {{
+                            put( "threshold", "" );
+                            put( "acceptable-heartbeat-pause", "3 s" );
+                            put( "heartbeat-interval", "1 s" );
+                            put( "heartbeat-request", new HashMap<String, Object>() {{
+                                put( "expected-response-after", "3 s" );
+                            }} );
+                        }} );
+                    }} );
+                }} );
+            }} );
+        }} );
+
     }
 }
