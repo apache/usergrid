@@ -18,13 +18,9 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
+import com.netflix.astyanax.util.RangeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +51,6 @@ import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.ConsistencyLevel;
 import com.netflix.astyanax.model.Row;
 import com.netflix.astyanax.query.RowQuery;
-import com.netflix.astyanax.util.RangeBuilder;
 
 
 /**
@@ -271,7 +266,8 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
         Iterator<Row<ScopedRowKey<FieldKey>, EntityVersion>> results =
             keyspace.prepareQuery( CF_UNIQUE_VALUES ).setConsistencyLevel( consistencyLevel ).getKeySlice( keys )
-                    .withColumnRange( new RangeBuilder().setLimit( 1 ).build() ).execute().getResult().iterator();
+                .withColumnRange(new RangeBuilder().setLimit(serializationFig.getBufferSize()).build())
+                .execute().getResult().iterator();
 
 
         while ( results.hasNext() )
@@ -279,7 +275,6 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
         {
 
             final Row<ScopedRowKey<FieldKey>, EntityVersion> unique = results.next();
-
 
             final Field field = parseRowKey( unique.getKey() );
 
@@ -290,20 +285,75 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                 continue;
             }
 
-            final EntityVersion entityVersion = columnList.next().getName();
+            // these used duplicate tracking and cleanup
+            UUID oldestEntityUUID = null;
+            UniqueValueImpl firstUniqueValue = null;
 
 
-            final UniqueValueImpl uniqueValue =
-                new UniqueValueImpl( field, entityVersion.getEntityId(), entityVersion.getEntityVersion() );
+            /**
+             *  While iterating the columns, a rule is being enforced to only EVER return the oldest UUID.  This means
+             *  the UUID with the oldest timestamp ( it was the original entity written for the unique value ).
+             *
+             *  We do this to prevent cycling of unique value -> entity UUID mappings as this data is ordered by the
+             *  entity's version and not the entity's timestamp itself.
+             *
+             *  If newer entity UUIDs are encountered, they are removed from the unique value tables, however their
+             *  backing serialized entity data is left in tact in case a cleanup / audit is later needed.
+             */
+            while (columnList.hasNext()) {
 
-            if(logger.isTraceEnabled()){
-                logger.trace("Putting unique value [{}={}] into result set with entity id [{}] and entity version [{}]",
-                    field.getName(), field.getValue().toString(),
-                    entityVersion.getEntityId(),
-                    entityVersion.getEntityVersion());
+                final EntityVersion entityVersion = columnList.next().getName();
+
+                final UUID currentEntityUUID = entityVersion.getEntityId().getUuid();
+                final UniqueValueImpl uniqueValue =
+                    new UniqueValueImpl(field, entityVersion.getEntityId(), entityVersion.getEntityVersion());
+
+
+                // keep track of the first and oldest entity (not version),
+                // knowing the the first one may not be the 'oldest'
+                if(oldestEntityUUID == null){
+
+                    oldestEntityUUID = currentEntityUUID;
+                    firstUniqueValue = uniqueValue;
+
+                }else if(currentEntityUUID.timestamp() < oldestEntityUUID.timestamp()){
+
+                    oldestEntityUUID = currentEntityUUID;
+                }
+
+
+                // only return the oldest (original) unique value entries
+                if(currentEntityUUID.timestamp() <= oldestEntityUUID.timestamp() ){
+
+                    if (logger.isTraceEnabled()) {
+                    logger.trace("Putting unique value [{}={}] into result set with entity id [{}] and entity version [{}]",
+                        field.getName(), field.getValue().toString(),
+                        entityVersion.getEntityId(),
+                        entityVersion.getEntityVersion());
+                     }
+
+                    uniqueValueSet.addValue(uniqueValue);
+
+                }
+                // remove the newer duplicated unique value entries
+                else{
+
+                    delete(appScope, uniqueValue ).execute();
+
+                }
+
             }
 
-            uniqueValueSet.addValue( uniqueValue );
+            // check to see if the very first unique value entry was overwritten because it was not the oldest
+            // if so, clean up its unique index
+            if( !uniqueValueSet.getValue( firstUniqueValue.getField().getName() )
+                .getEntityId().getUuid().equals(firstUniqueValue.getEntityId().getUuid()) ){
+
+                delete(appScope, firstUniqueValue).execute();
+
+            }
+
+
         }
 
         return uniqueValueSet;
