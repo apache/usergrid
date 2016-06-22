@@ -117,49 +117,27 @@ public class EntityCollectionManagerIT {
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        Entity entity = new Entity( new SimpleId( "test" ) );
-        entity.setField( new IntegerField( "count", 5, true ) );
+        {
+            Entity newEntity = new Entity( new SimpleId( "test" ) );
+            newEntity.setField( new IntegerField( "count", 5, true ) );
 
-        Observable<Entity> firstWrite = manager.write( entity );
-
-        Entity newEntity = null;
-        Entity firstReturned = null;
-
-        for(int i=0; i<500; i++){
-
-
-            firstReturned = firstWrite.toBlocking().lastOrDefault( null );
-
+            Observable<Entity> observable = manager.write( newEntity );
+            Entity returned = observable.toBlocking().lastOrDefault( null );
         }
 
-//        try {
-//            //newEntity = new Entity( new SimpleId( "test" ) );
-//            //newEntity.setField( new IntegerField( "count", 5, true ) );
-//
-//            Observable<Entity> secondWrite = manager.write( entity );
-//            secondReturned = secondWrite.toBlocking().lastOrDefault( null );
-//
-//            //fail( "Write should have thrown an exception" );
-//        }
-//        catch ( Exception ex ) {
-//            WriteUniqueVerifyException e = ( WriteUniqueVerifyException ) ex;
-//            assertEquals( 1, e.getVioliations().size() );
-//        }
+        {
+            try {
+                Entity newEntity = new Entity( new SimpleId( "test" ) );
+                newEntity.setField( new IntegerField( "count", 5, true ) );
 
-        // try fetching the original one again
-
-        assertEquals(entity.getId().getUuid(), firstReturned.getId().getUuid());
-        assertEquals(entity.getVersion(), firstReturned.getVersion());
-
-
-        //assertEquals(newEntity.getId().getUuid(), secondReturned.getId().getUuid());
-        //assertEquals(newEntity.getVersion(), secondReturned.getVersion());
-
-
-
-
-
-
+                manager.write( newEntity ).toBlocking().last();
+                fail( "Write should have thrown an exception" );
+            }
+            catch ( Exception ex ) {
+                WriteUniqueVerifyException e = ( WriteUniqueVerifyException ) ex;
+                assertEquals( 1, e.getVioliations().size() );
+            }
+        }
     }
 
 
