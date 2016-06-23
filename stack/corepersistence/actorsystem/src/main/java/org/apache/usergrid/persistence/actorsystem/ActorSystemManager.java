@@ -27,7 +27,7 @@ public interface ActorSystemManager {
 
     void start(String hostname, Integer port, String currentRegion);
 
-    void waitForRequestActors();
+    void waitForClientActors();
 
     boolean isReady();
 
@@ -35,5 +35,9 @@ public interface ActorSystemManager {
 
     void registerMessageType( Class messageType, String routerPath );
 
-    ActorRef getClientActor(String region );
+    ActorRef getClientActor();
+
+    ActorRef getClusterClient(String region );
+
+    String getCurrentRegion();
 }

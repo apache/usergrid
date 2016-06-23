@@ -19,15 +19,15 @@
 package org.apache.usergrid.persistence.actorsystem;
 
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
+import akka.actor.*;
+import akka.cluster.client.ClusterClient;
+import akka.cluster.client.ClusterClientReceptionist;
+import akka.cluster.client.ClusterClientSettings;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -45,22 +45,25 @@ import java.util.concurrent.TimeUnit;
 public class ActorSystemManagerImpl implements ActorSystemManager {
     private static final Logger logger = LoggerFactory.getLogger( ActorSystemManagerImpl.class );
 
+    private boolean started = false;
+
     private String  hostname;
     private Integer port;
     private String  currentRegion;
 
-    private static Injector             injector;
     private final ActorSystemFig        actorSystemFig;
-    private final Map<String, ActorRef> requestActorsByRegion;
     private final List<RouterProducer>  routerProducers = new ArrayList<>();
     private final Map<Class, String>    routersByMessageType = new HashMap<>();
+    private final Map<String, ActorRef> clusterClientsByRegion = new HashMap<String, ActorRef>(20);
+
+    private ActorRef                    clientActor;
+
+    private ListMultimap<String, String> seedsByRegion;
 
 
     @Inject
-    public ActorSystemManagerImpl(Injector inj, ActorSystemFig actorSystemFig) {
-        injector = inj;
+    public ActorSystemManagerImpl( ActorSystemFig actorSystemFig ) {
         this.actorSystemFig = actorSystemFig;
-        this.requestActorsByRegion = new HashMap<>();
     }
 
 
@@ -75,7 +78,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
         this.port = null;
 
         initAkka();
-        waitForRequestActors();
+        waitForClientActors();
     }
 
 
@@ -95,7 +98,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
     @Override
     public boolean isReady() {
-        return !getRequestActorsByRegion().isEmpty();
+        return started;
     }
 
 
@@ -112,13 +115,20 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
 
     @Override
-    public ActorRef getClientActor(String region) {
-        return getRequestActorsByRegion().get( region );
+    public ActorRef getClientActor() {
+        return clientActor;
     }
 
 
-    private Map<String, ActorRef> getRequestActorsByRegion() {
-        return requestActorsByRegion;
+    @Override
+    public ActorRef getClusterClient(String region) {
+        return clusterClientsByRegion.get( region );
+    }
+
+
+    @Override
+    public String getCurrentRegion() {
+        return currentRegion;
     }
 
 
@@ -152,215 +162,214 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
         logger.info("Initializing Akka for hostname {} region {} regionList {} seeds {}",
             hostname, currentRegion, regionList, actorSystemFig.getRegionSeeds() );
 
-        final Map<String, ActorSystem> systemMap = new HashMap<>();
+        Config config = readClusterSystemConfig();
 
-        Map<String, Config> configMap = readClusterSingletonConfigs();
+        ActorSystem localSystem = createClusterSystemsFromConfigs( config );
 
-        ActorSystem localSystem = createClusterSingletonProxies( configMap, systemMap );
-
-        createRequestActors( systemMap );
+        createClientActors( localSystem );
 
         for ( RouterProducer routerProducer : routerProducers ) {
-            routerProducer.createLocalSystemActors( localSystem, systemMap );
+            routerProducer.createLocalSystemActors( localSystem );
         }
     }
 
 
     /**
-     * Read configuration and create a Config for each region.
-     *
-     * @return Map of regions to Configs.
+     * Read Usergrid's list of seeds, put them in handy multi-map.
      */
-    private Map<String, Config> readClusterSingletonConfigs() {
+    private ListMultimap<String, String> getSeedsByRegion() {
 
-        Map<String, Config> configs = new HashMap<>();
+        if ( seedsByRegion == null ) {
 
-        ListMultimap<String, String> seedsByRegion = ArrayListMultimap.create();
+            seedsByRegion = ArrayListMultimap.create();
 
-        String[] regionSeeds = actorSystemFig.getRegionSeeds().split( "," );
+            String[] regionSeeds = actorSystemFig.getRegionSeeds().split( "," );
 
-        logger.info("Found region {} seeds {}", regionSeeds.length, regionSeeds);
+            logger.info( "Found region {} seeds {}", regionSeeds.length, regionSeeds );
+
+            try {
+
+                if (port != null) {
+
+                    // we are testing, create seeds-by-region map for one region, one seed
+
+                    String seed = "akka.tcp://ClusterSystem" + "@" + hostname + ":" + port;
+                    seedsByRegion.put( currentRegion, seed );
+                    logger.info( "Akka testing, only starting one seed" );
+
+                } else { // create seeds-by-region map
+
+                    for (String regionSeed : regionSeeds) {
+
+                        String[] parts = regionSeed.split( ":" );
+                        String region = parts[0];
+                        String hostname = parts[1];
+                        String regionPortString = parts[2];
+
+                        // all seeds in same region must use same port
+                        // we assume 0th seed has the right port
+                        final Integer regionPort;
+
+                        if (port == null) {
+                            regionPort = Integer.parseInt( regionPortString );
+                        } else {
+                            regionPort = port; // unless we are testing
+                        }
+
+                        String seed = "akka.tcp://ClusterSystem" + "@" + hostname + ":" + regionPort;
+
+                        logger.info( "Adding seed {} for region {}", seed, region );
+
+                        seedsByRegion.put( region, seed );
+                    }
+
+                    if (seedsByRegion.keySet().isEmpty()) {
+                        throw new RuntimeException(
+                            "No seeds listed in 'parsing collection.akka.region.seeds' property." );
+                    }
+                }
+
+            } catch (Exception e) {
+                throw new RuntimeException( "Error 'parsing collection.akka.region.seeds' property", e );
+            }
+        }
+
+        return seedsByRegion;
+    }
+
+
+    /**
+     * Read cluster config and add seed nodes to it.
+     */
+    private Config readClusterSystemConfig() {
+
+        Config config = null;
 
         try {
 
-            if ( port != null ) {
-
-                // we are testing, create seeds-by-region map for one region, one seed
-
-                String seed = "akka.tcp://ClusterSystem@" + hostname + ":" + port;
-                seedsByRegion.put( currentRegion, seed );
-                logger.info("Akka testing, only starting one seed");
-
-            } else { // create seeds-by-region map
-
-                for (String regionSeed : regionSeeds) {
-
-                    String[] parts = regionSeed.split( ":" );
-                    String region = parts[0];
-                    String hostname = parts[1];
-                    String regionPortString = parts[2];
-
-                    // all seeds in same region must use same port
-                    // we assume 0th seed has the right port
-                    final Integer regionPort;
-
-                    if (port == null) {
-                        regionPort = Integer.parseInt( regionPortString );
-                    } else {
-                        regionPort = port; // unless we are testing
-                    }
-
-                    String seed = "akka.tcp://ClusterSystem@" + hostname + ":" + regionPort;
-
-                    logger.info("Adding seed {} for region {}", seed, region );
-
-                    seedsByRegion.put( region, seed );
-                }
-
-                if (seedsByRegion.keySet().isEmpty()) {
-                    throw new RuntimeException(
-                        "No seeds listed in 'parsing collection.akka.region.seeds' property." );
-                }
-            }
-
             int numInstancesPerNode = actorSystemFig.getInstancesPerNode();
 
-            // read config file once for each region
+            String region = currentRegion;
 
-            for ( String region : seedsByRegion.keySet() ) {
+            List<String> seeds = getSeedsByRegion().get( region );
+            int lastColon = seeds.get(0).lastIndexOf(":") + 1;
+            final Integer regionPort = Integer.parseInt( seeds.get(0).substring( lastColon ));
 
-                List<String> seeds = seedsByRegion.get( region );
-                int lastColon = seeds.get(0).lastIndexOf(":") + 1;
-                final Integer regionPort = Integer.parseInt( seeds.get(0).substring( lastColon ));
+            logger.info( "Akka Config for region {} is:\n" +
+                    "   Hostname {}\n" +
+                    "   Seeds {}\n" +
+                    "   Authoritative Region {}\n",
+                region, hostname, seeds, actorSystemFig.getAkkaAuthoritativeRegion() );
 
-                // cluster singletons only run role "io" nodes and NOT on "client" nodes of other regions
-                String clusterRole = currentRegion.equals( region ) ? "io" : "client";
+            Map<String, Object> configMap = new HashMap<String, Object>() {{
 
-                logger.info( "Akka Config for region {} is:\n" +
-                        "   Hostname {}\n" +
-                        "   Seeds {}\n" +
-                        "   Authoritative Region {}\n",
-                    region, hostname, seeds, actorSystemFig.getAkkaAuthoritativeRegion() );
+                put( "akka", new HashMap<String, Object>() {{
 
-                Map<String, Object> configMap = new HashMap<String, Object>() {{
-
-                    put( "akka", new HashMap<String, Object>() {{
-
-                        put( "remote", new HashMap<String, Object>() {{
-                            put( "netty.tcp", new HashMap<String, Object>() {{
-                                put( "hostname", hostname );
-                                put( "bind-hostname", hostname );
-                                put( "port", regionPort );
-                            }} );
+                    put( "remote", new HashMap<String, Object>() {{
+                        put( "netty.tcp", new HashMap<String, Object>() {{
+                            put( "hostname", hostname );
+                            put( "bind-hostname", hostname );
+                            put( "port", regionPort );
                         }} );
-
-                        put( "cluster", new HashMap<String, Object>() {{
-                            put( "max-nr-of-instances-per-node", 300);
-                            put( "roles", Collections.singletonList(clusterRole) );
-                            put( "seed-nodes", new ArrayList<String>() {{
-                                for (String seed : seeds) {
-                                    add( seed );
-                                }
-                            }} );
-                        }} );
-
                     }} );
-                }};
 
-                for ( RouterProducer routerProducer : routerProducers ) {
-                    routerProducer.addConfiguration( configMap );
-                }
+                    put( "cluster", new HashMap<String, Object>() {{
+                        put( "max-nr-of-instances-per-node", numInstancesPerNode);
+                        put( "roles", Collections.singletonList("io") );
+                        put( "seed-nodes", new ArrayList<String>() {{
+                            for (String seed : seeds) {
+                                add( seed );
+                            }
+                        }} );
+                    }} );
 
-                Config config = ConfigFactory.parseMap( configMap )
-                    .withFallback( ConfigFactory.parseString( "akka.cluster.roles = [io]" ) )
-                    .withFallback( ConfigFactory.load( "application.conf" ) );
+                }} );
+            }};
 
-                configs.put( region, config );
+            for ( RouterProducer routerProducer : routerProducers ) {
+                routerProducer.addConfiguration( configMap );
             }
 
+            config = ConfigFactory.parseMap( configMap )
+                .withFallback( ConfigFactory.load( "application.conf" ) );
+
+
         } catch ( Exception e ) {
-            throw new RuntimeException("Error 'parsing collection.akka.region.seeds' property", e );
+            throw new RuntimeException("Error reading and adding to cluster config", e );
         }
 
-        return configs;
+        return config;
     }
 
 
     /**
-     * Create ActorSystem and ClusterSingletonProxy for every region.
-     * Create ClusterSingletonManager for the current region.
-     *
-     * @param configMap Configurations to be used to create ActorSystems
-     * @param systemMap Map of ActorSystems created by this method
-     *
-     * @return ActorSystem for this region.
+     * Create actor system for this region, with cluster singleton manager & proxy.
      */
-    private ActorSystem createClusterSingletonProxies(
-        Map<String, Config> configMap, Map<String, ActorSystem> systemMap ) {
+    private ActorSystem createClusterSystemsFromConfigs( Config config ) {
 
-        ActorSystem localSystem = null;
+        ActorSystem system = ActorSystem.create( "ClusterSystem", config );
 
-        for ( String region : configMap.keySet() ) {
-            Config config = configMap.get( region );
-
-            ActorSystem system = ActorSystem.create( "ClusterSystem", config );
-            systemMap.put( region, system );
-
-            // cluster singletons only run role "io" nodes and NOT on "client" nodes of other regions
-            if ( currentRegion.equals( region ) ) {
-
-                localSystem = system;
-
-                for ( RouterProducer routerProducer : routerProducers ) {
-                    routerProducer.createClusterSingletonManager( system );
-                }
-            }
-
-            for ( RouterProducer routerProducer : routerProducers ) {
-                routerProducer.createClusterSingletonProxy( system );
-            }
+        for ( RouterProducer routerProducer : routerProducers ) {
+            logger.info("Creating {} for region {}", routerProducer.getName(), currentRegion );
+            routerProducer.createClusterSingletonManager( system );
         }
 
-        return localSystem;
+        for ( RouterProducer routerProducer : routerProducers ) {
+            logger.info("Creating {} proxy for region {} role 'io'", routerProducer.getName(), currentRegion);
+            routerProducer.createClusterSingletonProxy( system, "io" );
+        }
+
+        return system;
     }
 
 
     /**
      * Create RequestActor for each region.
-     *
-     * @param systemMap Map of regions to ActorSystems.
      */
-    private void createRequestActors( Map<String, ActorSystem> systemMap ) {
+    private void createClientActors( ActorSystem system ) {
 
-        for ( String region : systemMap.keySet() ) {
+        for ( String region : getSeedsByRegion().keySet() ) {
 
-            logger.info("Creating request actor for region {}", region);
+            if ( currentRegion.equals( region )) {
 
-            // Each RequestActor needs to know path to ClusterSingletonProxy and region
-            ActorRef requestActor = systemMap.get( region ).actorOf(
-                //Props.create( ClientActor.class, "/user/uvProxy" ), "requestActor" );
-                Props.create( ClientActor.class, routersByMessageType ), "requestActor" );
+                logger.info( "Creating clientActor for region {}", region );
 
-            requestActorsByRegion.put( region, requestActor );
+                // Each clientActor needs to know path to ClusterSingletonProxy and region
+                clientActor = system.actorOf(
+                    Props.create( ClientActor.class, routersByMessageType ), "clientActor" );
+
+                ClusterClientReceptionist.get(system).registerService( clientActor );
+
+            } else {
+
+                List<String> regionSeeds = getSeedsByRegion().get( region );
+                Set<ActorPath> seedPaths = new HashSet<>(20);
+                for ( String seed : getSeedsByRegion().get( region ) ) {
+                    seedPaths.add( ActorPaths.fromString( seed + "/system/receptionist") );
+                }
+
+                ActorRef clusterClient = system.actorOf( ClusterClient.props(
+                    ClusterClientSettings.create(system).withInitialContacts( seedPaths )), "client");
+
+                clusterClientsByRegion.put( region, clusterClient );
+            }
+
         }
     }
 
 
     @Override
-    public void waitForRequestActors() {
+    public void waitForClientActors() {
 
-        for ( String region : requestActorsByRegion.keySet() ) {
-            ActorRef ra = requestActorsByRegion.get( region );
-            waitForRequestActor( ra );
-        }
+        waitForClientActor( clientActor );
     }
 
-
-    private void waitForRequestActor( ActorRef ra ) {
+    private void waitForClientActor( ActorRef ra ) {
 
         logger.info( "Waiting on request actor {}...", ra.path() );
 
-        boolean started = false;
+        started = false;
+
         int retries = 0;
         int maxRetries = 60;
         while (retries < maxRetries) {

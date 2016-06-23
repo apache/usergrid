@@ -155,7 +155,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 actorSystemManager.registerMessageType( UniqueValueActor.Cancellation.class, "/user/uvProxy" );
                 actorSystemManager.registerMessageType( UniqueValueActor.Confirmation.class, "/user/uvProxy" );
                 actorSystemManager.start();
-                actorSystemManager.waitForRequestActors();
+                actorSystemManager.waitForClientActors();
 
             } catch (Throwable t) {
                 logger.error("Error starting Akka", t);
