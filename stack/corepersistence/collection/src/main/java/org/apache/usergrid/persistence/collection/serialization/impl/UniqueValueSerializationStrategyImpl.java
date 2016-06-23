@@ -338,12 +338,14 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                                 candidate.getEntityId().getUuid(), candidate.getEntityVersion() );
 
                             delete(appScope, candidate ).execute();
+
                         } catch (ConnectionException e) {
                             // do nothing for now
                         }
 
                     });
 
+                    // clear the transient candidates list
                     candidates.clear();
 
                     if(logger.isTraceEnabled()) {
@@ -355,8 +357,6 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                     // add our new candidate to the list
                     candidates.add(uniqueValue);
 
-                    // add our new candidate to the result set
-                    //uniqueValueSet.addValue(candidate);
 
                 }else{
 
