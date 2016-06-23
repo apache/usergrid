@@ -391,7 +391,7 @@ public class AbstractCollectionService extends AbstractService {
             for ( Map<String, Object> p : batch ) {
 
                 // track unique name value in the batch to identify if duplicates are trying to be created
-                String name = p.get("name").toString();
+                String name = (String) p.get("name");
                 if( name !=null && nameValues.get(name) !=null ){
                     logger.warn("Batch contains more than 1 entity with the same name: {}", name);
                 }else{
