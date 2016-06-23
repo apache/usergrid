@@ -24,6 +24,8 @@ import java.util.Map;
 
 public interface RouterProducer {
 
+    String getName();
+
     /**
      * Create cluster single manager for current region.
      * Will be called once per router per JVM.
@@ -34,16 +36,16 @@ public interface RouterProducer {
      * Create cluster singleton proxy for region.
      * Will be called once per router per JVM per region.
      */
-    void createClusterSingletonProxy( ActorSystem system );
+    void createClusterSingletonProxy( ActorSystem system, String role );
 
     /**
      * Create other actors needed to support the router produced by the implementation.
      */
-    void createLocalSystemActors( ActorSystem localSystem, Map<String, ActorSystem> systemMap );
+    void createLocalSystemActors( ActorSystem localSystem );
 
     /**
      * Add configuration for the router to configuration map
      */
-    void addConfiguration( Map<String, Object> configMap );
+    void addConfiguration(Map<String, Object> configMap );
 
 }

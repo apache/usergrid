@@ -22,6 +22,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
+import akka.cluster.client.ClusterClient;
 import akka.cluster.singleton.ClusterSingletonManager;
 import akka.cluster.singleton.ClusterSingletonManagerSettings;
 import akka.cluster.singleton.ClusterSingletonProxy;
@@ -75,16 +76,23 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     }
 
 
-    private void subscribeToReservations( ActorSystem localSystem, Map<String, ActorSystem> systemMap ) {
-
-        for ( String region : systemMap.keySet() ) {
-            ActorSystem actorSystem = systemMap.get( region );
-            if ( !actorSystem.equals( localSystem ) ) {
-                logger.info("Starting ReservationCacheUpdater for {}", region );
-                actorSystem.actorOf( Props.create( ReservationCacheActor.class ), "subscriber");
-            }
-        }
+    @Override
+    public String getName() {
+        return "UniqueValues ClusterSingleton Router";
     }
+
+
+    // TODO: restore reservation cache
+//    private void subscribeToReservations( ActorSystem localSystem, Map<String, ActorSystem> systemMap ) {
+//
+//        for ( String region : systemMap.keySet() ) {
+//            ActorSystem actorSystem = systemMap.get( region );
+//            if ( !actorSystem.equals( localSystem ) ) {
+//                logger.info("Starting ReservationCacheUpdater for {}", region );
+//                actorSystem.actorOf( Props.create( ReservationCacheActor.class ), "subscriber");
+//            }
+//        }
+//    }
 
 
     @Override
@@ -154,12 +162,6 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     private void reserveUniqueField(
         ApplicationScope scope, Entity entity, UUID version, Field field, String region ) throws UniqueValueException {
 
-        final ActorRef requestActor = actorSystemManager.getClientActor( region );
-
-        if ( requestActor == null ) {
-            throw new RuntimeException( "No request actor for region " + region);
-        }
-
         UniqueValueActor.Request request = new UniqueValueActor.Reservation(
             scope, entity.getId(), version, field );
 
@@ -171,39 +173,35 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             throw new UniqueValueException( "Error property not unique (cache)", field);
         }
 
-        sendUniqueValueRequest( entity, requestActor, request );
+        sendUniqueValueRequest( entity, region, request );
     }
 
 
     private void confirmUniqueField(
         ApplicationScope scope, Entity entity, UUID version, Field field, String region) throws UniqueValueException {
 
-        final ActorRef requestActor = actorSystemManager.getClientActor( region );
-
-        if ( requestActor == null ) {
-            throw new RuntimeException( "No request actor for type, cannot verify unique fields!" );
-        }
-
         UniqueValueActor.Confirmation request = new UniqueValueActor.Confirmation(
             scope, entity.getId(), version, field );
 
-        sendUniqueValueRequest( entity, requestActor, request );
+        sendUniqueValueRequest( entity, region, request );
     }
 
 
     private void cancelUniqueField(
         ApplicationScope scope, Entity entity, UUID version, Field field, String region ) throws UniqueValueException {
 
-        final ActorRef requestActor = actorSystemManager.getClientActor( region );
-
-        if ( requestActor == null ) {
-            throw new RuntimeException( "No request actor for type, cannot verify unique fields!" );
-        }
-
         UniqueValueActor.Cancellation request = new UniqueValueActor.Cancellation(
             scope, entity.getId(), version, field );
 
-        requestActor.tell( request, null );
+        if ( actorSystemManager.getCurrentRegion().equals( region ) ) {
+            ActorRef clientActor = actorSystemManager.getClientActor();
+            clientActor.tell( request, null );
+
+        } else {
+            ActorRef clusterClient = actorSystemManager.getClusterClient( region );
+            clusterClient.tell( new ClusterClient.Send("/user/clientActor", request), null );
+        }
+
     }
 
 
@@ -218,7 +216,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
 
     private void sendUniqueValueRequest(
-        Entity entity, ActorRef requestActor, UniqueValueActor.Request request ) throws UniqueValueException {
+        Entity entity, String region, UniqueValueActor.Request request ) throws UniqueValueException {
 
         int maxRetries = 5;
         int retries = 0;
@@ -230,7 +228,17 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
                 // ask RequestActor and wait (up to timeout) for response
 
-                Future<Object> fut = Patterns.ask( requestActor, request, t );
+                Future<Object> fut;
+
+                if ( actorSystemManager.getCurrentRegion().equals( region ) ) {
+                    ActorRef clientActor = actorSystemManager.getClientActor();
+                    fut = Patterns.ask( clientActor, request, t );
+
+                } else {
+                    ActorRef clusterClient = actorSystemManager.getClusterClient( region );
+                    fut = Patterns.ask( clusterClient, new ClusterClient.Send("/user/clientActor", request), t );
+                }
+
                 response = (UniqueValueActor.Response) Await.result( fut, t.duration() );
 
                 if ( response != null && (
@@ -280,33 +288,32 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             ClusterSingletonManagerSettings.create( system ).withRole("io");
 
         system.actorOf( ClusterSingletonManager.props(
-            //Props.create( ClusterSingletonRouter.class, table ),
-            Props.create( GuiceActorProducer.class, injector, UniqueValuesRouter.class),
-            PoisonPill.getInstance(), settings ), "uvRouter");
+            Props.create( GuiceActorProducer.class, injector, UniqueValuesRouter.class ),
+            PoisonPill.getInstance(), settings ), "uvRouter" );
+
     }
 
 
     @Override
-    public void createClusterSingletonProxy(ActorSystem system) {
+    public void createClusterSingletonProxy( ActorSystem system, String role ) {
 
         ClusterSingletonProxySettings proxySettings =
-            ClusterSingletonProxySettings.create( system ).withRole("io");
+            ClusterSingletonProxySettings.create( system ).withRole( role );
 
         system.actorOf( ClusterSingletonProxy.props( "/user/uvRouter", proxySettings ), "uvProxy" );
     }
 
 
     @Override
-    public void createLocalSystemActors( ActorSystem localSystem, Map<String, ActorSystem> systemMap ) {
-        subscribeToReservations( localSystem, systemMap );
+    public void createLocalSystemActors( ActorSystem localSystem ) {
+        // TODO: restore reservation cache
+        //subscribeToReservations( localSystem );
     }
 
     @Override
-    public void addConfiguration(Map<String, Object> configMap) {
+    public void addConfiguration( Map<String, Object> configMap ) {
 
         int numInstancesPerNode = uniqueValuesFig.getUniqueValueInstancesPerNode();
-
-        // TODO: will the below overwrite things other routers have added under "actor.deployment"?
 
         Map<String, Object> akka = (Map<String, Object>)configMap.get("akka");
 
@@ -317,10 +324,10 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
                     put( "cluster", new HashMap<String, Object>() {{
                         put( "enabled", "on" );
                         put( "allow-local-routees", "on" );
-                        put( "user-role", "io" );
+                        put( "use-role", "io" );
                         put( "max-nr-of-instances-per-node", numInstancesPerNode );
                         put( "failure-detector", new HashMap<String, Object>() {{
-                            put( "threshold", "" );
+                            put( "threshold", "10" );
                             put( "acceptable-heartbeat-pause", "3 s" );
                             put( "heartbeat-interval", "1 s" );
                             put( "heartbeat-request", new HashMap<String, Object>() {{

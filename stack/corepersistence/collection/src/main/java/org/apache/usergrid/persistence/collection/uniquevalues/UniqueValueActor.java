@@ -59,7 +59,7 @@ public class UniqueValueActor extends UntypedActor {
 
             count++;
             if (count % 10 == 0) {
-                logger.debug( "UniqueValueActor {} processed {} requests", name, count );
+                logger.info( "UniqueValueActor {} processed {} requests", name, count );
             }
         }
 
