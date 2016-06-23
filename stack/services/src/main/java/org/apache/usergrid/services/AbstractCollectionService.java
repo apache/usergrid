@@ -17,11 +17,7 @@
 package org.apache.usergrid.services;
 
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -389,37 +385,48 @@ public class AbstractCollectionService extends AbstractService {
                         batch.size(), context.getCollectionName());
             }
 
-            int i = 1;
+
+            final Map<String, Boolean> nameValues = new HashMap<>(batch.size());
 
             for ( Map<String, Object> p : batch ) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("Creating entity {} in collection {}", i, context.getCollectionName());
+
+                // track unique name value in the batch to identify if duplicates are trying to be created
+                String name = p.get("name").toString();
+                if( name !=null && nameValues.get(name) !=null ){
+                    logger.warn("Batch contains more than 1 entity with the same name: {}", name);
+                }else{
+                    nameValues.put(name, true);
                 }
 
-                Entity item = null;
 
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Creating entity [{}] in collection [{}]", p, context.getCollectionName());
+                }
+
+
+                Entity item = null;
                 try {
                     item = em.createItemInCollection( context.getOwner(), context.getCollectionName(), getEntityType(),
                             p );
                 }
                 catch ( Exception e ) {
-                    // TODO should we not log this as error?
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Entity {} unable to be created in collection {}", i, context.getCollectionName(),
-                            e);
-                    }
 
-                    i++;
+                    logger.error("Entity [{}] unable to be created in collection [{}] due to [{} - {}]", p, context.getCollectionName(),
+                            e.getClass().getSimpleName(), e.getMessage());
+
+                    // move on as we can't block the whole batch if only 1 failed
                     continue;
                 }
+
+
                 if (logger.isTraceEnabled()) {
-                    logger.trace(
-                        "Entity {} created in collection {} with UUID {}", i, context.getCollectionName(), item.getUuid());
+                    logger.trace("Successfully created entity [{}] in collection [{}]", p, context.getCollectionName());
                 }
+
 
                 item = importEntity( context, item );
                 entities.add( item );
-                i++;
+
             }
             return new ServiceResults( this, context, Type.COLLECTION, Results.fromEntities( entities ), null, null );
         }
