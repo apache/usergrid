@@ -333,7 +333,7 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
                         try {
 
-                            logger.warn("Duplicate unique value [{}={}] found, removing older entry " +
+                            logger.warn("Duplicate unique value [{}={}] found, removing newer entry " +
                                     "with entity id [{}] and entity version [{}]", field.getName(), field.getValue().toString(),
                                 candidate.getEntityId().getUuid(), candidate.getEntityVersion() );
 
