@@ -349,7 +349,7 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                     candidates.clear();
 
                     if(logger.isTraceEnabled()) {
-                        logger.info("Updating candidate to entity id [{}] and entity version [{}]",
+                        logger.trace("Updating candidate to entity id [{}] and entity version [{}]",
                             uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion());
 
                     }
