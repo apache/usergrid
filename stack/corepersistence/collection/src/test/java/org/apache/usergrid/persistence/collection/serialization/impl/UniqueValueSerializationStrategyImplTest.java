@@ -442,4 +442,119 @@ public abstract class UniqueValueSerializationStrategyImplTest {
 
     }
 
+    @Test
+    public void testDuplicateEntitiesDescending() throws ConnectionException, InterruptedException {
+
+        ApplicationScope scope =
+            new ApplicationScopeImpl( new SimpleId( "organization" ) );
+
+        IntegerField field = new IntegerField( "count", 5 );
+        Id entityId1 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        Id entityId2 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        Id entityId3 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+
+
+
+        UUID version1 = UUIDGenerator.newTimeUUID();
+        UUID version2 = UUIDGenerator.newTimeUUID();
+        UUID version3 = UUIDGenerator.newTimeUUID();
+
+        UniqueValue stored1 = new UniqueValueImpl( field, entityId3, version1 );
+        UniqueValue stored2 = new UniqueValueImpl( field, entityId2,  version2 );
+        UniqueValue stored3 = new UniqueValueImpl( field, entityId1,  version3 );
+
+
+        strategy.write( scope, stored1 ).execute();
+        strategy.write( scope, stored2 ).execute();
+        strategy.write( scope, stored3 ).execute();
+
+
+        // load descending to get the older version of entity for this unique value
+        UniqueValueSet fields = strategy.load( scope, entityId1.getType(), Collections.<Field>singleton( field ));
+
+        UniqueValue retrieved = fields.getValue( field.getName() );
+        assertEquals( stored3, retrieved );
+
+
+    }
+
+    @Test
+    public void testDuplicateEntitiesAscending() throws ConnectionException, InterruptedException {
+
+        ApplicationScope scope =
+            new ApplicationScopeImpl( new SimpleId( "organization" ) );
+
+        IntegerField field = new IntegerField( "count", 5 );
+        Id entityId1 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        Id entityId2 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        Id entityId3 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+
+
+
+        UUID version1 = UUIDGenerator.newTimeUUID();
+        UUID version2 = UUIDGenerator.newTimeUUID();
+        UUID version3 = UUIDGenerator.newTimeUUID();
+
+        UniqueValue stored1 = new UniqueValueImpl( field, entityId1, version1 );
+        UniqueValue stored2 = new UniqueValueImpl( field, entityId2,  version2 );
+        UniqueValue stored3 = new UniqueValueImpl( field, entityId3,  version3 );
+
+
+        strategy.write( scope, stored1 ).execute();
+        strategy.write( scope, stored2 ).execute();
+        strategy.write( scope, stored3 ).execute();
+
+
+        // load descending to get the older version of entity for this unique value
+        UniqueValueSet fields = strategy.load( scope, entityId1.getType(), Collections.<Field>singleton( field ));
+
+        UniqueValue retrieved = fields.getValue( field.getName() );
+        assertEquals( stored1, retrieved );
+
+
+    }
+
+    @Test
+    public void testMixedDuplicates() throws ConnectionException, InterruptedException {
+
+        ApplicationScope scope =
+            new ApplicationScopeImpl( new SimpleId( "organization" ) );
+
+        IntegerField field = new IntegerField( "count", 5 );
+        Id entityId1 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        Id entityId2 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        Id entityId3 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+
+
+
+        UUID version1 = UUIDGenerator.newTimeUUID();
+        UUID version2 = UUIDGenerator.newTimeUUID();
+        UUID version3 = UUIDGenerator.newTimeUUID();
+        UUID version4 = UUIDGenerator.newTimeUUID();
+        UUID version5 = UUIDGenerator.newTimeUUID();
+
+        UniqueValue stored1 = new UniqueValueImpl( field, entityId1, version5 );
+        UniqueValue stored2 = new UniqueValueImpl( field, entityId2,  version4 );
+        UniqueValue stored3 = new UniqueValueImpl( field, entityId1, version3 );
+        UniqueValue stored4 = new UniqueValueImpl( field, entityId3,  version2 );
+        UniqueValue stored5 = new UniqueValueImpl( field, entityId3,  version1 );
+
+
+
+        strategy.write( scope, stored1 ).execute();
+        strategy.write( scope, stored2 ).execute();
+        strategy.write( scope, stored3 ).execute();
+        strategy.write( scope, stored4 ).execute();
+        strategy.write( scope, stored5 ).execute();
+
+
+        // load descending to get the older version of entity for this unique value
+        UniqueValueSet fields = strategy.load( scope, entityId1.getType(), Collections.<Field>singleton( field ));
+
+        UniqueValue retrieved = fields.getValue( field.getName() );
+        assertEquals( stored1, retrieved );
+
+
+    }
+
 }
