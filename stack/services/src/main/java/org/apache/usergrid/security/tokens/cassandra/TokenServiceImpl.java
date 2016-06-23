@@ -42,6 +42,7 @@ import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.security.tokens.exceptions.BadTokenException;
 import org.apache.usergrid.security.tokens.exceptions.ExpiredTokenException;
 import org.apache.usergrid.security.tokens.exceptions.InvalidTokenException;
+import org.apache.usergrid.security.tokens.externalProviders.ApigeeSSO2Provider;
 import org.apache.usergrid.utils.ConversionUtils;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -326,13 +327,20 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public TokenInfo getTokenInfo( String token, boolean updateAccessTime ) throws Exception {
 
+        if(isApigeeSSO2Enabled()) {
+            //TODO: pass the correct token ttl.
+            return validateExternalToken(token,maxPersistenceTokenAge ,properties.getProperty(USERGRID_EXTERNAL_PROVIDER));
+        }
+
+
         UUID uuid = getUUIDForToken( token );
 
         long ssoTtl = 1000000L; // TODO: property for this
 
         if ( uuid == null ) {
-            return isSSOEnabled() ? validateExternalToken( token, ssoTtl ) : null;
+            return isSSOEnabled() ? validateExternalToken( token, ssoTtl, "" ) : null;
         }
+
 
         TokenInfo tokenInfo;
         try {
@@ -340,7 +348,7 @@ public class TokenServiceImpl implements TokenService {
         } catch (InvalidTokenException e){
             // now try from central sso
             if ( isSSOEnabled() ){
-                return validateExternalToken( token, maxPersistenceTokenAge );
+                return validateExternalToken( token, maxPersistenceTokenAge,"" );
             }else{
                 throw e; // re-throw the error
             }
@@ -748,11 +756,18 @@ public class TokenServiceImpl implements TokenService {
     public static final String CENTRAL_CONNECTION_TIMEOUT =   "usergrid.central.connection.timeout";
     public static final String CENTRAL_READ_TIMEOUT =         "usergrid.central.read.timeout";
 
+
     // names for metrics to be collected
     private static final String SSO_TOKENS_REJECTED =         "sso.tokens_rejected";
     private static final String SSO_TOKENS_VALIDATED =        "sso.tokens_validated";
     private static final String SSO_CREATED_LOCAL_ADMINS =    "sso.created_local_admins";
     private static final String SSO_PROCESSING_TIME =         "sso.processing_time";
+
+    //SSO2 implementation
+    public static final String USERGRID_EXTERNAL_SSO_ENABLED = "usergrid.external.sso.enabled";
+    public static final String USERGRID_EXTERNAL_PROVIDER =    "usergrid.external.sso.provider";
+
+
 
     private static Client jerseyClient = null;
 
@@ -770,6 +785,9 @@ public class TokenServiceImpl implements TokenService {
         return !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ));
     }
 
+    private boolean isApigeeSSO2Enabled() {
+        return Boolean.valueOf(properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ));
+    }
 
     /**
      * <p>
@@ -788,9 +806,15 @@ public class TokenServiceImpl implements TokenService {
      * @param extAccessToken Access token from external Usergrid system.
      * @param ttl            Time to live for token.
      */
-    public TokenInfo validateExternalToken(String extAccessToken, long ttl) throws Exception {
+    public TokenInfo validateExternalToken(String extAccessToken, long ttl, String provider) throws Exception {
 
         TokenInfo tokenInfo = null;
+
+        //todo: based on provider call the appropriate method.
+        if(provider.equalsIgnoreCase("apigee")){
+            ApigeeSSO2Provider apigeeProvider = ((CpEntityManagerFactory)emf).getApplicationContext().getBean( ApigeeSSO2Provider.class );
+            return apigeeProvider.validateAndReturnUserInfo(extAccessToken);
+        }
 
         if (!isSSOEnabled()) {
             throw new NotImplementedException( "External Token Validation Service not enabled" );
@@ -891,7 +915,6 @@ public class TokenServiceImpl implements TokenService {
 
         return tokenInfo;
     }
-
 
     /**
      * Look up Admin User via UG Central's /management/me endpoint.
