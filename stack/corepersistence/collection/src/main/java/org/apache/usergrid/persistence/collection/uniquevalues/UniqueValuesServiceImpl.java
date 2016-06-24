@@ -82,17 +82,10 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     }
 
 
-    // TODO: restore reservation cache
-//    private void subscribeToReservations( ActorSystem localSystem, Map<String, ActorSystem> systemMap ) {
-//
-//        for ( String region : systemMap.keySet() ) {
-//            ActorSystem actorSystem = systemMap.get( region );
-//            if ( !actorSystem.equals( localSystem ) ) {
-//                logger.info("Starting ReservationCacheUpdater for {}", region );
-//                actorSystem.actorOf( Props.create( ReservationCacheActor.class ), "subscriber");
-//            }
-//        }
-//    }
+    private void subscribeToReservations( ActorSystem localSystem ) {
+        logger.info("Starting ReservationCacheUpdater");
+        localSystem.actorOf( Props.create( ReservationCacheActor.class ), "subscriber");
+    }
 
 
     @Override
@@ -166,9 +159,9 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             scope, entity.getId(), version, field );
 
         UniqueValueActor.Reservation res = reservationCache.get( request.getConsistentHashKey() );
-//        if ( res != null ) {
-//            getCacheCounter().inc();
-//        }
+        // if ( res != null ) {
+        //    getCacheCounter().inc();
+        // }
         if ( res != null && !res.getOwner().equals( request.getOwner() )) {
             throw new UniqueValueException( "Error property not unique (cache)", field);
         }
@@ -194,25 +187,19 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             scope, entity.getId(), version, field );
 
         if ( actorSystemManager.getCurrentRegion().equals( region ) ) {
+
+            // sending to current region, use local clientActor
             ActorRef clientActor = actorSystemManager.getClientActor();
             clientActor.tell( request, null );
 
         } else {
+
+            // sending to remote region, send via cluster client for that region
             ActorRef clusterClient = actorSystemManager.getClusterClient( region );
             clusterClient.tell( new ClusterClient.Send("/user/clientActor", request), null );
         }
 
     }
-
-
-//    private ActorRef lookupRequestActorForType( String type ) {
-//        final String region = getRegionsByType().get( type );
-//        ActorRef requestActor = getRequestActorsByRegion().get( region == null ? currentRegion : region );
-//        if ( requestActor == null ) {
-//            throw new RuntimeException( "No request actor available for region: " + region );
-//        }
-//        return requestActor;
-//    }
 
 
     private void sendUniqueValueRequest(
@@ -226,19 +213,22 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             try {
                 Timeout t = new Timeout( 1, TimeUnit.SECONDS );
 
-                // ask RequestActor and wait (up to timeout) for response
-
                 Future<Object> fut;
 
                 if ( actorSystemManager.getCurrentRegion().equals( region ) ) {
+
+                    // sending to current region, use local clientActor
                     ActorRef clientActor = actorSystemManager.getClientActor();
                     fut = Patterns.ask( clientActor, request, t );
 
                 } else {
+
+                    // sending to remote region, send via cluster client for that region
                     ActorRef clusterClient = actorSystemManager.getClusterClient( region );
                     fut = Patterns.ask( clusterClient, new ClusterClient.Send("/user/clientActor", request), t );
                 }
 
+                // wait (up to timeout) for response
                 response = (UniqueValueActor.Response) Await.result( fut, t.duration() );
 
                 if ( response != null && (
@@ -306,8 +296,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
     @Override
     public void createLocalSystemActors( ActorSystem localSystem ) {
-        // TODO: restore reservation cache
-        //subscribeToReservations( localSystem );
+        subscribeToReservations( localSystem );
     }
 
     @Override
@@ -316,6 +305,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         int numInstancesPerNode = uniqueValuesFig.getUniqueValueInstancesPerNode();
 
         Map<String, Object> akka = (Map<String, Object>)configMap.get("akka");
+
+        // TODO: replace this configuration stuff with equivalent Java code in the above "create" methods
 
         akka.put( "actor", new HashMap<String, Object>() {{
             put( "deployment", new HashMap<String, Object>() {{

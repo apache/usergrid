@@ -23,6 +23,8 @@ import akka.actor.*;
 import akka.cluster.client.ClusterClient;
 import akka.cluster.client.ClusterClientReceptionist;
 import akka.cluster.client.ClusterClientSettings;
+import akka.cluster.pubsub.DistributedPubSub;
+import akka.cluster.pubsub.DistributedPubSubMediator;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.google.common.collect.ArrayListMultimap;
@@ -56,6 +58,8 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     private final Map<Class, String>    routersByMessageType = new HashMap<>();
     private final Map<String, ActorRef> clusterClientsByRegion = new HashMap<String, ActorRef>(20);
 
+    private ActorRef                    mediator;
+
     private ActorRef                    clientActor;
 
     private ListMultimap<String, String> seedsByRegion;
@@ -78,7 +82,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
         this.port = null;
 
         initAkka();
-        waitForClientActors();
+        waitForClientActor();
     }
 
 
@@ -132,6 +136,20 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     }
 
 
+    @Override
+    public void publishToAllRegions( String topic, Object message, ActorRef sender  ) {
+
+        // send to local subscribers to topic
+        mediator.tell( new DistributedPubSubMediator.Publish( topic, message ), sender );
+
+        // send to each ClusterClient
+        for ( ActorRef clusterClient : clusterClientsByRegion.values() ) {
+            clusterClient.tell( new ClusterClient.Publish( topic, message ), sender );
+        }
+
+    }
+
+
     private void initAkka() {
         logger.info("Initializing Akka");
 
@@ -171,6 +189,8 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
         for ( RouterProducer routerProducer : routerProducers ) {
             routerProducer.createLocalSystemActors( localSystem );
         }
+
+        mediator = DistributedPubSub.get( localSystem ).mediator();
     }
 
 
@@ -359,7 +379,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
 
     @Override
-    public void waitForClientActors() {
+    public void waitForClientActor() {
 
         waitForClientActor( clientActor );
     }
