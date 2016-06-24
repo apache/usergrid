@@ -44,7 +44,8 @@ import java.util.UUID;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_CENTRAL_URL;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
 
 
 @Component( "org.apache.usergrid.rest.management.users.UsersResource" )
@@ -115,11 +116,11 @@ public class UsersResource extends AbstractContextResource {
             throws Exception {
 
         final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
+                Boolean.valueOf( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
 
         if ( externalTokensEnabled ) {
             throw new IllegalArgumentException( "Admin Users must signup via " +
-                    properties.getProperty( USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
 
         // email is only required parameter

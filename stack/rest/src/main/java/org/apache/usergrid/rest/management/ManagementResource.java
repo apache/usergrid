@@ -53,7 +53,8 @@ import java.util.Map;
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.*;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_CENTRAL_URL;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
 import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
@@ -483,7 +484,7 @@ public class ManagementResource extends AbstractContextResource {
         }
 
         final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
+                !StringUtils.isEmpty( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
 
         if ( externalTokensEnabled ) {
 
@@ -494,7 +495,7 @@ public class ManagementResource extends AbstractContextResource {
 
                 // this guy is not the superuser
                 throw new IllegalArgumentException( "Admin Users must login via " +
-                        properties.getProperty( USERGRID_CENTRAL_URL ) );
+                        properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
             }
         }
     }
