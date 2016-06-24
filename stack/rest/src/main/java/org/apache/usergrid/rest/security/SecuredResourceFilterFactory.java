@@ -45,6 +45,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.util.Map;
 import java.util.Properties;
 
@@ -67,6 +68,9 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
     Properties properties;
 
     ManagementService management;
+
+    private static final int PRIORITY_SUPERUSER = 1;
+    private static final int PRIORITY_DEFAULT = 5000;
 
 
     @Inject
@@ -112,6 +116,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
     @Override
     public void configure(ResourceInfo resourceInfo, FeatureContext featureContext) {
+
         Method am = resourceInfo.getResourceMethod();
 
         if (logger.isTraceEnabled()) {
@@ -119,20 +124,28 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 resourceInfo.getResourceClass().getSimpleName(), resourceInfo.getResourceMethod().getName());
         }
 
+        boolean sysadminLocalhostOnly =
+                Boolean.parseBoolean(properties.getProperty("usergrid.sysadmin.localhost.only", "false"));
+
+        if (sysadminLocalhostOnly) {
+            // priority = PRIORITY_SUPERUSER forces this to run first
+            featureContext.register( SysadminLocalhostFilter.class, PRIORITY_SUPERUSER );
+        }
+
         if ( am.isAnnotationPresent( RequireApplicationAccess.class ) ) {
-            featureContext.register( ApplicationFilter.class );
+            featureContext.register( ApplicationFilter.class, PRIORITY_DEFAULT);
         }
         else if ( am.isAnnotationPresent( RequireOrganizationAccess.class ) ) {
-            featureContext.register( OrganizationFilter.class );
+            featureContext.register( OrganizationFilter.class, PRIORITY_DEFAULT);
         }
         else if ( am.isAnnotationPresent( RequireSystemAccess.class ) ) {
-            featureContext.register( SystemFilter.class );
+            featureContext.register( SystemFilter.class, PRIORITY_DEFAULT);
         }
         else if ( am.isAnnotationPresent( RequireAdminUserAccess.class ) ) {
-            featureContext.register( SystemFilter.AdminUserFilter.class );
+            featureContext.register( SystemFilter.AdminUserFilter.class, PRIORITY_DEFAULT);
         }
         else if ( am.isAnnotationPresent( CheckPermissionsForPath.class ) ) {
-            featureContext.register( PathPermissionsFilter.class );
+            featureContext.register( PathPermissionsFilter.class, PRIORITY_DEFAULT);
         }
 
     }
@@ -224,6 +237,55 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 return Identifier.fromEmail( email );
             }
             return null;
+        }
+    }
+
+    @Resource
+    public static class SysadminLocalhostFilter extends AbstractFilter {
+
+        @Inject
+        public SysadminLocalhostFilter( UriInfo uriInfo ) {
+            super(uriInfo);
+        }
+
+        @Override
+        public void authorize( ContainerRequestContext request ) {
+            if (logger.isTraceEnabled()) {
+                logger.trace("SysadminLocalhostFilter.authorize");
+            }
+
+            if (!request.getSecurityContext().isUserInRole( ROLE_SERVICE_ADMIN )) {
+                // not a sysadmin request
+                return;
+            }
+
+            boolean isLocalhost = false;
+            try {
+                byte[] address = InetAddress.getByName(request.getUriInfo().getBaseUri().getHost()).getAddress();
+                if (address[0] == 127) {
+                    // loopback address
+                    isLocalhost = true;
+                } else if (address[0] == 0 && address[1] == 0 && address[2] == 0 && address[3] == 0) {
+                    // 0.0.0.0, used for requests like curl 0:8080
+                    isLocalhost = true;
+                } else {
+                    // everything else
+                    isLocalhost = false;
+                }
+            }
+            catch (Exception e) {
+                // couldn't parse host, so assume not localhost
+                logger.error("Unable to parse host for sysadmin request, request rejected: path = {}",
+                        request.getUriInfo().getPath());
+            }
+
+            if (!isLocalhost) {
+                throw mappableSecurityException( "unauthorized", "No remote sysadmin access authorized" );
+            }
+
+            if (logger.isTraceEnabled()) {
+                logger.trace("SysadminLocalhostFilter.authorize - leaving");
+            }
         }
     }
 

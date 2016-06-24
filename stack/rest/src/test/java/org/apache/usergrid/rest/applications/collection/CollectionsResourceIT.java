@@ -17,12 +17,27 @@
 package org.apache.usergrid.rest.applications.collection;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ClientErrorException;
+
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.commons.lang.RandomStringUtils;
+
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.entities.Application;
-
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Collection;
@@ -30,24 +45,16 @@ import org.apache.usergrid.rest.test.resource.model.Credentials;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.rest.test.resource.model.Token;
-import org.apache.usergrid.services.ServiceParameter;
 
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.databind.JsonNode;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.core.MediaType;
-
-import java.io.IOException;
-import java.util.*;
-
-import org.apache.commons.lang.NullArgumentException;
-
-import static org.junit.Assert.*;
+import static junit.framework.TestCase.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 
 /**
@@ -1095,5 +1102,49 @@ public class CollectionsResourceIT extends AbstractRestIT {
             .get( new QueryParameters().setQuery( "select * where color='orange'" ));
         assertEquals( 0, connectionsByQuery.getNumOfEntities() );
     }
+
+    @Test
+    public void testBeingAbleToRetreiveMigratedValues() throws Exception {
+
+
+        Entity notifier = new Entity().chainPut("name", "mynotifier").chainPut("provider", "noop");
+
+        ApiResponse notifierNode = this.pathResource(getOrgAppPath("notifier")).post(ApiResponse.class,notifier);
+
+        // create user
+
+        Map payloads = new HashMap<>(  );
+        payloads.put( "mynotifier","hello world" );
+
+        Map statistics = new HashMap<>(  );
+        statistics.put( "sent",1 );
+        statistics.put( "errors",2 );
+
+        Entity payload = new Entity();
+        payload.put("debug", false);
+        payload.put( "expectedCount",0 );
+        payload.put( "finished",1438279671229L);
+        payload.put( "payloads",payloads);
+        payload.put( "priority","normal");
+        payload.put( "state","FINISHED");
+        payload.put( "statistics",statistics);
+
+
+        this.app().collection("notifications/"+ UUIDUtils.newTimeUUID()).post(payload );
+        this.refreshIndex();
+
+        Collection user2 = this.app().collection("notifications").get();
+
+        assertEquals(1,user2.getNumOfEntities());
+
+        this.app().collection("notifications/"+ UUIDUtils.newTimeUUID()).put(null,payload );
+        this.refreshIndex();
+
+        user2 = this.app().collection("notifications").get();
+
+        assertEquals(2,user2.getNumOfEntities());
+
+    }
+
 
 }

@@ -435,6 +435,7 @@ public class AdminUsersIT extends AbstractRestIT {
             //Add a property to management user
             Entity userProperty = new Entity(  ).chainPut( "company","usergrid" );
             management().users().user( newOrg.getUsername() ).put( userProperty );
+            fail("Should not have been allowed");
 
         } catch( NotAuthorizedException e ){
 
@@ -445,6 +446,85 @@ public class AdminUsersIT extends AbstractRestIT {
     }
 
 
+    @Test
+    public void testAdminRemovalFromOrg() throws Exception {
+        Organization newOrg = createOrgPayload( "testAdminRemovalFromOrg", null );
+        Organization orgReturned = clientSetup.getRestClient().management().orgs().post(newOrg);
+        User owner = orgReturned.getOwner();
+        assertNotNull(owner);
+        String orgName = orgReturned.getName();
+        Token ownerToken = management.token().get(owner.getUsername(), orgName);
+
+        // add a new admin user to the org
+        Entity adminUserPayload = new Entity();
+        String newAdminUserName = "newAdminUser"+UUIDUtils.newTimeUUID();
+        adminUserPayload.put( "username", newAdminUserName );
+        adminUserPayload.put( "name", newAdminUserName );
+        adminUserPayload.put( "email", newAdminUserName+"@usergrid.com" );
+        adminUserPayload.put( "password", newAdminUserName );
+
+        management.token().setToken(ownerToken);
+        management.orgs().org(orgName).users().post(User.class, adminUserPayload);
+
+        // get token of the new admin user
+        Token adminToken = management.token().get(newAdminUserName, newAdminUserName);
+        assertNotNull(adminToken);
+
+        // get org info
+        try {
+            management.token().setToken(adminToken);
+            management.orgs().org(orgName).get();
+        }
+        catch (Exception e) {
+            // should have been allowed
+            fail("Should have worked: " + e.getMessage());
+        }
+
+        // remove access
+        try {
+            management.token().setToken(ownerToken);
+            management.orgs().org(orgName).users().user(newAdminUserName).delete();
+        }
+        catch (Exception e) {
+            // should have been allowed
+            fail("Should have worked: " + e.getMessage());
+        }
+
+        // get org info (should be unsuccessful)
+        try {
+            management.token().setToken(adminToken);
+            management.orgs().org(orgName).get();
+            fail("Should not have allowed org access");
+        }
+        catch (NotAuthorizedException nae) {
+            // this is the right return
+
+        }
+        catch (Exception e) {
+            fail("Should have been unauthorized: " + e.getMessage());
+        }
+
+        // restore access
+        try {
+            management.token().setToken(ownerToken);
+            management.orgs().org(orgName).users().user(newAdminUserName).put(new Entity());
+        }
+        catch (Exception e) {
+            // should have been allowed
+            fail("Should have worked: " + e.getMessage());
+        }
+
+        // get org info
+        try {
+            management.token().setToken(adminToken);
+            management.orgs().org(orgName).get();
+        }
+        catch (Exception e) {
+            // should have been allowed
+            fail("Should have worked: " + e.getMessage());
+        }
+
+    }
 
 
     /**

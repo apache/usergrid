@@ -20,12 +20,7 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +51,6 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.utils.InflectionUtils;
-import org.apache.usergrid.utils.JsonUtils;
-import org.apache.usergrid.utils.UUIDUtils;
 
 import com.codahale.metrics.Timer;
 import com.google.common.base.Optional;
@@ -66,9 +59,7 @@ import com.google.inject.Singleton;
 
 import rx.Observable;
 
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createSearchEdgeFromSource;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromTarget;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.*;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 
 
@@ -278,42 +269,61 @@ public class IndexServiceImpl implements IndexService {
         return ObservableTimer.time( batches, addTimer );
     }
 
-    //This should look up the entityId and delete any documents with a timestamp that comes before
-    //The edges that are connected will be compacted away from the graph.
+
     @Override
-    public Observable<IndexOperationMessage> deleteEntityIndexes( final ApplicationScope applicationScope,
-                                                                  final Id entityId, final UUID markedVersion ) {
+    public Observable<IndexOperationMessage> deIndexEntity( final ApplicationScope applicationScope, final Id entityId,
+                                                            final UUID markedVersion,
+                                                            final List<UUID> allVersionsBeforeMarked ) {
 
-        //bootstrap the lower modules from their caches
-        final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
+        final EntityIndex ei = entityIndexFactory.
+            createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
-        CandidateResults crs = ei.getAllEntityVersionsBeforeMarkedVersion( entityId, markedVersion );
 
-        //If we get no search results, its possible that something was already deleted or
-        //that it wasn't indexed yet. In either case we can't delete anything and return an empty observable..
-        if(crs.isEmpty()) {
-            return Observable.empty();
-        }
-
-        UUID timeUUID = UUIDUtils.isTimeBased(entityId.getUuid()) ? entityId.getUuid() : UUIDUtils.newTimeUUID();
-        //not actually sure about the timestamp but ah well. works.
-        SearchEdge searchEdge = createSearchEdgeFromSource( new SimpleEdge( applicationScope.getApplication(),
+        final SearchEdge searchEdgeFromSource = createSearchEdgeFromSource( new SimpleEdge( applicationScope.getApplication(),
             CpNamingUtils.getEdgeTypeFromCollectionName( InflectionUtils.pluralize( entityId.getType() ) ), entityId,
-            timeUUID.timestamp() ) );
+            entityId.getUuid().timestamp() ) );
 
 
-        final Observable<IndexOperationMessage>  batches = Observable.from( crs )
-                //collect results into a single batch
-                .collect( () -> ei.createBatch(), ( batch, candidateResult ) -> {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Deindexing on edge {} for entity {} added to batch", searchEdge, entityId);
-                    }
-                    batch.deindex( candidateResult );
-                } )
-                    //return the future from the batch execution
-                .map( batch ->batch.build() );
+        final EntityIndexBatch batch = ei.createBatch();
 
-        return ObservableTimer.time(batches, indexTimer);
+        // de-index each version of the entity before the marked version
+        allVersionsBeforeMarked.forEach(version -> batch.deindex(searchEdgeFromSource, entityId, version));
+
+
+        // for now, query the index to remove docs where the entity is source/target node and older than markedVersion
+        // TODO: investigate getting this information from graph
+        CandidateResults candidateResults = ei.getNodeDocsOlderThanMarked(entityId, markedVersion );
+        candidateResults.forEach(candidateResult -> batch.deindex(candidateResult));
+
+        return Observable.just(batch.build());
+
+    }
+
+    @Override
+    public Observable<IndexOperationMessage> deIndexOldVersions(final ApplicationScope applicationScope,
+                                                                final Id entityId,
+                                                                final List<UUID> versions,
+                                                                UUID markedVersion) {
+
+        final EntityIndex ei = entityIndexFactory.
+            createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
+
+
+        final SearchEdge searchEdgeFromSource = createSearchEdgeFromSource( new SimpleEdge( applicationScope.getApplication(),
+            CpNamingUtils.getEdgeTypeFromCollectionName( InflectionUtils.pluralize( entityId.getType() ) ), entityId,
+             entityId.getUuid().timestamp() ) );
+
+
+        final EntityIndexBatch batch = ei.createBatch();
+
+        versions.forEach( version -> {
+
+            batch.deindex(searchEdgeFromSource, entityId, version);
+
+        });
+
+        return Observable.just(batch.build());
+
     }
 
     /**
