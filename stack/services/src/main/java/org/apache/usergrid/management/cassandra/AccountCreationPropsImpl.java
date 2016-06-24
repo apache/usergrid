@@ -17,11 +17,9 @@
 package org.apache.usergrid.management.cassandra;
 
 
-import java.net.InetAddress;
 import java.util.Enumeration;
 import java.util.Properties;
 
-import com.amazonaws.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.AccountCreationProps;
@@ -133,28 +131,17 @@ public class AccountCreationPropsImpl implements AccountCreationProps {
         private final String username;
         private final String email;
         private final String password;
-        private final boolean localhostOnly;
 
         public SuperUserImpl(Properties properties) {
             enabled = parseBoolean(properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_ALLOWED));
             username = properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_NAME);
             email = properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_EMAIL);
             password = properties.getProperty(PROPERTIES_SYSADMIN_LOGIN_PASSWORD);
-            localhostOnly = parseBoolean(properties.getProperty(PROPERTIES_SYSADMIN_LOCALHOST_ONLY, "false"));
         }
 
         @Override
-        public boolean isEnabled(String host) {
-            boolean isLocalhost = false;
-            // if host not passed in, assume not localhost
-            if (!StringUtils.isNullOrEmpty(host)) {
-                try {
-                    isLocalhost = InetAddress.getByName(host).isLoopbackAddress();
-                } catch (Exception e) {
-                    // will treat as non-localhost
-                }
-            }
-            return superuserEnabled() && (isLocalhost || !localhostOnly);
+        public boolean isEnabled() {
+            return superuserEnabled();
         }
 
         @Override
