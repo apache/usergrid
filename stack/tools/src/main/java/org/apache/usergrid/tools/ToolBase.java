@@ -17,6 +17,7 @@
 package org.apache.usergrid.tools;
 
 
+import com.google.inject.Injector;
 import me.prettyprint.hector.testutils.EmbeddedServerHelper;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang.ClassUtils;
@@ -69,6 +70,10 @@ public abstract class ToolBase {
 
     protected CassandraService cass;
 
+    protected Injector injector;
+
+
+
 
     public void startTool( String[] args ) {
         startTool( args, true );
@@ -87,6 +92,15 @@ public abstract class ToolBase {
         if ( line == null ) {
             return;
         }
+
+        // notification queue listener not needed for tools
+        System.setProperty("usergrid.notifications.listener.run", "false");
+        System.setProperty("usergrid.push.worker_count", "0");
+
+        //job scheduler also not needed for tools
+        System.setProperty("usergrid.scheduler.enabled", "false");
+
+
 
         if ( line.hasOption( "host" ) ) {
             System.setProperty( "cassandra.url", line.getOptionValue( "host" ) );
@@ -178,6 +192,10 @@ public abstract class ToolBase {
         assertNotNull( emf );
         assertTrue( "EntityManagerFactory is instance of EntityManagerFactory",
                 emf instanceof EntityManagerFactory );
+
+        injector = ac.getBean( Injector.class );
+
+
     }
 
 
@@ -256,7 +274,10 @@ public abstract class ToolBase {
             "   cassandra.keyspace.application: {}\n" +
             "   cassandra.lock.keyspace: {}\n" +
             "   cassandra.keyspace.replication: {}\n" +
-            "   cassandra.connections: {}\n",
+            "   cassandra.connections: {}\n" +
+            "   usergrid.notifications.listener.run: {}\n" +
+            "   usergrid.push.worker_count: {}\n" +
+            "   usergrid.scheduler.enabled: {}\n",
             properties.get("cassandra.url"),
             properties.get("cassandra.datacenter.local"),
             properties.get("cassandra.username"),
@@ -265,7 +286,10 @@ public abstract class ToolBase {
             properties.get("cassandra.keyspace.application"),
             properties.get("cassandra.lock.keyspace"),
             properties.get("cassandra.keyspace.replication"),
-            properties.get("cassandra.connections")
+            properties.get("cassandra.connections"),
+            properties.get("usergrid.notifications.listener.run"),
+            properties.get("usergrid.push.worker_count"),
+            properties.get("usergrid.scheduler.enabled")
         );
     }
 

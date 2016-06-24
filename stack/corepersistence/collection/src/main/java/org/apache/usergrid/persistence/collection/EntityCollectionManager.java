@@ -76,9 +76,10 @@ public interface EntityCollectionManager {
      * Get a fieldset of all fields from the entities
      * @param entityType The type of entity.  From the "type" field in the id.
      * @param fields The collection of fields to search
+     * @param useReadRepair
      * @return
      */
-    Observable<FieldSet> getEntitiesFromFields( String entityType, Collection<Field> fields );
+    Observable<FieldSet> getEntitiesFromFields(String entityType, Collection<Field> fields, boolean useReadRepair);
 
     /**
      * Gets the Id for a field

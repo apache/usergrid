@@ -18,10 +18,7 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.netflix.hystrix.HystrixCommandProperties;
 import org.slf4j.Logger;
@@ -112,6 +109,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
         // Construct all the functions for verifying we're unique
         //
 
+        final Map<String, Field> preWriteUniquenessViolations = new HashMap<>( uniqueFields.size() );
 
         for ( final Field field : EntityUtils.getUniqueFields(entity)) {
 
@@ -121,11 +119,38 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
             // use write-first then read strategy
             final UniqueValue written = new UniqueValueImpl( field, mvccEntity.getId(), mvccEntity.getVersion() );
 
+            try {
+
+                // loading will retrieve the oldest unique value entry for the field
+                UniqueValueSet set = uniqueValueStrat.load(scope, written.getEntityId().getType(), Collections.singletonList(written.getField()));
+
+
+                set.forEach(uniqueValue -> {
+
+                    if(!uniqueValue.getEntityId().getUuid().equals(written.getEntityId().getUuid())){
+
+                        preWriteUniquenessViolations.put(field.getName(), field);
+
+                    }
+
+                });
+
+
+            } catch (ConnectionException e) {
+
+                throw new RuntimeException("Error connecting to cassandra", e);
+            }
+
             // use TTL in case something goes wrong before entity is finally committed
             final MutationBatch mb = uniqueValueStrat.write( scope, written, serializationFig.getTimeout() );
 
             batch.mergeShallow( mb );
             uniqueFields.add(field);
+        }
+
+        if(preWriteUniquenessViolations.size() > 0 ){
+            throw new WriteUniqueVerifyException(mvccEntity, scope,
+                preWriteUniquenessViolations );
         }
 
         //short circuit nothing to do
@@ -191,6 +216,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
             //now get the set of fields back
             final UniqueValueSet uniqueValues;
             try {
+                // load ascending for verification to make sure we wrote is the last read back
                 uniqueValues = uniqueValueSerializationStrategy.load( scope, consistencyLevel, type,  uniqueFields );
             }
             catch ( ConnectionException e ) {
@@ -213,6 +239,16 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
                 final Id returnedEntityId = uniqueValue.getEntityId();
 
                 if ( !entity.getId().equals(returnedEntityId) ) {
+
+                    if(logger.isTraceEnabled()) {
+                        logger.trace("Violation occurred when verifying unique value [{}={}]. Returned entity id [{}] " +
+                            "does not match expected entity id [{}]",
+                            field.getName(), field.getValue().toString(),
+                            returnedEntityId,
+                            entity.getId()
+                        );
+                    }
+
                     uniquenessViolations.put( field.getName(), field );
                 }
             }

@@ -18,13 +18,9 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
+import com.netflix.astyanax.util.RangeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +51,6 @@ import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.ConsistencyLevel;
 import com.netflix.astyanax.model.Row;
 import com.netflix.astyanax.query.RowQuery;
-import com.netflix.astyanax.util.RangeBuilder;
 
 
 /**
@@ -64,7 +59,7 @@ import com.netflix.astyanax.util.RangeBuilder;
 public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     implements UniqueValueSerializationStrategy {
 
-    private static final Logger log = LoggerFactory.getLogger( UniqueValueSerializationStrategyImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( UniqueValueSerializationStrategyImpl.class );
 
 
     private final MultiTenantColumnFamily<ScopedRowKey<FieldKey>, EntityVersion>
@@ -75,6 +70,8 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
         CF_ENTITY_UNIQUE_VALUE_LOG ;
 
     public static final int COL_VALUE = 0x0;
+
+    private final Comparator<UniqueValue> uniqueValueComparator = new UniqueValueComparator();
 
 
     private final SerializationFig serializationFig;
@@ -159,7 +156,7 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
 
             //we purposefully leave out TTL.  Worst case we issue deletes against tombstoned columns
-            //best case, we clean up an invalid secondary index entry when the log is used
+            //best case, we clean up an invalid secondary index entry when the logger is used
             @Override
             public void doLog( final ColumnListMutation<UniqueFieldEntry> colMutation ) {
                 colMutation.putColumn( uniqueFieldEntry, COL_VALUE );
@@ -225,8 +222,8 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
             ScopedRowKey.fromKey( applicationId, entityKey ) ) );
 
 
-        if ( log.isTraceEnabled() ) {
-            log.trace( "Writing unique value version={} name={} value={} ",
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Writing unique value version={} name={} value={} ",
                     uniqueValue.getEntityVersion(), uniqueValue.getField().getName(),
                     uniqueValue.getField().getValue()
                 );
@@ -271,7 +268,8 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
         Iterator<Row<ScopedRowKey<FieldKey>, EntityVersion>> results =
             keyspace.prepareQuery( CF_UNIQUE_VALUES ).setConsistencyLevel( consistencyLevel ).getKeySlice( keys )
-                    .withColumnRange( new RangeBuilder().setLimit( 1 ).build() ).execute().getResult().iterator();
+                .withColumnRange(new RangeBuilder().setLimit(serializationFig.getMaxLoadSize()).build())
+                .execute().getResult().iterator();
 
 
         while ( results.hasNext() )
@@ -279,7 +277,6 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
         {
 
             final Row<ScopedRowKey<FieldKey>, EntityVersion> unique = results.next();
-
 
             final Field field = parseRowKey( unique.getKey() );
 
@@ -290,13 +287,95 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                 continue;
             }
 
-            final EntityVersion entityVersion = columnList.next().getName();
+
+            List<UniqueValue> candidates = new ArrayList<>();
+
+            /**
+             *  While iterating the columns, a rule is being enforced to only EVER return the oldest UUID.  This means
+             *  the UUID with the oldest timestamp ( it was the original entity written for the unique value ).
+             *
+             *  We do this to prevent cycling of unique value -> entity UUID mappings as this data is ordered by the
+             *  entity's version and not the entity's timestamp itself.
+             *
+             *  If newer entity UUIDs are encountered, they are removed from the unique value tables, however their
+             *  backing serialized entity data is left in tact in case a cleanup / audit is later needed.
+             */
+            while (columnList.hasNext()) {
+
+                final EntityVersion entityVersion = columnList.next().getName();
+
+                final UniqueValue uniqueValue =
+                    new UniqueValueImpl(field, entityVersion.getEntityId(), entityVersion.getEntityVersion());
 
 
-            final UniqueValueImpl uniqueValue =
-                new UniqueValueImpl( field, entityVersion.getEntityId(), entityVersion.getEntityVersion() );
+                // set the initial candidate and move on
+                if(candidates.size() == 0){
+                    candidates.add(uniqueValue);
+                    continue;
+                }
 
-            uniqueValueSet.addValue( uniqueValue );
+                final int result = uniqueValueComparator.compare(uniqueValue, candidates.get(candidates.size() -1));
+
+                if(result == 0){
+
+                    // do nothing, only versions can be newer and we're not worried about newer versions of same entity
+                    if(logger.isTraceEnabled()){
+                        logger.trace("Candidate unique value is equal to the current unique value");
+                    }
+
+                    // update candidate w/ latest version
+                    candidates.add(uniqueValue);
+
+                }else if(result < 0){
+
+                    // delete the duplicate from the unique value index
+                    candidates.forEach(candidate -> {
+
+                        try {
+
+                            logger.warn("Duplicate unique value [{}={}] found, removing newer entry " +
+                                    "with entity id [{}] and entity version [{}]", field.getName(), field.getValue().toString(),
+                                candidate.getEntityId().getUuid(), candidate.getEntityVersion() );
+
+                            delete(appScope, candidate ).execute();
+
+                        } catch (ConnectionException e) {
+                            // do nothing for now
+                        }
+
+                    });
+
+                    // clear the transient candidates list
+                    candidates.clear();
+
+                    if(logger.isTraceEnabled()) {
+                        logger.trace("Updating candidate to entity id [{}] and entity version [{}]",
+                            uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion());
+
+                    }
+
+                    // add our new candidate to the list
+                    candidates.add(uniqueValue);
+
+
+                }else{
+
+                    logger.warn("Duplicate unique value [{}={}] found, removing newer entry " +
+                            "with entity id [{}] and entity version [{}]", field.getName(), field.getValue().toString(),
+                        uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion() );
+
+                    // delete the duplicate from the unique value index
+                    delete(appScope, uniqueValue ).execute();
+
+
+                }
+
+
+            }
+
+            // take the last candidate ( should be the latest version) and add to the result set
+            uniqueValueSet.addValue(candidates.get(candidates.size() -1));
+
         }
 
         return uniqueValueSet;
@@ -415,4 +494,30 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
      * @param uniqueValueId The uniqueValue
      */
     protected abstract EntityKey createEntityUniqueLogKey(final Id applicationId,  final Id uniqueValueId );
+
+
+
+    private class UniqueValueComparator implements Comparator<UniqueValue> {
+
+        @Override
+        public int compare(UniqueValue o1, UniqueValue o2) {
+
+            if( o1.getEntityId().getUuid().equals(o2.getEntityId().getUuid())){
+
+                return 0;
+
+            }else if( o1.getEntityId().getUuid().timestamp() < o2.getEntityId().getUuid().timestamp()){
+
+                return -1;
+
+            }
+
+            // if the UUIDs are not equal and o1's timestamp is not less than o2's timestamp,
+            // then o1 must be greater than o2
+            return 1;
+
+
+        }
+    }
+
 }
