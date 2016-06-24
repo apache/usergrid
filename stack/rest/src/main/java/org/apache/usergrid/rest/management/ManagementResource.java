@@ -35,6 +35,8 @@ import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.management.users.UsersResource;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.apache.usergrid.security.sso.ExternalSSOProvider;
+import org.apache.usergrid.security.sso.SSOProviderFactory;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +89,9 @@ public class ManagementResource extends AbstractContextResource {
 
     @Autowired
     private ApplicationCreator applicationCreator;
+
+    @Autowired
+    private SSOProviderFactory ssoProviderFactory;
 
     // usergrid configuration property names needed
     public static final String USERGRID_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
@@ -157,8 +162,47 @@ public class ManagementResource extends AbstractContextResource {
                                          @QueryParam( "access_token" ) String access_token,
                                          @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
-        return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
-                callback, false, true );
+
+
+        final UserInfo user = SubjectUtils.getUser();
+
+        // if user is null ( meaning no token was provided and previously validated in OAuth2AccessTokenSecurityFilter)
+        // then assume it's a token request
+        if( user == null) {
+            return getAccessTokenInternal(ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
+                callback, false, true);
+        }
+
+
+
+        // if it's not a token request and we have a user, extract details from the token
+
+        final long passwordChanged = management.getLastAdminPasswordChange( user.getUuid() );
+        final boolean ssoEnabled = Boolean.parseBoolean(properties.getProperty(USERGRID_EXTERNAL_SSO_ENABLED));
+        long tokenTtl;
+
+        if(ssoEnabled){
+
+            ExternalSSOProvider provider = ssoProviderFactory.getProvider();
+
+            tokenTtl =
+                Long.valueOf(provider.getDecodedTokenDetails(access_token).get("expiry")) - System.currentTimeMillis()/1000;
+
+        }else{
+
+            tokenTtl = tokens.getTokenInfo(access_token).getDuration();
+        }
+
+
+        final AccessInfo access_info = new AccessInfo().withExpiresIn( tokenTtl ).withAccessToken( access_token )
+            .withPasswordChanged( passwordChanged );
+
+        access_info.setProperty( "user", management.getAdminUserOrganizationData( user, true ) );
+
+        return Response.status( SC_OK ).type( jsonMediaType( callback ) )
+            .entity( wrapWithCallback( access_info, callback ) ).build();
+
+
     }
 
 
@@ -181,6 +225,8 @@ public class ManagementResource extends AbstractContextResource {
                                            String callback, boolean adminData, boolean me) throws Exception {
 
 
+
+
         UserInfo user = null;
 
         try {
@@ -196,12 +242,14 @@ public class ManagementResource extends AbstractContextResource {
 
             if ( user == null ) {
 
-                if ( !me ) { // if not lightweight-auth, i.e. /management/me then...
+
+
+                //if ( !me ) { // if not lightweight-auth, i.e. /management/me then...
 
                     // make sure authentication is allowed considering
                     // external token validation configuration (UG Central SSO)
                     ensureAuthenticationAllowed( username, grant_type );
-                }
+               // }
 
                 if ( authorization != null ) {
                     String type = stringOrSubstringBeforeFirst( authorization, ' ' ).toUpperCase();
