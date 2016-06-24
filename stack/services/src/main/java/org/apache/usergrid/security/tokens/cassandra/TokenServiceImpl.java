@@ -32,14 +32,14 @@ import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
+import org.apache.usergrid.security.sso.SSOProviderFactory;
 import org.apache.usergrid.security.tokens.TokenCategory;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.security.tokens.exceptions.BadTokenException;
 import org.apache.usergrid.security.tokens.exceptions.ExpiredTokenException;
 import org.apache.usergrid.security.tokens.exceptions.InvalidTokenException;
-import org.apache.usergrid.security.tokens.externalProviders.ApigeeSSO2Provider;
-import org.apache.usergrid.security.tokens.externalProviders.UsergridCentral;
+import org.apache.usergrid.security.sso.ExternalSSOProvider;
 import org.apache.usergrid.utils.ConversionUtils;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
@@ -316,29 +316,43 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public TokenInfo getTokenInfo( String token, boolean updateAccessTime ) throws Exception {
 
-        UUID uuid = null;
+        UUID uuid;
+
+
+        /** Pre-validation of the token string based on Usergrid's encoding scheme.
+         *
+         * If the token does not parse out a UUID, then it's not a Usergrid token.  Check if External SSO provider
+         * is configured, which is not Usergrid and immediately try to validate the token based on this parsing
+         * information.
+         */
         try{
             uuid = getUUIDForToken( token );
         }
         catch(Exception e){
-            try{
-                return validateExternalToken(token,1,properties.getProperty(USERGRID_EXTERNAL_PROVIDER));
+
+            // If the token doesn't parse as a Usergrid token, see if an external provider other than Usergrid is
+            // enabled.  If so, just validate the external token.
+            if( isExternalSSOProviderEnabled() && !getExternalSSOProvider().equalsIgnoreCase("usergrid")) {
+                return validateExternalToken(token, 1, getExternalSSOProvider());
+            }else{
+                throw e; // re-throw the error
             }
-            catch (Exception exception){
-                logger.debug("invalid request");
-                throw new IllegalArgumentException("Invalid token in the request.");
-            }
+
         }
 
-        long ssoTtl = 1000000L; // TODO: property for this
+        final TokenInfo tokenInfo;
 
-        TokenInfo tokenInfo;
+        /**
+         * Now try actual Usergrid token validations.  First try locally.  If that fails and SSO is enabled with
+         * Usergrid being a provider, validate the external token.
+         */
         try {
             tokenInfo = getTokenInfo( uuid );
         } catch (InvalidTokenException e){
-            // now try from central sso
-            if ( isExternalSSOProviderEnabled() ){
-                return validateExternalToken( token, maxPersistenceTokenAge,"" );
+            // Try the request from Usergrid, conditions are specific so we don't incur perf hits for unncessary
+            // token validations that are known to not
+            if ( isExternalSSOProviderEnabled() && getExternalSSOProvider().equalsIgnoreCase("usergrid") ){
+                return validateExternalToken( token, maxPersistenceTokenAge, getExternalSSOProvider() );
             }else{
                 throw e; // re-throw the error
             }
@@ -767,6 +781,9 @@ public class TokenServiceImpl implements TokenService {
     @Autowired
     protected ManagementService management;
 
+    @Autowired
+    private SSOProviderFactory ssoProviderFactory;
+
     MetricsFactory getMetricsFactory() {
         return metricsFactory;
     }
@@ -774,6 +791,10 @@ public class TokenServiceImpl implements TokenService {
 
     private boolean isExternalSSOProviderEnabled() {
         return Boolean.valueOf(properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ));
+    }
+
+    private String getExternalSSOProvider(){
+        return properties.getProperty(USERGRID_EXTERNAL_PROVIDER);
     }
 
     /**
@@ -794,24 +815,25 @@ public class TokenServiceImpl implements TokenService {
      * @param ttl            Time to live for token.
      */
     public TokenInfo validateExternalToken(String extAccessToken, long ttl, String provider) throws Exception {
-        TokenInfo tokenInfo = null;
-        //todo: based on provider call the appropriate method.
-        if(provider.equalsIgnoreCase("apigee")){
-            ApigeeSSO2Provider apigeeProvider = ((CpEntityManagerFactory)emf).getApplicationContext().getBean( ApigeeSSO2Provider.class );
-            return apigeeProvider.validateAndReturnTokenInfo(extAccessToken,ttl);
-        }
-        else if(provider.equalsIgnoreCase("usergridCentral")){
-            UsergridCentral ugCentralProvider = ((CpEntityManagerFactory)emf).getApplicationContext().getBean( UsergridCentral.class );
-            UserInfo userinfo = ugCentralProvider.validateAndReturnUserInfo(extAccessToken,ttl);
 
-            // store the external access_token as if it were one of our own
+
+        ExternalSSOProvider ssoProvider = ssoProviderFactory.getProvider();
+
+        if(provider.equalsIgnoreCase("usergrid")){
+
+            UserInfo userinfo = ssoProvider.validateAndReturnUserInfo(extAccessToken,ttl);
+
+            // Store the external Usergrid access_token as if it were one of our own so we don't have to make the
+            // external HTTP validation call on subsequent requests
             importToken( extAccessToken, TokenCategory.ACCESS, null, new AuthPrincipalInfo(
                 ADMIN_USER, userinfo.getUuid(), CpNamingUtils.MANAGEMENT_APPLICATION_ID), null, ttl );
             return getTokenInfo( extAccessToken );
 
+        }else{
+
+            return ssoProvider.validateAndReturnTokenInfo(extAccessToken,ttl);
         }
-        //todo : what if the token info is null ?
-        return tokenInfo;
+
     }
 
 }

@@ -77,12 +77,12 @@
 
     <bean id="saltProvider" class="org.apache.usergrid.security.salt.NoOpSaltProvider"/>
 
-
-    <bean id="apigeeSSO2Provider" class="org.apache.usergrid.security.tokens.externalProviders.ApigeeSSO2Provider">
+    <!-- singletons for custom SSO providers if they are used -->
+    <bean id="apigeeSSO2Provider" class="org.apache.usergrid.security.sso.ApigeeSSO2Provider">
         <property name="management" ref="managementService" />
     </bean>
 
-    <bean id="usergridCentral" class="org.apache.usergrid.security.tokens.externalProviders.UsergridCentral">
+    <bean id="usergridExternalProvider" class="org.apache.usergrid.security.sso.UsergridExternalProvider">
         <property name="management" ref="managementService" />
     </bean>
 
@@ -100,9 +100,16 @@
         <constructor-arg ref="managementService"/>
     </bean>
 
+    <!-- sign in providers are for application users to have integration with FB,Ping,etc. -->
     <bean id="signInProviderFactory" class="org.apache.usergrid.security.providers.SignInProviderFactory">
         <property name="entityManagerFactory" ref="entityManagerFactory"/>
         <property name="managementService" ref="managementService"/>
+    </bean>
+
+    <!-- sso providers are for admin user accounts integrated with SSO systems like Apigee or central UG -->
+    <bean id="ssoProviderFactory" class="org.apache.usergrid.security.sso.SSOProviderFactory">
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+        <property name="properties" ref="properties"/>
     </bean>
 
     <bean id="exportService" class="org.apache.usergrid.management.export.ExportServiceImpl">
