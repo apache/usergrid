@@ -20,13 +20,11 @@ package org.apache.usergrid.rest.management.users;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
-import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
-import org.apache.usergrid.rest.management.ManagementResource;
 import org.apache.usergrid.rest.management.users.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.security.annotations.RequireAdminUserAccess;
 import org.apache.usergrid.security.tokens.TokenInfo;
@@ -46,8 +44,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isServiceAdmin;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.utils.ConversionUtils.string;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_CENTRAL_URL;
 
 
 @Component( "org.apache.usergrid.rest.management.users.UserResource" )
@@ -212,11 +211,11 @@ public class UserResource extends AbstractContextResource {
     public Viewable showPasswordResetForm( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
         final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
+                Boolean.valueOf( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
 
         if ( externalTokensEnabled ) {
             throw new IllegalArgumentException( "Admin Users must reset passwords via " +
-                    properties.getProperty( USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
 
         UUID organizationId = null;
@@ -259,11 +258,11 @@ public class UserResource extends AbstractContextResource {
         }
 
         final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
+            Boolean.valueOf( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
 
         if ( externalTokensEnabled ) {
             throw new IllegalArgumentException( "Admin Users must reset passwords via " +
-                    properties.getProperty( USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
 
         UUID organizationId = null;
@@ -348,11 +347,11 @@ public class UserResource extends AbstractContextResource {
     public Viewable activate( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
         final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
+            Boolean.valueOf( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
 
         if ( externalTokensEnabled ) {
             throw new IllegalArgumentException( "Admin Users must activate via " +
-                    properties.getProperty( USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
 
         UUID organizationId = null;
@@ -381,11 +380,11 @@ public class UserResource extends AbstractContextResource {
     public Viewable confirm( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
         final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
+            Boolean.valueOf( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
 
         if ( externalTokensEnabled ) {
             throw new IllegalArgumentException( "Admin Users must confirm via " +
-                    properties.getProperty( USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
 
         UUID organizationId = null;
@@ -420,11 +419,11 @@ public class UserResource extends AbstractContextResource {
             throws Exception {
 
         final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
+            Boolean.valueOf( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
 
         if ( externalTokensEnabled ) {
             throw new IllegalArgumentException( "Admin Users must reactivate via " +
-                    properties.getProperty( USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
 
         logger.info( "Send activation email for user: {}" , user.getUuid() );
