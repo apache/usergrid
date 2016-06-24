@@ -75,7 +75,6 @@ public interface AccountCreationProps {
     String PROPERTIES_SYSADMIN_LOGIN_EMAIL = "usergrid.sysadmin.login.email";
     String PROPERTIES_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
     String PROPERTIES_SYSADMIN_LOGIN_ALLOWED = "usergrid.sysadmin.login.allowed";
-    String PROPERTIES_SYSADMIN_LOCALHOST_ONLY = "usergrid.sysadmin.localhost.only";
 
     String PROPERTIES_ADMIN_SYSADMIN_EMAIL = "usergrid.admin.sysadmin.email";
     String PROPERTIES_ORG_SYSADMIN_EMAIL = "usergrid.org.sysadmin.email";
@@ -128,7 +127,7 @@ public interface AccountCreationProps {
     SuperUser getSuperUser();
 
     interface SuperUser{
-        boolean isEnabled(String host);
+        boolean isEnabled();
         String getUsername();
         String getEmail();
         String getPassword();

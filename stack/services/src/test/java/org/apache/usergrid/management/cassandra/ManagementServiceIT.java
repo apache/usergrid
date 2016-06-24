@@ -480,15 +480,15 @@ public class ManagementServiceIT {
         EntityManager em = setup.getEmf().getEntityManager( setup.getSmf().getManagementAppId() );
         setup.getEntityIndex().refresh(applicationId);
 
-        UserInfo authedUser = setup.getMgmtSvc().verifyAdminUserPasswordCredentialsOnly( username, password );
+        UserInfo authedUser = setup.getMgmtSvc().verifyAdminUserPasswordCredentials( username, password );
 
         assertEquals( adminUser.getUuid(), authedUser.getUuid() );
 
-        authedUser = setup.getMgmtSvc().verifyAdminUserPasswordCredentialsOnly( adminUser.getEmail(), password );
+        authedUser = setup.getMgmtSvc().verifyAdminUserPasswordCredentials( adminUser.getEmail(), password );
 
         assertEquals( adminUser.getUuid(), authedUser.getUuid() );
 
-        authedUser = setup.getMgmtSvc().verifyAdminUserPasswordCredentialsOnly( adminUser.getUuid().toString(), password );
+        authedUser = setup.getMgmtSvc().verifyAdminUserPasswordCredentials( adminUser.getUuid().toString(), password );
 
         assertEquals( adminUser.getUuid(), authedUser.getUuid() );
     }
