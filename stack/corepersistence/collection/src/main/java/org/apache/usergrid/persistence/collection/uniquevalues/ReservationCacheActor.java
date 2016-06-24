@@ -49,7 +49,7 @@ public class ReservationCacheActor extends UntypedActor {
             ReservationCache.getInstance().cacheReservation( res );
 
             if ( ++reservationCount % 10 == 0 ) {
-                logger.debug("Received {} reservations cache size {}",
+                logger.info("Received {} reservations cache size {}",
                         reservationCount, ReservationCache.getInstance().getSize());
             }
 
@@ -58,7 +58,7 @@ public class ReservationCacheActor extends UntypedActor {
             ReservationCache.getInstance().cancelReservation( can );
 
             if ( ++cancellationCount % 10 == 0 ) {
-                logger.debug("Received {} cancellations", cancellationCount);
+                logger.info("Received {} cancellations", cancellationCount);
             }
 
         } else if (msg instanceof DistributedPubSubMediator.SubscribeAck) {

@@ -41,7 +41,7 @@ public class AbstractUniqueValueTest {
             actorSystemManager.registerMessageType( UniqueValueActor.Cancellation.class, "/user/uvProxy" );
             actorSystemManager.registerMessageType( UniqueValueActor.Confirmation.class, "/user/uvProxy" );
             actorSystemManager.start( "127.0.0.1", port, "us-east" );
-            actorSystemManager.waitForRequestActors();
+            actorSystemManager.waitForClientActor();
 
             startedAkka.put( port, true );
         }

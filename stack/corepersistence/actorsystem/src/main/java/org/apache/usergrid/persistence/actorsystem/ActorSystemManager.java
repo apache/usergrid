@@ -23,21 +23,55 @@ import akka.actor.ActorRef;
 
 public interface ActorSystemManager {
 
+    /**
+     * Start create and start all Akka Actors, ClusterClients Routers and etc.
+     */
     void start();
 
+    /**
+     * Start method used in JUnit tests.
+     */
     void start(String hostname, Integer port, String currentRegion);
 
-    void waitForClientActors();
+    /**
+     * Wait until ClientActor has seen some nodes and is ready for use.
+     */
+    void waitForClientActor();
 
+    /**
+     * True if ActorSystem and ClientActor are ready to be used.
+     */
     boolean isReady();
 
+    /**
+     * MUST be called before start() to register any router producers to be configured.
+     */
     void registerRouterProducer( RouterProducer routerProducer );
 
+    /**
+     * MUST be called before start() to register any messages to be sent.
+     * @param messageType Class of message.
+     * @param routerPath Router-path to which such messages are to be sent.
+     */
     void registerMessageType( Class messageType, String routerPath );
 
+    /**
+     * Local client for ActorSystem, send all local messages here for routing.
+     */
     ActorRef getClientActor();
 
+    /**
+     * Get ClientClient for specified remote region.
+     */
     ActorRef getClusterClient(String region );
 
+    /**
+     * Get name of of this, the current region.
+     */
     String getCurrentRegion();
+
+    /**
+     * Publish message to all topic subscribers in all regions.
+     */
+    void publishToAllRegions( String topic, Object message, ActorRef sender );
 }

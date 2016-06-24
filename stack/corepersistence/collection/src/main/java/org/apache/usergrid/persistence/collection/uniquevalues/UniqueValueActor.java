@@ -21,6 +21,7 @@ import akka.actor.UntypedActor;
 import akka.cluster.pubsub.DistributedPubSub;
 import akka.cluster.pubsub.DistributedPubSubMediator;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -30,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.util.UUID;
 
+
 public class UniqueValueActor extends UntypedActor {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValueActor.class );
 
@@ -37,7 +39,7 @@ public class UniqueValueActor extends UntypedActor {
 
     //private MetricsService metricsService;
 
-    final private ActorRef mediator = DistributedPubSub.get(getContext().system()).mediator();
+    private final ActorSystemManager actorSystemManager;
 
     private final UniqueValuesTable table;
 
@@ -48,6 +50,8 @@ public class UniqueValueActor extends UntypedActor {
 
         // TODO: is there a way to avoid this ugly kludge? see also: ClusterSingletonRouter
         this.table = UniqueValuesServiceImpl.injector.getInstance( UniqueValuesTable.class );
+        this.actorSystemManager = UniqueValuesServiceImpl.injector.getInstance( ActorSystemManager.class );
+
         //logger.info("UniqueValueActor {} is live with table {}", name, table);
     }
 
@@ -66,7 +70,7 @@ public class UniqueValueActor extends UntypedActor {
         if ( message instanceof Reservation ) {
             Reservation res = (Reservation) message;
 
-//            final Timer.Context context = metricsService.getReservationTimer().time();
+            // final Timer.Context context = metricsService.getReservationTimer().time();
 
             try {
                 Id owner = table.lookupOwner( res.getApplicationScope(), res.getOwner().getType(), res.getField() );
@@ -86,8 +90,7 @@ public class UniqueValueActor extends UntypedActor {
 
                 getSender().tell( new Response( Response.Status.IS_UNIQUE ), getSender() );
 
-                mediator.tell( new DistributedPubSubMediator.Publish( "content",
-                        new Reservation( res ) ), getSelf() );
+                actorSystemManager.publishToAllRegions( "content", new Reservation( res ), getSelf() );
 
             } catch (Throwable t) {
 
@@ -96,13 +99,13 @@ public class UniqueValueActor extends UntypedActor {
 
 
             } finally {
-//                context.stop();
+                // context.stop();
             }
 
         } else if ( message instanceof Confirmation) {
             Confirmation con = (Confirmation) message;
 
-//            final Timer.Context context = metricsService.getCommitmentTimer().time();
+            // final Timer.Context context = metricsService.getCommitmentTimer().time();
 
             try {
                 Id owner = table.lookupOwner( con.getApplicationScope(), con.getOwner().getType(), con.getField() );
@@ -122,15 +125,14 @@ public class UniqueValueActor extends UntypedActor {
 
                 getSender().tell( new Response( Response.Status.IS_UNIQUE ), getSender() );
 
-                mediator.tell( new DistributedPubSubMediator.Publish( "content",
-                        new Reservation( con ) ), getSelf() );
+                actorSystemManager.publishToAllRegions( "content", new Reservation( con ), getSelf() );
 
             } catch (Throwable t) {
                 getSender().tell( new Response( Response.Status.ERROR ), getSender() );
                 logger.error( "Error processing request", t );
 
             } finally {
-//                context.stop();
+                // context.stop();
             }
 
 
@@ -155,8 +157,7 @@ public class UniqueValueActor extends UntypedActor {
 
                 getSender().tell( new Response( Response.Status.SUCCESS ), getSender() );
 
-                mediator.tell( new DistributedPubSubMediator.Publish( "content",
-                        new Reservation( can ) ), getSelf() );
+                actorSystemManager.publishToAllRegions( "content", new Reservation( can ), getSelf() );
 
             } catch (Throwable t) {
                 getSender().tell( new Response( Response.Status.ERROR ), getSender() );
@@ -180,10 +181,12 @@ public class UniqueValueActor extends UntypedActor {
         final String consistentHashKey;
 
         public Request( ApplicationScope applicationScope, Id owner, UUID ownerVersion, Field field ) {
+
             this.applicationScope = applicationScope;
             this.owner = owner;
             this.ownerVersion = ownerVersion;
             this.field = field;
+
             StringBuilder sb = new StringBuilder();
             sb.append( applicationScope.getApplication() );
             sb.append(":");
@@ -195,10 +198,12 @@ public class UniqueValueActor extends UntypedActor {
             this.consistentHashKey = sb.toString();
         }
         public Request( Request req ) {
+
             this.applicationScope = req.applicationScope;
             this.owner = req.owner;
             this.ownerVersion = req.ownerVersion;
             this.field = req.field;
+
             StringBuilder sb = new StringBuilder();
             sb.append( req.applicationScope.getApplication() );
             sb.append(":");
