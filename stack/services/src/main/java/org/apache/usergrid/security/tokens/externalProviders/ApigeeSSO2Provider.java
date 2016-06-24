@@ -34,13 +34,9 @@ public class ApigeeSSO2Provider implements ExternalTokenProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(ApigeeSSO2Provider.class);
     private static final String RESPONSE_PUBLICKEY_VALUE = "value";
-
     protected Properties properties;
-
     protected ManagementService management;
-
     protected Client client;
-
     protected String publicKey;
 
     public static final String USERGRID_EXTERNAL_PUBLICKEY_URL = "usergrid.external.sso.publicKeyUrl";
@@ -52,45 +48,51 @@ public class ApigeeSSO2Provider implements ExternalTokenProvider {
     }
 
     private String getPublicKey() {
-        return client.target(properties.getProperty(USERGRID_EXTERNAL_PUBLICKEY_URL)).request().get(Map.class).
-            get(RESPONSE_PUBLICKEY_VALUE).toString();
+        Map<String, Object> publicKey = client.target(properties.getProperty(USERGRID_EXTERNAL_PUBLICKEY_URL)).request().get(Map.class);
+        return publicKey.get(RESPONSE_PUBLICKEY_VALUE).toString().split("----\n")[1].split("\n---")[0];
     }
 
     @Override
-    public TokenInfo validateAndReturnUserInfo(String token) throws Exception {
+    public TokenInfo validateAndReturnTokenInfo(String token, long ttl) throws Exception {
 
+        try {
+            UserInfo userInfo = validateAndReturnUserInfo(token, ttl);
+            TokenInfo tokeninfo = new TokenInfo(UUIDUtils.newTimeUUID(), "access", 1, 1, 1, ttl,
+                new AuthPrincipalInfo(AuthPrincipalType.ADMIN_USER, userInfo.getUuid(),
+                    CpNamingUtils.MANAGEMENT_APPLICATION_ID), null);
+            return tokeninfo;
+        }
+        catch(Exception e){
+            logger.debug("Error construcing token info from userinfo");
+            e.printStackTrace();
+        }
+        return null;
+    }
 
-        //todo:// check cache , if its invalid retrieve from the USERGRID_EXTERNAL_PUBLICKEY_URL
-        String key = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0w+/0m5ENuLEAUxPxTMm\nXrJ8bhkyPunC2VCLTaA+2dkYhR0pfPM4RtCO9tqkjc63Raos3OTph9I9gE7RMBiU\n0GVMBDYe74OLZjpGeI7OO8TmQhaOeLzX/ej9QBvq1gbhHt1QGP3m43/g1bN64Ggt\nBq4NCXm1Ie80NvdxWDsKifhYi4fgo+zhcMBaSE2Hhyc3TIg1oEKfh+EmHL/4LhPd\n7CYl4PxqR+DVNbJrdGeGOteWX4p5sW79t/8CsnvJ4St5Yv3sGK5JuBbmGiKW8wWE\nn+9bDg5i3SPlimMBdySH+wMbFULyfVSvJHeMmEAMHKDq+PVGdM+znNkPCCVIkHZG\nRQIDAQAB";
-        byte[] publicBytes = decodeBase64(key);
+    @Override
+    public UserInfo validateAndReturnUserInfo(String token, long ttl) throws Exception {
+
+        byte[] publicBytes = decodeBase64(publicKey);
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         PublicKey pubKey = keyFactory.generatePublic(keySpec);
         Jws<Claims> payload = null;
         try {
             payload = Jwts.parser().setSigningKey(pubKey).parseClaimsJws(token);
-            System.out.println(payload.getBody());
-            //todo : construct the jsonNode object - or should we construct the Tokeninfo??
             UserInfo userInfo = management.getAdminUserByEmail(payload.getBody().get("email").toString());
-            TokenInfo tokeninfo = new TokenInfo(UUIDUtils.newTimeUUID(), "access", 1, 1, 1, 1,
-                new AuthPrincipalInfo(AuthPrincipalType.ADMIN_USER, userInfo.getUuid(),
-                    CpNamingUtils.MANAGEMENT_APPLICATION_ID), null);
-            return tokeninfo;
+            if (userInfo == null) {
+                throw new IllegalArgumentException("user " + payload.getBody().get("email").toString() + " doesnt exist");
+            }
+            return userInfo;
         } catch (SignatureException se) {
-            //if this exception is thrown, first check if the token is expired. Else retirve the public key from the EXTERNAL_URL
-            try{
-                getPublicKey();
-            }
-            catch(Exception e){
-
-            }
-            logger.debug("signature did not match");
+            logger.debug("Signature did not match.");
+            throw new IllegalArgumentException("Signature did not match for the token.");
         } catch (Exception e) {
+            logger.debug("Error validating Apigee SSO2 token.");
             e.printStackTrace();
         }
         return null;
     }
-
 
 
     @Autowired
@@ -99,7 +101,7 @@ public class ApigeeSSO2Provider implements ExternalTokenProvider {
     }
 
     @Autowired
-    public void setProperties( Properties properties ) {
+    public void setProperties(Properties properties) {
         this.properties = properties;
         this.publicKey = getPublicKey();
     }

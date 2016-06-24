@@ -40,7 +40,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 import java.util.*;
 
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_CENTRAL_URL;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
 
 
 @Component( "org.apache.usergrid.rest.management.organizations.OrganizationsResource" )
@@ -186,11 +186,11 @@ public class OrganizationsResource extends AbstractContextResource {
                                              Map<String, Object> orgProperties, String callback ) throws Exception {
 
         final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
+                !StringUtils.isEmpty( properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
 
         if ( externalTokensEnabled ) {
             throw new IllegalArgumentException( "Organization / Admin Users must be created via " +
-                    properties.getProperty( USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
 
         Preconditions
