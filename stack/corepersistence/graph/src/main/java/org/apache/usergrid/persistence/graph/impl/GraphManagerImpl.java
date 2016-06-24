@@ -483,6 +483,10 @@ public class GraphManagerImpl implements GraphManager {
                         return true;
                     }
 
+                    if(logger.isTraceEnabled()){
+                        logger.trace("Filtering edge {}", simpleMarkedEdge);
+                    }
+
                     //if any one of these is true, we filter it
                     return !simpleMarkedEdge.isDeleted() &&  !simpleMarkedEdge.isSourceNodeDelete() && !simpleMarkedEdge.isTargetNodeDeleted();
                 });
