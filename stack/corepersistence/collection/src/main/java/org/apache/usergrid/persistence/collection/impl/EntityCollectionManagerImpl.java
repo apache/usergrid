@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.netflix.astyanax.model.ConsistencyLevel;
+import org.apache.usergrid.persistence.collection.serialization.impl.LogEntryIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +65,6 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.codahale.metrics.Timer;
@@ -81,7 +81,6 @@ import com.netflix.astyanax.serializers.StringSerializer;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action0;
 
 
 /**
@@ -279,6 +278,19 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         } );
     }
 
+    @Override
+    public Observable<MvccLogEntry> getVersionsFromMaxToMin( final Id entityId, final UUID startVersion ) {
+        ValidationUtils.verifyIdentity( entityId );
+
+        return Observable.create( new ObservableIterator<MvccLogEntry>( "Log entry iterator" ) {
+            @Override
+            protected Iterator<MvccLogEntry> getIterator() {
+                return new LogEntryIterator( mvccLogEntrySerializationStrategy, applicationScope, entityId, startVersion,
+                    serializationFig.getBufferSize() );
+            }
+        } );
+    }
+
 
     @Override
     public Observable<MvccLogEntry> delete( final Collection<MvccLogEntry> entries ) {
@@ -313,7 +325,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
      * Retrieves all entities that correspond to each field given in the Collection.
      */
     @Override
-    public Observable<FieldSet> getEntitiesFromFields( final String type, final Collection<Field> fields ) {
+    public Observable<FieldSet> getEntitiesFromFields(final String type, final Collection<Field> fields, boolean useReadRepair) {
         final Observable<FieldSet> fieldSetObservable = Observable.just( fields ).map( fields1 -> {
             try {
 
@@ -324,6 +336,20 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                 //Short circuit if we don't have any uniqueValues from the given fields.
                 if ( !set.iterator().hasNext() ) {
+
+                    fields1.forEach( field -> {
+
+                        if(logger.isTraceEnabled()){
+                            logger.trace("Requested field [{}={}] not found in unique value table",
+                                field.getName(), field.getValue().toString());
+                        }
+
+                    });
+
+                    if(logger.isTraceEnabled()) {
+                        logger.trace("No unique values found for requested fields, returning empty FieldSet");
+                    }
+
                     return new MutableFieldSet( 0 );
                 }
 
@@ -357,8 +383,18 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                     //bad unique value, delete this, it's inconsistent
                     if ( entity == null || !entity.getEntity().isPresent() ) {
+
+                        if(logger.isTraceEnabled()) {
+                            logger.trace("Unique value [{}={}] does not have corresponding entity, executing " +
+                                "read repair to remove stale unique value entry",
+                                expectedUnique.getField().getName(),
+                                expectedUnique.getField().getValue().toString()
+                            );
+                        }
+
                         final MutationBatch valueDelete =
                             uniqueValueSerializationStrategy.delete( applicationScope, expectedUnique );
+
                         deleteBatch.mergeShallow( valueDelete );
                         continue;
                     }
@@ -370,9 +406,33 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     response.addEntity( expectedUnique.getField(), entity );
                 }
 
-                //TODO: explore making this an Async process
-                //We'll repair it again if we have to
-                deleteBatch.execute();
+                if ( useReadRepair && deleteBatch.getRowCount() > 0 ) {
+
+                    deleteBatch.execute();
+
+
+                    // optionally sleep after read repair as some tasks immediately try to write after the delete
+                    if ( serializationFig.getReadRepairDelay() > 0 ){
+
+                        try {
+
+                            if(logger.isTraceEnabled()) {
+                                logger.trace("Sleeping {}ms after unique value read repair execution",
+                                    serializationFig.getReadRepairDelay());
+                            }
+
+                            Thread.sleep(Math.min(serializationFig.getReadRepairDelay(), 200L));
+
+                        } catch (InterruptedException e) {
+
+                            // do nothing if sleep fails; log and continue on
+                            logger.warn("Sleep during unique value read repair failed.");
+                        }
+
+                    }
+
+                }
+
 
                 return response;
             }

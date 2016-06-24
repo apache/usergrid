@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.collection;
 
 
 import java.util.Collection;
+import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -75,9 +76,10 @@ public interface EntityCollectionManager {
      * Get a fieldset of all fields from the entities
      * @param entityType The type of entity.  From the "type" field in the id.
      * @param fields The collection of fields to search
+     * @param useReadRepair
      * @return
      */
-    Observable<FieldSet> getEntitiesFromFields( String entityType, Collection<Field> fields );
+    Observable<FieldSet> getEntitiesFromFields(String entityType, Collection<Field> fields, boolean useReadRepair);
 
     /**
      * Gets the Id for a field
@@ -98,11 +100,18 @@ public interface EntityCollectionManager {
     Observable<EntitySet> load( Collection<Id> entityIds );
 
     /**
-     * Get all versions of the log entry, from Max to min
+     * Get all versions of the log entry, from min to max
      * @param entityId
      * @return An observable stream of mvccLog entries
      */
     Observable<MvccLogEntry> getVersions(final Id entityId);
+
+    /**
+     * Get all versions of the log entry, from max to min
+     * @param entityId
+     * @return An observable stream of mvccLog entries
+     */
+    Observable<MvccLogEntry> getVersionsFromMaxToMin(final Id entityId, final UUID startVersion);
 
     /**
      * Delete these versions from cassandra.  Must be atomic so that read log entries are only removed.  Entity data
