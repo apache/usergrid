@@ -709,7 +709,7 @@ public interface EntityManager {
     public void flushManagerCaches();
 
 
-    public Entity getUniqueEntityFromAlias( String aliasType, String aliasValue );
+    public Entity getUniqueEntityFromAlias(String aliasType, String aliasValue, boolean useReadRepair);
 
     public UUID getUniqueIdFromAlias( String aliasType, String aliasValue );
 
