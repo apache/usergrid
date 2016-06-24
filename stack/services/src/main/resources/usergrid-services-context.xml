@@ -82,6 +82,10 @@
         <property name="management" ref="managementService" />
     </bean>
 
+    <bean id="usergridCentral" class="org.apache.usergrid.security.tokens.externalProviders.UsergridCentral">
+        <property name="management" ref="managementService" />
+    </bean>
+
     <bean id="serviceManagerFactory" class="org.apache.usergrid.services.ServiceManagerFactory">
         <constructor-arg ref="entityManagerFactory"/>
         <constructor-arg ref="properties"/>
