@@ -29,7 +29,6 @@ import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerial
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
-import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueActor;
 import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.collection.util.EntityHelper;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
@@ -56,7 +55,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.*;
 
@@ -744,7 +742,7 @@ public class EntityCollectionManagerIT extends AbstractUniqueValueTest {
         assertNotNull( "Version was assigned", createReturned.getVersion() );
 
         FieldSet fieldResults =
-            manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ) )
+            manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ), true)
                    .toBlocking().last();
 
         assertEquals( 1, fieldResults.size() );
@@ -761,7 +759,7 @@ public class EntityCollectionManagerIT extends AbstractUniqueValueTest {
 
         //try to load via the unique field, should have triggered repair
         final FieldSet results =
-            manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ) )
+            manager.getEntitiesFromFields( newEntity.getId().getType(), Arrays.<Field>asList( expectedInteger ), true)
                    .toBlocking().last();
 
 

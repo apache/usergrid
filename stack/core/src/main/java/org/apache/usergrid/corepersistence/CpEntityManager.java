@@ -527,6 +527,11 @@ public class CpEntityManager implements EntityManager {
             }
         }
         catch ( WriteUniqueVerifyException wuve ) {
+
+            if(logger.isTraceEnabled()){
+                logger.trace("WriteUniqueVerifyException encountered during update of entity with id {}",
+                    cpEntity.getId().getUuid());
+            }
             handleWriteUniqueVerifyException( entity, wuve );
         }
 
@@ -777,10 +782,9 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public Entity getUniqueEntityFromAlias( String collectionType, String aliasType ){
+    public Entity getUniqueEntityFromAlias(String collectionType, String aliasType, boolean useReadRepair){
+
         String collName = Schema.defaultCollectionName( collectionType );
-
-
         String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
 
         Timer.Context repairedEntityGet = entGetRepairedEntityTimer.time();
@@ -791,7 +795,7 @@ public class CpEntityManager implements EntityManager {
         StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType.toString());
 
         Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
-            Inflector.getInstance().singularize( collectionType ), Arrays.<Field>asList( uniqueLookupRepairField ) );
+            Inflector.getInstance().singularize( collectionType ), Arrays.<Field>asList( uniqueLookupRepairField ), useReadRepair);
 
         if(fieldSetObservable == null){
 
@@ -802,11 +806,15 @@ public class CpEntityManager implements EntityManager {
             return null;
         }
 
-        FieldSet fieldSet = fieldSetObservable.toBlocking().last();
+        FieldSet fieldSet = fieldSetObservable
+            .doOnError( t ->
+                logger.error("Unable to retrieve unique values due to: {}", t.getMessage())
+            )
+            .toBlocking().last();
 
         repairedEntityGet.stop();
 
-        if(fieldSet.isEmpty()) {
+        if(fieldSet == null || fieldSet.isEmpty()) {
             return null;
         }
 
@@ -821,7 +829,7 @@ public class CpEntityManager implements EntityManager {
         StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType);
 
         Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
-            Inflector.getInstance().singularize( collectionType ), Collections.singletonList(uniqueLookupRepairField));
+            Inflector.getInstance().singularize( collectionType ), Collections.singletonList(uniqueLookupRepairField), true);
 
         if(fieldSetObservable == null){
 
@@ -832,8 +840,13 @@ public class CpEntityManager implements EntityManager {
             return null;
         }
 
-        FieldSet fieldSet = fieldSetObservable.toBlocking().last();
-        if(fieldSet.isEmpty()) {
+        FieldSet fieldSet = fieldSetObservable
+            .doOnError( t ->
+                logger.error("Unable to retrieve unique values due to: {}", t.getMessage())
+            )
+            .toBlocking().last();
+
+        if(fieldSet == null || fieldSet.isEmpty()) {
             return null;
         }
 
@@ -2768,6 +2781,11 @@ public class CpEntityManager implements EntityManager {
 
         }
         catch ( WriteUniqueVerifyException wuve ) {
+
+            if(logger.isTraceEnabled()){
+                logger.trace("WriteUniqueVerifyException encountered during batchCreate of entity with id {}",
+                    cpEntity.getId().getUuid());
+            }
             handleWriteUniqueVerifyException( entity, wuve );
         }
 

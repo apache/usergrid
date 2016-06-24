@@ -356,6 +356,14 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                 }
 
 
+                if( !(event instanceof ElasticsearchIndexEvent)
+                    && !(event instanceof InitializeApplicationIndexEvent)
+                      && single.isEmpty() ){
+                        logger.warn("No index operation messages came back from event processing for msg: {} ",
+                            message.getStringBody().trim());
+                }
+
+
                 // if no exception happens and the QueueMessage is returned in these results, it will get ack'd
                 return new IndexEventResult(Optional.of(single), Optional.of(message), thisEvent.getCreationTime());
 
@@ -370,8 +378,16 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
             } catch (Exception e) {
 
+                // NPEs don't have a detail message, so add something for our log statement to identify better
+                final String errorMessage;
+                if( e instanceof NullPointerException ) {
+                    errorMessage = "NullPointerException";
+                }else{
+                    errorMessage = e.getMessage();
+                }
+
                 // if the event fails to process, log and return empty message result so it doesn't get ack'd
-                logger.error("{}. Failed to process message: {}", e.getMessage(), message.getStringBody().trim() );
+                logger.error("{}. Failed to process message: {}", errorMessage, message.getStringBody().trim() );
                 return new IndexEventResult(Optional.absent(), Optional.absent(), thisEvent.getCreationTime());
             }
         });
@@ -427,7 +443,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         final EntityIndexOperation entityIndexOperation = new EntityIndexOperation( applicationScope, entityId, updatedAfter);
 
-        return eventBuilder.buildEntityIndex( entityIndexOperation ).toBlocking().lastOrDefault(null);
+        // default this observable's return to empty index operation message if nothing is emitted
+        return eventBuilder.buildEntityIndex( entityIndexOperation ).toBlocking().lastOrDefault(new IndexOperationMessage());
     }
 
 
@@ -453,9 +470,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( edgeIndexEvent.getApplicationScope() );
 
+        // default this observable's return to empty index operation message if nothing is emitted
         return ecm.load( edgeIndexEvent.getEntityId() )
             .flatMap( loadedEntity -> eventBuilder.buildNewEdge(edgeIndexEvent.getApplicationScope(), loadedEntity, edgeIndexEvent.getEdge()) )
-            .toBlocking().lastOrDefault(null);
+            .toBlocking().lastOrDefault(new IndexOperationMessage());
 
     }
 
@@ -487,7 +505,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             logger.debug("Deleting in app scope {} with edge {}", applicationScope, edge);
         }
 
-        return eventBuilder.buildDeleteEdge(applicationScope, edge).toBlocking().lastOrDefault(null);
+        // default this observable's return to empty index operation message if nothing is emitted
+        return eventBuilder.buildDeleteEdge(applicationScope, edge).toBlocking().lastOrDefault(new IndexOperationMessage());
 
     }
 
@@ -600,9 +619,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         final Id entityId = deIndexOldVersionsEvent.getEntityIdScope().getId();
         final UUID markedVersion = deIndexOldVersionsEvent.getMarkedVersion();
 
+        // default this observable's return to empty index operation message if nothing is emitted
         return eventBuilder.deIndexOldVersions( applicationScope, entityId, markedVersion )
-            .toBlocking().lastOrDefault(null);
-
+            .toBlocking().lastOrDefault(new IndexOperationMessage());
 
     }
 
@@ -675,7 +694,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         entityDeleteResults.getCompactedNode().toBlocking().lastOrDefault(null);
 
-        return entityDeleteResults.getIndexObservable().toBlocking().lastOrDefault(null);
+        // default this observable's return to empty index operation message if nothing is emitted
+        return entityDeleteResults.getIndexObservable().toBlocking().lastOrDefault(new IndexOperationMessage());
 
     }
 
