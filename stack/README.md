@@ -11,7 +11,7 @@ A highly-scalable data platform for mobile applications.
 * JDK 1.8 (http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 * 3.0.0 <= Maven (http://maven.apache.org/)
 * Cassandra 1.2.1+
-* ElasticSearch 1.4.4+
+* ElasticSearch 1.4.x - 1.7.x
 
 
 ## Building

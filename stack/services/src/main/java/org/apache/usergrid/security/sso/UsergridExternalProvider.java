@@ -1,4 +1,4 @@
-package org.apache.usergrid.security.tokens.externalProviders;
+package org.apache.usergrid.security.sso;
 
 import com.codahale.metrics.Counter;
 import com.google.inject.Injector;
@@ -21,15 +21,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Created by ayeshadastagiri on 6/23/16.
  */
-public class UsergridCentral implements ExternalTokenProvider {
+public class UsergridExternalProvider implements ExternalSSOProvider {
     private static final Logger logger = LoggerFactory.getLogger(ApigeeSSO2Provider.class);
 
     private static final String SSO_PROCESSING_TIME = "sso.processing_time";
@@ -74,7 +71,7 @@ public class UsergridCentral implements ExternalTokenProvider {
 
     @Override
     public TokenInfo validateAndReturnTokenInfo(String token, long ttl) throws Exception {
-        return null;
+        throw new UnsupportedOperationException("Returning user info not supported from external Usergrid SSO tokens");
     }
 
     @Override
@@ -87,7 +84,7 @@ public class UsergridCentral implements ExternalTokenProvider {
         }
 
         com.codahale.metrics.Timer processingTimer = getMetricsFactory().getTimer(
-            UsergridCentral.class, SSO_PROCESSING_TIME);
+            UsergridExternalProvider.class, SSO_PROCESSING_TIME);
 
         com.codahale.metrics.Timer.Context timerContext = processingTimer.time();
 
@@ -141,7 +138,7 @@ public class UsergridCentral implements ExternalTokenProvider {
                         userInfo = ownerOrgInfo.getOwner();
 
                         Counter createdAdminsCounter = getMetricsFactory().getCounter(
-                            UsergridCentral.class, SSO_CREATED_LOCAL_ADMINS);
+                            UsergridExternalProvider.class, SSO_CREATED_LOCAL_ADMINS);
                         createdAdminsCounter.inc();
 
                         logger.info("Created user {} and org {}", username, orgName);
@@ -168,6 +165,13 @@ public class UsergridCentral implements ExternalTokenProvider {
 
     }
 
+    @Override
+    public Map<String, String> getDecodedTokenDetails(String token) {
+
+        throw new UnsupportedOperationException("Not currently supported with Usergrid external tokens");
+
+    }
+
     /**
      * Look up Admin User via UG Central's /management/me endpoint.
      *
@@ -180,9 +184,9 @@ public class UsergridCentral implements ExternalTokenProvider {
         // prepare to count tokens validated and rejected
 
         Counter tokensRejectedCounter = getMetricsFactory().getCounter(
-            UsergridCentral.class, SSO_TOKENS_REJECTED);
+            UsergridExternalProvider.class, SSO_TOKENS_REJECTED);
         Counter tokensValidatedCounter = getMetricsFactory().getCounter(
-            UsergridCentral.class, SSO_TOKENS_VALIDATED);
+            UsergridExternalProvider.class, SSO_TOKENS_VALIDATED);
 
         // create URL of central Usergrid's /management/me endpoint
 
