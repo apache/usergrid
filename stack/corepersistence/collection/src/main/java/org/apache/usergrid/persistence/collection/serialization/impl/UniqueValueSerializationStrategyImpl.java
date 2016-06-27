@@ -333,8 +333,9 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
                         try {
 
-                            logger.warn("Duplicate unique value [{}={}] found, removing newer entry " +
-                                    "with entity id [{}] and entity version [{}]", field.getName(), field.getValue().toString(),
+                            logger.warn("Duplicate unique value [{}={}] found for application [{}], removing newer " +
+                                    "entry with entity id [{}] and entity version [{}]", field.getName(),
+                                    field.getValue().toString(), applicationId.getUuid(),
                                 candidate.getEntityId().getUuid(), candidate.getEntityVersion() );
 
                             delete(appScope, candidate ).execute();
