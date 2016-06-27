@@ -68,6 +68,7 @@ import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.security.tokens.TokenCategory;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
+import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
 import org.apache.usergrid.services.*;
 import org.apache.usergrid.utils.*;
@@ -1525,6 +1526,12 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public String getAccessTokenForAdminUser( UUID userId, long duration ) throws Exception {
+
+        if( properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED).equalsIgnoreCase("true")){
+            throw new RuntimeException("SSO Integration is enabled, Admin users must login via provider: "+
+                properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER));
+        }
+
         return getTokenForPrincipal( ACCESS, null, smf.getManagementAppId(), ADMIN_USER, userId, duration );
     }
 
