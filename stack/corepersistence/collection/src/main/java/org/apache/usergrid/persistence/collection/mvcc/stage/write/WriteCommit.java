@@ -135,6 +135,9 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
             if ( region == null ) {
                 region = actorSystemFig.getAkkaAuthoritativeRegion();
             }
+            if ( region == null ) {
+                region = actorSystemFig.getRegion();
+            }
             confirmUniqueFieldsAkka( mvccEntity, version, applicationScope, region );
         } else {
             confirmUniqueFields( mvccEntity, version, applicationScope, logMutation );

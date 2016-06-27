@@ -172,7 +172,9 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
         }
 
         if ( StringUtils.isEmpty( actorSystemFig.getAkkaAuthoritativeRegion() )) {
-            throw new RuntimeException( "No value specified for " + ActorSystemFig.AKKA_AUTHORITATIVE_REGION);
+            logger.warn("No value for {} specified, will use current region as authoriative region",
+                ActorSystemFig.AKKA_AUTHORITATIVE_REGION);
+            //throw new RuntimeException( "No value specified for " + ActorSystemFig.AKKA_AUTHORITATIVE_REGION);
         }
 
         List regionList = Arrays.asList( actorSystemFig.getRegionList().toLowerCase().split(",") );

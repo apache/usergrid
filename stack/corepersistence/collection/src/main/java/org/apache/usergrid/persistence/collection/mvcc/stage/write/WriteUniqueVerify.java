@@ -123,6 +123,9 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
         if ( region == null ) {
             region = actorSystemFig.getAkkaAuthoritativeRegion();
         }
+        if ( region == null ) {
+            region = actorSystemFig.getRegion();
+        }
         try {
             akkaUvService.reserveUniqueValues( applicationScope, entity, mvccEntity.getVersion(), region );
 
