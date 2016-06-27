@@ -64,8 +64,14 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
     }
 
     private String getPublicKey() {
-        Map<String, Object> publicKey = client.target(properties.getProperty(USERGRID_EXTERNAL_PUBLICKEY_URL)).request().get(Map.class);
-        return publicKey.get(RESPONSE_PUBLICKEY_VALUE).toString().split("----\n")[1].split("\n---")[0];
+
+        final String keyUrl = properties.getProperty(USERGRID_EXTERNAL_PUBLICKEY_URL);
+        if(keyUrl != null && !keyUrl.isEmpty()) {
+            Map<String, Object> publicKey = client.target(properties.getProperty(USERGRID_EXTERNAL_PUBLICKEY_URL)).request().get(Map.class);
+            return publicKey.get(RESPONSE_PUBLICKEY_VALUE).toString().split("----\n")[1].split("\n---")[0];
+        }
+
+        return null;
     }
 
     @Override
