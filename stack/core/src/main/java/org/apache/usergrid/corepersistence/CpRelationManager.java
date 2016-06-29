@@ -524,44 +524,42 @@ public class CpRelationManager implements RelationManager {
         }
 
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
-        org.apache.usergrid.persistence.model.entity.Entity memberEntity = ( ( CpEntityManager ) em ).load( entityId );
-
 
         // remove edge from collection to item
         GraphManager gm = managerCache.getGraphManager( applicationScope );
 
 
-        List<Edge> removedEdges = new ArrayList<>();
-        //run our delete
-        gm.loadEdgeVersions(
-            CpNamingUtils.createEdgeFromCollectionName( cpHeadEntity.getId(), collectionName, memberEntity.getId() ) )
-                .flatMap(edge -> gm.markEdge(edge)).flatMap(edge -> gm.deleteEdge(edge))
-                .doOnNext(edge -> removedEdges.add(edge)).toBlocking()
-          .lastOrDefault(null);
 
+        // mark the edge versions and take the first for later delete edge queue event ( load is descending )
+        final Edge markedSourceEdge = gm.loadEdgeVersions(
+            CpNamingUtils.createEdgeFromCollectionName( cpHeadEntity.getId(), collectionName, entityId ) )
+                .flatMap(edge -> gm.markEdge(edge)).toBlocking().firstOrDefault(null);
+
+
+        Edge markedReversedEdge = null;
         CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collectionName );
         if (collection != null && collection.getLinkedCollection() != null) {
             // delete reverse edges
             final String pluralType = InflectionUtils.pluralize( cpHeadEntity.getId().getType() );
-            gm.loadEdgeVersions(
-                    CpNamingUtils.createEdgeFromCollectionName( memberEntity.getId(), pluralType, cpHeadEntity.getId() ) )
-                    .flatMap(reverseEdge -> gm.markEdge(reverseEdge))
-                    .flatMap(reverseEdge -> gm.deleteEdge(reverseEdge))
-                    .doOnNext(reverseEdge -> removedEdges.add(reverseEdge))
-                    .toBlocking().lastOrDefault(null);
+            markedReversedEdge = gm.loadEdgeVersions(
+                    CpNamingUtils.createEdgeFromCollectionName( entityId, pluralType, cpHeadEntity.getId() ) )
+                    .flatMap(reverseEdge -> gm.markEdge(reverseEdge)).toBlocking().firstOrDefault(null);
         }
 
 
         /**
-         * Remove from the index
+         * Remove from the index.  This will call gm.deleteEdge which also deletes the reverse edge(s) and de-indexes
+         * older versions of the edge(s).
          *
          */
+        if( markedSourceEdge != null ) {
+            indexService.queueDeleteEdge(applicationScope, markedSourceEdge);
+        }
+        if( markedReversedEdge != null ){
+            indexService.queueDeleteEdge(applicationScope, markedReversedEdge);
 
+        }
 
-        // item not deindexed, only edges
-        removedEdges.forEach(edge -> {
-            indexService.queueDeleteEdge(applicationScope, edge);
-        });
 
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {
@@ -572,7 +570,7 @@ public class CpRelationManager implements RelationManager {
                 if ( path.startsWith( "/roles/" ) ) {
 
                     Entity itemEntity =
-                        em.get( new SimpleEntityRef( memberEntity.getId().getType(), memberEntity.getId().getUuid() ) );
+                        em.get( new SimpleEntityRef( entityId.getType(), entityId.getUuid() ) );
 
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
                     em.deleteRole( roleRef.getApplicationRoleName(), Optional.fromNullable(itemEntity) );
