@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.UUID;
 
+import com.netflix.astyanax.model.ConsistencyLevel;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -369,7 +370,8 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         strategy.write( scope, stored2 ).execute();
 
         // load descending to get the older version of entity for this unique value
-        UniqueValueSet fields = strategy.load( scope, entityId1.getType(), Collections.<Field>singleton( field ));
+        UniqueValueSet fields = strategy.load( scope, ConsistencyLevel.CL_LOCAL_QUORUM,
+            entityId1.getType(), Collections.<Field>singleton( field ), true);
 
         UniqueValue retrieved = fields.getValue( field.getName() );
 
@@ -383,7 +385,8 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         strategy.write( scope, stored3 ).execute();
 
         // load the values again, we should still only get back the original unique value
-        fields = strategy.load( scope, entityId1.getType(), Collections.<Field>singleton( field ));
+        fields = strategy.load( scope, ConsistencyLevel.CL_LOCAL_QUORUM,
+            entityId1.getType(), Collections.<Field>singleton( field ), true);
 
         retrieved = fields.getValue( field.getName() );
 
@@ -396,7 +399,8 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         strategy.write( scope, stored4 ).execute();
 
         // load the values again, now we should get the latest version of the original UUID written
-        fields = strategy.load( scope, entityId1.getType(), Collections.<Field>singleton( field ));
+        fields = strategy.load( scope, ConsistencyLevel.CL_LOCAL_QUORUM,
+            entityId1.getType(), Collections.<Field>singleton( field ), true);
 
         retrieved = fields.getValue( field.getName() );
 
@@ -433,7 +437,8 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         strategy.write( scope, stored2 ).execute();
 
         // load descending to get the older version of entity for this unique value
-        UniqueValueSet fields = strategy.load( scope, entityId1.getType(), Collections.<Field>singleton( field ));
+        UniqueValueSet fields = strategy.load( scope, ConsistencyLevel.CL_LOCAL_QUORUM,
+            entityId1.getType(), Collections.<Field>singleton( field ), true);
 
         UniqueValue retrieved = fields.getValue( field.getName() );
         Assert.assertNotNull( retrieved );
@@ -470,7 +475,12 @@ public abstract class UniqueValueSerializationStrategyImplTest {
 
 
         // load descending to get the older version of entity for this unique value
-        UniqueValueSet fields = strategy.load( scope, entityId1.getType(), Collections.<Field>singleton( field ));
+        UniqueValueSet fields = strategy.load( scope, ConsistencyLevel.CL_LOCAL_QUORUM,
+            entityId1.getType(), Collections.<Field>singleton( field ), true);
+
+
+        fields = strategy.load( scope, ConsistencyLevel.CL_LOCAL_QUORUM,
+            entityId1.getType(), Collections.<Field>singleton( field ), false);
 
         UniqueValue retrieved = fields.getValue( field.getName() );
         assertEquals( stored3, retrieved );
@@ -506,7 +516,8 @@ public abstract class UniqueValueSerializationStrategyImplTest {
 
 
         // load descending to get the older version of entity for this unique value
-        UniqueValueSet fields = strategy.load( scope, entityId1.getType(), Collections.<Field>singleton( field ));
+        UniqueValueSet fields = strategy.load( scope,
+            ConsistencyLevel.CL_LOCAL_QUORUM, entityId1.getType(), Collections.<Field>singleton( field ), true);
 
         UniqueValue retrieved = fields.getValue( field.getName() );
         assertEquals( stored1, retrieved );
@@ -549,7 +560,8 @@ public abstract class UniqueValueSerializationStrategyImplTest {
 
 
         // load descending to get the older version of entity for this unique value
-        UniqueValueSet fields = strategy.load( scope, entityId1.getType(), Collections.<Field>singleton( field ));
+        UniqueValueSet fields = strategy.load( scope, ConsistencyLevel.CL_LOCAL_QUORUM,
+            entityId1.getType(), Collections.<Field>singleton( field ), true);
 
         UniqueValue retrieved = fields.getValue( field.getName() );
         assertEquals( stored1, retrieved );

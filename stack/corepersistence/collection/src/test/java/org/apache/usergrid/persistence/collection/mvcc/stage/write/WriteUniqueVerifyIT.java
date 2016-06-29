@@ -18,6 +18,12 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import org.apache.usergrid.persistence.collection.FieldSet;
+import org.apache.usergrid.persistence.collection.MvccEntity;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,6 +47,8 @@ import org.apache.usergrid.persistence.model.field.StringField;
 
 import com.google.inject.Inject;
 
+import java.util.Collections;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -58,6 +66,9 @@ public class WriteUniqueVerifyIT {
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
+
+    @Inject
+    public UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
     @Inject
     public EntityCollectionManagerFactory cmf;
@@ -141,5 +152,65 @@ public class WriteUniqueVerifyIT {
 
         entity.setField( new StringField("foo", "bar"));
         entityManager.write( entity ).toBlocking().last();
+    }
+
+    @Test
+    public void testConflictReadRepair() throws Exception {
+
+        final Id appId = new SimpleId("testNoConflict");
+
+
+
+        final ApplicationScope scope = new ApplicationScopeImpl( appId);
+
+        final EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
+
+        final Entity entity = TestEntityGenerator.generateEntity();
+        entity.setField(new StringField("name", "Porsche 911 GT3", true));
+        entity.setField(new StringField("identifier", "911gt3", true));
+        entity.setField(new IntegerField("top_speed_mph", 194));
+        entityManager.write( entity ).toBlocking().last();
+
+
+        FieldSet fieldSet =
+            entityManager.getEntitiesFromFields("test", Collections.singletonList(entity.getField("name")), true)
+            .toBlocking().last();
+
+        MvccEntity entityFetched = fieldSet.getEntity( entity.getField("name") );
+
+
+        final Entity entityDuplicate = TestEntityGenerator.generateEntity();
+        UniqueValue uniqueValue = new UniqueValueImpl(new StringField("name", "Porsche 911 GT3", true),
+            entityDuplicate.getId(), UUIDGenerator.newTimeUUID());
+
+        // manually insert a record to simulate a 'duplicate' trying to be inserted
+        uniqueValueSerializationStrategy.
+            write(scope, uniqueValue).execute();
+
+
+
+        FieldSet fieldSetAgain =
+            entityManager.getEntitiesFromFields("test", Collections.singletonList(entity.getField("name")), true)
+                .toBlocking().last();
+
+        MvccEntity entityFetchedAgain = fieldSetAgain.getEntity( entity.getField("name") );
+
+        assertEquals(entityFetched, entityFetchedAgain);
+
+
+        // now test writing the original entity again ( simulates a PUT )
+        // this should read repair and work
+        entityManager.write( entity ).toBlocking().last();
+
+        FieldSet fieldSetAgainAgain =
+            entityManager.getEntitiesFromFields("test", Collections.singletonList(entity.getField("name")), true)
+                .toBlocking().last();
+
+        MvccEntity entityFetchedAgainAgain = fieldSetAgainAgain.getEntity( entity.getField("name") );
+
+        assertEquals(entityFetched, entityFetchedAgainAgain);
+
+
+
     }
 }

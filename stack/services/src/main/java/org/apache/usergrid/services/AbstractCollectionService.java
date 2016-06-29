@@ -41,6 +41,7 @@ import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 
 
@@ -125,16 +126,34 @@ public class AbstractCollectionService extends AbstractService {
             checkPermissionsForEntity( context, entity );
         }
 
-        // the context of the entity they're trying to load isn't owned by the owner
-        // in the path, don't return it
+        // check ownership based on graph
         if ( !em.isCollectionMember( context.getOwner(), context.getCollectionName(), entity ) ) {
-            logger.info( "Someone tried to GET entity {} they don't own. Entity id {} with owner {}",
-                    getEntityType(), id, context.getOwner()
-            );
-            throw new ServiceResourceNotFoundException( context );
-        }
 
-        // TODO check that entity is in fact in the collection
+            // the entity is already loaded in the scope of the owner and type ( collection ) so it must exist at this point
+            // if for some reason it's not a member of the collection, it should be and read repair it
+            if( context.getOwner().getType().equals(TYPE_APPLICATION) ){
+                logger.warn( "Edge missing for entity id {} with owner {}. Executing edge read repair to create new edge in " +
+                    "collection {}", id, context.getOwner(), context.getCollectionName());
+
+                em.addToCollection( context.getOwner(), context.getCollectionName(), entity);
+
+                // do a final check to be absolutely sure we're good now before returning back to the client
+                // TODO : Keep thinking if the double-check read after repair is necessary.  Favoring stability here
+                if ( !em.isCollectionMember( context.getOwner(), context.getCollectionName(), entity ) ) {
+                    logger.error( "Edge read repair failed for entity id {} with owner {} in collection {}",
+                        id, context.getOwner(), context.getCollectionName());
+
+                    throw new ServiceResourceNotFoundException( context );
+                }
+
+            }
+            // if not head application, then we can't assume the ownership is meant to be there
+            else{
+                throw new ServiceResourceNotFoundException( context );
+            }
+
+
+        }
 
         List<ServiceRequest> nextRequests = context.getNextServiceRequests( entity );
 
@@ -158,7 +177,7 @@ public class AbstractCollectionService extends AbstractService {
         if ( entityId == null ) {
 
             if (logger.isTraceEnabled()) {
-                logger.trace("miss on entityType: {} with name: {}", getEntityType(), name);
+                logger.trace("Miss on entityType: {} with name: {}", getEntityType(), name);
             }
 
             String msg = "Cannot find entity with name: "+name;

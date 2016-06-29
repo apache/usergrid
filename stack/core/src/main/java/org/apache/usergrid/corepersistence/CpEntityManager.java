@@ -1545,6 +1545,12 @@ public class CpEntityManager implements EntityManager {
         getRelationManager( entityRef ).removeFromCollection( collectionName, itemRef );
     }
 
+    @Override
+    public void removeItemFromCollection( EntityRef entityRef, String collectionName, EntityRef itemRef ) throws Exception {
+
+        getRelationManager( entityRef ).removeItemFromCollection( collectionName, itemRef );
+    }
+
 
     @Override
     public Set<String> getCollectionIndexes( EntityRef entity, String collectionName ) throws Exception {

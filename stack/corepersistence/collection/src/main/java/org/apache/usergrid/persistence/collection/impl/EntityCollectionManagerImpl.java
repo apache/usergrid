@@ -385,10 +385,11 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     if ( entity == null || !entity.getEntity().isPresent() ) {
 
                         if(logger.isTraceEnabled()) {
-                            logger.trace("Unique value [{}={}] does not have corresponding entity, executing " +
+                            logger.trace("Unique value [{}={}] does not have corresponding entity [{}], executing " +
                                 "read repair to remove stale unique value entry",
                                 expectedUnique.getField().getName(),
-                                expectedUnique.getField().getValue().toString()
+                                expectedUnique.getField().getValue().toString(),
+                                expectedUnique.getEntityId()
                             );
                         }
 
