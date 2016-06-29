@@ -24,11 +24,14 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.cassandra.ClearShiroSubject;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+
+import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
+import org.apache.usergrid.utils.InflectionUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -220,5 +223,26 @@ public class ServiceInvocationIT extends AbstractServiceIT {
 
         app.testRequest( ServiceAction.GET, 1,
                 "projects", project.getName(), "contains", "contributors", contributor.getName());
+    }
+
+    @Test
+    public void testGetByIdAndNameEdgeReadRepair() throws Exception {
+
+        EntityManager em = setup.getEmf().getEntityManager( app.getId() );
+
+        Entity contributor = app.doCreate( "contributor", "Malaka" );
+
+        EntityRef appRef = new SimpleEntityRef("application", app.getId());
+
+
+        em.removeItemFromCollection(appRef, InflectionUtils.pluralize(contributor.getType()), contributor);
+
+        assertFalse("Entity should not have an edge from app to entity",
+            em.isCollectionMember(appRef, InflectionUtils.pluralize(contributor.getType()), contributor));
+
+        app.testRequest( ServiceAction.GET, 1, "contributor", contributor.getName());
+
+        assertTrue("Entity should now be member of the collection",
+            em.isCollectionMember(appRef, InflectionUtils.pluralize(contributor.getType()), contributor));
     }
 }

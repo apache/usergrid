@@ -79,11 +79,12 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
     * @param consistencyLevel Consistency level of query
     * @param type The type the unique value exists within
     * @param fields Field name/value to search for
-    * @return UniqueValueSet containing fields from the collection that exist in cassandra
+    * @param useReadRepair
+     * @return UniqueValueSet containing fields from the collection that exist in cassandra
     * @throws ConnectionException on error connecting to Cassandra
     */
-    UniqueValueSet load( ApplicationScope applicationScope, ConsistencyLevel consistencyLevel, String type,
-                         Collection<Field> fields ) throws ConnectionException;
+    UniqueValueSet load(ApplicationScope applicationScope, ConsistencyLevel consistencyLevel, String type,
+                        Collection<Field> fields, boolean useReadRepair) throws ConnectionException;
 
 
     /**

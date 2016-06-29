@@ -122,7 +122,9 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
             try {
 
                 // loading will retrieve the oldest unique value entry for the field
-                UniqueValueSet set = uniqueValueStrat.load(scope, written.getEntityId().getType(), Collections.singletonList(written.getField()));
+                // purposely enable the read repair here to clean up before we write
+                UniqueValueSet set = uniqueValueStrat.load(scope, cassandraFig.getReadCL(),
+                    written.getEntityId().getType(), Collections.singletonList(written.getField()), true);
 
 
                 set.forEach(uniqueValue -> {
@@ -149,6 +151,11 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
         }
 
         if(preWriteUniquenessViolations.size() > 0 ){
+            if(logger.isTraceEnabled()){
+                logger.trace("Pre-write unique violations found, raising exception before executing first write");
+            }
+            logger.error("Pre-write unique violations found, raising exception before executing first write");
+
             throw new WriteUniqueVerifyException(mvccEntity, scope,
                 preWriteUniquenessViolations );
         }
@@ -217,7 +224,9 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
             final UniqueValueSet uniqueValues;
             try {
                 // load ascending for verification to make sure we wrote is the last read back
-                uniqueValues = uniqueValueSerializationStrategy.load( scope, consistencyLevel, type,  uniqueFields );
+                // don't read repair on this read because our write-first strategy will introduce a duplicate
+                uniqueValues =
+                    uniqueValueSerializationStrategy.load( scope, consistencyLevel, type,  uniqueFields, false);
             }
             catch ( ConnectionException e ) {
                 throw new RuntimeException( "Unable to read from cassandra", e );
