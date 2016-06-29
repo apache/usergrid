@@ -277,6 +277,12 @@ public class AbstractCollectionService extends AbstractService {
 
         if ( item != null ) {
             validateEntityType( item, id );
+
+            if( context.getOwner().getType().equals(TYPE_APPLICATION)) {
+                // this will repair any missing edges
+                em.addToCollection(context.getOwner(), context.getCollectionName(), item);
+            }
+
             updateEntity( context, item, context.getPayload() );
             item = importEntity( context, item );
         }
@@ -312,7 +318,14 @@ public class AbstractCollectionService extends AbstractService {
         else {
             entity = importEntity( context, entity );
             checkPermissionsForEntity( context, entity );
+
+            if( context.getOwner().getType().equals(TYPE_APPLICATION)) {
+                // this will repair any missing edges
+                em.addToCollection(context.getOwner(), context.getCollectionName(), entity);
+            }
+
             updateEntity( context, entity );
+
         }
 
         return new ServiceResults( this, context, Type.COLLECTION, Results.fromEntity( entity ), null, null );
