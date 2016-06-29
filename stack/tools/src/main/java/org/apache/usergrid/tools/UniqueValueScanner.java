@@ -17,9 +17,7 @@
 package org.apache.usergrid.tools;
 
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.UUID;
+import java.util.*;
 
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.Column;
@@ -208,9 +206,11 @@ public class UniqueValueScanner extends ToolBase {
             UUID finalAppToFilter = appToFilter;
             rows.forEachRemaining(row -> {
 
-                String fieldName = row.getKey().getKey().getField().getName();
-                String scopeType = row.getKey().getScope().getType();
-                UUID scopeUUID = row.getKey().getScope().getUuid();
+                final String fieldName = row.getKey().getKey().getField().getName();
+                final String fieldValue = row.getKey().getKey().getField().getValue().toString();
+                final String scopeType = row.getKey().getScope().getType();
+                final UUID scopeUUID = row.getKey().getScope().getUuid();
+
 
                 if (!fieldName.equalsIgnoreCase(fieldType) ||
                     (finalAppToFilter != null && !finalAppToFilter.equals(scopeUUID))
@@ -223,16 +223,19 @@ public class UniqueValueScanner extends ToolBase {
                         em = emf.getEntityManager(scopeUUID);
                     }
 
-                    Iterator<Column<EntityVersion>> columns = row.getColumns().iterator();
-                    columns.forEachRemaining(column -> {
+                    // if we have more than 1 column, let's check for a duplicate
+                    if(row.getColumns().size() > 1) {
 
-                        EntityVersion entityVersion = column.getName();
+                        final List<EntityVersion> values = new ArrayList<>(row.getColumns().size());
 
-                        if (entityType != null &&
-                            entityVersion.getEntityId().getType().equalsIgnoreCase(entityType)
-                            ) {
+                        Iterator<Column<EntityVersion>> columns = row.getColumns().iterator();
+                        columns.forEachRemaining(column -> {
 
-                            String fieldValue = row.getKey().getKey().getField().getValue().toString();
+
+
+                            final EntityVersion entityVersion = column.getName();
+
+
 
                             logger.trace(
                                 scopeType + ": " + scopeUUID + ", " +
@@ -242,30 +245,34 @@ public class UniqueValueScanner extends ToolBase {
                             );
 
 
-                            Entity entity = em.getUniqueEntityFromAlias(entityType, fieldValue, false);
+                            if (entityType != null &&
+                                entityVersion.getEntityId().getType().equalsIgnoreCase(entityType)
+                                ) {
 
-//                       Optional<MvccEntity> entity = mvccEntitySerializationStrategy.
-//                            load(new ApplicationScopeImpl(new SimpleId(scopeUUID, scopeType)), entityVersion.getEntityId());
-//
-//                        if(!entity.isPresent()){
+                                // add the first value into the list
+                                if(values.size() == 0 ) {
 
-                            if (entity == null) {
+                                    values.add(entityVersion);
 
-                                logger.error("{}: {}. Entity with type=[{}],  name=[{}], and uuid=[{}] has a unique value entry " +
-                                        "but cannot be loaded from Mvcc entity serialization",
-                                    scopeType,
-                                    scopeUUID,
-                                    entityVersion.getEntityId().getType(),
-                                    fieldValue,
-                                    entityVersion.getEntityId().getUuid());
+
+                                }else{
+
+                                    if( !values.get(0).getEntityId().getUuid().equals(entityVersion.getEntityId().getUuid())){
+
+                                        values.add(entityVersion);
+
+                                        logger.error("Duplicate found for field [{}={}].  Entry 1: [{}], Entry 2: [{}]",
+                                            fieldName, fieldValue, values.get(0).getEntityId(), entityVersion.getEntityId());
+
+                                    }
+
+                                }
+
+
                             }
 
-                        } else {
-                            // do nothing
-                        }
-
-
-                    });
+                        });
+                    }
                 }
 
 
