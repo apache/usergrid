@@ -154,7 +154,6 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
             if(logger.isTraceEnabled()){
                 logger.trace("Pre-write unique violations found, raising exception before executing first write");
             }
-            logger.error("Pre-write unique violations found, raising exception before executing first write");
 
             throw new WriteUniqueVerifyException(mvccEntity, scope,
                 preWriteUniquenessViolations );
