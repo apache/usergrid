@@ -525,41 +525,9 @@ public class CpRelationManager implements RelationManager {
 
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
 
-        // remove edge from collection to item
-        GraphManager gm = managerCache.getGraphManager( applicationScope );
 
-
-
-        // mark the edge versions and take the first for later delete edge queue event ( load is descending )
-        final Edge markedSourceEdge = gm.loadEdgeVersions(
-            CpNamingUtils.createEdgeFromCollectionName( cpHeadEntity.getId(), collectionName, entityId ) )
-                .flatMap(edge -> gm.markEdge(edge)).toBlocking().firstOrDefault(null);
-
-
-        Edge markedReversedEdge = null;
-        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collectionName );
-        if (collection != null && collection.getLinkedCollection() != null) {
-            // delete reverse edges
-            final String pluralType = InflectionUtils.pluralize( cpHeadEntity.getId().getType() );
-            markedReversedEdge = gm.loadEdgeVersions(
-                    CpNamingUtils.createEdgeFromCollectionName( entityId, pluralType, cpHeadEntity.getId() ) )
-                    .flatMap(reverseEdge -> gm.markEdge(reverseEdge)).toBlocking().firstOrDefault(null);
-        }
-
-
-        /**
-         * Remove from the index.  This will call gm.deleteEdge which also deletes the reverse edge(s) and de-indexes
-         * older versions of the edge(s).
-         *
-         */
-        if( markedSourceEdge != null ) {
-            indexService.queueDeleteEdge(applicationScope, markedSourceEdge);
-        }
-        if( markedReversedEdge != null ){
-            indexService.queueDeleteEdge(applicationScope, markedReversedEdge);
-
-        }
-
+        // this will remove the edges from app->entity(collection)
+        removeItemFromCollection(collectionName, itemRef);
 
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {
