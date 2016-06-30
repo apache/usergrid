@@ -59,6 +59,8 @@ public interface RelationManager {
 
     public void removeFromCollection( String collectionName, EntityRef itemRef ) throws Exception;
 
+    public void removeItemFromCollection( String collectionName, EntityRef itemRef ) throws Exception;
+
     public void copyRelationships( String srcRelationName, EntityRef dstEntityRef, String dstRelationName )
             throws Exception;
 

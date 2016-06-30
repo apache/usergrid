@@ -116,7 +116,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         }
 
         // check if the role was assigned
-        assertEquals(status, 404);
+        assertEquals(404, status);
     }
 
 
@@ -167,7 +167,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
             fail("Should not have been able to retrieve the user as it was deleted");
         }catch (ClientErrorException e){
             status=e.getResponse().getStatus();
-            assertEquals( 404,status );
+            assertEquals( 404, status );
         }
 
     }

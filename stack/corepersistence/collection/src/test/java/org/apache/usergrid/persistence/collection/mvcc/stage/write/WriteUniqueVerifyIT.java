@@ -18,21 +18,17 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import com.google.inject.Inject;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
-import org.apache.usergrid.persistence.collection.AbstractUniqueValueTest;
-import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueActor;
-import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.*;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
@@ -43,10 +39,13 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.StringField;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-import com.google.inject.Inject;
-
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Collections;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -69,6 +68,9 @@ public class WriteUniqueVerifyIT extends AbstractUniqueValueTest {
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
+
+    @Inject
+    public UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
     @Inject
     public EntityCollectionManagerFactory cmf;
@@ -164,5 +166,65 @@ public class WriteUniqueVerifyIT extends AbstractUniqueValueTest {
 
         entity.setField( new StringField("foo", "bar"));
         entityManager.write( entity, null ).toBlocking().last();
+    }
+
+    @Test
+    public void testConflictReadRepair() throws Exception {
+
+        final Id appId = new SimpleId("testNoConflict");
+
+
+
+        final ApplicationScope scope = new ApplicationScopeImpl( appId);
+
+        final EntityCollectionManager entityManager = cmf.createCollectionManager( scope );
+
+        final Entity entity = TestEntityGenerator.generateEntity();
+        entity.setField(new StringField("name", "Porsche 911 GT3", true));
+        entity.setField(new StringField("identifier", "911gt3", true));
+        entity.setField(new IntegerField("top_speed_mph", 194));
+        entityManager.write( entity, null ).toBlocking().last();
+
+
+        FieldSet fieldSet =
+            entityManager.getEntitiesFromFields("test", Collections.singletonList(entity.getField("name")), true)
+            .toBlocking().last();
+
+        MvccEntity entityFetched = fieldSet.getEntity( entity.getField("name") );
+
+
+        final Entity entityDuplicate = TestEntityGenerator.generateEntity();
+        UniqueValue uniqueValue = new UniqueValueImpl(new StringField("name", "Porsche 911 GT3", true),
+            entityDuplicate.getId(), UUIDGenerator.newTimeUUID());
+
+        // manually insert a record to simulate a 'duplicate' trying to be inserted
+        uniqueValueSerializationStrategy.
+            write(scope, uniqueValue).execute();
+
+
+
+        FieldSet fieldSetAgain =
+            entityManager.getEntitiesFromFields("test", Collections.singletonList(entity.getField("name")), true)
+                .toBlocking().last();
+
+        MvccEntity entityFetchedAgain = fieldSetAgain.getEntity( entity.getField("name") );
+
+        assertEquals(entityFetched, entityFetchedAgain);
+
+
+        // now test writing the original entity again ( simulates a PUT )
+        // this should read repair and work
+        entityManager.write( entity, null ).toBlocking().last();
+
+        FieldSet fieldSetAgainAgain =
+            entityManager.getEntitiesFromFields("test", Collections.singletonList(entity.getField("name")), true)
+                .toBlocking().last();
+
+        MvccEntity entityFetchedAgainAgain = fieldSetAgainAgain.getEntity( entity.getField("name") );
+
+        assertEquals(entityFetched, entityFetchedAgainAgain);
+
+
+
     }
 }
