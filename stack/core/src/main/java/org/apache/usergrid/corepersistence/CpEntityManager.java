@@ -782,7 +782,7 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public Entity getUniqueEntityFromAlias(String collectionType, String aliasType, boolean useReadRepair){
+    public Entity getUniqueEntityFromAlias(String collectionType, String aliasType, boolean uniqueIndexRepair){
 
         String collName = Schema.defaultCollectionName( collectionType );
         String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
@@ -795,7 +795,7 @@ public class CpEntityManager implements EntityManager {
         StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType.toString());
 
         Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
-            Inflector.getInstance().singularize( collectionType ), Arrays.<Field>asList( uniqueLookupRepairField ), useReadRepair);
+            Inflector.getInstance().singularize( collectionType ), Arrays.<Field>asList( uniqueLookupRepairField ), uniqueIndexRepair);
 
         if(fieldSetObservable == null){
 
@@ -822,14 +822,15 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public UUID getUniqueIdFromAlias( String collectionType, String aliasType ){
+    public UUID getUniqueIdFromAlias(String collectionType, String aliasType, boolean uniqueIndexRepair){
 
         String collName = Schema.defaultCollectionName( collectionType );
         String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
         StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType);
 
         Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
-            Inflector.getInstance().singularize( collectionType ), Collections.singletonList(uniqueLookupRepairField), true);
+            Inflector.getInstance().singularize( collectionType ),
+            Collections.singletonList(uniqueLookupRepairField), uniqueIndexRepair);
 
         if(fieldSetObservable == null){
 
@@ -1482,6 +1483,12 @@ public class CpEntityManager implements EntityManager {
     public void removeFromCollection( EntityRef entityRef, String collectionName, EntityRef itemRef ) throws Exception {
 
         getRelationManager( entityRef ).removeFromCollection( collectionName, itemRef );
+    }
+
+    @Override
+    public void removeItemFromCollection( EntityRef entityRef, String collectionName, EntityRef itemRef ) throws Exception {
+
+        getRelationManager( entityRef ).removeItemFromCollection( collectionName, itemRef );
     }
 
 

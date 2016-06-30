@@ -271,7 +271,8 @@ public class AbstractConnectionsService extends AbstractService {
 
             //TODO T.N. USERGRID-1919 actually validate this is connected
 
-            Entity entity = em.getUniqueEntityFromAlias( query.getEntityType(), name, true);
+            // this is purely read only, don't use unique index repair
+            Entity entity = em.getUniqueEntityFromAlias( query.getEntityType(), name, false);
             if ( entity == null ) {
                 return null;
             }
@@ -372,6 +373,7 @@ public class AbstractConnectionsService extends AbstractService {
             if ( query.containsSingleNameOrEmailIdentifier() ) {
                 String name = query.getSingleNameOrEmailIdentifier();
 
+                // use unique index repair here before any write logic if there are problems
                 entity = em.getUniqueEntityFromAlias( query.getEntityType(), name, true);
                 if ( entity == null ) {
                     throw new ServiceResourceNotFoundException( context );
@@ -529,6 +531,7 @@ public class AbstractConnectionsService extends AbstractService {
                 nameProperty = "name";
             }
 
+            // use unique index repair here before any write logic if there are problems
             Entity entity = em.getUniqueEntityFromAlias( query.getEntityType(), name, true);
             if ( entity == null ) {
                 throw new ServiceResourceNotFoundException( context );
