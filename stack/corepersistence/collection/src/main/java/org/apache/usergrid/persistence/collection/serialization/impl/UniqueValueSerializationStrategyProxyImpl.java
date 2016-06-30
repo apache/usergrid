@@ -113,6 +113,19 @@ public class UniqueValueSerializationStrategyProxyImpl implements UniqueValueSer
         return migration.to.load( applicationScope, type, fields );
     }
 
+    @Override
+    public UniqueValueSet load( final ApplicationScope applicationScope, final String type,
+                                final Collection<Field> fields, boolean useReadRepair ) throws ConnectionException {
+
+        final MigrationRelationship<UniqueValueSerializationStrategy> migration = getMigrationRelationShip();
+
+        if ( migration.needsMigration() ) {
+            return migration.from.load( applicationScope, type, fields, useReadRepair );
+        }
+
+        return migration.to.load( applicationScope, type, fields, useReadRepair );
+    }
+
 
     @Override
     public UniqueValueSet load(final ApplicationScope applicationScope, final ConsistencyLevel consistencyLevel,

@@ -325,14 +325,16 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
      * Retrieves all entities that correspond to each field given in the Collection.
      */
     @Override
-    public Observable<FieldSet> getEntitiesFromFields(final String type, final Collection<Field> fields, boolean useReadRepair) {
+    public Observable<FieldSet> getEntitiesFromFields(final String type, final Collection<Field> fields,
+                                                      boolean uniqueIndexRepair) {
         final Observable<FieldSet> fieldSetObservable = Observable.just( fields ).map( fields1 -> {
             try {
 
                 final UUID startTime = UUIDGenerator.newTimeUUID();
 
                 //Get back set of unique values that correspond to collection of fields
-                UniqueValueSet set = uniqueValueSerializationStrategy.load( applicationScope, type, fields1 );
+                UniqueValueSet set =
+                    uniqueValueSerializationStrategy.load( applicationScope, type, fields1 , uniqueIndexRepair);
 
                 //Short circuit if we don't have any uniqueValues from the given fields.
                 if ( !set.iterator().hasNext() ) {
@@ -407,7 +409,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     response.addEntity( expectedUnique.getField(), entity );
                 }
 
-                if ( useReadRepair && deleteBatch.getRowCount() > 0 ) {
+                if ( deleteBatch.getRowCount() > 0 ) {
 
                     deleteBatch.execute();
 

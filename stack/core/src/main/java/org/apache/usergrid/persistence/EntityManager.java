@@ -721,9 +721,9 @@ public interface EntityManager {
     public void flushManagerCaches();
 
 
-    public Entity getUniqueEntityFromAlias(String aliasType, String aliasValue, boolean useReadRepair);
+    public Entity getUniqueEntityFromAlias(String aliasType, String aliasValue, boolean uniqueIndexRepair);
 
-    public UUID getUniqueIdFromAlias( String aliasType, String aliasValue );
+    public UUID getUniqueIdFromAlias(String aliasType, String aliasValue, boolean uniqueIndexRepair);
 
 
     /**

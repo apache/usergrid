@@ -70,7 +70,23 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
      *
      * @throws ConnectionException on error connecting to Cassandra
      */
-    UniqueValueSet load( ApplicationScope applicationScope, String type, Collection<Field> fields ) throws ConnectionException;
+    UniqueValueSet load( ApplicationScope applicationScope, String type, Collection<Field> fields )
+        throws ConnectionException;
+
+    /**
+     * Load UniqueValue that matches field from collection or null if that value does not exist.  Returns the oldest
+     * unique value entry if more than 1 exists
+     *
+     * @param applicationScope scope in which to look for field name/value
+     * @param type The type the unique value exists within
+     * @param fields Field name/value to search for
+     *
+     * @return UniqueValueSet containing fields from the collection that exist in cassandra
+     *
+     * @throws ConnectionException on error connecting to Cassandra
+     */
+    UniqueValueSet load( ApplicationScope applicationScope, String type, Collection<Field> fields,
+                         boolean useReadRepair ) throws ConnectionException;
 
     /**
     * Load UniqueValue that matches field from collection or null if that value does not exist.

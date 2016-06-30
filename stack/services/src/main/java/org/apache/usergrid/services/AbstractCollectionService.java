@@ -82,7 +82,7 @@ public class AbstractCollectionService extends AbstractService {
             nameProperty = "name";
         }
 
-        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name, true);
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name, false);
         if ( entity != null ) {
             entity = importEntity( request, entity );
         }
@@ -172,7 +172,8 @@ public class AbstractCollectionService extends AbstractService {
     public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception {
 
         // just get the UUID and then getItemById such that same results are being returned in both cases
-        UUID entityId = em.getUniqueIdFromAlias( getEntityType(), name );
+        // don't use uniqueIndexRepair on read only logic
+        UUID entityId = em.getUniqueIdFromAlias( getEntityType(), name, false);
 
         if ( entityId == null ) {
 
@@ -302,7 +303,7 @@ public class AbstractCollectionService extends AbstractService {
             return getItemByName( context, name );
         }
 
-       // EntityRef ref = em.getAlias( getEntityType(), name );
+        // use unique index repair here before any write logic if there are problems
         Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name, true);
         if ( entity == null ) {
             // null entity ref means we tried to put a non-existing entity
@@ -516,6 +517,7 @@ public class AbstractCollectionService extends AbstractService {
             return super.postItemByName( context, name );
         }
 
+        // use unique index repair here before any write logic if there are problems
         Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name, true);
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
@@ -570,6 +572,7 @@ public class AbstractCollectionService extends AbstractService {
             return getItemByName( context, name );
         }
 
+        // use unique index repair here before any write logic if there are problems
         Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name, true);
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
