@@ -240,6 +240,14 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
         return load( colScope, ConsistencyLevel.valueOf( cassandraFig.getReadCL() ), type, fields, false);
     }
 
+    @Override
+    public UniqueValueSet load( final ApplicationScope colScope, final String type, final Collection<Field> fields,
+                                boolean useReadRepair)
+        throws ConnectionException {
+        return load( colScope, ConsistencyLevel.valueOf( cassandraFig.getReadCL() ), type, fields, useReadRepair);
+    }
+
+
 
     @Override
     public UniqueValueSet load(final ApplicationScope appScope, final ConsistencyLevel consistencyLevel,

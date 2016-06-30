@@ -122,9 +122,9 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
             try {
 
                 // loading will retrieve the oldest unique value entry for the field
-                // purposely enable the read repair here to clean up before we write
-                UniqueValueSet set = uniqueValueStrat.load(scope, cassandraFig.getReadCL(),
-                    written.getEntityId().getType(), Collections.singletonList(written.getField()), true);
+                // don't use read repair on this pre-write check
+                UniqueValueSet set = uniqueValueStrat.load(scope, written.getEntityId().getType(),
+                    Collections.singletonList(written.getField()), false);
 
 
                 set.forEach(uniqueValue -> {
@@ -143,11 +143,15 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
                 throw new RuntimeException("Error connecting to cassandra", e);
             }
 
-            // use TTL in case something goes wrong before entity is finally committed
-            final MutationBatch mb = uniqueValueStrat.write( scope, written, serializationFig.getTimeout() );
+            // only build the batch statement if we don't have a violation for the field
+            if( preWriteUniquenessViolations.get(field.getName()) != null) {
 
-            batch.mergeShallow( mb );
-            uniqueFields.add(field);
+                // use TTL in case something goes wrong before entity is finally committed
+                final MutationBatch mb = uniqueValueStrat.write(scope, written, serializationFig.getTimeout());
+
+                batch.mergeShallow(mb);
+                uniqueFields.add(field);
+            }
         }
 
         if(preWriteUniquenessViolations.size() > 0 ){
