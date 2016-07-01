@@ -89,7 +89,7 @@ public class EntityCollectionManagerIT extends AbstractUniqueValueTest {
 
     @Before
     public void initAkka() {
-        initAkka( 2555, actorSystemManager, uniqueValuesService );
+        initAkka( 2551, actorSystemManager, uniqueValuesService );
     }
 
 

@@ -32,6 +32,7 @@ import akka.util.Timeout;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -92,9 +93,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     public void reserveUniqueValues(
         ApplicationScope scope, Entity entity, UUID version, String region ) throws UniqueValueException {
 
-        if ( !actorSystemManager.isReady() ) {
-            throw new RuntimeException("Unique values service not initialized, no request actors ready");
-        }
+        ready();
 
         try {
             for (Field field : entity.getFields()) {
@@ -124,9 +123,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     public void confirmUniqueValues(
         ApplicationScope scope, Entity entity, UUID version, String region ) throws UniqueValueException {
 
-        if ( !actorSystemManager.isReady() ) {
-            throw new RuntimeException("Unique values service not initialized, no request actors ready");
-        }
+        ready();
 
         try {
             for (Field field : entity.getFields()) {
@@ -199,6 +196,19 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             clusterClient.tell( new ClusterClient.Send("/user/clientActor", request), null );
         }
 
+    }
+
+
+    private void ready() {
+        if ( !actorSystemManager.isReady() ) {
+            throw new RuntimeException("Unique values service not initialized, no request actors ready");
+        }
+
+        if ( !StringUtils.isEmpty( uniqueValuesFig.getAuthoritativeRegion() )) {
+            if ( !actorSystemManager.getRegions().contains( uniqueValuesFig.getAuthoritativeRegion() ) ) {
+                throw new RuntimeException( "Authoritative region not in region list" );
+            }
+        }
     }
 
 

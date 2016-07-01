@@ -86,7 +86,7 @@ public class UniqueValuesServiceTest extends AbstractUniqueValueTest {
     @Before
     public void initAkka() {
         // each test class needs unique port number
-        initAkka( 2553, actorSystemManager, uniqueValuesService );
+        initAkka( 2555, actorSystemManager, uniqueValuesService );
     }
 
 
