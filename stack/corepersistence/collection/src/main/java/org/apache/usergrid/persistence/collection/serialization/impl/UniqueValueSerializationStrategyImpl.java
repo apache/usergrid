@@ -358,7 +358,8 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                                 delete(appScope, candidate).execute();
 
                             } catch (ConnectionException e) {
-                                // do nothing for now
+                               logger.error( "Unable to connect to cassandra during duplicate repair of [{}={}]",
+                                   field.getName(), field.getValue().toString() );
                             }
 
                         });
