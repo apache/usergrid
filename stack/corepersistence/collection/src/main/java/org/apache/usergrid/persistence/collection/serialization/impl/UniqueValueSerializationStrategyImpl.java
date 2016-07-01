@@ -394,11 +394,14 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
             }
 
             // take the last candidate ( should be the latest version) and add to the result set
+
+            final UniqueValue returnValue = candidates.get(candidates.size() -1);
             if(logger.isTraceEnabled()){
-                logger.trace("Adding unique value [{}] to response set.",
-                    candidates.get(candidates.size() -1));
+                logger.trace("Adding unique value [{}={}] with entity id [{}] and entity version [{}] to response set",
+                    returnValue.getField().getName(), returnValue.getField().getValue().toString(),
+                    returnValue.getEntityId().getUuid(), returnValue.getEntityVersion());
             }
-            uniqueValueSet.addValue(candidates.get(candidates.size() -1));
+            uniqueValueSet.addValue(returnValue);
 
         }
 
