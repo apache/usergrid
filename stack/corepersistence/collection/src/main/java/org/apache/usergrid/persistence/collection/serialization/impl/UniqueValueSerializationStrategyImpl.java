@@ -335,7 +335,9 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
                         // do nothing, only versions can be newer and we're not worried about newer versions of same entity
                         if (logger.isTraceEnabled()) {
-                            logger.trace("Candidate unique value is equal to the current unique value");
+                            logger.trace("Current unique value [{}={}] entry has UUID [{}] equal to candidate UUID [{}]",
+                                field.getName(), field.getValue().toString(), uniqueValue.getEntityId().getUuid(),
+                                candidates.get(candidates.size() -1));
                         }
 
                         // update candidate w/ latest version
@@ -365,7 +367,8 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                         candidates.clear();
 
                         if (logger.isTraceEnabled()) {
-                            logger.trace("Updating candidate to entity id [{}] and entity version [{}]",
+                            logger.trace("Updating candidate unique value [{}={}] to entity id [{}] and " +
+                                "entity version [{}]", field.getName(), field.getValue().toString(),
                                 uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion());
 
                         }
@@ -390,6 +393,10 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
             }
 
             // take the last candidate ( should be the latest version) and add to the result set
+            if(logger.isTraceEnabled()){
+                logger.trace("Adding unique value [{}] to response set.",
+                    candidates.get(candidates.size() -1));
+            }
             uniqueValueSet.addValue(candidates.get(candidates.size() -1));
 
         }
