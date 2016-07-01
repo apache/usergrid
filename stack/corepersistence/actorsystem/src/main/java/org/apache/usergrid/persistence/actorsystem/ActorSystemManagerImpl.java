@@ -67,9 +67,15 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     private ListMultimap<String, String> seedsByRegion;
 
 
+
     @Inject
     public ActorSystemManagerImpl( ActorSystemFig actorSystemFig ) {
         this.actorSystemFig = actorSystemFig;
+    }
+
+
+    public Set<String> getRegions() {
+        return getSeedsByRegion().keySet();
     }
 
 

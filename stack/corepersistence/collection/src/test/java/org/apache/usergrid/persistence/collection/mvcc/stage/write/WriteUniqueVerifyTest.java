@@ -77,7 +77,7 @@ public class WriteUniqueVerifyTest extends AbstractUniqueValueTest {
     @Before
     public void initAkka() {
         // each test class needs unique port number
-        initAkka( 2552, actorSystemManager, uniqueValuesService );
+        initAkka( 2554, actorSystemManager, uniqueValuesService );
     }
 
 

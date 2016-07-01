@@ -21,6 +21,8 @@ package org.apache.usergrid.persistence.actorsystem;
 
 import akka.actor.ActorRef;
 
+import java.util.Set;
+
 public interface ActorSystemManager {
 
     /**
@@ -69,6 +71,11 @@ public interface ActorSystemManager {
      * Get name of of this, the current region.
      */
     String getCurrentRegion();
+
+    /**
+     * Get all regions known to system.
+     */
+    public Set<String> getRegions();
 
     /**
      * Publish message to all topic subscribers in all regions.
