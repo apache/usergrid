@@ -40,6 +40,7 @@ import org.apache.usergrid.persistence.collection.serialization.UniqueValueSeria
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
 import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueException;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesFig;
 import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -63,6 +64,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
     private static final Logger logger = LoggerFactory.getLogger( WriteUniqueVerify.class );
 
     ActorSystemFig actorSystemFig;
+    UniqueValuesFig uniqueValuesFig;
     UniqueValuesService akkaUvService;
 
     private final UniqueValueSerializationStrategy uniqueValueStrat;
@@ -83,11 +85,13 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
                              final Keyspace keyspace,
                              final CassandraConfig cassandraFig,
                              final ActorSystemFig actorSystemFig,
+                             final UniqueValuesFig uniqueValuesFig,
                              final UniqueValuesService akkaUvService ) {
 
         this.keyspace = keyspace;
         this.cassandraFig = cassandraFig;
         this.actorSystemFig = actorSystemFig;
+        this.uniqueValuesFig = uniqueValuesFig;
         this.akkaUvService = akkaUvService;
 
         Preconditions.checkNotNull( uniqueValueSerializiationStrategy, "uniqueValueSerializationStrategy is required" );
@@ -102,7 +106,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
     @Override
     public void call( final CollectionIoEvent<MvccEntity> ioevent ) {
-        if ( actorSystemFig != null && actorSystemFig.getAkkaEnabled() ) {
+        if ( actorSystemFig != null && actorSystemFig.getEnabled() ) {
             verifyUniqueFieldsAkka( ioevent );
         } else {
             verifyUniqueFields( ioevent );
@@ -121,10 +125,10 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
         String region = ioevent.getRegion();
         if ( region == null ) {
-            region = actorSystemFig.getAkkaAuthoritativeRegion();
+            region = uniqueValuesFig.getAuthoritativeRegion();
         }
         if ( region == null ) {
-            region = actorSystemFig.getRegion();
+            region = actorSystemFig.getRegionLocal();
         }
         try {
             akkaUvService.reserveUniqueValues( applicationScope, entity, mvccEntity.getVersion(), region );

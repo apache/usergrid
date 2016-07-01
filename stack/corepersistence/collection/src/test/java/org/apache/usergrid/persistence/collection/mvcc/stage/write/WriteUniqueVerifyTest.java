@@ -96,7 +96,7 @@ public class WriteUniqueVerifyTest extends AbstractUniqueValueTest {
         final MvccEntity mvccEntity = fromEntity( entity );
 
         // run the stage
-        WriteUniqueVerify newStage = new WriteUniqueVerify( uvstrat, fig, keyspace, cassandraConfig, null, null );
+        WriteUniqueVerify newStage = new WriteUniqueVerify( uvstrat, fig, keyspace, cassandraConfig, null, null, null );
 
        newStage.call( new CollectionIoEvent<>( collectionScope, mvccEntity ) ) ;
 

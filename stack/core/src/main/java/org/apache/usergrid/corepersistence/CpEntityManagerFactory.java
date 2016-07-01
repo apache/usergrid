@@ -142,7 +142,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
         logger.info("EntityManagerFactoring starting...");
 
-        if ( actorSystemFig.getAkkaEnabled() ) {
+        if ( actorSystemFig.getEnabled() ) {
             try {
                 logger.info("Akka cluster starting...");
 
