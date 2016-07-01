@@ -156,7 +156,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
             }
 
             // only build the batch statement if we don't have a violation for the field
-            if( preWriteUniquenessViolations.get(field.getName()) != null) {
+            if( preWriteUniquenessViolations.get(field.getName()) == null) {
 
                 // use TTL in case something goes wrong before entity is finally committed
                 final MutationBatch mb = uniqueValueStrat.write(scope, written, serializationFig.getTimeout());

@@ -223,10 +223,9 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
 
         if ( logger.isTraceEnabled() ) {
-            logger.trace( "Writing unique value version={} name={} value={} ",
-                    uniqueValue.getEntityVersion(), uniqueValue.getField().getName(),
-                    uniqueValue.getField().getValue()
-                );
+            logger.trace( "Building batch statement for unique value entity={} version={} name={} value={} ",
+                uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion(),
+                uniqueValue.getField().getName(), uniqueValue.getField().getValue() );
         }
 
 
