@@ -39,6 +39,8 @@ import org.slf4j.LoggerFactory;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -77,8 +79,17 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     @Override
     public void start() {
 
-        this.hostname = actorSystemFig.getHostname();
-        this.currentRegion = actorSystemFig.getRegion();
+        if ( !StringUtils.isEmpty( actorSystemFig.getHostname()) ) {
+            this.hostname = actorSystemFig.getHostname();
+        } else {
+            try {
+                this.hostname = InetAddress.getLocalHost().getHostName();
+            } catch (UnknownHostException e) {
+                logger.error("Cannot get hostname, defaulting to 'localhost': " + e.getMessage());
+            }
+        }
+
+        this.currentRegion = actorSystemFig.getRegionLocal();
         this.port = null;
 
         initAkka();
@@ -155,32 +166,22 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
         // Create one actor system with request actor for each region
 
-        if ( StringUtils.isEmpty( hostname )) {
-            throw new RuntimeException( "No value specified for " + ActorSystemFig.AKKA_HOSTNAME );
-        }
-
         if ( StringUtils.isEmpty( currentRegion )) {
-            throw new RuntimeException( "No value specified for " + ActorSystemFig.AKKA_REGION );
+            throw new RuntimeException( "No value specified for " + ActorSystemFig.CLUSTER_REGIONS_LOCAL );
         }
 
-        if ( StringUtils.isEmpty( actorSystemFig.getRegionList() )) {
-            throw new RuntimeException( "No value specified for " + ActorSystemFig.AKKA_REGION_LIST );
+        if ( StringUtils.isEmpty( actorSystemFig.getRegionsList() )) {
+            throw new RuntimeException( "No value specified for " + ActorSystemFig.CLUSTER_REGIONS_LIST );
         }
 
-        if ( StringUtils.isEmpty( actorSystemFig.getRegionSeeds() )) {
-            throw new RuntimeException( "No value specified for " + ActorSystemFig.AKKA_REGION_SEEDS);
+        if ( StringUtils.isEmpty( actorSystemFig.getSeeds() )) {
+            throw new RuntimeException( "No value specified for " + ActorSystemFig.CLUSTER_SEEDS );
         }
 
-        if ( StringUtils.isEmpty( actorSystemFig.getAkkaAuthoritativeRegion() )) {
-            logger.warn("No value for {} specified, will use current region as authoriative region",
-                ActorSystemFig.AKKA_AUTHORITATIVE_REGION);
-            //throw new RuntimeException( "No value specified for " + ActorSystemFig.AKKA_AUTHORITATIVE_REGION);
-        }
-
-        List regionList = Arrays.asList( actorSystemFig.getRegionList().toLowerCase().split(",") );
+        List regionList = Arrays.asList( actorSystemFig.getRegionsList().toLowerCase().split(",") );
 
         logger.info("Initializing Akka for hostname {} region {} regionList {} seeds {}",
-            hostname, currentRegion, regionList, actorSystemFig.getRegionSeeds() );
+            hostname, currentRegion, regionList, actorSystemFig.getSeeds() );
 
         Config config = readClusterSystemConfig();
 
@@ -205,7 +206,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
             seedsByRegion = ArrayListMultimap.create();
 
-            String[] regionSeeds = actorSystemFig.getRegionSeeds().split( "," );
+            String[] regionSeeds = actorSystemFig.getSeeds().split( "," );
 
             logger.info( "Found region {} seeds {}", regionSeeds.length, regionSeeds );
 
@@ -226,7 +227,8 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                         String[] parts = regionSeed.split( ":" );
                         String region = parts[0];
                         String hostname = parts[1];
-                        String regionPortString = parts[2];
+
+                        String regionPortString = parts.length > 2 ? parts[2] : actorSystemFig.getPort();
 
                         // all seeds in same region must use same port
                         // we assume 0th seed has the right port
@@ -269,7 +271,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
         try {
 
-            int numInstancesPerNode = actorSystemFig.getInstancesPerNode();
+            int numInstancesPerNode = 300; // expect this to be overridden by RouterProducers
 
             String region = currentRegion;
 
@@ -277,11 +279,8 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
             int lastColon = seeds.get(0).lastIndexOf(":") + 1;
             final Integer regionPort = Integer.parseInt( seeds.get(0).substring( lastColon ));
 
-            logger.info( "Akka Config for region {} is:\n" +
-                    "   Hostname {}\n" +
-                    "   Seeds {}\n" +
-                    "   Authoritative Region {}\n",
-                region, hostname, seeds, actorSystemFig.getAkkaAuthoritativeRegion() );
+            logger.info( "Akka Config for region {} is:\n" + "   Hostname {}\n" + "   Seeds {}\n",
+                region, hostname, seeds );
 
             Map<String, Object> configMap = new HashMap<String, Object>() {{
 

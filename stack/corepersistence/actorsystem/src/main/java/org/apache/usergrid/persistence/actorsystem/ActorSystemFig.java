@@ -30,64 +30,54 @@ import java.io.Serializable;
 @FigSingleton
 public interface ActorSystemFig extends GuicyFig, Serializable {
 
-    String AKKA_ENABLED = "collection.akka.enabled";
+    String CLUSTER_ENABLED = "usergrid.cluster.enabled";
 
-    String AKKA_HOSTNAME = "collection.akka.hostname";
+    String CLUSTER_REGIONS_LIST = "usergrid.cluster.region.list";
 
-    String AKKA_REGION = "collection.akka.region";
+    String CLUSTER_REGIONS_LOCAL = "usergrid.cluster.region.local";
 
-    String AKKA_REGION_LIST = "usergrid.queue.regionList"; // same region list used by queues
+    String CLUSTER_SEEDS = "usergrid.cluster.seeds";
 
-    String AKKA_REGION_SEEDS = "collection.akka.region.seeds";
-
-    String AKKA_AUTHORITATIVE_REGION = "collection.akka.authoritative.region";
-
-    String AKKA_INSTANCES_PER_NODE = "collection.akka.instances-per-node";
+    String CLUSTER_PORT = "usergrid.cluster.port";
 
 
     /**
-     * Use Akka or nah
+     * Use Cluster or nah
      */
-    @Key(AKKA_ENABLED)
+    @Key(CLUSTER_ENABLED)
     @Default("true")
-    boolean getAkkaEnabled();
-
-    /**
-     * Hostname to be used in Akka configuration.
-     */
-    @Key(AKKA_HOSTNAME)
-    String getHostname();
+    boolean getEnabled();
 
     /**
      * Local region to be used in Akka configuration.
      */
-    @Key(AKKA_REGION)
-    String getRegion();
+    @Key(CLUSTER_REGIONS_LOCAL)
+    @Default("default")
+    String getRegionLocal();
 
     /**
      * Comma separated list of regions known to cluster.
      */
-    @Key(AKKA_REGION_LIST)
-    String getRegionList();
+    @Key(CLUSTER_REGIONS_LIST)
+    @Default("default")
+    String getRegionsList();
 
     /**
-     * Comma-separated lists of seeds each with format {region}:{hostname}:{port}.
-     * Regions MUST be listed in the 'usergrid.queue.regionList'
+     * Comma-separated lists of seeds each with format {region}:{hostname}
      */
-    @Key(AKKA_REGION_SEEDS)
-    String getRegionSeeds();
+    @Key(CLUSTER_SEEDS)
+    @Default("default:localhost")
+    String getSeeds();
 
     /**
-     * If no region specified for type, use the authoritative region
+     * Port for cluster comms.
      */
-    @Key(AKKA_AUTHORITATIVE_REGION)
-    String getAkkaAuthoritativeRegion();
+    @Key(CLUSTER_PORT)
+    @Default("2551")
+    String getPort();
 
 
-    /**
-     * Number of actor instances to create on each node for each router.
-     */
-    @Key(AKKA_INSTANCES_PER_NODE)
-    @Default("300")
-    int getInstancesPerNode();
+    @Key("usergrid.cluster.hostname")
+    @Default("")
+    String getHostname();
 }

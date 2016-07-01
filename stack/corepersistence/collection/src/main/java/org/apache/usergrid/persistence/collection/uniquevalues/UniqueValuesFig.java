@@ -28,40 +28,40 @@ import java.io.Serializable;
 @FigSingleton
 public interface UniqueValuesFig extends GuicyFig, Serializable {
 
-    String AKKA_UNIQUEVALUE_ACTORS = "collection.akka.uniquevalue.actors";
+    String UNIQUEVALUE_ACTORS = "collection.uniquevalues.actors";
 
-    String AKKA_UNIQUEVALUE_CACHE_TTL = "collection.akka.uniquevalue.cache.ttl";
+    String UNIQUEVALUE_CACHE_TTL = "collection.uniquevalues.cache.ttl";
 
-    String AKKA_UNIQUEVALUE_RESERVATION_TTL= "collection.akka.uniquevalue.reservation.ttl";
+    String UNIQUEVALUE_RESERVATION_TTL= "collection.uniquevalues.reservation.ttl";
 
-    String AKKA_UNIQUEVALUE_INSTANCES_PER_NODE = "collection.akka.uniquevalue.instances-per-node";
+    String UNIQUEVALUE_AUTHORITATIVE_REGION = "collection.uniquevalues.authoritative.region";
 
-
-    /**
-     * Number of UniqueValueActors to be started on each node
-     */
-    @Key(AKKA_UNIQUEVALUE_ACTORS)
-    @Default("300")
-    int getUniqueValueActors();
 
     /**
      * Unique Value cache TTL in seconds.
      */
-    @Key(AKKA_UNIQUEVALUE_CACHE_TTL)
+    @Key(UNIQUEVALUE_CACHE_TTL)
     @Default("10")
     int getUniqueValueCacheTtl();
 
     /**
      * Unique Value Reservation TTL in seconds.
      */
-    @Key(AKKA_UNIQUEVALUE_RESERVATION_TTL)
+    @Key(UNIQUEVALUE_RESERVATION_TTL)
     @Default("10")
     int getUniqueValueReservationTtl();
 
     /**
      * Number of actor instances to create on each.
      */
-    @Key(AKKA_UNIQUEVALUE_INSTANCES_PER_NODE)
+    @Key(UNIQUEVALUE_ACTORS)
     @Default("300")
     int getUniqueValueInstancesPerNode();
+
+    /**
+     * Primary authoritative region (used if none other specified).
+     */
+    @Key(UNIQUEVALUE_AUTHORITATIVE_REGION)
+    @Default("default")
+    String getAuthoritativeRegion();
 }

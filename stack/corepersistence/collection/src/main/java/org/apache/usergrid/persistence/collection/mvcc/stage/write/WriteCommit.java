@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueException;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesFig;
 import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +68,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
     private static final Logger logger = LoggerFactory.getLogger( WriteCommit.class );
 
     ActorSystemFig actorSystemFig;
+    UniqueValuesFig uniqueValuesFig;
     UniqueValuesService akkaUvService;
 
     @Inject
@@ -82,6 +84,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
                         final MvccEntitySerializationStrategy entryStrat,
                         final UniqueValueSerializationStrategy uniqueValueStrat,
                         final ActorSystemFig actorSystemFig,
+                        final UniqueValuesFig uniqueValuesFig,
                         final UniqueValuesService akkaUvService ) {
 
         Preconditions.checkNotNull( logStrat, "MvccLogEntrySerializationStrategy is required" );
@@ -92,6 +95,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         this.entityStrat = entryStrat;
         this.uniqueValueStrat = uniqueValueStrat;
         this.actorSystemFig = actorSystemFig;
+        this.uniqueValuesFig = uniqueValuesFig;
         this.akkaUvService = akkaUvService;
     }
 
@@ -130,13 +134,13 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         logMutation.mergeShallow( entityMutation );
 
         // akkaFig may be null when this is called from JUnit tests
-        if ( actorSystemFig != null && actorSystemFig.getAkkaEnabled() ) {
+        if ( actorSystemFig != null && actorSystemFig.getEnabled() ) {
             String region = ioEvent.getRegion();
             if ( region == null ) {
-                region = actorSystemFig.getAkkaAuthoritativeRegion();
+                region = uniqueValuesFig.getAuthoritativeRegion();
             }
             if ( region == null ) {
-                region = actorSystemFig.getRegion();
+                region = actorSystemFig.getRegionLocal();
             }
             confirmUniqueFieldsAkka( mvccEntity, version, applicationScope, region );
         } else {
