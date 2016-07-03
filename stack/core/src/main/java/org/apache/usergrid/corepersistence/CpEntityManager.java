@@ -860,8 +860,6 @@ public class CpEntityManager implements EntityManager {
 
         Timer.Context repairedEntityGet = entGetRepairedEntityTimer.time();
 
-        // TODO: can't we just sub in the getEntityRepair method here
-        // so for every read of a uniqueEntityField we can verify it is correct?
 
         StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType.toString());
 
@@ -877,11 +875,22 @@ public class CpEntityManager implements EntityManager {
             return null;
         }
 
-        FieldSet fieldSet = fieldSetObservable
-            .doOnError( t ->
-                logger.error("Unable to retrieve unique values due to: {}", t.getMessage())
-            )
-            .toBlocking().last();
+        FieldSet fieldSet = fieldSetObservable.toBlocking().last();
+
+        // do a re-load if we know an entity repair was executed
+        // a hit to performance, but we need to return consistent success respones if we're repairing data
+        if(fieldSet.getEntityRepairExecuted()){
+
+            if(logger.isTraceEnabled()){
+                logger.trace("One or more entities were repaired ( removed ) during loading of unique field [{}={}], " +
+                    "executing the unique value lookup once more for consistency", uniqueLookupRepairField.getName(),
+                    uniqueLookupRepairField.getValue());
+            }
+
+            fieldSet = ecm.getEntitiesFromFields(
+                Inflector.getInstance().singularize( collectionType ),
+                Collections.singletonList(uniqueLookupRepairField), uniqueIndexRepair).toBlocking().last();
+        }
 
         repairedEntityGet.stop();
 
@@ -912,11 +921,22 @@ public class CpEntityManager implements EntityManager {
             return null;
         }
 
-        FieldSet fieldSet = fieldSetObservable
-            .doOnError( t ->
-                logger.error("Unable to retrieve unique values due to: {}", t.getMessage())
-            )
-            .toBlocking().last();
+        FieldSet fieldSet = fieldSetObservable.toBlocking().last();
+
+        // do a re-load if we know an entity repair was executed
+        // a hit to performance, but we need to return consistent success respones if we're repairing data
+        if(fieldSet.getEntityRepairExecuted()){
+
+            if(logger.isTraceEnabled()){
+                logger.trace("One or more entities were repaired ( removed ) during loading of unique field [{}={}], " +
+                        "executing the unique value lookup once more for consistency", uniqueLookupRepairField.getName(),
+                    uniqueLookupRepairField.getValue());
+            }
+
+            fieldSet = ecm.getEntitiesFromFields(
+                Inflector.getInstance().singularize( collectionType ),
+                Collections.singletonList(uniqueLookupRepairField), uniqueIndexRepair).toBlocking().last();
+        }
 
         if(fieldSet == null || fieldSet.isEmpty()) {
             return null;

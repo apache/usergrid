@@ -413,31 +413,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                 if ( deleteBatch.getRowCount() > 0 ) {
 
+                    response.setEntityRepairExecuted(true);
                     deleteBatch.execute();
 
-
-                    // optionally sleep after read repair as some tasks immediately try to write after the delete
-                    if ( serializationFig.getReadRepairDelay() > 0 ){
-
-                        try {
-
-                            if(logger.isTraceEnabled()) {
-                                logger.trace("Sleeping {}ms after unique value read repair execution",
-                                    serializationFig.getReadRepairDelay());
-                            }
-
-                            Thread.sleep(Math.min(serializationFig.getReadRepairDelay(), 200L));
-
-                        } catch (InterruptedException e) {
-
-                            // do nothing if sleep fails; log and continue on
-                            logger.warn("Sleep during unique value read repair failed.");
-                        }
-
-                    }
-
                 }
-
 
                 return response;
             }
