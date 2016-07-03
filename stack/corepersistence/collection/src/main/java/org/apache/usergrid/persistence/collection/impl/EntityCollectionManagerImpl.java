@@ -333,8 +333,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 final UUID startTime = UUIDGenerator.newTimeUUID();
 
                 //Get back set of unique values that correspond to collection of fields
+                //Purposely use CL ALL as consistency is extremely important here, regardless of performance
                 UniqueValueSet set =
-                    uniqueValueSerializationStrategy.load( applicationScope, type, fields1 , uniqueIndexRepair);
+                    uniqueValueSerializationStrategy
+                        .load( applicationScope, ConsistencyLevel.CL_ALL, type, fields1 , uniqueIndexRepair);
 
                 //Short circuit if we don't have any uniqueValues from the given fields.
                 if ( !set.iterator().hasNext() ) {
