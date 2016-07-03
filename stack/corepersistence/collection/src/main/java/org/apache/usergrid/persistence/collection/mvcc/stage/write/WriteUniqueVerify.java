@@ -123,8 +123,9 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
                 // loading will retrieve the oldest unique value entry for the field
                 // don't use read repair on this pre-write check
-                UniqueValueSet set = uniqueValueStrat.load(scope, written.getEntityId().getType(),
-                    Collections.singletonList(written.getField()), false);
+                // use CL ALL as consistency is extremely important here, more so than performance
+                UniqueValueSet set = uniqueValueStrat.load(scope, ConsistencyLevel.CL_ALL,
+                    written.getEntityId().getType(), Collections.singletonList(written.getField()), false);
 
 
                 set.forEach(uniqueValue -> {
