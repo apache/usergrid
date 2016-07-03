@@ -278,6 +278,12 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                 .withColumnRange(new RangeBuilder().setLimit(serializationFig.getMaxLoadSize()).build())
                 .execute().getResult().iterator();
 
+        if( !results.hasNext()){
+            if(logger.isTraceEnabled()){
+                logger.trace("No partitions returned for unique value lookup");
+            }
+        }
+
 
         while ( results.hasNext() )
 
@@ -291,6 +297,10 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
             //sanity check, nothing to do, skip it
             if ( !columnList.hasNext() ) {
+                if(logger.isTraceEnabled()){
+                    logger.trace("No cells exist in partition for unique value [{}={}]",
+                        field.getName(), field.getValue().toString());
+                }
                 continue;
             }
 
@@ -317,12 +327,24 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                 // set the initial candidate and move on
                 if (candidates.size() == 0) {
                     candidates.add(uniqueValue);
+
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("First entry for unique value [{}={}] found for application [{}], adding " +
+                                "entry with entity id [{}] and entity version [{}] to the candidate list and continuing",
+                            field.getName(), field.getValue().toString(), applicationId.getType(),
+                            uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion());
+                    }
+
                     continue;
                 }
 
                 if(!useReadRepair){
 
                     // take only the first
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Read repair not enabled for this request of unique value [{}={}], breaking out" +
+                            " of cell loop", field.getName(), field.getValue().toString());
+                    }
                     break;
 
                 } else {
