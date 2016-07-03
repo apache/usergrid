@@ -132,7 +132,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
                     if(!uniqueValue.getEntityId().getUuid().equals(written.getEntityId().getUuid())){
 
                         if(logger.isTraceEnabled()){
-                            logger.trace("Pre-write violation detected. Attempted write for unique value [{}={}] and" +
+                            logger.trace("Pre-write violation detected. Attempted write for unique value [{}={}] and " +
                                 "entity id [{}], entity version [{}] conflicts with already existing entity id [{}], " +
                                 "entity version [{}]",
                                 written.getField().getName(),
