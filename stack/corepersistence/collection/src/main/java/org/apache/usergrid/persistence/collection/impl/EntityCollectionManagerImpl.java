@@ -350,8 +350,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 final UUID startTime = UUIDGenerator.newTimeUUID();
 
                 //Get back set of unique values that correspond to collection of fields
+                //Purposely use CL ALL as consistency is extremely important here, regardless of performance
                 UniqueValueSet set =
-                    uniqueValueSerializationStrategy.load( applicationScope, type, fields1 , uniqueIndexRepair);
+                    uniqueValueSerializationStrategy
+                        .load( applicationScope, ConsistencyLevel.CL_ALL, type, fields1 , uniqueIndexRepair);
 
                 //Short circuit if we don't have any uniqueValues from the given fields.
                 if ( !set.iterator().hasNext() ) {
@@ -428,31 +430,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
                 if ( deleteBatch.getRowCount() > 0 ) {
 
+                    response.setEntityRepairExecuted(true);
                     deleteBatch.execute();
 
-
-                    // optionally sleep after read repair as some tasks immediately try to write after the delete
-                    if ( serializationFig.getReadRepairDelay() > 0 ){
-
-                        try {
-
-                            if(logger.isTraceEnabled()) {
-                                logger.trace("Sleeping {}ms after unique value read repair execution",
-                                    serializationFig.getReadRepairDelay());
-                            }
-
-                            Thread.sleep(Math.min(serializationFig.getReadRepairDelay(), 200L));
-
-                        } catch (InterruptedException e) {
-
-                            // do nothing if sleep fails; log and continue on
-                            logger.warn("Sleep during unique value read repair failed.");
-                        }
-
-                    }
-
                 }
-
 
                 return response;
             }

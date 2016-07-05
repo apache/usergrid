@@ -31,6 +31,8 @@ public class MutableFieldSet implements FieldSet {
 
     private final Map<Field<?>, MvccEntity> entities;
 
+    private boolean readRepairExecuted;
+
 
     public MutableFieldSet( final int expectedSize ) {
         this.entities = new HashMap<>( expectedSize );
@@ -59,5 +61,15 @@ public class MutableFieldSet implements FieldSet {
     @Override
     public boolean isEmpty() {
         return entities.size() == 0;
+    }
+
+    @Override
+    public void setEntityRepairExecuted( final boolean readRepairExecuted ){
+        this.readRepairExecuted = readRepairExecuted;
+    }
+
+    @Override
+    public boolean getEntityRepairExecuted(){
+        return readRepairExecuted;
     }
 }
