@@ -223,10 +223,9 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
 
         if ( logger.isTraceEnabled() ) {
-            logger.trace( "Writing unique value version={} name={} value={} ",
-                    uniqueValue.getEntityVersion(), uniqueValue.getField().getName(),
-                    uniqueValue.getField().getValue()
-                );
+            logger.trace( "Building batch statement for unique value entity={} version={} name={} value={} ",
+                uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion(),
+                uniqueValue.getField().getName(), uniqueValue.getField().getValue() );
         }
 
 
@@ -279,6 +278,12 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                 .withColumnRange(new RangeBuilder().setLimit(serializationFig.getMaxLoadSize()).build())
                 .execute().getResult().iterator();
 
+        if( !results.hasNext()){
+            if(logger.isTraceEnabled()){
+                logger.trace("No partitions returned for unique value lookup");
+            }
+        }
+
 
         while ( results.hasNext() )
 
@@ -292,6 +297,10 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
             //sanity check, nothing to do, skip it
             if ( !columnList.hasNext() ) {
+                if(logger.isTraceEnabled()){
+                    logger.trace("No cells exist in partition for unique value [{}={}]",
+                        field.getName(), field.getValue().toString());
+                }
                 continue;
             }
 
@@ -318,12 +327,24 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                 // set the initial candidate and move on
                 if (candidates.size() == 0) {
                     candidates.add(uniqueValue);
+
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("First entry for unique value [{}={}] found for application [{}], adding " +
+                                "entry with entity id [{}] and entity version [{}] to the candidate list and continuing",
+                            field.getName(), field.getValue().toString(), applicationId.getType(),
+                            uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion());
+                    }
+
                     continue;
                 }
 
                 if(!useReadRepair){
 
                     // take only the first
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Read repair not enabled for this request of unique value [{}={}], breaking out" +
+                            " of cell loop", field.getName(), field.getValue().toString());
+                    }
                     break;
 
                 } else {
@@ -335,7 +356,9 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
                         // do nothing, only versions can be newer and we're not worried about newer versions of same entity
                         if (logger.isTraceEnabled()) {
-                            logger.trace("Candidate unique value is equal to the current unique value");
+                            logger.trace("Current unique value [{}={}] entry has UUID [{}] equal to candidate UUID [{}]",
+                                field.getName(), field.getValue().toString(), uniqueValue.getEntityId().getUuid(),
+                                candidates.get(candidates.size() -1));
                         }
 
                         // update candidate w/ latest version
@@ -356,7 +379,8 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                                 delete(appScope, candidate).execute();
 
                             } catch (ConnectionException e) {
-                                // do nothing for now
+                               logger.error( "Unable to connect to cassandra during duplicate repair of [{}={}]",
+                                   field.getName(), field.getValue().toString() );
                             }
 
                         });
@@ -365,7 +389,8 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                         candidates.clear();
 
                         if (logger.isTraceEnabled()) {
-                            logger.trace("Updating candidate to entity id [{}] and entity version [{}]",
+                            logger.trace("Updating candidate unique value [{}={}] to entity id [{}] and " +
+                                "entity version [{}]", field.getName(), field.getValue().toString(),
                                 uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion());
 
                         }
@@ -390,7 +415,14 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
             }
 
             // take the last candidate ( should be the latest version) and add to the result set
-            uniqueValueSet.addValue(candidates.get(candidates.size() -1));
+
+            final UniqueValue returnValue = candidates.get(candidates.size() -1);
+            if(logger.isTraceEnabled()){
+                logger.trace("Adding unique value [{}={}] with entity id [{}] and entity version [{}] to response set",
+                    returnValue.getField().getName(), returnValue.getField().getValue().toString(),
+                    returnValue.getEntityId().getUuid(), returnValue.getEntityVersion());
+            }
+            uniqueValueSet.addValue(returnValue);
 
         }
 

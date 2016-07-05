@@ -171,12 +171,25 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
             try {
 
                 // don't use read repair on this pre-write check
-                UniqueValueSet set = uniqueValueStrat.load(scope, written.getEntityId().getType(),
-                    Collections.singletonList(written.getField()), false);
+                // use CL ALL as consistency is extremely important here, more so than performance
+                UniqueValueSet set = uniqueValueStrat.load(scope, ConsistencyLevel.CL_ALL,
+                    written.getEntityId().getType(), Collections.singletonList(written.getField()), false);
 
                 set.forEach(uniqueValue -> {
 
                     if(!uniqueValue.getEntityId().getUuid().equals(written.getEntityId().getUuid())){
+
+                        if(logger.isTraceEnabled()){
+                            logger.trace("Pre-write violation detected. Attempted write for unique value [{}={}] and " +
+                                "entity id [{}], entity version [{}] conflicts with already existing entity id [{}], " +
+                                "entity version [{}]",
+                                written.getField().getName(),
+                                written.getField().getValue().toString(),
+                                written.getEntityId().getUuid(),
+                                written.getEntityVersion(),
+                                uniqueValue.getEntityId().getUuid(),
+                                uniqueValue.getEntityVersion());
+                        }
 
                         preWriteUniquenessViolations.put(field.getName(), field);
 
@@ -191,7 +204,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
             }
 
             // only build the batch statement if we don't have a violation for the field
-            if( preWriteUniquenessViolations.get(field.getName()) != null) {
+            if( preWriteUniquenessViolations.get(field.getName()) == null) {
 
                 // use TTL in case something goes wrong before entity is finally committed
                 final MutationBatch mb = uniqueValueStrat.write(scope, written, serializationFig.getTimeout());
