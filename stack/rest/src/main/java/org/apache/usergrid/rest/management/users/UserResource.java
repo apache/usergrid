@@ -195,9 +195,9 @@ public class UserResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "get admin user" );
 
-        String token = management.getAccessTokenForAdminUser( user.getUuid(), ttl );
+        //String token = management.getAccessTokenForAdminUser( user.getUuid(), ttl );
         Map<String, Object> userOrganizationData = management.getAdminUserOrganizationData( user, !shallow );
-        userOrganizationData.put( "token", token );
+        //userOrganizationData.put( "token", token );
         response.setData( userOrganizationData );
         response.setSuccess();
 
