@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import com.netflix.astyanax.model.ConsistencyLevel;
 import org.apache.usergrid.persistence.collection.serialization.impl.LogEntryIterator;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,6 +111,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
     private final SerializationFig serializationFig;
+    private final CassandraConfig cassandraConfig;
 
 
     private final Keyspace keyspace;
@@ -135,7 +137,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                                         final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
                                         final Keyspace keyspace, final MetricsFactory metricsFactory,
                                         final SerializationFig serializationFig, final RxTaskScheduler rxTaskScheduler,
-                                        @Assisted final ApplicationScope applicationScope ) {
+                                        @Assisted final ApplicationScope applicationScope,
+                                        final CassandraConfig cassandraConfig) {
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
         this.uniqueCleanup = uniqueCleanup;
@@ -166,6 +169,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.fieldEntityTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.fieldEntity");
         this.loadTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.load");
         this.getLatestTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.latest");
+
+        this.cassandraConfig = cassandraConfig;
     }
 
 
@@ -333,10 +338,10 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                 final UUID startTime = UUIDGenerator.newTimeUUID();
 
                 //Get back set of unique values that correspond to collection of fields
-                //Purposely use CL ALL as consistency is extremely important here, regardless of performance
+                //Purposely use string consistency as it's extremely important here, regardless of performance
                 UniqueValueSet set =
                     uniqueValueSerializationStrategy
-                        .load( applicationScope, ConsistencyLevel.CL_ALL, type, fields1 , uniqueIndexRepair);
+                        .load( applicationScope, cassandraConfig.getConsistentReadCL(), type, fields1 , uniqueIndexRepair);
 
                 //Short circuit if we don't have any uniqueValues from the given fields.
                 if ( !set.iterator().hasNext() ) {

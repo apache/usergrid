@@ -40,6 +40,7 @@ import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerial
 import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -77,6 +78,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
     private final Keyspace keyspace;
     private final MetricsFactory metricsFactory;
     private final RxTaskScheduler rxTaskScheduler;
+    private final CassandraConfig cassandraConfig;
 
     private LoadingCache<ApplicationScope, EntityCollectionManager> ecmCache =
         CacheBuilder.newBuilder().maximumSize( 1000 )
@@ -89,7 +91,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                 entitySerializationStrategy, uniqueValueSerializationStrategy,
                                 mvccLogEntrySerializationStrategy, keyspace,
                                 metricsFactory, serializationFig,
-                                rxTaskScheduler, scope );
+                                rxTaskScheduler, scope, cassandraConfig );
 
                             return target;
                         }
@@ -107,7 +109,9 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                                final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
                                                final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
                                                final Keyspace keyspace, final EntityCacheFig entityCacheFig,
-                                               final MetricsFactory metricsFactory, @CollectionExecutorScheduler  final RxTaskScheduler rxTaskScheduler ) {
+                                               final MetricsFactory metricsFactory,
+                                               @CollectionExecutorScheduler  final RxTaskScheduler rxTaskScheduler,
+                                               final CassandraConfig cassandraConfig) {
 
         this.writeStart = writeStart;
         this.writeVerifyUnique = writeVerifyUnique;
@@ -125,6 +129,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
         this.keyspace = keyspace;
         this.metricsFactory = metricsFactory;
         this.rxTaskScheduler = rxTaskScheduler;
+        this.cassandraConfig = cassandraConfig;
     }
     @Override
     public EntityCollectionManager createCollectionManager(ApplicationScope applicationScope) {
