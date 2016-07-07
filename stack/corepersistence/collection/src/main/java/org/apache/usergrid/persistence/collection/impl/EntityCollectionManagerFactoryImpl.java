@@ -19,31 +19,6 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import java.util.concurrent.ExecutionException;
-
-import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
-import org.apache.usergrid.persistence.collection.cache.EntityCacheFig;
-import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
-import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
-import org.apache.usergrid.persistence.collection.mvcc.stage.delete.UniqueCleanup;
-import org.apache.usergrid.persistence.collection.mvcc.stage.delete.VersionCompact;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.RollbackAction;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
-import org.apache.usergrid.persistence.collection.scheduler.CollectionExecutorScheduler;
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -51,6 +26,26 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
+import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
+import org.apache.usergrid.persistence.collection.mvcc.stage.delete.UniqueCleanup;
+import org.apache.usergrid.persistence.collection.mvcc.stage.delete.VersionCompact;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.*;
+import org.apache.usergrid.persistence.collection.scheduler.CollectionExecutorScheduler;
+import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+
+import java.util.concurrent.ExecutionException;
 
 
 
@@ -59,7 +54,6 @@ import com.netflix.astyanax.Keyspace;
  */
 @Singleton
 public class EntityCollectionManagerFactoryImpl implements EntityCollectionManagerFactory {
-
 
     private final WriteStart writeStart;
     private final WriteUniqueVerify writeVerifyUnique;
@@ -80,6 +74,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
     private final ActorSystemManager actorSystemManager;
     private final UniqueValuesService uniqueValuesService;
 
+    private final CassandraConfig cassandraConfig;
 
     private LoadingCache<ApplicationScope, EntityCollectionManager> ecmCache =
         CacheBuilder.newBuilder().maximumSize( 1000 )
@@ -87,6 +82,7 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                         public EntityCollectionManager load( ApplicationScope scope ) {
                             //create the target EM that will perform logic
                             final EntityCollectionManager target = new EntityCollectionManagerImpl(
+
                                 writeStart,
                                 writeVerifyUnique,
                                 writeOptimisticVerify,
@@ -96,15 +92,18 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
                                 markCommit,
                                 uniqueCleanup,
                                 versionCompact,
+
                                 entitySerializationStrategy,
                                 uniqueValueSerializationStrategy,
                                 mvccLogEntrySerializationStrategy,
+
                                 keyspace,
                                 metricsFactory,
                                 serializationFig,
                                 rxTaskScheduler,
                                 actorSystemManager,
                                 uniqueValuesService,
+                                cassandraConfig,
                                 scope );
 
                             return target;
@@ -114,44 +113,46 @@ public class EntityCollectionManagerFactoryImpl implements EntityCollectionManag
 
     @Inject
     public EntityCollectionManagerFactoryImpl(
-            final WriteStart writeStart,
-            final WriteUniqueVerify writeVerifyUnique,
+            final WriteStart            writeStart,
+            final WriteUniqueVerify     writeVerifyUnique,
             final WriteOptimisticVerify writeOptimisticVerify,
-            final WriteCommit writeCommit,
-            final RollbackAction rollback,
-            final MarkStart markStart,
-            final MarkCommit markCommit,
-            final UniqueCleanup uniqueCleanup,
-            final VersionCompact versionCompact,
-            final SerializationFig serializationFig,
-            final MvccEntitySerializationStrategy entitySerializationStrategy,
-            final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
+            final WriteCommit           writeCommit,
+            final RollbackAction        rollback,
+            final MarkStart             markStart,
+            final MarkCommit            markCommit,
+            final UniqueCleanup         uniqueCleanup,
+            final VersionCompact        versionCompact,
+            final SerializationFig      serializationFig,
+            final MvccEntitySerializationStrategy   entitySerializationStrategy,
+            final UniqueValueSerializationStrategy  uniqueValueSerializationStrategy,
             final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
-            final Keyspace keyspace,
-            final EntityCacheFig entityCacheFig,
-            final MetricsFactory metricsFactory, @CollectionExecutorScheduler
-            final RxTaskScheduler rxTaskScheduler,
-            final ActorSystemManager actorSystemManager,
-            final UniqueValuesService uniqueValuesService ) {
+            final Keyspace              keyspace,
+            final MetricsFactory        metricsFactory,
+            @CollectionExecutorScheduler
+            final RxTaskScheduler       rxTaskScheduler,
+            final ActorSystemManager    actorSystemManager,
+            final UniqueValuesService   uniqueValuesService,
+            final CassandraConfig       cassandraConfig ) {
 
-        this.writeStart = writeStart;
-        this.writeVerifyUnique = writeVerifyUnique;
-        this.writeOptimisticVerify = writeOptimisticVerify;
-        this.writeCommit = writeCommit;
-        this.rollback = rollback;
-        this.markStart = markStart;
-        this.markCommit = markCommit;
-        this.uniqueCleanup = uniqueCleanup;
-        this.versionCompact = versionCompact;
-        this.serializationFig = serializationFig;
-        this.entitySerializationStrategy = entitySerializationStrategy;
-        this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
+        this.writeStart =               writeStart;
+        this.writeVerifyUnique =        writeVerifyUnique;
+        this.writeOptimisticVerify =    writeOptimisticVerify;
+        this.writeCommit =              writeCommit;
+        this.rollback =                 rollback;
+        this.markStart =                markStart;
+        this.markCommit =               markCommit;
+        this.uniqueCleanup =            uniqueCleanup;
+        this.versionCompact =           versionCompact;
+        this.serializationFig =         serializationFig;
+        this.entitySerializationStrategy =       entitySerializationStrategy;
+        this.uniqueValueSerializationStrategy =  uniqueValueSerializationStrategy;
         this.mvccLogEntrySerializationStrategy = mvccLogEntrySerializationStrategy;
-        this.keyspace = keyspace;
-        this.metricsFactory = metricsFactory;
-        this.rxTaskScheduler = rxTaskScheduler;
-        this.actorSystemManager = actorSystemManager;
-        this.uniqueValuesService = uniqueValuesService;
+        this.keyspace =                 keyspace;
+        this.metricsFactory =           metricsFactory;
+        this.rxTaskScheduler =          rxTaskScheduler;
+        this.actorSystemManager =       actorSystemManager;
+        this.uniqueValuesService =      uniqueValuesService;
+        this.cassandraConfig =          cassandraConfig;
     }
 
     @Override
