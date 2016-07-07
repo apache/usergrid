@@ -20,61 +20,53 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.index.impl.IndexProducer;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import com.google.inject.Inject;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.corepersistence.TestIndexModule;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueActor;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.CandidateResults;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.SearchEdge;
-import org.apache.usergrid.persistence.index.SearchTypes;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.impl.EsRunner;
-import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.index.impl.IndexOperation;
+import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-
-import com.google.inject.Inject;
-
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import rx.Observable;
 import rx.schedulers.Schedulers;
+
+import java.util.*;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createCollectionEdge;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getApplicationScope;
 import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 
 @RunWith( EsRunner.class )
 @UseModules( { TestIndexModule.class } )
+@NotThreadSafe//anything that changes the system version state is not safe to be run concurrently
 public class IndexServiceTest {
 
     @Inject
     public IndexService indexService;
-
 
     @Inject
     public GraphManagerFactory graphManagerFactory;
@@ -98,12 +90,39 @@ public class IndexServiceTest {
 
     public ApplicationScope applicationScope;
 
+    @Inject
+    ActorSystemManager actorSystemManager;
+
+    @Inject
+    UniqueValuesService uniqueValuesService;
+
+
+    private static Map<Integer, Boolean> startedAkka = new HashMap<>();
+
+
+    protected synchronized void initAkka(
+        int port, ActorSystemManager actorSystemManager, UniqueValuesService uniqueValuesService ) {
+
+        if ( startedAkka.get(port) == null ) {
+
+            actorSystemManager.registerRouterProducer( uniqueValuesService );
+            actorSystemManager.registerMessageType( UniqueValueActor.Request.class, "/user/uvProxy" );
+            actorSystemManager.registerMessageType( UniqueValueActor.Reservation.class, "/user/uvProxy" );
+            actorSystemManager.registerMessageType( UniqueValueActor.Cancellation.class, "/user/uvProxy" );
+            actorSystemManager.registerMessageType( UniqueValueActor.Confirmation.class, "/user/uvProxy" );
+            actorSystemManager.start( "localhost", port, "us-east" );
+            actorSystemManager.waitForClientActor();
+
+            startedAkka.put( port, true );
+        }
+    }
+
 
     @Before
     public void setup() {
         applicationScope = getApplicationScope( UUIDGenerator.newTimeUUID() );
-
         graphManager = graphManagerFactory.createEdgeManager( applicationScope );
+        initAkka( 2555, actorSystemManager, uniqueValuesService );
     }
 
 
@@ -139,7 +158,6 @@ public class IndexServiceTest {
 //    @Test( timeout = 60000 )
     @Test( )
     public void testSingleCollectionConnection() throws InterruptedException {
-
 
         ApplicationScope applicationScope =
             new ApplicationScopeImpl( new SimpleId( UUID.randomUUID(), "application" ) );

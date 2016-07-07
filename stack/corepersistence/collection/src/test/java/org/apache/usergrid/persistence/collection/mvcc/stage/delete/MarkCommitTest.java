@@ -120,7 +120,8 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
                 .thenReturn( entityMutation );
 
 
-        new MarkCommit( logStrategy, mvccEntityStrategy, uniqueValueSerializationStrategy, serializationFig, keyspace ).call( event );
+        new MarkCommit( logStrategy, mvccEntityStrategy, uniqueValueSerializationStrategy, serializationFig,
+            null, null, null, keyspace ).call( event );
 
         //TODO: This doesn't assert anything, this needs fixed (should be a fail technically)
     }
