@@ -72,6 +72,11 @@ public class ReservationCache {
         cache.invalidate( cancellation.getConsistentHashKey() );
     }
 
+    public void cancelReservation( UniqueValueActor.Response response ) {
+        if ( ttl == 0 ) { return; }
+        cache.invalidate( response.getConsistentHashKey() );
+    }
+
     public CacheStats getStats() {
         return cache.stats();
     }

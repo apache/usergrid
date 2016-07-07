@@ -19,24 +19,24 @@
 package org.apache.usergrid.persistence.collection.uniquevalues;
 
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 
+import java.util.Iterator;
 import java.util.UUID;
 
 
 public interface UniqueValuesTable {
 
-    Id lookupOwner(
-        ApplicationScope applicationScope, String type, Field field ) throws ConnectionException;
+    Id lookupOwner( ApplicationScope scope, String type, Field field ) throws ConnectionException;
 
-    void reserve(
-        ApplicationScope applicationScope, Id owner, UUID version, Field field ) throws ConnectionException;
+    void reserve( ApplicationScope scope, Id owner, UUID version, Field field ) throws ConnectionException;
 
-    void confirm(
-        ApplicationScope applicationScope, Id owner, UUID version, Field field ) throws ConnectionException;
+    void confirm( ApplicationScope scope, Id owner, UUID version, Field field ) throws ConnectionException;
 
-    void cancel(
-        ApplicationScope applicationScope, Id owner, UUID version, Field field ) throws ConnectionException;
+    void cancel( ApplicationScope scope, Id owner, UUID version, Field field ) throws ConnectionException;
+
+    Iterator<UniqueValue> getUniqueValues(ApplicationScope scope, Id entityId );
 }

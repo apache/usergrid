@@ -20,8 +20,11 @@ package org.apache.usergrid.persistence.collection.uniquevalues;
 
 
 import org.apache.usergrid.persistence.actorsystem.RouterProducer;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.field.Field;
 
 import java.util.UUID;
 
@@ -54,5 +57,17 @@ public interface UniqueValuesService extends RouterProducer {
      * @throws UniqueValueException if unique values cannot be reserved.
      */
     void confirmUniqueValues( ApplicationScope scope, Entity entity, UUID version , String region )
+        throws UniqueValueException;
+
+    /**
+     * Release unique values held by an entity.
+     *
+     * @param scope Application scope of entity.
+     * @param entityId Id of Entity with unique values to be released
+     * @param version Version of entity.
+     * @param region Authoritative Region to be used for this entity or null to use current region.
+     * @throws UniqueValueException if unique values cannot be reserved.
+     */
+    void releaseUniqueValues( ApplicationScope scope, Id entityId, UUID version, String region )
         throws UniqueValueException;
 }

@@ -2863,7 +2863,7 @@ public class CpEntityManager implements EntityManager {
             throws DuplicateUniquePropertyExistsException {
 
         // we may have multiple conflicts, but caller expects only one
-        Map<String, Field> violiations = wuve.getVioliations();
+        Map<String, Field> violiations = wuve.getViolations();
 
         if ( violiations != null ) {
             Field conflict = violiations.get( violiations.keySet().iterator().next() );

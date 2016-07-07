@@ -16,10 +16,7 @@
  */
 package org.apache.usergrid.persistence.collection.uniquevalues;
 
-import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
-import akka.cluster.pubsub.DistributedPubSub;
-import akka.cluster.pubsub.DistributedPubSubMediator;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -51,8 +48,6 @@ public class UniqueValueActor extends UntypedActor {
         // TODO: is there a way to avoid this ugly kludge? see also: ClusterSingletonRouter
         this.table = UniqueValuesServiceImpl.injector.getInstance( UniqueValuesTable.class );
         this.actorSystemManager = UniqueValuesServiceImpl.injector.getInstance( ActorSystemManager.class );
-
-        //logger.info("UniqueValueActor {} is live with table {}", name, table);
     }
 
     @Override
@@ -77,24 +72,27 @@ public class UniqueValueActor extends UntypedActor {
 
                 if ( owner != null && owner.equals( res.getOwner() )) {
                     // sender already owns this unique value
-                    getSender().tell( new Response( Response.Status.IS_UNIQUE ), getSender() );
+                    getSender().tell( new Response( Response.Status.IS_UNIQUE, res.getConsistentHashKey() ),
+                        getSender() );
                     return;
 
                 } else if ( owner != null && !owner.equals( res.getOwner() )) {
                     // tell sender value is not unique
-                    getSender().tell( new Response( Response.Status.NOT_UNIQUE ), getSender() );
+                    getSender().tell( new Response( Response.Status.NOT_UNIQUE, res.getConsistentHashKey() ),
+                        getSender() );
                     return;
                 }
 
                 table.reserve( res.getApplicationScope(), res.getOwner(), res.getOwnerVersion(), res.getField() );
 
-                getSender().tell( new Response( Response.Status.IS_UNIQUE ), getSender() );
+                getSender().tell( new Response( Response.Status.IS_UNIQUE, res.getConsistentHashKey() ),
+                    getSender() );
 
                 actorSystemManager.publishToAllRegions( "content", new Reservation( res ), getSelf() );
 
             } catch (Throwable t) {
 
-                getSender().tell( new Response( Response.Status.ERROR ), getSender() );
+                getSender().tell( new Response( Response.Status.ERROR, res.getConsistentHashKey() ), getSender() );
                 logger.error( "Error processing request", t );
 
 
@@ -112,23 +110,29 @@ public class UniqueValueActor extends UntypedActor {
 
                 if ( owner != null && !owner.equals( con.getOwner() )) {
                     // cannot reserve, somebody else owns the unique value
-                    getSender().tell( new Response( Response.Status.NOT_UNIQUE ), getSender() );
+                    Response response  = new Response( Response.Status.NOT_UNIQUE, con.getConsistentHashKey());
+                    getSender().tell( response, getSender() );
+                    actorSystemManager.publishToAllRegions( "content", response, getSelf() );
                     return;
 
                 } else if ( owner == null ) {
                     // cannot commit without first reserving
-                    getSender().tell( new Response( Response.Status.BAD_REQUEST ), getSender() );
+                    Response response  = new Response( Response.Status.BAD_REQUEST, con.getConsistentHashKey());
+                    getSender().tell( response, getSender() );
+                    actorSystemManager.publishToAllRegions( "content", response, getSelf() );
                     return;
                 }
 
                 table.confirm( con.getApplicationScope(), con.getOwner(), con.getOwnerVersion(), con.getField() );
 
-                getSender().tell( new Response( Response.Status.IS_UNIQUE ), getSender() );
+                Response response = new Response( Response.Status.IS_UNIQUE, con.getConsistentHashKey() );
+                getSender().tell( response, getSender() );
 
-                actorSystemManager.publishToAllRegions( "content", new Reservation( con ), getSelf() );
+                actorSystemManager.publishToAllRegions( "content", response, getSelf() );
 
             } catch (Throwable t) {
-                getSender().tell( new Response( Response.Status.ERROR ), getSender() );
+                getSender().tell( new Response( Response.Status.ERROR, con.getConsistentHashKey() ),
+                    getSender() );
                 logger.error( "Error processing request", t );
 
             } finally {
@@ -144,23 +148,34 @@ public class UniqueValueActor extends UntypedActor {
 
                 if ( owner != null && !owner.equals( can.getOwner() )) {
                     // cannot cancel, somebody else owns the unique value
-                    getSender().tell( new Response( Response.Status.NOT_UNIQUE ), getSender() );
+                    getSender().tell( new Response( Response.Status.NOT_UNIQUE, can.getConsistentHashKey() ),
+                        getSender() );
                     return;
 
                 } else if ( owner == null ) {
+
                     // cannot cancel unique value that does not exist
-                    getSender().tell( new Response( Response.Status.BAD_REQUEST ), getSender() );
+                    getSender().tell( new Response( Response.Status.BAD_REQUEST, can.getConsistentHashKey() ),
+                        getSender() );
+
+                    // unique value record may have already been cleaned up, also clear cache
+                    actorSystemManager.publishToAllRegions( "content", new Cancellation( can ), getSelf() );
+
                     return;
                 }
 
-                table.confirm( can.getApplicationScope(), can.getOwner(), can.getOwnerVersion(), can.getField() );
+                table.cancel( can.getApplicationScope(), can.getOwner(), can.getOwnerVersion(), can.getField() );
 
-                getSender().tell( new Response( Response.Status.SUCCESS ), getSender() );
+                logger.debug("Removing {} from unique values table", can.getConsistentHashKey());
 
-                actorSystemManager.publishToAllRegions( "content", new Reservation( can ), getSelf() );
+                getSender().tell( new Response( Response.Status.SUCCESS, can.getConsistentHashKey() ),
+                    getSender() );
+
+                actorSystemManager.publishToAllRegions( "content", new Cancellation( can ), getSelf() );
 
             } catch (Throwable t) {
-                getSender().tell( new Response( Response.Status.ERROR ), getSender() );
+                getSender().tell( new Response( Response.Status.ERROR, can.getConsistentHashKey() ),
+                    getSender() );
                 logger.error( "Error processing request", t );
             }
 
@@ -188,7 +203,7 @@ public class UniqueValueActor extends UntypedActor {
             this.field = field;
 
             StringBuilder sb = new StringBuilder();
-            sb.append( applicationScope.getApplication() );
+            sb.append( applicationScope.getApplication().getUuid() );
             sb.append(":");
             sb.append( owner.getType() );
             sb.append(":");
@@ -198,22 +213,7 @@ public class UniqueValueActor extends UntypedActor {
             this.consistentHashKey = sb.toString();
         }
         public Request( Request req ) {
-
-            this.applicationScope = req.applicationScope;
-            this.owner = req.owner;
-            this.ownerVersion = req.ownerVersion;
-            this.field = req.field;
-
-            StringBuilder sb = new StringBuilder();
-            sb.append( req.applicationScope.getApplication() );
-            sb.append(":");
-            sb.append( req.owner.getType() );
-            sb.append(":");
-            sb.append( req.field.getName() );
-            sb.append(":");
-            sb.append( req.field.getValue().toString() );
-            this.consistentHashKey = sb.toString();
-
+            this( req.getApplicationScope(), req.getOwner(), req.getOwnerVersion(), req.getField() );
         }
         public ApplicationScope getApplicationScope() {
             return applicationScope;
@@ -238,12 +238,17 @@ public class UniqueValueActor extends UntypedActor {
     public static class Response implements Serializable {
         public enum Status { IS_UNIQUE, NOT_UNIQUE, SUCCESS, ERROR, BAD_REQUEST }
         final Status status;
+        final String consistentHashKey;
 
-        public Response(Status status) {
+        public Response(Status status, String consistentHashKey ) {
             this.status = status;
+            this.consistentHashKey = consistentHashKey;
         }
         public Status getStatus() {
             return status;
+        }
+        public String getConsistentHashKey() {
+            return consistentHashKey;
         }
     }
 

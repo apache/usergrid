@@ -282,11 +282,12 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
             String region = currentRegion;
 
             List<String> seeds = getSeedsByRegion().get( region );
-            int lastColon = seeds.get(0).lastIndexOf(":") + 1;
-            final Integer regionPort = Integer.parseInt( seeds.get(0).substring( lastColon ));
 
             logger.info( "Akka Config for region {} is:\n" + "   Hostname {}\n" + "   Seeds {}\n",
                 region, hostname, seeds );
+
+            int lastColon = seeds.get(0).lastIndexOf(":") + 1;
+            final Integer regionPort = Integer.parseInt( seeds.get(0).substring( lastColon ));
 
             Map<String, Object> configMap = new HashMap<String, Object>() {{
 

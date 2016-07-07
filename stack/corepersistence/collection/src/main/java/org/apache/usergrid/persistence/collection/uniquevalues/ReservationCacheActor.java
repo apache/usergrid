@@ -54,12 +54,19 @@ public class ReservationCacheActor extends UntypedActor {
             }
 
         } else if ( msg instanceof UniqueValueActor.Cancellation ) {
-            UniqueValueActor.Cancellation can = (UniqueValueActor.Cancellation)msg;
+            UniqueValueActor.Cancellation can = (UniqueValueActor.Cancellation) msg;
             ReservationCache.getInstance().cancelReservation( can );
 
-            if ( ++cancellationCount % 10 == 0 ) {
-                logger.info("Received {} cancellations", cancellationCount);
+            if (++cancellationCount % 10 == 0) {
+                logger.info( "Received {} cancellations", cancellationCount );
             }
+            logger.debug("Removing cancelled {} from reservation cache", can.getConsistentHashKey());
+
+        } else if ( msg instanceof UniqueValueActor.Response ) {
+            UniqueValueActor.Response response = (UniqueValueActor.Response) msg;
+            ReservationCache.getInstance().cancelReservation( response );
+
+            logger.info("Removing completed {} from reservation cache", response.getConsistentHashKey());
 
         } else if (msg instanceof DistributedPubSubMediator.SubscribeAck) {
             logger.debug( "subscribing" );

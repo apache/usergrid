@@ -33,7 +33,9 @@ import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.UUID;
 
 
@@ -83,4 +85,10 @@ public class UniqueValuesTableImpl implements UniqueValuesTable {
         final MutationBatch write = strat.delete( scope, uv );
         write.execute();
     }
+
+    @Override
+    public Iterator<UniqueValue> getUniqueValues(ApplicationScope scope, Id entityId) {
+        return strat.getAllUniqueFields( scope, entityId );
+    }
+
 }
