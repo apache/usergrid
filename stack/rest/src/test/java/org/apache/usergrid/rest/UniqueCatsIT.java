@@ -49,7 +49,7 @@ import static com.codahale.metrics.MetricRegistry.name;
 
 
 /**
- * Tests that Catgrid will not allow creation of entities with duplicate names.
+ * Tests that Usergrid will not allow creation of entities with duplicate names.
  *
  * Intended for use against a production-like cluster, not run during normal JUnit testing.
  *

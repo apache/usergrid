@@ -49,6 +49,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 
 import java.util.ArrayList;
@@ -63,6 +65,7 @@ import static org.junit.Assert.*;
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
 public class EntityCollectionManagerIT extends AbstractUniqueValueTest {
+    private static final Logger logger = LoggerFactory.getLogger( EntityCollectionManagerIT.class );
 
     @Inject
     private EntityCollectionManagerFactory factory;
@@ -137,7 +140,7 @@ public class EntityCollectionManagerIT extends AbstractUniqueValueTest {
             }
             catch ( Exception ex ) {
                 WriteUniqueVerifyException e = ( WriteUniqueVerifyException ) ex;
-                assertEquals( 1, e.getVioliations().size() );
+                assertEquals( 1, e.getViolations().size() );
             }
         }
     }
@@ -319,44 +322,46 @@ public class EntityCollectionManagerIT extends AbstractUniqueValueTest {
     @Test
     public void writeAndGetField2X() throws InterruptedException {
 
-        ApplicationScope collectionScope1 = new ApplicationScopeImpl( new SimpleId( "organization" ) );
+        // create entity with unique testField
 
+        ApplicationScope collectionScope1 = new ApplicationScopeImpl( new SimpleId( "organization" ) );
         final Id entityId = new SimpleId( "test" );
         Entity firstInstance = new Entity( entityId  );
         Field firstField = new StringField( "testField", "unique", true );
         firstInstance.setField( firstField );
 
         EntityCollectionManager manager = factory.createCollectionManager( collectionScope1 );
-
         Observable<Entity> observable = manager.write( firstInstance, null );
-
         Entity createReturned = observable.toBlocking().lastOrDefault( null );
-
 
         assertNotNull( "Id was assigned", createReturned.getId() );
         assertNotNull( "Version was assigned", createReturned.getVersion() );
+
+        // get entity via that unique field, should get correct entity
 
         final Id existingId = manager.getIdField( firstInstance.getId().getType(), firstField )
             .toBlocking().lastOrDefault( null );
         assertNotNull( existingId );
         assertEquals( firstInstance.getId(), existingId );
 
+        // get entity via bogus unique field that does not exist, should get null
+
         Field fieldNull = new StringField( "testFieldNotThere", "uniquely", true );
         final Id noId = manager.getIdField( firstInstance.getId().getType(), fieldNull )
             .toBlocking().lastOrDefault( null );
         assertNull( noId );
 
+        // ensure we clean up
 
-        //ensure we clean up
+        // set a different unique field to the entity we created above
+        // this should effectively remove the original unique testField that we created above
 
         Entity secondInstance = new Entity( entityId  );
         Field secondField = new StringField( firstField.getName(), "unique2", true );
         secondInstance.setField( secondField );
 
         Observable<Entity> observableSecond = manager.write( secondInstance, null );
-
         Entity createReturnedSecond = observableSecond.toBlocking().lastOrDefault( null );
-
 
         assertNotNull( "Id was assigned", createReturnedSecond.getId() );
         assertNotNull( "Version was assigned", createReturnedSecond.getVersion() );
@@ -364,21 +369,31 @@ public class EntityCollectionManagerIT extends AbstractUniqueValueTest {
         assertNotEquals( "Versions should not be equal",
             createReturned.getVersion(), createReturnedSecond.getVersion() );
 
-        //sanity check, get the entity to ensure it's the right version
+        // sanity check, get the entity to ensure it's the right version
 
         final Entity loadedVersion = manager.load( entityId ).toBlocking().last();
 
         assertEquals(entityId, loadedVersion.getId());
         assertEquals(createReturnedSecond.getVersion(), loadedVersion.getVersion());
 
-        //give clean time to run.  need to finish the todo below
-        Thread.sleep( 2000 );
+        // give clean time to run.  need to finish the todo below
 
-        //TODO, we need to implement verify and repair on this
-        final Id idFirst = manager.getIdField( firstInstance.getId().getType(), firstField )
-            .toBlocking().lastOrDefault( null );
+        Id idFirst = null;
+        int retries = 0;
+        while ( retries++ < 20 ) {
+
+            //TODO, we need to implement verify and repair on this
+
+            idFirst = manager.getIdField( firstInstance.getId().getType(), firstField )
+                .toBlocking().lastOrDefault( null );
+            if ( idFirst == null ) {
+                break;
+            }
+
+            logger.error("Clean no run yet, waiting ({})", retries);
+            Thread.sleep( 2000 );
+        }
         assertNull(idFirst);
-
 
         final Id idSecond = manager.getIdField( secondInstance.getId().getType(), secondField )
             .toBlocking().lastOrDefault( null );

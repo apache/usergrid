@@ -123,7 +123,7 @@ public class WriteUniqueVerifyIT extends AbstractUniqueValueTest {
 
         } catch ( Exception ex ) {
             WriteUniqueVerifyException e = (WriteUniqueVerifyException)ex;
-            assertTrue( !e.getVioliations().isEmpty() );
+            assertTrue( !e.getViolations().isEmpty() );
         }
 
         // ensure we can update original entity without error

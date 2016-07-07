@@ -77,7 +77,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         ApiResponse appCreateAgainResponse = null;
 
         int retries = 0;
-        while ( retries++ < 100 ) {
+        while ( retries++ < 30 ) {
             try {
                 appCreateAgainResponse = clientSetup.getRestClient()
                     .management().orgs().org( orgName ).app().getTarget()
