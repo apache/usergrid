@@ -138,7 +138,14 @@ public class UsersResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "create user" );
 
-        UserInfo user = management.createAdminUser( null, username, name, email, password, false, false );
+
+        UserInfo user = null;
+        if ( tokens.isExternalSSOProviderEnabled() ){
+            user = management.createAdminUser(null,username,name,email,password,true,false);
+        }
+        else {
+            user = management.createAdminUser(null, username, name, email, password, false, false);
+        }
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         if ( user != null ) {
             result.put( "user", user );

@@ -20,6 +20,7 @@ package org.apache.usergrid.rest.management.users;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
+import org.apache.shiro.SecurityUtils;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.rest.AbstractContextResource;
@@ -27,6 +28,7 @@ import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.management.users.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.security.annotations.RequireAdminUserAccess;
+import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
 import org.apache.usergrid.services.ServiceResults;
@@ -72,6 +74,8 @@ public class UserResource extends AbstractContextResource {
 
     public UserResource init( UserInfo user ) {
         this.user = user;
+        PrincipalIdentifier userPrincipal  = (PrincipalIdentifier) SecurityUtils.getSubject().getPrincipal();
+        this.token = userPrincipal.getAccessTokenCredentials().getToken();
         return this;
     }
 

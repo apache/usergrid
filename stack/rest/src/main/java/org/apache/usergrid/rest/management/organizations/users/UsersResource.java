@@ -129,11 +129,16 @@ public class UsersResource extends AbstractContextResource {
         }
 
         if ( user == null ) {
-            user = management.createAdminUser( organization.getUuid(), username, name, email, password, false, false );
 
-            // A null may be returned if the user fails validation check
-            if ( user != null ) {
-                management.startAdminUserPasswordResetFlow( organization.getUuid(), user );
+            if ( tokens.isExternalSSOProviderEnabled() ){
+             user = management.createAdminUser(organization.getUuid(),username,name,email,password,true,false);
+            }
+            else {
+                user = management.createAdminUser(organization.getUuid(), username, name, email, password, false, false);
+                // A null may be returned if the user fails validation check
+                if (user != null) {
+                    management.startAdminUserPasswordResetFlow(organization.getUuid(), user);
+                }
             }
         }
 
