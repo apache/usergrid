@@ -118,6 +118,7 @@
         <slf4j-version>1.7.2</slf4j-version>
         <snakeyaml-version>1.9</snakeyaml-version>
         <tomcat-version>8.5.3</tomcat-version>
+        <tomcat-logging-version>8.5.2</tomcat-logging-version>
         <antlr.version>3.4</antlr.version>
         <tika.version>1.4</tika.version>
         <mockito.version>1.10.8</mockito.version>
@@ -908,7 +909,7 @@
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-logging-juli</artifactId>
-                <version>${tomcat-version}</version>
+                <version>${tomcat-logging-version}</version>
             </dependency>
 
             <dependency>
