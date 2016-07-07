@@ -24,10 +24,16 @@ import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 
 
 @RunWith( ITRunner.class )
@@ -38,20 +44,31 @@ public class ActorServiceServiceTest {
     @Inject
     ActorSystemFig actorSystemFig;
 
+    @Inject
+    ActorSystemManager actorSystemManager;
+
+
     private static AtomicBoolean startedAkka = new AtomicBoolean( false );
-
-
-    @Before
-    public void initAkka() {
-        if ( !startedAkka.getAndSet( true ) ) {
-        }
-    }
 
 
     @Test
     public void testBasicOperation() throws Exception {
-        initAkka();
-    }
 
+        RouterProducer routerProducer = Mockito.mock( RouterProducer.class );
+        actorSystemManager.registerRouterProducer( routerProducer );
+
+        actorSystemManager.registerMessageType( String.class, "/users/path" );
+        actorSystemManager.registerMessageType( Integer.class, "/users/path" );
+        actorSystemManager.registerMessageType( Long.class, "/users/path" );
+
+        actorSystemManager.start( "localhost", 2770, "us-east" );
+        actorSystemManager.waitForClientActor();
+
+        verify( routerProducer ).createClusterSingletonManager( any() );
+        verify( routerProducer ).createClusterSingletonProxy( any(), eq("io") );
+        verify( routerProducer ).createLocalSystemActors( any() );
+        verify( routerProducer ).addConfiguration( any() );
+
+    }
 
 }
