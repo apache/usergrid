@@ -22,6 +22,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.inject.Inject;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.collection.AbstractUniqueValueTest;
@@ -51,6 +52,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static junit.framework.TestCase.fail;
 
 
 /**
@@ -86,7 +89,7 @@ public class UniqueValuesServiceDeleteTest extends AbstractUniqueValueTest {
     @Before
     public void initAkka() {
         // each test class needs unique port number
-        initAkka( 2555, actorSystemManager, uniqueValuesService );
+        initAkka( 2559, actorSystemManager, uniqueValuesService );
     }
 
 
@@ -94,92 +97,53 @@ public class UniqueValuesServiceDeleteTest extends AbstractUniqueValueTest {
      * Use multiple threads to attempt to create entities with duplicate usernames.
      */
     @Test
-    public void testDuplicatePrevention() throws Exception {
+    public void testUniqueValueCleanup() throws Exception {
 
         initAkka();
-
-        final AtomicInteger successCounter = new AtomicInteger( 0 );
-        final AtomicInteger errorCounter = new AtomicInteger( 0 );
-
-        Multimap<String, Entity> usersCreated =
-            generateDuplicateUsers( numUsers, successCounter, errorCounter );
-
-        int userCount = 0;
-        int usernamesWithDuplicates = 0;
-        for ( String username : usersCreated.keySet() ) {
-            Collection<Entity> users = usersCreated.get( username );
-            if ( users.size() > 1 ) {
-                usernamesWithDuplicates++;
-            }
-            userCount++;
-        }
-
-        Assert.assertEquals( 0, usernamesWithDuplicates );
-
-        Assert.assertEquals( numUsers, successCounter.get() );
-        Assert.assertEquals( 0, errorCounter.get() );
-        Assert.assertEquals( numUsers, usersCreated.size() );
-        Assert.assertEquals( numUsers, userCount );
-    }
-
-
-    private Multimap<String, Entity> generateDuplicateUsers(
-        int numUsers, AtomicInteger successCounter, AtomicInteger errorCounter ) {
 
         ApplicationScope context = new ApplicationScopeImpl( new SimpleId( "organization" ) );
 
         EntityCollectionManager manager = factory.createCollectionManager( context );
 
-        Multimap<String, Entity> usersCreated =
-                Multimaps.synchronizedListMultimap( ArrayListMultimap.create() );
+        String username = RandomStringUtils.randomAlphanumeric( 20 );
 
-        ExecutorService execService = Executors.newFixedThreadPool( poolSize );
-
-        for (int i = 0; i < numUsers; i++) {
-
-            // multiple threads simultaneously trying to create a user with the same propertyName
-            for (int j = 0; j < numThreads; j++) {
-                String username = "user_" + i;
-
-                execService.submit( () -> {
-
-                    try {
-
-                        // give entity two unqiue fields username and email
-                        Entity newEntity = new Entity( new SimpleId( "user" ) );
-                        newEntity.setField( new StringField( "username", username, true ) );
-                        newEntity.setField( new StringField( "email", username + "@example.org", true ) );
-
-                        Observable<Entity> observable = manager.write( newEntity, null );
-                        Entity returned = observable.toBlocking().lastOrDefault( null );
-
-                        usersCreated.put( username, newEntity );
-                        successCounter.incrementAndGet();
-
-                        logger.debug("Created user {}", username);
-
-                    } catch ( Throwable t ) {
-                        if ( t instanceof WriteUniqueVerifyException) {
-                            // we expect lots of these
-                        } else {
-                            errorCounter.incrementAndGet();
-                            logger.error( "Error creating user " + username, t );
-                        }
-                    }
-
-                } );
-            }
-        }
-        execService.shutdown();
-
-        try {
-            while (!execService.awaitTermination( 60, TimeUnit.SECONDS )) {
-                System.out.println( "Waiting..." );
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        // create user
+        Entity originalUser = null;
+        {
+            Entity newEntity = new Entity( new SimpleId( "user" ) );
+            newEntity.setField( new StringField( "username", username, true ) );
+            newEntity.setField( new StringField( "email", username + "@example.org", true ) );
+            Observable<Entity> observable = manager.write( newEntity, null );
+            originalUser = observable.toBlocking().lastOrDefault( null );
         }
 
-        return usersCreated;
+        // cannot create another user with same name
+        {
+            Entity newEntity = new Entity( new SimpleId( "user" ) );
+            newEntity.setField( new StringField( "username", username, true ) );
+            newEntity.setField( new StringField( "email", username + "@example.org", true ) );
+            try {
+                Observable<Entity> observable = manager.write( newEntity, null );
+                Entity returned = observable.toBlocking().lastOrDefault( null );
+                fail("Should not have created dupliate user");
+            } catch ( WriteUniqueVerifyException expected ) {}
+        }
+
+        // delete user
+        manager.mark( originalUser.getId(), null ).toBlocking().firstOrDefault( null );
+
+        // now we can create another user with same name
+        {
+            Entity newEntity = new Entity( new SimpleId( "user" ) );
+            newEntity.setField( new StringField( "username", username, true ) );
+            newEntity.setField( new StringField( "email", username + "@example.org", true ) );
+            try {
+                Observable<Entity> observable = manager.write( newEntity, null );
+                Entity returned = observable.toBlocking().lastOrDefault( null );
+            } catch ( WriteUniqueVerifyException unexpected ) {
+                logger.error("Error creating user", unexpected);
+                fail("Still cannot create new user after delete");
+            }
+        }
     }
 }
