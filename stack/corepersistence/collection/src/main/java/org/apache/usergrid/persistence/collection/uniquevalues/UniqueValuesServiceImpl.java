@@ -35,8 +35,10 @@ import com.google.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +46,7 @@ import scala.concurrent.Await;
 import scala.concurrent.Future;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -109,13 +112,12 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
                     try {
                         cancelUniqueField( scope, entity, version, field, region );
                     } catch (Throwable ignored) {
-                        logger.debug( "Error canceling unique field", ignored );
+                        logger.error( "Error canceling unique field", ignored );
                     }
                 }
             }
             throw e;
         }
-
     }
 
 
@@ -149,6 +151,21 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     }
 
 
+    @Override
+    public void releaseUniqueValues(ApplicationScope scope, Id entityId, UUID version, String region)
+        throws UniqueValueException {
+
+        ready();
+
+        Iterator<UniqueValue> iterator = table.getUniqueValues( scope, entityId );
+
+        while ( iterator.hasNext() ) {
+            UniqueValue uniqueValue = iterator.next();
+            cancelUniqueField( scope, entityId, uniqueValue.getEntityVersion(), uniqueValue.getField(), region );
+        }
+    }
+
+
     private void reserveUniqueField(
         ApplicationScope scope, Entity entity, UUID version, Field field, String region ) throws UniqueValueException {
 
@@ -177,11 +194,18 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     }
 
 
-    private void cancelUniqueField(
-        ApplicationScope scope, Entity entity, UUID version, Field field, String region ) throws UniqueValueException {
+    private void cancelUniqueField( ApplicationScope scope,
+        Entity entity, UUID version, Field field, String region ) throws UniqueValueException {
+
+        cancelUniqueField( scope, entity.getId(), version, field, region );
+    }
+
+
+    private void cancelUniqueField( ApplicationScope scope,
+        Id entityId, UUID version, Field field, String region ) throws UniqueValueException {
 
         UniqueValueActor.Cancellation request = new UniqueValueActor.Cancellation(
-            scope, entity.getId(), version, field );
+            scope, entityId, version, field );
 
         if ( actorSystemManager.getCurrentRegion().equals( region ) ) {
 
