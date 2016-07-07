@@ -126,23 +126,25 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
             throw new RuntimeException( "Unable to mark entry as deleted" );
         }
 
-        // actorSystemFig may be null in testing
-        if ( actorSystemFig != null && actorSystemFig.getEnabled() ) {
-
-            String region = idIoEvent.getRegion();
-            if ( region == null ) {
-                region = uniqueValuesFig.getAuthoritativeRegion();
-            }
-            if ( region == null ) {
-                region = actorSystemFig.getRegionLocal();
-            }
-
-            try {
-                uniqueValuesService.releaseUniqueValues( applicationScope, entityId, version, region );
-            } catch (UniqueValueException e) {
-                throw new RuntimeException( "Unable to release unique values for entity " + entityId );
-            }
-        }
+        // TODO: do we need this or can we rely on UniqueCleanup + Cassandra replication?
+//
+//        // actorSystemFig may be null in testing
+//        if ( actorSystemFig != null && actorSystemFig.getEnabled() ) {
+//
+//            String region = idIoEvent.getRegion();
+//            if ( region == null ) {
+//                region = uniqueValuesFig.getAuthoritativeRegion();
+//            }
+//            if ( region == null ) {
+//                region = actorSystemFig.getRegionLocal();
+//            }
+//
+//            try {
+//                uniqueValuesService.releaseUniqueValues( applicationScope, entityId, version, region );
+//            } catch (UniqueValueException e) {
+//                throw new RuntimeException( "Unable to release unique values for entity " + entityId );
+//            }
+//        }
     }
 }
 

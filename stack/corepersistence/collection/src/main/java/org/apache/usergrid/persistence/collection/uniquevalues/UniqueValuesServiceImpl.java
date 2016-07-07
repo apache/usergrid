@@ -151,19 +151,23 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     }
 
 
-    @Override
-    public void releaseUniqueValues(ApplicationScope scope, Id entityId, UUID version, String region)
-        throws UniqueValueException {
+    // TODO: do we need this or can we rely on UniqueCleanup + Cassandra replication?
 
-        ready();
-
-        Iterator<UniqueValue> iterator = table.getUniqueValues( scope, entityId );
-
-        while ( iterator.hasNext() ) {
-            UniqueValue uniqueValue = iterator.next();
-            cancelUniqueField( scope, entityId, uniqueValue.getEntityVersion(), uniqueValue.getField(), region );
-        }
-    }
+//    @Override
+//    public void releaseUniqueValues(ApplicationScope scope, Id entityId, UUID version, String region)
+//        throws UniqueValueException {
+//
+//        ready();
+//
+//        TODO: need to replicate logic from UniqueCleanup and make sure it happens in Authoritative Region
+//
+//        Iterator<UniqueValue> iterator = table.getUniqueValues( scope, entityId );
+//
+//        while ( iterator.hasNext() ) {
+//            UniqueValue uniqueValue = iterator.next();
+//            cancelUniqueField( scope, entityId, uniqueValue.getEntityVersion(), uniqueValue.getField(), region );
+//        }
+//    }
 
 
     private void reserveUniqueField(
