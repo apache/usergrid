@@ -63,7 +63,7 @@ public class UniqueCatsIT {
     private static final AtomicInteger dupCounter = new AtomicInteger( 0 );
 
     @Test
-    //@Ignore("Intended for use against  prod-like cluster")
+    @Ignore("Intended for use against  prod-like cluster")
     public void testDuplicatePrevention() throws Exception {
 
         int numThreads = 20;
@@ -83,12 +83,7 @@ public class UniqueCatsIT {
 
         final AtomicBoolean failed = new AtomicBoolean(false);
 
-        //String[] targetHosts = {"http://localhost:8080"};
-
-        String[] targetHosts = {
-            "https://ug21-west.e2e.apigee.net",
-            "https://ug21-east.e2e.apigee.net"
-        };
+        String[] targetHosts = {"http://localhost:8080"};
 
         for (int i = 0; i < numCats; i++) {
 
