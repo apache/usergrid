@@ -789,7 +789,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
 
-    private boolean isExternalSSOProviderEnabled() {
+    public boolean isExternalSSOProviderEnabled() {
         return Boolean.valueOf(properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ));
     }
 
