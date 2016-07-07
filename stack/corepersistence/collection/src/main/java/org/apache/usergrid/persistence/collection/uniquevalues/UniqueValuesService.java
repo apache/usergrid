@@ -59,15 +59,16 @@ public interface UniqueValuesService extends RouterProducer {
     void confirmUniqueValues( ApplicationScope scope, Entity entity, UUID version , String region )
         throws UniqueValueException;
 
+    // TODO: is this really necessary? MarkCommit and UniqueCleanup should do the trick
     /**
      * Release unique values held by an entity.
-     *
      * @param scope Application scope of entity.
      * @param entityId Id of Entity with unique values to be released
      * @param version Version of entity.
      * @param region Authoritative Region to be used for this entity or null to use current region.
      * @throws UniqueValueException if unique values cannot be reserved.
      */
-    void releaseUniqueValues( ApplicationScope scope, Id entityId, UUID version, String region )
-        throws UniqueValueException;
+//    void releaseUniqueValues( ApplicationScope scope, Id entityId, UUID version, String region )
+//        throws UniqueValueException;
+
 }
