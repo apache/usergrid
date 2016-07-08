@@ -49,27 +49,36 @@ public class ReservationCacheActor extends UntypedActor {
             ReservationCache.getInstance().cacheReservation( res );
 
             if ( ++reservationCount % 10 == 0 ) {
-                logger.info("Received {} reservations cache size {}",
+                if(logger.isDebugEnabled()) {
+                    logger.debug("Received {} reservations cache size {}",
                         reservationCount, ReservationCache.getInstance().getSize());
+                }
             }
 
         } else if ( msg instanceof UniqueValueActor.Cancellation ) {
             UniqueValueActor.Cancellation can = (UniqueValueActor.Cancellation) msg;
-            ReservationCache.getInstance().cancelReservation( can );
-
-            if (++cancellationCount % 10 == 0) {
-                logger.info( "Received {} cancellations", cancellationCount );
+            ReservationCache.getInstance().cancelReservation(can);
+            if (logger.isDebugEnabled()) {
+                if (++cancellationCount % 10 == 0) {
+                    logger.debug("Received {} cancellations", cancellationCount);
+                } else {
+                    logger.debug("Removing cancelled {} from reservation cache", can.getConsistentHashKey());
+                }
             }
-            logger.debug("Removing cancelled {} from reservation cache", can.getConsistentHashKey());
+
 
         } else if ( msg instanceof UniqueValueActor.Response ) {
             UniqueValueActor.Response response = (UniqueValueActor.Response) msg;
             ReservationCache.getInstance().cancelReservation( response );
 
-            logger.info("Removing completed {} from reservation cache", response.getConsistentHashKey());
+            if(logger.isDebugEnabled()) {
+                logger.debug("Removing completed {} from reservation cache", response.getConsistentHashKey());
+            }
 
         } else if (msg instanceof DistributedPubSubMediator.SubscribeAck) {
-            logger.debug( "subscribing" );
+            if(logger.isDebugEnabled()) {
+                logger.debug("subscribing");
+            }
 
         } else {
             unhandled( msg );
