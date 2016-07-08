@@ -794,7 +794,12 @@ public class TokenServiceImpl implements TokenService {
     }
 
     private String getExternalSSOProvider(){
-        return properties.getProperty(USERGRID_EXTERNAL_PROVIDER);
+        try {
+            return properties.getProperty(USERGRID_EXTERNAL_PROVIDER);
+        }
+        catch(NullPointerException e ){
+            throw new IllegalArgumentException("External SSO provider is enabled but the provider name is empty");
+        }
     }
 
     /**
