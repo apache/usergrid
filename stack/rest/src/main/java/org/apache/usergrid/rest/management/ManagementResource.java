@@ -531,10 +531,11 @@ public class ManagementResource extends AbstractContextResource {
             return; // we only care about username/password auth
         }
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
+        //why !isexternal_sso_enabled ?
+//        final boolean externalTokensEnabled =
+//                !StringUtils.isEmpty( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
 
-        if ( externalTokensEnabled ) {
+        if ( tokens.isExternalSSOProviderEnabled() ) {
 
             // when external tokens enabled then only superuser can obtain an access token
 

@@ -185,10 +185,7 @@ public class OrganizationsResource extends AbstractContextResource {
                                              String email, String password, Map<String, Object> userProperties,
                                              Map<String, Object> orgProperties, String callback ) throws Exception {
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
-
-        if ( externalTokensEnabled ) {
+        if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Organization / Admin Users must be created via " +
                     properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }

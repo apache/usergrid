@@ -44,7 +44,6 @@ import java.util.UUID;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
 
 
@@ -115,10 +114,7 @@ public class UsersResource extends AbstractContextResource {
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
-        final boolean externalTokensEnabled =
-                Boolean.valueOf( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
-
-        if ( externalTokensEnabled ) {
+        if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must signup via " +
                     properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
@@ -141,6 +137,7 @@ public class UsersResource extends AbstractContextResource {
 
         UserInfo user = null;
         if ( tokens.isExternalSSOProviderEnabled() ){
+            //autoactivating user, since the activation
             user = management.createAdminUser(null,username,name,email,password,true,false);
         }
         else {

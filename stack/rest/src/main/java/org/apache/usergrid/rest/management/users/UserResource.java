@@ -47,7 +47,6 @@ import java.util.UUID;
 
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isServiceAdmin;
 import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.utils.ConversionUtils.string;
 
 
@@ -216,10 +215,7 @@ public class UserResource extends AbstractContextResource {
     @Produces( MediaType.TEXT_HTML )
     public Viewable showPasswordResetForm( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        final boolean externalTokensEnabled =
-                Boolean.valueOf( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
-
-        if ( externalTokensEnabled ) {
+        if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must reset passwords via " +
                     properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
@@ -263,10 +259,7 @@ public class UserResource extends AbstractContextResource {
             logger.trace("handlePasswordResetForm");
         }
 
-        final boolean externalTokensEnabled =
-            Boolean.valueOf( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
-
-        if ( externalTokensEnabled ) {
+        if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must reset passwords via " +
                     properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
@@ -352,10 +345,7 @@ public class UserResource extends AbstractContextResource {
     @Produces( MediaType.TEXT_HTML )
     public Viewable activate( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        final boolean externalTokensEnabled =
-            Boolean.valueOf( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
-
-        if ( externalTokensEnabled ) {
+        if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must activate via " +
                     properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
@@ -385,10 +375,7 @@ public class UserResource extends AbstractContextResource {
     @Produces( MediaType.TEXT_HTML )
     public Viewable confirm( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        final boolean externalTokensEnabled =
-            Boolean.valueOf( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
-
-        if ( externalTokensEnabled ) {
+        if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must confirm via " +
                     properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
@@ -424,10 +411,7 @@ public class UserResource extends AbstractContextResource {
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
-        final boolean externalTokensEnabled =
-            Boolean.valueOf( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
-
-        if ( externalTokensEnabled ) {
+        if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must reactivate via " +
                     properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
@@ -450,6 +434,11 @@ public class UserResource extends AbstractContextResource {
     public ApiResponse revokeTokensPost( @Context UriInfo ui,
                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
+
+        if ( tokens.isExternalSSOProviderEnabled() ) {
+            throw new IllegalArgumentException( "Admin Users must tokens must be revoked via " +
+                properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+        }
 
         UUID adminId = user.getUuid();
 
