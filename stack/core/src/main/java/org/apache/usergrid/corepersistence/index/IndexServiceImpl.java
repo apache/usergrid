@@ -278,10 +278,12 @@ public class IndexServiceImpl implements IndexService {
         final EntityIndex ei = entityIndexFactory.
             createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
-
+        // use LONG.MAX_VALUE in search edge because this value is not used elsewhere in lower code foe de-indexing
+        // previously .timstamp() was used on entityId, but some entities do not have type-1 UUIDS ( legacy data)
         final SearchEdge searchEdgeFromSource = createSearchEdgeFromSource( new SimpleEdge( applicationScope.getApplication(),
             CpNamingUtils.getEdgeTypeFromCollectionName( InflectionUtils.pluralize( entityId.getType() ) ), entityId,
-            entityId.getUuid().timestamp() ) );
+            Long.MAX_VALUE ) );
+
 
 
         final EntityIndexBatch batch = ei.createBatch();
@@ -308,10 +310,11 @@ public class IndexServiceImpl implements IndexService {
         final EntityIndex ei = entityIndexFactory.
             createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
-
+        // use LONG.MAX_VALUE in search edge because this value is not used elsewhere in lower code foe de-indexing
+        // previously .timstamp() was used on entityId, but some entities do not have type-1 UUIDS ( legacy data)
         final SearchEdge searchEdgeFromSource = createSearchEdgeFromSource( new SimpleEdge( applicationScope.getApplication(),
             CpNamingUtils.getEdgeTypeFromCollectionName( InflectionUtils.pluralize( entityId.getType() ) ), entityId,
-             entityId.getUuid().timestamp() ) );
+            Long.MAX_VALUE ) );
 
 
         final EntityIndexBatch batch = ei.createBatch();
