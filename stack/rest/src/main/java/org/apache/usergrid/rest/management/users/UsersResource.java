@@ -137,7 +137,7 @@ public class UsersResource extends AbstractContextResource {
 
         UserInfo user = null;
         if ( tokens.isExternalSSOProviderEnabled() ){
-            //autoactivating user, since the activation
+            //autoactivating user, since the activation is done via the external sso provider.
             user = management.createAdminUser(null,username,name,email,password,true,false);
         }
         else {
