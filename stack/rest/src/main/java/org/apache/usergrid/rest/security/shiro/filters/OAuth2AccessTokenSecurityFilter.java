@@ -74,6 +74,10 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter implements C
             logger.trace("Filtering: {}", request.getUriInfo().getBaseUri());
         }
 
+        if( bypassSecurityCheck(request) ){
+            return;
+        }
+
         try {
             try {
 
