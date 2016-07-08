@@ -904,10 +904,13 @@ public class ManagementServiceImpl implements ManagementService {
             user.getEmail(), user.getConfirmed(), user.getActivated(), user.getDisabled(),
             user.getDynamicProperties(), true );
 
+
         // special case for sysadmin and test account only
         if (    !user.getEmail().equals( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ) )
              && !user.getEmail().equals( properties .getProperty( PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL ) ) ) {
-            this.startAdminUserActivationFlow( organizationId, userInfo );
+            if(!tokens.isExternalSSOProviderEnabled()) {
+                this.startAdminUserActivationFlow(organizationId, userInfo);
+            }
         }
 
         return userInfo;
