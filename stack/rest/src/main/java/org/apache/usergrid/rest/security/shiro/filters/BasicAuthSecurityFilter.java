@@ -49,6 +49,9 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
             logger.trace("Filtering: {}", request.getUriInfo().getBaseUri());
         }
 
+        if( bypassSecurityCheck(request) ){
+            return;
+        }
 
         Map<String, String> auth_types = getAuthTypes( request );
         if ( ( auth_types == null ) || !auth_types.containsKey( AUTH_BASIC_TYPE ) ) {

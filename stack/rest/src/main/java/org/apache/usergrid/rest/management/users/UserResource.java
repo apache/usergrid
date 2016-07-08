@@ -201,8 +201,9 @@ public class UserResource extends AbstractContextResource {
 
 //        commenting out creation of token each time and setting the token value to the one sent in the request.
 //        String token = management.getAccessTokenForAdminUser( user.getUuid(), ttl );
+
         Map<String, Object> userOrganizationData = management.getAdminUserOrganizationData( user, !shallow );
-        userOrganizationData.put( "token", token );
+        //userOrganizationData.put( "token", token );
         response.setData( userOrganizationData );
         response.setSuccess();
 

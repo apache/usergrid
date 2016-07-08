@@ -55,6 +55,10 @@ public class ClientCredentialsSecurityFilter extends SecurityFilter {
             logger.trace("Filtering: {}", request.getUriInfo().getBaseUri());
         }
 
+        if( bypassSecurityCheck(request) ){
+            return;
+        }
+
         String clientId = httpServletRequest.getParameter( "client_id" );
         String clientSecret = httpServletRequest.getParameter( "client_secret" );
 
