@@ -66,6 +66,8 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
     private ListMultimap<String, String> seedsByRegion;
 
+    private ActorSystem clusterSystem = null;
+
 
 
     @Inject
@@ -173,15 +175,15 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
         // Create one actor system with request actor for each region
 
         if ( StringUtils.isEmpty( currentRegion )) {
-            throw new RuntimeException( "No value specified for " + ActorSystemFig.CLUSTER_REGIONS_LOCAL );
+            throw new RuntimeException( "No value specified for: " + ActorSystemFig.CLUSTER_REGIONS_LOCAL );
         }
 
         if ( StringUtils.isEmpty( actorSystemFig.getRegionsList() )) {
-            throw new RuntimeException( "No value specified for " + ActorSystemFig.CLUSTER_REGIONS_LIST );
+            throw new RuntimeException( "No value specified for: " + ActorSystemFig.CLUSTER_REGIONS_LIST );
         }
 
         if ( StringUtils.isEmpty( actorSystemFig.getSeeds() )) {
-            throw new RuntimeException( "No value specified for " + ActorSystemFig.CLUSTER_SEEDS );
+            throw new RuntimeException( "No value specified for: " + ActorSystemFig.CLUSTER_SEEDS );
         }
 
         List regionList = Arrays.asList( actorSystemFig.getRegionsList().toLowerCase().split(",") );
@@ -191,15 +193,15 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
         Config config = readClusterSystemConfig();
 
-        ActorSystem localSystem = createClusterSystemsFromConfigs( config );
+        clusterSystem = createClusterSystemsFromConfigs( config );
 
-        createClientActors( localSystem );
+        createClientActors( clusterSystem );
 
         for ( RouterProducer routerProducer : routerProducers ) {
-            routerProducer.createLocalSystemActors( localSystem );
+            routerProducer.createLocalSystemActors( clusterSystem );
         }
 
-        mediator = DistributedPubSub.get( localSystem ).mediator();
+        mediator = DistributedPubSub.get( clusterSystem ).mediator();
     }
 
 
@@ -214,7 +216,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
             String[] regionSeeds = actorSystemFig.getSeeds().split( "," );
 
-            logger.info( "Found region {} seeds {}", regionSeeds.length, regionSeeds );
+            logger.info( "Found region [{}] seeds [{}]", regionSeeds.length, regionSeeds );
 
             try {
 
@@ -248,7 +250,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
                         String seed = "akka.tcp://ClusterSystem" + "@" + hostname + ":" + regionPort;
 
-                        logger.info( "Adding seed {} for region {}", seed, region );
+                        logger.info( "Adding seed [{}] for region [{}]", seed, region );
 
                         seedsByRegion.put( region, seed );
                     }
@@ -283,7 +285,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
             List<String> seeds = getSeedsByRegion().get( region );
 
-            logger.info( "Akka Config for region {} is:\n" + "   Hostname {}\n" + "   Seeds {}\n",
+            logger.info( "Akka Config for region [{}] is:\n" + "   Hostname [{}]\n" + "   Seeds [{}]\n",
                 region, hostname, seeds );
 
             int lastColon = seeds.get(0).lastIndexOf(":") + 1;
@@ -335,19 +337,38 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
      */
     private ActorSystem createClusterSystemsFromConfigs( Config config ) {
 
-        ActorSystem system = ActorSystem.create( "ClusterSystem", config );
 
-        for ( RouterProducer routerProducer : routerProducers ) {
-            logger.info("Creating {} for region {}", routerProducer.getName(), currentRegion );
-            routerProducer.createClusterSingletonManager( system );
+        // there is only 1 akka system for a Usergrid cluster
+        final String clusterName = "ClusterSystem";
+
+
+        if( clusterSystem == null) {
+
+            logger.info("Class: {}. ActorSystem [{}] not initialized, creating...", this, clusterName);
+
+            clusterSystem = ActorSystem.create( clusterName, config );
+
+            for ( RouterProducer routerProducer : routerProducers ) {
+                logger.info("Creating router producer [{}] for region [{}]", routerProducer.getName(), currentRegion );
+                routerProducer.createClusterSingletonManager( clusterSystem );
+            }
+
+            for ( RouterProducer routerProducer : routerProducers ) {
+                logger.info("Creating [{}] proxy for region [{}] role 'io'", routerProducer.getName(), currentRegion);
+                routerProducer.createClusterSingletonProxy( clusterSystem, "io" );
+            }
+
+            //add a shutdown hook to clean all actor systems if the JVM exits without the servlet container knowing
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    shutdownAll();
+                }
+            });
+
         }
 
-        for ( RouterProducer routerProducer : routerProducers ) {
-            logger.info("Creating {} proxy for region {} role 'io'", routerProducer.getName(), currentRegion);
-            routerProducer.createClusterSingletonProxy( system, "io" );
-        }
-
-        return system;
+        return clusterSystem;
     }
 
 
@@ -360,7 +381,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
             if ( currentRegion.equals( region )) {
 
-                logger.info( "Creating clientActor for region {}", region );
+                logger.info( "Creating clientActor for region [{}]", region );
 
                 // Each clientActor needs to know path to ClusterSingletonProxy and region
                 clientActor = system.actorOf(
@@ -381,7 +402,6 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
                 clusterClientsByRegion.put( region, clusterClient );
             }
-
         }
     }
 
@@ -394,7 +414,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
     private void waitForClientActor( ActorRef ra ) {
 
-        logger.info( "Waiting on request actor {}...", ra.path() );
+        logger.info( "Waiting on RequestActor [{}]...", ra.path() );
 
         started = false;
 
@@ -411,20 +431,29 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                     started = true;
                     break;
                 }
-                logger.info( "Waiting for request actor {} region {} ({}s)", ra.path(), currentRegion, retries );
+                logger.info( "Waiting for RequestActor [{}] region [{}] for [{}s]", ra.path(), currentRegion, retries );
                 Thread.sleep( 1000 );
 
             } catch (Exception e) {
-                logger.error( "Error: Timeout waiting for requestActor" );
+                logger.error( "Error: Timeout waiting for RequestActor [{}]", ra.path() );
             }
             retries++;
         }
 
         if (started) {
-            logger.info( "RequestActor has started" );
+            logger.info( "RequestActor [{}] has started", ra.path() );
         } else {
-            throw new RuntimeException( "RequestActor did not start in time" );
+            throw new RuntimeException( "RequestActor ["+ra.path()+"] did not start in time" );
         }
+    }
+
+    @Override
+    public void shutdownAll(){
+
+        logger.info("Shutting down Akka cluster: {}", clusterSystem.name());
+        clusterSystem.shutdown();
+
+
     }
 
 }

@@ -57,8 +57,8 @@ public class UniqueValueActor extends UntypedActor {
             Request req = (Request) message;
 
             count++;
-            if (count % 10 == 0) {
-                logger.info( "UniqueValueActor {} processed {} requests", name, count );
+            if (count % 10 == 0 && logger.isDebugEnabled()) {
+                logger.debug( "UniqueValueActor {} processed {} requests", name, count );
             }
         }
 
