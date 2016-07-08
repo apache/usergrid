@@ -20,7 +20,7 @@ import io.jsonwebtoken.*;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.management.exceptions.ExternalSSOProviderAdminUserNotFoundExceptions;
+import org.apache.usergrid.management.exceptions.ExternalSSOProviderAdminUserNotFoundException;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.security.tokens.TokenInfo;
@@ -82,7 +82,7 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
         UserInfo userInfo = validateAndReturnUserInfo(token, ttl);
 
         if(userInfo == null){
-            throw new ExternalSSOProviderAdminUserNotFoundExceptions("Unable to load user from token: "+token);
+            throw new ExternalSSOProviderAdminUserNotFoundException("Unable to load user from token: "+token);
         }
 
         return new TokenInfo(UUIDUtils.newTimeUUID(), "access", 1, 1, 1, ttl,
