@@ -332,10 +332,15 @@ public class TokenServiceImpl implements TokenService {
 
             // If the token doesn't parse as a Usergrid token, see if an external provider other than Usergrid is
             // enabled.  If so, just validate the external token.
-            if( isExternalSSOProviderEnabled() && !getExternalSSOProvider().equalsIgnoreCase("usergrid")) {
-                return validateExternalToken(token, 1, getExternalSSOProvider());
-            }else{
-                throw e; // re-throw the error
+            try{
+                if( isExternalSSOProviderEnabled() && !getExternalSSOProvider().equalsIgnoreCase("usergrid")) {
+                    return validateExternalToken(token, 1, getExternalSSOProvider());
+                }else{
+                    throw new IllegalArgumentException("invalid external provider : " + getExternalSSOProvider()); // re-throw the error
+                }
+            }
+            catch (NullPointerException npe){
+                throw new IllegalArgumentException("The SSO provider in the config is empty.");
             }
 
         }

@@ -27,7 +27,7 @@ import org.apache.shiro.subject.Subject;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.management.exceptions.ExternalSSOProviderAdminUserNotFoundExceptions;
+import org.apache.usergrid.management.exceptions.ExternalSSOProviderAdminUserNotFoundException;
 import org.apache.usergrid.management.exceptions.ManagementException;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
@@ -110,7 +110,7 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter implements C
                 } catch (InvalidTokenException ite) {
                     throw mappableSecurityException( INVALID_AUTH_ERROR );
                 }
-                catch (ExternalSSOProviderAdminUserNotFoundExceptions eAdminUserNotFound){
+                catch (ExternalSSOProviderAdminUserNotFoundException eAdminUserNotFound){
                     throw mappableSecurityException(EXTERNALSSOPROVIDER_UNACTIVATED_ADMINUSER);
                 } catch(IndexOutOfBoundsException ioobe) {
                     // token is just some rubbish string
