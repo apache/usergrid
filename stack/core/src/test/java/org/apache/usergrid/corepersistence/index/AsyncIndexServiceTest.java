@@ -120,7 +120,7 @@ public abstract class AsyncIndexServiceTest {
         final EntityCollectionManager collectionManager =
             entityCollectionManagerFactory.createCollectionManager(applicationScope);
 
-        collectionManager.write(testEntity).toBlocking().last();
+        collectionManager.write(testEntity, null ).toBlocking().last();
 
         final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
 

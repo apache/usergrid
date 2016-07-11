@@ -47,6 +47,13 @@ public final class ArrayField<T> extends ListField<T> {
         value.add( listItem );
     }
 
+    /**
+     * This type of field is never unique
+     */
+    @Override
+    public boolean isUnique() {
+        return false;
+    }
 
 
 }

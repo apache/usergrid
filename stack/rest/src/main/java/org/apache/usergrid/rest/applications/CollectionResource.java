@@ -73,8 +73,7 @@ import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
  */
 @Component
 @Scope("prototype")
-@Produces({
-    MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
+@Produces({ MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
     "application/ecmascript", "text/jscript"
 })
 public class CollectionResource extends ServiceResource {
@@ -82,33 +81,34 @@ public class CollectionResource extends ServiceResource {
     public CollectionResource() {
     }
 
+
     /**
-     * THE BEGINNINGS OF AN ENDPOINT THAT WILL ALLOW TO DEFINE WHAT TO
-     * STORE IN ELASTICSEARCH.
-     * @param ui
-     * @param callback
-     * @return
-     * @throws Exception
+     * POST settings for a collection.
+     *
+     * Expects a JSON object which may include:
+     * - fields: (array or string) either an array of field names to be indexed, or 'all' or 'none'
+     * - region: (string) name of the authoritative region for this collection
      */
     @POST
-    @Path( "{itemName}/_index" )
+    @Path( "{itemName}/_settings" )
     @Produces({ MediaType.APPLICATION_JSON,"application/javascript"})
     @RequireApplicationAccess
     @JSONP
-    public ApiResponse executePostOnIndexesWithCollectionName( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName,
-                                                               String body,
-                                                               @QueryParam("callback") @DefaultValue("callback") String callback )
-        throws Exception {
+    public ApiResponse executePostOnSettingsWithCollectionName(
+        @Context UriInfo ui,
+        @PathParam("itemName") PathSegment itemName,
+        String body,
+        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         if(logger.isTraceEnabled()){
-            logger.trace( "ServiceResource.executePostOnIndexes" );
+            logger.trace( "CollectionResource.executePostOnSettingsWithCollectionName" );
         }
 
         addItemToServiceContext( ui, itemName );
 
         Object json;
         if ( StringUtils.isEmpty( body ) ) {
-            json = null;
+            throw new NullArgumentException( "No body posted" );
         } else {
             json = readJsonToObject( body );
         }
@@ -121,24 +121,16 @@ public class CollectionResource extends ServiceResource {
 
         ServicePayload payload = getPayload( json );
 
-        if(payload.getProperty( "fields" )==null){
-            throw new NullArgumentException( "fields" );
-        }
-
-        if(! (payload.getProperty( "fields" ) instanceof ArrayList)){
-            throw new NullArgumentException( "fields must be of json array type" );
-        }
-
-
-        executeServicePostRequestForSchema( ui,response, ServiceAction.POST,payload );
+        executeServicePostRequestForSettings( ui,response, ServiceAction.POST, payload );
 
         return response;
     }
 
-    private void addItemToServiceContext( final @Context UriInfo ui,
-                                          final @PathParam( "itemName" ) PathSegment itemName ) throws Exception {
-        //The below is duplicated because it could change in the future and is probably not all needed but
-        //not determined yet.
+
+    private void addItemToServiceContext( UriInfo ui, PathSegment itemName ) throws Exception {
+
+        // The below is duplicated because it could change in the future
+        // and is probably not all needed but not determined yet.
         if ( itemName.getPath().startsWith( "{" ) ) {
             Query query = Query.fromJsonString( itemName.getPath() );
             if ( query != null ) {
@@ -152,18 +144,24 @@ public class CollectionResource extends ServiceResource {
         addMatrixParams( getServiceParameters(), ui, itemName );
     }
 
+
+    /**
+     * Delete settings for a collection.
+     */
     @DELETE
-    @Path( "{itemName}/_index" )
+    @Path( "{itemName}/_settings" )
     @Produces({ MediaType.APPLICATION_JSON,"application/javascript"})
     @RequireApplicationAccess
     @JSONP
-    public ApiResponse executeDeleteOnIndexesWithCollectionName( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName,
-                                                               String body,
-                                                               @QueryParam("callback") @DefaultValue("callback") String callback )
+    public ApiResponse executeDeleteOnSettingsWithCollectionName(
+        @Context UriInfo ui,
+        @PathParam("itemName") PathSegment itemName,
+        String body,
+        @QueryParam("callback") @DefaultValue("callback") String callback )
         throws Exception {
 
         if(logger.isTraceEnabled()){
-            logger.trace( "CollectionResource.executeDeleteOnIndexesWithCollectionName" );
+            logger.trace( "CollectionResource.executeDeleteOnSettingsWithCollectionName" );
         }
 
         addItemToServiceContext( ui, itemName );
@@ -175,7 +173,7 @@ public class CollectionResource extends ServiceResource {
         response.setParams( ui.getQueryParameters() );
 
 
-        emf.getEntityManager( services.getApplicationId() ).deleteCollectionSchema( itemName.getPath().toLowerCase() );
+        emf.getEntityManager( services.getApplicationId() ).deleteCollectionSettings( itemName.getPath().toLowerCase() );
 
         return response;
     }
@@ -183,16 +181,17 @@ public class CollectionResource extends ServiceResource {
 
 
     @GET
-    @Path( "{itemName}/_index")
+    @Path( "{itemName}/_settings")
     @Produces({MediaType.APPLICATION_JSON,"application/javascript"})
     @RequireApplicationAccess
     @JSONP
-    public ApiResponse executeGetOnIndex( @Context UriInfo ui,@PathParam("itemName") PathSegment itemName,
-                                          @QueryParam("callback") @DefaultValue("callback") String callback )
-        throws Exception {
+    public ApiResponse executeGetOnIndex(
+        @Context UriInfo ui,
+        @PathParam("itemName") PathSegment itemName,
+        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         if(logger.isTraceEnabled()){
-            logger.trace( "CollectionResource.executeGetOnIndex" );
+            logger.trace( "CollectionResource.executeGetOnSettings" );
         }
 
         addItemToServiceContext( ui, itemName );
@@ -202,28 +201,30 @@ public class CollectionResource extends ServiceResource {
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
 
-        executeServiceGetRequestForSchema( ui,response,ServiceAction.GET,null );
+        executeServiceGetRequestForSettings( ui,response,ServiceAction.GET,null );
 
         return response;
     }
 
 
-    //TODO: this can't be controlled and until it can be controlled we shouldn' allow muggles to do this. So system access only.
-    //TODO: use scheduler here to get around people sending a reindex call 30 times.
+    // TODO: this can't be controlled and until it can be controlled we shouldn' allow muggles to do this.
+    // So system access only.
+    // TODO: use scheduler here to get around people sending a reindex call 30 times.
     @POST
     @Path("{itemName}/_reindex")
     @Produces({ MediaType.APPLICATION_JSON,"application/javascript"})
     @RequireSystemAccess
     @JSONP
-    public ApiResponse executePostForReindexing( @Context UriInfo ui, String body,
-                                                 @PathParam("itemName") PathSegment itemName,
-                                             @QueryParam("callback") @DefaultValue("callback") String callback )
-        throws Exception {
+    public ApiResponse executePostForReindexing(
+        @Context UriInfo ui, String body,
+        @PathParam("itemName") PathSegment itemName,
+        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         addItemToServiceContext( ui, itemName );
 
         IndexResource indexResource = new IndexResource(injector);
-        return indexResource.rebuildIndexesPost( services.getApplicationId().toString(),itemName.getPath(),false,callback );
+        return indexResource.rebuildIndexesPost(
+            services.getApplicationId().toString(),itemName.getPath(),false,callback );
     }
 
 }

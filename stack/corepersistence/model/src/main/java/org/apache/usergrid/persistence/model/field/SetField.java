@@ -48,6 +48,13 @@ public final class SetField<T> extends AbstractField<Set<T>> {
         value.add( setItem );
     }
 
+    /**
+     * This type of field is never unique
+     */
+    @Override
+    public boolean isUnique() {
+        return false;
+    }
 
     @Override
     public final FieldTypeName getTypeName() {

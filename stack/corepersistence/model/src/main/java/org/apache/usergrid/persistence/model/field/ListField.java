@@ -60,5 +60,12 @@ public class ListField<T> extends AbstractField<List<T>> {
         return this.value.size();
     }
 
+    /**
+     * This type of field is never unique
+     */
+    @Override
+    public boolean isUnique() {
+        return false;
+    }
 
 }
