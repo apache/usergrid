@@ -22,6 +22,7 @@ import org.apache.amber.oauth2.common.exception.OAuthProblemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
 import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.codec.Base64;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.UserInfo;
@@ -34,6 +35,7 @@ import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.management.users.UsersResource;
 import org.apache.usergrid.security.oauth.AccessInfo;
+import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.security.sso.ExternalSSOProvider;
 import org.apache.usergrid.security.sso.SSOProviderFactory;
@@ -99,6 +101,9 @@ public class ManagementResource extends AbstractContextResource {
     MetricsFactory metricsFactory = null;
 
 
+    String access_token = null;
+
+
     public ManagementResource() {
         if (logger.isTraceEnabled()) {
             logger.trace( "ManagementResource initialized" );
@@ -159,7 +164,6 @@ public class ManagementResource extends AbstractContextResource {
                                          @QueryParam( "client_id" ) String client_id,
                                          @QueryParam( "client_secret" ) String client_secret,
                                          @QueryParam( "ttl" ) long ttl,
-                                         @QueryParam( "access_token" ) String access_token,
                                          @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
 
@@ -180,6 +184,12 @@ public class ManagementResource extends AbstractContextResource {
         final long passwordChanged = management.getLastAdminPasswordChange( user.getUuid() );
         final boolean ssoEnabled = Boolean.parseBoolean(properties.getProperty(USERGRID_EXTERNAL_SSO_ENABLED));
         long tokenTtl;
+
+        PrincipalIdentifier userPrincipal  = (PrincipalIdentifier) SecurityUtils.getSubject().getPrincipal();
+        if ( userPrincipal != null && userPrincipal.getAccessTokenCredentials() != null ) {
+            this.access_token = userPrincipal.getAccessTokenCredentials().getToken();
+        }
+
 
         if(ssoEnabled){
 
@@ -384,6 +394,7 @@ public class ManagementResource extends AbstractContextResource {
                                              @FormParam( "access_token" ) String access_token,
                                              @FormParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
+
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
                 callback, false, true );
     }
@@ -424,6 +435,16 @@ public class ManagementResource extends AbstractContextResource {
     public Response getAccessTokenMePostJson( @Context UriInfo ui, Map<String, Object> json,
                                               @QueryParam( "callback" ) @DefaultValue( "" ) String callback,
                                               @HeaderParam( "Authorization" ) String authorization ) throws Exception {
+
+
+        if ( json == null ) {
+            String errorDescription = "invalid request, expected data in the request.";
+            OAuthResponse response =
+                OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_REQUEST )
+                    .setErrorDescription( errorDescription ).buildJSONMessage();
+            return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
+                .entity( wrapWithCallback( response.getBody(), callback ) ).build();
+        }
 
         String grant_type = ( String ) json.get( "grant_type" );
         String username = ( String ) json.get( "username" );

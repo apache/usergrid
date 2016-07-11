@@ -64,7 +64,7 @@ public class UserResource extends AbstractContextResource {
 
     String errorMsg;
 
-    String token;
+    String token = null;
 
 
     public UserResource() {
@@ -74,7 +74,9 @@ public class UserResource extends AbstractContextResource {
     public UserResource init( UserInfo user ) {
         this.user = user;
         PrincipalIdentifier userPrincipal  = (PrincipalIdentifier) SecurityUtils.getSubject().getPrincipal();
-        this.token = userPrincipal.getAccessTokenCredentials().getToken();
+        if ( userPrincipal != null && userPrincipal.getAccessTokenCredentials() != null ) {
+            this.token = userPrincipal.getAccessTokenCredentials().getToken();
+        }
         return this;
     }
 
