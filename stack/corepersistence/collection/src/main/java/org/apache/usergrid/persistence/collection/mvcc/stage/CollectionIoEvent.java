@@ -29,14 +29,20 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
  */
 public class CollectionIoEvent<T> implements Serializable {
 
-    private ApplicationScope context;
+    final private ApplicationScope context;
 
-    private T event;
+    final private T event;
 
+    final private String region;
 
     public CollectionIoEvent( final ApplicationScope context, final T event ) {
+        this( context, event, null );
+    }
+
+    public CollectionIoEvent( final ApplicationScope context, final T event, String region ) {
         this.context = context;
         this.event = event;
+        this.region = region;
     }
 
 
@@ -47,5 +53,9 @@ public class CollectionIoEvent<T> implements Serializable {
 
     public T getEvent() {
         return event;
+    }
+
+    public String getRegion() {
+        return region;
     }
 }

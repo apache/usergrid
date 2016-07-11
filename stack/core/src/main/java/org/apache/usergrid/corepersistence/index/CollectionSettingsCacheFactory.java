@@ -1,4 +1,4 @@
-package org.apache.usergrid.corepersistence.index;/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,25 +15,30 @@ package org.apache.usergrid.corepersistence.index;/*
  * limitations under the License.
  */
 
+package org.apache.usergrid.corepersistence.index;
 
-import org.safehaus.guicyfig.Default;
-import org.safehaus.guicyfig.FigSingleton;
-import org.safehaus.guicyfig.GuicyFig;
-import org.safehaus.guicyfig.Key;
+
+import org.apache.usergrid.persistence.map.MapManager;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 
 /**
- * Index schema configuration.
+ * This can only be implemented after we have the impl for the application cache.
  */
-@FigSingleton
-public interface IndexSchemaCacheFig extends GuicyFig {
+@Singleton
+public class CollectionSettingsCacheFactory {
+    private final CollectionSettingsCacheFig fig;
 
-    @Key( "usergrid.index_schema_cache_size" )
-    @Default( "5000" )
-    int getCacheSize();
+    @Inject
+    public CollectionSettingsCacheFactory(CollectionSettingsCacheFig fig){
+        this.fig = fig;
+    }
 
-    @Key( "usergrid.index_schema_cache_timeout_ms" )
-    @Default( "15000" )
-    int getCacheTimeout();
+    public CollectionSettingsCache getInstance(MapManager mapManager ){
+        return new CollectionSettingsCacheImpl( mapManager,fig );
+    }
+
 
 }

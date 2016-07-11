@@ -18,22 +18,17 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
-import org.apache.usergrid.persistence.collection.FieldSet;
-import org.apache.usergrid.persistence.collection.MvccEntity;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
-import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import com.google.inject.Inject;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
+import org.apache.usergrid.persistence.collection.*;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
@@ -44,11 +39,15 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.StringField;
-
-import com.google.inject.Inject;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.Collections;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -58,7 +57,10 @@ import static org.junit.Assert.fail;
  */
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class WriteUniqueVerifyIT {
+public class WriteUniqueVerifyIT extends AbstractUniqueValueTest {
+
+    @Inject
+    private EntityCollectionManagerFactory factory;
 
     @Inject
     SerializationFig serializationFig;
@@ -73,6 +75,20 @@ public class WriteUniqueVerifyIT {
     @Inject
     public EntityCollectionManagerFactory cmf;
 
+    @Inject
+    ActorSystemManager actorSystemManager;
+
+    @Inject
+    UniqueValuesService uniqueValuesService;
+
+
+    @Before
+    public void initAkka() {
+        // each test class needs unique port number
+        initAkka( 2553, actorSystemManager, uniqueValuesService );
+    }
+
+
     @Test
     public void testConflict() {
 
@@ -85,7 +101,7 @@ public class WriteUniqueVerifyIT {
         entity.setField(new StringField("name", "Aston Martin Vanquish", true));
         entity.setField(new StringField("identifier", "v12", true));
         entity.setField(new IntegerField("top_speed_mph", 200));
-        entityManager.write( entity ).toBlocking().last();
+        entityManager.write( entity, null ).toBlocking().last();
 
         Entity entityFetched = entityManager.load( entity.getId() ).toBlocking().last();
         entityFetched.setField( new StringField("foo", "bar"));
@@ -102,19 +118,17 @@ public class WriteUniqueVerifyIT {
         entity2.setField(new IntegerField("top_speed_mph", 120));
 
         try {
-            entityManager.write( entity2 ).toBlocking().last();
+            entityManager.write( entity2, null ).toBlocking().last();
             fail("Write should have thrown an exception");
 
         } catch ( Exception ex ) {
             WriteUniqueVerifyException e = (WriteUniqueVerifyException)ex;
-
-            // verify two unique value violations
-            assertEquals( 2, e.getVioliations().size() );
+            assertTrue( !e.getViolations().isEmpty() );
         }
 
         // ensure we can update original entity without error
         entity.setField( new IntegerField("top_speed_mph", 190) );
-        entityManager.write( entity );
+        entityManager.write( entity, null );
     }
 
     @Test
@@ -129,11 +143,11 @@ public class WriteUniqueVerifyIT {
         entity.setField(new StringField("name", "Porsche 911 GT3", true));
         entity.setField(new StringField("identifier", "911gt3", true));
         entity.setField(new IntegerField("top_speed_mph", 194));
-        entityManager.write( entity ).toBlocking().last();
+        entityManager.write( entity, null ).toBlocking().last();
 
         Entity entityFetched = entityManager.load( entity.getId() ).toBlocking().last();
         entityFetched.setField( new StringField("foo", "baz"));
-        entityManager.write( entityFetched ).toBlocking().last();
+        entityManager.write( entityFetched, null ).toBlocking().last();
     }
 
     @Test
@@ -148,10 +162,10 @@ public class WriteUniqueVerifyIT {
         entity.setField(new StringField("name", "Alfa Romeo 8C Competizione", true));
         entity.setField(new StringField("identifier", "ar8c", true));
         entity.setField(new IntegerField("top_speed_mph", 182));
-        entityManager.write( entity ).toBlocking().last();
+        entityManager.write( entity, null ).toBlocking().last();
 
         entity.setField( new StringField("foo", "bar"));
-        entityManager.write( entity ).toBlocking().last();
+        entityManager.write( entity, null ).toBlocking().last();
     }
 
     @Test
@@ -169,7 +183,7 @@ public class WriteUniqueVerifyIT {
         entity.setField(new StringField("name", "Porsche 911 GT3", true));
         entity.setField(new StringField("identifier", "911gt3", true));
         entity.setField(new IntegerField("top_speed_mph", 194));
-        entityManager.write( entity ).toBlocking().last();
+        entityManager.write( entity, null ).toBlocking().last();
 
 
         FieldSet fieldSet =
@@ -200,7 +214,7 @@ public class WriteUniqueVerifyIT {
 
         // now test writing the original entity again ( simulates a PUT )
         // this should read repair and work
-        entityManager.write( entity ).toBlocking().last();
+        entityManager.write( entity, null ).toBlocking().last();
 
         FieldSet fieldSetAgainAgain =
             entityManager.getEntitiesFromFields("test", Collections.singletonList(entity.getField("name")), true)

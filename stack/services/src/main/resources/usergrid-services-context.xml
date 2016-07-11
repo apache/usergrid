@@ -126,7 +126,7 @@
     <!--<constructor-arg orgAppName="emf" ref="entityManagerFactory" />-->
     <!--<constructor-arg orgAppName="metricsService" ref="metricsFactory" />-->
     <!--<constructor-arg orgAppName="smf" ref="serviceManagerFactory" />-->
-    <!--<constructor-arg orgAppName="props" ref="properties" />-->
+    <!--<constructor-arg orgAppName="props" ref="newSettings" />-->
 
     <!--</bean>-->
 
