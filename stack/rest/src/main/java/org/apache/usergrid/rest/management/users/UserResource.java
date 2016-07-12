@@ -136,6 +136,11 @@ public class UserResource extends AbstractContextResource {
                                                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
+        if ( tokens.isExternalSSOProviderEnabled() ) {
+            throw new IllegalArgumentException( "Admin Users must reset passwords via " +
+                properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+        }
+
         if ( json == null ) {
             return null;
         }
@@ -473,6 +478,11 @@ public class UserResource extends AbstractContextResource {
     public ApiResponse revokeTokenPost( @Context UriInfo ui,
                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
                                             @QueryParam( "token" ) String token ) throws Exception {
+
+        if ( tokens.isExternalSSOProviderEnabled() ) {
+            throw new IllegalArgumentException( "Admin Users must tokens must be revoked via " +
+                properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+        }
 
         UUID adminId = user.getUuid();
         this.token = token;
