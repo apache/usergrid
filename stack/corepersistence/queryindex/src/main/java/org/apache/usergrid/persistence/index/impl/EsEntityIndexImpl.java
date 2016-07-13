@@ -469,8 +469,11 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         // never let this fetch more than 100 to save memory
         final int searchLimit = Math.min(100, indexFig.getVersionQueryLimit());
 
-        final QueryBuilder entityQuery = QueryBuilders
+        final QueryBuilder nodeIdQuery = QueryBuilders
             .termQuery(IndexingUtils.EDGE_NODE_ID_FIELDNAME, IndexingUtils.nodeId(edge.getNodeId()));
+
+        final QueryBuilder entityIdQuery = QueryBuilders
+            .termQuery(IndexingUtils.ENTITY_ID_FIELDNAME, IndexingUtils.entityId(entityId));
 
         final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder()
             .addSort(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME, SortOrder.ASC);
@@ -492,7 +495,8 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
             QueryBuilder finalQuery = QueryBuilders
                 .boolQuery()
-                .must(entityQuery)
+                .must(entityIdQuery)
+                .must(nodeIdQuery)
                 .must(timestampQuery);
 
             searchResponse = srb
