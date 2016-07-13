@@ -355,6 +355,12 @@ public class IndexServiceTest {
 
         final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( connectionSearch );
 
+        //ensure that no edges remain
+        CandidateResults connectionResultsEmpty = EntityIndex.search( connectionSearchEdge,
+            SearchTypes.fromTypes( "thing" ),"select *",10,0 );
+
+        assertEquals(1,connectionResultsEmpty.size());
+
         //step 1
         //(We need to mark then delete things in the graph manager.)
         final Edge toBeMarkedEdge = graphManager.markEdge( connectionSearch ).toBlocking().firstOrDefault( null );
@@ -367,9 +373,13 @@ public class IndexServiceTest {
 
         assertEquals( 1, indexOperationMessage.getDeIndexRequests().size() );
 
+        indexProducer.put(indexOperationMessage).toBlocking().last();
+
+        Thread.sleep(1000); // wait for the operation to flush at Elasticsearch
+
         //ensure that no edges remain
-        final CandidateResults connectionResultsEmpty = EntityIndex.search( connectionSearchEdge,
-            SearchTypes.fromTypes( "things" ),"select *",10,0 );
+        connectionResultsEmpty = EntityIndex.search( connectionSearchEdge,
+            SearchTypes.fromTypes( "thing" ),"select *",10,0 );
 
         assertEquals(0,connectionResultsEmpty.size());
 
