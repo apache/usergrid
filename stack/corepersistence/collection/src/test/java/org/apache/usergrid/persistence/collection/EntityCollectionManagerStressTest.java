@@ -22,6 +22,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.usergrid.StressTest;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -52,7 +55,7 @@ import static org.junit.Assert.assertNotNull;
 @RunWith(ITRunner.class)
 @UseModules(TestCollectionModule.class)
 @Category(StressTest.class)
-public class EntityCollectionManagerStressTest {
+public class EntityCollectionManagerStressTest extends AbstractUniqueValueTest {
     private static final Logger logger = LoggerFactory.getLogger(
             EntityCollectionManagerStressTest.class );
 
@@ -62,6 +65,20 @@ public class EntityCollectionManagerStressTest {
     @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
+
+    @Inject
+    ActorSystemManager actorSystemManager;
+
+    @Inject
+    UniqueValuesService uniqueValuesService;
+
+
+    @Before
+    public void initAkka() {
+        // each test class needs unique port number
+        initAkka( 2552, actorSystemManager, uniqueValuesService );
+    }
+
 
     @Test
     public void writeThousands() {
@@ -81,7 +98,7 @@ public class EntityCollectionManagerStressTest {
             newEntity.setField(new StringField("name", String.valueOf(i)));
             newEntity.setField(new LocationField("location", new Location(120,40)));
 
-            Entity returned = manager.write(newEntity).toBlocking().last();
+            Entity returned = manager.write(newEntity, null ).toBlocking().last();
 
             assertNotNull("Returned has a id", returned.getId());
             assertNotNull("Returned has a version", returned.getVersion());

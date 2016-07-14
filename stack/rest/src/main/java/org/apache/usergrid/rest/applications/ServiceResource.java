@@ -245,7 +245,7 @@ public class ServiceResource extends AbstractContextResource {
     }
 
 
-    public ServiceResults executeServiceGetRequestForSchema(UriInfo ui, ApiResponse response, ServiceAction action,
+    public ServiceResults executeServiceGetRequestForSettings(UriInfo ui, ApiResponse response, ServiceAction action,
                                                              ServicePayload payload) throws Exception {
 
         if(logger.isTraceEnabled()){
@@ -270,7 +270,7 @@ public class ServiceResource extends AbstractContextResource {
         AbstractCollectionService abstractCollectionService = new AbstractCollectionService();
 
        // abstractCollectionService
-        ServiceResults results = abstractCollectionService.getCollectionSchema( r );
+        ServiceResults results = abstractCollectionService.getCollectionSettings( r );
 
         //        ServiceResults results = r.execute();
         if ( results != null ) {
@@ -299,7 +299,7 @@ public class ServiceResource extends AbstractContextResource {
         return results;
     }
 
-    public ServiceResults executeServicePostRequestForSchema(UriInfo ui, ApiResponse response, ServiceAction action,
+    public ServiceResults executeServicePostRequestForSettings(UriInfo ui, ApiResponse response, ServiceAction action,
                                                          ServicePayload payload) throws Exception {
 
         if(logger.isTraceEnabled()){
@@ -323,7 +323,7 @@ public class ServiceResource extends AbstractContextResource {
 
         AbstractCollectionService abstractCollectionService = new AbstractCollectionService();
 
-        ServiceResults results = abstractCollectionService.postCollectionSchema( r );
+        ServiceResults results = abstractCollectionService.postCollectionSettings( r );
 
 //        ServiceResults results = r.execute();
         if ( results != null ) {

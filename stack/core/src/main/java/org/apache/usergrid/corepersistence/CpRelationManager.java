@@ -19,8 +19,8 @@ package org.apache.usergrid.corepersistence;
 
 import java.util.*;
 
-import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
-import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsCache;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsCacheFactory;
 import org.apache.usergrid.corepersistence.results.IdQueryExecutor;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
@@ -107,7 +107,7 @@ public class CpRelationManager implements RelationManager {
 
     private final AsyncEventService indexService;
 
-    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+    private final CollectionSettingsCacheFactory collectionSettingsCacheFactory;
 
 
     private final CollectionService collectionService;
@@ -119,7 +119,7 @@ public class CpRelationManager implements RelationManager {
                               final ConnectionService connectionService,
                               final EntityManager em,
                               final EntityManagerFig entityManagerFig, final UUID applicationId,
-                              final IndexSchemaCacheFactory indexSchemaCacheFactory,
+                              final CollectionSettingsCacheFactory collectionSettingsCacheFactory,
                               final EntityRef headEntity) {
 
 
@@ -159,7 +159,7 @@ public class CpRelationManager implements RelationManager {
             .format( "cpHeadEntity cannot be null for entity id %s, app id %s", entityId.getUuid(), applicationId ) );
 
         this.indexService = indexService;
-        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
+        this.collectionSettingsCacheFactory = collectionSettingsCacheFactory;
 
     }
 
@@ -524,44 +524,10 @@ public class CpRelationManager implements RelationManager {
         }
 
         Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
-        org.apache.usergrid.persistence.model.entity.Entity memberEntity = ( ( CpEntityManager ) em ).load( entityId );
 
 
-        // remove edge from collection to item
-        GraphManager gm = managerCache.getGraphManager( applicationScope );
-
-
-        List<Edge> removedEdges = new ArrayList<>();
-        //run our delete
-        gm.loadEdgeVersions(
-            CpNamingUtils.createEdgeFromCollectionName( cpHeadEntity.getId(), collectionName, memberEntity.getId() ) )
-                .flatMap(edge -> gm.markEdge(edge)).flatMap(edge -> gm.deleteEdge(edge))
-                .doOnNext(edge -> removedEdges.add(edge)).toBlocking()
-          .lastOrDefault(null);
-
-        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collectionName );
-        if (collection != null && collection.getLinkedCollection() != null) {
-            // delete reverse edges
-            final String pluralType = InflectionUtils.pluralize( cpHeadEntity.getId().getType() );
-            gm.loadEdgeVersions(
-                    CpNamingUtils.createEdgeFromCollectionName( memberEntity.getId(), pluralType, cpHeadEntity.getId() ) )
-                    .flatMap(reverseEdge -> gm.markEdge(reverseEdge))
-                    .flatMap(reverseEdge -> gm.deleteEdge(reverseEdge))
-                    .doOnNext(reverseEdge -> removedEdges.add(reverseEdge))
-                    .toBlocking().lastOrDefault(null);
-        }
-
-
-        /**
-         * Remove from the index
-         *
-         */
-
-
-        // item not deindexed, only edges
-        removedEdges.forEach(edge -> {
-            indexService.queueDeleteEdge(applicationScope, edge);
-        });
+        // this will remove the edges from app->entity(collection)
+        removeItemFromCollection(collectionName, itemRef);
 
         // special handling for roles collection of a group
         if ( headEntity.getType().equals( Group.ENTITY_TYPE ) ) {
@@ -572,13 +538,55 @@ public class CpRelationManager implements RelationManager {
                 if ( path.startsWith( "/roles/" ) ) {
 
                     Entity itemEntity =
-                        em.get( new SimpleEntityRef( memberEntity.getId().getType(), memberEntity.getId().getUuid() ) );
+                        em.get( new SimpleEntityRef( entityId.getType(), entityId.getUuid() ) );
 
                     RoleRef roleRef = SimpleRoleRef.forRoleEntity( itemEntity );
                     em.deleteRole( roleRef.getApplicationRoleName(), Optional.fromNullable(itemEntity) );
                 }
             }
         }
+    }
+
+    @Override
+    public void removeItemFromCollection( String collectionName, EntityRef itemRef ) throws Exception {
+
+        Id entityId = new SimpleId( itemRef.getUuid(), itemRef.getType() );
+
+        // remove edge from collection to item
+        GraphManager gm = managerCache.getGraphManager( applicationScope );
+
+
+
+        // mark the edge versions and take the first for later delete edge queue event ( load is descending )
+        final Edge markedSourceEdge = gm.loadEdgeVersions(
+            CpNamingUtils.createEdgeFromCollectionName( cpHeadEntity.getId(), collectionName, entityId ) )
+            .flatMap(edge -> gm.markEdge(edge)).toBlocking().firstOrDefault(null);
+
+
+        Edge markedReversedEdge = null;
+        CollectionInfo collection = getDefaultSchema().getCollection( headEntity.getType(), collectionName );
+        if (collection != null && collection.getLinkedCollection() != null) {
+            // delete reverse edges
+            final String pluralType = InflectionUtils.pluralize( cpHeadEntity.getId().getType() );
+            markedReversedEdge = gm.loadEdgeVersions(
+                CpNamingUtils.createEdgeFromCollectionName( entityId, pluralType, cpHeadEntity.getId() ) )
+                .flatMap(reverseEdge -> gm.markEdge(reverseEdge)).toBlocking().firstOrDefault(null);
+        }
+
+
+        /**
+         * Remove from the index.  This will call gm.deleteEdge which also deletes the reverse edge(s) and de-indexes
+         * older versions of the edge(s).
+         *
+         */
+        if( markedSourceEdge != null ) {
+            indexService.queueDeleteEdge(applicationScope, markedSourceEdge);
+        }
+        if( markedReversedEdge != null ){
+            indexService.queueDeleteEdge(applicationScope, markedReversedEdge);
+
+        }
+
     }
 
 
@@ -1099,14 +1107,15 @@ public class CpRelationManager implements RelationManager {
         boolean skipIndexing = false;
 
         MapManager mm = getMapManagerForTypes();
-        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+        CollectionSettingsCache collectionSettingsCache = collectionSettingsCacheFactory.getInstance( mm );
         String collectionName = Schema.defaultCollectionName( type );
-        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+        Optional<Map<String, Object>> collectionIndexingSchema =
+            collectionSettingsCache.getCollectionSettings( collectionName );
 
         if ( collectionIndexingSchema.isPresent()) {
             Map jsonMapData = collectionIndexingSchema.get();
-            final ArrayList fields = (ArrayList) jsonMapData.get( "fields" );
-            if ( fields.size() == 1 && fields.get(0).equals("none")) {
+            final Object fields = jsonMapData.get( "fields" );
+            if ( fields != null && fields instanceof String && "none".equalsIgnoreCase( fields.toString())) {
                 skipIndexing = true;
             }
         }

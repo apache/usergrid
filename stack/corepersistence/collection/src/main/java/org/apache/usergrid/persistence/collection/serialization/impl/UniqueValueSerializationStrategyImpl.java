@@ -223,10 +223,9 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
 
         if ( logger.isTraceEnabled() ) {
-            logger.trace( "Writing unique value version={} name={} value={} ",
-                    uniqueValue.getEntityVersion(), uniqueValue.getField().getName(),
-                    uniqueValue.getField().getValue()
-                );
+            logger.trace( "Building batch statement for unique value entity={} version={} name={} value={} ",
+                uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion(),
+                uniqueValue.getField().getName(), uniqueValue.getField().getValue() );
         }
 
 
@@ -237,13 +236,21 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     @Override
     public UniqueValueSet load( final ApplicationScope colScope, final String type, final Collection<Field> fields )
         throws ConnectionException {
-        return load( colScope, ConsistencyLevel.valueOf( cassandraFig.getReadCL() ), type, fields );
+        return load( colScope, ConsistencyLevel.valueOf( cassandraFig.getReadCL() ), type, fields, false);
+    }
+
+    @Override
+    public UniqueValueSet load( final ApplicationScope colScope, final String type, final Collection<Field> fields,
+                                boolean useReadRepair)
+        throws ConnectionException {
+        return load( colScope, ConsistencyLevel.valueOf( cassandraFig.getReadCL() ), type, fields, useReadRepair);
     }
 
 
+
     @Override
-    public UniqueValueSet load( final ApplicationScope appScope, final ConsistencyLevel consistencyLevel,
-                                final String type, final Collection<Field> fields ) throws ConnectionException {
+    public UniqueValueSet load(final ApplicationScope appScope, final ConsistencyLevel consistencyLevel,
+                               final String type, final Collection<Field> fields, boolean useReadRepair) throws ConnectionException {
 
         Preconditions.checkNotNull( fields, "fields are required" );
         Preconditions.checkArgument( fields.size() > 0, "More than 1 field must be specified" );
@@ -271,6 +278,12 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                 .withColumnRange(new RangeBuilder().setLimit(serializationFig.getMaxLoadSize()).build())
                 .execute().getResult().iterator();
 
+        if( !results.hasNext()){
+            if(logger.isTraceEnabled()){
+                logger.trace("No partitions returned for unique value lookup");
+            }
+        }
+
 
         while ( results.hasNext() )
 
@@ -284,6 +297,10 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
             //sanity check, nothing to do, skip it
             if ( !columnList.hasNext() ) {
+                if(logger.isTraceEnabled()){
+                    logger.trace("No cells exist in partition for unique value [{}={}]",
+                        field.getName(), field.getValue().toString());
+                }
                 continue;
             }
 
@@ -307,74 +324,105 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
                 final UniqueValue uniqueValue =
                     new UniqueValueImpl(field, entityVersion.getEntityId(), entityVersion.getEntityVersion());
 
-
                 // set the initial candidate and move on
-                if(candidates.size() == 0){
+                if (candidates.size() == 0) {
                     candidates.add(uniqueValue);
+
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("First entry for unique value [{}={}] found for application [{}], adding " +
+                                "entry with entity id [{}] and entity version [{}] to the candidate list and continuing",
+                            field.getName(), field.getValue().toString(), applicationId.getType(),
+                            uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion());
+                    }
+
                     continue;
                 }
 
-                final int result = uniqueValueComparator.compare(uniqueValue, candidates.get(candidates.size() -1));
+                if(!useReadRepair){
 
-                if(result == 0){
-
-                    // do nothing, only versions can be newer and we're not worried about newer versions of same entity
-                    if(logger.isTraceEnabled()){
-                        logger.trace("Candidate unique value is equal to the current unique value");
+                    // take only the first
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Read repair not enabled for this request of unique value [{}={}], breaking out" +
+                            " of cell loop", field.getName(), field.getValue().toString());
                     }
+                    break;
 
-                    // update candidate w/ latest version
-                    candidates.add(uniqueValue);
+                } else {
 
-                }else if(result < 0){
 
-                    // delete the duplicate from the unique value index
-                    candidates.forEach(candidate -> {
+                    final int result = uniqueValueComparator.compare(uniqueValue, candidates.get(candidates.size() - 1));
 
-                        try {
+                    if (result == 0) {
 
-                            logger.warn("Duplicate unique value [{}={}] found, removing newer entry " +
-                                    "with entity id [{}] and entity version [{}]", field.getName(), field.getValue().toString(),
-                                candidate.getEntityId().getUuid(), candidate.getEntityVersion() );
-
-                            delete(appScope, candidate ).execute();
-
-                        } catch (ConnectionException e) {
-                            // do nothing for now
+                        // do nothing, only versions can be newer and we're not worried about newer versions of same entity
+                        if (logger.isTraceEnabled()) {
+                            logger.trace("Current unique value [{}={}] entry has UUID [{}] equal to candidate UUID [{}]",
+                                field.getName(), field.getValue().toString(), uniqueValue.getEntityId().getUuid(),
+                                candidates.get(candidates.size() -1));
                         }
 
-                    });
+                        // update candidate w/ latest version
+                        candidates.add(uniqueValue);
 
-                    // clear the transient candidates list
-                    candidates.clear();
+                    } else if (result < 0) {
 
-                    if(logger.isTraceEnabled()) {
-                        logger.trace("Updating candidate to entity id [{}] and entity version [{}]",
-                            uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion());
+                        // delete the duplicate from the unique value index
+                        candidates.forEach(candidate -> {
+
+                            try {
+
+                                logger.warn("Duplicate unique value [{}={}] found for application [{}], removing newer " +
+                                        "entry with entity id [{}] and entity version [{}]", field.getName(),
+                                    field.getValue().toString(), applicationId.getUuid(),
+                                    candidate.getEntityId().getUuid(), candidate.getEntityVersion());
+
+                                delete(appScope, candidate).execute();
+
+                            } catch (ConnectionException e) {
+                               logger.error( "Unable to connect to cassandra during duplicate repair of [{}={}]",
+                                   field.getName(), field.getValue().toString() );
+                            }
+
+                        });
+
+                        // clear the transient candidates list
+                        candidates.clear();
+
+                        if (logger.isTraceEnabled()) {
+                            logger.trace("Updating candidate unique value [{}={}] to entity id [{}] and " +
+                                "entity version [{}]", field.getName(), field.getValue().toString(),
+                                uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion());
+
+                        }
+
+                        // add our new candidate to the list
+                        candidates.add(uniqueValue);
+
+
+                    } else {
+
+                        logger.warn("Duplicate unique value [{}={}] found for application [{}], removing newer entry " +
+                                "with entity id [{}] and entity version [{}].", field.getName(), field.getValue().toString(),
+                            applicationId.getUuid(), uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion());
+
+                        // delete the duplicate from the unique value index
+                        delete(appScope, uniqueValue).execute();
+
 
                     }
 
-                    // add our new candidate to the list
-                    candidates.add(uniqueValue);
-
-
-                }else{
-
-                    logger.warn("Duplicate unique value [{}={}] found, removing newer entry " +
-                            "with entity id [{}] and entity version [{}]", field.getName(), field.getValue().toString(),
-                        uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion() );
-
-                    // delete the duplicate from the unique value index
-                    delete(appScope, uniqueValue ).execute();
-
-
                 }
-
-
             }
 
             // take the last candidate ( should be the latest version) and add to the result set
-            uniqueValueSet.addValue(candidates.get(candidates.size() -1));
+
+            final UniqueValue returnValue = candidates.get(candidates.size() -1);
+            if(logger.isTraceEnabled()){
+                logger.trace("Adding unique value [{}={}] with entity id [{}] and entity version [{}] to response set",
+                    returnValue.getField().getName(), returnValue.getField().getValue().toString(),
+                    returnValue.getEntityId().getUuid(), returnValue.getEntityVersion());
+            }
+            uniqueValueSet.addValue(returnValue);
 
         }
 

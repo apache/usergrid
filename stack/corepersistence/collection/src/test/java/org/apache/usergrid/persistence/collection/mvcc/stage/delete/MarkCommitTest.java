@@ -71,13 +71,12 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
 
 
         //run the stage
-        WriteCommit newStage = new WriteCommit( logStrategy, mvccEntityStrategy, uniqueValueStrategy );
+        WriteCommit newStage = new WriteCommit( logStrategy, mvccEntityStrategy, uniqueValueStrategy, null, null, null);
 
 
         //verify the observable is correct
-        Entity result  = newStage.call( new CollectionIoEvent<MvccEntity>( context, mvccEntityInput ) ).getEvent().getEntity().get();
-
-
+        Entity result  = newStage.call(
+            new CollectionIoEvent<MvccEntity>( context, mvccEntityInput ) ).getEvent().getEntity().get();
 
 
         //verify the log entry is correct
@@ -121,7 +120,8 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
                 .thenReturn( entityMutation );
 
 
-        new MarkCommit( logStrategy, mvccEntityStrategy, uniqueValueSerializationStrategy, serializationFig, keyspace ).call( event );
+        new MarkCommit( logStrategy, mvccEntityStrategy, uniqueValueSerializationStrategy, serializationFig,
+            null, null, null, keyspace ).call( event );
 
         //TODO: This doesn't assert anything, this needs fixed (should be a fail technically)
     }
