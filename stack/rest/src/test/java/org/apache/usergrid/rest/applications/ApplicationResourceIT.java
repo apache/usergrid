@@ -279,7 +279,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
             .get(ApiResponse.class);
 
         // assert that the response returns the correct URI
-        assertEquals(apiResponse.getUri(), String.format("http://sometestvalue/%s/%s", orgName, appName));
+        assertEquals(String.format("http://localhost:8080/%s/%s", orgName, appName), apiResponse.getUri());
 
         //unmarshal the application from the response
         Application application = new Application(apiResponse);

@@ -18,42 +18,40 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.map.MapManager;
-import org.apache.usergrid.utils.JsonUtils;
-
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Singleton;
+import org.apache.usergrid.persistence.map.MapManager;
+import org.apache.usergrid.utils.JsonUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 /**
- * Cache the calls to update and get the map manager so we don't overload cassandra when we update
- * after each call?
+ * Cache collection settings to reduce load on Cassandra.
  */
 @Singleton
-public class IndexSchemaCacheImpl implements IndexSchemaCache {
-    private static final Logger logger = LoggerFactory.getLogger(IndexSchemaCacheImpl.class );
+public class CollectionSettingsCacheImpl implements CollectionSettingsCache {
+    private static final Logger logger = LoggerFactory.getLogger(CollectionSettingsCacheImpl.class );
 
-    private final LoadingCache<String,Optional<Map>> indexSchemaCache;
+    private final LoadingCache<String,Optional<Map<String, Object>>> indexSchemaCache;
     private final MapManager mapManager;
 
 
-    public IndexSchemaCacheImpl(MapManager mapManager,IndexSchemaCacheFig indexSchemaCacheFig){
+    public CollectionSettingsCacheImpl( MapManager mapManager, CollectionSettingsCacheFig indexSchemaCacheFig) {
         this.mapManager = mapManager;
+
         indexSchemaCache = CacheBuilder.newBuilder()
             .maximumSize( indexSchemaCacheFig.getCacheSize() )
             .expireAfterWrite( indexSchemaCacheFig.getCacheTimeout(), TimeUnit.MILLISECONDS )
-            .build( new CacheLoader<String, Optional<Map>>() {
+            .build( new CacheLoader<String, Optional<Map<String, Object>>>() {
                 @Override
-                public Optional<Map> load( final String collectionName ) throws Exception {
+                public Optional<Map<String, Object>> load( final String collectionName ) throws Exception {
                     return Optional.fromNullable( retrieveCollectionSchema( collectionName ) );
                 }
             } );
@@ -71,15 +69,17 @@ public class IndexSchemaCacheImpl implements IndexSchemaCache {
 
 
     @Override
-    public Optional<Map> getCollectionSchema( final String collectionName ) {
+    public Optional<Map<String, Object>> getCollectionSettings(final String collectionName ) {
+
         try {
-            Optional<Map> optionalCollectionSchema = indexSchemaCache.get( collectionName );
+            Optional<Map<String, Object>> optionalCollectionSchema = indexSchemaCache.get( collectionName );
             if(!optionalCollectionSchema.isPresent()){
                 indexSchemaCache.invalidate( collectionName );
                 return Optional.absent();
             }
             return optionalCollectionSchema;
-        }catch(Exception e){
+
+        } catch ( Exception e ) {
             if(logger.isDebugEnabled()){
                 logger.debug( "Returning for collection name: {} "
                     + "resulted in the following failure: {}",collectionName,e );
@@ -89,19 +89,21 @@ public class IndexSchemaCacheImpl implements IndexSchemaCache {
     }
 
     @Override
-    public void putCollectionSchema( final String collectionName, final String collectionSchema ){
+    public void putCollectionSettings(final String collectionName, final String collectionSchema ){
         mapManager.putString( collectionName, collectionSchema );
-        evictCollectionSchema( collectionName );
+        evictCollectionSettings( collectionName );
     }
 
+
     @Override
-    public void deleteCollectionSchema(final String collectionName){
+    public void deleteCollectionSettings(final String collectionName){
         mapManager.delete( collectionName );
-        evictCollectionSchema( collectionName );
+        evictCollectionSettings( collectionName );
     }
 
+
     @Override
-    public void evictCollectionSchema( final String collectionName ) {
+    public void evictCollectionSettings(final String collectionName ) {
         indexSchemaCache.invalidate( collectionName );
         if(logger.isDebugEnabled() ){
             logger.debug( "Invalidated key {}",collectionName );

@@ -466,11 +466,14 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         SearchResponse searchResponse;
         List<CandidateResult> candidates = new ArrayList<>();
 
-        //never let the limit be less than 2 as there are potential indefinite paging issues
-        final int searchLimit = Math.max(2, indexFig.getVersionQueryLimit());
+        // never let this fetch more than 100 to save memory
+        final int searchLimit = Math.min(100, indexFig.getVersionQueryLimit());
 
-        final QueryBuilder entityQuery = QueryBuilders
+        final QueryBuilder nodeIdQuery = QueryBuilders
             .termQuery(IndexingUtils.EDGE_NODE_ID_FIELDNAME, IndexingUtils.nodeId(edge.getNodeId()));
+
+        final QueryBuilder entityIdQuery = QueryBuilders
+            .termQuery(IndexingUtils.ENTITY_ID_FIELDNAME, IndexingUtils.entityId(entityId));
 
         final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder()
             .addSort(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME, SortOrder.ASC);
@@ -485,41 +488,25 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
             long queryTimestamp = 0L;
 
-            while(true){
 
-                QueryBuilder timestampQuery =  QueryBuilders
-                    .rangeQuery(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME)
-                    .gte(queryTimestamp);
+            QueryBuilder timestampQuery =  QueryBuilders
+                .rangeQuery(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME)
+                .gte(queryTimestamp);
 
-                QueryBuilder finalQuery = QueryBuilders
-                    .boolQuery()
-                    .must(entityQuery)
-                    .must(timestampQuery);
+            QueryBuilder finalQuery = QueryBuilders
+                .boolQuery()
+                .must(entityIdQuery)
+                .must(nodeIdQuery)
+                .must(timestampQuery);
 
-                searchResponse = srb
-                    .setQuery(finalQuery)
-                    .setSize(searchLimit)
-                    .execute()
-                    .actionGet();
+            searchResponse = srb
+                .setQuery(finalQuery)
+                .setSize(searchLimit)
+                .execute()
+                .actionGet();
 
-                int responseSize = searchResponse.getHits().getHits().length;
-                if(responseSize == 0){
-                    break;
-                }
+            candidates = aggregateScrollResults(candidates, searchResponse, null);
 
-                // update queryTimestamp to be the timestamp of the last entity returned from the query
-                queryTimestamp = (long) searchResponse
-                    .getHits().getAt(responseSize - 1)
-                    .getSource().get(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME);
-
-                candidates = aggregateScrollResults(candidates, searchResponse, null);
-
-                if(responseSize < searchLimit){
-
-                    break;
-                }
-
-            }
         }
         catch ( Throwable t ) {
             logger.error( "Unable to communicate with Elasticsearch", t.getMessage() );
