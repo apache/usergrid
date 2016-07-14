@@ -28,6 +28,7 @@ import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,8 @@ public class OrganizationsResource extends AbstractContextResource {
 
     public static final String ORGANIZATION_PROPERTIES = "properties";
     public static final String ORGANIZATION_CONFIGURATION = "configuration";
+    public static final String USERGRID_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
+    public static final String USERGRID_SUPERUSER_ADDORG_ENABLED ="usergrid.superuser.addorg.enable";
 
     @Autowired
     private ApplicationCreator applicationCreator;
@@ -185,9 +188,13 @@ public class OrganizationsResource extends AbstractContextResource {
                                              String email, String password, Map<String, Object> userProperties,
                                              Map<String, Object> orgProperties, String callback ) throws Exception {
 
+        String tokenUserName = SubjectUtils.getUser().getUsername();
+
         if ( tokens.isExternalSSOProviderEnabled() ) {
-            throw new IllegalArgumentException( "Organization / Admin Users must be created via " +
-                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+            if(!tokenUserName.equals(properties.getProperty(USERGRID_SYSADMIN_LOGIN_NAME))) {
+                throw new IllegalArgumentException("Organization / Admin Users must be created via " +
+                    properties.getProperty(USERGRID_EXTERNAL_PROVIDER_URL));
+            }
         }
 
         Preconditions
