@@ -23,8 +23,9 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
-import org.apache.usergrid.corepersistence.index.CollectionSettingsCache;
-import org.apache.usergrid.corepersistence.index.CollectionSettingsCacheFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettings;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Schema;
@@ -60,7 +61,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
     private final EventBuilder eventBuilder;
     private final MapManagerFactory mapManagerFactory;
     private final GraphManagerFactory graphManagerFactory;
-    private final CollectionSettingsCacheFactory collectionSettingsCacheFactory;
+    private final CollectionSettingsFactory collectionSettingsFactory;
     private final ActorSystemFig actorSystemFig;
 
 
@@ -71,7 +72,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
                                   EventBuilder eventBuilder,
                                   MapManagerFactory mapManagerFactory,
                                   GraphManagerFactory graphManagerFactory,
-                                  CollectionSettingsCacheFactory collectionSettingsCacheFactory,
+                                  CollectionSettingsFactory collectionSettingsFactory,
                                   ActorSystemFig actorSystemFig
     ){
 
@@ -81,7 +82,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
         this.eventBuilder = eventBuilder;
         this.mapManagerFactory = mapManagerFactory;
         this.graphManagerFactory = graphManagerFactory;
-        this.collectionSettingsCacheFactory = collectionSettingsCacheFactory;
+        this.collectionSettingsFactory = collectionSettingsFactory;
         this.actorSystemFig = actorSystemFig;
     }
 
@@ -151,11 +152,13 @@ public class ApplicationServiceImpl  implements ApplicationService{
 
         boolean skipIndexing = false;
 
-        MapManager mm = getMapManagerForTypes(applicationScope);
-        CollectionSettingsCache collectionSettingsCache = collectionSettingsCacheFactory.getInstance( mm );
         String collectionName = Schema.defaultCollectionName( type );
+
+        CollectionSettings collectionSettings = collectionSettingsFactory
+            .getInstance( new CollectionSettingsScopeImpl(applicationScope.getApplication(), collectionName));
+
         Optional<Map<String, Object>> collectionIndexingSchema =
-            collectionSettingsCache.getCollectionSettings( collectionName );
+            collectionSettings.getCollectionSettings( collectionName );
 
         if ( collectionIndexingSchema.isPresent()) {
             Map jsonMapData = collectionIndexingSchema.get();

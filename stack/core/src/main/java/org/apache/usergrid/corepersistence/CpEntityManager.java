@@ -29,8 +29,9 @@ import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
 import org.apache.commons.lang.NullArgumentException;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.index.CollectionSettingsCache;
-import org.apache.usergrid.corepersistence.index.CollectionSettingsCacheFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettings;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
@@ -112,7 +113,7 @@ public class CpEntityManager implements EntityManager {
 
     private final ManagerCache managerCache;
 
-    private final CollectionSettingsCacheFactory collectionSettingsCacheFactory;
+    private final CollectionSettingsFactory collectionSettingsFactory;
 
     private final ApplicationScope applicationScope;
 
@@ -176,7 +177,7 @@ public class CpEntityManager implements EntityManager {
                             final GraphManagerFactory graphManagerFactory,
                             final CollectionService collectionService,
                             final ConnectionService connectionService,
-                            final CollectionSettingsCacheFactory collectionSettingsCacheFactory,
+                            final CollectionSettingsFactory collectionSettingsFactory,
                             final UUID applicationId ) {
 
         this.entityManagerFig = entityManagerFig;
@@ -201,7 +202,7 @@ public class CpEntityManager implements EntityManager {
         this.managerCache = managerCache;
         this.applicationId = applicationId;
         this.indexService = indexService;
-        this.collectionSettingsCacheFactory = collectionSettingsCacheFactory;
+        this.collectionSettingsFactory = collectionSettingsFactory;
 
         applicationScope = CpNamingUtils.getApplicationScope( applicationId );
 
@@ -550,15 +551,16 @@ public class CpEntityManager implements EntityManager {
     private boolean skipIndexingForType( String type ) {
 
         boolean skipIndexing = false;
-
-        MapManager mm = getMapManagerForTypes();
-        CollectionSettingsCache collectionSettingsCache = collectionSettingsCacheFactory.getInstance( mm );
         String collectionName = Schema.defaultCollectionName( type );
-        Optional<Map<String, Object>> collectionSettings =
-            collectionSettingsCache.getCollectionSettings( collectionName );
 
-        if ( collectionSettings.isPresent()) {
-            Map jsonMapData = collectionSettings.get();
+
+        CollectionSettings collectionSettings = collectionSettingsFactory
+            .getInstance( new CollectionSettingsScopeImpl(getAppIdObject(), collectionName) );
+        Optional<Map<String, Object>> existingSettings =
+            collectionSettings.getCollectionSettings( collectionName );
+
+        if ( existingSettings.isPresent()) {
+            Map jsonMapData = existingSettings.get();
             Object fields = jsonMapData.get("fields");
             if ( fields != null && "none".equalsIgnoreCase( fields.toString() ) ) {
                 skipIndexing = true;
@@ -715,7 +717,7 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull(entityRef, "entityRef cannot be null");
 
         CpRelationManager relationManager = new CpRelationManager( managerCache, indexService, collectionService,
-            connectionService, this, entityManagerFig, applicationId, collectionSettingsCacheFactory, entityRef );
+            connectionService, this, entityManagerFig, applicationId, collectionSettingsFactory, entityRef );
         return relationManager;
     }
 
@@ -1120,13 +1122,14 @@ public class CpEntityManager implements EntityManager {
         }
 
         String region = null;
-        MapManager mm = getMapManagerForTypes();
-        CollectionSettingsCache collectionSettingsCache = collectionSettingsCacheFactory.getInstance( mm );
         String collectionName = Schema.defaultCollectionName( entityRef.getType() );
-        Optional<Map<String, Object>> collectionSettings =
-            collectionSettingsCache.getCollectionSettings( collectionName );
-        if ( collectionSettings.isPresent() ) {
-            region = collectionSettings.get().get("region").toString();
+
+        CollectionSettings collectionSettings = collectionSettingsFactory
+            .getInstance( new CollectionSettingsScopeImpl( getAppIdObject(), collectionName) );
+        Optional<Map<String, Object>> existingSettings =
+            collectionSettings.getCollectionSettings( collectionName );
+        if ( existingSettings.isPresent() ) {
+            region = existingSettings.get().get("region").toString();
         }
 
         //TODO: does this call and others like it need a graphite reporter?
@@ -1771,12 +1774,10 @@ public class CpEntityManager implements EntityManager {
         // Possible values are app credentials, org credentials, or the user email(Admin tokens).
         updatedSettings.put( "lastUpdateBy", owner );
 
-        MapManager mm = getMapManagerForTypes();
-
-        CollectionSettingsCache collectionSettingsCache = collectionSettingsCacheFactory.getInstance( mm );
-
+        CollectionSettings collectionSettings = collectionSettingsFactory
+            .getInstance( new CollectionSettingsScopeImpl( getAppIdObject(), collectionName) );
         Optional<Map<String, Object>> existingSettings =
-            collectionSettingsCache.getCollectionSettings( collectionName );
+            collectionSettings.getCollectionSettings( collectionName );
 
         // If there is an existing schema then take the lastReindexed time and keep it around.
         // Otherwise initialize to 0.
@@ -1810,30 +1811,31 @@ public class CpEntityManager implements EntityManager {
             }
         }
 
-        collectionSettingsCache.putCollectionSettings( collectionName, JsonUtils.mapToJsonString( updatedSettings ) );
+        collectionSettings.putCollectionSettings( collectionName, JsonUtils.mapToJsonString( updatedSettings ) );
 
         return updatedSettings;
     }
 
     @Override
     public void deleteCollectionSettings( String collectionName ){
-        MapManager mm = getMapManagerForTypes();
 
-        CollectionSettingsCache collectionSettingsCache = collectionSettingsCacheFactory.getInstance( mm );
+        CollectionSettings collectionSettings = collectionSettingsFactory
+            .getInstance( new CollectionSettingsScopeImpl( getAppIdObject(), collectionName) );
 
-        collectionSettingsCache.deleteCollectionSettings( collectionName );
+
+        collectionSettings.deleteCollectionSettings( collectionName );
 
     }
 
 
     @Override
     public Object getCollectionSettings(String collectionName) {
-        MapManager mm = getMapManagerForTypes();
 
-        CollectionSettingsCache collectionSettingsCache = collectionSettingsCacheFactory.getInstance( mm );
+        CollectionSettings collectionSettings =
+            collectionSettingsFactory.getInstance( new CollectionSettingsScopeImpl( getAppIdObject(), collectionName) );
 
         Optional<Map<String, Object>> collectionIndexingSchema =
-            collectionSettingsCache.getCollectionSettings( collectionName );
+            collectionSettings.getCollectionSettings( collectionName );
 
         if (collectionIndexingSchema.isPresent()) {
             return collectionIndexingSchema.get();
@@ -2467,6 +2469,10 @@ public class CpEntityManager implements EntityManager {
         MapManager mm = managerCache.getMapManager( ms );
 
         return mm;
+    }
+
+    private Id getAppIdObject(){
+        return new SimpleId( applicationId, TYPE_APPLICATION );
     }
 
 
@@ -3108,17 +3114,18 @@ public class CpEntityManager implements EntityManager {
     private  String lookupRegionForType( String type ) {
 
         String region = null;
-
-        // get collection settings for type
-        MapManager mm = getMapManagerForTypes();
-        CollectionSettingsCache collectionSettingsCache = collectionSettingsCacheFactory.getInstance( mm );
         String collectionName = Schema.defaultCollectionName( type );
 
-        Optional<Map<String, Object>> collectionSettings =
-            collectionSettingsCache.getCollectionSettings( collectionName );
 
-        if ( collectionSettings.isPresent() && collectionSettings.get().get("region") != null ) {
-            region = collectionSettings.get().get("region").toString();
+        // get collection settings for type
+        CollectionSettings collectionSettings = collectionSettingsFactory
+            .getInstance( new CollectionSettingsScopeImpl( getAppIdObject(), collectionName) );
+
+        Optional<Map<String, Object>> existingSettings =
+            collectionSettings.getCollectionSettings( collectionName );
+
+        if ( existingSettings.isPresent() && existingSettings.get().get("region") != null ) {
+            region = existingSettings.get().get("region").toString();
         }
 
         return region;

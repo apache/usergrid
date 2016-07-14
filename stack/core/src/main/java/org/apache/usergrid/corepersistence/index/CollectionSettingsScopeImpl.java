@@ -14,49 +14,60 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.cache;
+package org.apache.usergrid.corepersistence.index;
+
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
+public class CollectionSettingsScopeImpl implements CollectionSettingsScope {
 
-/**
- * For caches scoped by application.
- */
-public class CacheScope implements ApplicationScope {
+    private final Id owner;
+    private final String collectionName;
 
-    private Id appId;
+    public CollectionSettingsScopeImpl( final Id owner, final String collectionName ) {
+        this.owner = owner;
+        this.collectionName = collectionName;
+    }
 
-    public CacheScope( Id appId ) {
-        this.appId = appId;
+    @Override
+    public String getCollectionName() {
+        return collectionName;
     }
 
     @Override
     public Id getApplication() {
-        return appId;
+        return owner;
     }
 
     @Override
-    public boolean equals( Object o){
-
+    public boolean equals( final Object o ) {
         if ( this == o ) {
             return true;
         }
-        if ( !( o instanceof CacheScope ) ) {
+        if ( !( o instanceof CollectionSettingsScopeImpl ) ) {
             return false;
         }
 
-        final CacheScope cacheScope = ( CacheScope ) o;
+        final CollectionSettingsScopeImpl collectionSettingsScope = ( CollectionSettingsScopeImpl ) o;
 
-        return appId.equals(cacheScope.appId);
+        if ( !collectionName.equals( collectionSettingsScope.collectionName ) ) {
+            return false;
+        }
+        if ( !owner.equals( collectionSettingsScope.owner ) ) {
+            return false;
+        }
 
+        return true;
     }
+
 
     @Override
-    public int hashCode(){
+    public int hashCode() {
         return new HashCodeBuilder()
-            .append(appId)
+            .append(collectionName)
+            .append(owner)
             .toHashCode();
     }
+
 }
