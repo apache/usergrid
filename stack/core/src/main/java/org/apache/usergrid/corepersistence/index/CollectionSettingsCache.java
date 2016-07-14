@@ -27,15 +27,13 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class CollectionSettingsCache {
 
-    private final CollectionSettingsCacheFig fig;
     private final Cache<CollectionSettingsScope,String> cache;
 
 
     @Inject
     public CollectionSettingsCache( CollectionSettingsCacheFig fig ) {
-        this.fig = fig;
         this.cache = CacheBuilder.newBuilder()
-            .maximumSize(Math.min(1000, fig.getCacheSize()))
+            .maximumSize(fig.getCacheSize())
             .expireAfterWrite(fig.getCacheTimeout(), TimeUnit.SECONDS).build();
     }
 
