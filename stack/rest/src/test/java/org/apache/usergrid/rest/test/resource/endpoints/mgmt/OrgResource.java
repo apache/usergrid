@@ -18,7 +18,6 @@
 package org.apache.usergrid.rest.test.resource.endpoints.mgmt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.usergrid.java.client.exception.ClientException;
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
@@ -29,14 +28,10 @@ import org.apache.usergrid.rest.test.resource.state.ClientContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.StringReader;
 
