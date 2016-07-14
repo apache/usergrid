@@ -83,7 +83,7 @@ public class ReIndexServiceImpl implements ReIndexService {
     private final MapManagerFactory mapManagerFactory;
     private final AsyncEventService indexService;
     private final EntityIndexFactory entityIndexFactory;
-    private final CollectionSettingsCacheFactory collectionSettingsCacheFactory;
+    private final CollectionSettingsFactory collectionSettingsFactory;
 
 
     @Inject
@@ -93,7 +93,7 @@ public class ReIndexServiceImpl implements ReIndexService {
                                final MapManagerFactory mapManagerFactory,
                                final AllApplicationsObservable allApplicationsObservable,
                                final IndexProcessorFig indexProcessorFig,
-                               final CollectionSettingsCacheFactory collectionSettingsCacheFactory,
+                               final CollectionSettingsFactory collectionSettingsFactory,
                                final AsyncEventService indexService ) {
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
@@ -101,7 +101,7 @@ public class ReIndexServiceImpl implements ReIndexService {
         this.allApplicationsObservable = allApplicationsObservable;
         this.indexProcessorFig = indexProcessorFig;
         this.indexService = indexService;
-        this.collectionSettingsCacheFactory = collectionSettingsCacheFactory;
+        this.collectionSettingsFactory = collectionSettingsFactory;
         this.mapManagerFactory = mapManagerFactory;
         this.mapManager = mapManagerFactory.createMapManager( RESUME_MAP_SCOPE );
     }
@@ -141,11 +141,8 @@ public class ReIndexServiceImpl implements ReIndexService {
             String collectionName =  InflectionUtils.pluralize(
                 CpNamingUtils.getNameFromEdgeType(reIndexRequestBuilder.getCollectionName().get() ));
 
-            MapManager collectionMapStorage = mapManagerFactory.createMapManager(
-                CpNamingUtils.getEntityTypeMapScope( appId.get().getApplication()  ) );
-
-            CollectionSettingsCache collectionSettingsCache =
-                collectionSettingsCacheFactory.getInstance( collectionMapStorage );
+            CollectionSettings collectionSettingsCache =
+                collectionSettingsFactory.getInstance( new CollectionSettingsScopeImpl(appId.get().getApplication(), collectionName) );
 
             Optional<Map<String, Object>> collectionSettings =
                 collectionSettingsCache.getCollectionSettings( collectionName );
