@@ -554,13 +554,13 @@ public class CpEntityManager implements EntityManager {
         String collectionName = Schema.defaultCollectionName( type );
 
 
-        CollectionSettings collectionSettingsCache = collectionSettingsFactory
+        CollectionSettings collectionSettings = collectionSettingsFactory
             .getInstance( new CollectionSettingsScopeImpl(getAppIdObject(), collectionName) );
-        Optional<Map<String, Object>> collectionSettings =
-            collectionSettingsCache.getCollectionSettings( collectionName );
+        Optional<Map<String, Object>> existingSettings =
+            collectionSettings.getCollectionSettings( collectionName );
 
-        if ( collectionSettings.isPresent()) {
-            Map jsonMapData = collectionSettings.get();
+        if ( existingSettings.isPresent()) {
+            Map jsonMapData = existingSettings.get();
             Object fields = jsonMapData.get("fields");
             if ( fields != null && "none".equalsIgnoreCase( fields.toString() ) ) {
                 skipIndexing = true;
@@ -1124,12 +1124,12 @@ public class CpEntityManager implements EntityManager {
         String region = null;
         String collectionName = Schema.defaultCollectionName( entityRef.getType() );
 
-        CollectionSettings collectionSettingsCache = collectionSettingsFactory
+        CollectionSettings collectionSettings = collectionSettingsFactory
             .getInstance( new CollectionSettingsScopeImpl( getAppIdObject(), collectionName) );
-        Optional<Map<String, Object>> collectionSettings =
-            collectionSettingsCache.getCollectionSettings( collectionName );
-        if ( collectionSettings.isPresent() ) {
-            region = collectionSettings.get().get("region").toString();
+        Optional<Map<String, Object>> existingSettings =
+            collectionSettings.getCollectionSettings( collectionName );
+        if ( existingSettings.isPresent() ) {
+            region = existingSettings.get().get("region").toString();
         }
 
         //TODO: does this call and others like it need a graphite reporter?
@@ -1774,10 +1774,10 @@ public class CpEntityManager implements EntityManager {
         // Possible values are app credentials, org credentials, or the user email(Admin tokens).
         updatedSettings.put( "lastUpdateBy", owner );
 
-        CollectionSettings collectionSettingsCache = collectionSettingsFactory
+        CollectionSettings collectionSettings = collectionSettingsFactory
             .getInstance( new CollectionSettingsScopeImpl( getAppIdObject(), collectionName) );
         Optional<Map<String, Object>> existingSettings =
-            collectionSettingsCache.getCollectionSettings( collectionName );
+            collectionSettings.getCollectionSettings( collectionName );
 
         // If there is an existing schema then take the lastReindexed time and keep it around.
         // Otherwise initialize to 0.
@@ -1811,7 +1811,7 @@ public class CpEntityManager implements EntityManager {
             }
         }
 
-        collectionSettingsCache.putCollectionSettings( collectionName, JsonUtils.mapToJsonString( updatedSettings ) );
+        collectionSettings.putCollectionSettings( collectionName, JsonUtils.mapToJsonString( updatedSettings ) );
 
         return updatedSettings;
     }
@@ -1819,11 +1819,11 @@ public class CpEntityManager implements EntityManager {
     @Override
     public void deleteCollectionSettings( String collectionName ){
 
-        CollectionSettings collectionSettingsCache = collectionSettingsFactory
+        CollectionSettings collectionSettings = collectionSettingsFactory
             .getInstance( new CollectionSettingsScopeImpl( getAppIdObject(), collectionName) );
 
 
-        collectionSettingsCache.deleteCollectionSettings( collectionName );
+        collectionSettings.deleteCollectionSettings( collectionName );
 
     }
 
@@ -3118,14 +3118,14 @@ public class CpEntityManager implements EntityManager {
 
 
         // get collection settings for type
-        CollectionSettings collectionSettingsCache = collectionSettingsFactory
+        CollectionSettings collectionSettings = collectionSettingsFactory
             .getInstance( new CollectionSettingsScopeImpl( getAppIdObject(), collectionName) );
 
-        Optional<Map<String, Object>> collectionSettings =
-            collectionSettingsCache.getCollectionSettings( collectionName );
+        Optional<Map<String, Object>> existingSettings =
+            collectionSettings.getCollectionSettings( collectionName );
 
-        if ( collectionSettings.isPresent() && collectionSettings.get().get("region") != null ) {
-            region = collectionSettings.get().get("region").toString();
+        if ( existingSettings.isPresent() && existingSettings.get().get("region") != null ) {
+            region = existingSettings.get().get("region").toString();
         }
 
         return region;

@@ -141,21 +141,21 @@ public class ReIndexServiceImpl implements ReIndexService {
             String collectionName =  InflectionUtils.pluralize(
                 CpNamingUtils.getNameFromEdgeType(reIndexRequestBuilder.getCollectionName().get() ));
 
-            CollectionSettings collectionSettingsCache =
+            CollectionSettings collectionSettings =
                 collectionSettingsFactory.getInstance( new CollectionSettingsScopeImpl(appId.get().getApplication(), collectionName) );
 
-            Optional<Map<String, Object>> collectionSettings =
-                collectionSettingsCache.getCollectionSettings( collectionName );
+            Optional<Map<String, Object>> existingSettings =
+                collectionSettings.getCollectionSettings( collectionName );
 
             // If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
-            if ( collectionSettings.isPresent() ) {
+            if ( existingSettings.isPresent() ) {
 
-                Map jsonMapData = collectionSettings.get();
+                Map jsonMapData = existingSettings.get();
 
                 jsonMapData.put( "lastReindexed", Instant.now().toEpochMilli() );
 
                 // should probably roll this into the cache.
-                collectionSettingsCache.putCollectionSettings(
+                collectionSettings.putCollectionSettings(
                     collectionName, JsonUtils.mapToJsonString(jsonMapData ) );
             }
 

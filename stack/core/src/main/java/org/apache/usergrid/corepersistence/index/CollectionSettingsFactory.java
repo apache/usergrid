@@ -18,7 +18,6 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -28,36 +27,21 @@ import org.apache.usergrid.persistence.map.MapManager;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
-import org.apache.usergrid.persistence.model.entity.Id;
 
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 
-/**
- * This can only be implemented after we have the impl for the application cache.
- */
 @Singleton
 public class CollectionSettingsFactory {
 
-    private final CollectionSettingsCacheFig fig;
-
-    private final MapManagerFactory mapManagerFactory;
-
-
     private final LoadingCache<CollectionSettingsScope,CollectionSettings> indexSchemaCache;
-
-    private final CollectionSettingsCache collectionSettingsCache;
-
 
     @Inject
     public CollectionSettingsFactory( final CollectionSettingsCacheFig fig,
                                       final MapManagerFactory mapManagerFactory,
                                       final CollectionSettingsCache collectionSettingsCache ){
-        this.fig = fig;
-        this.mapManagerFactory = mapManagerFactory;
-        this.collectionSettingsCache = collectionSettingsCache;
+
 
        indexSchemaCache  = CacheBuilder.newBuilder()
             .maximumSize( fig.getCacheSize() )
