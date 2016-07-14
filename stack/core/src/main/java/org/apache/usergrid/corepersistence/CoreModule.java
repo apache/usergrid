@@ -91,7 +91,8 @@ public class CoreModule extends AbstractModule {
 
         bind( ManagerCache.class ).to( CpManagerCache.class );
         bind( ApplicationIdCacheFactory.class );
-        bind( CollectionSettingsCacheFactory.class );
+        bind( CollectionSettingsFactory.class );
+        bind( CollectionSettingsCache.class );
 
 
         /**

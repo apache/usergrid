@@ -65,7 +65,7 @@ public class IndexServiceImpl implements IndexService {
     private final GraphManagerFactory graphManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
     private final MapManagerFactory mapManagerFactory;
-    private final CollectionSettingsCacheFactory collectionSettingsCacheFactory;
+    private final CollectionSettingsFactory collectionSettingsFactory;
     private final EdgesObservable edgesObservable;
     private final IndexFig indexFig;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
@@ -76,7 +76,7 @@ public class IndexServiceImpl implements IndexService {
     @Inject
     public IndexServiceImpl( final GraphManagerFactory graphManagerFactory, final EntityIndexFactory entityIndexFactory,
                              final MapManagerFactory mapManagerFactory,
-                             final CollectionSettingsCacheFactory collectionSettingsCacheFactory,
+                             final CollectionSettingsFactory collectionSettingsFactory,
                              final EdgesObservable edgesObservable, final IndexFig indexFig,
                              final IndexLocationStrategyFactory indexLocationStrategyFactory,
                              final MetricsFactory metricsFactory ) {
@@ -86,7 +86,7 @@ public class IndexServiceImpl implements IndexService {
         this.edgesObservable = edgesObservable;
         this.indexFig = indexFig;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
-        this.collectionSettingsCacheFactory = collectionSettingsCacheFactory;
+        this.collectionSettingsFactory = collectionSettingsFactory;
         this.indexTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.update_all");
         this.addTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.add" );
     }
@@ -180,20 +180,17 @@ public class IndexServiceImpl implements IndexService {
      */
     private Optional<Set<String>> getFilteredStringObjectMap( final IndexEdge indexEdge ) {
 
-        Id mapOwner = new SimpleId( indexEdge.getNodeId().getUuid(), TYPE_APPLICATION );
-
-        final MapScope ms = CpNamingUtils.getEntityTypeMapScope( mapOwner );
-
-        MapManager mm = mapManagerFactory.createMapManager( ms );
+        Id owner = new SimpleId( indexEdge.getNodeId().getUuid(), TYPE_APPLICATION );
 
         Set<String> defaultProperties;
 
         String collectionName = CpNamingUtils.getCollectionNameFromEdgeName( indexEdge.getEdgeName() );
 
-        CollectionSettingsCache collectionSettingsCache = collectionSettingsCacheFactory.getInstance( mm );
+        CollectionSettings collectionSettings =
+            collectionSettingsFactory.getInstance( new CollectionSettingsScopeImpl( owner, collectionName) );
 
         Optional<Map<String, Object>> collectionIndexingSchema =
-            collectionSettingsCache.getCollectionSettings( collectionName );
+            collectionSettings.getCollectionSettings( collectionName );
 
         //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
         if ( collectionIndexingSchema.isPresent()) {
