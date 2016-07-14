@@ -39,6 +39,8 @@ import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.security.sso.ExternalSSOProvider;
 import org.apache.usergrid.security.sso.SSOProviderFactory;
+import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
+import org.apache.usergrid.utils.JsonUtils;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,8 +59,8 @@ import java.util.Map;
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.*;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
@@ -191,15 +193,12 @@ public class ManagementResource extends AbstractContextResource {
         }
 
 
-        if(ssoEnabled){
-
+        if(ssoEnabled && !user.getUsername().equals(properties.getProperty(USERGRID_SYSADMIN_LOGIN_NAME))){
             ExternalSSOProvider provider = ssoProviderFactory.getProvider();
-
             tokenTtl =
                 Long.valueOf(provider.getDecodedTokenDetails(access_token).get("expiry")) - System.currentTimeMillis()/1000;
 
         }else{
-
             tokenTtl = tokens.getTokenInfo(access_token).getDuration();
         }
 
@@ -215,6 +214,51 @@ public class ManagementResource extends AbstractContextResource {
 
     }
 
+    /**
+     * Get token details. Specially used for external tokens.
+     * @param ui
+     * @param authorization
+     * @param token
+     * @param provider
+     * @param keyUrl
+     * @param callback
+     * @return the json with all the token details. Error message if the external SSO provider is not supported or any other error.
+     * @throws Exception
+     */
+    @GET
+    @Path( "tokendetails" )
+    public Response getTokenDetails( @Context UriInfo ui, @HeaderParam( "Authorization" ) String authorization,
+                                    @QueryParam( "token" ) String token,
+                                    @QueryParam( "provider" )  @DefaultValue( "" ) String provider,
+                                    @QueryParam( "keyurl" )  @DefaultValue( "" ) String keyUrl,
+                                    @QueryParam( "callback" ) @DefaultValue( "" ) String callback
+                                    ) throws Exception {
+
+        ExternalSSOProvider externalprovider = null;
+        Map<String, Object> jwt = null;
+
+        if (! provider.isEmpty()) {
+            //check if its in one of the external provider list.
+            if (!ssoProviderFactory.getProvidersList().contains(StringUtils.upperCase(provider))) {
+                throw new IllegalArgumentException("Unsupported provider.");
+            } else {
+                //get the specific provider.
+                externalprovider = ssoProviderFactory.getSpecificProvider(provider);
+            }
+        }
+        else{   //if the provider is not specified get the default provider enabled in the properties.
+            externalprovider = ssoProviderFactory.getProvider();
+        }
+
+        if(keyUrl.isEmpty()) {
+            keyUrl =  externalprovider.getExternalSSOUrl();
+        }
+
+        jwt = externalprovider.getAllTokenDetails(token, keyUrl);
+
+        return Response.status( SC_OK ).type( jsonMediaType( callback ) )
+            .entity( wrapWithCallback(JsonUtils.mapToJsonString(jwt) , callback ) ).build();
+    }
 
     @GET
     @Path( "token" )
@@ -334,6 +378,12 @@ public class ManagementResource extends AbstractContextResource {
                                      .setErrorDescription( errorDescription ).buildJSONMessage();
                 return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
                                .entity( wrapWithCallback( response.getBody(), callback ) ).build();
+            }
+
+            //moved the check for sso enabled form MangementServiceImpl since was unable to get the current user there to check if its super user.
+            if( tokens.isExternalSSOProviderEnabled() && !user.getUsername().equals(properties.getProperty(USERGRID_SYSADMIN_LOGIN_NAME)) ){
+                throw new RuntimeException("SSO Integration is enabled, Admin users must login via provider: "+
+                    properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER));
             }
 
             String token = management.getAccessTokenForAdminUser( user.getUuid(), ttl );
@@ -520,6 +570,8 @@ public class ManagementResource extends AbstractContextResource {
                 else {
                     redirect_uri += "&";
                 }
+
+                //todo: check if sso enabled.
                 redirect_uri += "code=" + management.getAccessTokenForAdminUser( user.getUuid(), 0 );
                 if ( isNotBlank( state ) ) {
                     redirect_uri += "&state=" + URLEncoder.encode( state, "UTF-8" );

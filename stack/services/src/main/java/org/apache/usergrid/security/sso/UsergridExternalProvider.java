@@ -48,7 +48,7 @@ public class UsergridExternalProvider implements ExternalSSOProvider {
     private static final String SSO_PROCESSING_TIME = "sso.processing_time";
     private static final String SSO_TOKENS_REJECTED = "sso.tokens_rejected";
     private static final String SSO_TOKENS_VALIDATED = "sso.tokens_validated";
-    public static final String USERGRID_CENTRAL_URL = "usergrid.external.sso.publicKeyUrl";
+    public static final String USERGRID_CENTRAL_URL = "usergrid.external.sso.url";
     public static final String CENTRAL_CONNECTION_POOL_SIZE = "usergrid.central.connection.pool.size";
     public static final String CENTRAL_CONNECTION_TIMEOUT = "usergrid.central.connection.timeout";
     public static final String CENTRAL_READ_TIMEOUT = "usergrid.central.read.timeout";
@@ -89,6 +89,18 @@ public class UsergridExternalProvider implements ExternalSSOProvider {
     public TokenInfo validateAndReturnTokenInfo(String token, long ttl) throws Exception {
         throw new UnsupportedOperationException("Returning user info not supported from external Usergrid SSO tokens");
     }
+
+    @Override
+    public Map<String, Object> getAllTokenDetails(String token, String keyUrl) throws Exception {
+        throw new UnsupportedOperationException("Returning all token details info not supported from external Usergrid SSO tokens");
+
+    }
+
+    @Override
+    public String getExternalSSOUrl() {
+        return properties.getProperty(USERGRID_CENTRAL_URL);
+    }
+
 
     @Override
     public UserInfo validateAndReturnUserInfo(String token, long ttl) throws Exception {

@@ -21,7 +21,10 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by russo on 6/24/16.
@@ -38,17 +41,21 @@ public class SSOProviderFactory {
 
     public ExternalSSOProvider getProvider(){
 
-        final Provider configuredProvider;
+        return getSpecificProvider(properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER));
+
+    }
+
+    public ExternalSSOProvider getSpecificProvider(String providerName){
+
+        final Provider specifiedProvider ;
         try{
-            configuredProvider =
-                Provider.valueOf(properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER).toUpperCase());
-        }catch (IllegalArgumentException e){
-            throw new RuntimeException("Property usergrid.external.sso.provider must " +
-                "be configured when external SSO is enabled");
+            specifiedProvider = Provider.valueOf(providerName.toUpperCase());
+        }
+        catch(IllegalArgumentException e){
+            throw new IllegalArgumentException("Unsupported provider");
         }
 
-        switch (configuredProvider){
-
+        switch (specifiedProvider){
             case APIGEE:
                 return ((CpEntityManagerFactory)emf).getApplicationContext().getBean( ApigeeSSO2Provider.class );
             case USERGRID:
@@ -56,8 +63,8 @@ public class SSOProviderFactory {
             default:
                 throw new RuntimeException("Unknown SSO provider");
         }
-
     }
+
 
     @Autowired
     public void setEntityManagerFactory( EntityManagerFactory emf ) {
@@ -68,5 +75,11 @@ public class SSOProviderFactory {
     @Autowired
     public void setProperties(Properties properties) {
         this.properties = properties;
+    }
+
+    public List<String> getProvidersList() {
+        return Stream.of(Provider.values())
+            .map(Enum::name)
+            .collect(Collectors.toList());
     }
 }

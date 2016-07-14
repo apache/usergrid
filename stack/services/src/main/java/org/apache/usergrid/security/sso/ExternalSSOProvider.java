@@ -35,4 +35,8 @@ public interface ExternalSSOProvider {
     /** Decode the token, if supported, and return any information encoded with the token */
     Map<String, String> getDecodedTokenDetails(String token) throws Exception;
 
+    Map<String, Object> getAllTokenDetails(String token, String keyUrl) throws Exception;
+
+    String getExternalSSOUrl() throws Exception;
+
 }

@@ -137,7 +137,7 @@ public abstract class SecurityFilter implements ContainerRequestFilter {
 
         // if this is a CORS Pre-Flight request, we can skip the security check
         // OPTIONS requests do not have access into Usergrid data, Jersey default handles these requests
-        if( request.getMethod().equalsIgnoreCase("options")){
+        if( request.getMethod().equalsIgnoreCase("options") ){
             return true;
         }
 

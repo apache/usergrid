@@ -26,6 +26,7 @@ import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.exceptions.BadTokenException;
 import org.apache.usergrid.security.tokens.exceptions.ExpiredTokenException;
+import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -36,7 +37,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,12 +67,16 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
         client = ClientBuilder.newClient(clientConfig);
     }
 
-    private String getPublicKey() {
+    public String getPublicKey(String keyUrl) {
 
-        final String keyUrl = properties.getProperty(USERGRID_EXTERNAL_PUBLICKEY_URL);
         if(keyUrl != null && !keyUrl.isEmpty()) {
-            Map<String, Object> publicKey = client.target(properties.getProperty(USERGRID_EXTERNAL_PUBLICKEY_URL)).request().get(Map.class);
-            return publicKey.get(RESPONSE_PUBLICKEY_VALUE).toString().split("----\n")[1].split("\n---")[0];
+            try {
+                Map<String, Object> publicKey = client.target(keyUrl).request().get(Map.class);
+                return publicKey.get(RESPONSE_PUBLICKEY_VALUE).toString().split("----\n")[1].split("\n---")[0];
+            }
+            catch(Exception e){
+                throw new IllegalArgumentException("error getting public key");
+            }
         }
 
         return null;
@@ -121,18 +128,28 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
 
     }
 
+    @Override
+    public Map<String, Object> getAllTokenDetails(String token, String keyUrl) throws Exception {
+        Jws<Claims> claims = getClaimsForKeyUrl(token,getPublicKey(keyUrl));
+        return JsonUtils.toJsonMap(claims.getBody());
 
-    private Jws<Claims> getClaims(String token) throws Exception{
+    }
 
+    @Override
+    public String getExternalSSOUrl() {
+        return properties.getProperty(USERGRID_EXTERNAL_PUBLICKEY_URL);
+    }
+
+    public Jws<Claims> getClaimsForKeyUrl(String token, String ssoPublicKey) throws NoSuchAlgorithmException, InvalidKeySpecException, BadTokenException {
         Jws<Claims> claims = null;
 
-        if(publicKey == null){
+        if(ssoPublicKey == null){
             throw new IllegalArgumentException("Public key must be provided with Apigee " +
                 "token in order to verify signature.");
         }
 
 
-        byte[] publicBytes = decodeBase64(publicKey);
+        byte[] publicBytes = decodeBase64(ssoPublicKey);
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         PublicKey pubKey = keyFactory.generatePublic(keySpec);
@@ -141,7 +158,7 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
             claims = Jwts.parser().setSigningKey(pubKey).parseClaimsJws(token);
         } catch (SignatureException se) {
             if(logger.isDebugEnabled()) {
-                logger.debug("Signature was invalid for Apigee JWT: {} and key: {}", token, publicKey);
+                logger.debug("Signature was invalid for Apigee JWT: {} and key: {}", token, ssoPublicKey);
             }
             throw new BadTokenException("Invalid Apigee SSO token signature");
         } catch (MalformedJwtException me){
@@ -158,6 +175,12 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
 
 
         return claims;
+    }
+
+    public Jws<Claims> getClaims(String token) throws Exception{
+
+        return getClaimsForKeyUrl(token,publicKey);
+
     }
 
     private void validateClaims (final Jws<Claims> claims) throws ExpiredTokenException {
@@ -185,6 +208,6 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
     @Autowired
     public void setProperties(Properties properties) {
         this.properties = properties;
-        this.publicKey = getPublicKey();
+        this.publicKey = getPublicKey(getExternalSSOUrl());
     }
 }
