@@ -26,7 +26,7 @@ import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.index.CollectionSettingsCacheFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.corepersistence.service.CollectionService;
@@ -111,7 +111,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final CollectionService collectionService;
     private final ConnectionService connectionService;
     private final GraphManagerFactory graphManagerFactory;
-    private final CollectionSettingsCacheFactory collectionSettingsCacheFactory;
+    private final CollectionSettingsFactory collectionSettingsFactory;
     private ActorSystemManager actorSystemManager;
     private UniqueValuesService uniqueValuesService;
     private final LockManager lockManager;
@@ -135,7 +135,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
         this.collectionService = injector.getInstance( CollectionService.class );
         this.connectionService = injector.getInstance( ConnectionService.class );
-        this.collectionSettingsCacheFactory = injector.getInstance( CollectionSettingsCacheFactory.class );
+        this.collectionSettingsFactory = injector.getInstance( CollectionSettingsFactory.class );
 
         Properties properties = cassandraService.getProperties();
         this.entityManagers = createEntityManagerCache( properties );
@@ -378,7 +378,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             graphManagerFactory,
             collectionService,
             connectionService,
-            collectionSettingsCacheFactory,
+            collectionSettingsFactory,
             applicationId );
 
         return em;

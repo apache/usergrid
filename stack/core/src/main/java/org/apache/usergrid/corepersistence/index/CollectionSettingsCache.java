@@ -1,3 +1,5 @@
+package org.apache.usergrid.corepersistence.index;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,34 +16,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.corepersistence.index;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+import java.util.concurrent.TimeUnit;
+
+@Singleton
+public class CollectionSettingsCache {
+
+    private final CollectionSettingsCacheFig fig;
+    private final Cache<CollectionSettingsScope,String> cache;
 
 
-import java.util.Map;
+    @Inject
+    public CollectionSettingsCache( CollectionSettingsCacheFig fig ) {
+        this.fig = fig;
+        this.cache = CacheBuilder.newBuilder()
+            .maximumSize(Math.min(1000, fig.getCacheSize()))
+            .expireAfterWrite(fig.getCacheTimeout(), TimeUnit.SECONDS).build();
+    }
 
-import com.google.common.base.Optional;
+
+    public void put(CollectionSettingsScope key, String value){
+
+        cache.put(key, value);
+    }
 
 
-public interface CollectionSettingsCache {
+    public String get(CollectionSettingsScope key){
+        return cache.getIfPresent(key);
+    }
 
-    /**
-     * Get the collection schema from the cache.
-     */
-    Optional<Map<String, Object>> getCollectionSettings(String collectionName );
+    public void invalidate(CollectionSettingsScope key){
+        cache.invalidate(key);
+    }
 
-    void putCollectionSettings(String collectionName, String collectionSettings );
-
-    void deleteCollectionSettings(String collectionName );
-
-    /**
-     * Evict the collection schema from the cache.
-     */
-    void evictCollectionSettings(String collectionName);
-
-    /**
-     * Evict everything from the cache.
-     */
-    void evictCache();
-
+    public void invalidateAll(){
+        cache.invalidateAll();
+    }
 
 }
