@@ -128,7 +128,8 @@ public class PathQuery<E> {
             String name = query.getSingleNameOrEmailIdentifier();
             String entityType = InflectionUtils.singularize(query.getCollection());
 
-            UUID entityId = em.getUniqueIdFromAlias( entityType, name );
+            // don't use unique index repair on read only logic
+            UUID entityId = em.getUniqueIdFromAlias( entityType, name, false);
 
             if( entityId == null){
                 throw new

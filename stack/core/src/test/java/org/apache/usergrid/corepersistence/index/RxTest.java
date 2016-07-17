@@ -163,6 +163,17 @@ public class RxTest {
 
     }
 
+    @Test
+    public void someTest(){
+
+
+        final String uuidtype = "UUIDType";
+        final String utf8type = "UTF8Type";
+
+        assertEquals(uuidtype.length(), utf8type.length());
+
+    }
+
     private List<StreamResult> callStream (final List<Integer> input){
 
         Stream<StreamResult> results = input.stream().map(integer -> {

@@ -394,7 +394,19 @@ public interface EntityManager {
                                           Map<String, Object> properties ) throws Exception;
 
     /**
-     * Removes an entity to the specified collection belonging to the specified entity.
+     * Deletes an entity from the specified collection.
+     *
+     * @param entityRef an entity reference
+     * @param collectionName the collection name.
+     * @param itemRef a entity to be deleted and removed from the collection.
+     *
+     * @throws Exception the exception
+     */
+    public void removeFromCollection( EntityRef entityRef, String collectionName, EntityRef itemRef)
+            throws Exception;
+
+    /**
+     * Removes only the edge from the specified collection, the entity is left in-tact
      *
      * @param entityRef an entity reference
      * @param collectionName the collection name.
@@ -402,8 +414,8 @@ public interface EntityManager {
      *
      * @throws Exception the exception
      */
-    public void removeFromCollection( EntityRef entityRef, String collectionName, EntityRef itemRef)
-            throws Exception;
+    public void removeItemFromCollection( EntityRef entityRef, String collectionName, EntityRef itemRef)
+        throws Exception;
 
     public Results searchCollection( EntityRef entityRef, String collectionName, Query query )
             throws Exception;
@@ -512,11 +524,11 @@ public interface EntityManager {
      */
     public Entity createRole( String roleName, String roleTitle, long inactivity ) throws Exception;
 
-    public Map createCollectionSchema( String collectionName, String owner ,Map<String, Object> properties );
+    public Map createCollectionSettings( String collectionName, String owner ,Map<String, Object> properties );
 
-    void deleteCollectionSchema( String collectionName );
+    void deleteCollectionSettings( String collectionName );
 
-    Object getCollectionSchema( String collectionName );
+    Object getCollectionSettings( String collectionName );
 
     public void grantRolePermission( String roleName, String permission ) throws Exception;
 
@@ -709,9 +721,9 @@ public interface EntityManager {
     public void flushManagerCaches();
 
 
-    public Entity getUniqueEntityFromAlias( String aliasType, String aliasValue );
+    public Entity getUniqueEntityFromAlias(String aliasType, String aliasValue, boolean uniqueIndexRepair);
 
-    public UUID getUniqueIdFromAlias( String aliasType, String aliasValue );
+    public UUID getUniqueIdFromAlias(String aliasType, String aliasValue, boolean uniqueIndexRepair);
 
 
     /**

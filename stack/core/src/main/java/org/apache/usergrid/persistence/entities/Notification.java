@@ -17,17 +17,27 @@
 package org.apache.usergrid.persistence.entities;
 
 
-import javax.xml.bind.annotation.XmlRootElement;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.apache.usergrid.persistence.*;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.PathQuery;
+import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.TypedEntity;
 import org.apache.usergrid.persistence.annotations.EntityCollection;
 import org.apache.usergrid.persistence.annotations.EntityProperty;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.utils.InflectionUtils;
 
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
  * The entity class for representing Notifications.
@@ -112,7 +122,7 @@ public class Notification extends TypedEntity {
 
     /** Map containing a count for "sent" and "errors" */
     @EntityProperty
-    protected Map<String, Long> statistics;
+    protected Map<String, Object> statistics;
 
     @EntityProperty
     protected Map<String, Object> filters;
@@ -275,11 +285,11 @@ public class Notification extends TypedEntity {
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-    public Map<String, Long> getStatistics() {
+    public Map<String, Object> getStatistics() {
         return statistics;
     }
 
-    public void setStatistics(Map<String, Long> statistics) {
+    public void setStatistics(Map<String, Object> statistics) {
         this.statistics = statistics;
     }
 
@@ -294,13 +304,19 @@ public class Notification extends TypedEntity {
 
     public void updateStatistics(long sent, long errors) {
         if (this.statistics == null) {
-            this.statistics = new HashMap<String, Long>(2);
+            this.statistics = new HashMap<String, Object>(2);
             this.statistics.put("sent", sent);
             this.statistics.put("errors", errors);
         } else {
-            this.statistics.put("sent", sent + this.statistics.get("sent"));
-            this.statistics.put("errors",
-                    errors + this.statistics.get("errors"));
+            //Don't need to account for integers here because this is only called internally
+            //We won't ever need to call updateStatistics for a postedNotification as that only happens once
+            //after the notification is completed.
+            if (this.statistics.get( "sent" ) instanceof Long ) {
+                this.statistics.put( "sent", sent + (Long) this.statistics.get( "sent" ) );
+            }
+            if( this.statistics.get( "errors" ) instanceof Long){
+                this.statistics.put( "errors", errors + (Long) this.statistics.get( "errors" ) );
+            }
         }
     }
 

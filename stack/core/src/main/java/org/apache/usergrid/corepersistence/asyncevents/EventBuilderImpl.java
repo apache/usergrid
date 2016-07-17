@@ -20,11 +20,10 @@
 package org.apache.usergrid.corepersistence.asyncevents;
 
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.collection.VersionSet;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,10 +96,9 @@ public class EventBuilderImpl implements EventBuilder {
             logger.debug("Deleting in app scope {} with edge {}", applicationScope, edge);
         }
 
-        return indexService.deleteIndexEdge( applicationScope, edge ).flatMap( batch -> {
-            final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
-            return gm.deleteEdge( edge ).map( deletedEdge -> batch );
-        } );
+        final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
+        return gm.deleteEdge( edge )
+            .flatMap( deletedEdge -> indexService.deleteIndexEdge( applicationScope, deletedEdge ));
     }
 
 
@@ -118,7 +116,7 @@ public class EventBuilderImpl implements EventBuilder {
 
         //TODO USERGRID-1123: Implement so we don't iterate logs twice (latest DELETED version, then to get all DELETED)
 
-        MvccLogEntry mostRecentlyMarked = ecm.getVersions( entityId ).toBlocking()
+        MvccLogEntry mostRecentlyMarked = ecm.getVersionsFromMaxToMin( entityId, UUIDUtils.newTimeUUID() ).toBlocking()
             .firstOrDefault( null, mvccLogEntry -> mvccLogEntry.getState() == MvccLogEntry.State.DELETED );
 
         // De-indexing and entity deletes don't check log entries.  We must do that first. If no DELETED logs, then
@@ -127,13 +125,16 @@ public class EventBuilderImpl implements EventBuilder {
         Observable<List<MvccLogEntry>> ecmDeleteObservable = Observable.empty();
 
         if(mostRecentlyMarked != null){
+
+            // fetch entity versions to be de-index by looking in cassandra
             deIndexObservable =
-                indexService.deleteEntityIndexes( applicationScope, entityId, mostRecentlyMarked.getVersion() );
+                indexService.deIndexEntity(applicationScope, entityId, mostRecentlyMarked.getVersion(),
+                    getVersionsOlderThanMarked(ecm, entityId, mostRecentlyMarked.getVersion()));
 
             ecmDeleteObservable =
-                ecm.getVersions( entityId )
+                ecm.getVersionsFromMaxToMin( entityId, mostRecentlyMarked.getVersion() )
                     .filter( mvccLogEntry->
-                        UUIDUtils.compare(mvccLogEntry.getVersion(), mostRecentlyMarked.getVersion()) <= 0)
+                        mvccLogEntry.getVersion().timestamp() <= mostRecentlyMarked.getVersion().timestamp() )
                     .buffer( serializationFig.getBufferSize() )
                     .doOnNext( buffer -> ecm.delete( buffer ) );
         }
@@ -173,7 +174,8 @@ public class EventBuilderImpl implements EventBuilder {
 
 
     @Override
-    public Observable<IndexOperationMessage> deIndexOlderVersions(final ApplicationScope applicationScope, Id entityId ){
+    public Observable<IndexOperationMessage> deIndexOldVersions( final ApplicationScope applicationScope,
+                                                                 final Id entityId, final UUID markedVersion ){
 
         if (logger.isDebugEnabled()) {
             logger.debug("Removing old versions of entity {} from index in app scope {}", entityId, applicationScope );
@@ -181,24 +183,31 @@ public class EventBuilderImpl implements EventBuilder {
 
         final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
-        // find all versions of the entity that come before the provided entityId
-        VersionSet latestVersions = ecm.getLatestVersion(Collections.singletonList(entityId) ).toBlocking()
-            .firstOrDefault( null );
 
-        // If there are no versions before this, allow it to return an empty observable
-        Observable<IndexOperationMessage> deIndexObservable = Observable.empty();
+        return indexService.deIndexOldVersions( applicationScope, entityId,
+            getVersionsOlderThanMarked(ecm, entityId, markedVersion), markedVersion);
 
-        if(latestVersions.getMaxVersion(entityId) != null){
+    }
 
-            UUID latestVersion = latestVersions.getMaxVersion(entityId).getVersion();
 
-            deIndexObservable =
-                indexService.deleteEntityIndexes( applicationScope, entityId, latestVersion);
+    private List<UUID> getVersionsOlderThanMarked( final EntityCollectionManager ecm,
+                                                   final Id entityId, final UUID markedVersion ){
 
-        }
+        final List<UUID> versions = new ArrayList<>();
 
-        return  deIndexObservable;
+        // only take last 5 versions to avoid eating memory. a tool can be built for massive cleanups for old usergrid
+        // clusters that do not have this in-line cleanup
+        ecm.getVersionsFromMaxToMin( entityId, markedVersion)
+            .take(5)
+            .forEach( mvccLogEntry -> {
+                if ( mvccLogEntry.getVersion().timestamp() < markedVersion.timestamp() ) {
+                    versions.add(mvccLogEntry.getVersion());
+                }
 
+            });
+
+
+        return versions;
     }
 
 }

@@ -56,8 +56,8 @@ public interface CassandraFig extends GuicyFig {
     String LOCKS_CONNECTIONS = "cassandra.lock.connections";
     String LOCKS_EXPIRATION = "cassandra.lock.expiration.milliseconds";
 
-
-
+    String LOCK_MANAGER_INIT_RETRIES = "cassandra.lock.init.retries";
+    String LOCK_MANAGER_INIT_INTERVAL = "cassandra.lock.init.interval";
 
     // re-usable default values
     String DEFAULT_CONNECTION_POOLSIZE = "15";
@@ -221,5 +221,19 @@ public interface CassandraFig extends GuicyFig {
     @Key( LOCKS_EXPIRATION )
     @Default(DEFAULT_LOCKS_EXPIRATION)
     int getLocksExpiration();
+
+    /**
+     * How many times to attempt lock keyspace and column family creation
+     */
+    @Key( LOCK_MANAGER_INIT_RETRIES )
+    @Default( "100" )
+    int getLockManagerInitRetries();
+
+    /**
+     * Return the expiration that should be used for expiring a lock if it's not released
+     */
+    @Key( LOCK_MANAGER_INIT_INTERVAL )
+    @Default( "1000" )
+    int getLockManagerInitInterval();
 
 }

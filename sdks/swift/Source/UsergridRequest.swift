@@ -177,7 +177,7 @@ public class UsergridRequest : NSObject {
 
     private static let AUTHORIZATION = "Authorization"
     private static let ACCESS_TOKEN = "access_token"
-    private static let APPLICATION_JSON = "application/json"
+    private static let APPLICATION_JSON = "application/json; charset=utf-8"
     private static let BEARER = "Bearer"
     private static let CONTENT_LENGTH = "Content-Length"
     private static let CONTENT_TYPE = "Content-Type"

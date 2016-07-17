@@ -16,29 +16,55 @@
  */
 package org.apache.usergrid.services.notifications.impl;
 
-import com.codahale.metrics.Meter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.batch.JobExecution;
-import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.core.executor.TaskExecutorFactory;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.entities.*;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.PathQuery;
 import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.entities.Device;
+import org.apache.usergrid.persistence.entities.Notification;
+import org.apache.usergrid.persistence.entities.Notifier;
+import org.apache.usergrid.persistence.entities.Receipt;
+import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueMessage;
-import org.apache.usergrid.services.notifications.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.usergrid.services.notifications.ApplicationQueueManager;
+import org.apache.usergrid.services.notifications.ApplicationQueueMessage;
+import org.apache.usergrid.services.notifications.JobScheduler;
+import org.apache.usergrid.services.notifications.NotificationsService;
+import org.apache.usergrid.services.notifications.ProviderAdapter;
+import org.apache.usergrid.services.notifications.ProviderAdapterFactory;
+import org.apache.usergrid.services.notifications.TaskManager;
+import org.apache.usergrid.services.notifications.TaskTracker;
+
+import com.codahale.metrics.Meter;
+
 import rx.Observable;
-import rx.Scheduler;
 import rx.Subscriber;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class ApplicationQueueManagerImpl implements ApplicationQueueManager {

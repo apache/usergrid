@@ -20,16 +20,10 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.codahale.metrics.Timer;
+import com.google.common.base.Optional;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -40,14 +34,7 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
-import org.apache.usergrid.persistence.index.CandidateResult;
-import org.apache.usergrid.persistence.index.CandidateResults;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexBatch;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexEdge;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.SearchEdge;
+import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
@@ -56,19 +43,13 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.utils.InflectionUtils;
-import org.apache.usergrid.utils.JsonUtils;
-import org.apache.usergrid.utils.UUIDUtils;
-
-import com.codahale.metrics.Timer;
-import com.google.common.base.Optional;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createSearchEdgeFromSource;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromSource;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.generateScopeFromTarget;
+import java.util.*;
+
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.*;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 
 
@@ -84,7 +65,7 @@ public class IndexServiceImpl implements IndexService {
     private final GraphManagerFactory graphManagerFactory;
     private final EntityIndexFactory entityIndexFactory;
     private final MapManagerFactory mapManagerFactory;
-    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+    private final CollectionSettingsFactory collectionSettingsFactory;
     private final EdgesObservable edgesObservable;
     private final IndexFig indexFig;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
@@ -95,7 +76,7 @@ public class IndexServiceImpl implements IndexService {
     @Inject
     public IndexServiceImpl( final GraphManagerFactory graphManagerFactory, final EntityIndexFactory entityIndexFactory,
                              final MapManagerFactory mapManagerFactory,
-                             final IndexSchemaCacheFactory indexSchemaCacheFactory,
+                             final CollectionSettingsFactory collectionSettingsFactory,
                              final EdgesObservable edgesObservable, final IndexFig indexFig,
                              final IndexLocationStrategyFactory indexLocationStrategyFactory,
                              final MetricsFactory metricsFactory ) {
@@ -105,7 +86,7 @@ public class IndexServiceImpl implements IndexService {
         this.edgesObservable = edgesObservable;
         this.indexFig = indexFig;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
-        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
+        this.collectionSettingsFactory = collectionSettingsFactory;
         this.indexTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.update_all");
         this.addTimer = metricsFactory.getTimer( IndexServiceImpl.class, "index.add" );
     }
@@ -199,20 +180,17 @@ public class IndexServiceImpl implements IndexService {
      */
     private Optional<Set<String>> getFilteredStringObjectMap( final IndexEdge indexEdge ) {
 
-        Id mapOwner = new SimpleId( indexEdge.getNodeId().getUuid(), TYPE_APPLICATION );
-
-        final MapScope ms = CpNamingUtils.getEntityTypeMapScope( mapOwner );
-
-        MapManager mm = mapManagerFactory.createMapManager( ms );
+        Id owner = new SimpleId( indexEdge.getNodeId().getUuid(), TYPE_APPLICATION );
 
         Set<String> defaultProperties;
-        ArrayList fieldsToKeep;
 
         String collectionName = CpNamingUtils.getCollectionNameFromEdgeName( indexEdge.getEdgeName() );
 
-        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+        CollectionSettings collectionSettings =
+            collectionSettingsFactory.getInstance( new CollectionSettingsScopeImpl( owner, collectionName) );
 
-        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+        Optional<Map<String, Object>> collectionIndexingSchema =
+            collectionSettings.getCollectionSettings( collectionName );
 
         //If we do have a schema then parse it and add it to a list of properties we want to keep.Otherwise return.
         if ( collectionIndexingSchema.isPresent()) {
@@ -220,18 +198,18 @@ public class IndexServiceImpl implements IndexService {
             Map jsonMapData = collectionIndexingSchema.get();
             Schema schema = Schema.getDefaultSchema();
             defaultProperties = schema.getRequiredProperties( collectionName );
-            fieldsToKeep = ( ArrayList ) jsonMapData.get( "fields" );
 
-            if(fieldsToKeep.contains( "*" )){
+            Object fields = jsonMapData.get("fields");
+
+            if ( fields != null && fields instanceof String && "all".equalsIgnoreCase(fields.toString())) {
                 return Optional.absent();
             }
 
-            // never add "none" because it has special meaning, "none" disables indexing for a type
-            fieldsToKeep.remove("none");
+            if ( fields != null && fields instanceof List ) {
+                defaultProperties.addAll( (List) fields );
+            }
 
-            defaultProperties.addAll( fieldsToKeep );
-        }
-        else {
+        } else {
             return Optional.absent();
         }
 
@@ -278,42 +256,64 @@ public class IndexServiceImpl implements IndexService {
         return ObservableTimer.time( batches, addTimer );
     }
 
-    //This should look up the entityId and delete any documents with a timestamp that comes before
-    //The edges that are connected will be compacted away from the graph.
+
     @Override
-    public Observable<IndexOperationMessage> deleteEntityIndexes( final ApplicationScope applicationScope,
-                                                                  final Id entityId, final UUID markedVersion ) {
+    public Observable<IndexOperationMessage> deIndexEntity( final ApplicationScope applicationScope, final Id entityId,
+                                                            final UUID markedVersion,
+                                                            final List<UUID> allVersionsBeforeMarked ) {
 
-        //bootstrap the lower modules from their caches
-        final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
+        final EntityIndex ei = entityIndexFactory.
+            createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
-        CandidateResults crs = ei.getAllEntityVersionsBeforeMarkedVersion( entityId, markedVersion );
-
-        //If we get no search results, its possible that something was already deleted or
-        //that it wasn't indexed yet. In either case we can't delete anything and return an empty observable..
-        if(crs.isEmpty()) {
-            return Observable.empty();
-        }
-
-        UUID timeUUID = UUIDUtils.isTimeBased(entityId.getUuid()) ? entityId.getUuid() : UUIDUtils.newTimeUUID();
-        //not actually sure about the timestamp but ah well. works.
-        SearchEdge searchEdge = createSearchEdgeFromSource( new SimpleEdge( applicationScope.getApplication(),
+        // use LONG.MAX_VALUE in search edge because this value is not used elsewhere in lower code foe de-indexing
+        // previously .timstamp() was used on entityId, but some entities do not have type-1 UUIDS ( legacy data)
+        final SearchEdge searchEdgeFromSource = createSearchEdgeFromSource( new SimpleEdge( applicationScope.getApplication(),
             CpNamingUtils.getEdgeTypeFromCollectionName( InflectionUtils.pluralize( entityId.getType() ) ), entityId,
-            timeUUID.timestamp() ) );
+            Long.MAX_VALUE ) );
 
 
-        final Observable<IndexOperationMessage>  batches = Observable.from( crs )
-                //collect results into a single batch
-                .collect( () -> ei.createBatch(), ( batch, candidateResult ) -> {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Deindexing on edge {} for entity {} added to batch", searchEdge, entityId);
-                    }
-                    batch.deindex( candidateResult );
-                } )
-                    //return the future from the batch execution
-                .map( batch ->batch.build() );
 
-        return ObservableTimer.time(batches, indexTimer);
+        final EntityIndexBatch batch = ei.createBatch();
+
+        // de-index each version of the entity before the marked version
+        allVersionsBeforeMarked.forEach(version -> batch.deindex(searchEdgeFromSource, entityId, version));
+
+
+        // for now, query the index to remove docs where the entity is source/target node and older than markedVersion
+        // TODO: investigate getting this information from graph
+        CandidateResults candidateResults = ei.getNodeDocsOlderThanMarked(entityId, markedVersion );
+        candidateResults.forEach(candidateResult -> batch.deindex(candidateResult));
+
+        return Observable.just(batch.build());
+
+    }
+
+    @Override
+    public Observable<IndexOperationMessage> deIndexOldVersions(final ApplicationScope applicationScope,
+                                                                final Id entityId,
+                                                                final List<UUID> versions,
+                                                                UUID markedVersion) {
+
+        final EntityIndex ei = entityIndexFactory.
+            createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
+
+        // use LONG.MAX_VALUE in search edge because this value is not used elsewhere in lower code foe de-indexing
+        // previously .timstamp() was used on entityId, but some entities do not have type-1 UUIDS ( legacy data)
+        final SearchEdge searchEdgeFromSource = createSearchEdgeFromSource( new SimpleEdge( applicationScope.getApplication(),
+            CpNamingUtils.getEdgeTypeFromCollectionName( InflectionUtils.pluralize( entityId.getType() ) ), entityId,
+            Long.MAX_VALUE ) );
+
+
+        final EntityIndexBatch batch = ei.createBatch();
+
+        versions.forEach( version -> {
+
+            batch.deindex(searchEdgeFromSource, entityId, version);
+
+        });
+
+        return Observable.just(batch.build());
+
     }
 
     /**

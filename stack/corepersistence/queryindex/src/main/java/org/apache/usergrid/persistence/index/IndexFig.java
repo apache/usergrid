@@ -205,7 +205,7 @@ public interface IndexFig extends GuicyFig {
     @Key( "elasticsearch_queue_error_sleep_ms" )
     long getSleepTimeForQueueError();
 
-    @Default("1000")
+    @Default("100")
     @Key( ELASTICSEARCH_VERSION_QUERY_LIMIT )
     int getVersionQueryLimit();
 }

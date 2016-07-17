@@ -17,6 +17,7 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.usergrid</groupId>
@@ -55,6 +56,7 @@
                 </includes>
             </resource>
         </resources>
+
         <testResources>
             <testResource>
                 <directory>src/test/resources</directory>
@@ -130,6 +132,10 @@
                 <exclusion>
                     <groupId>net.jpountz.lz4</groupId>
                     <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>netty</artifactId>
+                    <groupId>io.netty</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -310,10 +316,12 @@
             <artifactId>jline</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.jboss.netty</groupId>
-            <artifactId>netty</artifactId>
-        </dependency>
+        <!--
+            <dependency>
+              <groupId>org.jboss.netty</groupId>
+              <artifactId>netty</artifactId>
+            </dependency>
+        -->
 
         <!-- Test and Logging Dependencies -->
 
@@ -362,9 +370,7 @@
         <dependency>
             <groupId>org.apache.usergrid</groupId>
             <artifactId>common</artifactId>
-            <version>2.2.0-SNAPSHOT</version>
-            <type>test-jar</type>
-            <scope>test</scope>
+            <version>${project.version}</version>
         </dependency>
 
 
@@ -372,7 +378,7 @@
         <dependency>
             <groupId>org.apache.usergrid</groupId>
             <artifactId>collection</artifactId>
-            <version>2.2.0-SNAPSHOT</version>
+            <version>${project.version}</version>
             <type>jar</type>
             <exclusions>
                 <exclusion>
@@ -386,38 +392,43 @@
             </exclusions>
         </dependency>
 
-
         <dependency>
             <groupId>org.apache.usergrid</groupId>
             <artifactId>queryindex</artifactId>
-            <version>2.2.0-SNAPSHOT</version>
+            <version>${project.version}</version>
             <type>jar</type>
         </dependency>
 
         <dependency>
             <groupId>org.apache.usergrid</groupId>
             <artifactId>graph</artifactId>
-            <version>2.2.0-SNAPSHOT</version>
+            <version>${project.version}</version>
             <type>jar</type>
         </dependency>
 
         <dependency>
             <groupId>org.apache.usergrid</groupId>
             <artifactId>map</artifactId>
-            <version>2.2.0-SNAPSHOT</version>
+            <version>${project.version}</version>
             <type>jar</type>
         </dependency>
 
         <dependency>
             <groupId>org.apache.usergrid</groupId>
             <artifactId>cache</artifactId>
-            <version>2.2.0-SNAPSHOT</version>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>actorsystem</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.usergrid</groupId>
             <artifactId>queue</artifactId>
-            <version>2.2.0-SNAPSHOT</version>
+            <version>${project.version}</version>
             <type>jar</type>
         </dependency>
 
@@ -431,11 +442,6 @@
             <groupId>com.codahale.metrics</groupId>
             <artifactId>metrics-graphite</artifactId>
             <version>${metrics.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
-            <artifactId>common</artifactId>
-            <version>2.2.0-SNAPSHOT</version>
         </dependency>
 
     </dependencies>
