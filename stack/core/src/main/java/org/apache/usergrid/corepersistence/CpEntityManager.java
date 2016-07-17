@@ -16,72 +16,38 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.nio.ByteBuffer;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.apache.usergrid.persistence.collection.EntitySet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
-
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.*;
+import me.prettyprint.hector.api.factory.HFactory;
+import me.prettyprint.hector.api.mutation.Mutator;
+import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
+import me.prettyprint.hector.api.query.QueryResult;
+import me.prettyprint.hector.api.query.SliceCounterQuery;
+import org.apache.commons.lang.NullArgumentException;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
-import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettings;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.AggregateCounter;
-import org.apache.usergrid.persistence.AggregateCounterSet;
-import org.apache.usergrid.persistence.CollectionRef;
-import org.apache.usergrid.persistence.ConnectedEntityRef;
-import org.apache.usergrid.persistence.ConnectionRef;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityFactory;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.IndexBucketLocator;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.Query.Level;
-import org.apache.usergrid.persistence.RelationManager;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Schema;
-import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.SimpleRoleRef;
-import org.apache.usergrid.persistence.TypedEntity;
-import org.apache.usergrid.persistence.cassandra.ApplicationCF;
-import org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
-import org.apache.usergrid.persistence.cassandra.CounterUtils;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.cassandra.*;
 import org.apache.usergrid.persistence.cassandra.util.TraceParticipant;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.EntitySet;
 import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.entities.Event;
-import org.apache.usergrid.persistence.entities.Group;
-import org.apache.usergrid.persistence.entities.Role;
-import org.apache.usergrid.persistence.entities.User;
+import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
@@ -99,75 +65,32 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.utils.ClassUtils;
-import org.apache.usergrid.utils.CompositeUtils;
-import org.apache.usergrid.utils.InflectionUtils;
-import org.apache.usergrid.utils.Inflector;
-import org.apache.usergrid.utils.JsonUtils;
-import org.apache.usergrid.utils.StringUtils;
-import org.apache.usergrid.utils.UUIDUtils;
-
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.Timer;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-
-import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.ColumnSlice;
-import me.prettyprint.hector.api.beans.CounterRow;
-import me.prettyprint.hector.api.beans.CounterRows;
-import me.prettyprint.hector.api.beans.CounterSlice;
-import me.prettyprint.hector.api.beans.DynamicComposite;
-import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.beans.HCounterColumn;
-import me.prettyprint.hector.api.factory.HFactory;
-import me.prettyprint.hector.api.mutation.Mutator;
-import me.prettyprint.hector.api.query.MultigetSliceCounterQuery;
-import me.prettyprint.hector.api.query.QueryResult;
-import me.prettyprint.hector.api.query.SliceCounterQuery;
+import org.apache.usergrid.utils.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
 import rx.Observable;
+
+import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.util.Arrays.asList;
-
 import static me.prettyprint.hector.api.factory.HFactory.createCounterSliceQuery;
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.lang.StringUtils.capitalize;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.corepersistence.util.CpEntityMapUtils.entityToCpEntity;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionTypeSearch;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createGraphOperationTimestamp;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getConnectionNameFromEdgeName;
-import static org.apache.usergrid.persistence.Schema.COLLECTION_ROLES;
-import static org.apache.usergrid.persistence.Schema.COLLECTION_USERS;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_PERMISSIONS;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_ROLENAMES;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_ROLETIMES;
-import static org.apache.usergrid.persistence.Schema.DICTIONARY_SETS;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_CREATED;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_INACTIVITY;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_MODIFIED;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TIMESTAMP;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_TYPE;
-import static org.apache.usergrid.persistence.Schema.PROPERTY_UUID;
-import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
-import static org.apache.usergrid.persistence.Schema.TYPE_ENTITY;
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.*;
+import static org.apache.usergrid.persistence.Schema.*;
 import static org.apache.usergrid.persistence.SimpleEntityRef.getUuid;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.APPLICATION_AGGREGATE_COUNTERS;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COMPOSITE_DICTIONARIES;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_COUNTERS;
-import static org.apache.usergrid.persistence.cassandra.ApplicationCF.ENTITY_DICTIONARIES;
+import static org.apache.usergrid.persistence.cassandra.ApplicationCF.*;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.ALL_COUNT;
-import static org.apache.usergrid.persistence.cassandra.Serializers.be;
-import static org.apache.usergrid.persistence.cassandra.Serializers.le;
-import static org.apache.usergrid.persistence.cassandra.Serializers.se;
-import static org.apache.usergrid.persistence.cassandra.Serializers.ue;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 import static org.apache.usergrid.utils.ClassUtils.cast;
-import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
-import static org.apache.usergrid.utils.ConversionUtils.getLong;
-import static org.apache.usergrid.utils.ConversionUtils.object;
-import static org.apache.usergrid.utils.ConversionUtils.string;
+import static org.apache.usergrid.utils.ConversionUtils.*;
 import static org.apache.usergrid.utils.InflectionUtils.singularize;
 
 
@@ -183,12 +106,14 @@ public class CpEntityManager implements EntityManager {
 
     private final UUID applicationId;
     private final EntityManagerFig entityManagerFig;
+    private final ActorSystemFig actorSystemFig;
+
     private Application application;
 
 
     private final ManagerCache managerCache;
 
-    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+    private final CollectionSettingsFactory collectionSettingsFactory;
 
     private final ApplicationScope applicationScope;
 
@@ -247,14 +172,16 @@ public class CpEntityManager implements EntityManager {
                             final AsyncEventService indexService,
                             final ManagerCache managerCache,
                             final MetricsFactory metricsFactory,
+                            final ActorSystemFig actorSystemFig,
                             final EntityManagerFig entityManagerFig,
                             final GraphManagerFactory graphManagerFactory,
                             final CollectionService collectionService,
                             final ConnectionService connectionService,
-                            final IndexSchemaCacheFactory indexSchemaCacheFactory,
+                            final CollectionSettingsFactory collectionSettingsFactory,
                             final UUID applicationId ) {
 
         this.entityManagerFig = entityManagerFig;
+        this.actorSystemFig = actorSystemFig;
 
         Preconditions.checkNotNull( cass, "cass must not be null" );
         Preconditions.checkNotNull( counterUtils, "counterUtils must not be null" );
@@ -275,7 +202,7 @@ public class CpEntityManager implements EntityManager {
         this.managerCache = managerCache;
         this.applicationId = applicationId;
         this.indexService = indexService;
-        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
+        this.collectionSettingsFactory = collectionSettingsFactory;
 
         applicationScope = CpNamingUtils.getApplicationScope( applicationId );
 
@@ -328,8 +255,7 @@ public class CpEntityManager implements EntityManager {
      */
     org.apache.usergrid.persistence.model.entity.Entity load( Id entityId ) {
 
-            return ecm .load( entityId ).toBlocking()
-                                       .lastOrDefault(null);
+            return ecm .load( entityId ).toBlocking().lastOrDefault(null);
 
     }
 
@@ -406,7 +332,7 @@ public class CpEntityManager implements EntityManager {
      *
      * @param entityType the entity type
      * @param entityClass the entity class
-     * @param properties the properties
+     * @param properties the newSettings
      * @param importId an existing external UUID to use as the id for the new entity
      *
      * @return new entity
@@ -586,10 +512,12 @@ public class CpEntityManager implements EntityManager {
         cpEntity = CpEntityMapUtils.fromMap( cpEntity, entity.getProperties(), entity.getType(), true );
 
         try {
-            cpEntity = ecm.write( cpEntity ).toBlocking().last();
+
+            String region = lookupRegionForType( entity.getType() );
+
+            cpEntity = ecm.write( cpEntity, region ).toBlocking().last();
+
 //            cpEntity = ecm.update( cpEntity ).toBlockingObservable().last();
-//
-//
 //            // need to reload entity so bypass entity cache
 //            cpEntity = ecm.load( entityId ).toBlockingObservable().last();
 
@@ -600,6 +528,11 @@ public class CpEntityManager implements EntityManager {
             }
         }
         catch ( WriteUniqueVerifyException wuve ) {
+
+            if(logger.isTraceEnabled()){
+                logger.trace("WriteUniqueVerifyException encountered during update of entity with id {}",
+                    cpEntity.getId().getUuid());
+            }
             handleWriteUniqueVerifyException( entity, wuve );
         }
 
@@ -610,7 +543,7 @@ public class CpEntityManager implements EntityManager {
 
             // queue up an event to clean-up older versions than this one from the index
             if (entityManagerFig.getDeindexOnUpdate()) {
-                indexService.queueDeIndexOldVersion( applicationScope, entityId );
+                indexService.queueDeIndexOldVersion( applicationScope, cpEntity.getId(), cpEntity.getVersion());
             }
         }
     }
@@ -618,16 +551,18 @@ public class CpEntityManager implements EntityManager {
     private boolean skipIndexingForType( String type ) {
 
         boolean skipIndexing = false;
-
-        MapManager mm = getMapManagerForTypes();
-        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
         String collectionName = Schema.defaultCollectionName( type );
-        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
 
-        if ( collectionIndexingSchema.isPresent()) {
-            Map jsonMapData = collectionIndexingSchema.get();
-            final ArrayList fields = (ArrayList) jsonMapData.get( "fields" );
-            if ( fields.size() == 1 && fields.get(0).equals("none")) {
+
+        CollectionSettings collectionSettings = collectionSettingsFactory
+            .getInstance( new CollectionSettingsScopeImpl(getAppIdObject(), collectionName) );
+        Optional<Map<String, Object>> existingSettings =
+            collectionSettings.getCollectionSettings( collectionName );
+
+        if ( existingSettings.isPresent()) {
+            Map jsonMapData = existingSettings.get();
+            Object fields = jsonMapData.get("fields");
+            if ( fields != null && "none".equalsIgnoreCase( fields.toString() ) ) {
                 skipIndexing = true;
             }
         }
@@ -681,7 +616,8 @@ public class CpEntityManager implements EntityManager {
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
         //Step 1 & 2 of delete
-        return ecm.mark( entityId ).mergeWith( gm.markNode( entityId, createGraphOperationTimestamp() ) );
+        String region = this.lookupRegionForType( entityRef.getType() );
+        return ecm.mark( entityId, region ).mergeWith( gm.markNode( entityId, createGraphOperationTimestamp() ) );
 
     }
 
@@ -781,7 +717,7 @@ public class CpEntityManager implements EntityManager {
         Preconditions.checkNotNull(entityRef, "entityRef cannot be null");
 
         CpRelationManager relationManager = new CpRelationManager( managerCache, indexService, collectionService,
-            connectionService, this, entityManagerFig, applicationId, indexSchemaCacheFactory, entityRef );
+            connectionService, this, entityManagerFig, applicationId, collectionSettingsFactory, entityRef );
         return relationManager;
     }
 
@@ -848,21 +784,18 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public Entity getUniqueEntityFromAlias( String collectionType, String aliasType ){
+    public Entity getUniqueEntityFromAlias(String collectionType, String aliasType, boolean uniqueIndexRepair){
+
         String collName = Schema.defaultCollectionName( collectionType );
-
-
         String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
 
         Timer.Context repairedEntityGet = entGetRepairedEntityTimer.time();
 
-        // TODO: can't we just sub in the getEntityRepair method here
-        // so for every read of a uniqueEntityField we can verify it is correct?
 
         StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType.toString());
 
         Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
-            Inflector.getInstance().singularize( collectionType ), Arrays.<Field>asList( uniqueLookupRepairField ) );
+            Inflector.getInstance().singularize( collectionType ), Arrays.<Field>asList( uniqueLookupRepairField ), uniqueIndexRepair);
 
         if(fieldSetObservable == null){
 
@@ -875,9 +808,24 @@ public class CpEntityManager implements EntityManager {
 
         FieldSet fieldSet = fieldSetObservable.toBlocking().last();
 
+        // do a re-load if we know an entity repair was executed
+        // a hit to performance, but we need to return consistent success respones if we're repairing data
+        if(fieldSet.getEntityRepairExecuted()){
+
+            if(logger.isTraceEnabled()){
+                logger.trace("One or more entities were repaired ( removed ) during loading of unique field [{}={}], " +
+                    "executing the unique value lookup once more for consistency", uniqueLookupRepairField.getName(),
+                    uniqueLookupRepairField.getValue());
+            }
+
+            fieldSet = ecm.getEntitiesFromFields(
+                Inflector.getInstance().singularize( collectionType ),
+                Collections.singletonList(uniqueLookupRepairField), uniqueIndexRepair).toBlocking().last();
+        }
+
         repairedEntityGet.stop();
 
-        if(fieldSet.isEmpty()) {
+        if(fieldSet == null || fieldSet.isEmpty()) {
             return null;
         }
 
@@ -885,14 +833,15 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public UUID getUniqueIdFromAlias( String collectionType, String aliasType ){
+    public UUID getUniqueIdFromAlias(String collectionType, String aliasType, boolean uniqueIndexRepair){
 
         String collName = Schema.defaultCollectionName( collectionType );
         String propertyName = Schema.getDefaultSchema().aliasProperty( collName );
         StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType);
 
         Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
-            Inflector.getInstance().singularize( collectionType ), Collections.singletonList(uniqueLookupRepairField));
+            Inflector.getInstance().singularize( collectionType ),
+            Collections.singletonList(uniqueLookupRepairField), uniqueIndexRepair);
 
         if(fieldSetObservable == null){
 
@@ -904,7 +853,23 @@ public class CpEntityManager implements EntityManager {
         }
 
         FieldSet fieldSet = fieldSetObservable.toBlocking().last();
-        if(fieldSet.isEmpty()) {
+
+        // do a re-load if we know an entity repair was executed
+        // a hit to performance, but we need to return consistent success respones if we're repairing data
+        if(fieldSet.getEntityRepairExecuted()){
+
+            if(logger.isTraceEnabled()){
+                logger.trace("One or more entities were repaired ( removed ) during loading of unique field [{}={}], " +
+                        "executing the unique value lookup once more for consistency", uniqueLookupRepairField.getName(),
+                    uniqueLookupRepairField.getValue());
+            }
+
+            fieldSet = ecm.getEntitiesFromFields(
+                Inflector.getInstance().singularize( collectionType ),
+                Collections.singletonList(uniqueLookupRepairField), uniqueIndexRepair).toBlocking().last();
+        }
+
+        if(fieldSet == null || fieldSet.isEmpty()) {
             return null;
         }
 
@@ -1156,8 +1121,19 @@ public class CpEntityManager implements EntityManager {
                 cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() );
         }
 
+        String region = null;
+        String collectionName = Schema.defaultCollectionName( entityRef.getType() );
+
+        CollectionSettings collectionSettings = collectionSettingsFactory
+            .getInstance( new CollectionSettingsScopeImpl( getAppIdObject(), collectionName) );
+        Optional<Map<String, Object>> existingSettings =
+            collectionSettings.getCollectionSettings( collectionName );
+        if ( existingSettings.isPresent() ) {
+            region = existingSettings.get().get("region").toString();
+        }
+
         //TODO: does this call and others like it need a graphite reporter?
-        cpEntity = ecm.write( cpEntity ).toBlocking().last();
+        cpEntity = ecm.write( cpEntity, region ).toBlocking().last();
 
         if(logger.isTraceEnabled()){
             logger.trace("Wrote {}:{} version {}",
@@ -1532,6 +1508,12 @@ public class CpEntityManager implements EntityManager {
         getRelationManager( entityRef ).removeFromCollection( collectionName, itemRef );
     }
 
+    @Override
+    public void removeItemFromCollection( EntityRef entityRef, String collectionName, EntityRef itemRef ) throws Exception {
+
+        getRelationManager( entityRef ).removeItemFromCollection( collectionName, itemRef );
+    }
+
 
     @Override
     public Set<String> getCollectionIndexes( EntityRef entity, String collectionName ) throws Exception {
@@ -1778,90 +1760,91 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public Map createCollectionSchema( String collectionName, String owner ,Map<String, Object> properties ){
-
+    public Map createCollectionSettings(String collectionName, String owner, Map<String, Object> newSettings) {
 
         //TODO: change timeservice as below then use timeservice.
         Instant timeInstance = Instant.now();
 
         Long epoch = timeInstance.toEpochMilli();
 
-        Map<String,Object> schemaMap = new HashMap<>(  );
+        Map<String, Object> updatedSettings = new HashMap<>();
 
-        schemaMap.put("lastUpdated",epoch);
-        //this needs the method that can extract the user from the token no matter the token.
-        //Possible values are app credentials, org credentials, or the user email(Admin tokens).
-        schemaMap.put("lastUpdateBy",owner);
+        updatedSettings.put( "lastUpdated", epoch );
+        // this needs the method that can extract the user from the token no matter the token.
+        // Possible values are app credentials, org credentials, or the user email(Admin tokens).
+        updatedSettings.put( "lastUpdateBy", owner );
 
+        CollectionSettings collectionSettings = collectionSettingsFactory
+            .getInstance( new CollectionSettingsScopeImpl( getAppIdObject(), collectionName) );
+        Optional<Map<String, Object>> existingSettings =
+            collectionSettings.getCollectionSettings( collectionName );
 
-        MapManager mm = getMapManagerForTypes();
-
-        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
-
-        Optional<Map> collectionIndexingSchema = indexSchemaCache.getCollectionSchema( collectionName );
-
-
-        //If there is an existing schema then take the lastReindexed time and keep it around.Otherwise initialize to 0.
-        if ( collectionIndexingSchema.isPresent() ) {
-            Map jsonMapData = collectionIndexingSchema.get();
-            schemaMap.put( "lastReindexed", jsonMapData.get( "lastReindexed" ) );
-        }
-        else {
-            schemaMap.put( "lastReindexed", 0 );
-        }
-
-        ArrayList<String> fieldProperties = ( ArrayList<String> ) properties.get( "fields" );
-
-        //do a check to see if you have a * field. If you do have a * field then ignore all other fields
-        //and only accept the * field.
-        if ( fieldProperties.contains( "*" )) {
-            ArrayList<String> wildCardArrayList = new ArrayList<>();
-            wildCardArrayList.add( "*" );
-            schemaMap.put( "fields", wildCardArrayList );
-
-        } else if ( fieldProperties.contains( "none" )) {
-            ArrayList<String> wildCardArrayList = new ArrayList<>();
-            wildCardArrayList.add( "none" );
-            schemaMap.put( "fields", wildCardArrayList );
-
+        // If there is an existing schema then take the lastReindexed time and keep it around.
+        // Otherwise initialize to 0.
+        if ( existingSettings.isPresent() ) {
+            Map<String, Object> jsonMapData = existingSettings.get();
+            updatedSettings.put( "lastReindexed", jsonMapData.get( "lastReindexed" ) );
         } else {
-            schemaMap.putAll( properties );
+            updatedSettings.put( "lastReindexed", 0 );
         }
 
-        indexSchemaCache.putCollectionSchema( collectionName, JsonUtils.mapToJsonString( schemaMap ) );
+        // if fields specified, then put in settings
+        if ( newSettings.get("fields") != null ) {
+            updatedSettings.put("fields", newSettings.get("fields"));
+        }
 
-        return schemaMap;
+        // if region specified
+        Object region = newSettings.get("region");
+        if ( region != null ) {
 
+            // passing an empty string causes region to be removed from settings
+            if ( region.toString().trim().isEmpty() ) {
+                updatedSettings.remove("region");
+
+            } else {
+                // make sure region is in the configured region list
+                List regionList = Arrays.asList( entityManagerFig.getRegionList().toLowerCase().split( "," ) );
+                if (!regionList.contains( region )) {
+                    throw new NullArgumentException( "Region " + region + " not in region list" );
+                }
+                updatedSettings.put("region", region);
+            }
+        }
+
+        collectionSettings.putCollectionSettings( collectionName, JsonUtils.mapToJsonString( updatedSettings ) );
+
+        return updatedSettings;
     }
 
     @Override
-    public void deleteCollectionSchema( String collectionName ){
-        MapManager mm = getMapManagerForTypes();
+    public void deleteCollectionSettings( String collectionName ){
 
-        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+        CollectionSettings collectionSettings = collectionSettingsFactory
+            .getInstance( new CollectionSettingsScopeImpl( getAppIdObject(), collectionName) );
 
-        indexSchemaCache.deleteCollectionSchema( collectionName );
+
+        collectionSettings.deleteCollectionSettings( collectionName );
 
     }
 
 
     @Override
-    public Object getCollectionSchema( String collectionName ){
-        MapManager mm = getMapManagerForTypes();
+    public Object getCollectionSettings(String collectionName) {
 
-        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
+        CollectionSettings collectionSettings =
+            collectionSettingsFactory.getInstance( new CollectionSettingsScopeImpl( getAppIdObject(), collectionName) );
 
-        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+        Optional<Map<String, Object>> collectionIndexingSchema =
+            collectionSettings.getCollectionSettings( collectionName );
 
-        if(collectionIndexingSchema.isPresent()){
+        if (collectionIndexingSchema.isPresent()) {
             return collectionIndexingSchema.get();
-        }
-        else{
+        } else {
             return null;
         }
     }
 
-        @Override
+    @Override
     public void grantRolePermission( String roleName, String permission ) throws Exception {
         roleName = roleName.toLowerCase();
         permission = permission.toLowerCase();
@@ -2488,6 +2471,10 @@ public class CpEntityManager implements EntityManager {
         return mm;
     }
 
+    private Id getAppIdObject(){
+        return new SimpleId( applicationId, TYPE_APPLICATION );
+    }
+
 
     @Override
     public <A extends Entity> A get( EntityRef entityRef, Class<A> entityClass ) throws Exception {
@@ -2760,7 +2747,7 @@ public class CpEntityManager implements EntityManager {
             properties.put( PROPERTY_MODIFIED, ( long ) ( timestamp / 1000 ) );
         }
 
-        // special case timestamp and published properties
+        // special case timestamp and published newSettings
         // and dictionary their timestamp values if not set
         // this is sure to break something for someone someday
 
@@ -2808,13 +2795,16 @@ public class CpEntityManager implements EntityManager {
 
         try {
 
-            if(logger.isTraceEnabled()) {
+            if ( logger.isTraceEnabled()) {
                 logger.trace( "About to Write {}:{} version {}",
                     cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() );
             }
 
+            String region = lookupRegionForType( entity.getType() );
+
             //this does the write so before adding to a collection everything already exists already.
-            cpEntity = ecm.write( cpEntity ).toBlocking().last();
+            cpEntity = ecm.write( cpEntity, region ).toBlocking().last();
+
             entity.setSize(cpEntity.getSize());
 
             if(logger.isTraceEnabled()) {
@@ -2824,6 +2814,11 @@ public class CpEntityManager implements EntityManager {
 
         }
         catch ( WriteUniqueVerifyException wuve ) {
+
+            if(logger.isTraceEnabled()){
+                logger.trace("WriteUniqueVerifyException encountered during batchCreate of entity with id {}",
+                    cpEntity.getId().getUuid());
+            }
             handleWriteUniqueVerifyException( entity, wuve );
         }
 
@@ -2874,7 +2869,7 @@ public class CpEntityManager implements EntityManager {
             throws DuplicateUniquePropertyExistsException {
 
         // we may have multiple conflicts, but caller expects only one
-        Map<String, Field> violiations = wuve.getVioliations();
+        Map<String, Field> violiations = wuve.getViolations();
 
         if ( violiations != null ) {
             Field conflict = violiations.get( violiations.keySet().iterator().next() );
@@ -3114,6 +3109,28 @@ public class CpEntityManager implements EntityManager {
         }
 
     }
+
+
+    private  String lookupRegionForType( String type ) {
+
+        String region = null;
+        String collectionName = Schema.defaultCollectionName( type );
+
+
+        // get collection settings for type
+        CollectionSettings collectionSettings = collectionSettingsFactory
+            .getInstance( new CollectionSettingsScopeImpl( getAppIdObject(), collectionName) );
+
+        Optional<Map<String, Object>> existingSettings =
+            collectionSettings.getCollectionSettings( collectionName );
+
+        if ( existingSettings.isPresent() && existingSettings.get().get("region") != null ) {
+            region = existingSettings.get().get("region").toString();
+        }
+
+        return region;
+    }
+
 }
 
 

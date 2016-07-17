@@ -48,7 +48,8 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
     BatchStatement writeCQL(ApplicationScope applicationScope, UniqueValue uniqueValue, int timeToLive );
 
     /**
-     * Load UniqueValue that matches field from collection or null if that value does not exist.
+     * Load UniqueValue that matches field from collection or null if that value does not exist.  Returns the oldest
+     * unique value entry if more than 1 exists
      *
      * @param applicationScope scope in which to look for field name/value
      * @param type The type the unique value exists within
@@ -59,6 +60,21 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
      */
     UniqueValueSet load( ApplicationScope applicationScope, String type, Collection<Field> fields );
 
+
+    /**
+     * Load UniqueValue that matches field from collection or null if that value does not exist.  Returns the oldest
+     * unique value entry if more than 1 exists
+     *
+     * @param applicationScope scope in which to look for field name/value
+     * @param type The type the unique value exists within
+     * @param fields Field name/value to search for
+     *
+     * @return UniqueValueSet containing fields from the collection that exist in cassandra
+     *
+     */
+    UniqueValueSet load( ApplicationScope applicationScope, String type, Collection<Field> fields,
+                         boolean useReadRepair );
+
     /**
     * Load UniqueValue that matches field from collection or null if that value does not exist.
     *
@@ -67,10 +83,12 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
     * @param type The type the unique value exists within
     * @param fields Field name/value to search for
     * @return UniqueValueSet containing fields from the collection that exist in cassandra
+    *
+    * @param useReadRepair
+     * @return UniqueValueSet containing fields from the collection that exist in cassandra
     */
     UniqueValueSet load(ApplicationScope applicationScope, ConsistencyLevel consistencyLevel, String type,
-                        Collection<Field> fields );
-
+                        Collection<Field> fields, boolean useReadRepair);
 
     /**
      * Loads the currently persisted history of every unique value the entity has held.  This will

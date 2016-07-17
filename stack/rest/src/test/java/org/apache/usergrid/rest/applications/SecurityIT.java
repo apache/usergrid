@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest.applications;
 
 
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.utils.UUIDUtils;

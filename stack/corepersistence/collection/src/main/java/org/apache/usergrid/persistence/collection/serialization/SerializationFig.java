@@ -57,4 +57,5 @@ public interface SerializationFig extends GuicyFig {
     @Key ( "usergrid.uniqueverify.poolsize" )
     @Default( "150" )
     int getUniqueVerifyPoolSize();
+
 }

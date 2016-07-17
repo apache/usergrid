@@ -44,7 +44,150 @@ Response:
       "organization" : "your-org",
       "applicationName" : "your-app"
     }
+ 
+ 
+## Collection Settings
+
+Usergrid allows you to specify settings for each of your Collections. 
+Collections may have a *_settings* resource with the following URI pattern:
+
+	/{org-identifier}/{app-identifier}/{collection-name}/_settings
+	
+If a Collection does not have a _settings resource,
+then doing an HTTP GET on that URI will yield the normal Collection resource.
+For example here a request and respinse for settings for the Collection "battles", which does not yet have _settigs:
+
+	curl "https//api.usergrid.com/test-organization/settingstest/battles/_settings?access_token=YWM..."
+	{
+	  "action" : "get",
+	  "application" : "7fd6c414-2cb6-11e6-8b07-0a669fe1d66e",
+	  "params" : { },
+	  "path" : "/battles",
+	  "uri" : "https//api.usergrid.com/test-organization/settingstest/battles",
+	  "entities" : [ ],
+	  "timestamp" : 1465308535753,
+	  "duration" : 175,
+	  "organization" : "test-organization",
+	  "applicationName" : "settingstest"
+	}
+	
+Once a Collection has a _settings resource, here's what it might look like:
+	
+	curl "0:8080/test-organization/settingstest/battles/_settings?access_token=YWM..."
+	{
+	  "action" : "get",
+	  "application" : "7fd6c414-2cb6-11e6-8b07-0a669fe1d66e",
+	  "params" : { },
+	  "path" : "/battles",
+	  "uri" : "https//api.usergrid.com/test-organization/settingstest/battles",
+	  "entities" : [ ],
+	  "data" : {
+	    "lastUpdated" : 1465311161543,
+	    "lastReindexed" : 0,
+	    "fields" : "all",
+	    "region" : "us-east-1",
+	    "lastUpdateBy" : "super@usergrid.com"
+	  },
+	  "timestamp" : 1465311177535,
+	  "duration" : 6,
+	  "organization" : "test-organization",
+	  "applicationName" : "settingstest"
+	}
+
+	
+Collection settings are useful for setting up Selective Indexing. Let's discuss that next.
+
   
+## Setting up Selective Indexing via Collection Settings
+ 
+Indexing is expensive and now it can be done selectively.
+
+In the beginning, Usergrid indexed each and every field of an Entity. 
+If a field was an object, the the fields of that object would also be indexed.
+Indexing everything is very convenient because it means you can query on any field,
+but indexing everything is expensive in terms of performance; 
+it slows down Entity creation and update.
+Indexing everything is also expensive in terms of storage, 
+it takes up space and makes puts strain on the system.
+
+Staring with Usegrid 2.1.1, you can specify a "schema" for each Collection.
+You can tell Usergrid which fields should be indexed or 
+you can tell Usergrid to completely skip indexing for a collection. 
+
+### Specifying a Schema for a Collection
+
+There are three ways to specify a schema for a Collection. 
+You can specify that all fields are to be index, you can specify none or 
+you can specify a list of the fields that should be indexed. 
+You do this by POSTing or PUTing a _settings resource for the Collection with one field named "fields".
+
+There are three possible values for "fields":
+
+Fields Setting                 Type     Meaning
+--------------                 ----     -------
+"fields":"all"                 String   Index all Entity fields
+"fields":"none"                String   Index no fields; completely skip indexing for this collection.
+"fields":["field1", "field2"]  Array    Index all fields whose names are listed in the array value.
+
+
+#### Example: Turn off Indexing for a Collection
+
+This example shows how you would use curl to set the schema if you want to turn off indexing for a collection:
+
+	curl -X PUT "0:8080/test-organization/settingstest/_settings?access_token=YWM..." -d '{"fields":"none"}'
+	{
+	  "action" : "put",
+	  "application" : "7fd6c414-2cb6-11e6-8b07-0a669fe1d66e",
+	  "params" : { },
+	  "path" : "/_settings",
+	  "uri" : "http://localhost:8080/test-organization/settingstest/_settings",
+	  "entities" : [ {
+	    "uuid" : "6fc783c6-2cc3-11e6-8fce-0a669fe1d66e",
+	    "type" : "_setting",
+	    "created" : 1465312858697,
+	    "modified" : 1465312858697,
+	    "fields" : "none",
+	    "metadata" : {
+	      "path" : "/_settings/6fc783c6-2cc3-11e6-8fce-0a669fe1d66e",
+	      "size" : 347
+	    }
+	  } ],
+	  "timestamp" : 1465312858688,
+	  "duration" : 63,
+	  "organization" : "test-organization",
+	  "applicationName" : "settingstest"
+	}
+
+
+#### Example: Index only one field of a Collection
+
+This example shows how you would use curl to set the schema if you only want the "year" field to be indexed:
+
+	curl -X PUT "0:8080/test-organization/settingstest/_settings?access_token=YWM..." -d '{"fields":["year"]}'
+	{
+	  "action" : "put",
+	  "application" : "7fd6c414-2cb6-11e6-8b07-0a669fe1d66e",
+	  "params" : { },
+	  "path" : "/_settings",
+	  "uri" : "http://localhost:8080/test-organization/settingstest/_settings",
+	  "entities" : [ {
+	    "uuid" : "6fc783c6-2cc3-11e6-8fce-0a669fe1d66e",
+	    "type" : "_setting",
+	    "created" : 1465312858697,
+	    "modified" : 1465312858697,
+	    "fields" : [ "year" ],
+	    "metadata" : {
+	      "path" : "/_settings/6fc783c6-2cc3-11e6-8fce-0a669fe1d66e",
+	      "size" : 347
+	    }
+	  } ],
+	  "timestamp" : 1465312858688,
+	  "duration" : 63,
+	  "organization" : "test-organization",
+	  "applicationName" : "settingstest"
+	}
+
+
 ## Retrieving Collections
 
 This article describes how to retrieve all of the entities in a collection.
@@ -179,6 +322,7 @@ Response:
       "organization" : "your-org",
       "applicationName" : "your-app"
     }
+    
    
 ## Deleting Collections
 This article describes how to batch delete entities in a collection. Batch deletes require the use of a query string in the request, which specifies a subset of entities to be deleted. For more information on queries, see Querying your data.

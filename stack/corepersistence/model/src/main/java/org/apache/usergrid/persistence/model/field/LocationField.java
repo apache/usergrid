@@ -41,6 +41,13 @@ public final class LocationField extends AbstractField<Location> {
         super();
     }
 
+    /**
+     * This type of field is never unique
+     */
+    @Override
+    public boolean isUnique() {
+        return false;
+    }
 
     @Override
     public final FieldTypeName getTypeName() {

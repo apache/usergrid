@@ -43,7 +43,7 @@ import UIKit
     }
 
     func setUp() {
-        addTarget(self, action: "actionKeyboardButtonTapped:", forControlEvents: .EditingDidEndOnExit)
+        addTarget(self, action: #selector(FormTextField.actionKeyboardButtonTapped(_:)), forControlEvents: .EditingDidEndOnExit)
     }
 
     func actionKeyboardButtonTapped(sender: UITextField) {

@@ -343,8 +343,13 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
         int count = 0;
         while(bb.hasRemaining()){
 
-            // custom columns have a short at beginning for comparator (which we don't use here )
-            ByteBuffer comparator = CQLUtils.getWithShortLength(bb);
+            // pull of custom comparator (per Astyanax deserialize)
+            int e = CQLUtils.getShortLength(bb);
+            if((e & '耀') == 0) {
+                CQLUtils.getBytes(bb, e);
+            } else {
+                // do nothing
+            }
 
             ByteBuffer data = CQLUtils.getWithShortLength(bb);
 
@@ -383,11 +388,12 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
         int count = 0;
         while(bb.hasRemaining()){
 
-            // the comparator info is different for the UUID reversed type vs. UTF8 type
-            if(count ==0){
-                bb.getShort(); // take the reversed comparator byte off
-            }else {
-                ByteBuffer comparator = CQLUtils.getWithShortLength(bb);
+            // pull of custom comparator (per Astyanax deserialize)
+            int e = CQLUtils.getShortLength(bb);
+            if((e & '耀') == 0) {
+                CQLUtils.getBytes(bb, e);
+            } else {
+                // do nothing
             }
 
             ByteBuffer data = CQLUtils.getWithShortLength(bb);

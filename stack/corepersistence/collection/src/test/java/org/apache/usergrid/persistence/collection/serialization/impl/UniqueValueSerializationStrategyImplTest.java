@@ -24,7 +24,9 @@ import java.util.Iterator;
 import java.util.UUID;
 
 import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.Session;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -35,7 +37,6 @@ import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
-import org.apache.usergrid.persistence.collection.serialization.impl.UniqueValueImpl;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
@@ -49,7 +50,6 @@ import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
 import com.google.inject.Inject;
-import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import static org.junit.Assert.assertEquals;
@@ -362,6 +362,231 @@ public abstract class UniqueValueSerializationStrategyImplTest {
         assertEquals( version1, allFieldsValue.getEntityVersion() );
 
         assertFalse(allFieldsWritten.hasNext());
+
+    }
+
+    /**
+     * Test that inserting duplicates always show the oldest entity UUID being returned (versions of that OK to change).
+     *
+     * @throws ConnectionException
+     * @throws InterruptedException
+     */
+    @Test
+    public void testWritingDuplicates() throws ConnectionException, InterruptedException {
+
+        ApplicationScope scope =
+            new ApplicationScopeImpl( new SimpleId( "organization" ) );
+
+        IntegerField field = new IntegerField( "count", 5 );
+        Id entityId1 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        Id entityId2 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+
+
+
+        UUID version1 = UUIDGenerator.newTimeUUID();
+        UUID version2 = UUIDGenerator.newTimeUUID();
+
+        UniqueValue stored1 = new UniqueValueImpl( field, entityId1, version2 );
+        UniqueValue stored2 = new UniqueValueImpl( field, entityId2,  version1 );
+
+
+        session.execute(strategy.writeCQL( scope, stored1, -1 ));
+        session.execute(strategy.writeCQL( scope, stored2, -1 ));
+
+        // load descending to get the older version of entity for this unique value
+        UniqueValueSet fields = strategy.load( scope, ConsistencyLevel.LOCAL_QUORUM,
+            entityId1.getType(), Collections.<Field>singleton( field ), true);
+
+        UniqueValue retrieved = fields.getValue( field.getName() );
+
+        // validate that the first entity UUID is returned after inserting a duplicate mapping
+        assertEquals( stored1, retrieved );
+
+
+
+        UUID version3 = UUIDGenerator.newTimeUUID();
+        UniqueValue stored3 = new UniqueValueImpl( field, entityId2, version3);
+        session.execute(strategy.writeCQL( scope, stored3, -1 ));
+
+        // load the values again, we should still only get back the original unique value
+        fields = strategy.load( scope, ConsistencyLevel.LOCAL_QUORUM,
+            entityId1.getType(), Collections.<Field>singleton( field ), true);
+
+        retrieved = fields.getValue( field.getName() );
+
+        // validate that the first entity UUID is still returned after inserting duplicate with newer version
+        assertEquals( stored1, retrieved );
+
+
+        UUID version4 = UUIDGenerator.newTimeUUID();
+        UniqueValue stored4 = new UniqueValueImpl( field, entityId1, version4);
+        session.execute(strategy.writeCQL( scope, stored4, -1 ));
+
+        // load the values again, now we should get the latest version of the original UUID written
+        fields = strategy.load( scope, ConsistencyLevel.LOCAL_QUORUM,
+            entityId1.getType(), Collections.<Field>singleton( field ), true);
+
+        retrieved = fields.getValue( field.getName() );
+
+        // validate that the first entity UUID is still returned, but with the latest version
+        assertEquals( stored4, retrieved );
+
+    }
+
+    /**
+     * Test that inserting multiple versions of the same entity UUID result in the latest version being returned.
+     *
+     * @throws ConnectionException
+     * @throws InterruptedException
+     */
+    @Test
+    public void testMultipleVersionsSameEntity() throws ConnectionException, InterruptedException {
+
+        ApplicationScope scope =
+            new ApplicationScopeImpl( new SimpleId( "organization" ) );
+
+        IntegerField field = new IntegerField( "count", 5 );
+        Id entityId1 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+
+
+
+        UUID version1 = UUIDGenerator.newTimeUUID();
+        UUID version2 = UUIDGenerator.newTimeUUID();
+
+        UniqueValue stored1 = new UniqueValueImpl( field, entityId1, version1 );
+        UniqueValue stored2 = new UniqueValueImpl( field, entityId1,  version2 );
+
+
+        session.execute(strategy.writeCQL( scope, stored1, -1 ));
+        session.execute(strategy.writeCQL( scope, stored2, -1 ));
+
+        // load descending to get the older version of entity for this unique value
+        UniqueValueSet fields = strategy.load( scope, ConsistencyLevel.LOCAL_QUORUM,
+            entityId1.getType(), Collections.<Field>singleton( field ), true);
+
+        UniqueValue retrieved = fields.getValue( field.getName() );
+        Assert.assertNotNull( retrieved );
+        assertEquals( stored2, retrieved );
+
+
+    }
+
+    @Test
+    public void testDuplicateEntitiesDescending() throws ConnectionException, InterruptedException {
+
+        ApplicationScope scope =
+            new ApplicationScopeImpl( new SimpleId( "organization" ) );
+
+        IntegerField field = new IntegerField( "count", 5 );
+        Id entityId1 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        Id entityId2 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        Id entityId3 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+
+
+
+        UUID version1 = UUIDGenerator.newTimeUUID();
+        UUID version2 = UUIDGenerator.newTimeUUID();
+        UUID version3 = UUIDGenerator.newTimeUUID();
+
+        UniqueValue stored1 = new UniqueValueImpl( field, entityId3, version1 );
+        UniqueValue stored2 = new UniqueValueImpl( field, entityId2,  version2 );
+        UniqueValue stored3 = new UniqueValueImpl( field, entityId1,  version3 );
+
+
+        session.execute(strategy.writeCQL( scope, stored1, -1 ));
+        session.execute(strategy.writeCQL( scope, stored2, -1 ));
+        session.execute(strategy.writeCQL( scope, stored3, -1 ));
+
+
+        // load descending to get the older version of entity for this unique value
+        UniqueValueSet fields = strategy.load( scope, ConsistencyLevel.LOCAL_QUORUM,
+            entityId1.getType(), Collections.<Field>singleton( field ), true);
+
+
+        UniqueValue retrieved = fields.getValue( field.getName() );
+        assertEquals( stored3, retrieved );
+
+
+    }
+
+    @Test
+    public void testDuplicateEntitiesAscending() throws ConnectionException, InterruptedException {
+
+        ApplicationScope scope =
+            new ApplicationScopeImpl( new SimpleId( "organization" ) );
+
+        IntegerField field = new IntegerField( "count", 5 );
+        Id entityId1 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        Id entityId2 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        Id entityId3 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+
+
+
+        UUID version1 = UUIDGenerator.newTimeUUID();
+        UUID version2 = UUIDGenerator.newTimeUUID();
+        UUID version3 = UUIDGenerator.newTimeUUID();
+
+        UniqueValue stored1 = new UniqueValueImpl( field, entityId1, version1 );
+        UniqueValue stored2 = new UniqueValueImpl( field, entityId2,  version2 );
+        UniqueValue stored3 = new UniqueValueImpl( field, entityId3,  version3 );
+
+
+        session.execute(strategy.writeCQL( scope, stored1, -1 ));
+        session.execute(strategy.writeCQL( scope, stored2, -1 ));
+        session.execute(strategy.writeCQL( scope, stored3, -1 ));
+
+
+        // load descending to get the older version of entity for this unique value
+        UniqueValueSet fields = strategy.load( scope,
+            ConsistencyLevel.LOCAL_QUORUM, entityId1.getType(), Collections.<Field>singleton( field ), true);
+
+        UniqueValue retrieved = fields.getValue( field.getName() );
+        assertEquals( stored1, retrieved );
+
+
+    }
+
+    @Test
+    public void testMixedDuplicates() throws ConnectionException, InterruptedException {
+
+        ApplicationScope scope =
+            new ApplicationScopeImpl( new SimpleId( "organization" ) );
+
+        IntegerField field = new IntegerField( "count", 5 );
+        Id entityId1 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        Id entityId2 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+        Id entityId3 = new SimpleId( UUIDGenerator.newTimeUUID(), "entity" );
+
+
+
+        UUID version1 = UUIDGenerator.newTimeUUID();
+        UUID version2 = UUIDGenerator.newTimeUUID();
+        UUID version3 = UUIDGenerator.newTimeUUID();
+        UUID version4 = UUIDGenerator.newTimeUUID();
+        UUID version5 = UUIDGenerator.newTimeUUID();
+
+        UniqueValue stored1 = new UniqueValueImpl( field, entityId1, version5 );
+        UniqueValue stored2 = new UniqueValueImpl( field, entityId2,  version4 );
+        UniqueValue stored3 = new UniqueValueImpl( field, entityId1, version3 );
+        UniqueValue stored4 = new UniqueValueImpl( field, entityId3,  version2 );
+        UniqueValue stored5 = new UniqueValueImpl( field, entityId3,  version1 );
+
+
+
+        session.execute(strategy.writeCQL( scope, stored1, -1 ));
+        session.execute(strategy.writeCQL( scope, stored2, -1 ));
+        session.execute(strategy.writeCQL( scope, stored3, -1 ));
+        session.execute(strategy.writeCQL( scope, stored4, -1 ));
+        session.execute(strategy.writeCQL( scope, stored5, -1 ));
+
+
+        // load descending to get the older version of entity for this unique value
+        UniqueValueSet fields = strategy.load( scope, ConsistencyLevel.LOCAL_QUORUM,
+            entityId1.getType(), Collections.<Field>singleton( field ), true);
+
+        UniqueValue retrieved = fields.getValue( field.getName() );
+        assertEquals( stored1, retrieved );
+
 
     }
 

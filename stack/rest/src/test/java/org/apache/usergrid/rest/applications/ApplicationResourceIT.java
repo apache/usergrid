@@ -16,19 +16,17 @@
  */
 package org.apache.usergrid.rest.applications;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import junit.framework.Assert;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.shiro.codec.Base64;
 import org.apache.usergrid.cassandra.SpringResource;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.endpoints.mgmt.OrganizationResource;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 import org.apache.usergrid.utils.MapUtils;
 import org.glassfish.jersey.client.ClientProperties;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +50,7 @@ import static org.junit.Assert.*;
 /**
  * Invokes methods on ApplicationResource
  */
+@NotThreadSafe
 public class ApplicationResourceIT extends AbstractRestIT {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationResourceIT.class);
 
@@ -280,7 +279,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
             .get(ApiResponse.class);
 
         // assert that the response returns the correct URI
-        assertEquals(apiResponse.getUri(), String.format("http://sometestvalue/%s/%s", orgName, appName));
+        assertEquals(String.format("http://localhost:8080/%s/%s", orgName, appName), apiResponse.getUri());
 
         //unmarshal the application from the response
         Application application = new Application(apiResponse);

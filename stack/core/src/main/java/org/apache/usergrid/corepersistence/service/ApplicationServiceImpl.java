@@ -23,11 +23,13 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
-import org.apache.usergrid.corepersistence.index.IndexSchemaCache;
-import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettings;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
@@ -59,8 +61,8 @@ public class ApplicationServiceImpl  implements ApplicationService{
     private final EventBuilder eventBuilder;
     private final MapManagerFactory mapManagerFactory;
     private final GraphManagerFactory graphManagerFactory;
-    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
-
+    private final CollectionSettingsFactory collectionSettingsFactory;
+    private final ActorSystemFig actorSystemFig;
 
 
     @Inject
@@ -70,7 +72,8 @@ public class ApplicationServiceImpl  implements ApplicationService{
                                   EventBuilder eventBuilder,
                                   MapManagerFactory mapManagerFactory,
                                   GraphManagerFactory graphManagerFactory,
-                                  IndexSchemaCacheFactory indexSchemaCacheFactory
+                                  CollectionSettingsFactory collectionSettingsFactory,
+                                  ActorSystemFig actorSystemFig
     ){
 
         this.allEntityIdsObservable = allEntityIdsObservable;
@@ -79,7 +82,8 @@ public class ApplicationServiceImpl  implements ApplicationService{
         this.eventBuilder = eventBuilder;
         this.mapManagerFactory = mapManagerFactory;
         this.graphManagerFactory = graphManagerFactory;
-        this.indexSchemaCacheFactory = indexSchemaCacheFactory;
+        this.collectionSettingsFactory = collectionSettingsFactory;
+        this.actorSystemFig = actorSystemFig;
     }
 
 
@@ -112,7 +116,7 @@ public class ApplicationServiceImpl  implements ApplicationService{
         }
 
         countObservable = countObservable.map(id -> {
-            entityCollectionManager.mark((Id) id)
+            entityCollectionManager.mark((Id) id, null )
                 .mergeWith(graphManager.markNode((Id) id, createGraphOperationTimestamp())).toBlocking().last();
             return id;
         })
@@ -148,10 +152,13 @@ public class ApplicationServiceImpl  implements ApplicationService{
 
         boolean skipIndexing = false;
 
-        MapManager mm = getMapManagerForTypes(applicationScope);
-        IndexSchemaCache indexSchemaCache = indexSchemaCacheFactory.getInstance( mm );
         String collectionName = Schema.defaultCollectionName( type );
-        Optional<Map> collectionIndexingSchema =  indexSchemaCache.getCollectionSchema( collectionName );
+
+        CollectionSettings collectionSettings = collectionSettingsFactory
+            .getInstance( new CollectionSettingsScopeImpl(applicationScope.getApplication(), collectionName));
+
+        Optional<Map<String, Object>> collectionIndexingSchema =
+            collectionSettings.getCollectionSettings( collectionName );
 
         if ( collectionIndexingSchema.isPresent()) {
             Map jsonMapData = collectionIndexingSchema.get();

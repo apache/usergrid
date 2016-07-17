@@ -17,6 +17,7 @@
  */
 package org.apache.usergrid.persistence.collection.exception;
 
+import com.netflix.astyanax.connectionpool.exceptions.BadRequestException;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
@@ -56,6 +57,16 @@ public class CollectionRuntimeException extends RuntimeException {
         this.applicationScope = scope;
     }
 
+    public boolean isBootstrapping() {
+        if ( getCause() instanceof BadRequestException ) {
+            BadRequestException bre = (BadRequestException)getCause();
+            String msg = bre.getMessage();
+            if ( msg.contains("Keyspace") && msg.contains( "does not exist" ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public ApplicationScope getApplicationScope() {
         return applicationScope;

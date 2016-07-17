@@ -18,43 +18,51 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+
 import com.datastax.driver.core.Session;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import com.google.inject.Inject;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
+import org.apache.usergrid.persistence.collection.AbstractUniqueValueTest;
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
+
 import org.apache.usergrid.persistence.core.CassandraConfig;
+
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
+
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.model.entity.Entity;
-
-import com.google.inject.Inject;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.fromEntity;
 import static org.apache.usergrid.persistence.collection.mvcc.stage.TestEntityGenerator.generateEntity;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
-public class WriteUniqueVerifyTest {
+public class WriteUniqueVerifyTest extends AbstractUniqueValueTest {
+
+    @Inject
+    private EntityCollectionManagerFactory factory;
 
     @Inject
     private UniqueValueSerializationStrategy uvstrat;
-
 
     @Inject
     @Rule
@@ -69,9 +77,23 @@ public class WriteUniqueVerifyTest {
     @Inject
     private CassandraConfig cassandraConfig;
 
+    @Inject
+    ActorSystemManager actorSystemManager;
+
+    @Inject
+    UniqueValuesService uniqueValuesService;
+
+
+    @Before
+    public void initAkka() {
+        // each test class needs unique port number
+        initAkka( 2554, actorSystemManager, uniqueValuesService );
+    }
+
 
     @Test
     public void testNoFields() throws ConnectionException {
+
         final ApplicationScope collectionScope = mock( ApplicationScope.class );
         final Keyspace keyspace = mock(Keyspace.class);
         final MutationBatch batch = mock(MutationBatch.class);
@@ -84,12 +106,12 @@ public class WriteUniqueVerifyTest {
         final MvccEntity mvccEntity = fromEntity( entity );
 
         // run the stage
-        WriteUniqueVerify newStage = new WriteUniqueVerify( uvstrat, fig, keyspace,cassandraConfig, session );
+        WriteUniqueVerify newStage = new WriteUniqueVerify( uvstrat, fig, keyspace, cassandraConfig, null, null, null, session );
 
-       newStage.call(
-            new CollectionIoEvent<>( collectionScope, mvccEntity ) ) ;
 
-       //if we get here, it's a success.  We want to test no exceptions are thrown
+       newStage.call( new CollectionIoEvent<>( collectionScope, mvccEntity ) ) ;
+
+       // if we get here, it's a success.  We want to test no exceptions are thrown
 
         verify(batch, never()).execute();
     }

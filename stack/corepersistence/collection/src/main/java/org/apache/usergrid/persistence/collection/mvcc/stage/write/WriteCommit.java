@@ -18,10 +18,20 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+
 
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.Session;
+
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueException;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesFig;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +72,10 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
 
     private static final Logger logger = LoggerFactory.getLogger( WriteCommit.class );
 
+    ActorSystemFig actorSystemFig;
+    UniqueValuesFig uniqueValuesFig;
+    UniqueValuesService akkaUvService;
+
     @Inject
     private UniqueValueSerializationStrategy uniqueValueStrat;
 
@@ -76,7 +90,11 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
     public WriteCommit( final MvccLogEntrySerializationStrategy logStrat,
                         final MvccEntitySerializationStrategy entryStrat,
                         final UniqueValueSerializationStrategy uniqueValueStrat,
-                        final Session session) {
+                        final ActorSystemFig actorSystemFig,
+                        final UniqueValuesFig uniqueValuesFig,
+                        final UniqueValuesService akkaUvService,
+                        final Session session ) {
+
 
         Preconditions.checkNotNull( logStrat, "MvccLogEntrySerializationStrategy is required" );
         Preconditions.checkNotNull( entryStrat, "MvccEntitySerializationStrategy is required" );
@@ -85,13 +103,21 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         this.logEntryStrat = logStrat;
         this.entityStrat = entryStrat;
         this.uniqueValueStrat = uniqueValueStrat;
+        this.actorSystemFig = actorSystemFig;
+        this.uniqueValuesFig = uniqueValuesFig;
+        this.akkaUvService = akkaUvService;
         this.session = session;
+
     }
 
 
     @Override
     public CollectionIoEvent<MvccEntity> call( final CollectionIoEvent<MvccEntity> ioEvent ) {
+        return confirmUniqueFields( ioEvent );
+    }
 
+
+    private CollectionIoEvent<MvccEntity> confirmUniqueFields(CollectionIoEvent<MvccEntity> ioEvent) {
         final MvccEntity mvccEntity = ioEvent.getEvent();
         MvccValidationUtils.verifyMvccEntityWithEntity( mvccEntity );
 
@@ -107,7 +133,8 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         MvccValidationUtils.verifyMvccEntityWithEntity( ioEvent.getEvent() );
         ValidationUtils.verifyTimeUuid( version ,"version" );
 
-        final MvccLogEntry startEntry = new MvccLogEntryImpl( entityId, version, Stage.COMMITTED, MvccLogEntry.State.COMPLETE );
+        final MvccLogEntry startEntry =
+            new MvccLogEntryImpl( entityId, version, Stage.COMMITTED, MvccLogEntry.State.COMPLETE );
 
 
 
@@ -119,15 +146,46 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         // merge the 2 into 1 mutation
         logMutation.mergeShallow( entityMutation );
 
+        // akkaFig may be null when this is called from JUnit tests
+        if ( actorSystemFig != null && actorSystemFig.getEnabled() ) {
+            String region = ioEvent.getRegion();
+            if ( region == null ) {
+                region = uniqueValuesFig.getAuthoritativeRegion();
+            }
+            if ( region == null ) {
+                region = actorSystemFig.getRegionLocal();
+            }
+            confirmUniqueFieldsAkka( mvccEntity, version, applicationScope, region );
+        } else {
+            confirmUniqueFields( mvccEntity, version, applicationScope, logMutation );
+        }
+
+        try {
+            logMutation.execute();
+        }
+        catch ( ConnectionException e ) {
+            logger.error( "Failed to execute write asynchronously ", e );
+            throw new WriteCommitException( mvccEntity, applicationScope,
+                "Failed to execute write asynchronously ", e );
+        }
+
+        return ioEvent;
+    }
+
+
+    private void confirmUniqueFields(
+        MvccEntity mvccEntity, UUID version, ApplicationScope scope, MutationBatch logMutation) {
+
+        final Entity entity = mvccEntity.getEntity().get();
+
         // re-write the unique values but this time with no TTL
         final BatchStatement uniqueBatch = new BatchStatement();
 
         for ( Field field : EntityUtils.getUniqueFields(mvccEntity.getEntity().get()) ) {
 
-                UniqueValue written  = new UniqueValueImpl( field,
-                    entityId,version);
+                UniqueValue written  = new UniqueValueImpl( field, entity.getId(), version);
 
-                uniqueBatch.add(uniqueValueStrat.writeCQL(applicationScope,  written, -1 ));
+                uniqueBatch.add(uniqueValueStrat.writeCQL(scope,  written, -1 ));
 
                 logger.debug("Finalizing {} unique value {}", field.getName(), field.getValue().toString());
 
@@ -140,11 +198,26 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         }
         catch ( ConnectionException e ) {
             logger.error( "Failed to execute write asynchronously ", e );
-            throw new WriteCommitException( mvccEntity, applicationScope,
+            throw new WriteCommitException( mvccEntity, scope,
                 "Failed to execute write asynchronously ", e );
         }
+    }
 
 
-        return ioEvent;
+    private void confirmUniqueFieldsAkka(
+        MvccEntity mvccEntity, UUID version, ApplicationScope scope, String region ) {
+
+        final Entity entity = mvccEntity.getEntity().get();
+
+        try {
+            akkaUvService.confirmUniqueValues( scope, entity, version, region );
+
+        } catch (UniqueValueException e) {
+
+            Map<String, Field> violations = new HashMap<>();
+            violations.put( e.getField().getName(), e.getField() );
+
+            throw new WriteUniqueVerifyException( mvccEntity, scope, violations  );
+        }
     }
 }

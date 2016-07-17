@@ -195,9 +195,7 @@
         <module>core</module>
         <module>services</module>
         <module>rest</module>
-        <!-- Tools should be built separately
         <module>tools</module>
-        -->
         <!--
         <module>websocket</module>
         -->
@@ -782,12 +780,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.jboss.netty</groupId>
-                <artifactId>netty</artifactId>
-                <version>3.2.7.Final</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.jsoup</groupId>
                 <artifactId>jsoup</artifactId>
                 <version>1.6.0</version>
@@ -1151,7 +1143,7 @@
             <dependency>
                 <groupId>org.apache.usergrid</groupId>
                 <artifactId>usergrid-java-client</artifactId>
-                <version>0.0.10-SNAPSHOT</version>
+                <version>2.2.0-SNAPSHOT</version>
             </dependency>
 
             <dependency>

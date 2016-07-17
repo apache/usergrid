@@ -18,6 +18,7 @@
 package org.apache.usergrid.persistence.collection.serialization.impl;
 
 
+
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -27,24 +28,27 @@ import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Using;
 import org.apache.usergrid.persistence.core.CassandraConfig;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.core.CassandraFig;
-import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
+
+import com.netflix.astyanax.ColumnListMutation;
+
 
 
 /**
@@ -53,7 +57,7 @@ import com.google.common.base.Preconditions;
 public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     implements UniqueValueSerializationStrategy {
 
-    private static final Logger log = LoggerFactory.getLogger( UniqueValueSerializationStrategyImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( UniqueValueSerializationStrategyImpl.class );
 
     public static final String UUID_TYPE_REVERSED = "UUIDType(reversed=true)";
 
@@ -66,6 +70,8 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
 
     public static final int COL_VALUE = 0x0;
+
+    private final Comparator<UniqueValue> uniqueValueComparator = new UniqueValueComparator();
 
 
     private final SerializationFig serializationFig;
@@ -212,34 +218,52 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
         batch.add(uniqueLogDelete);
 
 
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Building batch statement for unique value entity={} version={} name={} value={} ",
+                value.getEntityId().getUuid(), value.getEntityVersion(),
+                value.getField().getName(), value.getField().getValue() );
+        }
+
+
 
         return batch;
     }
 
 
     @Override
-    public UniqueValueSet load( final ApplicationScope colScope, final String type, final Collection<Field> fields )
-         {
-        return load( colScope, ConsistencyLevel.valueOf( cassandraFig.getReadCl() ), type, fields );
+    public UniqueValueSet load( final ApplicationScope colScope, final String type, final Collection<Field> fields ) {
+
+        return load( colScope, ConsistencyLevel.valueOf( cassandraFig.getReadCl() ), type, fields, false );
+
     }
+
+    @Override
+    public UniqueValueSet load( final ApplicationScope colScope, final String type, final Collection<Field> fields,
+                                boolean useReadRepair) {
+
+        return load( colScope, ConsistencyLevel.valueOf( cassandraFig.getReadCl() ), type, fields, useReadRepair);
+
+    }
+
 
 
     @Override
     public UniqueValueSet load( final ApplicationScope appScope,
                                 final ConsistencyLevel consistencyLevel,
-                                final String type, final Collection<Field> fields ) {
+                                final String type, final Collection<Field> fields, boolean useReadRepair ) {
+
 
         Preconditions.checkNotNull( fields, "fields are required" );
         Preconditions.checkArgument( fields.size() > 0, "More than 1 field must be specified" );
 
-        return loadCQL(appScope, consistencyLevel, type, fields);
+        return loadCQL(appScope, consistencyLevel, type, fields, useReadRepair);
 
     }
 
 
     private UniqueValueSet loadCQL( final ApplicationScope appScope,
                                     final ConsistencyLevel consistencyLevel,
-                                    final String type, final Collection<Field> fields ) {
+                                    final String type, final Collection<Field> fields, boolean useReadRepair ) {
 
         Preconditions.checkNotNull( fields, "fields are required" );
         Preconditions.checkArgument( fields.size() > 0, "More than 1 field must be specified" );
@@ -249,68 +273,201 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
         // row key = app UUID + app type + entityType + field type + field name + field value
 
-        List<ByteBuffer> partitionKeys = new ArrayList<>( fields.size() );
+
+
+
+        //List<ByteBuffer> partitionKeys = new ArrayList<>( fields.size() );
+
+        final UniqueValueSetImpl uniqueValueSet = new UniqueValueSetImpl( fields.size() );
+
+
         for ( Field field : fields ) {
 
             //log.info(Bytes.toHexString(getPartitionKey(applicationId, type, field.getTypeName().toString(), field.getName(), field.getValue())));
 
-            partitionKeys.add(getPartitionKey(applicationId, type, field.getTypeName().toString(), field.getName(), field.getValue()));
+            //partitionKeys.add(getPartitionKey(applicationId, type, field.getTypeName().toString(), field.getName(), field.getValue()));
 
-        }
+            final Clause inKey = QueryBuilder.in("key", getPartitionKey(applicationId, type,
+                field.getTypeName().toString(), field.getName(), field.getValue()) );
 
-        final UniqueValueSetImpl uniqueValueSet = new UniqueValueSetImpl( fields.size() );
+            final Statement statement = QueryBuilder.select().all().from(TABLE_UNIQUE_VALUES)
+                .where(inKey)
+                .setConsistencyLevel(consistencyLevel);
 
-        final Clause inKey = QueryBuilder.in("key", partitionKeys );
-
-        final Statement statement = QueryBuilder.select().all().from(TABLE_UNIQUE_VALUES)
-            .where(inKey)
-            .setConsistencyLevel(consistencyLevel);
-
-        final ResultSet resultSet = session.execute(statement);
+            final ResultSet resultSet = session.execute(statement);
 
 
-        Iterator<com.datastax.driver.core.Row> results = resultSet.iterator();
+            Iterator<com.datastax.driver.core.Row> results = resultSet.iterator();
+
+            if( !results.hasNext()){
+                if(logger.isTraceEnabled()){
+                    logger.trace("No rows returned for unique value lookup of field: {}", field);
+                }
+            }
 
 
-        while( results.hasNext() ){
+            List<UniqueValue> candidates = new ArrayList<>();
 
-            final com.datastax.driver.core.Row unique = results.next();
-            ByteBuffer partitionKey = unique.getBytes("key");
-            ByteBuffer column = unique.getBytesUnsafe("column1");
+            while( results.hasNext() ){
 
-            List<Object> keyContents = deserializePartitionKey(partitionKey);
-            List<Object> columnContents = deserializeUniqueValueColumn(column);
+                final com.datastax.driver.core.Row unique = results.next();
+                ByteBuffer partitionKey = unique.getBytes("key");
+                ByteBuffer column = unique.getBytesUnsafe("column1");
 
-            FieldTypeName fieldType;
-            String name;
-            String value;
-            if(this instanceof UniqueValueSerializationStrategyV2Impl) {
+                List<Object> keyContents = deserializePartitionKey(partitionKey);
+                List<Object> columnContents = deserializeUniqueValueColumn(column);
 
-                 fieldType = FieldTypeName.valueOf((String) keyContents.get(3));
-                 name = (String) keyContents.get(4);
-                 value = (String) keyContents.get(5);
+                FieldTypeName fieldType;
+                String name;
+                String value;
+                if(this instanceof UniqueValueSerializationStrategyV2Impl) {
 
-            }else{
 
-                fieldType = FieldTypeName.valueOf((String) keyContents.get(5));
-                name = (String) keyContents.get(6);
-                value = (String) keyContents.get(7);
+                    fieldType = FieldTypeName.valueOf((String) keyContents.get(3));
+                    name = (String) keyContents.get(4);
+                    value = (String) keyContents.get(5);
+
+                }else{
+
+
+                    fieldType = FieldTypeName.valueOf((String) keyContents.get(5));
+                    name = (String) keyContents.get(6);
+                    value = (String) keyContents.get(7);
+
+
+                }
+
+                Field returnedField = getField(name, value, fieldType);
+
+
+                final EntityVersion entityVersion = new EntityVersion(
+                    new SimpleId((UUID)columnContents.get(1), (String)columnContents.get(2)), (UUID)columnContents.get(0));
+//            //sanity check, nothing to do, skip it
+//            if ( !columnList.hasNext() ) {
+//                if(logger.isTraceEnabled()){
+//                    logger.trace("No cells exist in partition for unique value [{}={}]",
+//                        field.getName(), field.getValue().toString());
+//                }
+//                continue;
+//            }
+
+
+
+
+                /**
+                 *  While iterating the rows, a rule is enforced to only EVER return the oldest UUID for the field.
+                 *  This means the UUID with the oldest timestamp ( it was the original entity written for
+                 *  the unique value ).
+                 *
+                 *  We do this to prevent cycling of unique value -> entity UUID mappings as this data is ordered by the
+                 *  entity's version and not the entity's timestamp itself.
+                 *
+                 *  If newer entity UUIDs are encountered, they are removed from the unique value tables, however their
+                 *  backing serialized entity data is left in tact in case a cleanup / audit is later needed.
+                 */
+
+
+                final UniqueValue uniqueValue =
+                    new UniqueValueImpl(returnedField, entityVersion.getEntityId(), entityVersion.getEntityVersion());
+
+                // set the initial candidate and move on
+                if (candidates.size() == 0) {
+                    candidates.add(uniqueValue);
+
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("First entry for unique value [{}={}] found for application [{}], adding " +
+                                "entry with entity id [{}] and entity version [{}] to the candidate list and continuing",
+                            returnedField.getName(), returnedField.getValue().toString(), applicationId.getType(),
+                            uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion());
+                    }
+
+                    continue;
+                }
+
+                if(!useReadRepair){
+
+                    // take only the first
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Read repair not enabled for this request of unique value [{}={}], breaking out" +
+                            " of cell loop", returnedField.getName(), returnedField.getValue().toString());
+                    }
+                    break;
+
+                } else {
+
+
+                    final int result = uniqueValueComparator.compare(uniqueValue, candidates.get(candidates.size() - 1));
+
+                    if (result == 0) {
+
+                        // do nothing, only versions can be newer and we're not worried about newer versions of same entity
+                        if (logger.isTraceEnabled()) {
+                            logger.trace("Current unique value [{}={}] entry has UUID [{}] equal to candidate UUID [{}]",
+                                returnedField.getName(), returnedField.getValue().toString(), uniqueValue.getEntityId().getUuid(),
+                                candidates.get(candidates.size() -1));
+                        }
+
+                        // update candidate w/ latest version
+                        candidates.add(uniqueValue);
+
+                    } else if (result < 0) {
+
+                        // delete the duplicate from the unique value index
+                        candidates.forEach(candidate -> {
+
+                            logger.warn("Duplicate unique value [{}={}] found for application [{}], removing newer " +
+                                    "entry with entity id [{}] and entity version [{}]", returnedField.getName(),
+                                returnedField.getValue().toString(), applicationId.getUuid(),
+                                candidate.getEntityId().getUuid(), candidate.getEntityVersion());
+
+                            session.execute(deleteCQL(appScope, candidate));
+
+                        });
+
+                        // clear the transient candidates list
+                        candidates.clear();
+
+                        if (logger.isTraceEnabled()) {
+                            logger.trace("Updating candidate unique value [{}={}] to entity id [{}] and " +
+                                    "entity version [{}]", returnedField.getName(), returnedField.getValue().toString(),
+                                uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion());
+
+                        }
+
+                        // add our new candidate to the list
+                        candidates.add(uniqueValue);
+
+
+                    } else {
+
+                        logger.warn("Duplicate unique value [{}={}] found for application [{}], removing newer entry " +
+                                "with entity id [{}] and entity version [{}].", returnedField.getName(), returnedField.getValue().toString(),
+                            applicationId.getUuid(), uniqueValue.getEntityId().getUuid(), uniqueValue.getEntityVersion());
+
+                        // delete the duplicate from the unique value index
+                        session.execute(deleteCQL(appScope, uniqueValue));
+
+
+                    }
+
+                }
 
             }
 
-            Field field = getField(name, value, fieldType);
+            if ( candidates.size() > 0 ) {
+                // take the last candidate ( should be the latest version) and add to the result set
+                final UniqueValue returnValue = candidates.get(candidates.size() - 1);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Adding unique value [{}={}] with entity id [{}] and entity version [{}] to response set",
+                        returnValue.getField().getName(), returnValue.getField().getValue().toString(),
+                        returnValue.getEntityId().getUuid(), returnValue.getEntityVersion());
+                }
+                uniqueValueSet.addValue(returnValue);
+            }
 
-
-            final EntityVersion entityVersion = new EntityVersion(
-                new SimpleId((UUID)columnContents.get(1), (String)columnContents.get(2)), (UUID)columnContents.get(0));
-
-
-            final UniqueValueImpl uniqueValue =
-              new UniqueValueImpl( field, entityVersion.getEntityId(), entityVersion.getEntityVersion() );
-
-            uniqueValueSet.addValue(uniqueValue);
 
         }
+
 
         return uniqueValueSet;
 
@@ -463,6 +620,30 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
         return field;
 
+    }
+
+
+    private class UniqueValueComparator implements Comparator<UniqueValue> {
+
+        @Override
+        public int compare(UniqueValue o1, UniqueValue o2) {
+
+            if( o1.getEntityId().getUuid().equals(o2.getEntityId().getUuid())){
+
+                return 0;
+
+            }else if( o1.getEntityId().getUuid().timestamp() < o2.getEntityId().getUuid().timestamp()){
+
+                return -1;
+
+            }
+
+            // if the UUIDs are not equal and o1's timestamp is not less than o2's timestamp,
+            // then o1 must be greater than o2
+            return 1;
+
+
+        }
     }
 
 }

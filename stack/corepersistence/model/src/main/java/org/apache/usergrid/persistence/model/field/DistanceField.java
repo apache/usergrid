@@ -32,6 +32,15 @@ public class DistanceField extends DoubleField {
         super(NAME, value, unique);
     }
 
+    /**
+     * This type of field is never unique
+     */
+    @Override
+    public boolean isUnique() {
+        return false;
+    }
+
+
     public DistanceField() {
         super();
     }
