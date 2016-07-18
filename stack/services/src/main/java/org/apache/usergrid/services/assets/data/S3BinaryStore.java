@@ -26,35 +26,33 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Stack;
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import org.apache.usergrid.utils.StringUtils;
 import org.jclouds.ContextBuilder;
-import org.jclouds.blobstore.AsyncBlobStore;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.domain.BlobBuilder;
 import org.jclouds.blobstore.options.GetOptions;
-import org.jclouds.blobstore.options.PutOptions;
 import org.jclouds.http.config.JavaUrlHttpCommandExecutorServiceModule;
 import org.jclouds.logging.log4j.config.Log4JLoggingModule;
 import org.jclouds.netty.config.NettyPayloadModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.utils.StringUtils;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Module;
 
 
@@ -178,7 +176,7 @@ public class S3BinaryStore implements BinaryStore {
             blob = blobStore.getBlob( bucketName, AssetUtils.buildAssetKey( appId, entity ) );
         }
         else {
-            GetOptions options = GetOptions.Builder.range( offset, length );
+            GetOptions options = GetOptions.Builder.range( offset, offset + length - 1 );
             blob = blobStore.getBlob( bucketName, AssetUtils.buildAssetKey( appId, entity ), options );
         }
         if ( blob == null || blob.getPayload() == null ) {

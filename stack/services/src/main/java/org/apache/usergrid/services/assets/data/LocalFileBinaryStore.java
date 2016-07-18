@@ -25,16 +25,18 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.usergrid.persistence.Entity;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.utils.StringUtils;
+
+import com.google.common.io.ByteStreams;
 
 
 /** A binary store implementation using the local file system */
@@ -134,7 +136,10 @@ public class LocalFileBinaryStore implements BinaryStore {
 
     @Override
     public InputStream read( UUID appId, Entity entity, long offset, long length ) throws IOException {
-        return new BufferedInputStream( FileUtils.openInputStream( path( appId, entity ) ) );
+        InputStream in = FileUtils.openInputStream( path( appId, entity ) );
+        in.skip( offset );
+        in = ByteStreams.limit( in, length);
+        return new BufferedInputStream( in );
     }
 
 

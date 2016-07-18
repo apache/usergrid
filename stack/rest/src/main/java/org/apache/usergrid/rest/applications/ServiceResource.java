@@ -43,25 +43,31 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.usergrid.rest.RootResource;
-import org.apache.usergrid.services.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
+import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.applications.assets.AssetsResource;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
+import org.apache.usergrid.services.ServiceAction;
+import org.apache.usergrid.services.ServiceManager;
+import org.apache.usergrid.services.ServiceParameter;
+import org.apache.usergrid.services.ServicePayload;
+import org.apache.usergrid.services.ServiceRequest;
+import org.apache.usergrid.services.ServiceResults;
 import org.apache.usergrid.services.assets.data.AssetUtils;
 import org.apache.usergrid.services.assets.data.BinaryStore;
 import org.apache.usergrid.utils.InflectionUtils;
-import org.apache.commons.lang.StringUtils;
 
 import com.sun.jersey.api.json.JSONWithPadding;
 import com.sun.jersey.core.provider.EntityHolder;
@@ -71,14 +77,10 @@ import com.sun.jersey.multipart.FormDataBodyPart;
 import com.sun.jersey.multipart.FormDataMultiPart;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.services.ServiceParameter.addParameter;
-import static org.apache.usergrid.services.ServicePayload.batchPayload;
-import static org.apache.usergrid.services.ServicePayload.idListPayload;
-import static org.apache.usergrid.services.ServicePayload.payload;
-import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
-import static org.apache.usergrid.utils.JsonUtils.normalizeJsonTree;
+import static org.apache.usergrid.services.ServicePayload.*;
+import static org.apache.usergrid.utils.JsonUtils.*;
 
 
 @Component
@@ -604,7 +606,7 @@ public class ServiceResource extends AbstractContextResource {
         Date modified = AssetUtils.fromIfModifiedSince( modifiedSince );
         if ( modified != null ) {
             Long lastModified = ( Long ) fileMetadata.get( AssetUtils.LAST_MODIFIED );
-            if ( lastModified - modified.getTime() < 0 ) {
+            if ( lastModified - modified.getTime() < 1000 ) {
                 return Response.status( Response.Status.NOT_MODIFIED ).build();
             }
         }
@@ -629,13 +631,13 @@ public class ServiceResource extends AbstractContextResource {
                 }
                 if ( startEnd.length > 1 ) {
                     long parsedEnd = Long.parseLong( startEnd[1] );
-                    if ( parsedEnd > start && parsedEnd < end ) {
+                    if ( parsedEnd >= start && parsedEnd < end ) {
                         end = parsedEnd;
                     }
                 }
             }
 
-            inputStream = binaryStore.read( getApplicationId(), entity, start, end - start );
+            inputStream = binaryStore.read( getApplicationId(), entity, start, end - start + 1 );
         }
         else { // no range
 
