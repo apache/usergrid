@@ -28,20 +28,18 @@ import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.usergrid.cassandra.Concurrent;
 import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.applications.utils.UserRepo;
 import org.apache.usergrid.services.assets.data.AssetUtils;
 
-import org.apache.commons.io.IOUtils;
-
 import com.sun.jersey.multipart.FormDataMultiPart;
 
-import static org.apache.usergrid.management.AccountCreationProps.PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
 
@@ -124,6 +122,24 @@ public class AssetResourceIT extends AbstractRestIT {
 
         byte[] foundData = IOUtils.toByteArray( is );
         assertEquals( 7979, foundData.length );
+
+        // get first byte
+        is = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
+                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                        .header( "Range", "bytes=0-0" )
+                        .get( InputStream.class );
+
+        foundData = IOUtils.toByteArray( is );
+        assertEquals( 1, foundData.length );
+
+        // get 10 bytes from the middle
+        is = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
+                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                        .header( "Range", "bytes=10-19" )
+                        .get( InputStream.class );
+
+        foundData = IOUtils.toByteArray( is );
+        assertEquals( 10, foundData.length );
 
         // get data by name
         is = resource().path( "/test-organization/test-app/foos/assetname" ).queryParam( "access_token", access_token )
