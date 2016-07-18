@@ -606,7 +606,7 @@ public class ServiceResource extends AbstractContextResource {
         Date modified = AssetUtils.fromIfModifiedSince( modifiedSince );
         if ( modified != null ) {
             Long lastModified = ( Long ) fileMetadata.get( AssetUtils.LAST_MODIFIED );
-            if ( lastModified - modified.getTime() < 0 ) {
+            if ( lastModified - modified.getTime() < 1000 ) {
                 return Response.status( Response.Status.NOT_MODIFIED ).build();
             }
         }
