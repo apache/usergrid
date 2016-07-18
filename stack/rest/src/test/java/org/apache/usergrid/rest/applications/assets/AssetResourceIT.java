@@ -19,11 +19,13 @@ package org.apache.usergrid.rest.applications.assets;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonNode;
@@ -38,6 +40,7 @@ import org.apache.usergrid.rest.AbstractRestIT;
 import org.apache.usergrid.rest.applications.utils.UserRepo;
 import org.apache.usergrid.services.assets.data.AssetUtils;
 
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.multipart.FormDataMultiPart;
 
 import static org.apache.usergrid.utils.MapUtils.hashMap;
@@ -116,36 +119,62 @@ public class AssetResourceIT extends AbstractRestIT {
         assertEquals( uuid, idNode.getTextValue() );
 
         // get data by UUID
-        InputStream is =
+        ClientResponse response =
                 resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
-                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
+                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( ClientResponse.class );
 
-        byte[] foundData = IOUtils.toByteArray( is );
+        assertEquals( 200, response.getStatus() );
+        byte[] foundData = IOUtils.toByteArray( response.getEntityInputStream() );
+        assertEquals( 7979, foundData.length );
+        Date lastModified = response.getLastModified();
+        assertNotNull(lastModified);
+
+        // check if modified since creation
+        response = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
+                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                        .header( HttpHeaders.IF_MODIFIED_SINCE, lastModified )
+                        .get( ClientResponse.class );
+
+        assertEquals( 304, response.getStatus() );
+        foundData = IOUtils.toByteArray( response.getEntityInputStream() );
+        assertEquals( 0, foundData.length );
+
+        // check if modified since ever
+        response = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
+                        .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                        .header( HttpHeaders.IF_MODIFIED_SINCE, new Date(0) )
+                        .get( ClientResponse.class );
+
+        assertEquals( 200, response.getStatus() );
+        foundData = IOUtils.toByteArray( response.getEntityInputStream() );
         assertEquals( 7979, foundData.length );
 
         // get first byte
-        is = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
+        response = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
                         .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE )
                         .header( "Range", "bytes=0-0" )
-                        .get( InputStream.class );
+                        .get( ClientResponse.class );
 
-        foundData = IOUtils.toByteArray( is );
+        assertEquals( 200, response.getStatus() );
+        foundData = IOUtils.toByteArray( response.getEntityInputStream() );
         assertEquals( 1, foundData.length );
 
         // get 10 bytes from the middle
-        is = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
+        response = resource().path( "/test-organization/test-app/foos/" + uuid ).queryParam( "access_token", access_token )
                         .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE )
                         .header( "Range", "bytes=10-19" )
-                        .get( InputStream.class );
+                        .get( ClientResponse.class );
 
-        foundData = IOUtils.toByteArray( is );
+        assertEquals( 200, response.getStatus() );
+        foundData = IOUtils.toByteArray( response.getEntityInputStream() );
         assertEquals( 10, foundData.length );
 
         // get data by name
-        is = resource().path( "/test-organization/test-app/foos/assetname" ).queryParam( "access_token", access_token )
-                .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( InputStream.class );
+        response = resource().path( "/test-organization/test-app/foos/assetname" ).queryParam( "access_token", access_token )
+                .accept( MediaType.APPLICATION_OCTET_STREAM_TYPE ).get( ClientResponse.class );
 
-        foundData = IOUtils.toByteArray( is );
+        assertEquals( 200, response.getStatus() );
+        foundData = IOUtils.toByteArray( response.getEntityInputStream() );
         assertEquals( 7979, foundData.length );
     }
 
