@@ -18,13 +18,13 @@ package org.apache.usergrid.query.validator;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.junit.BeforeClass;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.ManagementService;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.UserInfo;
+import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.rest.TomcatRuntime;
 import org.apache.usergrid.utils.JsonUtils;
+import org.junit.BeforeClass;
 
 import java.io.IOException;
 import java.net.URL;
@@ -33,10 +33,13 @@ import java.util.*;
 
 import static org.junit.Assert.assertNotNull;
 
+
 /**
  * @author Sungju Jin
  */
 public class AbstractQueryIT {
+
+    public static TomcatRuntime tomcatRuntime = TomcatRuntime.getInstance();
 
     protected static QueryValidator validator;
     private static Properties properties;
@@ -49,8 +52,8 @@ public class AbstractQueryIT {
 
     @BeforeClass
     public static void tearsup() throws Exception {
-        validator = QueryITSuite.cassandraResource.getBean(QueryValidator.class);
-        properties = QueryITSuite.cassandraResource.getBean("properties",Properties.class);
+        validator = QueryITSuite.serverResource.getSpringResource().getBean(QueryValidator.class);
+        properties = QueryITSuite.serverResource.getSpringResource().getBean("properties",Properties.class);
         if( isDisableLocalServer()) {
             return;
         }
@@ -64,15 +67,15 @@ public class AbstractQueryIT {
         appName = appName + uuid;
         email = orgName + "@usergrid.com";
         ManagementService managementService = QueryITSuite.serverResource.getMgmtSvc();
-        UserInfo user = managementService.createAdminUser(orgName, "Query Test", email, password, false, false);
-        OrganizationInfo org = managementService.createOrganization(orgName, user, false );
-        assertNotNull( org );
-        ApplicationInfo app = managementService.createApplication( org.getUuid(), appName);
+        OrganizationOwnerInfo ownerInfo = managementService.createOwnerAndOrganization(
+            orgName, orgName, orgName, email, password, false, false );
+        assertNotNull( ownerInfo );
+        ApplicationInfo app = managementService.createApplication( ownerInfo.getOrganization().getUuid(), appName);
         assertNotNull( app );
     }
 
     private static void setProperties() {
-        port = QueryITSuite.serverResource.getTomcatPort();
+        port = tomcatRuntime.getPort();
         fullEndpoint = (String)properties.get("usergrid.query.validator.api.endpoint") + ":" + port;
         orgName = (String)properties.get("usergrid.query.validator.api.organization");
         appName = (String)properties.get("usergrid.query.validator.api.app");

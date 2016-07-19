@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
+        <version>2.1.1-SNAPSHOT</version>
     </parent>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -51,12 +51,16 @@
             </testResource>
         </testResources>
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 ${ug.argline}</argLine>
-
+                    <argLine>
+                    -Dwebapp.directory=${basedir}/../rest/src/main/webapp
+                    -Xmx${ug.heapmax} -Xms${ug.heapmin}
+                    -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 ${ug.argline}
+                    </argLine>
                     <includes>
                         <include>**/*Suite.java</include>
                     </includes>
@@ -71,10 +75,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>3.3</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <optimize>true</optimize>
                     <debug>true</debug>
                     <showDeprecation>true</showDeprecation>
@@ -246,7 +250,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!--  use the external test client.  Just depend on the maven jetty plugin to launch jetty -->
+        <!--  use the external test client.  Just depend on the maven jetty plugin to launch jetty
         <dependency>
             <groupId>com.sun.jersey.jersey-test-framework</groupId>
             <artifactId>jersey-test-framework-external</artifactId>
@@ -258,8 +262,7 @@
             <artifactId>jersey-test-framework-core</artifactId>
             <scope>test</scope>
         </dependency>
-
-
+        -->
 
         <dependency>
             <groupId>org.apache.usergrid</groupId>

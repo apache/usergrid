@@ -17,23 +17,22 @@
 package org.apache.usergrid.rest;
 
 
-import java.net.URI;
-import java.util.Properties;
-
-import javax.ws.rs.core.UriBuilder;
-
 import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.security.providers.SignInProviderFactory;
-import org.apache.usergrid.security.tokens.TokenService;
-import org.apache.usergrid.services.ServiceManagerFactory;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Properties;
 
 
 /** A {@link org.junit.rules.TestRule} that sets up services. */
-public class ITSetup  {
+public class ITSetup implements TestRule {
+    private static final Logger logger = LoggerFactory.getLogger( ITSetup.class );
 
     private static ITSetup instance;
 
@@ -56,7 +55,7 @@ public class ITSetup  {
 
     }
 
-    public static synchronized ITSetup getInstance(){
+    public static synchronized ITSetup getInstance() {
         if(instance == null){
             instance = new ITSetup();
         }
@@ -77,6 +76,41 @@ public class ITSetup  {
 
     public Properties getProps() {
         return properties;
+    }
+
+    public SpringResource getSpringResource() {
+        return springResource;
+    }
+
+
+    @Override
+    public Statement apply( Statement base, Description description ) {
+        return statement( base, description );
+    }
+
+
+    private Statement statement( final Statement base, final Description description ) {
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                before( description );
+
+                try {
+                    base.evaluate();
+                }
+                finally {
+                    after( description );
+                }
+            }
+        };
+    }
+
+    protected void before( Description description ) throws Throwable {
+        logger.info( "Setting up for {}", description.getDisplayName() );
+    }
+
+    protected void after( Description description ) {
+        logger.info( "Tearing down for {}", description.getDisplayName() );
     }
 
 }
