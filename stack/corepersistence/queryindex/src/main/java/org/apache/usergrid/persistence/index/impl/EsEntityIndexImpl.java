@@ -469,11 +469,11 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         // never let this fetch more than 100 to save memory
         final int searchLimit = Math.min(100, indexFig.getVersionQueryLimit());
 
-        final QueryBuilder nodeIdQuery = QueryBuilders
-            .termQuery(IndexingUtils.EDGE_NODE_ID_FIELDNAME, IndexingUtils.nodeId(edge.getNodeId()));
+        final FilterBuilder nodeIdQuery = FilterBuilders
+            .termFilter(IndexingUtils.EDGE_NODE_ID_FIELDNAME, IndexingUtils.nodeId(edge.getNodeId()));
 
-        final QueryBuilder entityIdQuery = QueryBuilders
-            .termQuery(IndexingUtils.ENTITY_ID_FIELDNAME, IndexingUtils.entityId(entityId));
+        final FilterBuilder entityIdQuery = FilterBuilders
+            .termFilter(IndexingUtils.ENTITY_ID_FIELDNAME, IndexingUtils.entityId(entityId));
 
         final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder()
             .addSort(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME, SortOrder.ASC);
@@ -489,13 +489,13 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             long queryTimestamp = 0L;
 
 
-            QueryBuilder timestampQuery =  QueryBuilders
-                .rangeQuery(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME)
+            FilterBuilder timestampQuery =  FilterBuilders
+                .rangeFilter(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME)
                 .gte(queryTimestamp);
 
             QueryBuilder finalQuery = QueryBuilders.constantScoreQuery(
-                QueryBuilders
-                    .boolQuery()
+                FilterBuilders
+                    .boolFilter()
                     .must(entityIdQuery)
                     .must(nodeIdQuery)
                     .must(timestampQuery)
@@ -539,8 +539,8 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final int searchLimit = Math.min(100, indexFig.getVersionQueryLimit());
 
         // this query will find all the documents where this entity is a source/target node
-        final QueryBuilder nodeQuery = QueryBuilders
-            .termQuery(IndexingUtils.EDGE_NODE_ID_FIELDNAME, IndexingUtils.nodeId(entityId));
+        final FilterBuilder nodeQuery = FilterBuilders
+            .termFilter(IndexingUtils.EDGE_NODE_ID_FIELDNAME, IndexingUtils.nodeId(entityId));
 
         final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder()
             .addSort(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME, SortOrder.ASC);
@@ -549,14 +549,14 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
             long queryTimestamp = 0L;
 
-            QueryBuilder timestampQuery =  QueryBuilders
-                .rangeQuery(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME)
+            FilterBuilder timestampQuery =  FilterBuilders
+                .rangeFilter(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME)
                 .gte(queryTimestamp)
                 .lt(markedTimestamp);
 
             QueryBuilder finalQuery = QueryBuilders.constantScoreQuery(
-                QueryBuilders
-                    .boolQuery()
+                FilterBuilders
+                    .boolFilter()
                     .must(timestampQuery)
                     .must(nodeQuery)
             );
