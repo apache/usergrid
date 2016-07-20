@@ -250,20 +250,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!--  use the external test client.  Just depend on the maven jetty plugin to launch jetty
-        <dependency>
-            <groupId>com.sun.jersey.jersey-test-framework</groupId>
-            <artifactId>jersey-test-framework-external</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.sun.jersey.jersey-test-framework</groupId>
-            <artifactId>jersey-test-framework-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        -->
-
         <dependency>
             <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-java-client</artifactId>

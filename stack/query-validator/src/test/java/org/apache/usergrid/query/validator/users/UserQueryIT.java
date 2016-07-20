@@ -105,7 +105,7 @@ public class UserQueryIT extends AbstractQueryIT {
     }
 
     @Test
-    @Ignore("TODO: why does this fail?")
+    @Ignore("TODO: uncomment this test when you are ready to fix USERGRID-1314")
     public void nameBeginswithAndSexEqualAndAgeGreaterthanequalOrSexEqual_sortNameDesc() {
         String sqlite = "SELECT * FROM users WHERE name LIKE 'a%' and sex = 'male' and age >= 35 or sex = 'female' " +
             "ORDER BY name desc LIMIT 10";
@@ -120,7 +120,7 @@ public class UserQueryIT extends AbstractQueryIT {
     }
 
     @Test
-    @Ignore("TODO: why does this fail?")
+    @Ignore("TODO: uncomment this test when you are ready to fix USERGRID-1314")
     public void nameBeginswithAndSexEqualAndAgeGreaterthanequalOrSexEqual_sortAddressAscNameDesc() {
         String sqlite = "SELECT * FROM users WHERE name LIKE 'a%' and sex = 'male' and age >= 35 or sex = 'female' " +
             "ORDER BY address asc, name desc LIMIT 4";
@@ -136,7 +136,7 @@ public class UserQueryIT extends AbstractQueryIT {
     }
 
     @Test
-    @Ignore("TODO: why does this fail?")
+    @Ignore("TODO: uncomment this test when you are ready to fix USERGRID-1314")
     public void nameBeginswithAndSexEqualAndAgeGreaterthanequalOrSexEqual_sortAddressAscNameDesc_limitL4() {
         String sqlite = "SELECT * FROM users WHERE name LIKE 'a%' and sex = 'male' and age >= 35 or sex = 'female' " +
             "ORDER BY address asc, name desc LIMIT 4";
@@ -193,7 +193,6 @@ public class UserQueryIT extends AbstractQueryIT {
 
     @Test
     public void sexEqualAndAgeGreaterthanequal() {
-        // TODO: why do we need order by here? It was not needed in 1.0
         String sqlite = " SELECT * FROM users WHERE sex = 'male' and age >= 35 ORDER BY created DESC LIMIT 10";
         String api = "select * where sex = 'male' and age >= 35 order by created desc";
 
@@ -300,7 +299,6 @@ public class UserQueryIT extends AbstractQueryIT {
 
     @Test
     public void limitL12() {
-        // TODO: why do we need order by here? It was not needed in 1.0
         String sqlite = "SELECT * FROM users order by created desc LIMIT 12";
         String api = null;
         int limit = 12;
@@ -343,7 +341,6 @@ public class UserQueryIT extends AbstractQueryIT {
 
     @Test
     public void limitL11() {
-        // TODO: why do we need order by here? It was not needed in 1.0
         String sqlite = "SELECT * FROM users order by created desc LIMIT 11";
         String api = null;
         int limit = 11;
@@ -357,7 +354,7 @@ public class UserQueryIT extends AbstractQueryIT {
     }
 
     @Test
-    @Ignore("TODO: why does this fail?")
+    @Ignore("TODO: uncomment this test when you are ready to fix USERGRID-1314")
     public void nameBeginswithAndSexEqualAndAgeGreaterthanequalOrSexEqual() {
         String sqlite = "SELECT * FROM users WHERE name LIKE 'a%' and sex = 'male' and age >= 20 " +
             "or sex = 'female' LIMIT 10";
@@ -371,7 +368,7 @@ public class UserQueryIT extends AbstractQueryIT {
     }
 
     @Test
-    @Ignore("TODO: why does this fail?")
+    @Ignore("TODO: uncomment this test when you are ready to fix USERGRID-1314")
     public void nameBeginswithAndSexEqualAndAgeGreaterthanequalOrSexEqual_limitL20() {
         String sqlite = "SELECT * FROM users WHERE name LIKE 'a%' and sex = 'male' and age >= 20 " +
             "or sex = 'female' LIMIT 20";
