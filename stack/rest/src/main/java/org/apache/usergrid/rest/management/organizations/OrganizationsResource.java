@@ -28,7 +28,6 @@ import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
-import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -188,10 +187,9 @@ public class OrganizationsResource extends AbstractContextResource {
                                              String email, String password, Map<String, Object> userProperties,
                                              Map<String, Object> orgProperties, String callback ) throws Exception {
 
-        String tokenUserName = SubjectUtils.getUser().getUsername();
-
         if ( tokens.isExternalSSOProviderEnabled() ) {
-            if(!tokenUserName.equals(properties.getProperty(USERGRID_SYSADMIN_LOGIN_NAME))) {
+            //let superuser add an org even if external SSO Provider is enabled.
+            if(!userServiceAdmin(null) ) { // what should the username be ?
                 throw new IllegalArgumentException("Organization / Admin Users must be created via " +
                     properties.getProperty(USERGRID_EXTERNAL_PROVIDER_URL));
             }
