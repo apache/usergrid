@@ -69,7 +69,6 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     private ActorSystem clusterSystem = null;
 
 
-
     @Inject
     public ActorSystemManagerImpl( ActorSystemFig actorSystemFig ) {
         this.actorSystemFig = actorSystemFig;
@@ -131,9 +130,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     }
 
 
-    @Override
     public void registerMessageType(Class messageType, String routerPath) {
-        routersByMessageType.put( messageType, routerPath );
     }
 
 
@@ -198,7 +195,14 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
         createClientActors( clusterSystem );
 
         for ( RouterProducer routerProducer : routerProducers ) {
+
             routerProducer.createLocalSystemActors( clusterSystem );
+
+            Iterator<Class> messageTypes = routerProducer.getMessageTypes().iterator();
+            while ( messageTypes.hasNext() ) {
+                Class messageType = messageTypes.next();
+                routersByMessageType.put( messageType, routerProducer.getRouterPath() );
+            }
         }
 
         mediator = DistributedPubSub.get( clusterSystem ).mediator();
@@ -337,12 +341,10 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
      */
     private ActorSystem createClusterSystemsFromConfigs( Config config ) {
 
-
         // there is only 1 akka system for a Usergrid cluster
         final String clusterName = "ClusterSystem";
 
-
-        if( clusterSystem == null) {
+        if ( clusterSystem == null) {
 
             logger.info("Class: {}. ActorSystem [{}] not initialized, creating...", this, clusterName);
 

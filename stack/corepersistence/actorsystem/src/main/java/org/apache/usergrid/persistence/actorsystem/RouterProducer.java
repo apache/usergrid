@@ -19,12 +19,16 @@
 package org.apache.usergrid.persistence.actorsystem;
 
 import akka.actor.ActorSystem;
+
+import java.util.Collection;
 import java.util.Map;
 
 
 public interface RouterProducer {
 
     String getName();
+
+    String getRouterPath();
 
     /**
      * Create cluster single manager for current region.
@@ -48,4 +52,8 @@ public interface RouterProducer {
      */
     void addConfiguration(Map<String, Object> configMap );
 
+    /**
+     * Get all message types that should be sent to this router.
+     */
+    Collection<Class> getMessageTypes();
 }
