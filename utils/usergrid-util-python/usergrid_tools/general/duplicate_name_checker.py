@@ -19,6 +19,7 @@
 
 from usergrid import UsergridQueryIterator
 
+
 ### This iterates a collection using GRAPH and checks whether there are more than on entity with the same name
 
 url = 'https://host/org/app/collection?access_token=foo&limit=1000'

@@ -25,20 +25,11 @@ __author__ = 'Jeff West @ ApigeeCorporation'
 
 # Simple utility to send commands, useful to not have to recall the proper format
 
-#
-# url = 'http://localhost:9200/_cat/shards'
-#
-# r = requests.get(url)
-#
-# response = r.text
-#
-# print response
-
 data = {
     "commands": [
         {
             "move": {
-                "index": "usergrid__a34ad389-b626-11e4-848f-06b49118d7d0__application_target_final",
+                "index": "usergrid__APPID__application_target_final",
                 "shard": 14,
                 "from_node": "elasticsearch018",
                 "to_node": "elasticsearch021"
@@ -46,7 +37,7 @@ data = {
         },
         {
             "move": {
-                "index": "usergrid__a34ad389-b626-11e4-848f-06b49118d7d0__application_target_final",
+                "index": "usergrid__APPID__application_target_final",
                 "shard": 12,
                 "from_node": "elasticsearch018",
                 "to_node": "elasticsearch009"

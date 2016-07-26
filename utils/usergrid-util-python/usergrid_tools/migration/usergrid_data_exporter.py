@@ -17,6 +17,7 @@
 # * under the License.
 # */
 
+from __future__ import print_function
 import os
 import uuid
 from Queue import Empty
@@ -186,7 +187,7 @@ class StatusListener(Process):
                 org_results['apps'][app]['collections'].update(status_map)
 
                 try:
-                    for app, app_data in org_results['apps'].iteritems():
+                    for app, app_data in org_results['apps'].items():
                         app_data['summary'] = {
                             'max_created': -1,
                             'max_modified': -1,
@@ -197,7 +198,7 @@ class StatusListener(Process):
                         }
 
                         if 'collections' in app_data:
-                            for collection, collection_data in app_data['collections'].iteritems():
+                            for collection, collection_data in app_data['collections'].items():
 
                                 app_data['summary']['count'] += collection_data['count']
                                 app_data['summary']['bytes'] += collection_data['bytes']
@@ -236,13 +237,13 @@ class StatusListener(Process):
 
                         status_logger.warn('UPDATED status of org processed: %s' % json.dumps(org_results))
 
-                except KeyboardInterrupt, e:
+                except KeyboardInterrupt as e:
                     raise e
 
                 except:
-                    print traceback.format_exc()
+                    print(traceback.format_exc())
 
-            except KeyboardInterrupt, e:
+            except KeyboardInterrupt as e:
                 status_logger.warn('FINAL status of org processed: %s' % json.dumps(org_results))
                 raise e
 
@@ -260,7 +261,7 @@ class StatusListener(Process):
                     keep_going = False
 
             except:
-                print traceback.format_exc()
+                print(traceback.format_exc())
 
         logger.warn('FINAL status of org processed: %s' % json.dumps(org_results))
 
@@ -305,7 +306,7 @@ class EntityExportWorker(Process):
 
                     collection_worker_logger.info('Done! Finished app/collection: %s / %s' % (app, collection_name))
 
-                except KeyboardInterrupt, e:
+                except KeyboardInterrupt as e:
                     raise e
 
                 except Empty:
@@ -316,9 +317,9 @@ class EntityExportWorker(Process):
                     if empty_count >= 2:
                         keep_going = False
 
-                except Exception, e:
+                except Exception as e:
                     logger.exception('Error in CollectionWorker processing collection [%s]' % collection_name)
-                    print traceback.format_exc()
+                    print(traceback.format_exc())
 
         finally:
             if entity_file is not None:
@@ -790,7 +791,7 @@ def main():
                                                                  limit=config.get('limit'),
                                                                  **config.get('source_endpoint'))
 
-        print 'Retrieving apps from [%s]' % source_org_mgmt_url
+        print('Retrieving apps from [%s]' % source_org_mgmt_url)
         logger.info('Retrieving apps from [%s]' % source_org_mgmt_url)
 
         try:
@@ -807,9 +808,9 @@ def main():
 
             org_apps = r.json().get('data')
 
-        except Exception, e:
+        except Exception as e:
             logger.exception('ERROR Retrieving apps from [%s]' % source_org_mgmt_url)
-            print traceback.format_exc()
+            print(traceback.format_exc())
             logger.critical('Unable to retrieve apps from [%s] and will exit' % source_org_mgmt_url)
             exit()
 

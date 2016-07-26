@@ -32,31 +32,13 @@ __author__ = 'Jeff West @ ApigeeCorporation'
 nodes_c32xl = [
     'elasticsearch000eu',
     'elasticsearch001eu',
-    'elasticsearch002eu',
-    'elasticsearch003eu',
-    'elasticsearch004eu',
-    'elasticsearch005eu',
-    'elasticsearch009eu',
-    'elasticsearch010eu',
-    'elasticsearch011eu',
-    'elasticsearch012eu',
-    'elasticsearch013eu',
-    'elasticsearch014eu',
+    'elasticsearch002eu'
 ]
 
 nodes_c34xl = [
     'elasticsearch015eu',
     'elasticsearch018eu',
-    'elasticsearch019eu',
-    'elasticsearch020eu',
-    'elasticsearch021eu',
-    'elasticsearch022eu',
-    'elasticsearch023eu',
-    'elasticsearch024eu',
-    'elasticsearch025eu',
-    'elasticsearch026eu',
-    'elasticsearch027eu',
-    'elasticsearch028eu'
+    'elasticsearch019eu'
 ]
 
 nodes = nodes_c34xl

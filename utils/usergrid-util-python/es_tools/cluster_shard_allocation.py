@@ -24,26 +24,30 @@ import requests
 __author__ = 'Jeff West @ ApigeeCorporation'
 
 # The purpose of this script is to set certain nodes in an ElasticSearch cluster to be excluded from index allocation,
-# generally for the purpose of shutting down or restarting the node
+# generally for the purpose of decomissioning or troubleshooting a node.
 
+# you can optionally shut down nodes as they have all the replicas removed from them
 SHUTDOWN_NODES = True
 
-nodes = [
+# these are the nodes which will have shard allocation disabled.  The replicas will then be gradually moved off these
+# nodes.  The amount of time required depends on the size of the index, speed of network, CPU and cluster load
+
+exclude_nodes = [
     'elasticsearch206west',
     'elasticsearch207west',
 ]
 
 base_url = 'http://localhost:9200'
 
-exclude_nodes = nodes
-
 nodes_string = ",".join(exclude_nodes)
 
 print 'Excluding: ' + nodes_string
+
 url_template = '%s/_cluster/settings' % base_url
 
 status_code = 503
 
+# when a cluster is under load, it is possible that a 5xx will be returned.
 while status_code >= 500:
     r = requests.put(
         '%s/_cluster/settings' % base_url,
@@ -62,7 +66,6 @@ ready = False
 nodes_shut_down = []
 
 while not ready:
-
     ready = True
     nodes_left = 0
     bytes_left = 0
@@ -105,4 +108,4 @@ while not ready:
         print 'NOT READY! Waiting for %s nodes and %s GB' % (nodes_left, bytes_left / 1024.0 / 1000000)
         time.sleep(10)
 
-# print 'READY TO MOVE!'
+print 'READY TO MOVE!'

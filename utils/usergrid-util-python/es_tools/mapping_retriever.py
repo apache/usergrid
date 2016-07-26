@@ -49,7 +49,7 @@ for type_name, mapping_detail in mappings.iteritems():
 
     print 'Processing %s' % type_name
 
-    filename = '/Users/ApigeeCorporation/tmp/%s_%s_source_mapping.json' % (
+    filename = '/tmp/%s_%s_source_mapping.json' % (
         SOURCE_INDEX, type_name)
 
     print filename

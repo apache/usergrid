@@ -103,6 +103,7 @@ def update_shards(index_name):
         current_replicas = int(index_settings.get('number_of_replicas'))
 
         if current_replicas == NUMBER_VALUE:
+            # no action required
             return
 
         success = False
