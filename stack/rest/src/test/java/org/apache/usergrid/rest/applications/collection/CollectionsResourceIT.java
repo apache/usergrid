@@ -17,44 +17,26 @@
 package org.apache.usergrid.rest.applications.collection;
 
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ClientErrorException;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.index.utils.UUIDUtils;
+import org.apache.usergrid.rest.test.resource.AbstractRestIT;
+import org.apache.usergrid.rest.test.resource.model.*;
+import org.apache.usergrid.rest.test.resource.model.Collection;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.commons.lang.RandomStringUtils;
-
-import org.apache.usergrid.persistence.Schema;
-import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.test.resource.AbstractRestIT;
-import org.apache.usergrid.rest.test.resource.model.ApiResponse;
-import org.apache.usergrid.rest.test.resource.model.Collection;
-import org.apache.usergrid.rest.test.resource.model.Credentials;
-import org.apache.usergrid.rest.test.resource.model.Entity;
-import org.apache.usergrid.rest.test.resource.model.QueryParameters;
-import org.apache.usergrid.rest.test.resource.model.Token;
-
-import com.fasterxml.jackson.databind.JsonNode;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ClientErrorException;
+import java.io.IOException;
+import java.util.*;
 
 import static junit.framework.TestCase.assertNotNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 
 /**
@@ -143,7 +125,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         try {
 
-            this.pathResource( getOrgAppPath( "testcollections/_index" ) ).post( false, payload,
+            this.pathResource( getOrgAppPath( "testcollections/_settings" ) ).post( false, payload,
                 new QueryParameters().addParam( "grant_type", "client_credentials" ).addParam( "client_id",
                     String.valueOf( ( ( Map ) appCredentials.get( "credentials" ) ).get( "client_id" ) ) )
                                      .addParam( "client_secret", String.valueOf(
@@ -155,7 +137,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         refreshIndex();
 
 
-        Collection collection = this.app().collection( "testCollections" ).collection( "_index" ).get();
+        Collection collection = this.app().collection( "testCollections" ).collection( "_settings" ).get();
 
         LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
         assertEquals( "app credentials",testCollectionSchema.get( "lastUpdateBy" ) );
@@ -174,7 +156,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        Entity thing = this.app().collection( "testCollections" ).collection( "_index" ).post( payload );
+        Entity thing = this.app().collection( "testCollections" ).collection( "_settings" ).post( payload );
         refreshIndex();
 
 
@@ -213,7 +195,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         //to prove that the entity exists
 
         //next part is to delete the schema then reindex it and it should work.
-        this.app().collection( "testCollections" ).collection( "_index" ).delete();
+        this.app().collection( "testCollections" ).collection( "_settings" ).delete();
         refreshIndex();
 
         this.app().collection( "testCollections" ).collection( "_reindex" )
@@ -243,100 +225,32 @@ public class CollectionsResourceIT extends AbstractRestIT {
     }
 
     @Test
-    public void verifyThatFieldsIsRequiredForCollectionSchema() throws Exception {
-        ArrayList<String> indexingArray = new ArrayList<>(  );
-
-        //field "fields" is required.
-        Entity payload = new Entity();
-        payload.put( "fieldWeirdnessNotFields", indexingArray);
-
-        //Post index to the collection metadata
-        try {
-            this.app().collection( "testCollections" ).collection( "_index" ).post( payload );
-            fail();
-        }catch(BadRequestException bre){
-            //this is expected.
-        }
-
-        //ensure that it has to be an arraylist passed in.
-        Map indexingMap = new HashMap<>(  );
-        indexingMap.put( "exludeStuff","randomtext" );
-
-        payload = new Entity();
-        payload.put( "fields", indexingMap);
-
-        try {
-            this.app().collection( "testCollections" ).collection( "_index" ).post( payload );
-            fail();
-        }catch(BadRequestException bre){
-            //this is expected.
-        }
-
-        payload = new Entity();
-        payload.put( "fields", indexingArray);
-
-        try {
-            this.app().collection( "testCollections" ).collection( "_index" ).post( payload );
-        }catch(BadRequestException bre){
-            fail( "This shouldn't fail" );
-        }
-
-    }
-
-
-    @Test
     public void postCollectionSchemaWithWildcardIndexAll() throws Exception {
-        //Creating schema.
-        //this could be changed to a hashmap.
-        ArrayList<String> indexingArray = new ArrayList<>(  );
-        indexingArray.add( "*" );
-        indexingArray.add( "one" );
-        indexingArray.add( "two" );
 
-
-        //field "fields" is required.
+        // setup collection with index all
         Entity payload = new Entity();
-        payload.put( "fields", indexingArray);
-
-        //Post index to the collection metadata
-        Entity thing = this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
+        payload.put( "fields", "all");
+        app().collection( "testCollection" ).collection( "_settings" ).post( payload );
         refreshIndex();
 
-
-        Collection collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
-
-        LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
-        ArrayList<String> schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
-        assertTrue( schema.contains( "*" ) );
-        assertFalse( schema.contains( "one" ) );
-        assertFalse( schema.contains( "two" ) );
-
-
-//The above verifies the test case.
-
-
-        //Create test collection with a test entity that is partially indexed.
+        // post entity with two fields
         Entity testEntity = new Entity();
         testEntity.put( "one", "helper" );
         testEntity.put( "two","query" );
-
-        //Post entity.
-        this.app().collection( "testCollection" ).post( testEntity );
+        app().collection( "testCollection" ).post( testEntity );
         refreshIndex();
 
-        //Do a query to see if you can find the indexed query.
+        // verify it can be queried on both fields
+
         String query = "two ='query'";
         QueryParameters queryParameters = new QueryParameters().setQuery(query);
-
-        //having a name breaks it. Need to get rid of the stack trace and also
-        Collection tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
+        Collection tempEntity = app().collection( "testCollection" ).get(queryParameters,true);
         Entity reindexedEntity = tempEntity.getResponse().getEntity();
         assertEquals( "helper",reindexedEntity.get( "one" ) );
 
-        //Verify if you can query on an entity that was not indexed and that no entities are returned.
         query = "one = 'helper'";
         queryParameters = new QueryParameters().setQuery(query);
-        tempEntity = this.app().collection( "testCollection" ).get(queryParameters,true);
+        tempEntity = app().collection( "testCollection" ).get(queryParameters,true);
         assertEquals(1,tempEntity.getResponse().getEntities().size());
     }
 
@@ -346,8 +260,6 @@ public class CollectionsResourceIT extends AbstractRestIT {
      * Give collection an indexing schema
      * Give collection a new entity and ensure it only indexes wht is in the schema
      * Reindex and make sure old entity with full text indexing is reindexed with the schema.
-     *
-     * @throws Exception
      */
     @Test
     public void postToCollectionSchemaUpdateExistingCollection() throws Exception {
@@ -373,7 +285,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        Entity thing = this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
+        Entity thing = this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
         refreshIndex();
 
 
@@ -424,10 +336,10 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        Entity thing = this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
+        Entity thing = this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
         refreshIndex();
 
-        Collection collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
+        Collection collection = this.app().collection( "testCollection" ).collection( "_settings" ).get();
 
         LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
         assertEquals( ( thing ).get( "lastUpdated" ), testCollectionSchema.get( "lastUpdated" ));
@@ -452,9 +364,9 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
 
-        collection = this.app().collection( "testCollection" ).collection( "_index" ).get();
+        collection = this.app().collection( "testCollection" ).collection( "_settings" ).get();
 
 
 
@@ -504,7 +416,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
         refreshIndex();
 
         //Create test collection with a test entity that is partially indexed.
@@ -546,7 +458,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
         refreshIndex();
 
         Map<String,Object> arrayFieldsForTesting = new HashMap<>();
@@ -596,7 +508,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
         refreshIndex();
 
         Map<String,Object> arrayFieldsForTesting = new HashMap<>();
@@ -639,7 +551,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
         refreshIndex();
 
         Map<String,Object> arrayFieldsForTestingSelectiveIndexing = new HashMap<>();
@@ -694,7 +606,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
         refreshIndex();
 
         Map<String,Object> arrayFieldsForTestingSelectiveIndexing = new HashMap<>();
@@ -745,7 +657,7 @@ public class CollectionsResourceIT extends AbstractRestIT {
         payload.put( "fields", indexingArray);
 
         //Post index to the collection metadata
-        this.app().collection( "testCollection" ).collection( "_index" ).post( payload );
+        this.app().collection( "testCollection" ).collection( "_settings" ).post( payload );
         refreshIndex();
 
         //Create test collection with a test entity that is partially indexed.
@@ -902,7 +814,8 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         LinkedHashMap collectionHashMap = ( LinkedHashMap ) usersDefaultCollection.getEntity().get( "metadata" );
 
-        assertNotSame( null,((LinkedHashMap)(collectionHashMap.get( "collections" ))).get( collectionName.toLowerCase() ));
+        assertNotSame( null,
+            ((LinkedHashMap)(collectionHashMap.get( "collections" ))).get( collectionName.toLowerCase() ));
 
         this.refreshIndex();
         this.app().collection( collectionName ).entity( testEntity.getEntity().getUuid() ).delete();
@@ -914,7 +827,8 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         collectionHashMap = ( LinkedHashMap ) usersDefaultCollection.getEntity().get( "metadata" );
 
-        assertNotSame( null,((LinkedHashMap)(collectionHashMap.get( "collections" ))).get( collectionName.toLowerCase() ));
+        assertNotSame( null,
+            ((LinkedHashMap)(collectionHashMap.get( "collections" ))).get( collectionName.toLowerCase() ));
 
         Collection createdCollectionResponse = this.app().collection( collectionName ).get();
 
@@ -958,26 +872,19 @@ public class CollectionsResourceIT extends AbstractRestIT {
     @Test
     public void postCollectionSchemaWithWildcardIndexNone() throws Exception {
 
-        // creating schema with no index wildcard and other fields that should be ignored
-        ArrayList<String> indexingArray = new ArrayList<>(  );
-        indexingArray.add( "none" );
-        indexingArray.add( "one" );
-        indexingArray.add( "two" );
         Entity payload = new Entity();
-        payload.put( "fields", indexingArray);
+        payload.put( "fields", "none");
 
         String randomizer = RandomStringUtils.randomAlphanumeric(10);
         String collectionName = "col_" + randomizer;
-        app().collection( collectionName ).collection( "_index" ).post( payload );
+        app().collection( collectionName ).collection( "_settings" ).post( payload );
         refreshIndex();
 
         // was the no-index wildcard saved and others ignored?
-        Collection collection = app().collection( collectionName ).collection( "_index" ).get();
+        Collection collection = app().collection( collectionName ).collection( "_settings" ).get();
         LinkedHashMap testCollectionSchema = (LinkedHashMap)collection.getResponse().getData();
-        ArrayList<String> schema = ( ArrayList<String> ) testCollectionSchema.get( "fields" );
-        assertTrue( schema.contains( "none" ) );
-        assertFalse( schema.contains( "one" ) );
-        assertFalse( schema.contains( "two" ) );
+        String schema = (String)testCollectionSchema.get( "fields" );
+        assertEquals( "none", schema );
 
         // post an entity with a name and a color
         String entityName = "name_" + randomizer;
@@ -1000,7 +907,6 @@ public class CollectionsResourceIT extends AbstractRestIT {
         assertFalse( getByQuery.hasNext() );
     }
 
-
     /**
      * Test that indexed entities can be connected to un-indexed Entities and connections still work.
      */
@@ -1009,14 +915,12 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         // create entities in an un-indexed collection
 
-        ArrayList<String> indexingArray = new ArrayList<>(  );
-        indexingArray.add( "!" );
         Entity payload = new Entity();
-        payload.put( "fields", indexingArray);
+        payload.put( "fields", "none");
 
         String randomizer = RandomStringUtils.randomAlphanumeric(10);
         String unIndexedCollectionName = "col_" + randomizer;
-        app().collection( unIndexedCollectionName ).collection( "_index" ).post( payload );
+        app().collection( unIndexedCollectionName ).collection( "_settings" ).post( payload );
         refreshIndex();
 
         String entityName1 = "unindexed1";
@@ -1071,13 +975,11 @@ public class CollectionsResourceIT extends AbstractRestIT {
 
         // create an un-indexed entity
 
-        ArrayList<String> indexingArray = new ArrayList<>(  );
-        indexingArray.add( "!" );
         Entity payload = new Entity();
-        payload.put( "fields", indexingArray);
+        payload.put( "fields", "none");
 
         String unIndexedCollectionName = "col_" + randomizer;
-        app().collection( unIndexedCollectionName ).collection( "_index" ).post( payload );
+        app().collection( unIndexedCollectionName ).collection( "_settings" ).post( payload );
         refreshIndex();
 
         String entityName1 = "unindexed1";
@@ -1102,6 +1004,62 @@ public class CollectionsResourceIT extends AbstractRestIT {
             .get( new QueryParameters().setQuery( "select * where color='orange'" ));
         assertEquals( 0, connectionsByQuery.getNumOfEntities() );
     }
+
+
+    @Test
+    public void testCollectionRegion() {
+
+        // create collection with settings for index all
+
+        String randomizer = RandomStringUtils.randomAlphanumeric(10);
+        String collectionName = "col_" + randomizer;
+
+        app().collection( collectionName ).collection( "_settings" )
+            .post( new Entity().chainPut( "fields", "all" ) );
+        refreshIndex();
+
+        // get collection settings, should see no region
+
+        Collection collection = app().collection( collectionName ).collection( "_settings" ).get();
+        Map<String, Object> settings = (Map<String, Object>)collection.getResponse().getData();
+        assertNull( settings.get( "region" ));
+
+        // set collection region with bad region, expect error
+
+        try {
+            app().collection( collectionName ).collection( "_settings" )
+                .post( new Entity().chainPut( "region", "us-moon-1" ) );
+            fail( "post should have failed");
+
+        } catch ( BadRequestException expected ) {}
+
+        // set collection region with good region
+
+        app().collection( collectionName ).collection( "_settings" )
+            .post( new Entity().chainPut( "region", "us-east-1" ) );
+
+        // get collection settings see that we have a region
+
+        collection = app().collection( collectionName ).collection( "_settings" ).get();
+        settings = (Map<String, Object>)collection.getResponse().getData();
+        assertNotNull( settings.get( "region" ));
+        assertEquals( "us-east-1", settings.get( "region" ));
+
+        // unset the collection region
+
+        app().collection( collectionName ).collection( "_settings" )
+            .post( new Entity().chainPut( "region", "" ) );
+        refreshIndex();
+
+        // get collection settings, should see no region
+
+        collection = app().collection( collectionName ).collection( "_settings" ).get();
+        settings = (Map<String, Object>)collection.getResponse().getData();
+        assertNull( settings.get( "region" ));
+
+
+    }
+
 
     @Test
     public void testBeingAbleToRetreiveMigratedValues() throws Exception {
@@ -1145,6 +1103,5 @@ public class CollectionsResourceIT extends AbstractRestIT {
         assertEquals(2,user2.getNumOfEntities());
 
     }
-
 
 }

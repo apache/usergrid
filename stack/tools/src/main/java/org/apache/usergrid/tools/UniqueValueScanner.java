@@ -17,12 +17,12 @@
 package org.apache.usergrid.tools;
 
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.Column;
+import com.netflix.astyanax.model.ConsistencyLevel;
 import com.netflix.astyanax.util.RangeBuilder;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
@@ -133,6 +133,7 @@ public class UniqueValueScanner extends ToolBase {
         }
 
         logger.info("Staring Tool: UniqueValueScanner");
+        logger.info("Using Cassandra consistency level: {}", System.getProperty("usergrid.read.cl", "CL_LOCAL_QUORUM"));
 
 
         keyspace = injector.getInstance(com.netflix.astyanax.Keyspace.class);
@@ -143,6 +144,8 @@ public class UniqueValueScanner extends ToolBase {
             line.getOptionValue(ENTITY_FIELD_TYPE_ARG) != null ?  line.getOptionValue(ENTITY_FIELD_TYPE_ARG)  : "name" ;
         String entityType = line.getOptionValue(ENTITY_TYPE_ARG);
         String entityName = line.getOptionValue(ENTITY_NAME_ARG);
+
+        AtomicInteger count = new AtomicInteger(0);
 
         if (entityName != null && !entityName.isEmpty()) {
 
@@ -159,11 +162,11 @@ public class UniqueValueScanner extends ToolBase {
             logger.info("Running entity unique load only");
 
 
-            //do stuff
+            //do stuff w/o read repair
             UniqueValueSet uniqueValueSet = uniqueValueSerializationStrategy.load(
                 new ApplicationScopeImpl( new SimpleId(appToFilter, "application" ) ),
-                entityType,
-                Collections.singletonList(new StringField( fieldType, entityName) ));
+                ConsistencyLevel.valueOf(System.getProperty("usergrid.read.cl", "CL_LOCAL_QUORUM")), entityType,
+                Collections.singletonList(new StringField( fieldType, entityName) ), false);
 
             StringBuilder stringBuilder = new StringBuilder();
 
@@ -196,80 +199,99 @@ public class UniqueValueScanner extends ToolBase {
             try {
 
                 rows = keyspace.prepareQuery(CF_UNIQUE_VALUES)
+                    .setConsistencyLevel(ConsistencyLevel.valueOf(System.getProperty("usergrid.read.cl", "CL_LOCAL_QUORUM")))
                     .getAllRows()
-                    .withColumnRange(new RangeBuilder().build())
+                    .withColumnRange(new RangeBuilder().setLimit(1000).build())
                     .execute().getResult().iterator();
 
             } catch (ConnectionException e) {
 
+                logger.error("Error connecting to cassandra", e);
             }
 
 
             UUID finalAppToFilter = appToFilter;
-            rows.forEachRemaining(row -> {
 
-                String fieldName = row.getKey().getKey().getField().getName();
-                String scopeType = row.getKey().getScope().getType();
-                UUID scopeUUID = row.getKey().getScope().getUuid();
+            if( rows != null) {
+                rows.forEachRemaining(row -> {
 
-                if (!fieldName.equalsIgnoreCase(fieldType) ||
-                    (finalAppToFilter != null && !finalAppToFilter.equals(scopeUUID))
-                    ) {
-                    // do nothing
+                    count.incrementAndGet();
 
-                } else {
-
-                    if (em == null && finalAppToFilter.equals(scopeUUID)) {
-                        em = emf.getEntityManager(scopeUUID);
+                    if(count.get() % 1000 == 0 ){
+                        logger.info("Scanned {} rows in {}", count.get(), CF_UNIQUE_VALUES.getName());
                     }
 
-                    Iterator<Column<EntityVersion>> columns = row.getColumns().iterator();
-                    columns.forEachRemaining(column -> {
-
-                        EntityVersion entityVersion = column.getName();
-
-                        if (entityType != null &&
-                            entityVersion.getEntityId().getType().equalsIgnoreCase(entityType)
-                            ) {
-
-                            String fieldValue = row.getKey().getKey().getField().getValue().toString();
-
-                            logger.trace(
-                                scopeType + ": " + scopeUUID + ", " +
-                                    fieldName + ": " + fieldValue + ", " +
-                                    "entity type: " + entityVersion.getEntityId().getType() + ", " +
-                                    "entity uuid: " + entityVersion.getEntityId().getUuid()
-                            );
+                    final String fieldName = row.getKey().getKey().getField().getName();
+                    final String fieldValue = row.getKey().getKey().getField().getValue().toString();
+                    final String scopeType = row.getKey().getScope().getType();
+                    final UUID scopeUUID = row.getKey().getScope().getUuid();
 
 
-                            Entity entity = em.getUniqueEntityFromAlias(entityType, fieldValue, false);
+                    if (!fieldName.equalsIgnoreCase(fieldType) ||
+                        (finalAppToFilter != null && !finalAppToFilter.equals(scopeUUID))
+                        ) {
+                        // do nothing
 
-//                       Optional<MvccEntity> entity = mvccEntitySerializationStrategy.
-//                            load(new ApplicationScopeImpl(new SimpleId(scopeUUID, scopeType)), entityVersion.getEntityId());
-//
-//                        if(!entity.isPresent()){
+                    } else {
 
-                            if (entity == null) {
 
-                                logger.error("{}: {}. Entity with type=[{}],  name=[{}], and uuid=[{}] has a unique value entry " +
-                                        "but cannot be loaded from Mvcc entity serialization",
-                                    scopeType,
-                                    scopeUUID,
-                                    entityVersion.getEntityId().getType(),
-                                    fieldValue,
-                                    entityVersion.getEntityId().getUuid());
-                            }
+                        // if we have more than 1 column, let's check for a duplicate
+                        if (row.getColumns() != null && row.getColumns().size() > 1) {
 
-                        } else {
-                            // do nothing
+                            final List<EntityVersion> values = new ArrayList<>(row.getColumns().size());
+
+                            Iterator<Column<EntityVersion>> columns = row.getColumns().iterator();
+                            columns.forEachRemaining(column -> {
+
+
+                                final EntityVersion entityVersion = column.getName();
+
+
+                                logger.trace(
+                                    scopeType + ": " + scopeUUID + ", " +
+                                        fieldName + ": " + fieldValue + ", " +
+                                        "entity type: " + entityVersion.getEntityId().getType() + ", " +
+                                        "entity uuid: " + entityVersion.getEntityId().getUuid()
+                                );
+
+
+                                if (entityType != null &&
+                                    entityVersion.getEntityId().getType().equalsIgnoreCase(entityType)
+                                    ) {
+
+                                    // add the first value into the list
+                                    if (values.size() == 0) {
+
+                                        values.add(entityVersion);
+
+
+                                    } else {
+
+                                        if (!values.get(0).getEntityId().getUuid().equals(entityVersion.getEntityId().getUuid())) {
+
+                                            values.add(entityVersion);
+
+                                            logger.error("Duplicate found for field [{}={}].  Entry 1: [{}], Entry 2: [{}]",
+                                                fieldName, fieldValue, values.get(0).getEntityId(), entityVersion.getEntityId());
+
+                                        }
+
+                                    }
+
+
+                                }
+
+                            });
                         }
+                    }
 
 
-                    });
-                }
+                });
+            }else{
 
+                logger.warn("No rows returned from table: {}", CF_UNIQUE_VALUES.getName());
 
-            });
+            }
 
         }
     }

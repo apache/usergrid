@@ -38,4 +38,13 @@ public class EntityObjectField extends AbstractField<EntityObject> {
     public FieldTypeName getTypeName() {
         return FieldTypeName.OBJECT;
     }
+
+    /**
+     * This type of field is never unique
+     */
+    @Override
+    public boolean isUnique() {
+        return false;
+    }
+
 }

@@ -14,37 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.corepersistence.index;
+package org.apache.usergrid.rest.exceptions;
 
 
-import java.util.Map;
+import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 
-import com.google.common.base.Optional;
+import javax.ws.rs.core.Response;
 
-
-public interface IndexSchemaCache {
-
-    /**
-     * Get the collection schema from the cache.
-     * @param collectionName
-     * @return
-     */
-    public Optional<Map> getCollectionSchema( String collectionName );
-
-    void putCollectionSchema( String collectionName, String collectionSchema );
-
-    void deleteCollectionSchema( String collectionName );
-
-    /**
-     * Evict the collection schema from the cache.
-     * @param collectionName
-     */
-    public void evictCollectionSchema(String collectionName);
-
-    /**
-     * Evict everything from the cache.
-     */
-    public void evictCache();
+import static javax.ws.rs.core.Response.Status.CONFLICT;
 
 
+public class ApplicationAlreadyExistsExceptionMapper extends AbstractExceptionMapper<ApplicationAlreadyExistsException> {
+    @Override
+    public Response toResponse(ApplicationAlreadyExistsException e ) {
+        return toResponse( CONFLICT, e );
+    }
 }

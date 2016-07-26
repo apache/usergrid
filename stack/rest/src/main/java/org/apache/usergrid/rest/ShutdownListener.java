@@ -18,8 +18,10 @@
 package org.apache.usergrid.rest;
 
 
+import com.google.inject.Injector;
 import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.batch.service.SchedulerService;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +64,15 @@ public class ShutdownListener implements ServletContextListener {
     public void contextDestroyed(ServletContextEvent sce) {
 
         logger.info("ShutdownListener invoked");
+
+        ApplicationContext ctx = WebApplicationContextUtils
+            .getWebApplicationContext(sce.getServletContext());
+
+        Injector injector = ctx.getBean(Injector.class);
+        ActorSystemManager actorSystemManager = injector.getInstance(ActorSystemManager.class);
+
+        // stop the Akka actor system
+        actorSystemManager.shutdownAll();
 
         boolean started = Boolean.parseBoolean(
             properties.getProperty(JobServiceBoostrap.START_SCHEDULER_PROP, "true"));

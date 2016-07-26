@@ -23,16 +23,14 @@ import org.apache.usergrid.cassandra.CassandraResource;
 import org.apache.usergrid.query.validator.users.UserQueryIT;
 import org.apache.usergrid.rest.ITSetup;
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses(
-        {
-                UserQueryIT.class
-        })
-public class QueryITSuite {
-    @ClassRule
-    public static CassandraResource cassandraResource = CassandraResource.newWithAvailablePorts();
 
-    //TODO Detecting current path
+@RunWith(Suite.class)
+@Suite.SuiteClasses( { UserQueryIT.class })
+public class QueryITSuite {
+
     @ClassRule
-    public static ITSetup serverResource = new ITSetup( cassandraResource, "../rest/src/main/webapp" );
+    public static CassandraResource cassandraResource = new CassandraResource();
+
+    @ClassRule
+    public static ITSetup serverResource = ITSetup.getInstance();
 }
