@@ -57,17 +57,11 @@ public class ActorServiceServiceTest {
         RouterProducer routerProducer = Mockito.mock( RouterProducer.class );
         actorSystemManager.registerRouterProducer( routerProducer );
 
-        actorSystemManager.registerMessageType( String.class, "/users/path" );
-        actorSystemManager.registerMessageType( Integer.class, "/users/path" );
-        actorSystemManager.registerMessageType( Long.class, "/users/path" );
-
         actorSystemManager.start( "localhost", 2770, "us-east" );
         actorSystemManager.waitForClientActor();
 
-        verify( routerProducer ).createClusterSingletonManager( any() );
-        verify( routerProducer ).createClusterSingletonProxy( any(), eq("io") );
-        verify( routerProducer ).createLocalSystemActors( any() );
         verify( routerProducer ).addConfiguration( any() );
+        verify( routerProducer ).produceRouter( any(), eq("io") );
 
     }
 
