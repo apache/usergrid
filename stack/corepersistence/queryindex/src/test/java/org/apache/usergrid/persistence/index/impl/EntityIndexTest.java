@@ -390,7 +390,7 @@ public class EntityIndexTest extends BaseIT {
 
         StopWatch timer = new StopWatch();
         timer.start();
-        CandidateResults candidateResults  = entityIndex.search( scope, searchTypes, queryString, num == 0 ?  1 : num  , 0 );
+        CandidateResults candidateResults  = entityIndex.search( scope, searchTypes, queryString, 1000, 0 );
 
         timer.stop();
 
@@ -401,6 +401,16 @@ public class EntityIndexTest extends BaseIT {
 
 
     private void testQueries( final SearchEdge scope, SearchTypes searchTypes) {
+
+        testQuery( scope, searchTypes, "age > 35", 29 );
+
+        testQuery( scope, searchTypes, "age <= 35", 73 );
+
+        testQuery( scope, searchTypes, "age <= 35 or age > 35", 102 );
+
+        // TODO: uncomment this test when you are ready to fix USERGRID-1314
+        // (https://issues.apache.org/jira/browse/USERGRID-1314)
+        // testQuery( scope, searchTypes, "name = 'astro*' or age > 35", 29 );
 
         testQuery( scope, searchTypes, "name = 'Morgan Pierce'", 1 );
 
