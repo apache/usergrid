@@ -412,7 +412,7 @@ public class UsergridEntity {
     }
 
     @JsonAnyGetter @NotNull
-    private Map<String, JsonNode> getProperties() {
+    public Map<String, JsonNode> getProperties() {
         return this.properties;
     }
 

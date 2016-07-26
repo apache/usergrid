@@ -17,20 +17,17 @@
 package org.apache.usergrid.query.validator;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
+
+import java.util.*;
 import java.util.logging.Logger;
-import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.java.client.UsergridClient;
+import org.apache.usergrid.java.client.auth.UsergridUserAuth;
+import org.apache.usergrid.java.client.model.UsergridEntity;
+import org.apache.usergrid.java.client.query.UsergridQuery;
+import org.apache.usergrid.java.client.response.UsergridResponse;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.Schema;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
-import org.apache.usergrid.java.client.Client;
-import org.apache.usergrid.java.client.response.ApiResponse;
-import static org.apache.usergrid.java.client.utils.ObjectUtils.isEmpty;
 
 
 /**
@@ -40,7 +37,7 @@ import static org.apache.usergrid.java.client.utils.ObjectUtils.isEmpty;
 public class ApiServerRunner implements QueryRunner {
 
     private Logger logger = Logger.getLogger(SqliteRunner.class.getName());
-    private Client client;
+    private UsergridClient client;
 
     private String org;
     private String app;
@@ -52,62 +49,38 @@ public class ApiServerRunner implements QueryRunner {
 
     @Override
     public boolean setup() {
-        client = new Client(getOrg(), getApp()).withApiUrl(getBaseUri());
-        String accessToken = authorize(email, password);
-        if(!StringUtils.isEmpty(accessToken))
-            client.setAccessToken(accessToken);
+
+        client = new UsergridClient(getOrg(), getApp(), getBaseUri());
+        UsergridUserAuth usergridUserAuth = new UsergridUserAuth(email, password);
+        client.authenticateUser(usergridUserAuth);
+
         return insertDatas();
     }
 
-    public String authorize(String email, String password) {
-        String accessToken = null;
-        Map<String, Object> formData = new HashMap<String, Object>();
-        formData.put("grant_type", "password");
-        formData.put("username", email);
-        formData.put("password", password);
-        ApiResponse response = client.apiRequest(HttpMethod.POST, null, formData,
-                "management", "token");
-        if (!isEmpty(response.getAccessToken())) {
-            accessToken = response.getAccessToken();
-            logger.info("Access token: " + accessToken);
-        } else {
-            logger.info("Response: " + response);
-        }
-        return accessToken;
-    }
-
     public boolean insertDatas() {
-       List<org.apache.usergrid.java.client.entities.Entity> clientEntities = getEntitiesForClient(getEntities());
-       for(org.apache.usergrid.java.client.entities.Entity entity : clientEntities) {
-           ApiResponse response = client.createEntity(entity);
-           if( response == null || !StringUtils.isEmpty(response.getError()) ) {
-               logger.log(Level.SEVERE, response.getErrorDescription());
-               //throw new RuntimeException(response.getErrorDescription());
-           } else {
-               logger.log(Level.INFO, response.toString());
-           }
-       }
+       List<UsergridEntity> clientEntities = getEntitiesForClient(getEntities());
+       client.POST(clientEntities);
        return true;
     }
 
-    private List<org.apache.usergrid.java.client.entities.Entity> getEntitiesForClient(List<Entity> entities) {
-        List<org.apache.usergrid.java.client.entities.Entity> clientEntities = new ArrayList<org.apache.usergrid.java.client.entities.Entity>();
+    private List<UsergridEntity> getEntitiesForClient(List<Entity> entities) {
+        List<UsergridEntity> clientEntities = new ArrayList<>();
         for(Entity entity : entities) {
-            org.apache.usergrid.java.client.entities.Entity clientEntity = new org.apache.usergrid.java.client.entities.Entity();
-            clientEntity.setType(entity.getType());
+            UsergridEntity clientEntity = new UsergridEntity(entity.getType());
+
             Map<String, Object> properties = Schema.getDefaultSchema().getEntityProperties(entity);
             for(String key : properties.keySet()) {
                 Object value = entity.getProperty(key);
                 if( value instanceof String )
-                    clientEntity.setProperty(key,(String)value );
+                    clientEntity.putProperty(key,(String)value );
                 else if( value instanceof Long )
-                    clientEntity.setProperty(key,(Long)value );
+                    clientEntity.putProperty(key,(Long)value );
                 else if( value instanceof Integer )
-                    clientEntity.setProperty(key,(Integer)value );
+                    clientEntity.putProperty(key,(Integer)value );
                 else if( value instanceof Float )
-                    clientEntity.setProperty(key,(Float)value );
+                    clientEntity.putProperty(key,(Float)value );
                 else if( value instanceof Boolean )
-                    clientEntity.setProperty(key,(Boolean)value );
+                    clientEntity.putProperty(key,(Boolean)value );
             }
             clientEntities.add(clientEntity);
         }
@@ -121,19 +94,17 @@ public class ApiServerRunner implements QueryRunner {
 
     @Override
     public List<Entity> execute(String query, int limit) {
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("ql", query);
-        params.put("limit", limit);
-        ApiResponse response = client.apiRequest(HttpMethod.GET, params, null, getOrg(), getApp(), getCollection());
+        UsergridQuery usergridQuery = new UsergridQuery().ql(query).limit(limit).type(getCollection());
+        UsergridResponse response = client.GET(usergridQuery);
         List<Entity> entities = new ArrayList<Entity>();
         if( response.getEntities() == null )
             return entities;
 
-        for(org.apache.usergrid.java.client.entities.Entity clientEntitity : response.getEntities()) {
+        for(UsergridEntity clientEntity : response.getEntities()) {
             Entity entity = new QueryEntity();
-            entity.setUuid(clientEntitity.getUuid());
-            entity.setType(clientEntitity.getType());
-            Map<String, JsonNode> values = clientEntitity.getProperties();
+            entity.setUuid(UUID.fromString(clientEntity.getUuid()));
+            entity.setType(clientEntity.getType());
+            Map<String, JsonNode> values = clientEntity.getProperties();
             for( String key : values.keySet() ) {
                 JsonNode node = values.get(key);
                 if( node.isBoolean() ) {
