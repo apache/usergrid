@@ -253,6 +253,7 @@
         <dependency>
             <groupId>org.apache.usergrid</groupId>
             <artifactId>usergrid-java-client</artifactId>
+            <version>0.0.10-SNAPSHOT</version>
         </dependency>
 
         <dependency>
