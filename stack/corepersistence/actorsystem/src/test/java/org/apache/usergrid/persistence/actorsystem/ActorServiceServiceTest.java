@@ -60,10 +60,8 @@ public class ActorServiceServiceTest {
         actorSystemManager.start( "localhost", 2770, "us-east" );
         actorSystemManager.waitForClientActor();
 
-        verify( routerProducer ).createClusterSingletonManager( any() );
-        verify( routerProducer ).createClusterSingletonProxy( any(), eq("io") );
-        verify( routerProducer ).createLocalSystemActors( any() );
         verify( routerProducer ).addConfiguration( any() );
+        verify( routerProducer ).produceRouter( any(), eq("io") );
 
     }
 

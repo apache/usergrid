@@ -77,12 +77,6 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
 
     @Override
-    public String getName() {
-        return "UniqueValues ClusterSingleton Router";
-    }
-
-
-    @Override
     public String getRouterPath() {
         return "/user/uvProxy";
     }
@@ -151,25 +145,6 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         }
 
     }
-
-
-    // TODO: do we need this or can we rely on UniqueCleanup + Cassandra replication?
-
-//    @Override
-//    public void releaseUniqueValues(ApplicationScope scope, Id entityId, UUID version, String region)
-//        throws UniqueValueException {
-//
-//        ready();
-//
-//        TODO: need to replicate logic from UniqueCleanup and make sure it happens in Authoritative Region
-//
-//        Iterator<UniqueValue> iterator = table.getUniqueValues( scope, entityId );
-//
-//        while ( iterator.hasNext() ) {
-//            UniqueValue uniqueValue = iterator.next();
-//            cancelUniqueField( scope, entityId, uniqueValue.getEntityVersion(), uniqueValue.getField(), region );
-//        }
-//    }
 
 
     private void reserveUniqueField(
@@ -311,9 +286,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
 
     @Override
-    public void createClusterSingletonManager(ActorSystem system) {
+    public void produceRouter( ActorSystem system, String role ) {
 
-        // create cluster singleton supervisor for actor system
         ClusterSingletonManagerSettings settings =
             ClusterSingletonManagerSettings.create( system ).withRole("io");
 
@@ -321,22 +295,12 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             Props.create( GuiceActorProducer.class, injector, UniqueValuesRouter.class ),
             PoisonPill.getInstance(), settings ), "uvRouter" );
 
-    }
-
-
-    @Override
-    public void createClusterSingletonProxy( ActorSystem system, String role ) {
-
         ClusterSingletonProxySettings proxySettings =
             ClusterSingletonProxySettings.create( system ).withRole( role );
 
         system.actorOf( ClusterSingletonProxy.props( "/user/uvRouter", proxySettings ), "uvProxy" );
-    }
 
-
-    @Override
-    public void createLocalSystemActors( ActorSystem localSystem ) {
-        subscribeToReservations( localSystem );
+        subscribeToReservations( system );
     }
 
 
