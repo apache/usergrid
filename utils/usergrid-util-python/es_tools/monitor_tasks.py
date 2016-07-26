@@ -25,6 +25,7 @@ __author__ = 'Jeff West @ ApigeeCorporation'
 
 # Utility for monitoring pending tasks in ElasticSearch
 
+
 def total_milliseconds(td):
     return (td.microseconds + td.seconds * 1000000) / 1000
 

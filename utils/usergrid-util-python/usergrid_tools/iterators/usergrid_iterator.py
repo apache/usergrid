@@ -246,7 +246,7 @@ def create_new(org_name, app_name, collection_name, entity_data, source_client, 
             e = c.entity_from_data(entity_data)
             e.put()
 
-        except UsergridError, err:
+        except UsergridError as err:
             logger.error(err)
             raise err
 

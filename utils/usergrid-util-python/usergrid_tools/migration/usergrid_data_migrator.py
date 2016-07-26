@@ -17,6 +17,9 @@
 # * under the License.
 # */
 
+from __future__ import print_function
+from __future__ import print_function
+from __future__ import print_function
 import os
 import uuid
 from Queue import Empty
@@ -2022,7 +2025,7 @@ def filter_apps_and_collections(org_apps):
                 logger.info('App=[%s] filtered Collections=[%s]' % (app, collections))
 
     except:
-        print traceback.format_exc()
+        print(traceback.format_exc())
 
     return app_collecitons
 
@@ -2113,7 +2116,7 @@ def main():
                                                                  limit=config.get('limit'),
                                                                  **config.get('source_endpoint'))
 
-        print 'Retrieving apps from [%s]' % source_org_mgmt_url
+        print('Retrieving apps from [%s]' % source_org_mgmt_url)
         logger.info('Retrieving apps from [%s]' % source_org_mgmt_url)
 
         try:
@@ -2132,7 +2135,7 @@ def main():
 
         except Exception:
             logger.exception('ERROR Retrieving apps from [%s]' % source_org_mgmt_url)
-            print traceback.format_exc()
+            print(traceback.format_exc())
             logger.critical('Unable to retrieve apps from [%s] and will exit' % source_org_mgmt_url)
             exit()
 

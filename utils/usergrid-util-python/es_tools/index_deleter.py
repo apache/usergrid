@@ -16,6 +16,7 @@
 #    * specific language governing permissions and limitations
 # * under the License.
 # */
+from multiprocessing import Pool
 
 import requests
 import logging
@@ -58,6 +59,14 @@ counter = 0
 process = False
 delete_counter = 0
 
+indexes_to_delete = []
+
+
+def delete_index(index_name):
+    url_template = '%s/%s' % (url_base, index_name)
+    print 'DELETING Index [%s] %s at URL %s' % (delete_counter, index_name, url_template)
+    response = requests.delete('%s/%s' % (url_base, index))
+
 for index in indices:
     process = False
     counter += 1
@@ -78,9 +87,12 @@ for index in indices:
                 process = False
 
     if process:
-        delete_counter += 1
+        indexes_to_delete.append(index)
 
-        url_template = '%s/%s' % (url_base, index)
-        print 'DELETING Index [%s] %s at URL %s' % (delete_counter, index, url_template)
+print 'Found [%s] indexes to delete: %s' % (len(indexes_to_delete), indexes_to_delete)
 
-        response = requests.delete('%s/%s' % (url_base, index))
+if len(indexes_to_delete) > 0:
+    pool = Pool(4)
+    pool.map(delete_index, indexes_to_delete)
+
+print 'Done!'
