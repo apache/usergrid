@@ -51,13 +51,6 @@ public interface ActorSystemManager {
     void registerRouterProducer( RouterProducer routerProducer );
 
     /**
-     * MUST be called before start() to register any messages to be sent.
-     * @param messageType Class of message.
-     * @param routerPath Router-path to which such messages are to be sent.
-     */
-    void registerMessageType( Class messageType, String routerPath );
-
-    /**
      * Local client for ActorSystem, send all local messages here for routing.
      */
     ActorRef getClientActor();
@@ -75,7 +68,7 @@ public interface ActorSystemManager {
     /**
      * Get all regions known to system.
      */
-    public Set<String> getRegions();
+    Set<String> getRegions();
 
     /**
      * Publish message to all topic subscribers in all regions.
