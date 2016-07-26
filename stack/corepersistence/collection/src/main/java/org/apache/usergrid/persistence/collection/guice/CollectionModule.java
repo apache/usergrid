@@ -20,6 +20,9 @@ package org.apache.usergrid.persistence.collection.guice;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemModule;
+import org.apache.usergrid.persistence.collection.uniquevalues.*;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -56,8 +59,10 @@ public abstract class CollectionModule extends AbstractModule {
         // noinspection unchecked
         install( new GuicyFigModule( SerializationFig.class ) );
         install( new GuicyFigModule( CollectionSchedulerFig.class ) );
+        install( new GuicyFigModule( UniqueValuesFig.class ) );
         install( new SerializationModule() );
         install( new ServiceModule() );
+        install( new ActorSystemModule() );
 
         // users of this module can add their own implemementations
         // create a guice factor for getting our collection manager
@@ -65,6 +70,10 @@ public abstract class CollectionModule extends AbstractModule {
 
         //bind this to our factory
         install( new GuicyFigModule( EntityCacheFig.class ) );
+
+        bind( UniqueValuesService.class ).to( UniqueValuesServiceImpl.class );
+
+        bind( UniqueValuesTable.class ).to( UniqueValuesTableImpl.class );
 
         bind( ChangeLogGenerator.class).to( ChangeLogGeneratorImpl.class);
 

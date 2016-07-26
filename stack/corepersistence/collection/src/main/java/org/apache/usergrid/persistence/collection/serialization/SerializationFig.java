@@ -58,8 +58,4 @@ public interface SerializationFig extends GuicyFig {
     @Default( "150" )
     int getUniqueVerifyPoolSize();
 
-
-    @Key ( "collection.readrepair.delay" )
-    @Default( "0" ) // in milliseconds
-    int getReadRepairDelay();
 }

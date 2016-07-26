@@ -14,31 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.usergrid.corepersistence.index;
 
-
-import org.apache.usergrid.persistence.map.MapManager;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 
-/**
- * This can only be implemented after we have the impl for the application cache.
- */
-@Singleton
-public class IndexSchemaCacheFactory {
-    private final IndexSchemaCacheFig fig;
+public interface CollectionSettingsScope extends ApplicationScope {
 
-    @Inject
-    public IndexSchemaCacheFactory(IndexSchemaCacheFig fig){
-        this.fig = fig;
-    }
 
-    public IndexSchemaCache getInstance(MapManager mapManager ){
-        return new IndexSchemaCacheImpl( mapManager,fig );
-    }
-
+    String getCollectionName();
 
 }

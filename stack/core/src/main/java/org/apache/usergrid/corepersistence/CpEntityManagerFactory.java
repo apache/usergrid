@@ -26,7 +26,7 @@ import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.index.IndexSchemaCacheFactory;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.corepersistence.service.CollectionService;
@@ -35,12 +35,16 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.locking.LockManager;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueActor;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -78,7 +82,9 @@ import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 public class CpEntityManagerFactory implements EntityManagerFactory, ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManagerFactory.class );
+
     private final EntityManagerFig entityManagerFig;
+    private final ActorSystemFig actorSystemFig;
 
     private ApplicationContext applicationContext;
 
@@ -91,7 +97,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final LoadingCache<UUID, EntityManager> entityManagers;
 
     private final ApplicationIdCache applicationIdCache;
-    //private final IndexSchemaCache indexSchemaCache;
 
     Application managementApp = null;
 
@@ -106,7 +111,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final CollectionService collectionService;
     private final ConnectionService connectionService;
     private final GraphManagerFactory graphManagerFactory;
-    private final IndexSchemaCacheFactory indexSchemaCacheFactory;
+    private final CollectionSettingsFactory collectionSettingsFactory;
+    private ActorSystemManager actorSystemManager;
+    private UniqueValuesService uniqueValuesService;
     private final LockManager lockManager;
 
     public static final String MANAGEMENT_APP_INIT_MAXRETRIES= "management.app.init.max-retries";
@@ -121,24 +128,45 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.injector = injector;
         this.reIndexService = injector.getInstance(ReIndexService.class);
         this.entityManagerFig = injector.getInstance(EntityManagerFig.class);
+        this.actorSystemFig = injector.getInstance( ActorSystemFig.class );
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
         this.indexService = injector.getInstance( AsyncEventService.class );
         this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
         this.collectionService = injector.getInstance( CollectionService.class );
         this.connectionService = injector.getInstance( ConnectionService.class );
-        this.indexSchemaCacheFactory = injector.getInstance( IndexSchemaCacheFactory.class );
-        this.lockManager = injector.getInstance( LockManager.class );
+        this.collectionSettingsFactory = injector.getInstance( CollectionSettingsFactory.class );
 
         Properties properties = cassandraService.getProperties();
+        this.entityManagers = createEntityManagerCache( properties );
 
-        entityManagers = createEntityManagerCache( properties );
+        logger.info("EntityManagerFactoring starting...");
+
+        if ( actorSystemFig.getEnabled() ) {
+            try {
+                logger.info("Akka cluster starting...");
+
+                this.uniqueValuesService = injector.getInstance( UniqueValuesService.class );
+                this.actorSystemManager = injector.getInstance( ActorSystemManager.class );
+
+                actorSystemManager.registerRouterProducer( uniqueValuesService );
+                actorSystemManager.start();
+                actorSystemManager.waitForClientActor();
+
+            } catch (Throwable t) {
+                logger.error("Error starting Akka", t);
+                throw t;
+            }
+        }
+        this.lockManager = injector.getInstance( LockManager.class );
+
+
+
+        // this line always needs to be last due to the temporary cicular dependency until spring is removed
+        this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
+            getManagementEntityManager() );
 
         checkManagementApp( properties );
-
-        // this line always needs to be last due to the temporary circular dependency until spring is removed
-        applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class)
-            .getInstance( getManagementEntityManager() );
     }
 
 
@@ -334,8 +362,20 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
 
     private EntityManager _getEntityManager( UUID applicationId ) {
-        EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache,
-            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService,indexSchemaCacheFactory, applicationId );
+
+        EntityManager em = new CpEntityManager(
+            cassandraService,
+            counterUtils,
+            indexService,
+            managerCache,
+            metricsFactory,
+            actorSystemFig,
+            entityManagerFig,
+            graphManagerFactory,
+            collectionService,
+            connectionService,
+            collectionSettingsFactory,
+            applicationId );
 
         return em;
     }

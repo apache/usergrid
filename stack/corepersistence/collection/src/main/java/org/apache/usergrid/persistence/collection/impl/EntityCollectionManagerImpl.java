@@ -19,42 +19,32 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-
+import com.codahale.metrics.Timer;
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.OperationResult;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.model.ConsistencyLevel;
-import org.apache.usergrid.persistence.collection.serialization.impl.LogEntryIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntitySet;
-import org.apache.usergrid.persistence.collection.FieldSet;
-import org.apache.usergrid.persistence.collection.MvccEntity;
-import org.apache.usergrid.persistence.collection.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.VersionSet;
+import com.netflix.astyanax.model.CqlResult;
+import com.netflix.astyanax.serializers.StringSerializer;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
+import org.apache.usergrid.persistence.collection.*;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.UniqueCleanup;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.VersionCompact;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.RollbackAction;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.*;
+import org.apache.usergrid.persistence.collection.serialization.*;
+import org.apache.usergrid.persistence.collection.serialization.impl.LogEntryIterator;
 import org.apache.usergrid.persistence.collection.serialization.impl.MinMaxLogEntryIterator;
 import org.apache.usergrid.persistence.collection.serialization.impl.MutableFieldSet;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
+import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
@@ -66,21 +56,12 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-
-import com.codahale.metrics.Timer;
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.OperationResult;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.model.ColumnFamily;
-import com.netflix.astyanax.model.CqlResult;
-import com.netflix.astyanax.serializers.StringSerializer;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
+
+import java.util.*;
 
 
 /**
@@ -110,6 +91,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
     private final SerializationFig serializationFig;
+    private final CassandraConfig cassandraConfig;
 
 
     private final Keyspace keyspace;
@@ -123,25 +105,44 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final ApplicationScope applicationScope;
     private final RxTaskScheduler rxTaskScheduler;
 
+    private final UniqueValuesService uniqueValuesService;
+    private final ActorSystemManager actorSystemManager;
+
 
     @Inject
-    public EntityCollectionManagerImpl( final WriteStart writeStart, final WriteUniqueVerify writeVerifyUnique,
-                                        final WriteOptimisticVerify writeOptimisticVerify,
-                                        final WriteCommit writeCommit, final RollbackAction rollback,
-                                        final MarkStart markStart, final MarkCommit markCommit,
-                                        final UniqueCleanup uniqueCleanup, final VersionCompact versionCompact,
-                                        final MvccEntitySerializationStrategy entitySerializationStrategy,
-                                        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                                        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
-                                        final Keyspace keyspace, final MetricsFactory metricsFactory,
-                                        final SerializationFig serializationFig, final RxTaskScheduler rxTaskScheduler,
-                                        @Assisted final ApplicationScope applicationScope ) {
+    public EntityCollectionManagerImpl(
+        final WriteStart            writeStart,
+        final WriteUniqueVerify     writeVerifyUnique,
+        final WriteOptimisticVerify writeOptimisticVerify,
+        final WriteCommit           writeCommit,
+        final RollbackAction        rollback,
+        final MarkStart             markStart,
+        final MarkCommit            markCommit,
+        final UniqueCleanup         uniqueCleanup,
+        final VersionCompact        versionCompact,
+
+        final MvccEntitySerializationStrategy   entitySerializationStrategy,
+        final UniqueValueSerializationStrategy  uniqueValueSerializationStrategy,
+        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
+
+        final Keyspace              keyspace,
+        final MetricsFactory        metricsFactory,
+        final SerializationFig      serializationFig,
+        final RxTaskScheduler       rxTaskScheduler,
+        final ActorSystemManager    actorSystemManager,
+        final UniqueValuesService   uniqueValuesService,
+        final CassandraConfig       cassandraConfig,
+        @Assisted final ApplicationScope applicationScope ) {
+
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
         this.uniqueCleanup = uniqueCleanup;
         this.versionCompact = versionCompact;
         this.serializationFig = serializationFig;
         this.rxTaskScheduler = rxTaskScheduler;
+
+        this.actorSystemManager = actorSystemManager;
+        this.uniqueValuesService = uniqueValuesService;
 
         ValidationUtils.validateApplicationScope( applicationScope );
 
@@ -166,11 +167,13 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.fieldEntityTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.fieldEntity");
         this.loadTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.load");
         this.getLatestTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.latest");
+
+        this.cassandraConfig = cassandraConfig;
     }
 
 
     @Override
-    public Observable<Entity> write( final Entity entity ) {
+    public Observable<Entity> write(final Entity entity, String region) {
 
         //do our input validation
         Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
@@ -181,36 +184,35 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         // create our observable and start the write
-        final CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( applicationScope, entity );
+        final CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( applicationScope, entity, region );
 
         Observable<CollectionIoEvent<MvccEntity>> observable =  stageRunner( writeData, writeStart );
 
 
-        final Observable<Entity> write = observable.map( writeCommit )
-                                                   .map(ioEvent -> {
-                //fire this in the background so we don't block writes
-                Observable.just( ioEvent ).compose( uniqueCleanup ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
-                return ioEvent;
-            }
-         )
-                                                                              //now extract the ioEvent we need to return and update the version
-                                                                              .map( ioEvent -> ioEvent.getEvent().getEntity().get() );
+        final Observable<Entity> write = observable.map( writeCommit ).map(ioEvent -> {
+
+            // fire this in the background so we don't block writes
+            Observable.just( ioEvent ).compose( uniqueCleanup )
+                .subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
+            return ioEvent;
+
+        }) // now extract the ioEvent we need to return and update the version
+        .map( ioEvent -> ioEvent.getEvent().getEntity().get() );
 
         return ObservableTimer.time( write, writeTimer );
     }
 
 
     @Override
-    public Observable<Id> mark( final Id entityId ) {
+    public Observable<Id> mark(final Id entityId, String region) {
 
         Preconditions.checkNotNull( entityId, "Entity id is required in this stage" );
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id is required in this stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
-        Observable<Id> o = Observable.just( new CollectionIoEvent<>( applicationScope, entityId ) ).map( markStart )
-            .doOnNext( markCommit ).compose( uniqueCleanup ).map(
+        Observable<Id> o = Observable.just( new CollectionIoEvent<>( applicationScope, entityId, region ) )
+            .map( markStart ).doOnNext( markCommit ).compose( uniqueCleanup ).map(
                 entityEvent -> entityEvent.getEvent().getId() );
-
 
         return ObservableTimer.time( o, deleteTimer );
     }
@@ -243,7 +245,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         Preconditions.checkNotNull( entityIds, "entityIds cannot be null" );
 
-        final Observable<EntitySet> entitySetObservable = Observable.create( new Observable.OnSubscribe<EntitySet>() {
+        final Observable<EntitySet> entitySetObservable =
+            Observable.create( new Observable.OnSubscribe<EntitySet>() {
 
             @Override
             public void call( final Subscriber<? super EntitySet> subscriber ) {
@@ -325,14 +328,18 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
      * Retrieves all entities that correspond to each field given in the Collection.
      */
     @Override
-    public Observable<FieldSet> getEntitiesFromFields(final String type, final Collection<Field> fields, boolean useReadRepair) {
+    public Observable<FieldSet> getEntitiesFromFields(final String type, final Collection<Field> fields,
+                                                      boolean uniqueIndexRepair) {
         final Observable<FieldSet> fieldSetObservable = Observable.just( fields ).map( fields1 -> {
             try {
 
                 final UUID startTime = UUIDGenerator.newTimeUUID();
 
                 //Get back set of unique values that correspond to collection of fields
-                UniqueValueSet set = uniqueValueSerializationStrategy.load( applicationScope, type, fields1 );
+                //Purposely use string consistency as it's extremely important here, regardless of performance
+                UniqueValueSet set =
+                    uniqueValueSerializationStrategy
+                        .load( applicationScope, cassandraConfig.getConsistentReadCL(), type, fields1 , uniqueIndexRepair);
 
                 //Short circuit if we don't have any uniqueValues from the given fields.
                 if ( !set.iterator().hasNext() ) {
@@ -385,10 +392,11 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     if ( entity == null || !entity.getEntity().isPresent() ) {
 
                         if(logger.isTraceEnabled()) {
-                            logger.trace("Unique value [{}={}] does not have corresponding entity, executing " +
+                            logger.trace("Unique value [{}={}] does not have corresponding entity [{}], executing " +
                                 "read repair to remove stale unique value entry",
                                 expectedUnique.getField().getName(),
-                                expectedUnique.getField().getValue().toString()
+                                expectedUnique.getField().getValue().toString(),
+                                expectedUnique.getEntityId()
                             );
                         }
 
@@ -406,33 +414,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     response.addEntity( expectedUnique.getField(), entity );
                 }
 
-                if ( useReadRepair && deleteBatch.getRowCount() > 0 ) {
+                if ( deleteBatch.getRowCount() > 0 ) {
 
+                    response.setEntityRepairExecuted(true);
                     deleteBatch.execute();
 
-
-                    // optionally sleep after read repair as some tasks immediately try to write after the delete
-                    if ( serializationFig.getReadRepairDelay() > 0 ){
-
-                        try {
-
-                            if(logger.isTraceEnabled()) {
-                                logger.trace("Sleeping {}ms after unique value read repair execution",
-                                    serializationFig.getReadRepairDelay());
-                            }
-
-                            Thread.sleep(Math.min(serializationFig.getReadRepairDelay(), 200L));
-
-                        } catch (InterruptedException e) {
-
-                            // do nothing if sleep fails; log and continue on
-                            logger.warn("Sleep during unique value read repair failed.");
-                        }
-
-                    }
-
                 }
-
 
                 return response;
             }
@@ -477,7 +464,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     public Observable<VersionSet> getLatestVersion( final Collection<Id> entityIds ) {
 
 
-        final Observable<VersionSet> observable =  Observable.create( new Observable.OnSubscribe<VersionSet>() {
+        final Observable<VersionSet> observable =
+            Observable.create( new Observable.OnSubscribe<VersionSet>() {
 
             @Override
             public void call( final Subscriber<? super VersionSet> subscriber ) {
