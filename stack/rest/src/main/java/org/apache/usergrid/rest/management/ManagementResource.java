@@ -299,13 +299,9 @@ public class ManagementResource extends AbstractContextResource {
             if ( user == null ) {
 
 
-
-                //if ( !me ) { // if not lightweight-auth, i.e. /management/me then...
-
-                    // make sure authentication is allowed considering
-                    // external token validation configuration (UG Central SSO)
-                    ensureAuthenticationAllowed( username, grant_type );
-               // }
+                // make sure authentication is allowed considering
+                // external token validation configuration (UG Central SSO)
+                ensureAuthenticationAllowed( username, grant_type );
 
 
                 if ( authorization != null ) {
