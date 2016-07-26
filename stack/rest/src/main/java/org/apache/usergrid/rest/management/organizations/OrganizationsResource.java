@@ -28,7 +28,6 @@ import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
-import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,8 +39,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 import java.util.*;
-
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
 
 
 @Component( "org.apache.usergrid.rest.management.organizations.OrganizationsResource" )
@@ -188,13 +185,16 @@ public class OrganizationsResource extends AbstractContextResource {
                                              String email, String password, Map<String, Object> userProperties,
                                              Map<String, Object> orgProperties, String callback ) throws Exception {
 
-        String tokenUserName = SubjectUtils.getUser().getUsername();
+        // Providing no password in this request signifies that an existing admin users should be associated to the
+        // newly requested organization.
 
-        if ( tokens.isExternalSSOProviderEnabled() ) {
-            if(!tokenUserName.equals(properties.getProperty(USERGRID_SYSADMIN_LOGIN_NAME))) {
-                throw new IllegalArgumentException("Organization / Admin Users must be created via " +
-                    properties.getProperty(USERGRID_EXTERNAL_PROVIDER_URL));
-            }
+        // Always let the sysadmin create an org, but otherwise follow the behavior specified with
+        // the property 'usergrid.management.allow-public-registration'
+        if ( ( System.getProperty("usergrid.management.allow-public-registration") != null
+            && !Boolean.valueOf(System.getProperty("usergrid.management.allow-public-registration"))
+            && !userServiceAdmin(null) ) ) {
+
+                throw new IllegalArgumentException("Public organization registration is disabled");
         }
 
         Preconditions

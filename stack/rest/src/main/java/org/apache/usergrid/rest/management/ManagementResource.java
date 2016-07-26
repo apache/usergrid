@@ -19,6 +19,7 @@ package org.apache.usergrid.rest.management;
 
 import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
+import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
 import org.apache.commons.lang.StringUtils;
@@ -269,6 +270,7 @@ public class ManagementResource extends AbstractContextResource {
                                     @QueryParam( "client_id" ) String client_id,
                                     @QueryParam( "client_secret" ) String client_secret, @QueryParam( "ttl" ) long ttl,
                                     @QueryParam( "callback" ) @DefaultValue( "" ) String callback ) throws Exception {
+
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
                 callback, false, false);
     }
@@ -297,13 +299,10 @@ public class ManagementResource extends AbstractContextResource {
             if ( user == null ) {
 
 
+                // make sure authentication is allowed considering
+                // external token validation configuration (UG Central SSO)
+                ensureAuthenticationAllowed( username, grant_type );
 
-                //if ( !me ) { // if not lightweight-auth, i.e. /management/me then...
-
-                    // make sure authentication is allowed considering
-                    // external token validation configuration (UG Central SSO)
-                    ensureAuthenticationAllowed( username, grant_type );
-               // }
 
                 if ( authorization != null ) {
                     String type = stringOrSubstringBeforeFirst( authorization, ' ' ).toUpperCase();
@@ -381,9 +380,15 @@ public class ManagementResource extends AbstractContextResource {
             }
 
             //moved the check for sso enabled form MangementServiceImpl since was unable to get the current user there to check if its super user.
-            if( tokens.isExternalSSOProviderEnabled() && !user.getUsername().equals(properties.getProperty(USERGRID_SYSADMIN_LOGIN_NAME)) ){
-                throw new RuntimeException("SSO Integration is enabled, Admin users must login via provider: "+
-                    properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER));
+            if( tokens.isExternalSSOProviderEnabled()
+                && !userServiceAdmin(username) ){
+                OAuthResponse response =
+                    OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
+                        .setErrorDescription( "SSO Integration is enabled, Admin users must login via provider: "+
+                            properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER) ).buildJSONMessage();
+                return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
+                    .entity( wrapWithCallback( response.getBody(), callback ) ).build();
+
             }
 
             String token = management.getAccessTokenForAdminUser( user.getUuid(), ttl );
@@ -458,6 +463,8 @@ public class ManagementResource extends AbstractContextResource {
                                             @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
 
+        ValidateJson(json);
+
         String grant_type = ( String ) json.get( "grant_type" );
         String username = ( String ) json.get( "username" );
         String password = ( String ) json.get( "password" );
@@ -487,14 +494,7 @@ public class ManagementResource extends AbstractContextResource {
                                               @HeaderParam( "Authorization" ) String authorization ) throws Exception {
 
 
-        if ( json == null ) {
-            String errorDescription = "invalid request, expected data in the request.";
-            OAuthResponse response =
-                OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_REQUEST )
-                    .setErrorDescription( errorDescription ).buildJSONMessage();
-            return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
-                .entity( wrapWithCallback( response.getBody(), callback ) ).build();
-        }
+        ValidateJson(json);
 
         String grant_type = ( String ) json.get( "grant_type" );
         String username = ( String ) json.get( "username" );
@@ -514,6 +514,12 @@ public class ManagementResource extends AbstractContextResource {
 
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
                 callback, false, false );
+    }
+
+    private void ValidateJson(Map<String, Object> json) throws OAuthSystemException {
+        if ( json == null ) {
+            throw new IllegalArgumentException("missing json post data");
+        }
     }
 
 
@@ -600,6 +606,7 @@ public class ManagementResource extends AbstractContextResource {
      */
     private void ensureAuthenticationAllowed( String username, String grant_type ) {
 
+
         if ( username == null || grant_type == null || !grant_type.equalsIgnoreCase( "password" )) {
             return; // we only care about username/password auth
         }
@@ -609,18 +616,16 @@ public class ManagementResource extends AbstractContextResource {
 //                !StringUtils.isEmpty( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
 
         if ( tokens.isExternalSSOProviderEnabled() ) {
-
             // when external tokens enabled then only superuser can obtain an access token
-
-            final String superuserName = properties.getProperty( USERGRID_SYSADMIN_LOGIN_NAME );
-            if ( !username.equalsIgnoreCase( superuserName )) {
-
+            if ( !userServiceAdmin(username)) {
                 // this guy is not the superuser
                 throw new IllegalArgumentException( "Admin Users must login via " +
                         properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
             }
         }
     }
+
+
 
 
     String errorMsg = "";
