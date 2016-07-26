@@ -55,6 +55,9 @@ public abstract class AbstractContextResource {
     };
     protected static final ObjectMapper mapper = new ObjectMapper();
 
+    public final static String ROLE_SERVICE_ADMIN = "service-admin";
+    public static final String USERGRID_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
+
 
     protected AbstractContextResource parent;
 
@@ -257,5 +260,18 @@ public abstract class AbstractContextResource {
             jsonObject = mapper.readValue(content, mapTypeReference);
         }
         return jsonObject;
+    }
+
+
+    /**
+     * check if its a system admin
+     * @return
+     */
+    public Boolean userServiceAdmin(String username) {
+
+        if (sc.isUserInRole(ROLE_SERVICE_ADMIN) || (username != null && username.equals(properties.getProperty(USERGRID_SYSADMIN_LOGIN_NAME)))) {
+            return true;
+        }
+        return false;
     }
 }

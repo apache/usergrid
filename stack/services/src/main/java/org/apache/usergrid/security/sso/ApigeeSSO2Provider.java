@@ -57,7 +57,7 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
     protected Properties properties;
     protected ManagementService management;
     protected Client client;
-    protected String publicKey;
+    protected PublicKey publicKey;
 
     public static final String USERGRID_EXTERNAL_PUBLICKEY_URL = "usergrid.external.sso.url";
 
@@ -67,12 +67,17 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
         client = ClientBuilder.newClient(clientConfig);
     }
 
-    public String getPublicKey(String keyUrl) {
+    public PublicKey getPublicKey(String keyUrl) {
 
         if(keyUrl != null && !keyUrl.isEmpty()) {
             try {
                 Map<String, Object> publicKey = client.target(keyUrl).request().get(Map.class);
-                return publicKey.get(RESPONSE_PUBLICKEY_VALUE).toString().split("----\n")[1].split("\n---")[0];
+                String ssoPublicKey = publicKey.get(RESPONSE_PUBLICKEY_VALUE).toString().split("----\n")[1].split("\n---")[0];
+                byte[] publicBytes = decodeBase64(ssoPublicKey);
+                X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
+                KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                PublicKey pubKey = keyFactory.generatePublic(keySpec);
+                return pubKey;
             }
             catch(Exception e){
                 throw new IllegalArgumentException("error getting public key");
@@ -140,7 +145,7 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
         return properties.getProperty(USERGRID_EXTERNAL_PUBLICKEY_URL);
     }
 
-    public Jws<Claims> getClaimsForKeyUrl(String token, String ssoPublicKey) throws NoSuchAlgorithmException, InvalidKeySpecException, BadTokenException {
+    public Jws<Claims> getClaimsForKeyUrl(String token, PublicKey ssoPublicKey) throws NoSuchAlgorithmException, InvalidKeySpecException, BadTokenException {
         Jws<Claims> claims = null;
 
         if(ssoPublicKey == null){
@@ -148,14 +153,8 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
                 "token in order to verify signature.");
         }
 
-
-        byte[] publicBytes = decodeBase64(ssoPublicKey);
-        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        PublicKey pubKey = keyFactory.generatePublic(keySpec);
-
         try {
-            claims = Jwts.parser().setSigningKey(pubKey).parseClaimsJws(token);
+            claims = Jwts.parser().setSigningKey(ssoPublicKey).parseClaimsJws(token);
         } catch (SignatureException se) {
             if(logger.isDebugEnabled()) {
                 logger.debug("Signature was invalid for Apigee JWT: {} and key: {}", token, ssoPublicKey);
@@ -196,9 +195,12 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
             throw new ExpiredTokenException(String.format("Token expired %d millisecons ago.", expirationDelta ));
         }
 
-
     }
 
+
+    public void setPublicKey( PublicKey publicKeyArg){
+        this.publicKey = publicKeyArg;
+    }
 
     @Autowired
     public void setManagement(ManagementService management) {
@@ -208,6 +210,6 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
     @Autowired
     public void setProperties(Properties properties) {
         this.properties = properties;
-        this.publicKey = getPublicKey(getExternalSSOUrl());
+        this.publicKey =  getPublicKey(getExternalSSOUrl());
     }
 }
