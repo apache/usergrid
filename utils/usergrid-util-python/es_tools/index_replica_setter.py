@@ -1,3 +1,22 @@
+# */
+# * Licensed to the Apache Software Foundation (ASF) under one
+# * or more contributor license agreements.  See the NOTICE file
+# * distributed with this work for additional information
+# * regarding copyright ownership.  The ASF licenses this file
+# * to you under the Apache License, Version 2.0 (the
+# * "License"); you may not use this file except in compliance
+# * with the License.  You may obtain a copy of the License at
+# *
+# *   http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing,
+# * software distributed under the License is distributed on an
+# * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# * KIND, either express or implied.  See the License for the
+#    * specific language governing permissions and limitations
+# * under the License.
+# */
+
 from multiprocessing import Pool
 import requests
 import time
@@ -32,22 +51,8 @@ payload = {
     "index.number_of_replicas": NUMBER_VALUE,
 }
 
-# indices = ['usergrid__a34ad389-b626-11e4-848f-06b49118d7d0__application_manual']
-
 includes = [
     # '70be096e-c2e1-11e4-8a55-12b4f5e28868',
-    # 'b0c640af-bc6c-11e4-b078-12b4f5e28868',
-    # 'e62e465e-bccc-11e4-b078-12b4f5e28868',
-    # 'd82b6413-bccc-11e4-b078-12b4f5e28868',
-    # '45914256-c27f-11e4-8a55-12b4f5e28868',
-    # '2776a776-c27f-11e4-8a55-12b4f5e28868',
-    # 'a54f878c-bc6c-11e4-b044-0e4cd56e19cd',
-    # 'ed5b47ea-bccc-11e4-b078-12b4f5e28868',
-    # 'bd4874ab-bccc-11e4-b044-0e4cd56e19cd',
-    # '3d748996-c27f-11e4-8a55-12b4f5e28868',
-    # '1daab807-c27f-11e4-8a55-12b4f5e28868',
-    # 'd0c4f0da-d961-11e4-849d-12b4f5e28868',
-    # '93e756ac-bc4e-11e4-92ae-12b4f5e28868',
 ]
 
 excludes = [
@@ -87,18 +92,18 @@ def update_shards(index_name):
     if update:
         print index_name
 
-        # url = '%s/%s/_settings' % (url_base, index)
-        # print url
-        #
-        # response = requests.get('%s/%s/_settings' % (url_base, index))
-        # settings = response.json()
-        #
-        # index_settings = settings[index]['settings']['index']
-        #
-        # current_replicas = int(index_settings.get('number_of_replicas'))
-        #
-        # if current_replicas == NUMBER_VALUE:
-        #     continue
+        url = '%s/%s/_settings' % (url_base, index)
+        print url
+
+        response = requests.get('%s/%s/_settings' % (url_base, index))
+        settings = response.json()
+
+        index_settings = settings[index]['settings']['index']
+
+        current_replicas = int(index_settings.get('number_of_replicas'))
+
+        if current_replicas == NUMBER_VALUE:
+            return
 
         success = False
 
