@@ -549,20 +549,19 @@ public class ManagementServiceImpl implements ManagementService {
                 return null;
             }
 
-            // irrespective of it being sso enabled or not , if its a super user request it will try to fetch user if no password is passed.
-            if(password == null && SubjectUtils.isServiceAdmin()){
+            // sysadmin can omit password field in the request and that will try to fetch an existing admin user to
+            // associate to the requested organization
+            if((password == null || password.isEmpty()) && SubjectUtils.isServiceAdmin()){
                 user = getAdminUserByEmail(email);
                 if(user == null ){
                     throw new IllegalArgumentException("Password should be sent in the request or should be a valid admin user email.");
                 }
             }
-            else if(password == null ){   //for existing workflow.
-                throw new IllegalArgumentException("Password should be sent in the request.");
-            }
 
 
             if(user == null) {
-                if ((tokens.isExternalSSOProviderEnabled() && SubjectUtils.isServiceAdmin()) || areActivationChecksDisabled()) {
+                // if external SSO is enabled and we're adding a user to an org, auto activate the user
+                if (tokens.isExternalSSOProviderEnabled() || areActivationChecksDisabled()) {
                     user = createAdminUserInternal(null, username, name, email, password, true, false, userProperties);
                 } else {
                     user = createAdminUserInternal(null, username, name, email, password, activated, disabled, userProperties);

@@ -40,8 +40,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 import java.util.*;
 
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
-
 
 @Component( "org.apache.usergrid.rest.management.organizations.OrganizationsResource" )
 @Scope( "prototype" )
@@ -187,12 +185,16 @@ public class OrganizationsResource extends AbstractContextResource {
                                              String email, String password, Map<String, Object> userProperties,
                                              Map<String, Object> orgProperties, String callback ) throws Exception {
 
-        if ( tokens.isExternalSSOProviderEnabled() ) {
-            //let superuser add an org even if external SSO Provider is enabled.
-            if(!userServiceAdmin(null) ) { // what should the username be ?
-                throw new IllegalArgumentException("Organization / Admin Users must be created via " +
-                    properties.getProperty(USERGRID_EXTERNAL_PROVIDER_URL));
-            }
+        // Providing no password in this request signifies that an existing admin users should be associated to the
+        // newly requested organization.
+
+        // Always let the sysadmin create an org, but otherwise follow the behavior specified with
+        // the property 'usergrid.management.allow-public-registration'
+        if ( ( System.getProperty("usergrid.management.allow-public-registration") != null
+            && !Boolean.valueOf(System.getProperty("usergrid.management.allow-public-registration"))
+            && !userServiceAdmin(null) ) ) {
+
+                throw new IllegalArgumentException("Public organization registration is disabled");
         }
 
         Preconditions
