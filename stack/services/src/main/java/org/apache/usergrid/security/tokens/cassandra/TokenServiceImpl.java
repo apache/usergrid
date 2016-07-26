@@ -328,6 +328,9 @@ public class TokenServiceImpl implements TokenService {
         try{
             uuid = getUUIDForToken( token );
         }
+        catch (ExpiredTokenException expiredTokenException){
+            throw new ExpiredTokenException(expiredTokenException.getMessage());
+        }
         catch(Exception e){
 
             // If the token doesn't parse as a Usergrid token, see if an external provider other than Usergrid is

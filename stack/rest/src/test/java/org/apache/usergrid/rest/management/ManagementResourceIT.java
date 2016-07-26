@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
 
@@ -671,6 +672,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         String suToken = clientSetup.getSuperuserToken().getAccessToken();
         Map<String, String> props = new HashMap<String, String>();
+        props.put(USERGRID_EXTERNAL_SSO_ENABLED, "true");
         props.put( USERGRID_EXTERNAL_PROVIDER_URL, getBaseURI().toURL().toExternalForm() );
         pathResource( "testproperties" ).post( props );
 
@@ -685,7 +687,7 @@ public class ManagementResourceIT extends AbstractRestIT {
                     put( "grant_type", "password" );
                 }};
                 ApiResponse postResponse = pathResource( "management/token" ).post( false, ApiResponse.class, loginInfo );
-                fail( "Login as Admin User must fail when validate external tokens is enabled" );
+                fail( "SSO Integration is enabled, Admin users must login via provider: "+ USERGRID_EXTERNAL_PROVIDER_URL);
 
             } catch (ClientErrorException actual) {
                 assertEquals( 400, actual.getResponse().getStatus() );
@@ -709,11 +711,31 @@ public class ManagementResourceIT extends AbstractRestIT {
             String accessToken = postResponse2.getAccessToken();
             assertNotNull( accessToken );
 
+            //Superuser : GET -> get tokenInfo with access_token
+            ApiResponse getResponse3 = pathResource("management/me").get(ApiResponse.class,new QueryParameters()
+                .addParam("grant_type", "password").addParam("password", "superpassword")
+                .addParam("username", "superuser"),false);
+
+            assertNotNull(getResponse3.getAccessToken());
+
+            //Superuser : POST -> Add org using super user credentials.
+            Map<String, Object> orgAdminUserInfo = new HashMap<String, Object>() {{
+                put( "username", username+"test" );
+                put("password","RandomPassword");
+                put("email",username+"@gmail.com");
+                put( "organization", username+"RandomOrgName" );
+            }};
+            ApiResponse postResponse4 = pathResource("management/orgs")
+                .post(false,orgAdminUserInfo,new QueryParameters().addParam("access_token",getResponse3.getAccessToken()));
+            assertNotNull(postResponse4.getData());
+
+
         } finally {
 
             // turn off validate external tokens by un-setting the usergrid.central.url
 
             props.put( USERGRID_EXTERNAL_PROVIDER_URL, "" );
+            props.put(USERGRID_EXTERNAL_SSO_ENABLED, "");
             pathResource( "testproperties" ).post( props );
         }
     }
