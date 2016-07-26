@@ -106,10 +106,6 @@ public class IndexServiceTest {
         if ( startedAkka.get(port) == null ) {
 
             actorSystemManager.registerRouterProducer( uniqueValuesService );
-            actorSystemManager.registerMessageType( UniqueValueActor.Request.class, "/user/uvProxy" );
-            actorSystemManager.registerMessageType( UniqueValueActor.Reservation.class, "/user/uvProxy" );
-            actorSystemManager.registerMessageType( UniqueValueActor.Cancellation.class, "/user/uvProxy" );
-            actorSystemManager.registerMessageType( UniqueValueActor.Confirmation.class, "/user/uvProxy" );
             actorSystemManager.start( "localhost", port, "us-east" );
             actorSystemManager.waitForClientActor();
 
