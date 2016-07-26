@@ -23,13 +23,13 @@ import requests
 cluster = 'cluster-1'
 
 work = {
-    # 'remove': {
-    #     '2dd3bf6c-02a5-11e6-8623-069e4448b365': 'applications_3',
-    #     '333af5b3-02a5-11e6-81cb-02fe3195fdff': 'applications_3',
-    # },
+    'remove': {
+        'app-id-1': 'from-index',
+        'app-id-2': 'from-index'
+    },
     'add': {
-        '2dd3bf6c-02a5-11e6-8623-069e4448b365': 'my-index-1-no-doc-18',
-        '333af5b3-02a5-11e6-81cb-02fe3195fdff': 'my-index-1-no-doc-18',
+        'app-id-1': 'to-index',
+        'app-id-2': 'to-index'
     }
 }
 
