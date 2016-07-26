@@ -1,3 +1,22 @@
+# */
+# * Licensed to the Apache Software Foundation (ASF) under one
+# * or more contributor license agreements.  See the NOTICE file
+# * distributed with this work for additional information
+# * regarding copyright ownership.  The ASF licenses this file
+# * to you under the Apache License, Version 2.0 (the
+# * "License"); you may not use this file except in compliance
+# * with the License.  You may obtain a copy of the License at
+# *
+# *   http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing,
+# * software distributed under the License is distributed on an
+# * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# * KIND, either express or implied.  See the License for the
+#    * specific language governing permissions and limitations
+# * under the License.
+# */
+
 import json
 from multiprocessing import JoinableQueue, Process
 import random
@@ -13,24 +32,10 @@ import requests
 from elasticsearch import Elasticsearch
 
 es_hosts = [
-    {'host': 'ees000wo', 'port': 9200},
-    {'host': 'ees001wo', 'port': 9200},
-    {'host': 'ees002wo', 'port': 9200},
-    {'host': 'ees003wo', 'port': 9200},
-    {'host': 'ees004wo', 'port': 9200},
-    {'host': 'ees005wo', 'port': 9200},
-    {'host': 'ees006wo', 'port': 9200},
-    {'host': 'ees007wo', 'port': 9200},
-    {'host': 'ees008wo', 'port': 9200},
-    {'host': 'ees009wo', 'port': 9200},
-    {'host': 'ees010wo', 'port': 9200},
-    {'host': 'ees011wo', 'port': 9200},
-    {'host': 'ees012wo', 'port': 9200},
-    {'host': 'ees013wo', 'port': 9200},
-    {'host': 'ees014wo', 'port': 9200},
-    {'host': 'ees015wo', 'port': 9200},
-    {'host': 'ees016wo', 'port': 9200},
-    {'host': 'ees017wo', 'port': 9200}
+    {'host': 'elasticsearch000west', 'port': 9200},
+    {'host': 'elasticsearch001west', 'port': 9200},
+    {'host': 'elasticsearch002west', 'port': 9200},
+    {'host': 'elasticsearch003west', 'port': 9200}
 ]
 
 

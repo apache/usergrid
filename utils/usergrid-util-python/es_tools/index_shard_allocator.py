@@ -1,3 +1,22 @@
+# */
+# * Licensed to the Apache Software Foundation (ASF) under one
+# * or more contributor license agreements.  See the NOTICE file
+# * distributed with this work for additional information
+# * regarding copyright ownership.  The ASF licenses this file
+# * to you under the Apache License, Version 2.0 (the
+# * "License"); you may not use this file except in compliance
+# * with the License.  You may obtain a copy of the License at
+# *
+# *   http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing,
+# * software distributed under the License is distributed on an
+# * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# * KIND, either express or implied.  See the License for the
+#    * specific language governing permissions and limitations
+# * under the License.
+# */
+
 import json
 from multiprocessing import Pool
 
@@ -11,33 +30,33 @@ __author__ = 'Jeff West @ ApigeeCorporation'
 
 
 nodes_c32xl = [
-    'res000eu',
-    'res001eu',
-    'res002eu',
-    'res003eu',
-    'res004eu',
-    'res005eu',
-    'res009eu',
-    'res010eu',
-    'res011eu',
-    'res012eu',
-    'res013eu',
-    'res014eu',
+    'elasticsearch000eu',
+    'elasticsearch001eu',
+    'elasticsearch002eu',
+    'elasticsearch003eu',
+    'elasticsearch004eu',
+    'elasticsearch005eu',
+    'elasticsearch009eu',
+    'elasticsearch010eu',
+    'elasticsearch011eu',
+    'elasticsearch012eu',
+    'elasticsearch013eu',
+    'elasticsearch014eu',
 ]
 
 nodes_c34xl = [
-    'res015eu',
-    'res018eu',
-    'res019eu',
-    'res020eu',
-    'res021eu',
-    'res022eu',
-    'res023eu',
-    'res024eu',
-    'res025eu',
-    'res026eu',
-    'res027eu',
-    'res028eu'
+    'elasticsearch015eu',
+    'elasticsearch018eu',
+    'elasticsearch019eu',
+    'elasticsearch020eu',
+    'elasticsearch021eu',
+    'elasticsearch022eu',
+    'elasticsearch023eu',
+    'elasticsearch024eu',
+    'elasticsearch025eu',
+    'elasticsearch026eu',
+    'elasticsearch027eu',
+    'elasticsearch028eu'
 ]
 
 nodes = nodes_c34xl
