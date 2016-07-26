@@ -294,7 +294,9 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
 
         for (Object key : keys) {
 
-            // custom comparator mappings in  CQLUtils.COMPOSITE_TYPE ( more leftover from Asytanax )
+            // custom comparator alias to comparator mappings in  CQLUtils.COMPOSITE_TYPE ( more leftover from Asytanax )
+            // the custom mapping is used for schema creation, but datastax driver does not have the alias concept and
+            // we must work with the actual types
             if(key instanceof UUID){
                 comparator = "UUIDType";
             }else{
