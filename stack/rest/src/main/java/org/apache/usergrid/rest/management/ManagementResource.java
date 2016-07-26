@@ -385,9 +385,14 @@ public class ManagementResource extends AbstractContextResource {
 
             //moved the check for sso enabled form MangementServiceImpl since was unable to get the current user there to check if its super user.
             if( tokens.isExternalSSOProviderEnabled()
-                && !userServiceAdmin(user.getUsername()) ){
-                throw new RuntimeException("SSO Integration is enabled, Admin users must login via provider: "+
-                    properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER));
+                && !userServiceAdmin(username) ){
+                OAuthResponse response =
+                    OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
+                        .setErrorDescription( "SSO Integration is enabled, Admin users must login via provider: "+
+                            properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER) ).buildJSONMessage();
+                return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
+                    .entity( wrapWithCallback( response.getBody(), callback ) ).build();
+
             }
 
             String token = management.getAccessTokenForAdminUser( user.getUuid(), ttl );
@@ -616,7 +621,7 @@ public class ManagementResource extends AbstractContextResource {
 
         if ( tokens.isExternalSSOProviderEnabled() ) {
             // when external tokens enabled then only superuser can obtain an access token
-            if ( userServiceAdmin(username)) {
+            if ( !userServiceAdmin(username)) {
                 // this guy is not the superuser
                 throw new IllegalArgumentException( "Admin Users must login via " +
                         properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
