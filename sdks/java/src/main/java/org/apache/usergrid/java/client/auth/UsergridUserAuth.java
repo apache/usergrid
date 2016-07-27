@@ -17,7 +17,6 @@
 package org.apache.usergrid.java.client.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.usergrid.java.client.model.UsergridUser;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -27,12 +26,15 @@ public class UsergridUserAuth extends UsergridAuth {
 
     @NotNull private String username;
     @NotNull private String password;
+    private boolean isAdminUser = false;
 
     @NotNull public String getUsername() { return username; }
     public void setUsername(@NotNull final String username) { this.username = username; }
 
     @NotNull private String getPassword() { return password; }
     public void setPassword(@NotNull final String password) { this.password = password; }
+
+    public boolean isAdminUser() { return isAdminUser; }
 
     @NotNull
     @Override
@@ -48,9 +50,19 @@ public class UsergridUserAuth extends UsergridAuth {
         this("","");
     }
 
-    public UsergridUserAuth(@JsonProperty("username") @NotNull final String username, @JsonProperty("password") @NotNull final String password) {
+    public UsergridUserAuth(@JsonProperty("username") @NotNull final String username,
+                            @JsonProperty("password") @NotNull final String password) {
         super();
         this.username = username;
         this.password = password;
+    }
+
+    public UsergridUserAuth(@JsonProperty("username") @NotNull final String username,
+                            @JsonProperty("password") @NotNull final String password,
+                            @JsonProperty("isAdminUser") final boolean isAdminUser) {
+        super();
+        this.username = username;
+        this.password = password;
+        this.isAdminUser = isAdminUser;
     }
 }
