@@ -83,7 +83,7 @@ public class AbstractQueryIT {
         password = (String)properties.get("usergrid.query.validator.api.authorize.password");
     }
 
-    protected static void createInitializationDatas(String collection) {
+    protected static void createInitializationDatas(String collection) throws InterruptedException{
         List<Entity> entities = loadEntitiesFromResource(collection);
         QueryValidationConfiguration configuration = new QueryValidationConfiguration();
         configuration.setEndpointUri(fullEndpoint);
@@ -95,6 +95,7 @@ public class AbstractQueryIT {
         configuration.setEntities(entities);
         validator.setConfiguration(configuration);
         validator.setup();
+        Thread.sleep(1000);
     }
 
     private static List<Entity> loadEntitiesFromResource(String collection) {
