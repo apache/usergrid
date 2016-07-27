@@ -51,7 +51,7 @@ public class ApiServerRunner implements QueryRunner {
     public boolean setup() {
 
         client = new UsergridClient(getOrg(), getApp(), getBaseUri());
-        UsergridUserAuth usergridUserAuth = new UsergridUserAuth(email, password);
+        UsergridUserAuth usergridUserAuth = new UsergridUserAuth(email, password, true);
         client.authenticateUser(usergridUserAuth);
 
         return insertDatas();
