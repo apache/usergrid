@@ -369,21 +369,20 @@ class UsergridClient(object):
 
         return UsergridResponse(r, self)
 
+    def disconnect_entities(self, from_entity, relationship, to_entity, auth=None, **kwargs):
+            url = connect_entities_by_type_template.format(from_collection=from_entity.get('type'),
+                                                           from_uuid_name=from_entity.entity_id(),
+                                                           relationship=relationship,
+                                                           to_collection=to_entity.get('type'),
+                                                           to_uuid_name=to_entity.entity_id(),
+                                                           **self.url_data)
 
-def disconnect_entities(self, from_entity, relationship, to_entity, auth=None, **kwargs):
-        url = connect_entities_by_type_template.format(from_collection=from_entity.get('type'),
-                                                       from_uuid_name=from_entity.entity_id(),
-                                                       relationship=relationship,
-                                                       to_collection=to_entity.get('type'),
-                                                       to_uuid_name=to_entity.entity_id(),
-                                                       **self.url_data)
+            if auth:
+                r = requests.delete(url, headers={'Authorization': 'Bearer %s' % auth.access_token})
+            else:
+                r = self.session.delete(url)
 
-        if auth:
-            r = requests.delete(url, headers={'Authorization': 'Bearer %s' % auth.access_token})
-        else:
-            r = self.session.delete(url)
-
-        return UsergridResponse(r, self)
+            return UsergridResponse(r, self)
 
 
 class UsergridUser(object):
