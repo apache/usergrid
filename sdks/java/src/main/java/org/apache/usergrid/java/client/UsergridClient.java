@@ -72,6 +72,8 @@ public class UsergridClient {
 
     @NotNull public String clientAppUrl() { return getBaseUrl() + "/" + getOrgId() + "/" + getAppId(); }
 
+    @NotNull public String managementUrl() { return getBaseUrl() + "/management"; }
+
     @NotNull public UsergridAuthMode getAuthMode() { return this.config.authMode; }
     public void setAuthMode(@NotNull final UsergridAuthMode authMode) { this.config.authMode = authMode; }
 

@@ -374,11 +374,6 @@ public final class UsergridQuery {
         }
 
         String requirementsString = this.constructRequirementString();
-        if (!requirementsString.isEmpty()) {
-            requirementsString = SELECT_ALL + SPACE + WHERE + SPACE + requirementsString;
-        } else {
-            requirementsString = SELECT_ALL + SPACE;
-        }
 
         String orderByString = this.constructOrderByString();
         if (!orderByString.isEmpty()) {

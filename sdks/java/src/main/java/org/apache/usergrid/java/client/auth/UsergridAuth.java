@@ -28,6 +28,7 @@ public class UsergridAuth {
     @Nullable private String accessToken = null;
     @Nullable private Long expiry = null;
     private boolean usingToken = false;
+    private boolean isAdminUser = false;
 
     public UsergridAuth() { }
 
