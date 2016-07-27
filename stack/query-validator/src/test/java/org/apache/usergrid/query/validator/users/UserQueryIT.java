@@ -38,7 +38,7 @@ import java.util.List;
 public class UserQueryIT extends AbstractQueryIT {
 
     @BeforeClass
-    public static void setDatas() {
+    public static void setDatas() throws InterruptedException{
         createInitializationDatas("user");
     }
 
