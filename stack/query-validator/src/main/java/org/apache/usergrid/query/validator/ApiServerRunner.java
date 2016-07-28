@@ -16,8 +16,6 @@
  */
 package org.apache.usergrid.query.validator;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import java.util.*;
 import java.util.logging.Logger;
 import org.apache.usergrid.java.client.UsergridClient;
@@ -104,20 +102,10 @@ public class ApiServerRunner implements QueryRunner {
             Entity entity = new QueryEntity();
             entity.setUuid(UUID.fromString(clientEntity.getUuid()));
             entity.setType(clientEntity.getType());
-            Map<String, JsonNode> values = clientEntity.getProperties();
+            Map<String, ?> values = clientEntity.toMapValue();
             for( String key : values.keySet() ) {
-                JsonNode node = values.get(key);
-                if( node.isBoolean() ) {
-                    entity.setProperty(key, node.asBoolean());
-                } else if( node.isInt() ) {
-                    entity.setProperty(key, node.asInt());
-                } else if( node.isLong() ) {
-                    entity.setProperty(key, node.asLong());
-                } else if( node.isDouble() ) {
-                    entity.setProperty(key, node.asDouble());
-                } else {
-                    entity.setProperty(key, node.asText());
-                }
+                Object node = values.get(key);
+                entity.setProperty(key, node);
             }
             entities.add(entity);
         }
