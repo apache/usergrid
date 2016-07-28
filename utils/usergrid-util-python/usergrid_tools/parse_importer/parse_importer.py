@@ -31,7 +31,7 @@ import traceback
 from usergrid import Usergrid
 from usergrid.UsergridClient import UsergridEntity
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 logger = logging.getLogger('UsergridParseImporter')
 

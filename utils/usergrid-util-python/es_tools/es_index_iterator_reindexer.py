@@ -22,6 +22,8 @@ import re
 from multiprocessing.pool import Pool
 import requests
 
+__author__ = 'Jeff.West@yahoo.com'
+
 # This script iterates an index and issues a PUT request for an empty string to force a reindex of the entity
 
 index_url_template = 'http://elasticsearch013wo:9200/{index_name}/_search?size={size}&from={from_var}'

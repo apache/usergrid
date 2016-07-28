@@ -19,6 +19,9 @@
 
 import traceback
 
+__author__ = 'Jeff.West@yahoo.com'
+
+
 url_data = {
     "api_url": "https://usergrid-e2e-prod.e2e.apigee.net/appservices-2-1/",
     "org": "",

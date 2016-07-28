@@ -21,7 +21,7 @@ from multiprocessing import Pool
 import requests
 import time
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 # utility for updating the replicas of a set of indexes that are no longer needed.  Given:
 # A) a set of strings to include when evaluating the index names to update

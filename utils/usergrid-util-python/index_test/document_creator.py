@@ -31,6 +31,9 @@ import argparse
 import loremipsum
 
 
+__author__ = 'Jeff.West@yahoo.com'
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description='ElasticSearch Index Test 1')
 

@@ -22,7 +22,7 @@ from multiprocessing import Pool
 
 import requests
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 # The purpose of this script is to update the shard allocation of ElasticSearch for specific indexes to be set to
 # specific nodes.  The reason for doing this is to isolate the nodes on which certain indexes run for specific

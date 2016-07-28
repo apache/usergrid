@@ -26,6 +26,9 @@ import urllib3
 
 import requests
 
+__author__ = 'Jeff.West@yahoo.com'
+
+
 group_name = 'precisely-10k'
 users = 10000
 username_template = 'precisely-10k-%s'

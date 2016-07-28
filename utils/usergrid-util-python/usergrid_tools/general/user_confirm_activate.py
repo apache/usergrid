@@ -21,7 +21,10 @@ import json
 
 import requests
 
-### This will make the API calls to activate and confirm an array of users
+__author__ = 'Jeff.West@yahoo.com'
+
+
+# This will make the API calls to activate and confirm an array of users
 
 users = [
     'user1@example.com',

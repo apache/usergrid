@@ -20,7 +20,7 @@
 import json
 import requests
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 # Utility to iterate the mappings for an index and save them locally
 

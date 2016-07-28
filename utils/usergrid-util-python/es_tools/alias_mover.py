@@ -20,6 +20,8 @@
 import json
 import requests
 
+__author__ = 'Jeff.West@yahoo.com'
+
 cluster = 'cluster-1'
 
 work = {

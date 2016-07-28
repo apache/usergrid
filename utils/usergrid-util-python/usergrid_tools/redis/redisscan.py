@@ -19,6 +19,9 @@
 
 import redis
 
+__author__ = 'Jeff.West@yahoo.com'
+
+
 r = redis.Redis("localhost", 6379)
 for key in r.scan_iter():
     # print '%s: %s' % (r.ttl(key), key)

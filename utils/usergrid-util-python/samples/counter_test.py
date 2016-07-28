@@ -22,6 +22,9 @@ import json
 
 import requests
 
+__author__ = 'Jeff.West@yahoo.com'
+
+
 tstamp = time.gmtime() * 1000
 
 s = requests.Session()

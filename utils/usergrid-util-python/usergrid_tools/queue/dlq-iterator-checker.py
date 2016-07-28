@@ -29,7 +29,7 @@ import boto
 from boto import sqs
 import requests
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 sqs_conn = None
 sqs_queue = None

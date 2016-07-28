@@ -20,7 +20,7 @@
 import json
 import requests
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 
 # Simple utility to send commands, useful to not have to recall the proper format

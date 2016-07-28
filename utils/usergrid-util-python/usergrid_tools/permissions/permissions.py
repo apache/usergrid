@@ -22,6 +22,9 @@ from multiprocessing import Pool
 
 import requests
 
+__author__ = 'Jeff.West@yahoo.com'
+
+
 # URL Templates for Usergrid
 import time
 

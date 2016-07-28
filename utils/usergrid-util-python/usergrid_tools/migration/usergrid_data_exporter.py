@@ -40,7 +40,7 @@ import signal
 from usergrid import UsergridQueryIterator
 import urllib3
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 ECID = str(uuid.uuid1())
 key_version = 'v4'

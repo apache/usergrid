@@ -30,6 +30,9 @@ import loremipsum
 import requests
 from elasticsearch import Elasticsearch
 
+__author__ = 'Jeff.West@yahoo.com'
+
+
 es_hosts = [
     {'host': 'elasticsearch000west', 'port': 9200},
     {'host': 'elasticsearch001west', 'port': 9200},

@@ -21,7 +21,7 @@ import json
 import time
 import requests
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 # The purpose of this script is to set certain nodes in an ElasticSearch cluster to be excluded from index allocation,
 # generally for the purpose of decomissioning or troubleshooting a node.

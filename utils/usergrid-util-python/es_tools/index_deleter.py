@@ -21,7 +21,7 @@ from multiprocessing import Pool
 import requests
 import logging
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 
 # utility for deleting indexes that are no longer needed.  Given:

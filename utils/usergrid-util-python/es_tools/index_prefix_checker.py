@@ -22,7 +22,7 @@ from collections import defaultdict
 import requests
 
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 # This script iterates all the indexes in an ES cluster and aggregates the size by the prefix
 
