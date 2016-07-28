@@ -18,6 +18,30 @@
 # */
 
 # URL Templates for Usergrid
+# 
+# Get all events for a user:
+#     https://usergrid.net/beacon-sample/event-example/users/jeff/events
+# 
+# Get only enterStore events:
+# https://usergrid.net/beacon-sample/event-example/users/jeff/events?ql=select * where eventtype=‘enterStore'
+# 
+# Get/filter beacon events for a user:
+#     https://usergrid.net/beacon-sample/event-example/users/jeff/events?ql=select * where eventtype=‘beacon'
+# 
+# Get latest beacon event for user:
+#     https://usergrid.net/beacon-sample/event-example/users/jeff/events?ql=select * where eventtype=‘beacon’&limit=1
+# 
+# Beacon events for store:
+#     https://usergrid.net/beacon-sample/event-example/users/jeff/events?ql=select * where eventtype=‘beacon'
+# 
+# All events for store:
+#     https://usergrid.net/beacon-sample/event-example/stores/store_123/events
+# 
+# All events for a beacon:
+#     https://usergrid.net/beacon-sample/event-example/beacons/store_456-b2/events
+# 
+# Get Users who passed a specific beacon:
+# https://usergrid.net/beacon-sample/event-example/beacons/3fd4fccb-d43b-11e5-978a-123320acb31f/events;ql=select%20* where profile=1/connecting/events/users
 
 __author__ = 'Jeff.West@yahoo.com'
 
