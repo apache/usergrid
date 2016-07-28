@@ -24,6 +24,8 @@ from usergrid.UsergridAuth import UsergridAppAuth
 from usergrid.app_templates import get_entity_url_template, post_collection_url_template, put_entity_url_template, \
     delete_entity_url_template, connect_entities_by_type_template, assign_role_url_template
 
+__author__ = 'Jeff.West@yahoo.com'
+
 
 def value_error(message):
     raise ValueError(message)

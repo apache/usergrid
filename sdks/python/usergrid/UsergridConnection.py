@@ -19,6 +19,8 @@
 
 import logging
 
+__author__ = 'Jeff.West@yahoo.com'
+
 
 class UsergridConnection(object):
     def __init__(self, source_entity, verb, target_entity):

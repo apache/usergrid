@@ -19,6 +19,8 @@
 
 from usergrid import UsergridApplication
 
+__author__ = 'Jeff.West@yahoo.com'
+
 
 class UsergridOrganization(object):
     def __init__(self, org_id, client):

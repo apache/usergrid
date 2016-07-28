@@ -17,6 +17,9 @@
 # * under the License.
 # */
 
+__author__ = 'Jeff.West@yahoo.com'
+
+
 class UsergridCollection(object):
     def __init__(self, org_id, app_id, collection_name, client):
         self.org_id = org_id

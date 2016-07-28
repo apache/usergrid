@@ -21,6 +21,7 @@ import logging
 from usergrid import UsergridError, UsergridCollection
 from usergrid.app_templates import app_url_template
 
+__author__ = 'Jeff.West@yahoo.com'
 
 class UsergridApplication(object):
     def __init__(self, app_id, client):
