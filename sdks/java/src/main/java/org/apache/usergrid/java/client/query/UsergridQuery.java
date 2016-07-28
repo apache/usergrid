@@ -261,8 +261,10 @@ public final class UsergridQuery {
     }
 
     @NotNull
-    public UsergridQuery ql(@NotNull final String value) {
-        return this.addRequirement(value);
+    public UsergridQuery ql(final String value) {
+
+        return value != null && !value.isEmpty() ? this.addRequirement(value) : this;
+
     }
 
     @NotNull
