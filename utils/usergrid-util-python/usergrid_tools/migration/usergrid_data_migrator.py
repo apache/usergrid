@@ -529,7 +529,7 @@ class CollectionWorker(Process):
                     if empty_count >= 2:
                         keep_going = False
 
-                except Exception, e:
+                except Exception as e:
                     logger.exception('Error in CollectionWorker processing collection [%s]' % collection_name)
                     print traceback.format_exc()
 
