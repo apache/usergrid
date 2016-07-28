@@ -19,7 +19,7 @@
 
 from setuptools import setup, find_packages
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 VERSION = '0.5.13'
 

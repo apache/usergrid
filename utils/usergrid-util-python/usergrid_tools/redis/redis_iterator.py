@@ -23,6 +23,9 @@ from collections import defaultdict
 import redis
 import time
 
+__author__ = 'Jeff.West@yahoo.com'
+
+
 cache = redis.StrictRedis(host='localhost', port=6379, db=0)
 # cache.flushall()
 

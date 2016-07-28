@@ -30,6 +30,9 @@ from logging.handlers import RotatingFileHandler
 
 import sys
 
+__author__ = 'Jeff.West@yahoo.com'
+
+
 entity_template = {
     "id": "replaced",
     "dataType": "entitlements",

@@ -30,7 +30,7 @@ from boto import sqs
 ### This monitors an SQS queue and measures the delta message count between polling intervals to infer the amount of time
 ### remaining to fully drain the queue
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 
 def total_seconds(td):

@@ -22,7 +22,10 @@ import time
 import numpy
 import requests
 
-## This will call a URL over and over to check the latency of the call
+__author__ = 'Jeff.West@yahoo.com'
+
+# This will call a URL over and over to check the latency of the call
+
 
 def total_milliseconds(td):
     return (td.microseconds + td.seconds * 1000000) / 1000

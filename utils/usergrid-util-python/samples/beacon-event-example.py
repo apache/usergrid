@@ -18,6 +18,10 @@
 # */
 
 # URL Templates for Usergrid
+
+__author__ = 'Jeff.West@yahoo.com'
+
+
 import json
 import random
 

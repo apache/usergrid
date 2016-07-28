@@ -25,6 +25,9 @@ from logging.handlers import RotatingFileHandler
 import datetime
 from usergrid import UsergridQueryIterator
 
+__author__ = 'Jeff.West@yahoo.com'
+
+
 execution_id = str(uuid.uuid4())
 
 

@@ -30,7 +30,7 @@ import requests
 import traceback
 import urllib3.contrib.pyopenssl
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 urllib3.disable_warnings()
 urllib3.contrib.pyopenssl.inject_into_urllib3()

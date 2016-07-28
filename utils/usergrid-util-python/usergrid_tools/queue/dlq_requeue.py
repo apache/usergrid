@@ -32,7 +32,7 @@ from multiprocessing import Process, Queue
 
 from boto.sqs.message import RawMessage
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 
 def total_seconds(td):

@@ -22,7 +22,7 @@ import requests
 
 # Simple example of searching for a specific entity in ES
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 INDEX_NAME=''
 

@@ -28,7 +28,7 @@ import boto
 from boto import sqs
 from multiprocessing import Process, Queue
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 
 def total_seconds(td):

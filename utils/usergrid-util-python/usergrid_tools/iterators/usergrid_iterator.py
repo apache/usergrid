@@ -30,7 +30,7 @@ import argparse
 
 from usergrid import UsergridClient, UsergridError
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 logger = logging.getLogger('UsergridIterator')
 

@@ -19,6 +19,8 @@
 
 from usergrid import UsergridQueryIterator
 
+__author__ = 'Jeff.West@yahoo.com'
+
 
 ### This iterates a collection using GRAPH and checks whether there are more than on entity with the same name
 

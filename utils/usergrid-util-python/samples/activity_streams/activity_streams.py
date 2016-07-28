@@ -17,6 +17,9 @@
 # * under the License.
 # */
 
+__author__ = 'Jeff.West@yahoo.com'
+
+
 # docs page: http://docs.apigee.com/api-baas/content/creating-activity
 
 # create user 1

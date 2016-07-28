@@ -22,7 +22,7 @@ import json
 import requests
 
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 url_base = 'http://localhost:9200'
 

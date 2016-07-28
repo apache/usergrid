@@ -21,7 +21,7 @@ import json
 import traceback
 import requests
 
-__author__ = 'Jeff West @ ApigeeCorporation'
+__author__ = 'Jeff.West@yahoo.com'
 
 
 def total_milliseconds(td):
