@@ -16,3 +16,6 @@
 #    * specific language governing permissions and limitations
 # * under the License.
 # */
+
+__author__ = 'Jeff.West@yahoo.com'
+
