@@ -3,6 +3,12 @@ AWS Cluster
 
 **UNDER CONSTRUCTION**
 
+This is not yet functional for the 2.1 stack.  It has the following needs:
+
+* Update the formation to include properties for 2.1, such as the usergrid cluster name
+* Set it so it has a public ELB and does nto require a DNS domain and route 53
+* Evaluate defaults for things such as emails, node sizes, etc.
+
 This project provides a AWS Cloud Formation template that launches and configures a complete Usergrid installation
 on Amazon EC2 including Elasticsearch instances, Tomcat instances, Cassandra instances, Security Groups, a Load Balancer 
 and DNS records.
@@ -26,6 +32,9 @@ To setup our AWS account to use  AWS Cluster here's what you need to do:
 * __Create an AWS S3 bucket__ for the AWS Cluster install bundle. e.g. Create an S3 bucket in your 
 account with the name `ug-cloudformation`. 
 
+* __Create an AWS Route 53 Configuraiton__ there needs to be a domain. 
+
+
 * __Setup a top-level domain name__ in the AWS Route 53 DNS service. The default value of usergrid.com will not work 
 (unless you happen to own that domain name).
 
@@ -36,7 +45,7 @@ Java 8 is required by Usergrid 2.1.0 +.
 * __Create an aws.properties file__ with your AWS credentials in the same directory as this 
 README file. The file is git-ignored so you don't have to worry about accidentally committing it.
 
-* __Deploy this the  AWS Cluster assembly__ by running the Maven command `mvn deploy` in the same
+* __Deploy the AWS Cluster assembly__ by running the Maven command `mvn deploy` in the same
 directory as this README file. 
 
 
