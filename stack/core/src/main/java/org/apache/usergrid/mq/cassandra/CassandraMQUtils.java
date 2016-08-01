@@ -244,7 +244,9 @@ public class CassandraMQUtils {
             queuePath = "/";
         }
 
-        logger.info( "QueueManagerFactoryImpl.getFromQueue: {}", queuePath );
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "QueueManagerFactoryImpl.getFromQueue: {}", queuePath );
+        }
 
         return Queue.getQueueId( queuePath );
     }
