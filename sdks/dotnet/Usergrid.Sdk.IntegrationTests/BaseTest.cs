@@ -32,7 +32,24 @@ namespace Usergrid.Sdk.IntegrationTests
 	            _config = config;
 	    }
 
-	    protected string Organization
+        /// <summary>
+        /// The URI of the Usergrid API, which defaults to api.usergrid.com if none is specified, just like the Client object does
+        /// </summary>
+        protected string ApiUri
+        {
+            get
+            {
+                var apiUri = GetAppSetting("apiUri");
+                if (String.IsNullOrWhiteSpace(apiUri))
+                {
+                    apiUri = "http://api.usergrid.com";
+                }
+
+                return apiUri;
+            }
+        }
+
+        protected string Organization
 		{
 			get{ return GetAppSetting("organization");}
 		}
@@ -84,12 +101,12 @@ namespace Usergrid.Sdk.IntegrationTests
 
         private string GetAppSetting(string key)
         {
-            return _config == null ? ConfigurationManager.AppSettings[key] : _config.AppSettings.Settings[key].Value;
+            return _config == null ? ConfigurationManager.AppSettings[key] : _config.AppSettings.Settings[key]?.Value;
         }
 
         protected IClient InitializeClientAndLogin(AuthType authType)
         {
-            var client = new Client(Organization, Application);
+            var client = new Client(Organization, Application, ApiUri);
             if (authType == AuthType.Application || authType == AuthType.Organization)
                 client.Login(ClientId, ClientSecret, authType);
             else if (authType == AuthType.User)
