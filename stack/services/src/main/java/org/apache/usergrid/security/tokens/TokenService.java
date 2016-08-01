@@ -17,10 +17,10 @@
 package org.apache.usergrid.security.tokens;
 
 
+import org.apache.usergrid.security.AuthPrincipalInfo;
+
 import java.util.Map;
 import java.util.UUID;
-
-import org.apache.usergrid.security.AuthPrincipalInfo;
 
 
 public interface TokenService {
@@ -65,4 +65,10 @@ public interface TokenService {
      * given principal uuid and application uuid
      */
     public void removeTokens( AuthPrincipalInfo principal ) throws Exception;
+
+
+    /**
+     * checks if the external SSO provider is enabled.
+     */
+    public boolean isExternalSSOProviderEnabled();
 }

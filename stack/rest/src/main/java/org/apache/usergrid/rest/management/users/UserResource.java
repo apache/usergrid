@@ -20,15 +20,15 @@ package org.apache.usergrid.rest.management.users;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
-import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.SecurityUtils;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
-import org.apache.usergrid.rest.management.ManagementResource;
 import org.apache.usergrid.rest.management.users.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.security.annotations.RequireAdminUserAccess;
+import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
 import org.apache.usergrid.services.ServiceResults;
@@ -46,8 +46,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isServiceAdmin;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
 import static org.apache.usergrid.utils.ConversionUtils.string;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_CENTRAL_URL;
 
 
 @Component( "org.apache.usergrid.rest.management.users.UserResource" )
@@ -64,7 +64,7 @@ public class UserResource extends AbstractContextResource {
 
     String errorMsg;
 
-    String token;
+    String token = null;
 
 
     public UserResource() {
@@ -73,6 +73,10 @@ public class UserResource extends AbstractContextResource {
 
     public UserResource init( UserInfo user ) {
         this.user = user;
+        PrincipalIdentifier userPrincipal  = (PrincipalIdentifier) SecurityUtils.getSubject().getPrincipal();
+        if ( userPrincipal != null && userPrincipal.getAccessTokenCredentials() != null ) {
+            this.token = userPrincipal.getAccessTokenCredentials().getToken();
+        }
         return this;
     }
 
@@ -131,6 +135,11 @@ public class UserResource extends AbstractContextResource {
     public ApiResponse setUserPasswordPut( @Context UriInfo ui, Map<String, Object> json,
                                                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
+
+        if ( tokens.isExternalSSOProviderEnabled() ) {
+            throw new IllegalArgumentException( "Admin Users must reset passwords via " +
+                properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+        }
 
         if ( json == null ) {
             return null;
@@ -196,9 +205,11 @@ public class UserResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "get admin user" );
 
-        String token = management.getAccessTokenForAdminUser( user.getUuid(), ttl );
+//        commenting out creation of token each time and setting the token value to the one sent in the request.
+//        String token = management.getAccessTokenForAdminUser( user.getUuid(), ttl );
+
         Map<String, Object> userOrganizationData = management.getAdminUserOrganizationData( user, !shallow );
-        userOrganizationData.put( "token", token );
+        //userOrganizationData.put( "token", token );
         response.setData( userOrganizationData );
         response.setSuccess();
 
@@ -211,12 +222,9 @@ public class UserResource extends AbstractContextResource {
     @Produces( MediaType.TEXT_HTML )
     public Viewable showPasswordResetForm( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
-
-        if ( externalTokensEnabled ) {
+        if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must reset passwords via " +
-                    properties.getProperty( USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
 
         UUID organizationId = null;
@@ -258,12 +266,9 @@ public class UserResource extends AbstractContextResource {
             logger.trace("handlePasswordResetForm");
         }
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
-
-        if ( externalTokensEnabled ) {
+        if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must reset passwords via " +
-                    properties.getProperty( USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
 
         UUID organizationId = null;
@@ -347,12 +352,9 @@ public class UserResource extends AbstractContextResource {
     @Produces( MediaType.TEXT_HTML )
     public Viewable activate( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
-
-        if ( externalTokensEnabled ) {
+        if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must activate via " +
-                    properties.getProperty( USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
 
         UUID organizationId = null;
@@ -380,12 +382,9 @@ public class UserResource extends AbstractContextResource {
     @Produces( MediaType.TEXT_HTML )
     public Viewable confirm( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
-
-        if ( externalTokensEnabled ) {
+        if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must confirm via " +
-                    properties.getProperty( USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
 
         UUID organizationId = null;
@@ -419,12 +418,9 @@ public class UserResource extends AbstractContextResource {
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
-
-        if ( externalTokensEnabled ) {
+        if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must reactivate via " +
-                    properties.getProperty( USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
 
         logger.info( "Send activation email for user: {}" , user.getUuid() );
@@ -445,6 +441,11 @@ public class UserResource extends AbstractContextResource {
     public ApiResponse revokeTokensPost( @Context UriInfo ui,
                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
+
+        if ( tokens.isExternalSSOProviderEnabled() ) {
+            throw new IllegalArgumentException( "Admin Users must tokens must be revoked via " +
+                properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+        }
 
         UUID adminId = user.getUuid();
 
@@ -477,6 +478,11 @@ public class UserResource extends AbstractContextResource {
     public ApiResponse revokeTokenPost( @Context UriInfo ui,
                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
                                             @QueryParam( "token" ) String token ) throws Exception {
+
+        if ( tokens.isExternalSSOProviderEnabled() ) {
+            throw new IllegalArgumentException( "Admin Users must tokens must be revoked via " +
+                properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+        }
 
         UUID adminId = user.getUuid();
         this.token = token;
