@@ -967,7 +967,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    private boolean validateAdminInfo( String username, String name, String email, String password ) throws Exception {
+    protected boolean validateAdminInfo( String username, String name, String email, String password ) throws Exception {
         if ( email == null ) {
             return false;
         }
@@ -988,7 +988,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    private UserInfo createAdminUserInternal( UUID organizationId, String username, String name, String email, String password,
+    protected UserInfo createAdminUserInternal( UUID organizationId, String username, String name, String email, String password,
                                               boolean activated, boolean disabled, Map<String, Object> userProperties )
             throws Exception {
         logger.info( "createAdminUserInternal: {}", username );

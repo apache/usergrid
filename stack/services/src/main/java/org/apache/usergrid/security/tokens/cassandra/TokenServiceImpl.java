@@ -776,9 +776,10 @@ public class TokenServiceImpl implements TokenService {
 
     //SSO2 implementation
     public static final String USERGRID_EXTERNAL_SSO_ENABLED = "usergrid.external.sso.enabled";
-    public static final String USERGRID_EXTERNAL_PROVIDER =    "usergrid.external.sso.provider";
-    public static final String USERGRID_EXTERNAL_PROVIDER_URL = "usergrid.external.sso.url";
-
+    public static final String USERGRID_EXTERNAL_SSO_PROVIDER =    "usergrid.external.sso.provider";
+    public static final String USERGRID_EXTERNAL_SSO_PROVIDER_URL = "usergrid.external.sso.url";
+    public static final String USERGRID_EXTERNAL_SSO_PROVIDER_USER_PROVISION_URL
+        = "usergrid.external.sso.userprovision.url";
 
 
     private static Client jerseyClient = null;
@@ -802,7 +803,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     private String getExternalSSOProvider(){
-            return properties.getProperty(USERGRID_EXTERNAL_PROVIDER);
+            return properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER);
     }
 
     /**

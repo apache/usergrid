@@ -60,7 +60,7 @@ import java.util.Map;
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.*;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER_URL;
 import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
@@ -385,7 +385,7 @@ public class ManagementResource extends AbstractContextResource {
                 OAuthResponse response =
                     OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
                         .setErrorDescription( "SSO Integration is enabled, Admin users must login via provider: "+
-                            properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER) ).buildJSONMessage();
+                            properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) ).buildJSONMessage();
                 return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
                     .entity( wrapWithCallback( response.getBody(), callback ) ).build();
 
@@ -620,7 +620,7 @@ public class ManagementResource extends AbstractContextResource {
             if ( !userServiceAdmin(username)) {
                 // this guy is not the superuser
                 throw new IllegalArgumentException( "Admin Users must login via " +
-                        properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+                        properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER_URL) );
             }
         }
     }

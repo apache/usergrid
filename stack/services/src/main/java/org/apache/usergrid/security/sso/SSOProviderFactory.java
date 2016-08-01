@@ -41,7 +41,7 @@ public class SSOProviderFactory {
 
     public ExternalSSOProvider getProvider(){
 
-        return getSpecificProvider(properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER));
+        return getSpecificProvider(properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER));
 
     }
 
