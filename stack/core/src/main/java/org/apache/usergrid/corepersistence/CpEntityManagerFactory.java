@@ -34,6 +34,7 @@ import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.locking.LockManager;
+import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
@@ -43,7 +44,6 @@ import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
-import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueActor;
 import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
@@ -116,6 +116,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private UniqueValuesService uniqueValuesService;
     private final LockManager lockManager;
 
+    private final QueueManagerFactory queueManagerFactory;
+
     public static final String MANAGEMENT_APP_INIT_MAXRETRIES= "management.app.init.max-retries";
     public static final String MANAGEMENT_APP_INIT_INTERVAL = "management.app.init.interval";
 
@@ -159,7 +161,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             }
         }
         this.lockManager = injector.getInstance( LockManager.class );
-
+        this.queueManagerFactory = injector.getInstance( QueueManagerFactory.class );
 
 
         // this line always needs to be last due to the temporary cicular dependency until spring is removed
@@ -375,7 +377,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             collectionService,
             connectionService,
             collectionSettingsFactory,
-            applicationId );
+            applicationId,
+            queueManagerFactory);
 
         return em;
     }
