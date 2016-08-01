@@ -46,7 +46,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isServiceAdmin;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER_URL;
 import static org.apache.usergrid.utils.ConversionUtils.string;
 
 
@@ -138,7 +138,7 @@ public class UserResource extends AbstractContextResource {
 
         if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must reset passwords via " +
-                properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+                properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER_URL) );
         }
 
         if ( json == null ) {
@@ -224,7 +224,7 @@ public class UserResource extends AbstractContextResource {
 
         if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must reset passwords via " +
-                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+                    properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER_URL) );
         }
 
         UUID organizationId = null;
@@ -268,7 +268,7 @@ public class UserResource extends AbstractContextResource {
 
         if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must reset passwords via " +
-                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+                    properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER_URL) );
         }
 
         UUID organizationId = null;
@@ -354,7 +354,7 @@ public class UserResource extends AbstractContextResource {
 
         if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must activate via " +
-                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+                    properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER_URL) );
         }
 
         UUID organizationId = null;
@@ -384,7 +384,7 @@ public class UserResource extends AbstractContextResource {
 
         if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must confirm via " +
-                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+                    properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER_URL) );
         }
 
         UUID organizationId = null;
@@ -420,7 +420,7 @@ public class UserResource extends AbstractContextResource {
 
         if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must reactivate via " +
-                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+                    properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER_URL) );
         }
 
         logger.info( "Send activation email for user: {}" , user.getUuid() );
@@ -444,7 +444,7 @@ public class UserResource extends AbstractContextResource {
 
         if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must tokens must be revoked via " +
-                properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+                properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER_URL) );
         }
 
         UUID adminId = user.getUuid();
@@ -481,7 +481,7 @@ public class UserResource extends AbstractContextResource {
 
         if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must tokens must be revoked via " +
-                properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
+                properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER_URL) );
         }
 
         UUID adminId = user.getUuid();

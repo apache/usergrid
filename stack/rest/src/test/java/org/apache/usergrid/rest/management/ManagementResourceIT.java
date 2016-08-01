@@ -37,7 +37,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.*;
 
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER_URL;
 import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
@@ -633,7 +633,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         String suToken = clientSetup.getSuperuserToken().getAccessToken();
         Map<String, String> props = new HashMap<String, String>();
-        props.put( USERGRID_EXTERNAL_PROVIDER_URL, getBaseURI().toURL().toExternalForm() );
+        props.put(USERGRID_EXTERNAL_SSO_PROVIDER_URL, getBaseURI().toURL().toExternalForm() );
         pathResource( "testproperties" ).post( props );
 
 
@@ -653,7 +653,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         // unset the Usergrid Central SSO URL so it does not interfere with other tests
 
-        props.put( USERGRID_EXTERNAL_PROVIDER_URL, "" );
+        props.put(USERGRID_EXTERNAL_SSO_PROVIDER_URL, "" );
         pathResource( "testproperties" ).post( props );
     }
 
@@ -673,7 +673,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         String suToken = clientSetup.getSuperuserToken().getAccessToken();
         Map<String, String> props = new HashMap<String, String>();
         props.put(USERGRID_EXTERNAL_SSO_ENABLED, "true");
-        props.put( USERGRID_EXTERNAL_PROVIDER_URL, getBaseURI().toURL().toExternalForm() );
+        props.put(USERGRID_EXTERNAL_SSO_PROVIDER_URL, getBaseURI().toURL().toExternalForm() );
         pathResource( "testproperties" ).post( props );
 
         try {
@@ -687,7 +687,7 @@ public class ManagementResourceIT extends AbstractRestIT {
                     put( "grant_type", "password" );
                 }};
                 ApiResponse postResponse = pathResource( "management/token" ).post( false, ApiResponse.class, loginInfo );
-                fail( "SSO Integration is enabled, Admin users must login via provider: "+ USERGRID_EXTERNAL_PROVIDER_URL);
+                fail( "SSO Integration is enabled, Admin users must login via provider: "+ USERGRID_EXTERNAL_SSO_PROVIDER_URL);
 
             } catch (ClientErrorException actual) {
                 assertEquals( 400, actual.getResponse().getStatus() );
@@ -734,7 +734,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
             // turn off validate external tokens by un-setting the usergrid.central.url
 
-            props.put( USERGRID_EXTERNAL_PROVIDER_URL, "" );
+            props.put(USERGRID_EXTERNAL_SSO_PROVIDER_URL, "" );
             props.put(USERGRID_EXTERNAL_SSO_ENABLED, "");
             pathResource( "testproperties" ).post( props );
         }
