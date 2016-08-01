@@ -38,6 +38,7 @@ import org.apache.usergrid.rest.management.users.UsersResource;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.apache.usergrid.security.sso.ApigeeSSO2Provider;
 import org.apache.usergrid.security.sso.ExternalSSOProvider;
 import org.apache.usergrid.security.sso.SSOProviderFactory;
 import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
@@ -193,11 +194,18 @@ public class ManagementResource extends AbstractContextResource {
             this.access_token = userPrincipal.getAccessTokenCredentials().getToken();
         }
 
-
+        String ssoUserId = null;
         if(ssoEnabled && !user.getUsername().equals(properties.getProperty(USERGRID_SYSADMIN_LOGIN_NAME))){
             ExternalSSOProvider provider = ssoProviderFactory.getProvider();
+            final Map<String, String> decodedTokenDetails = provider.getDecodedTokenDetails(access_token);
+            final String expiry = decodedTokenDetails.containsKey("expiry") ? decodedTokenDetails.get("expiry") : "0";
+
             tokenTtl =
-                Long.valueOf(provider.getDecodedTokenDetails(access_token).get("expiry")) - System.currentTimeMillis()/1000;
+                Long.valueOf(expiry) - System.currentTimeMillis()/1000;
+
+            if( provider instanceof ApigeeSSO2Provider ) {
+                ssoUserId = decodedTokenDetails.get("user_id");
+            }
 
         }else{
             tokenTtl = tokens.getTokenInfo(access_token).getDuration();
@@ -206,6 +214,12 @@ public class ManagementResource extends AbstractContextResource {
 
         final AccessInfo access_info = new AccessInfo().withExpiresIn( tokenTtl ).withAccessToken( access_token )
             .withPasswordChanged( passwordChanged );
+
+        // if external SSO is enabled, always set the external sso user id property, even if it's null
+        if ( ssoEnabled ){
+
+            access_info.setProperty("external_sso_user_id", ssoUserId);
+        }
 
         access_info.setProperty( "user", management.getAdminUserOrganizationData( user, true ) );
 
