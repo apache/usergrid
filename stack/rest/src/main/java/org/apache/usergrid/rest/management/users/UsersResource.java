@@ -44,7 +44,7 @@ import java.util.UUID;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_CENTRAL_URL;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_PROVIDER_URL;
 
 
 @Component( "org.apache.usergrid.rest.management.users.UsersResource" )
@@ -114,12 +114,9 @@ public class UsersResource extends AbstractContextResource {
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
-
-        if ( externalTokensEnabled ) {
+        if ( tokens.isExternalSSOProviderEnabled() ) {
             throw new IllegalArgumentException( "Admin Users must signup via " +
-                    properties.getProperty( USERGRID_CENTRAL_URL ) );
+                    properties.getProperty( USERGRID_EXTERNAL_PROVIDER_URL ) );
         }
 
         // email is only required parameter
@@ -137,7 +134,15 @@ public class UsersResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "create user" );
 
-        UserInfo user = management.createAdminUser( null, username, name, email, password, false, false );
+
+        UserInfo user = null;
+        if ( tokens.isExternalSSOProviderEnabled() ){
+            //autoactivating user, since the activation is done via the external sso provider.
+            user = management.createAdminUser(null,username,name,email,password,true,false);
+        }
+        else {
+            user = management.createAdminUser(null, username, name, email, password, false, false);
+        }
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         if ( user != null ) {
             result.put( "user", user );

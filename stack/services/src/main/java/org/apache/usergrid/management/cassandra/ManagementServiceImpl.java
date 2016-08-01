@@ -548,11 +548,24 @@ public class ManagementServiceImpl implements ManagementService {
             if ( !validateAdminInfo( username, name, email, password ) ) {
                 return null;
             }
-            if ( areActivationChecksDisabled() ) {
-                user = createAdminUserInternal( null, username, name, email, password, true, false, userProperties );
+
+            // sysadmin can omit password field in the request and that will try to fetch an existing admin user to
+            // associate to the requested organization
+            if((password == null || password.isEmpty()) && SubjectUtils.isServiceAdmin()){
+                user = getAdminUserByEmail(email);
+                if(user == null ){
+                    throw new IllegalArgumentException("Password should be sent in the request or should be a valid admin user email.");
+                }
             }
-            else {
-                user = createAdminUserInternal( null, username, name, email, password, activated, disabled, userProperties );
+
+
+            if(user == null) {
+                // if external SSO is enabled and we're adding a user to an org, auto activate the user
+                if (tokens.isExternalSSOProviderEnabled() || areActivationChecksDisabled()) {
+                    user = createAdminUserInternal(null, username, name, email, password, true, false, userProperties);
+                } else {
+                    user = createAdminUserInternal(null, username, name, email, password, activated, disabled, userProperties);
+                }
             }
 
             if(logger.isTraceEnabled()){
@@ -903,10 +916,13 @@ public class ManagementServiceImpl implements ManagementService {
             user.getEmail(), user.getConfirmed(), user.getActivated(), user.getDisabled(),
             user.getDynamicProperties(), true );
 
+
         // special case for sysadmin and test account only
         if (    !user.getEmail().equals( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ) )
              && !user.getEmail().equals( properties .getProperty( PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL ) ) ) {
-            this.startAdminUserActivationFlow( organizationId, userInfo );
+            if(!tokens.isExternalSSOProviderEnabled()) {
+                this.startAdminUserActivationFlow(organizationId, userInfo);
+            }
         }
 
         return userInfo;
@@ -961,11 +977,11 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
-        if ( !em.isPropertyValueUniqueForEntity( "user", "username", username ) ) {
+        if ( !( tokens.isExternalSSOProviderEnabled() && SubjectUtils.isServiceAdmin()) && !em.isPropertyValueUniqueForEntity( "user", "username", username ) ) {
             throw new DuplicateUniquePropertyExistsException( "user", "username", username );
         }
 
-        if ( !em.isPropertyValueUniqueForEntity( "user", "email", email ) ) {
+        if ( !(tokens.isExternalSSOProviderEnabled()&& SubjectUtils.isServiceAdmin())  && !em.isPropertyValueUniqueForEntity( "user", "email", email ) ) {
             throw new DuplicateUniquePropertyExistsException( "user", "email", email );
         }
         return true;
@@ -1525,6 +1541,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public String getAccessTokenForAdminUser( UUID userId, long duration ) throws Exception {
+
         return getTokenForPrincipal( ACCESS, null, smf.getManagementAppId(), ADMIN_USER, userId, duration );
     }
 
@@ -1722,7 +1739,9 @@ public class ManagementServiceImpl implements ManagementService {
         invalidateManagementAppAuthCache();
 
         if ( email ) {
-            sendAdminUserInvitedEmail( user, organization );
+            if(!tokens.isExternalSSOProviderEnabled()) {
+                sendAdminUserInvitedEmail(user, organization);
+            }
         }
     }
 
@@ -3473,4 +3492,5 @@ public class ManagementServiceImpl implements ManagementService {
         scopedCache.invalidate();
         localShiroCache.invalidateAll();
     }
+
 }
