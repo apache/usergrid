@@ -93,7 +93,9 @@ public class JobSchedulerService extends AbstractScheduledService {
         failCounter = metricsFactory.getCounter( JobSchedulerService.class, "scheduler.failed_jobs" );
 
         try {
-            logger.info( "Running one check iteration ..." );
+            if ( logger.isDebugEnabled() ) {
+                logger.debug( "Running one check iteration ..." );
+            }
             List<JobDescriptor> activeJobs;
 
             // run until there are no more active jobs
