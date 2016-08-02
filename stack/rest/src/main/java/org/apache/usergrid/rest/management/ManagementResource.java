@@ -61,8 +61,6 @@ import java.util.Map;
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.*;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER_URL;
 import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
@@ -222,7 +220,8 @@ public class ManagementResource extends AbstractContextResource {
             access_info.setProperty("external_sso_user_id", ssoUserId);
         }
 
-        access_info.setProperty( "user", management.getAdminUserOrganizationData( user, true ) );
+        access_info.setProperty( "user", management.getAdminUserOrganizationData( user, true, false) );
+
 
         return Response.status( SC_OK ).type( jsonMediaType( callback ) )
             .entity( wrapWithCallback( access_info, callback ) ).build();
@@ -413,7 +412,7 @@ public class ManagementResource extends AbstractContextResource {
                     new AccessInfo().withExpiresIn( tokens.getMaxTokenAgeInSeconds( token ) ).withAccessToken( token )
                                     .withPasswordChanged( passwordChanged );
 
-            access_info.setProperty( "user", management.getAdminUserOrganizationData( user, me ) );
+            access_info.setProperty( "user", management.getAdminUserOrganizationData( user, true, false) );
 
             // increment counters for admin login
             management.countAdminUserAction( user, "login" );

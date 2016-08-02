@@ -47,7 +47,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isServiceAdmin;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER_URL;
 import static org.apache.usergrid.utils.ConversionUtils.string;
 
 
@@ -209,7 +208,7 @@ public class UserResource extends AbstractContextResource {
         // commenting out creation of token each time and setting the token value to the one sent in the request.
         // String token = management.getAccessTokenForAdminUser( user.getUuid(), ttl );
 
-        Map<String, Object> userOrganizationData = management.getAdminUserOrganizationData( user, !shallow );
+        Map<String, Object> userOrganizationData = management.getAdminUserOrganizationData( user, !shallow, !shallow);
         //userOrganizationData.put( "token", token );
         response.setData( userOrganizationData );
         response.setSuccess();

@@ -127,6 +127,7 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
         tokenDetails.put("username", (String)claims.get("user_name"));
         tokenDetails.put("email", (String)claims.get("email"));
         tokenDetails.put("expiry", claims.get("exp").toString());
+        tokenDetails.put("user_id", claims.get("user_id").toString());
 
 
         return tokenDetails;
