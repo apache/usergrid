@@ -90,8 +90,8 @@ def init_logging(stdout_enabled=True):
     logging.getLogger('urllib3.connectionpool').setLevel(logging.WARN)
 
     log_formatter = logging.Formatter(
-            fmt='%(asctime)s | ' + ECID + ' | %(name)s | %(processName)s | %(levelname)s | %(message)s',
-            datefmt='%m/%d/%Y %I:%M:%S %p')
+        fmt='%(asctime)s | ' + ECID + ' | %(name)s | %(processName)s | %(levelname)s | %(message)s',
+        datefmt='%m/%d/%Y %I:%M:%S %p')
 
     stdout_logger = logging.StreamHandler(sys.stdout)
     stdout_logger.setFormatter(log_formatter)
@@ -256,7 +256,8 @@ class StatusListener(Process):
                             with open(status_file_name, 'w') as f:
                                 json.dump(org_results, f, indent=2)
                         except:
-                            print(traceback.format_exc())
+                            print
+                            traceback.format_exc()
 
                 except KeyboardInterrupt as e:
                     raise e
@@ -340,18 +341,19 @@ class EntityWorker(Process):
 
                             if count_processed % 1000 == 1:
                                 worker_logger.info(
-                                        'Processed [%sth] entity = [%s / %s / %s] in [%s]s - avg time/message [%s]' % (
-                                            count_processed, app, collection_name, entity.get('uuid'), message_time,
-                                            avg_time_per_message))
+                                    'Processed [%sth] entity = [%s / %s / %s] in [%s]s - avg time/message [%s]' % (
+                                        count_processed, app, collection_name, entity.get('uuid'), message_time,
+                                        avg_time_per_message))
 
-                    except KeyboardInterrupt as e:
+                    except KeyboardInterrupt, e:
                         raise e
 
-                    except Exception as e:
+                    except Exception, e:
                         logger.exception('Error in EntityWorker processing message')
-                        print(traceback.format_exc())
+                        print
+                        traceback.format_exc()
 
-            except KeyboardInterrupt as e:
+            except KeyboardInterrupt, e:
                 raise e
 
             except Empty:
@@ -362,9 +364,10 @@ class EntityWorker(Process):
                 if empty_count >= 2:
                     keep_going = False
 
-            except Exception as e:
+            except Exception, e:
                 logger.exception('Error in EntityWorker run()')
-                print(traceback.format_exc())
+                print
+                traceback.format_exc()
 
 
 class CollectionWorker(Process):
@@ -422,7 +425,7 @@ class CollectionWorker(Process):
                                                                                      collection=collection_name,
                                                                                      limit=config.get('limit'),
                                                                                      ql="select * %s" % config.get(
-                                                                                             'ql'),
+                                                                                         'ql'),
                                                                                      **config.get('source_endpoint'))
 
                     logger.info('Iterating URL: %s' % source_collection_url)
@@ -447,12 +450,12 @@ class CollectionWorker(Process):
                                 if entity_created > status_map[collection_name]['max_created']:
                                     status_map[collection_name]['max_created'] = entity_created
                                     status_map[collection_name]['max_created_str'] = str(
-                                            datetime.datetime.fromtimestamp(entity_created / 1000))
+                                        datetime.datetime.fromtimestamp(entity_created / 1000))
 
                                 if entity_created < status_map[collection_name]['min_created']:
                                     status_map[collection_name]['min_created'] = entity_created
                                     status_map[collection_name]['min_created_str'] = str(
-                                            datetime.datetime.fromtimestamp(entity_created / 1000))
+                                        datetime.datetime.fromtimestamp(entity_created / 1000))
 
                             except ValueError:
                                 pass
@@ -465,12 +468,12 @@ class CollectionWorker(Process):
                                 if entity_modified > status_map[collection_name]['max_modified']:
                                     status_map[collection_name]['max_modified'] = entity_modified
                                     status_map[collection_name]['max_modified_str'] = str(
-                                            datetime.datetime.fromtimestamp(entity_modified / 1000))
+                                        datetime.datetime.fromtimestamp(entity_modified / 1000))
 
                                 if entity_modified < status_map[collection_name]['min_modified']:
                                     status_map[collection_name]['min_modified'] = entity_modified
                                     status_map[collection_name]['min_modified_str'] = str(
-                                            datetime.datetime.fromtimestamp(entity_modified / 1000))
+                                        datetime.datetime.fromtimestamp(entity_modified / 1000))
 
                             except ValueError:
                                 pass
@@ -481,38 +484,38 @@ class CollectionWorker(Process):
                         if counter % 1000 == 1:
                             try:
                                 collection_worker_logger.warning(
-                                        'Sending stats for app/collection [%s / %s]: %s' % (
-                                            app, collection_name, status_map))
+                                    'Sending stats for app/collection [%s / %s]: %s' % (
+                                        app, collection_name, status_map))
 
                                 self.response_queue.put((app, collection_name, status_map))
 
                                 if QSIZE_OK:
                                     collection_worker_logger.info(
-                                            'Counter=%s, collection queue depth=%s' % (
-                                                counter, self.work_queue.qsize()))
+                                        'Counter=%s, collection queue depth=%s' % (
+                                            counter, self.work_queue.qsize()))
                             except:
                                 pass
 
                             collection_worker_logger.warn(
-                                    'Current status of collections processed: %s' % json.dumps(status_map))
+                                'Current status of collections processed: %s' % json.dumps(status_map))
 
                         if config.get('entity_sleep_time') > 0:
                             collection_worker_logger.debug(
-                                    'sleeping for [%s]s per entity...' % (config.get('entity_sleep_time')))
+                                'sleeping for [%s]s per entity...' % (config.get('entity_sleep_time')))
                             time.sleep(config.get('entity_sleep_time'))
                             collection_worker_logger.debug(
-                                    'STOPPED sleeping for [%s]s per entity...' % (config.get('entity_sleep_time')))
+                                'STOPPED sleeping for [%s]s per entity...' % (config.get('entity_sleep_time')))
 
                     # end entity loop
 
                     status_map[collection_name]['iteration_finished'] = str(datetime.datetime.now())
 
                     collection_worker_logger.warning(
-                            'Collection [%s / %s / %s] loop complete!  Max Created entity %s' % (
-                                config.get('org'), app, collection_name, status_map[collection_name]['max_created']))
+                        'Collection [%s / %s / %s] loop complete!  Max Created entity %s' % (
+                            config.get('org'), app, collection_name, status_map[collection_name]['max_created']))
 
                     collection_worker_logger.warning(
-                            'Sending FINAL stats for app/collection [%s / %s]: %s' % (app, collection_name, status_map))
+                        'Sending FINAL stats for app/collection [%s / %s]: %s' % (app, collection_name, status_map))
 
                     self.response_queue.put((app, collection_name, status_map))
 
@@ -555,12 +558,12 @@ def include_edge(collection_name, edge_name):
 
     if len(include_edges) > 0 and edge_name not in include_edges:
         logger.debug(
-                'Skipping edge [%s] since it is not in INCLUDED list: %s' % (edge_name, include_edges))
+            'Skipping edge [%s] since it is not in INCLUDED list: %s' % (edge_name, include_edges))
         return False
 
     if edge_name in exclude_edges:
         logger.debug(
-                'Skipping edge [%s] since it is in EXCLUDED list: %s' % (edge_name, exclude_edges))
+            'Skipping edge [%s] since it is in EXCLUDED list: %s' % (edge_name, exclude_edges))
         return False
 
     if (collection_name in ['users', 'user'] and edge_name in ['followers', 'feed', 'activities']) \
@@ -617,8 +620,8 @@ def confirm_user_entity(app, source_entity, attempts=0):
 
         if retrieved_entity.get('uuid') != source_entity.get('uuid'):
             logger.info(
-                    'UUID of Source Entity [%s] differs from uuid [%s] of retrieved entity at URL=[%s] and will be substituted' % (
-                        source_entity.get('uuid'), retrieved_entity.get('uuid'), source_entity_url))
+                'UUID of Source Entity [%s] differs from uuid [%s] of retrieved entity at URL=[%s] and will be substituted' % (
+                    source_entity.get('uuid'), retrieved_entity.get('uuid'), source_entity_url))
 
         return retrieved_entity
 
@@ -669,12 +672,12 @@ def create_connection(app, collection_name, source_entity, edge_name, target_ent
             target_type_id = '%s/%s' % ('receipts', target_entity.get('uuid'))
 
     create_connection_url = connection_create_by_pairs_url_template.format(
-            org=target_org,
-            app=target_app,
-            source_type_id=source_type_id,
-            verb=edge_name,
-            target_type_id=target_type_id,
-            **config.get('target_endpoint'))
+        org=target_org,
+        app=target_app,
+        source_type_id=source_type_id,
+        verb=edge_name,
+        target_type_id=target_type_id,
+        **config.get('target_endpoint'))
 
     if not config.get('skip_cache_read', False):
         processed = cache.get(create_connection_url)
@@ -712,8 +715,8 @@ def create_connection(app, collection_name, source_entity, edge_name, target_ent
                     time.sleep(DEFAULT_RETRY_SLEEP)
                 else:
                     logger.critical(
-                            'FAILED [%s] (WILL NOT RETRY - max attempts) to create connection at URL=[%s]: %s' % (
-                                r_create.status_code, create_connection_url, r_create.text))
+                        'FAILED [%s] (WILL NOT RETRY - max attempts) to create connection at URL=[%s]: %s' % (
+                            r_create.status_code, create_connection_url, r_create.text))
                     return False
 
             elif r_create.status_code in [401, 404]:
@@ -736,7 +739,6 @@ def create_connection(app, collection_name, source_entity, edge_name, target_ent
 
 
 def process_edges(app, collection_name, source_entity, edge_name, connection_stack):
-
     source_identifier = get_source_identifier(source_entity)
 
     while len(connection_stack) > 0:
@@ -745,7 +747,7 @@ def process_edges(app, collection_name, source_entity, edge_name, connection_sta
 
         if exclude_collection(collection_name) or exclude_collection(target_entity.get('type')):
             logger.debug('EXCLUDING Edge (collection): [%s / %s / %s] --[%s]--> ?' % (
-                app, collection_name, source_identifier, edge_name ))
+                app, collection_name, source_identifier, edge_name))
             continue
 
         create_connection(app, collection_name, source_entity, edge_name, target_entity)
@@ -782,18 +784,18 @@ def migrate_out_graph_edge_type(app, collection_name, source_entity, edge_name, 
     count_edges = 0
 
     logger.debug(
-            'Processing edge type=[%s] of entity [%s / %s / %s]' % (edge_name, app, collection_name, source_identifier))
+        'Processing edge type=[%s] of entity [%s / %s / %s]' % (edge_name, app, collection_name, source_identifier))
 
     target_app, target_collection, target_org = get_target_mapping(app, collection_name)
 
     connection_query_url = connection_query_url_template.format(
-            org=config.get('org'),
-            app=app,
-            verb=edge_name,
-            collection=collection_name,
-            uuid=source_identifier,
-            limit=config.get('limit'),
-            **config.get('source_endpoint'))
+        org=config.get('org'),
+        app=app,
+        verb=edge_name,
+        collection=collection_name,
+        uuid=source_identifier,
+        limit=config.get('limit'),
+        **config.get('source_endpoint'))
 
     connection_query = UsergridQueryIterator(connection_query_url, sleep_time=config.get('error_retry_sleep'))
 
@@ -807,9 +809,9 @@ def migrate_out_graph_edge_type(app, collection_name, source_entity, edge_name, 
 
         if not target_ok:
             logger.critical(
-                    'Error migrating TARGET entity data for connection [%s / %s / %s] --[%s]--> [%s / %s / %s]' % (
-                        app, collection_name, source_identifier, edge_name, app, target_connection_collection,
-                        target_entity.get('name', target_entity.get('uuid'))))
+                'Error migrating TARGET entity data for connection [%s / %s / %s] --[%s]--> [%s / %s / %s]' % (
+                    app, collection_name, source_identifier, edge_name, app, target_connection_collection,
+                    target_entity.get('name', target_entity.get('uuid'))))
 
         count_edges += 1
         connection_stack.append(target_entity)
@@ -894,19 +896,19 @@ def migrate_in_graph_edge_type(app, collection_name, source_entity, edge_name, d
         return True
 
     logger.debug(
-            'Processing edge type=[%s] of entity [%s / %s / %s]' % (edge_name, app, collection_name, source_identifier))
+        'Processing edge type=[%s] of entity [%s / %s / %s]' % (edge_name, app, collection_name, source_identifier))
 
     logger.debug('Processing IN edges type=[%s] of entity [ %s / %s / %s]' % (
         edge_name, app, collection_name, source_uuid))
 
     connecting_query_url = connecting_query_url_template.format(
-            org=config.get('org'),
-            app=app,
-            collection=collection_name,
-            uuid=source_uuid,
-            verb=edge_name,
-            limit=config.get('limit'),
-            **config.get('source_endpoint'))
+        org=config.get('org'),
+        app=app,
+        collection=collection_name,
+        uuid=source_uuid,
+        verb=edge_name,
+        limit=config.get('limit'),
+        **config.get('source_endpoint'))
 
     connection_query = UsergridQueryIterator(connecting_query_url, sleep_time=config.get('error_retry_sleep'))
 
@@ -928,7 +930,7 @@ def migrate_graph(app, collection_name, source_entity, depth=0):
     # short circuit if the graph depth exceeds what was specified
     if depth > config.get('graph_depth', 1):
         logger.debug(
-                'Reached Max Graph Depth, stopping after [%s] on [%s / %s]' % (depth, collection_name, source_uuid))
+            'Reached Max Graph Depth, stopping after [%s] on [%s / %s]' % (depth, collection_name, source_uuid))
         return True
     else:
         logger.debug('Processing @ Graph Depth [%s]' % depth)
@@ -1008,28 +1010,28 @@ def prune_edge_by_name(edge_name, app, collection_name, source_entity):
     target_app, target_collection, target_org = get_target_mapping(app, collection_name)
 
     target_connection_query_url = connection_query_url_template.format(
-            org=target_org,
-            app=target_app,
-            verb=edge_name,
-            collection=target_collection,
-            uuid=source_identifier,
-            limit=config.get('limit'),
-            **config.get('target_endpoint'))
+        org=target_org,
+        app=target_app,
+        verb=edge_name,
+        collection=target_collection,
+        uuid=source_identifier,
+        limit=config.get('limit'),
+        **config.get('target_endpoint'))
 
     source_connection_query_url = connection_query_url_template.format(
-            org=config.get('org'),
-            app=app,
-            verb=edge_name,
-            collection=collection_name,
-            uuid=source_identifier,
-            limit=config.get('limit'),
-            **config.get('source_endpoint'))
+        org=config.get('org'),
+        app=app,
+        verb=edge_name,
+        collection=collection_name,
+        uuid=source_identifier,
+        limit=config.get('limit'),
+        **config.get('source_endpoint'))
 
     source_connections = collect_entities(
-            UsergridQueryIterator(source_connection_query_url, sleep_time=config.get('error_retry_sleep')))
+        UsergridQueryIterator(source_connection_query_url, sleep_time=config.get('error_retry_sleep')))
 
     target_connections = collect_entities(
-            UsergridQueryIterator(target_connection_query_url, sleep_time=config.get('error_retry_sleep')))
+        UsergridQueryIterator(target_connection_query_url, sleep_time=config.get('error_retry_sleep')))
 
     delete_uuids = Set(target_connections.keys()) - Set(source_connections.keys())
 
@@ -1038,13 +1040,13 @@ def prune_edge_by_name(edge_name, app, collection_name, source_entity):
 
         for delete_uuid in delete_uuids:
             delete_connection_url = connection_create_by_uuid_url_template.format(
-                    org=target_org,
-                    app=target_app,
-                    verb=edge_name,
-                    collection=target_collection,
-                    uuid=source_identifier,
-                    target_uuid=delete_uuid,
-                    **config.get('target_endpoint'))
+                org=target_org,
+                app=target_app,
+                verb=edge_name,
+                collection=target_collection,
+                uuid=source_identifier,
+                target_uuid=delete_uuid,
+                **config.get('target_endpoint'))
 
             attempts = 0
 
@@ -1163,8 +1165,8 @@ def migrate_permissions(app, collection_name, source_entity, attempts=0):
 
             if r.status_code != 200:
                 logger.error(
-                        'ERROR posting permission %s to URL=[%s]: %s' % (
-                            json.dumps(data), target_permissions_url, r.text))
+                    'ERROR posting permission %s to URL=[%s]: %s' % (
+                        json.dumps(data), target_permissions_url, r.text))
 
     return True
 
@@ -1240,9 +1242,9 @@ def migrate_data(app, collection_name, source_entity, attempts=0, force=False):
         if r.status_code == 200:
             # Worked => WE ARE DONE
             logger.info(
-                    'migrate_data | success=[%s] | attempts=[%s] | entity=[%s / %s / %s] | created=[%s] | modified=[%s]' % (
-                        True, attempts, config.get('org'), app, source_identifier, source_entity.get('created'),
-                        source_entity.get('modified'),))
+                'migrate_data | success=[%s] | attempts=[%s] | entity=[%s / %s / %s] | created=[%s] | modified=[%s]' % (
+                    True, attempts, config.get('org'), app, source_identifier, source_entity.get('created'),
+                    source_entity.get('modified'),))
 
             if not config.get('skip_cache_write', False):
                 logger.debug('SETTING CACHE | uuid=[%s] | modified=[%s]' % (
@@ -1264,9 +1266,9 @@ def migrate_data(app, collection_name, source_entity, attempts=0, force=False):
 
             if attempts >= 5:
                 logger.critical(
-                        'ABORT migrate_data | success=[%s] | attempts=[%s] | created=[%s] | modified=[%s] %s / %s / %s' % (
-                            True, attempts, source_entity.get('created'), source_entity.get('modified'), app,
-                            collection_name, source_identifier))
+                    'ABORT migrate_data | success=[%s] | attempts=[%s] | created=[%s] | modified=[%s] %s / %s / %s' % (
+                        True, attempts, source_entity.get('created'), source_entity.get('modified'), app,
+                        collection_name, source_identifier))
 
                 return False
 
@@ -1280,16 +1282,16 @@ def migrate_data(app, collection_name, source_entity, attempts=0, force=False):
 
                 elif 'duplicate_unique_property_exists' in r.text:
                     logger.error(
-                            'WILL NOT RETRY (duplicate) [%s] attempts to PUT url=[%s], entity=[%s] response=[%s]' % (
-                                attempts, target_entity_url_by_name, json.dumps(source_entity), r.text))
+                        'WILL NOT RETRY (duplicate) [%s] attempts to PUT url=[%s], entity=[%s] response=[%s]' % (
+                            attempts, target_entity_url_by_name, json.dumps(source_entity), r.text))
 
                     return False
 
             elif r.status_code == 403:
                 logger.critical(
-                        'ABORT migrate_data | success=[%s] | attempts=[%s] | created=[%s] | modified=[%s] %s / %s / %s' % (
-                            False, attempts, source_entity.get('created'), source_entity.get('modified'), app,
-                            collection_name, source_identifier))
+                    'ABORT migrate_data | success=[%s] | attempts=[%s] | created=[%s] | modified=[%s] %s / %s / %s' % (
+                        False, attempts, source_entity.get('created'), source_entity.get('modified'), app,
+                        collection_name, source_identifier))
                 return False
 
     except:
@@ -1297,9 +1299,9 @@ def migrate_data(app, collection_name, source_entity, attempts=0, force=False):
         logger.error('error in migrate_data on entity: %s' % json.dumps(source_entity))
 
     logger.warn(
-            'UNSUCCESSFUL migrate_data | success=[%s] | attempts=[%s] | entity=[%s / %s / %s] | created=[%s] | modified=[%s]' % (
-                True, attempts, config.get('org'), app, source_identifier, source_entity.get('created'),
-                source_entity.get('modified'),))
+        'UNSUCCESSFUL migrate_data | success=[%s] | attempts=[%s] | entity=[%s / %s / %s] | created=[%s] | modified=[%s]' % (
+            True, attempts, config.get('org'), app, source_identifier, source_entity.get('created'),
+            source_entity.get('modified'),))
 
     return migrate_data(app, collection_name, source_entity, attempts=attempts + 1)
 
@@ -1320,7 +1322,7 @@ def handle_user_migration_conflict(app, collection_name, source_entity, attempts
     # There is retry build in, here is the short circuit
     if attempts >= 5:
         logger.critical(
-                'Aborting after [%s] attempts to audit user [%s] at URL [%s]' % (attempts, username, target_entity_url))
+            'Aborting after [%s] attempts to audit user [%s] at URL [%s]' % (attempts, username, target_entity_url))
 
         return False
 
@@ -1334,8 +1336,8 @@ def handle_user_migration_conflict(app, collection_name, source_entity, attempts
 
     elif r.status_code / 100 == 5:
         audit_logger.warning(
-                'CONFLICT: handle_user_migration_conflict failed attempt [%s] GET [%s] on TARGET URL=[%s] - : %s' % (
-                    attempts, r.status_code, target_entity_url, r.text))
+            'CONFLICT: handle_user_migration_conflict failed attempt [%s] GET [%s] on TARGET URL=[%s] - : %s' % (
+                attempts, r.status_code, target_entity_url, r.text))
 
         time.sleep(DEFAULT_RETRY_SLEEP)
 
@@ -1343,8 +1345,8 @@ def handle_user_migration_conflict(app, collection_name, source_entity, attempts
 
     else:
         audit_logger.error(
-                'CONFLICT: Failed handle_user_migration_conflict attempt [%s] GET [%s] on TARGET URL=[%s] - : %s' % (
-                    attempts, r.status_code, target_entity_url, r.text))
+            'CONFLICT: Failed handle_user_migration_conflict attempt [%s] GET [%s] on TARGET URL=[%s] - : %s' % (
+                attempts, r.status_code, target_entity_url, r.text))
 
         return False
 
@@ -1470,7 +1472,7 @@ def repair_user_role(app, collection_name, source_entity, attempts=0, depth=0):
         # log an error and keep going if we cannot delete the entity at the specified URL.  Unlikely, but if so
         # then this entity is borked
         logger.critical(
-                'Deletion of entity at URL=[%s] FAILED [%s]: %s' % (target_entity_url_by_name, r.status_code, r.text))
+            'Deletion of entity at URL=[%s] FAILED [%s]: %s' % (target_entity_url_by_name, r.status_code, r.text))
         return False
 
 
@@ -1826,8 +1828,8 @@ def migrate_user_credentials(app, collection_name, source_entity, attempts=0):
 
     if r.status_code != 200:
         logger.error(
-                'Unable to migrate credentials due to HTTP [%s] on PUT URL [%s]: %s' % (
-                    r.status_code, target_url, r.text))
+            'Unable to migrate credentials due to HTTP [%s] on PUT URL [%s]: %s' % (
+                r.status_code, target_url, r.text))
         return False
 
     logger.info('migrate_user_credentials | success=[%s] | app/collection/name = %s/%s/%s' % (
@@ -2066,9 +2068,9 @@ def main():
 
     except:
         logger.error(
-                'Error connecting to Redis cache, consider using Redis to be able to optimize the migration process...')
+            'Error connecting to Redis cache, consider using Redis to be able to optimize the migration process...')
         logger.error(
-                'Error connecting to Redis cache, consider using Redis to be able to optimize the migration process...')
+            'Error connecting to Redis cache, consider using Redis to be able to optimize the migration process...')
 
         time.sleep(3)
 
@@ -2103,7 +2105,7 @@ def main():
 
             if r.status_code != 200:
                 logger.critical(
-                        'Abort processing: Unable to retrieve apps from [%s]: %s' % (source_org_mgmt_url, r.text))
+                    'Abort processing: Unable to retrieve apps from [%s]: %s' % (source_org_mgmt_url, r.text))
                 exit()
 
             logger.info(json.dumps(r.text))
@@ -2130,8 +2132,8 @@ def main():
         operation = migrate_permissions
         config['collection'] = ['roles', 'groups']
         logger.warn(
-                'Since permissions migration was specified, overwriting included collections to be %s...' % config[
-                    'collection'])
+            'Since permissions migration was specified, overwriting included collections to be %s...' % config[
+                'collection'])
 
     elif config.get('migrate') == 'credentials':
         operation = migrate_user_credentials

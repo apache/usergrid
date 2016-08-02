@@ -731,29 +731,6 @@ def init():
     config['source_endpoint'].update(config['source_config']['credentials'][config['org']])
 
 
-def wait_for(threads, label, sleep_time=60):
-    wait = True
-
-    logger.info('Starting to wait for [%s] threads with sleep time=[%s]' % (len(threads), sleep_time))
-
-    while wait:
-        wait = False
-        alive_count = 0
-
-        for t in threads:
-
-            if t.is_alive():
-                alive_count += 1
-                logger.info('Thread [%s] is still alive' % t.name)
-
-        if alive_count > 0:
-            wait = True
-            logger.info('Continuing to wait for [%s] threads with sleep time=[%s]' % (alive_count, sleep_time))
-            time.sleep(sleep_time)
-
-    logger.warn('All workers [%s] done!' % label)
-
-
 def count_bytes(entity):
     entity_copy = entity.copy()
 
@@ -920,8 +897,8 @@ def main():
 
             logger.info('Finished publishing collections for app [%s] !' % app)
 
-        # allow collection workers to finish
-        wait_for(collection_workers, label='collection_workers', sleep_time=30)
+        # allow collection workers to finish using join, not wait_for
+        [w.join() for w in collection_workers]
 
         status_listener.terminate()
 

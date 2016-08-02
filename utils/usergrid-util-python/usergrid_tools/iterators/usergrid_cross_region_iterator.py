@@ -162,22 +162,6 @@ class Worker(Process):
         logger.warning('WORKER DONE!')
 
 
-def wait_for(threads, sleep_time=3000):
-    count_alive = 1
-
-    while count_alive > 0:
-        count_alive = 0
-
-        for t in threads:
-
-            if t.is_alive():
-                count_alive += 1
-
-        if count_alive > 0:
-            logger.warning('Waiting for [%s] processes to finish' % count_alive)
-            time.sleep(sleep_time)
-
-
 def parse_args():
     DEFAULT_WORKERS = 16
     DEFAULT_TOKEN_TTL = 25200000
@@ -416,7 +400,9 @@ def main():
         [w.terminate() for w in workers]
 
     logger.warning('Waiting for workers to finish...')
-    wait_for(workers)
+
+    # allow workers to finish using join, not wait_for
+    [w.join() for w in workers]
 
     finish = datetime.datetime.now()
     logger.warning('Done!  Took: %s ' % (finish - start))

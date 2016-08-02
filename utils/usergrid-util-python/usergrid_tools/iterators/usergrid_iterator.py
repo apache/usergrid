@@ -373,30 +373,6 @@ def init():
         config['target_endpoint'].update(config['target_config']['credentials'][config['target_org']])
 
 
-def wait_for(arr_threads, sleep_time=3):
-    """
-    This function pauses the thread until the array of threads which is provided all stop working
-
-    :param arr_threads: an array of Process objects to monitor
-    :param sleep_time: the time to sleep between evaluating the array for completion
-    :return: None
-    """
-    threads_working = 100
-
-    while threads_working > 0:
-        threads_working = 0
-
-        for t in arr_threads:
-
-            if t.is_alive():
-                threads_working += 1
-
-        if threads_working > 0:
-            logger.warn('Waiting for [%s] threads to finish...' % threads_working)
-            time.sleep(sleep_time)
-
-    logger.warn('Worker Threads finished!')
-
 
 class UsergridIterator:
     def __init__(self):
@@ -485,9 +461,10 @@ class UsergridIterator:
 
             logger.info('Publishing entities complete!')
 
-        wait_for(workers)
+        # allow workers to finish using join, not wait_for
+        [w.join() for w in workers]
 
-        logger.info('All done!!')
+    logger.info('All done!!')
 
 
 def main():
