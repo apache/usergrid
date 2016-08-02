@@ -146,7 +146,7 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
         return properties.getProperty(USERGRID_EXTERNAL_PUBLICKEY_URL);
     }
 
-    public Jws<Claims> getClaimsForKeyUrl(String token, PublicKey ssoPublicKey) throws NoSuchAlgorithmException, InvalidKeySpecException, BadTokenException {
+    public Jws<Claims> getClaimsForKeyUrl(String token, PublicKey ssoPublicKey) throws NoSuchAlgorithmException, InvalidKeySpecException, BadTokenException, ExpiredTokenException {
         Jws<Claims> claims = null;
 
         if(ssoPublicKey == null){
@@ -171,6 +171,10 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
                 logger.debug("Signature section of Apigee JWT invalid for token: {}", token);
             }
             throw new BadTokenException("Malformed Apigee JWT");
+        } catch ( ExpiredJwtException e ){
+            final long expiry = Long.valueOf(e.getClaims().get("exp").toString());
+            final long expirationDelta = ((System.currentTimeMillis()/1000) - expiry)*1000;
+            throw new ExpiredTokenException(String.format("Token expired %d milliseconds ago.", expirationDelta ));
         }
 
 
@@ -193,7 +197,7 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
 
             final long expirationDelta = ((System.currentTimeMillis()/1000) - expiry)*1000;
 
-            throw new ExpiredTokenException(String.format("Token expired %d millisecons ago.", expirationDelta ));
+            throw new ExpiredTokenException(String.format("Token expired %d milliseconds ago.", expirationDelta ));
         }
 
     }
