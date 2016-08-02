@@ -61,6 +61,7 @@ import java.util.Map;
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.*;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER;
 import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER_URL;
 import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
@@ -398,7 +399,7 @@ public class ManagementResource extends AbstractContextResource {
                 && !userServiceAdmin(username) ){
                 OAuthResponse response =
                     OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
-                        .setErrorDescription( "SSO Integration is enabled, Admin users must login via provider: "+
+                        .setErrorDescription( "External SSO integration is enabled, admin users must login via provider: "+
                             properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) ).buildJSONMessage();
                 return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
                     .entity( wrapWithCallback( response.getBody(), callback ) ).build();
@@ -625,16 +626,12 @@ public class ManagementResource extends AbstractContextResource {
             return; // we only care about username/password auth
         }
 
-        //why !isexternal_sso_enabled ?
-//        final boolean externalTokensEnabled =
-//                !StringUtils.isEmpty( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
-
         if ( tokens.isExternalSSOProviderEnabled() ) {
             // when external tokens enabled then only superuser can obtain an access token
             if ( !userServiceAdmin(username)) {
                 // this guy is not the superuser
-                throw new IllegalArgumentException( "Admin Users must login via " +
-                        properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER_URL) );
+                throw new IllegalArgumentException( "External SSO integration is enabled, admin users must login via provider: "+
+                    properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
             }
         }
     }
