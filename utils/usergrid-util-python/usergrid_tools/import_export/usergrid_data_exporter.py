@@ -43,14 +43,12 @@ import urllib3
 __author__ = 'Jeff.West@yahoo.com'
 
 ECID = str(uuid.uuid1())
-key_version = 'v4'
 
-logger = logging.getLogger('GraphMigrator')
+logger = logging.getLogger('UsergridDataExporter')
 worker_logger = logging.getLogger('Worker')
-collection_worker_logger = logging.getLogger('CollectionWorker')
-error_logger = logging.getLogger('ErrorLogger')
-audit_logger = logging.getLogger('AuditLogger')
-status_logger = logging.getLogger('StatusLogger')
+collection_worker_logger = logging.getLogger('ExportCollectionWorker')
+error_logger = logging.getLogger('ExportErrorLogger')
+status_logger = logging.getLogger('ExportStatusLogger')
 
 urllib3.disable_warnings()
 
@@ -79,15 +77,13 @@ def init_logging(stdout_enabled=True):
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.getLevelName(config.get('log_level', 'INFO')))
 
-    # root_logger.setLevel(logging.WARN)
-
     logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(logging.ERROR)
     logging.getLogger('boto').setLevel(logging.ERROR)
     logging.getLogger('urllib3.connectionpool').setLevel(logging.WARN)
 
     log_formatter = logging.Formatter(
-            fmt='%(asctime)s | ' + ECID + ' | %(name)s | %(processName)s | %(levelname)s | %(message)s',
-            datefmt='%m/%d/%Y %I:%M:%S %p')
+        fmt='%(asctime)s | ' + ECID + ' | %(name)s | %(processName)s | %(levelname)s | %(message)s',
+        datefmt='%m/%d/%Y %I:%M:%S %p')
 
     stdout_logger = logging.StreamHandler(sys.stdout)
     stdout_logger.setFormatter(log_formatter)
@@ -233,9 +229,9 @@ class StatusListener(Process):
                                     org_results['summary']['min_created'] = collection_data.get('min_created')
 
                         if QSIZE_OK:
-                            status_logger.warn('CURRENT Queue Depth: %s' % self.worker_queue.qsize())
+                            status_logger.info('CURRENT Queue Depth: %s' % self.worker_queue.qsize())
 
-                        status_logger.warn('UPDATED status of org processed: %s' % json.dumps(org_results))
+                        status_logger.info('UPDATED status of org processed: %s' % json.dumps(org_results))
 
                 except KeyboardInterrupt as e:
                     raise e
@@ -249,9 +245,9 @@ class StatusListener(Process):
 
             except Empty:
                 if QSIZE_OK:
-                    status_logger.warn('CURRENT Queue Depth: %s' % self.worker_queue.qsize())
+                    status_logger.info('CURRENT Queue Depth: %s' % self.worker_queue.qsize())
 
-                status_logger.warn('CURRENT status of org processed: %s' % json.dumps(org_results))
+                status_logger.info('CURRENT status of org processed: %s' % json.dumps(org_results))
 
                 status_logger.warning('EMPTY! Count=%s' % empty_count)
 
@@ -296,11 +292,11 @@ class EntityExportWorker(Process):
                     status_map[collection_name]['iteration_finished'] = str(datetime.datetime.now())
 
                     collection_worker_logger.warning(
-                            'Collection [%s / %s / %s] loop complete!  Max Created entity %s' % (
-                                config.get('org'), app, collection_name, status_map[collection_name]['max_created']))
+                        'Collection [%s / %s / %s] loop complete!  Max Created entity %s' % (
+                            config.get('org'), app, collection_name, status_map[collection_name]['max_created']))
 
                     collection_worker_logger.warning(
-                            'Sending FINAL stats for app/collection [%s / %s]: %s' % (app, collection_name, status_map))
+                        'Sending FINAL stats for app/collection [%s / %s]: %s' % (app, collection_name, status_map))
 
                     self.response_queue.put((app, collection_name, status_map))
 
@@ -355,7 +351,7 @@ class EntityExportWorker(Process):
                                                                          collection=collection_name,
                                                                          limit=config.get('limit'),
                                                                          ql="select * %s" % config.get(
-                                                                                 'ql'),
+                                                                             'ql'),
                                                                          **config.get('source_endpoint'))
         counter = 0
 
@@ -364,20 +360,21 @@ class EntityExportWorker(Process):
                                   page_delay=config.get('page_sleep_time'),
                                   sleep_time=config.get('error_retry_sleep'))
 
-        directory = os.path.join(config['export_path'], ECID, config['org'], app)
+        collection_directory = os.path.join(config['export_path'], 'usergrid-export', ECID, config['org'], app,
+                                            collection_name)
 
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        if not os.path.exists(collection_directory):
+            os.makedirs(collection_directory)
 
-        entity_filename = '_'.join([collection_name, 'entity-data'])
-        entity_filename_base = os.path.join(directory, entity_filename)
+        entity_filename = 'entity-data'
+        entity_filename_base = os.path.join(collection_directory, entity_filename)
         entity_file_number = 0
         entity_file_counter = 0
         entity_filename = '%s-%s.txt' % (entity_filename_base, entity_file_number)
         entity_file = open(entity_filename, 'w')
 
-        edge_filename = '_'.join([collection_name, 'edge-data'])
-        edge_filename_base = os.path.join(directory, edge_filename)
+        edge_filename = 'edge-data'
+        edge_filename_base = os.path.join(collection_directory, edge_filename)
         edge_file_number = 0
         edge_file_counter = 0
         edge_filename = '%s-%s.txt' % (edge_filename_base, edge_file_number)
@@ -406,13 +403,13 @@ class EntityExportWorker(Process):
                             continue
 
                         connection_query_url = connection_query_url_template.format(
-                                org=config.get('org'),
-                                app=app,
-                                verb=edge_name,
-                                collection=collection_name,
-                                uuid=entity.get('uuid'),
-                                limit=config.get('limit'),
-                                **config.get('source_endpoint'))
+                            org=config.get('org'),
+                            app=app,
+                            verb=edge_name,
+                            collection=collection_name,
+                            uuid=entity.get('uuid'),
+                            limit=config.get('limit'),
+                            **config.get('source_endpoint'))
 
                         connection_query = UsergridQueryIterator(connection_query_url,
                                                                  sleep_time=config.get('error_retry_sleep'))
@@ -455,12 +452,12 @@ class EntityExportWorker(Process):
                             if entity_created > status_map[collection_name]['max_created']:
                                 status_map[collection_name]['max_created'] = entity_created
                                 status_map[collection_name]['max_created_str'] = str(
-                                        datetime.datetime.fromtimestamp(entity_created / 1000))
+                                    datetime.datetime.fromtimestamp(entity_created / 1000))
 
                             if entity_created < status_map[collection_name]['min_created']:
                                 status_map[collection_name]['min_created'] = entity_created
                                 status_map[collection_name]['min_created_str'] = str(
-                                        datetime.datetime.fromtimestamp(entity_created / 1000))
+                                    datetime.datetime.fromtimestamp(entity_created / 1000))
 
                         except ValueError:
                             pass
@@ -473,12 +470,12 @@ class EntityExportWorker(Process):
                             if entity_modified > status_map[collection_name]['max_modified']:
                                 status_map[collection_name]['max_modified'] = entity_modified
                                 status_map[collection_name]['max_modified_str'] = str(
-                                        datetime.datetime.fromtimestamp(entity_modified / 1000))
+                                    datetime.datetime.fromtimestamp(entity_modified / 1000))
 
                             if entity_modified < status_map[collection_name]['min_modified']:
                                 status_map[collection_name]['min_modified'] = entity_modified
                                 status_map[collection_name]['min_modified_str'] = str(
-                                        datetime.datetime.fromtimestamp(entity_modified / 1000))
+                                    datetime.datetime.fromtimestamp(entity_modified / 1000))
 
                         except ValueError:
                             pass
@@ -488,27 +485,27 @@ class EntityExportWorker(Process):
 
                     if counter % 1000 == 1:
                         try:
-                            collection_worker_logger.warning(
-                                    'Sending incremental stats for app/collection [%s / %s]: %s' % (
-                                        app, collection_name, status_map))
+                            collection_worker_logger.info(
+                                'Sending incremental stats for app/collection [%s / %s]: %s' % (
+                                    app, collection_name, status_map))
 
                             self.response_queue.put((app, collection_name, status_map))
 
                             if QSIZE_OK:
                                 collection_worker_logger.info(
-                                        'Counter=%s, collection queue depth=%s' % (
-                                            counter, self.work_queue.qsize()))
+                                    'Counter=%s, collection queue depth=%s' % (
+                                        counter, self.work_queue.qsize()))
                         except:
                             pass
 
-                        collection_worker_logger.warn(
-                                'Current status of collections processed: %s' % json.dumps(status_map))
+                        collection_worker_logger.info(
+                            'Current status of collections processed: %s' % json.dumps(status_map))
                 except KeyboardInterrupt:
                     raise
 
                 except:
                     logger.exception(
-                            'Error processing entity %s / %s / %s' % (app, collection_name, entity.get('uuid')))
+                        'Error processing entity %s / %s / %s' % (app, collection_name, entity.get('uuid')))
 
         except KeyboardInterrupt:
             raise
@@ -543,12 +540,12 @@ def include_edge(collection_name, edge_name):
 
     if len(include_edges) > 0 and edge_name not in include_edges:
         logger.debug(
-                'Skipping edge [%s] since it is not in INCLUDED list: %s' % (edge_name, include_edges))
+            'Skipping edge [%s] since it is not in INCLUDED list: %s' % (edge_name, include_edges))
         return False
 
     if edge_name in exclude_edges:
         logger.debug(
-                'Skipping edge [%s] since it is in EXCLUDED list: %s' % (edge_name, exclude_edges))
+            'Skipping edge [%s] since it is in EXCLUDED list: %s' % (edge_name, exclude_edges))
         return False
 
     if (collection_name in ['users', 'user'] and edge_name in ['roles', 'followers', 'groups',
@@ -604,7 +601,7 @@ def get_uuid_time(the_uuid_string):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Usergrid Org/App Migrator')
+    parser = argparse.ArgumentParser(description='Usergrid Data Exporter')
 
     parser.add_argument('--log_dir',
                         help='path to the place where logs will be written',
@@ -674,14 +671,9 @@ def parse_args():
                         default=30)
 
     parser.add_argument('--page_sleep_time',
-                        help='The number of seconds to wait between retrieving pages from the UsergridQueryIterator',
+                        help='The number of seconds to wait between retrieving pages from the UsergridQueryIterator.  The page size would be indicated by the \'--limit\' command-line parameter.  An value of 5 for this parameter would indicate to wait for 5 seconds for every {limit} of entities',
                         type=float,
                         default=.5)
-
-    parser.add_argument('--entity_sleep_time',
-                        help='The number of seconds to wait between retrieving pages from the UsergridQueryIterator',
-                        type=float,
-                        default=.1)
 
     parser.add_argument('--workers',
                         dest='collection_workers',
@@ -778,7 +770,7 @@ def main():
 
             if r.status_code != 200:
                 logger.critical(
-                        'Abort processing: Unable to retrieve apps from [%s]: %s' % (source_org_mgmt_url, r.text))
+                    'Abort processing: Unable to retrieve apps from [%s]: %s' % (source_org_mgmt_url, r.text))
                 exit()
 
             logger.info(json.dumps(r.text))
