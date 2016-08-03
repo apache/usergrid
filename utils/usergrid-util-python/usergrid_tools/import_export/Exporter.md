@@ -3,7 +3,7 @@
 ## Prerequisites
 * Python 2 (not python 3)
 
-* Install the Usergrid Python SDK: https://github.com/jwest-apigee/usergrid-python
+* Install the Usergrid Python SDK: https://github.com/apache/usergrid/tree/master/sdks/python
     * with Pip (requires python-pip to be installed on Linux): `pip install usergrid`
 
 * Install Usergrid Tools 
