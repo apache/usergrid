@@ -4,12 +4,10 @@
 * Python 2 (not python 3)
 
 * Install the Usergrid Python SDK: https://github.com/jwest-apigee/usergrid-python
+    * with Pip (requires python-pip to be installed on Linux): `pip install usergrid`
 
-With Pip (requires python-pip to be installed on Linux): `pip install usergrid`
-
-* Install Usergrid Tools
-
-With Pip (requires python-pip to be installed on Linux): `pip install usergrid-tools`
+* Install Usergrid Tools 
+    * with Pip (requires python-pip to be installed on Linux): `pip install usergrid-tools`
 
 * A Usergrid Org with one or more apps having data you want to export
 
