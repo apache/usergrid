@@ -94,7 +94,7 @@ def init_logging(stdout_enabled=True):
 
     # base log file
 
-    log_file_name = '%s/migrator.log' % config.get('log_dir')
+    log_file_name = '%s/usergrid-exporter-%s.log' % (config.get('log_dir'), ECID)
 
     # ConcurrentRotatingFileHandler
     rotating_file = ConcurrentRotatingFileHandler(filename=log_file_name,
@@ -106,7 +106,7 @@ def init_logging(stdout_enabled=True):
 
     root_logger.addHandler(rotating_file)
 
-    error_log_file_name = '%s/migrator_errors.log' % config.get('log_dir')
+    error_log_file_name = '%s/usergrid-exporter-%s-errors.log' % (config.get('log_dir'), ECID)
     error_rotating_file = ConcurrentRotatingFileHandler(filename=error_log_file_name,
                                                         mode='a',
                                                         maxBytes=404857600,
@@ -616,7 +616,7 @@ def parse_args():
                         required=False)
 
     parser.add_argument('-o', '--org',
-                        help='Name of the org to migrate',
+                        help='Name of the org to export',
                         type=str,
                         required=True)
 
@@ -677,7 +677,7 @@ def parse_args():
 
     parser.add_argument('--workers',
                         dest='collection_workers',
-                        help='The number of worker processes to do the migration',
+                        help='The number of worker processes to do the export',
                         type=int,
                         default=4)
 
@@ -875,8 +875,8 @@ def main():
                     # filter out collections as configured...
                     if collection_name in ignore_collections \
                             or (len(collections_to_process) > 0 and collection_name not in collections_to_process) \
-                            or (len(exclude_collections) > 0 and collection_name in exclude_collections) \
-                            or (config.get('migrate') == 'credentials' and collection_name != 'users'):
+                            or (len(exclude_collections) > 0 and collection_name in exclude_collections):
+
                         logger.warning('Skipping collection=[%s]' % collection_name)
 
                         continue
