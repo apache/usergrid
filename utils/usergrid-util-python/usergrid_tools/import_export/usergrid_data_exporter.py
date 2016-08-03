@@ -253,7 +253,7 @@ class StatusListener(Process):
 
                 empty_count += 1
 
-                if empty_count >= 120:
+                if empty_count >= 2:
                     keep_going = False
 
             except:
@@ -366,14 +366,14 @@ class EntityExportWorker(Process):
         if not os.path.exists(collection_directory):
             os.makedirs(collection_directory)
 
-        entity_filename = 'entity-data'
+        entity_filename = 'entities'
         entity_filename_base = os.path.join(collection_directory, entity_filename)
         entity_file_number = 0
         entity_file_counter = 0
         entity_filename = '%s-%s.txt' % (entity_filename_base, entity_file_number)
         entity_file = open(entity_filename, 'w')
 
-        edge_filename = 'edge-data'
+        edge_filename = 'connections'
         edge_filename_base = os.path.join(collection_directory, edge_filename)
         edge_file_number = 0
         edge_file_counter = 0
@@ -429,7 +429,9 @@ class EntityExportWorker(Process):
                             edges = {
                                 'entity': {
                                     'type': entity.get('type'),
-                                    'uuid': entity.get('uuid')
+                                    'uuid': entity.get('uuid'),
+                                    'username': entity.get('username'),
+                                    'name': entity.get('name')
                                 },
                                 'edge_name': edge_name,
                                 'target_uuids': target_uuids
@@ -676,7 +678,6 @@ def parse_args():
                         default=.5)
 
     parser.add_argument('--workers',
-                        dest='collection_workers',
                         help='The number of worker processes to do the export',
                         type=int,
                         default=4)
@@ -797,7 +798,8 @@ def main():
 
     # start the worker processes which will iterate the collections
     collection_workers = [EntityExportWorker(collection_queue, collection_response_queue) for x in
-                          xrange(config.get('collection_workers'))]
+                          xrange(config.get('workers'))]
+
     [w.start() for w in collection_workers]
 
     try:
