@@ -21,7 +21,7 @@ from setuptools import setup, find_packages
 
 __author__ = 'Jeff.West@yahoo.com'
 
-VERSION = '0.5.13'
+VERSION = '0.5.15'
 
 setup(
         name='usergrid-tools',
@@ -48,7 +48,8 @@ setup(
             'console_scripts': [
                 'usergrid_iterator = usergrid_tools.iterators.simple_iterator:main',
                 'usergrid_data_migrator = usergrid_tools.migration.usergrid_data_migrator:main',
-                'usergrid_data_exporter = usergrid_tools.migration.usergrid_data_exporter:main',
+                'usergrid_data_exporter = usergrid_tools.import_export.usergrid_data_exporter:main',
+                'usergrid_data_importer = usergrid_tools.import_export.usergrid_data_importer:main',
                 'usergrid_entity_index_test = usergrid_tools.indexing.entity_index_test:main',
                 'usergrid_batch_index_test = usergrid_tools.indexing.batch_index_test:main',
                 'usergrid_parse_importer = usergrid_tools.parse_importer.parse_importer:main',
