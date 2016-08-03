@@ -6,7 +6,7 @@
 * Install the Usergrid Python SDK: https://github.com/apache/usergrid/tree/master/sdks/python
     * with Pip (requires python-pip to be installed on Linux): `pip install usergrid`
 
-* Install Usergrid Tools 
+* Install Usergrid Tools version 1.0.0 or higher
     * with Pip (requires python-pip to be installed on Linux): `pip install usergrid-tools`
 
 * A Usergrid Org with one or more apps having data you want to export
@@ -22,15 +22,15 @@ The purpose of this document is to cover the usergrid_exporter Python tool. This
 
 This is a multi-threaded process which exports the data and connections for each collection within one thread/process.
 
-## Output Format:
+## Export Format:
 
 * usergrid-export
-    * ECID - Execution Context ID - a Type 1 UUID which uniquely identifies one execution of the tool
+    * ECID (ex: 4eb979c2-59c8-11e6-a66b-c8e0eb16c585) - Execution Context ID - a Type 1 UUID which uniquely identifies one execution of the tool
         * Org Name
             * App Name
                 * Collection Name
-                    - entity-data-[0..n].txt
-                    - edge-data-[0..n].txt
+                    - entities-[0..n].txt - a one-line JSON object per entity
+                    - connections-[0..n].txt - a one-line JSON object for each connection type of each entity
 
 
 # Concepts
@@ -46,7 +46,7 @@ The export process implies that there is a source of data which is getting expor
 
 # Source Configuration File
 
-The source endpoint and credentials for onr or more orgs is required to be placed in a file whose path is specified on the command line when running the script. 
+The source endpoint and credentials for one or more orgs is required to be placed in a file whose path is specified on the command line when running the script. 
 
 Example source configuration files:
 

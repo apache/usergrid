@@ -383,6 +383,7 @@ class EntityExportWorker(Process):
         try:
 
             for entity in q:
+
                 try:
                     entity_file_counter += 1
                     counter += 1
@@ -398,9 +399,15 @@ class EntityExportWorker(Process):
 
                     edge_names = get_edge_names(entity)
 
+                    entity_edge_counter = 0
+                    entity_connection_counter = 0
+
                     for edge_name in edge_names:
+
                         if not include_edge(collection_name, edge_name):
                             continue
+
+                        entity_edge_counter += 1
 
                         connection_query_url = connection_query_url_template.format(
                             org=config.get('org'),
@@ -418,6 +425,7 @@ class EntityExportWorker(Process):
 
                         try:
                             for target_entity in connection_query:
+                                entity_connection_counter += 1
                                 target_uuids.append(target_entity.get('uuid'))
                         except:
                             logger.exception('Error processing edge [%s] of entity [ %s / %s / %s]' % (
@@ -519,8 +527,14 @@ class EntityExportWorker(Process):
             if edge_file is not None:
                 edge_file.close()
 
+                if os.stat(edge_file.name).st_size <= 0:
+                    os.remove(edge_file.name)
+
             if entity_file is not None:
                 entity_file.close()
+
+                if os.stat(entity_file.name).st_size <= 0:
+                    os.remove(entity_file.name)
 
         return status_map
 
@@ -878,7 +892,6 @@ def main():
                     if collection_name in ignore_collections \
                             or (len(collections_to_process) > 0 and collection_name not in collections_to_process) \
                             or (len(exclude_collections) > 0 and collection_name in exclude_collections):
-
                         logger.warning('Skipping collection=[%s]' % collection_name)
 
                         continue

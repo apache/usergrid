@@ -20,24 +20,17 @@
 from __future__ import print_function
 import os
 import uuid
-from Queue import Empty
 import argparse
 import json
 import logging
 import sys
-from multiprocessing import Queue, Process, Pool
+from multiprocessing import Queue, Pool
 import time_uuid
 
-import datetime
 from cloghandler import ConcurrentRotatingFileHandler
 import requests
 import traceback
 import time
-from sys import platform as _platform
-
-import signal
-
-from usergrid import UsergridQueryIterator
 import urllib3
 
 __author__ = 'Jeff.West@yahoo.com'
@@ -46,9 +39,7 @@ ECID = str(uuid.uuid1())
 
 logger = logging.getLogger('UsergridImporter')
 worker_logger = logging.getLogger('Worker')
-collection_worker_logger = logging.getLogger('ExportCollectionWorker')
 error_logger = logging.getLogger('ImporterErrorLogger')
-status_logger = logging.getLogger('ImporterStatusLogger')
 
 urllib3.disable_warnings()
 
@@ -94,7 +85,7 @@ def init_logging(stdout_enabled=True):
 
     # base log file
 
-    log_file_name = '%s/usergrid-exporter-%s.log' % (config.get('log_dir'), ECID)
+    log_file_name = '%s/usergrid-importer-%s.log' % (config.get('log_dir'), ECID)
 
     # ConcurrentRotatingFileHandler
     rotating_file = ConcurrentRotatingFileHandler(filename=log_file_name,
@@ -106,7 +97,7 @@ def init_logging(stdout_enabled=True):
 
     root_logger.addHandler(rotating_file)
 
-    error_log_file_name = '%s/usergrid-exporter-%s-errors.log' % (config.get('log_dir'), ECID)
+    error_log_file_name = '%s/usergrid-importer-%s-errors.log' % (config.get('log_dir'), ECID)
 
     error_rotating_file = ConcurrentRotatingFileHandler(filename=error_log_file_name,
                                                         mode='a',
@@ -216,7 +207,7 @@ def get_uuid_time(the_uuid_string):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Usergrid Data Exporter')
+    parser = argparse.ArgumentParser(description='Usergrid Data Importer')
 
     parser.add_argument('--map_app',
                         help="Multiple allowed: A colon-separated string such as 'apples:oranges' which indicates to"
@@ -282,7 +273,7 @@ def parse_args():
                         default='target.json')
 
     parser.add_argument('--import_path',
-                        help='The path to read the exported data from',
+                        help='The path to read the exported data from.  This should be the ECID (UUID) directory',
                         default=[],
                         action='append',
                         required=True)
@@ -291,11 +282,6 @@ def parse_args():
                         help='The number of worker processes to do the migration',
                         type=int,
                         default=4)
-
-    parser.add_argument('--queue_size_max',
-                        help='The max size of entities to allow in the queue',
-                        type=int,
-                        default=100000)
 
     parser.add_argument('--nohup',
                         help='specifies not to use stdout for logging',
@@ -586,12 +572,10 @@ def main():
     init_logging()
     init()
 
-    status_map = {}
-
     import_path_array = config.get('import_path')
 
-    connection_work = []
-    entity_work = []
+    logger.info('Creating pool with %s workers' % config.get('workers'))
+    pool = Pool(config.get('workers'))
 
     for import_path in import_path_array:
 
@@ -610,6 +594,9 @@ def main():
 
             for app in apps:
                 app_dir = os.path.join(org_dir, app)
+
+                connection_work = []
+                entity_work = []
 
                 logger.info('Found App [%s/%s] at path [%s]' % (org, app, app_dir))
 
@@ -655,15 +642,15 @@ def main():
                                     'file': os.path.join(collection_dir, connection_file)
                                 }
                             )
+                logger.info('Loading entities, file count is [%s]' % len(entity_work))
+                pool.map(load_entities_from_file, entity_work)
 
-    logger.info('Creating pool with %s workers' % config.get('workers'))
-    pool = Pool(config.get('workers'))
+                logger.info('Creating Connections, file count is [%s]' % len(connection_work))
+                pool.map(create_connections_from_file, connection_work)
 
-    logger.info('Loading entities, file count is [%s]' % len(entity_work))
-    pool.map(load_entities_from_file, entity_work)
+                logger.info('App [%s] complete!' % app)
 
-    logger.info('Creating Connections, file count is [%s]' % len(connection_work))
-    pool.map(create_connections_from_file, connection_work)
+            logger.info('Org [%s] complete!' % org)
 
     logger.info('Done!')
 
