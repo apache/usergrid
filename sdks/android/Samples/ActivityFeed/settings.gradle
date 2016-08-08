@@ -1,0 +1,2 @@
+include ':activityfeed', ':UsergridAndroidSDK'
+project (":UsergridAndroidSDK").projectDir = new File("../../UsergridAndroidSDK")

@@ -1,0 +1,70 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.github.dcendents.android-maven'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.1.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.2'
+        classpath "com.github.dcendents:android-maven-gradle-plugin:1.3"
+    }
+}
+
+android {
+    compileSdkVersion 17
+    buildToolsVersion "22.0.1"
+
+    group = 'org.apache.usergrid.android'
+    version = '2.1.0'
+
+    defaultConfig {
+        minSdkVersion 17
+        targetSdkVersion 23
+        versionCode 1
+        versionName "2.1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    repositories {
+        mavenCentral()
+    }
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+}
+
+task generateSourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier 'sources'
+}
+artifacts {
+    archives generateSourcesJar
+}
+
+bintray {
+    user = 'rwalsh'
+    key = '3ae2887b2af626dab61faffd57b99303e146feb6'
+    pkg {
+        repo = 'maven'
+        name = 'org.apache.usergrid.android'
+        version {
+            name = '2.1.0'
+            desc = 'Usergrid Android Client'
+            released  = new Date()
+        }
+
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/apache/usergrid.git'
+        websiteUrl = 'https://github.com/apache/usergrid'
+    }
+    configurations = ['archives']
+}
