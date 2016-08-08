@@ -562,9 +562,9 @@ public class ManagementServiceImpl implements ManagementService {
             if(user == null) {
                 // if external SSO is enabled and we're adding a user to an org, auto activate the user
                 if (tokens.isExternalSSOProviderEnabled() || areActivationChecksDisabled()) {
-                    user = createAdminUserInternal(null, username, name, email, password, true, false, userProperties);
+                    user = createAdminUser(null, username, name, email, password, true, false, userProperties);
                 } else {
-                    user = createAdminUserInternal(null, username, name, email, password, activated, disabled, userProperties);
+                    user = createAdminUser(null, username, name, email, password, activated, disabled, userProperties);
                 }
             }
 
