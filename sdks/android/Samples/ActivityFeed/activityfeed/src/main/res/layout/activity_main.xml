@@ -37,8 +37,7 @@
         android:maxLines="1"
         android:minHeight="30dp"
         android:paddingEnd="10dp"
-        android:maxWidth="250dp"
-        android:text="fc" />
+        android:maxWidth="250dp" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -58,8 +57,7 @@
         android:minHeight="30dp"
         android:maxWidth="250dp"
         android:paddingEnd="10dp"
-        android:inputType="textPassword"
-        android:text="fc" />
+        android:inputType="textPassword" />
 
     <Button
         android:layout_width="wrap_content"
