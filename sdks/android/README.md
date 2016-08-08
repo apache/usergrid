@@ -1,6 +1,8 @@
 # Usergrid Android SDK
 
-Usergrid SDK written for Android 
+Usergrid SDK written for Android.
+
+The Android SDK is an extension upon the the Usergrid Java SDK with added functionality including asynchronous HTTP handling and push notifications.
 
 ## Initialization
 
@@ -19,6 +21,14 @@ UsergridClient client = new UsergridClient("orgId","appId");
 ```
 
 _Note: Examples in this readme assume you are using the `Usergrid` shared instance. If you've implemented the instance pattern instead, simply replace `Usergrid` with your client instance variable._
+
+## ASYNCHRONOUS operations
+
+The examples in this readme utilize the synchronous method calls provided by the Usergrid Java SDK. 
+
+Each RESTful operation has a matching asynchrous method within to use within the SDK for convience of use within Android applications. 
+
+For examples of asynchronous calls, look over the sample Android applications located within the `Samples` folder.
 
 ## RESTful operations
 
