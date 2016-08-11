@@ -38,6 +38,7 @@ import org.apache.usergrid.rest.management.users.UsersResource;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.apache.usergrid.security.sso.ApigeeSSO2Provider;
 import org.apache.usergrid.security.sso.ExternalSSOProvider;
 import org.apache.usergrid.security.sso.SSOProviderFactory;
 import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
@@ -60,7 +61,6 @@ import java.util.Map;
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.*;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER_URL;
 import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
@@ -193,11 +193,18 @@ public class ManagementResource extends AbstractContextResource {
             this.access_token = userPrincipal.getAccessTokenCredentials().getToken();
         }
 
-
+        String ssoUserId = null;
         if(ssoEnabled && !user.getUsername().equals(properties.getProperty(USERGRID_SYSADMIN_LOGIN_NAME))){
             ExternalSSOProvider provider = ssoProviderFactory.getProvider();
+            final Map<String, String> decodedTokenDetails = provider.getDecodedTokenDetails(access_token);
+            final String expiry = decodedTokenDetails.containsKey("expiry") ? decodedTokenDetails.get("expiry") : "0";
+
             tokenTtl =
-                Long.valueOf(provider.getDecodedTokenDetails(access_token).get("expiry")) - System.currentTimeMillis()/1000;
+                Long.valueOf(expiry) - System.currentTimeMillis()/1000;
+
+            if( provider instanceof ApigeeSSO2Provider ) {
+                ssoUserId = decodedTokenDetails.get("user_id");
+            }
 
         }else{
             tokenTtl = tokens.getTokenInfo(access_token).getDuration();
@@ -207,7 +214,14 @@ public class ManagementResource extends AbstractContextResource {
         final AccessInfo access_info = new AccessInfo().withExpiresIn( tokenTtl ).withAccessToken( access_token )
             .withPasswordChanged( passwordChanged );
 
-        access_info.setProperty( "user", management.getAdminUserOrganizationData( user, true ) );
+        // if external SSO is enabled, always set the external sso user id property, even if it's null
+        if ( ssoEnabled ){
+
+            access_info.setProperty("external_sso_user_id", ssoUserId);
+        }
+
+        access_info.setProperty( "user", management.getAdminUserOrganizationData( user, true, false) );
+
 
         return Response.status( SC_OK ).type( jsonMediaType( callback ) )
             .entity( wrapWithCallback( access_info, callback ) ).build();
@@ -384,7 +398,7 @@ public class ManagementResource extends AbstractContextResource {
                 && !userServiceAdmin(username) ){
                 OAuthResponse response =
                     OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
-                        .setErrorDescription( "SSO Integration is enabled, Admin users must login via provider: "+
+                        .setErrorDescription( "External SSO integration is enabled, admin users must login via provider: "+
                             properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) ).buildJSONMessage();
                 return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
                     .entity( wrapWithCallback( response.getBody(), callback ) ).build();
@@ -398,7 +412,7 @@ public class ManagementResource extends AbstractContextResource {
                     new AccessInfo().withExpiresIn( tokens.getMaxTokenAgeInSeconds( token ) ).withAccessToken( token )
                                     .withPasswordChanged( passwordChanged );
 
-            access_info.setProperty( "user", management.getAdminUserOrganizationData( user, me ) );
+            access_info.setProperty( "user", management.getAdminUserOrganizationData( user, true, false) );
 
             // increment counters for admin login
             management.countAdminUserAction( user, "login" );
@@ -611,16 +625,12 @@ public class ManagementResource extends AbstractContextResource {
             return; // we only care about username/password auth
         }
 
-        //why !isexternal_sso_enabled ?
-//        final boolean externalTokensEnabled =
-//                !StringUtils.isEmpty( properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ) );
-
         if ( tokens.isExternalSSOProviderEnabled() ) {
             // when external tokens enabled then only superuser can obtain an access token
             if ( !userServiceAdmin(username)) {
                 // this guy is not the superuser
-                throw new IllegalArgumentException( "Admin Users must login via " +
-                        properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER_URL) );
+                throw new IllegalArgumentException( "External SSO integration is enabled, admin users must login via provider: "+
+                    properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
             }
         }
     }

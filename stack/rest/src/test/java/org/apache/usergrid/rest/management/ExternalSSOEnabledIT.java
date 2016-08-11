@@ -166,7 +166,7 @@ public class ExternalSSOEnabledIT extends AbstractRestIT {
 
         // /managment/token -> adminusername and password --> should fail.
         ApiResponse postResponse1 = pathResource("management/token").post(false, ApiResponse.class,loginInfo1);
-//        fail( "SSO Integration is enabled, Admin users must login via provider: "+ USERGRID_EXTERNAL_SSO_PROVIDER_URL);
+//        fail( "External SSO integration is enabled, admin users must login via provider: "+ USERGRID_EXTERNAL_SSO_PROVIDER_URL);
 
 
 

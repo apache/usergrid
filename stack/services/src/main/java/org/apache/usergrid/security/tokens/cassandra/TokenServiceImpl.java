@@ -645,7 +645,7 @@ public class TokenServiceImpl implements TokenService {
         long expirationDelta = System.currentTimeMillis() - expires;
 
         if ( expires != Long.MAX_VALUE && expirationDelta > 0 ) {
-            throw new ExpiredTokenException( String.format( "Token expired %d millisecons ago.", expirationDelta ) );
+            throw new ExpiredTokenException( String.format( "Token expired %d milliseconds ago.", expirationDelta ) );
         }
         return uuid;
     }

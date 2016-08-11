@@ -25,6 +25,7 @@ import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -687,14 +688,15 @@ public class ManagementResourceIT extends AbstractRestIT {
                     put( "grant_type", "password" );
                 }};
                 ApiResponse postResponse = pathResource( "management/token" ).post( false, ApiResponse.class, loginInfo );
-                fail( "SSO Integration is enabled, Admin users must login via provider: "+ USERGRID_EXTERNAL_SSO_PROVIDER_URL);
+                fail( "External SSO integration is enabled, admin users must login via provider using configured property: "+
+                    TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER );
 
             } catch (ClientErrorException actual) {
                 assertEquals( 400, actual.getResponse().getStatus() );
                 String errorMsg = actual.getResponse().readEntity( JsonNode.class )
                     .get( "error_description" ).toString();
                 logger.error( "ERROR: " + errorMsg );
-                assertTrue( errorMsg.contains( "Admin Users must login via" ) );
+                assertTrue( errorMsg.contains( "admin users must login via" ) );
 
             } catch (Exception e) {
                 fail( "We expected a ClientErrorException" );
