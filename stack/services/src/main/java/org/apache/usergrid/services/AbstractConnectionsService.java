@@ -17,21 +17,8 @@
 package org.apache.usergrid.services;
 
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.ConnectionRef;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.Query.Level;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Schema;
-import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.services.ServiceParameter.IdParameter;
 import org.apache.usergrid.services.ServiceParameter.NameParameter;
@@ -39,9 +26,14 @@ import org.apache.usergrid.services.ServiceParameter.QueryParameter;
 import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationException;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.schedulers.Schedulers;
+
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.apache.usergrid.services.ServiceParameter.filter;
 import static org.apache.usergrid.services.ServiceParameter.firstParameterIsName;
@@ -307,6 +299,7 @@ public class AbstractConnectionsService extends AbstractService {
         Results r = null;
 
         if ( connecting() ) {
+            query.setConnecting(true);
             if ( query.hasQueryPredicates() ) {
                 if (logger.isTraceEnabled()) {
                     logger.trace("Attempted query of backwards connections");
@@ -314,13 +307,7 @@ public class AbstractConnectionsService extends AbstractService {
                 return null;
             }
             else {
-//            	r = em.getSourceEntities( context.getOwner().getUuid(), query.getConnectionType(),
-//            			query.getEntityType(), level );
-                // usergrid-2389: User defined limit in the query is ignored. Fixed it by adding
-                // the limit to the method parameter downstream.
-            	r = em.getSourceEntities(
-                    new SimpleEntityRef(context.getOwner().getType(), context.getOwner().getUuid()),
-                    query.getConnectionType(), query.getEntityType(), level, query.getLimit());
+                r = em.searchTargetEntities(context.getOwner(),query);
             }
         }
         else {
@@ -381,6 +368,10 @@ public class AbstractConnectionsService extends AbstractService {
             }
             else {
                 entity = em.create( query.getEntityType(), context.getProperties() );
+                //if entity is null here it throws NPE. Fixing it to throw 404.
+                if ( entity == null ) {
+                    throw new ServiceResourceNotFoundException( context );
+                }
             }
             entity = importEntity( context, entity );
 

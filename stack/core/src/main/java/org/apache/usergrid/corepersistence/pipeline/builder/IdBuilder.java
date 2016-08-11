@@ -20,9 +20,10 @@
 package org.apache.usergrid.corepersistence.pipeline.builder;
 
 
+import com.google.common.base.Optional;
+import org.apache.usergrid.corepersistence.pipeline.Pipeline;
 import org.apache.usergrid.corepersistence.pipeline.PipelineOperation;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterFactory;
-import org.apache.usergrid.corepersistence.pipeline.Pipeline;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.ConnectionRefFilter;
@@ -30,13 +31,9 @@ import org.apache.usergrid.corepersistence.pipeline.read.collect.ConnectionRefRe
 import org.apache.usergrid.corepersistence.pipeline.read.collect.IdResumeFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.ResultsPageCollector;
 import org.apache.usergrid.corepersistence.pipeline.read.search.Candidate;
-import org.apache.usergrid.corepersistence.pipeline.read.traverse.IdFilter;
 import org.apache.usergrid.persistence.ConnectionRef;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-
-import com.google.common.base.Optional;
-
 import rx.Observable;
 
 
@@ -65,6 +62,28 @@ public class IdBuilder {
             this.pipeline.withFilter( filterFactory.entityLoadFilter() );
 
         return new EntityBuilder( pipeline );
+    }
+
+
+    /**
+     * Traverse all connection edges to our input Id
+     * @param connectionName The name of the connection
+     * @param entityType The optional type of the entity
+     * @return
+     */
+    public IdBuilder traverseReverseConnection( final String connectionName, final Optional<String> entityType ) {
+
+        final PipelineOperation<FilterResult<Id>, FilterResult<Id>> filter;
+
+        if(entityType.isPresent()){
+            //todo: change this too.
+            filter = filterFactory.readGraphConnectionByTypeFilter( connectionName, entityType.get() );
+        }else{
+            filter = filterFactory.readGraphReverseConnectionFilter( connectionName );
+        }
+
+
+        return new IdBuilder( pipeline.withFilter(filter ), filterFactory );
     }
 
 
