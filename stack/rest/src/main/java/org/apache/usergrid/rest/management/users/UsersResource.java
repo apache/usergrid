@@ -29,6 +29,7 @@ import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,8 +116,8 @@ public class UsersResource extends AbstractContextResource {
             throws Exception {
 
         if ( tokens.isExternalSSOProviderEnabled() ) {
-            throw new IllegalArgumentException( "Admin Users must signup via " +
-                    properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER_URL) );
+            throw new IllegalArgumentException(  "External SSO integration is enabled, admin users registering without an org" +
+                " must do so via provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
         }
 
         // email is only required parameter

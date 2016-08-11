@@ -562,9 +562,9 @@ public class ManagementServiceImpl implements ManagementService {
             if(user == null) {
                 // if external SSO is enabled and we're adding a user to an org, auto activate the user
                 if (tokens.isExternalSSOProviderEnabled() || areActivationChecksDisabled()) {
-                    user = createAdminUserInternal(null, username, name, email, password, true, false, userProperties);
+                    user = createAdminUser(null, username, name, email, password, true, false, userProperties);
                 } else {
-                    user = createAdminUserInternal(null, username, name, email, password, activated, disabled, userProperties);
+                    user = createAdminUser(null, username, name, email, password, activated, disabled, userProperties);
                 }
             }
 
@@ -1635,7 +1635,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public Map<String, Object> getAdminUserOrganizationData( UUID userId ) throws Exception {
         UserInfo user = getAdminUserByUuid( userId );
-        return getAdminUserOrganizationData( user, true );
+        return getAdminUserOrganizationData( user, true, true);
     }
 
 
@@ -1647,7 +1647,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public Map<String, Object> getAdminUserOrganizationData( UserInfo user, boolean deep ) throws Exception {
+    public Map<String, Object> getAdminUserOrganizationData(UserInfo user, boolean includeApps, boolean includeOrgUsers) throws Exception {
 
         Map<String, Object> json = new HashMap<>();
 
@@ -1676,10 +1676,11 @@ public class ManagementServiceImpl implements ManagementService {
             jsonOrganization.put( PROPERTY_UUID, organization.getKey() );
             jsonOrganization.put( "properties", getOrganizationByUuid( organization.getKey() ).getProperties() );
 
-            if ( deep ) {
-                BiMap<UUID, String> applications = getApplicationsForOrganization( organization.getKey() );
-                jsonOrganization.put( "applications", applications.inverse() );
-
+            if ( includeApps ) {
+                BiMap<UUID, String> applications = getApplicationsForOrganization(organization.getKey());
+                jsonOrganization.put("applications", applications.inverse());
+            }
+            if ( includeOrgUsers ){
                 List<UserInfo> users = getAdminUsersForOrganization( organization.getKey() );
                 Map<String, Object> jsonUsers = new HashMap<>();
                 for ( UserInfo u : users ) {
