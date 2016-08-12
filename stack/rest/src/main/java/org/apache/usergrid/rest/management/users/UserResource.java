@@ -102,6 +102,12 @@ public class UserResource extends AbstractContextResource {
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException(  "External SSO integration is enabled, admin users must update" +
+                " info via provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
+        }
+
+
         if ( json == null ) {
             return null;
         }
@@ -136,7 +142,7 @@ public class UserResource extends AbstractContextResource {
                                                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
-        if ( tokens.isExternalSSOProviderEnabled() ) {
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
             throw new IllegalArgumentException( "External SSO integration is enabled, admin users must reset passwords via" +
                 " provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
         }
@@ -222,7 +228,7 @@ public class UserResource extends AbstractContextResource {
     @Produces( MediaType.TEXT_HTML )
     public Viewable showPasswordResetForm( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        if ( tokens.isExternalSSOProviderEnabled() ) {
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
             throw new IllegalArgumentException( "External SSO integration is enabled, admin users must reset password via" +
                 " provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
         }
@@ -266,7 +272,7 @@ public class UserResource extends AbstractContextResource {
             logger.trace("handlePasswordResetForm");
         }
 
-        if ( tokens.isExternalSSOProviderEnabled() ) {
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
             throw new IllegalArgumentException(  "External SSO integration is enabled, admin users must reset password via" +
                 " provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
         }
@@ -352,7 +358,7 @@ public class UserResource extends AbstractContextResource {
     @Produces( MediaType.TEXT_HTML )
     public Viewable activate( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        if ( tokens.isExternalSSOProviderEnabled() ) {
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
             throw new IllegalArgumentException(  "External SSO integration is enabled, admin users must activate via" +
                 " provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
         }
@@ -382,7 +388,7 @@ public class UserResource extends AbstractContextResource {
     @Produces( MediaType.TEXT_HTML )
     public Viewable confirm( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        if ( tokens.isExternalSSOProviderEnabled() ) {
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
             throw new IllegalArgumentException( "External SSO integration is enabled, admin users must confirm " +
                 "via provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER ) );
         }
@@ -418,7 +424,7 @@ public class UserResource extends AbstractContextResource {
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
-        if ( tokens.isExternalSSOProviderEnabled() ) {
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
             throw new IllegalArgumentException( "External SSO integration is enabled, admin user must re-activate " +
                 "via provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER ) );
         }
@@ -442,7 +448,7 @@ public class UserResource extends AbstractContextResource {
                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
-        if ( tokens.isExternalSSOProviderEnabled() ) {
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
             throw new IllegalArgumentException( "External SSO integration is enabled, admin user tokens must be revoked " +
                 "via provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
         }
@@ -479,7 +485,7 @@ public class UserResource extends AbstractContextResource {
                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
                                             @QueryParam( "token" ) String token ) throws Exception {
 
-        if ( tokens.isExternalSSOProviderEnabled() ) {
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
             throw new IllegalArgumentException( "External SSO integration is enabled, admin user token must be revoked via " +
                 "via provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER ) );
         }

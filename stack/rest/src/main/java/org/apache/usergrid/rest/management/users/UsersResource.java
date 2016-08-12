@@ -45,6 +45,7 @@ import java.util.UUID;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
+import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isServiceAdmin;
 import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER_URL;
 
 
@@ -115,7 +116,7 @@ public class UsersResource extends AbstractContextResource {
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
-        if ( tokens.isExternalSSOProviderEnabled() ) {
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
             throw new IllegalArgumentException(  "External SSO integration is enabled, admin users registering without an org" +
                 " must do so via provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
         }
@@ -154,31 +155,23 @@ public class UsersResource extends AbstractContextResource {
             throw mappableSecurityException( AuthErrorInfo.BAD_CREDENTIALS_SYNTAX_ERROR );
         }
 
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.createAdminUserPostProcessing(user, null);
+
         return response;
     }
-
-	/*
-     * @POST
-	 *
-	 * @Consumes(MediaType.MULTIPART_FORM_DATA) public JSONWithPadding
-	 * createUserFromMultipart(@Context UriInfo ui,
-	 *
-	 * @FormDataParam("username") String username,
-	 *
-	 * @FormDataParam("name") String name,
-	 *
-	 * @FormDataParam("email") String email,
-	 *
-	 * @FormDataParam("password") String password) throws Exception {
-	 *
-	 * return createUser(ui, username, name, email, password); }
-	 */
 
 
     @GET
     @Path( "resetpw" )
     @Produces( MediaType.TEXT_HTML )
     public Viewable showPasswordResetForm( @Context UriInfo ui ) {
+
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException( "External SSO integration is enabled, admin users must reset password via" +
+                " provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
+        }
+
         return handleViewable( "resetpw_email_form", this );
     }
 
@@ -190,6 +183,11 @@ public class UsersResource extends AbstractContextResource {
     public Viewable handlePasswordResetForm( @Context UriInfo ui, @FormParam( "email" ) String email,
                                              @FormParam( "recaptcha_challenge_field" ) String challenge,
                                              @FormParam( "recaptcha_response_field" ) String uresponse ) {
+
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException( "External SSO integration is enabled, admin users must reset password via" +
+                " provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
+        }
 
         try {
             if ( isBlank( email ) ) {

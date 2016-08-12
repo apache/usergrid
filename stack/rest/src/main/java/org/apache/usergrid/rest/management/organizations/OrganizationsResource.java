@@ -20,6 +20,7 @@ package org.apache.usergrid.rest.management.organizations;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.SecurityUtils;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
@@ -28,6 +29,8 @@ import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
+import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +42,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 import java.util.*;
+
+import static org.apache.commons.lang.StringUtils.isBlank;
 
 
 @Component( "org.apache.usergrid.rest.management.organizations.OrganizationsResource" )
@@ -69,6 +74,7 @@ public class OrganizationsResource extends AbstractContextResource {
     public ApiResponse getAllOrganizations() throws Exception{
 
         ApiResponse response = createApiResponse();
+        //TODO this needs paging at some point
         List<OrganizationInfo> orgs = management.getOrganizations(null, 10000);
         List<Object> jsonOrgList = new ArrayList<>();
 
@@ -185,8 +191,8 @@ public class OrganizationsResource extends AbstractContextResource {
                                              String email, String password, Map<String, Object> userProperties,
                                              Map<String, Object> orgProperties, String callback ) throws Exception {
 
-        // Providing no password in this request signifies that an existing admin users should be associated to the
-        // newly requested organization.
+        /* Providing no password in this request signifies that an existing admin users should be associated to the
+        newly requested organization. */
 
         // Always let the sysadmin create an org, but otherwise follow the behavior specified with
         // the property 'usergrid.management.allow-public-registration'
@@ -221,6 +227,12 @@ public class OrganizationsResource extends AbstractContextResource {
 
         applicationCreator.createSampleFor( organizationOwner.getOrganization() );
 
+        // ( DO NOT REMOVE ) Execute any post processing which may be overridden by external classes using UG as
+        // a dependency
+        management.createAdminUserPostProcessing(organizationOwner.getOwner(), null);
+        management.createOrganizationPostProcessing(organizationOwner.getOrganization(), null);
+        management.addUserToOrganizationPostProcessing(organizationOwner.getOwner(), organizationName, null);
+
         response.setData( organizationOwner );
         response.setSuccess();
 
@@ -228,22 +240,4 @@ public class OrganizationsResource extends AbstractContextResource {
         return response;
     }
 
-    /*
-     * @POST
-     *
-     * @Consumes(MediaType.MULTIPART_FORM_DATA) public JSONWithPadding
-     * newOrganizationFromMultipart(@Context UriInfo ui,
-     *
-     * @FormDataParam("organization") String organization,
-     *
-     * @FormDataParam("username") String username,
-     *
-     * @FormDataParam("name") String name,
-     *
-     * @FormDataParam("email") String email,
-     *
-     * @FormDataParam("password") String password) throws Exception { return
-     * newOrganizationFromForm(ui, organization, username, name, email,
-     * password); }
-     */
 }

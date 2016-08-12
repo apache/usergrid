@@ -95,6 +95,10 @@ public class OrganizationsResource extends AbstractContextResource {
 
         management.activateOrganization( organization );
 
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.createOrganizationPostProcessing(organization, null);
+        management.addUserToOrganizationPostProcessing(user, organizationName, null);
+
         return response;
     }
 
@@ -122,6 +126,10 @@ public class OrganizationsResource extends AbstractContextResource {
 
         management.activateOrganization( organization );
 
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.createOrganizationPostProcessing(organization, null);
+        management.addUserToOrganizationPostProcessing(user, organizationName, null);
+
         return response;
     }
 
@@ -142,6 +150,10 @@ public class OrganizationsResource extends AbstractContextResource {
 
         OrganizationInfo organization = management.getOrganizationByName( organizationName );
         management.addAdminUserToOrganization( user, organization, true );
+
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.addUserToOrganizationPostProcessing(user, organizationName, null);
+
         response.setData( organization );
         return response;
     }
@@ -160,6 +172,10 @@ public class OrganizationsResource extends AbstractContextResource {
 
         OrganizationInfo organization = management.getOrganizationByUuid( UUID.fromString( organizationIdStr ) );
         management.addAdminUserToOrganization( user, organization, true );
+
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.addUserToOrganizationPostProcessing(user, organization.getName(), null);
+
         response.setData( organization );
         return response;
     }
@@ -182,6 +198,10 @@ public class OrganizationsResource extends AbstractContextResource {
 
         OrganizationInfo organization = management.getOrganizationByUuid( UUID.fromString( organizationIdStr ) );
         management.removeAdminUserFromOrganization( user.getUuid(), organization.getUuid() );
+
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.removeUserFromOrganizationPostProcessing(user, organization.getName(), null);
+
         response.setData( organization );
         return response;
     }
@@ -203,6 +223,10 @@ public class OrganizationsResource extends AbstractContextResource {
         response.setAction( "remove user from organization" );
         OrganizationInfo organization = management.getOrganizationByName( organizationName );
         management.removeAdminUserFromOrganization( user.getUuid(), organization.getUuid() );
+
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.removeUserFromOrganizationPostProcessing(user, organizationName, null);
+
         response.setData( organization );
 
         return response;
