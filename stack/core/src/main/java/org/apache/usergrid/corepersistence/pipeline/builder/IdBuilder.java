@@ -72,17 +72,8 @@ public class IdBuilder {
      * @return
      */
     public IdBuilder traverseReverseConnection( final String connectionName, final Optional<String> entityType ) {
-
         final PipelineOperation<FilterResult<Id>, FilterResult<Id>> filter;
-
-        if(entityType.isPresent()){
-            //todo: change this too.
-            filter = filterFactory.readGraphConnectionByTypeFilter( connectionName, entityType.get() );
-        }else{
-            filter = filterFactory.readGraphReverseConnectionFilter( connectionName );
-        }
-
-
+        filter = filterFactory.readGraphReverseConnectionFilter( connectionName );
         return new IdBuilder( pipeline.withFilter(filter ), filterFactory );
     }
 
