@@ -233,7 +233,7 @@ public class AbstractConnectionsService extends AbstractService {
 
         ServiceResults results = getItemsByQuery( context, context.getQuery() );
 
-        if ( results.size() == 0 ) {
+        if ( results == null || results.size() == 0 ) {
             throw new ServiceResourceNotFoundException( context );
         }
 

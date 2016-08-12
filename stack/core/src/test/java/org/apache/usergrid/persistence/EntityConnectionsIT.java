@@ -20,7 +20,6 @@ package org.apache.usergrid.persistence;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.entities.User;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -329,7 +328,6 @@ public class EntityConnectionsIT extends AbstractCoreIT {
     }
 
     //not required . addd tests at service layer.
-    @Ignore
     @Test
     public void testGetConnectingEntitiesCursor() throws Exception {
 
