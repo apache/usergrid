@@ -371,4 +371,21 @@ public interface ManagementService {
 	void updateOrganizationConfig( OrganizationConfig organizationConfig ) throws Exception;
 
 	Observable<Id> deleteAllEntities(final UUID applicationId,final int limit);
+
+
+    // DO NOT REMOVE BELOW METHODS, THEY ARE HERE TO ALLOW EXTERNAL CLASSES TO OVERRIDE AND HOOK INTO POST PROCESSING
+    void createOrganizationPostProcessing( final OrganizationInfo orgInfo,
+                                           final Map<String, String> properties ) throws Exception;
+
+    void createAdminUserPostProcessing( final UserInfo userInfo,
+                                        final Map<String, String> properties ) throws Exception;
+
+    void addUserToOrganizationPostProcessing( final UserInfo userInfo,
+                                              final String organizationName,
+                                              final Map<String, String> properties ) throws Exception;
+
+    void removeUserFromOrganizationPostProcessing( final UserInfo userInfo,
+                                              final String organizationName,
+                                              final Map<String, String> properties ) throws Exception;
+
 }

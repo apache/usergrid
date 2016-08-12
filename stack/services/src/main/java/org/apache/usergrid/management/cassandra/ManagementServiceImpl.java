@@ -3494,4 +3494,28 @@ public class ManagementServiceImpl implements ManagementService {
         localShiroCache.invalidateAll();
     }
 
+    @Override
+    public void createOrganizationPostProcessing( final OrganizationInfo orgInfo,
+                                                  final Map<String,String> properties ){
+        // do nothing, this is a hook for any classes extending the ManagementServiceInterface
+
+    }
+
+    @Override
+    public void createAdminUserPostProcessing( final UserInfo userInfo, final Map<String,String> properties){
+        // do nothing, this is a hook for any classes extending the ManagementServiceInterface
+    }
+
+    @Override
+    public void addUserToOrganizationPostProcessing( final UserInfo userInfo, final String organizationName,
+                                                          final Map<String,String> properties){
+        // do nothing, this is a hook for any classes extending the ManagementServiceInterface
+    }
+
+    @Override
+    public void removeUserFromOrganizationPostProcessing( final UserInfo userInfo, final String organizationName,
+                                                     final Map<String,String> properties){
+        // do nothing, this is a hook for any classes extending the ManagementServiceInterface
+    }
+
 }
