@@ -17,18 +17,16 @@
 package org.apache.usergrid.services;
 
 
-import java.util.Map;
-
+import org.apache.usergrid.persistence.Entity;
+import org.apache.usergrid.persistence.Query;
 import org.junit.Assert;
 import org.junit.Test;
-
-import org.apache.usergrid.persistence.Entity;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 
 
@@ -84,6 +82,66 @@ public class ConnectionsServiceIT extends AbstractServiceIT {
         app.put( "username", "conn-user3" );
         app.put( "email", "conn-user3@apigee.com" );
         app.testRequest( ServiceAction.POST, 1, "users", "conn-user1", "manages", "user" );
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testUserConnectionsCursor() throws Exception {
+        app.put("username", "conn-user1");
+        app.put("email", "conn-user1@apigee.com");
+
+        Entity user1 = app.testRequest(ServiceAction.POST, 1, "users").getEntity();
+        assertNotNull(user1);
+
+        app.testRequest(ServiceAction.GET, 1, "users", "conn-user1");
+
+        app.put("username", "conn-user2");
+        app.put("email", "conn-user2@apigee.com");
+
+        Entity user2 = app.testRequest(ServiceAction.POST, 1, "users").getEntity();
+        assertNotNull(user2);
+
+
+        app.put("username", "conn-user3");
+        app.put("email", "conn-user3@apigee.com");
+
+        Entity user3 = app.testRequest(ServiceAction.POST, 1, "users").getEntity();
+        assertNotNull(user3);
+
+
+        //POST users/conn-user2/manages/user2/conn-user1
+        app.testRequest(ServiceAction.POST, 1, "users", "conn-user2", "likes", "users", "conn-user1");
+        //POST users/conn-user3/reports/users/conn-user1
+        app.testRequest(ServiceAction.POST, 1, "users", "conn-user3", "likes", "users", "conn-user1");
+
+        Query query = new Query().fromQLNullSafe("");
+        query.setLimit(1);
+
+        //the result should return a valid cursor.
+        ServiceResults result = app.testRequest(ServiceAction.GET, 1, "users", "conn-user1", "connecting", "likes",query);
+        assertNotNull(result.getCursor());
+        String enityName1 = result.getEntity().getProperty("email").toString();
+
+        Query newquery = new Query().fromQLNullSafe("");
+        query.setCursor(result.getCursor());
+        result = app.testRequest(ServiceAction.GET,1,"users","conn-user1","connecting","likes",query);
+        String enityName2 = result.getEntity().getProperty("email").toString();
+
+        //ensure the two entities returned in above requests are different.
+        assertNotEquals(enityName1,enityName2);
+
+        newquery = new Query().fromQLNullSafe("");
+        query.setCursor(result.getCursor());
+        result = app.testRequest(ServiceAction.GET,0,"users","conn-user1","connecting","likes",query);
+        //return empty cursor when no more entitites found.
+        assertNull(result.getCursor());
+
+        //DELETE users/conn-user1/manages/user2/conn-user2 (qualified by collection type on second entity)
+        app.testRequest(ServiceAction.DELETE, 1, "users", "conn-user2", "likes", "users", "conn-user1");
+
+        app.testRequest(ServiceAction.GET,1,"users","conn-user1","connecting","likes");
+
+
     }
 
     @Test
