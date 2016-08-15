@@ -220,13 +220,13 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     private void sendUniqueValueRequest(
         Entity entity, String region, UniqueValueActor.Request request ) throws UniqueValueException {
 
-        int maxRetries = 5;
+        int maxRetries = uniqueValuesFig.getRequestRetryCount();
         int retries = 0;
 
         UniqueValueActor.Response response = null;
         while ( retries++ < maxRetries ) {
             try {
-                Timeout t = new Timeout( 1, TimeUnit.SECONDS );
+                Timeout t = new Timeout( uniqueValuesFig.getRequestTimeout(), TimeUnit.MILLISECONDS );
 
                 Future<Object> fut;
 
@@ -256,15 +256,15 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
                     break;
 
                 } else if ( response != null  ) {
-                    logger.debug("ERROR status retrying {} entity {} rowkey {}",
+                    logger.warn("ERROR status retrying {} entity {} rowkey {}",
                             retries, entity.getId().getUuid(), request.getConsistentHashKey());
                 } else {
-                    logger.debug("Timed-out retrying {} entity {} rowkey",
+                    logger.warn("Timed-out retrying {} entity {} rowkey",
                             retries, entity.getId().getUuid(), request.getConsistentHashKey());
                 }
 
             } catch ( Exception e ) {
-                logger.debug("{} caused retry {} for entity {} rowkey {}",
+                logger.error("{} caused retry {} for entity {} rowkey {}",
                     e.getClass().getSimpleName(), retries, entity.getId().getUuid(), request.getConsistentHashKey());
             }
         }
