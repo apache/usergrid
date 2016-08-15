@@ -45,6 +45,8 @@ from requests.auth import HTTPBasicAuth
 from usergrid import UsergridQueryIterator
 import urllib3
 
+LARGE_TIMESTAMP_MILLIS = 1584946416000
+
 __author__ = 'Jeff.West@yahoo.com'
 
 ecid = str(uuid.uuid1())
@@ -179,27 +181,35 @@ class StatusAggregator(Process):
 
     def summarize(self, org_results):
 
-        max_created = 267753609
-        max_modified = 267753609
-        min_created = 1584946416000
-        min_modified = 1584946416000
+        created_max = 267753609
+        modified_max = 267753609
+        created_min = LARGE_TIMESTAMP_MILLIS
+        min_modified = LARGE_TIMESTAMP_MILLIS
+        org_iteration_started = LARGE_TIMESTAMP_MILLIS
+        org_iteration_finished = 267753609
         count = 0
         bytes = 0
 
         org_results['summary'] = {
-            'max_created': max_created,
-            'max_modified': max_modified,
-            'min_created': min_created,
-            'min_modified': min_modified,
+            'iteration_started': org_iteration_started,
+            'iteration_finished': org_iteration_finished,
+            'created_max': created_max,
+            'modified_max': modified_max,
+            'created_min': created_min,
+            'modified_min': min_modified,
             'count': 0,
             'bytes': 0
         }
 
         for app, app_data in org_results['apps'].iteritems():
-            max_created = 267753609
-            max_modified = 267753609
-            min_created = 1584946416000
-            min_modified = 1584946416000
+            created_max = 267753609
+            modified_max = 267753609
+            created_min = LARGE_TIMESTAMP_MILLIS
+            min_modified = LARGE_TIMESTAMP_MILLIS
+
+            app_iteration_started = LARGE_TIMESTAMP_MILLIS
+            app_iteration_finished = 267753609
+
             count = 0
             bytes = 0
 
@@ -212,46 +222,66 @@ class StatusAggregator(Process):
                 bytes += collection_data['bytes']
 
                 if collection_data['count'] == 0:
-                    if 'max_modified' in collection_data: del collection_data['max_modified']
-                    if 'min_modified' in collection_data: del collection_data['min_modified']
+                    if 'modified_max' in collection_data: del collection_data['modified_max']
+                    if 'modified_min' in collection_data: del collection_data['modified_min']
 
-                    if 'min_created' in collection_data: del collection_data['min_created']
-                    if 'max_created' in collection_data: del collection_data['max_created']
+                    if 'created_min' in collection_data: del collection_data['created_min']
+                    if 'created_max' in collection_data: del collection_data['created_max']
 
                 # APP
-                if collection_data.get('max_modified') > max_modified:
-                    max_modified = collection_data.get('max_modified')
+                if 'iteration_finished' in collection_data:
+                    if app_iteration_finished < collection_data['iteration_finished']:
+                        app_iteration_finished = collection_data['iteration_finished']
 
-                if collection_data.get('min_modified') < min_modified:
-                    min_modified = collection_data.get('min_modified')
+                if 'iteration_started' in collection_data:
+                    if app_iteration_started > collection_data['iteration_started']:
+                        app_iteration_started = collection_data['iteration_started']
 
-                if collection_data.get('max_created') > max_created:
-                    max_created = collection_data.get('max_created')
+                if 'modified_max' in collection_data:
+                    if modified_max < collection_data['modified_max']:
+                        modified_max = collection_data['modified_max']
 
-                if collection_data.get('min_created') < min_created:
-                    min_created = collection_data.get('min_created')
+                if 'modified_min' in collection_data:
+                    if min_modified > collection_data['modified_min']:
+                        min_modified = collection_data['modified_min']
+
+                if 'created_max' in collection_data:
+                    if created_max < collection_data['created_max']:
+                        created_max = collection_data['created_max']
+
+                if 'created_min' in collection_data:
+                    if created_min > collection_data['created_min']:
+                        created_min = collection_data['created_min']
 
             app_data['summary'] = {
-                'max_created': max_created,
-                'max_modified': max_modified,
-                'min_created': min_created,
-                'min_modified': min_modified,
+                'iteration_started': app_iteration_started,
+                'iteration_finished': app_iteration_finished,
+                'created_max': created_max,
+                'modified_max': modified_max,
+                'created_min': created_min,
+                'modified_min': min_modified,
                 'count': count,
                 'bytes': bytes
             }
 
             # org
-            if org_results['summary']['max_modified'] < max_modified:
-                org_results['summary']['max_modified'] = max_modified
+            if app_iteration_started < org_results['summary']['iteration_started']:
+                org_results['summary']['iteration_started'] = app_iteration_started
 
-            if org_results['summary']['min_modified'] < min_modified:
-                org_results['summary']['min_modified'] = min_modified
+            if app_iteration_finished > org_results['summary']['iteration_finished']:
+                org_results['summary']['iteration_finished'] = app_iteration_finished
 
-            if org_results['summary']['max_created'] > max_created:
-                org_results['summary']['max_created'] = max_created
+            if modified_max > org_results['summary']['modified_max']:
+                org_results['summary']['modified_max'] = modified_max
 
-            if org_results['summary']['min_created'] < min_created:
-                org_results['summary']['min_created'] = min_created
+            if min_modified < org_results['summary']['modified_min'] :
+                org_results['summary']['modified_min'] = min_modified
+
+            if created_max > org_results['summary']['created_max']:
+                org_results['summary']['created_max'] = created_max
+
+            if created_min < org_results['summary']['created_min']:
+                org_results['summary']['created_min'] = created_min
 
             org_results['summary'].update({
                 'count': org_results['summary']['count'] + count,
@@ -424,7 +454,6 @@ class EntityWorker(Process):
 
 
 class CollectionWorker(Process):
-
     def __init__(self, work_queue, entity_queue, response_queue):
         super(CollectionWorker, self).__init__()
         collection_worker_logger.debug('Creating worker!')
@@ -437,7 +466,7 @@ class CollectionWorker(Process):
         collection_worker_logger.info('starting run()...')
 
         counter = 0
-        # max_created = 0
+        # created_max = 0
         empty_count = 0
         app = 'ERROR'
         collection_name = 'NOT SET'
@@ -459,11 +488,12 @@ class CollectionWorker(Process):
 
                     status_map = {
                         collection_name: {
-                            'iteration_started': str(datetime.datetime.now()),
-                            'max_created': 267753609,
-                            'max_modified': 267753609,
-                            'min_created': 1584946416000,
-                            'min_modified': 1584946416000,
+                            'iteration_started': int(round(time.time() * 1000)),
+                            'iteration_finished': int(round(time.time() * 1000)),
+                            'created_max': 267753609,
+                            'modified_max': 267753609,
+                            'created_min': 1584946416000,
+                            'modified_min': 1584946416000,
                             'count': 0,
                             'bytes': 0
                         }
@@ -507,15 +537,11 @@ class CollectionWorker(Process):
                             try:
                                 entity_created = long(entity.get('created'))
 
-                                if entity_created > status_map[collection_name]['max_created']:
-                                    status_map[collection_name]['max_created'] = entity_created
-                                    status_map[collection_name]['max_created_str'] = str(
-                                        datetime.datetime.fromtimestamp(entity_created / 1000))
+                                if entity_created > status_map[collection_name]['created_max']:
+                                    status_map[collection_name]['created_max'] = entity_created
 
-                                if entity_created < status_map[collection_name]['min_created']:
-                                    status_map[collection_name]['min_created'] = entity_created
-                                    status_map[collection_name]['min_created_str'] = str(
-                                        datetime.datetime.fromtimestamp(entity_created / 1000))
+                                if entity_created < status_map[collection_name]['created_min']:
+                                    status_map[collection_name]['created_min'] = entity_created
 
                             except ValueError:
                                 pass
@@ -525,19 +551,16 @@ class CollectionWorker(Process):
                             try:
                                 entity_modified = long(entity.get('modified'))
 
-                                if entity_modified > status_map[collection_name]['max_modified']:
-                                    status_map[collection_name]['max_modified'] = entity_modified
-                                    status_map[collection_name]['max_modified_str'] = str(
-                                        datetime.datetime.fromtimestamp(entity_modified / 1000))
+                                if entity_modified > status_map[collection_name]['modified_max']:
+                                    status_map[collection_name]['modified_max'] = entity_modified
 
-                                if entity_modified < status_map[collection_name]['min_modified']:
-                                    status_map[collection_name]['min_modified'] = entity_modified
-                                    status_map[collection_name]['min_modified_str'] = str(
-                                        datetime.datetime.fromtimestamp(entity_modified / 1000))
+                                if entity_modified < status_map[collection_name]['modified_min']:
+                                    status_map[collection_name]['modified_min'] = entity_modified
 
                             except ValueError:
                                 pass
 
+                        status_map[collection_name]['iteration_finished'] = int(round(time.time() * 1000))
                         status_map[collection_name]['bytes'] += count_bytes(entity)
                         status_map[collection_name]['count'] += 1
 
@@ -567,12 +590,9 @@ class CollectionWorker(Process):
                                 'STOPPED sleeping for [%s]s per entity...' % (config.get('entity_sleep_time')))
 
                     # end entity loop
-
-                    status_map[collection_name]['iteration_finished'] = str(datetime.datetime.now())
-
                     collection_worker_logger.warning(
                         'Collection [%s / %s / %s] loop complete!  Max Created entity %s' % (
-                            config.get('org'), app, collection_name, status_map[collection_name]['max_created']))
+                            config.get('org'), app, collection_name, status_map[collection_name]['created_max']))
 
                     collection_worker_logger.warning(
                         'Sending FINAL stats for app/collection [%s / %s]: %s' % (app, collection_name, status_map))
@@ -1672,16 +1692,6 @@ def parse_args():
                         type=int,
                         default=25000)
 
-    parser.add_argument('--min_modified',
-                        help='Break when encountering a modified date before this, per collection',
-                        type=int,
-                        default=0)
-
-    parser.add_argument('--max_modified',
-                        help='Break when encountering a modified date after this, per collection',
-                        type=long,
-                        default=3793805526000)
-
     parser.add_argument('--queue_watermark_low',
                         help='The point at which publishing to the queue will RESUME after it has reached the high watermark',
                         type=int,
@@ -1943,11 +1953,11 @@ def do_operation(apps_and_collections, operation):
             logger.info('Processing app=[%s]' % app)
 
             status_map[app] = {
-                'iteration_started': str(datetime.datetime.now()),
-                'max_created': 267753609,
-                'max_modified': 267753609,
-                'min_created': 1584946416000,
-                'min_modified': 1584946416000,
+                'iteration_started': int(round(time.time() * 1000)),
+                'created_max': 267753609,
+                'modified_max': 267753609,
+                'created_min': 1584946416000,
+                'modified_min': 1584946416000,
                 'count': 0,
                 'bytes': 0,
                 'collections': {}
@@ -2140,6 +2150,8 @@ def main():
 def perform_migration(parameters):
     global config, cache, ecid
 
+    migration_started = int(round(time.time() * 1000))
+
     ecid = str(uuid.uuid1())
     config = parameters
     init()
@@ -2250,6 +2262,9 @@ def perform_migration(parameters):
     # execute the operation over apps and collections
     status = do_operation(apps_and_collections, operation)
 
+    status['summary']['migration_finished'] = int(round(time.time() * 1000))
+    status['summary']['migration_started'] = migration_started
+
     logger.warn('Migration for org [%s] finished' % config['org'])
 
     return status
@@ -2280,7 +2295,7 @@ def send_complete_notification(config, status):
         source='no-reply@apigee.com',
         subject='Migration of BaaS org [%s] Completed' % config['org'],
         to_addresses='jwest@apigee.com',
-        body=json.dumps(status, indent=2)
+        body=json.dumps(status, indent=2, sort_keys=True)
     )
 
 
@@ -2390,8 +2405,8 @@ def sqs_listener():
 
 
 if __name__ == "__main__":
-    main()
-    # sqs_listener()
+    # main()
+    sqs_listener()
 
 if __name__ == "__testfile__":
     testfile()
