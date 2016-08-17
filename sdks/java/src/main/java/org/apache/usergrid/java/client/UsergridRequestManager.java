@@ -60,7 +60,18 @@ public class UsergridRequestManager {
     @NotNull
     private UsergridResponse authenticate(@NotNull final UsergridAuth auth) {
         Map<String, String> credentials = auth.credentialsMap();
-        UsergridRequest request = new UsergridRequest(UsergridHttpMethod.POST, UsergridRequest.APPLICATION_JSON_MEDIA_TYPE, this.usergridClient.clientAppUrl(), null, credentials, this.usergridClient.authForRequests(), "token");
+        String url = this.usergridClient.clientAppUrl();
+        if ( auth instanceof UsergridUserAuth){
+
+            UsergridUserAuth userAuth = (UsergridUserAuth) auth;
+            if( userAuth.isAdminUser()){
+
+                url = this.usergridClient.managementUrl();
+            }
+
+        }
+
+        UsergridRequest request = new UsergridRequest(UsergridHttpMethod.POST, UsergridRequest.APPLICATION_JSON_MEDIA_TYPE, url, null, credentials, this.usergridClient.authForRequests(), "token");
         UsergridResponse response = performRequest(request);
         if (!isEmpty(response.getAccessToken()) && !isEmpty(response.getExpires())) {
             auth.setAccessToken(response.getAccessToken());

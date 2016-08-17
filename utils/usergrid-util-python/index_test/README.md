@@ -1,0 +1,1 @@
+This set of scripts was intended to test indexing times and sizes for the new indexing scheme

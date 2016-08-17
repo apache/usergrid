@@ -306,6 +306,14 @@
             <version>${jackson-2-version}</version>
         </dependency>
 
+        <!-- for mocking the Apigee SSO Service -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- databinding; ObjectMapper, JsonNode and related classes are here -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

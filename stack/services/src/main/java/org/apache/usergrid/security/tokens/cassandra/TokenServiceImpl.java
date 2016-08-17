@@ -17,40 +17,32 @@
 package org.apache.usergrid.security.tokens.cassandra;
 
 
-import com.codahale.metrics.Counter;
 import com.google.inject.Injector;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.mutation.Mutator;
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.exception.NotImplementedException;
-import org.apache.usergrid.management.*;
+import org.apache.usergrid.management.ApplicationCreator;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.entities.Application;
-import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
+import org.apache.usergrid.security.sso.SSOProviderFactory;
 import org.apache.usergrid.security.tokens.TokenCategory;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.security.tokens.exceptions.BadTokenException;
 import org.apache.usergrid.security.tokens.exceptions.ExpiredTokenException;
 import org.apache.usergrid.security.tokens.exceptions.InvalidTokenException;
+import org.apache.usergrid.security.sso.ExternalSSOProvider;
 import org.apache.usergrid.utils.ConversionUtils;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
-import org.codehaus.jackson.JsonNode;
-import org.glassfish.jersey.apache.connector.ApacheClientProperties;
-import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.jackson.JacksonFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,8 +50,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.Assert;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.MediaType;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -326,21 +316,51 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public TokenInfo getTokenInfo( String token, boolean updateAccessTime ) throws Exception {
 
-        UUID uuid = getUUIDForToken( token );
+        UUID uuid;
 
-        long ssoTtl = 1000000L; // TODO: property for this
 
-        if ( uuid == null ) {
-            return isSSOEnabled() ? validateExternalToken( token, ssoTtl ) : null;
+        /** Pre-validation of the token string based on Usergrid's encoding scheme.
+         *
+         * If the token does not parse out a UUID, then it's not a Usergrid token.  Check if External SSO provider
+         * is configured, which is not Usergrid and immediately try to validate the token based on this parsing
+         * information.
+         */
+        try{
+            uuid = getUUIDForToken( token );
+        }
+        catch (ExpiredTokenException expiredTokenException){
+            throw new ExpiredTokenException(expiredTokenException.getMessage());
+        }
+        catch(Exception e){
+
+            // If the token doesn't parse as a Usergrid token, see if an external provider other than Usergrid is
+            // enabled.  If so, just validate the external token.
+            try{
+                if( isExternalSSOProviderEnabled() && !getExternalSSOProvider().equalsIgnoreCase("usergrid")) {
+                    return validateExternalToken(token, 1, getExternalSSOProvider());
+                }else{
+                    throw new IllegalArgumentException("invalid external provider : " + getExternalSSOProvider()); // re-throw the error
+                }
+            }
+            catch (NullPointerException npe){
+                throw new IllegalArgumentException("The SSO provider in the config is empty.");
+            }
+
         }
 
-        TokenInfo tokenInfo;
+        final TokenInfo tokenInfo;
+
+        /**
+         * Now try actual Usergrid token validations.  First try locally.  If that fails and SSO is enabled with
+         * Usergrid being a provider, validate the external token.
+         */
         try {
             tokenInfo = getTokenInfo( uuid );
         } catch (InvalidTokenException e){
-            // now try from central sso
-            if ( isSSOEnabled() ){
-                return validateExternalToken( token, maxPersistenceTokenAge );
+            // Try the request from Usergrid, conditions are specific so we don't incur perf hits for unncessary
+            // token validations that are known to not
+            if ( isExternalSSOProviderEnabled() && getExternalSSOProvider().equalsIgnoreCase("usergrid") ){
+                return validateExternalToken( token, maxPersistenceTokenAge, getExternalSSOProvider() );
             }else{
                 throw e; // re-throw the error
             }
@@ -625,7 +645,7 @@ public class TokenServiceImpl implements TokenService {
         long expirationDelta = System.currentTimeMillis() - expires;
 
         if ( expires != Long.MAX_VALUE && expirationDelta > 0 ) {
-            throw new ExpiredTokenException( String.format( "Token expired %d millisecons ago.", expirationDelta ) );
+            throw new ExpiredTokenException( String.format( "Token expired %d milliseconds ago.", expirationDelta ) );
         }
         return uuid;
     }
@@ -743,16 +763,24 @@ public class TokenServiceImpl implements TokenService {
     //
     // Central SSO implementation
 
-    public static final String USERGRID_CENTRAL_URL =         "usergrid.central.url";
     public static final String CENTRAL_CONNECTION_POOL_SIZE = "usergrid.central.connection.pool.size";
     public static final String CENTRAL_CONNECTION_TIMEOUT =   "usergrid.central.connection.timeout";
     public static final String CENTRAL_READ_TIMEOUT =         "usergrid.central.read.timeout";
+
 
     // names for metrics to be collected
     private static final String SSO_TOKENS_REJECTED =         "sso.tokens_rejected";
     private static final String SSO_TOKENS_VALIDATED =        "sso.tokens_validated";
     private static final String SSO_CREATED_LOCAL_ADMINS =    "sso.created_local_admins";
     private static final String SSO_PROCESSING_TIME =         "sso.processing_time";
+
+    //SSO2 implementation
+    public static final String USERGRID_EXTERNAL_SSO_ENABLED = "usergrid.external.sso.enabled";
+    public static final String USERGRID_EXTERNAL_SSO_PROVIDER =    "usergrid.external.sso.provider";
+    public static final String USERGRID_EXTERNAL_SSO_PROVIDER_URL = "usergrid.external.sso.url";
+    public static final String USERGRID_EXTERNAL_SSO_PROVIDER_USER_PROVISION_URL
+        = "usergrid.external.sso.userprovision.url";
+
 
     private static Client jerseyClient = null;
 
@@ -762,14 +790,21 @@ public class TokenServiceImpl implements TokenService {
     @Autowired
     protected ManagementService management;
 
+    @Autowired
+    private SSOProviderFactory ssoProviderFactory;
+
     MetricsFactory getMetricsFactory() {
         return metricsFactory;
     }
 
-    private boolean isSSOEnabled() {
-        return !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ));
+
+    public boolean isExternalSSOProviderEnabled() {
+        return Boolean.valueOf(properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ));
     }
 
+    private String getExternalSSOProvider(){
+            return properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER);
+    }
 
     /**
      * <p>
@@ -788,201 +823,26 @@ public class TokenServiceImpl implements TokenService {
      * @param extAccessToken Access token from external Usergrid system.
      * @param ttl            Time to live for token.
      */
-    public TokenInfo validateExternalToken(String extAccessToken, long ttl) throws Exception {
+    public TokenInfo validateExternalToken(String extAccessToken, long ttl, String provider) throws Exception {
 
-        TokenInfo tokenInfo = null;
 
-        if (!isSSOEnabled()) {
-            throw new NotImplementedException( "External Token Validation Service not enabled" );
-        }
+        ExternalSSOProvider ssoProvider = ssoProviderFactory.getProvider();
 
-        if (extAccessToken == null) {
-            throw new IllegalArgumentException( "ext_access_token must be specified" );
-        }
+        if(provider.equalsIgnoreCase("usergrid")){
 
-        if (ttl == -1) {
-            throw new IllegalArgumentException( "ttl must be specified" );
-        }
+            UserInfo userinfo = ssoProvider.validateAndReturnUserInfo(extAccessToken,ttl);
 
-        com.codahale.metrics.Timer processingTimer = getMetricsFactory().getTimer(
-            TokenServiceImpl.class, SSO_PROCESSING_TIME );
-
-        com.codahale.metrics.Timer.Context timerContext = processingTimer.time();
-
-        try {
-            // look up user via UG Central's /management/me endpoint.
-
-            JsonNode accessInfoNode = getMeFromUgCentral( extAccessToken );
-
-            JsonNode userNode = accessInfoNode.get( "user" );
-
-            String username = userNode.get( "username" ).asText();
-
-            // if user does not exist locally then we need to fix that
-
-            UserInfo userInfo = management.getAdminUserByUsername( username );
-            UUID userId = userInfo == null ? null : userInfo.getUuid();
-
-            if (userId == null) {
-
-                // create local user and and organizations they have on the central Usergrid instance
-                logger.info( "User {} does not exist locally, creating", username );
-
-                String name = userNode.get( "name" ).asText();
-                String email = userNode.get( "email" ).asText();
-                String dummyPassword = RandomStringUtils.randomAlphanumeric( 40 );
-
-                JsonNode orgsNode = userNode.get( "organizations" );
-                Iterator<String> fieldNames = orgsNode.getFieldNames();
-
-                if (!fieldNames.hasNext()) {
-                    // no organizations for user exist in response from central Usergrid SSO
-                    // so create user's personal organization and use username as organization name
-                    fieldNames = Collections.singletonList( username ).iterator();
-                }
-
-                // create user and any organizations that user is supposed to have
-
-                while (fieldNames.hasNext()) {
-
-                    String orgName = fieldNames.next();
-
-                    if (userId == null) {
-
-                        // haven't created user yet so do that now
-                        OrganizationOwnerInfo ownerOrgInfo = management.createOwnerAndOrganization(
-                            orgName, username, name, email, dummyPassword, true, false );
-
-                        applicationCreator.createSampleFor( ownerOrgInfo.getOrganization() );
-
-                        userId = ownerOrgInfo.getOwner().getUuid();
-                        userInfo = ownerOrgInfo.getOwner();
-
-                        Counter createdAdminsCounter = getMetricsFactory().getCounter(
-                            TokenServiceImpl.class, SSO_CREATED_LOCAL_ADMINS );
-                        createdAdminsCounter.inc();
-
-                        logger.info( "Created user {} and org {}", username, orgName );
-
-                    } else {
-
-                        // already created user, so just create an org
-                        final OrganizationInfo organization =
-                            management.createOrganization( orgName, userInfo, true );
-
-                        applicationCreator.createSampleFor( organization );
-
-                        logger.info( "Created user {}'s other org {}", username, orgName );
-                    }
-                }
-            }
-
-            // store the external access_token as if it were one of our own
+            // Store the external Usergrid access_token as if it were one of our own so we don't have to make the
+            // external HTTP validation call on subsequent requests
             importToken( extAccessToken, TokenCategory.ACCESS, null, new AuthPrincipalInfo(
-                ADMIN_USER, userId, CpNamingUtils.MANAGEMENT_APPLICATION_ID), null, ttl );
+                ADMIN_USER, userinfo.getUuid(), CpNamingUtils.MANAGEMENT_APPLICATION_ID), null, ttl );
+            return getTokenInfo( extAccessToken );
 
-            tokenInfo = getTokenInfo( extAccessToken );
+        }else{
 
-        } catch (Exception e) {
-            timerContext.stop();
-            logger.debug( "Error validating external token", e );
-            throw e;
+            return ssoProvider.validateAndReturnTokenInfo(extAccessToken,ttl);
         }
 
-        return tokenInfo;
     }
-
-
-    /**
-     * Look up Admin User via UG Central's /management/me endpoint.
-     *
-     * @param extAccessToken Access token issued by UG Central of Admin User
-     * @return JsonNode representation of AccessInfo object for Admin User
-     * @throws EntityNotFoundException if access_token is not valid.
-     */
-    private JsonNode getMeFromUgCentral( String extAccessToken )  throws EntityNotFoundException {
-
-        // prepare to count tokens validated and rejected
-
-        Counter tokensRejectedCounter = getMetricsFactory().getCounter(
-            TokenServiceImpl.class, SSO_TOKENS_REJECTED );
-        Counter tokensValidatedCounter = getMetricsFactory().getCounter(
-            TokenServiceImpl.class, SSO_TOKENS_VALIDATED );
-
-        // create URL of central Usergrid's /management/me endpoint
-
-        String externalUrl = properties.getProperty( USERGRID_CENTRAL_URL ).trim();
-
-        // be lenient about trailing slash
-        externalUrl = !externalUrl.endsWith( "/" ) ? externalUrl + "/" : externalUrl;
-        String me = externalUrl + "management/me?access_token=" + extAccessToken;
-
-        // use our favorite HTTP client to GET /management/me
-
-        Client client = getJerseyClient();
-        final JsonNode accessInfoNode;
-        try {
-            accessInfoNode = client.target( me ).request()
-                .accept( MediaType.APPLICATION_JSON_TYPE )
-                .get(JsonNode.class);
-
-            tokensValidatedCounter.inc();
-
-        } catch ( Exception e ) {
-            // user not found 404
-            tokensRejectedCounter.inc();
-            String msg = "Cannot find Admin User associated with " + extAccessToken;
-            throw new EntityNotFoundException( msg, e );
-        }
-
-        return accessInfoNode;
-    }
-
-
-
-    private Client getJerseyClient() {
-
-        if ( jerseyClient == null ) {
-
-            synchronized ( this ) {
-
-                // create HTTPClient and with configured connection pool
-
-                int poolSize = 100; // connections
-                final String poolSizeStr = properties.getProperty( CENTRAL_CONNECTION_POOL_SIZE );
-                if ( poolSizeStr != null ) {
-                    poolSize = Integer.parseInt( poolSizeStr );
-                }
-
-                PoolingClientConnectionManager connectionManager = new PoolingClientConnectionManager();
-                connectionManager.setMaxTotal(poolSize);
-
-                int timeout = 20000; // ms
-                final String timeoutStr = properties.getProperty( CENTRAL_CONNECTION_TIMEOUT );
-                if ( timeoutStr != null ) {
-                    timeout = Integer.parseInt( timeoutStr );
-                }
-
-                int readTimeout = 20000; // ms
-                final String readTimeoutStr = properties.getProperty( CENTRAL_READ_TIMEOUT );
-                if ( readTimeoutStr != null ) {
-                    readTimeout = Integer.parseInt( readTimeoutStr );
-                }
-
-                ClientConfig clientConfig = new ClientConfig();
-                clientConfig.register( new JacksonFeature() );
-                clientConfig.property( ApacheClientProperties.CONNECTION_MANAGER, connectionManager );
-                clientConfig.connectorProvider( new ApacheConnectorProvider() );
-
-                jerseyClient = ClientBuilder.newClient( clientConfig );
-                jerseyClient.property( ClientProperties.CONNECT_TIMEOUT, timeout );
-                jerseyClient.property( ClientProperties.READ_TIMEOUT, readTimeout );
-            }
-        }
-
-        return jerseyClient;
-
-    }
-
 
 }

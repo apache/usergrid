@@ -38,12 +38,12 @@ import static org.apache.usergrid.utils.ListUtils.dequeueCopy;
 import static org.apache.usergrid.utils.ListUtils.isEmpty;
 
 
-public class AbstractPathBasedColllectionService extends AbstractCollectionService {
+public class AbstractPathBasedCollectionService extends AbstractCollectionService {
 
-    private static final Logger logger = LoggerFactory.getLogger( AbstractPathBasedColllectionService.class );
+    private static final Logger logger = LoggerFactory.getLogger( AbstractPathBasedCollectionService.class );
 
 
-    public AbstractPathBasedColllectionService() {
+    public AbstractPathBasedCollectionService() {
         super();
     }
 

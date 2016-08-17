@@ -19,9 +19,11 @@ package org.apache.usergrid.rest.management;
 
 import org.apache.amber.oauth2.common.error.OAuthError;
 import org.apache.amber.oauth2.common.exception.OAuthProblemException;
+import org.apache.amber.oauth2.common.exception.OAuthSystemException;
 import org.apache.amber.oauth2.common.message.OAuthResponse;
 import org.apache.amber.oauth2.common.message.types.GrantType;
 import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.codec.Base64;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.UserInfo;
@@ -34,7 +36,13 @@ import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.management.users.UsersResource;
 import org.apache.usergrid.security.oauth.AccessInfo;
+import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.apache.usergrid.security.sso.ApigeeSSO2Provider;
+import org.apache.usergrid.security.sso.ExternalSSOProvider;
+import org.apache.usergrid.security.sso.SSOProviderFactory;
+import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
+import org.apache.usergrid.utils.JsonUtils;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +61,7 @@ import java.util.Map;
 import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.MediaType.*;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_CENTRAL_URL;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringAfterFirst;
 import static org.apache.usergrid.utils.StringUtils.stringOrSubstringBeforeFirst;
@@ -87,10 +95,16 @@ public class ManagementResource extends AbstractContextResource {
     @Autowired
     private ApplicationCreator applicationCreator;
 
+    @Autowired
+    private SSOProviderFactory ssoProviderFactory;
+
     // usergrid configuration property names needed
     public static final String USERGRID_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
 
     MetricsFactory metricsFactory = null;
+
+
+    String access_token = null;
 
 
     public ManagementResource() {
@@ -153,13 +167,113 @@ public class ManagementResource extends AbstractContextResource {
                                          @QueryParam( "client_id" ) String client_id,
                                          @QueryParam( "client_secret" ) String client_secret,
                                          @QueryParam( "ttl" ) long ttl,
-                                         @QueryParam( "access_token" ) String access_token,
                                          @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
-        return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
-                callback, false, true );
+
+
+        final UserInfo user = SubjectUtils.getUser();
+
+        // if user is null ( meaning no token was provided and previously validated in OAuth2AccessTokenSecurityFilter)
+        // then assume it's a token request
+        if( user == null) {
+            return getAccessTokenInternal(ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
+                callback, false, true);
+        }
+
+
+
+        // if it's not a token request and we have a user, extract details from the token
+
+        final long passwordChanged = management.getLastAdminPasswordChange( user.getUuid() );
+        final boolean ssoEnabled = Boolean.parseBoolean(properties.getProperty(USERGRID_EXTERNAL_SSO_ENABLED));
+        long tokenTtl;
+
+        PrincipalIdentifier userPrincipal  = (PrincipalIdentifier) SecurityUtils.getSubject().getPrincipal();
+        if ( userPrincipal != null && userPrincipal.getAccessTokenCredentials() != null ) {
+            this.access_token = userPrincipal.getAccessTokenCredentials().getToken();
+        }
+
+        String ssoUserId = null;
+        if(ssoEnabled && !user.getUsername().equals(properties.getProperty(USERGRID_SYSADMIN_LOGIN_NAME))){
+            ExternalSSOProvider provider = ssoProviderFactory.getProvider();
+            final Map<String, String> decodedTokenDetails = provider.getDecodedTokenDetails(access_token);
+            final String expiry = decodedTokenDetails.containsKey("expiry") ? decodedTokenDetails.get("expiry") : "0";
+
+            tokenTtl =
+                Long.valueOf(expiry) - System.currentTimeMillis()/1000;
+
+            if( provider instanceof ApigeeSSO2Provider ) {
+                ssoUserId = decodedTokenDetails.get("user_id");
+            }
+
+        }else{
+            tokenTtl = tokens.getTokenInfo(access_token).getDuration();
+        }
+
+
+        final AccessInfo access_info = new AccessInfo().withExpiresIn( tokenTtl ).withAccessToken( access_token )
+            .withPasswordChanged( passwordChanged );
+
+        // if external SSO is enabled, always set the external sso user id property, even if it's null
+        if ( ssoEnabled ){
+
+            access_info.setProperty("external_sso_user_id", ssoUserId);
+        }
+
+        access_info.setProperty( "user", management.getAdminUserOrganizationData( user, true, false) );
+
+
+        return Response.status( SC_OK ).type( jsonMediaType( callback ) )
+            .entity( wrapWithCallback( access_info, callback ) ).build();
+
+
     }
 
+    /**
+     * Get token details. Specially used for external tokens.
+     * @param ui
+     * @param authorization
+     * @param token
+     * @param provider
+     * @param keyUrl
+     * @param callback
+     * @return the json with all the token details. Error message if the external SSO provider is not supported or any other error.
+     * @throws Exception
+     */
+    @GET
+    @Path( "tokendetails" )
+    public Response getTokenDetails( @Context UriInfo ui, @HeaderParam( "Authorization" ) String authorization,
+                                    @QueryParam( "token" ) String token,
+                                    @QueryParam( "provider" )  @DefaultValue( "" ) String provider,
+                                    @QueryParam( "keyurl" )  @DefaultValue( "" ) String keyUrl,
+                                    @QueryParam( "callback" ) @DefaultValue( "" ) String callback
+                                    ) throws Exception {
+
+        ExternalSSOProvider externalprovider = null;
+        Map<String, Object> jwt = null;
+
+        if (! provider.isEmpty()) {
+            //check if its in one of the external provider list.
+            if (!ssoProviderFactory.getProvidersList().contains(StringUtils.upperCase(provider))) {
+                throw new IllegalArgumentException("Unsupported provider.");
+            } else {
+                //get the specific provider.
+                externalprovider = ssoProviderFactory.getSpecificProvider(provider);
+            }
+        }
+        else{   //if the provider is not specified get the default provider enabled in the properties.
+            externalprovider = ssoProviderFactory.getProvider();
+        }
+
+        if(keyUrl.isEmpty()) {
+            keyUrl =  externalprovider.getExternalSSOUrl();
+        }
+
+        jwt = externalprovider.getAllTokenDetails(token, keyUrl);
+
+        return Response.status( SC_OK ).type( jsonMediaType( callback ) )
+            .entity( wrapWithCallback(JsonUtils.mapToJsonString(jwt) , callback ) ).build();
+    }
 
     @GET
     @Path( "token" )
@@ -170,6 +284,7 @@ public class ManagementResource extends AbstractContextResource {
                                     @QueryParam( "client_id" ) String client_id,
                                     @QueryParam( "client_secret" ) String client_secret, @QueryParam( "ttl" ) long ttl,
                                     @QueryParam( "callback" ) @DefaultValue( "" ) String callback ) throws Exception {
+
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
                 callback, false, false);
     }
@@ -178,6 +293,8 @@ public class ManagementResource extends AbstractContextResource {
     private Response getAccessTokenInternal(UriInfo ui, String authorization, String grant_type, String username,
                                            String password, String client_id, String client_secret, long ttl,
                                            String callback, boolean adminData, boolean me) throws Exception {
+
+
 
 
         UserInfo user = null;
@@ -195,12 +312,11 @@ public class ManagementResource extends AbstractContextResource {
 
             if ( user == null ) {
 
-                if ( !me ) { // if not lightweight-auth, i.e. /management/me then...
 
-                    // make sure authentication is allowed considering
-                    // external token validation configuration (UG Central SSO)
-                    ensureAuthenticationAllowed( username, grant_type );
-                }
+                // make sure authentication is allowed considering
+                // external token validation configuration (UG Central SSO)
+                ensureAuthenticationAllowed( username, grant_type );
+
 
                 if ( authorization != null ) {
                     String type = stringOrSubstringBeforeFirst( authorization, ' ' ).toUpperCase();
@@ -277,6 +393,18 @@ public class ManagementResource extends AbstractContextResource {
                                .entity( wrapWithCallback( response.getBody(), callback ) ).build();
             }
 
+            //moved the check for sso enabled form MangementServiceImpl since was unable to get the current user there to check if its super user.
+            if( tokens.isExternalSSOProviderEnabled()
+                && !userServiceAdmin(username) ){
+                OAuthResponse response =
+                    OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
+                        .setErrorDescription( "External SSO integration is enabled, admin users must login via provider: "+
+                            properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) ).buildJSONMessage();
+                return Response.status( response.getResponseStatus() ).type( jsonMediaType( callback ) )
+                    .entity( wrapWithCallback( response.getBody(), callback ) ).build();
+
+            }
+
             String token = management.getAccessTokenForAdminUser( user.getUuid(), ttl );
             Long passwordChanged = management.getLastAdminPasswordChange( user.getUuid() );
 
@@ -284,7 +412,7 @@ public class ManagementResource extends AbstractContextResource {
                     new AccessInfo().withExpiresIn( tokens.getMaxTokenAgeInSeconds( token ) ).withAccessToken( token )
                                     .withPasswordChanged( passwordChanged );
 
-            access_info.setProperty( "user", management.getAdminUserOrganizationData( user, me ) );
+            access_info.setProperty( "user", management.getAdminUserOrganizationData( user, true, false) );
 
             // increment counters for admin login
             management.countAdminUserAction( user, "login" );
@@ -335,6 +463,7 @@ public class ManagementResource extends AbstractContextResource {
                                              @FormParam( "access_token" ) String access_token,
                                              @FormParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
+
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
                 callback, false, true );
     }
@@ -347,6 +476,8 @@ public class ManagementResource extends AbstractContextResource {
                                             Map<String, Object> json,
                                             @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
+
+        ValidateJson(json);
 
         String grant_type = ( String ) json.get( "grant_type" );
         String username = ( String ) json.get( "username" );
@@ -376,6 +507,9 @@ public class ManagementResource extends AbstractContextResource {
                                               @QueryParam( "callback" ) @DefaultValue( "" ) String callback,
                                               @HeaderParam( "Authorization" ) String authorization ) throws Exception {
 
+
+        ValidateJson(json);
+
         String grant_type = ( String ) json.get( "grant_type" );
         String username = ( String ) json.get( "username" );
         String password = ( String ) json.get( "password" );
@@ -394,6 +528,12 @@ public class ManagementResource extends AbstractContextResource {
 
         return getAccessTokenInternal( ui, authorization, grant_type, username, password, client_id, client_secret, ttl,
                 callback, false, false );
+    }
+
+    private void ValidateJson(Map<String, Object> json) throws OAuthSystemException {
+        if ( json == null ) {
+            throw new IllegalArgumentException("missing json post data");
+        }
     }
 
 
@@ -450,6 +590,8 @@ public class ManagementResource extends AbstractContextResource {
                 else {
                     redirect_uri += "&";
                 }
+
+                //todo: check if sso enabled.
                 redirect_uri += "code=" + management.getAccessTokenForAdminUser( user.getUuid(), 0 );
                 if ( isNotBlank( state ) ) {
                     redirect_uri += "&state=" + URLEncoder.encode( state, "UTF-8" );
@@ -478,26 +620,22 @@ public class ManagementResource extends AbstractContextResource {
      */
     private void ensureAuthenticationAllowed( String username, String grant_type ) {
 
+
         if ( username == null || grant_type == null || !grant_type.equalsIgnoreCase( "password" )) {
             return; // we only care about username/password auth
         }
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( USERGRID_CENTRAL_URL ) );
-
-        if ( externalTokensEnabled ) {
-
+        if ( tokens.isExternalSSOProviderEnabled() ) {
             // when external tokens enabled then only superuser can obtain an access token
-
-            final String superuserName = properties.getProperty( USERGRID_SYSADMIN_LOGIN_NAME );
-            if ( !username.equalsIgnoreCase( superuserName )) {
-
+            if ( !userServiceAdmin(username)) {
                 // this guy is not the superuser
-                throw new IllegalArgumentException( "Admin Users must login via " +
-                        properties.getProperty( USERGRID_CENTRAL_URL ) );
+                throw new IllegalArgumentException( "External SSO integration is enabled, admin users must login via provider: "+
+                    properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
             }
         }
     }
+
+
 
 
     String errorMsg = "";

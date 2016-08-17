@@ -31,7 +31,7 @@ namespace Usergrid.Sdk.IntegrationTests
 		[Test]
 		public void ShouldDoPaging()
 		{
-			var client = new Client(Organization, Application);
+			var client = new Client(Organization, Application, ApiUri);
 			client.Login(ClientId, ClientSecret, AuthType.Organization);
 
 			for (var i=0; i<20; i++) 

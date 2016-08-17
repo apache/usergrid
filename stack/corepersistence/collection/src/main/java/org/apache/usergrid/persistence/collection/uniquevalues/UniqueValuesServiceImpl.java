@@ -35,7 +35,6 @@ import com.google.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -45,10 +44,7 @@ import org.slf4j.LoggerFactory;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
@@ -81,8 +77,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
 
     @Override
-    public String getName() {
-        return "UniqueValues ClusterSingleton Router";
+    public String getRouterPath() {
+        return "/user/uvProxy";
     }
 
 
@@ -149,25 +145,6 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         }
 
     }
-
-
-    // TODO: do we need this or can we rely on UniqueCleanup + Cassandra replication?
-
-//    @Override
-//    public void releaseUniqueValues(ApplicationScope scope, Id entityId, UUID version, String region)
-//        throws UniqueValueException {
-//
-//        ready();
-//
-//        TODO: need to replicate logic from UniqueCleanup and make sure it happens in Authoritative Region
-//
-//        Iterator<UniqueValue> iterator = table.getUniqueValues( scope, entityId );
-//
-//        while ( iterator.hasNext() ) {
-//            UniqueValue uniqueValue = iterator.next();
-//            cancelUniqueField( scope, entityId, uniqueValue.getEntityVersion(), uniqueValue.getField(), region );
-//        }
-//    }
 
 
     private void reserveUniqueField(
@@ -243,13 +220,13 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
     private void sendUniqueValueRequest(
         Entity entity, String region, UniqueValueActor.Request request ) throws UniqueValueException {
 
-        int maxRetries = 5;
+        int maxRetries = uniqueValuesFig.getRequestRetryCount();
         int retries = 0;
 
         UniqueValueActor.Response response = null;
         while ( retries++ < maxRetries ) {
             try {
-                Timeout t = new Timeout( 1, TimeUnit.SECONDS );
+                Timeout t = new Timeout( uniqueValuesFig.getRequestTimeout(), TimeUnit.MILLISECONDS );
 
                 Future<Object> fut;
 
@@ -279,15 +256,15 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
                     break;
 
                 } else if ( response != null  ) {
-                    logger.debug("ERROR status retrying {} entity {} rowkey {}",
+                    logger.warn("ERROR status retrying {} entity {} rowkey {}",
                             retries, entity.getId().getUuid(), request.getConsistentHashKey());
                 } else {
-                    logger.debug("Timed-out retrying {} entity {} rowkey",
+                    logger.warn("Timed-out retrying {} entity {} rowkey",
                             retries, entity.getId().getUuid(), request.getConsistentHashKey());
                 }
 
             } catch ( Exception e ) {
-                logger.debug("{} caused retry {} for entity {} rowkey {}",
+                logger.error("{} caused retry {} for entity {} rowkey {}",
                     e.getClass().getSimpleName(), retries, entity.getId().getUuid(), request.getConsistentHashKey());
             }
         }
@@ -309,9 +286,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
 
 
     @Override
-    public void createClusterSingletonManager(ActorSystem system) {
+    public void produceRouter( ActorSystem system, String role ) {
 
-        // create cluster singleton supervisor for actor system
         ClusterSingletonManagerSettings settings =
             ClusterSingletonManagerSettings.create( system ).withRole("io");
 
@@ -319,54 +295,75 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             Props.create( GuiceActorProducer.class, injector, UniqueValuesRouter.class ),
             PoisonPill.getInstance(), settings ), "uvRouter" );
 
-    }
-
-
-    @Override
-    public void createClusterSingletonProxy( ActorSystem system, String role ) {
-
         ClusterSingletonProxySettings proxySettings =
             ClusterSingletonProxySettings.create( system ).withRole( role );
 
         system.actorOf( ClusterSingletonProxy.props( "/user/uvRouter", proxySettings ), "uvProxy" );
+
+        subscribeToReservations( system );
     }
 
-
-    @Override
-    public void createLocalSystemActors( ActorSystem localSystem ) {
-        subscribeToReservations( localSystem );
-    }
 
     @Override
     public void addConfiguration( Map<String, Object> configMap ) {
 
         int numInstancesPerNode = uniqueValuesFig.getUniqueValueInstancesPerNode();
 
-        Map<String, Object> akka = (Map<String, Object>)configMap.get("akka");
+        // TODO: replace this configuration stuff with equivalent Java code in the above "create" methods?
 
-        // TODO: replace this configuration stuff with equivalent Java code in the above "create" methods
+        // be careful not to overwrite configurations that other router producers may have added
 
-        akka.put( "actor", new HashMap<String, Object>() {{
-            put( "deployment", new HashMap<String, Object>() {{
-                put( "/uvRouter/singleton/router", new HashMap<String, Object>() {{
-                    put( "router", "consistent-hashing-pool" );
-                    put( "cluster", new HashMap<String, Object>() {{
-                        put( "enabled", "on" );
-                        put( "allow-local-routees", "on" );
-                        put( "use-role", "io" );
-                        put( "max-nr-of-instances-per-node", numInstancesPerNode );
-                        put( "failure-detector", new HashMap<String, Object>() {{
-                            put( "threshold", "10" );
-                            put( "acceptable-heartbeat-pause", "3 s" );
-                            put( "heartbeat-interval", "1 s" );
-                            put( "heartbeat-request", new HashMap<String, Object>() {{
-                                put( "expected-response-after", "3 s" );
-                            }} );
-                        }} );
+        Map<String, Object> akka = (Map<String, Object>) configMap.get( "akka" );
+        final Map<String, Object> deploymentMap;
+
+        if ( akka.get( "actor" ) == null ) {
+
+            // nobody has created anything under "actor" yet, so create it now
+            deploymentMap = new HashMap<>();
+            akka.put( "actor", new HashMap<String, Object>() {{
+                put( "deployment", deploymentMap );
+            }} );
+
+        } else if (((Map) akka.get( "actor" )).get( "deployment" ) == null) {
+
+            // nobody has created anything under "actor/deployment" yet, so create it now
+            deploymentMap = new HashMap<>();
+            ((Map) akka.get( "actor" )).put( "deployment", deploymentMap );
+
+        } else {
+
+            // somebody else already created "actor/deployment" config so use it
+            deploymentMap = (Map<String, Object>) ((Map) akka.get( "actor" )).get( "deployment" );
+        }
+
+        deploymentMap.put( "/uvRouter/singleton/router", new HashMap<String, Object>() {{
+            put( "router", "consistent-hashing-pool" );
+            put( "cluster", new HashMap<String, Object>() {{
+                put( "enabled", "on" );
+                put( "allow-local-routees", "on" );
+                put( "use-role", "io" );
+                put( "max-nr-of-instances-per-node", numInstancesPerNode );
+                put( "failure-detector", new HashMap<String, Object>() {{
+                    put( "threshold", "10" );
+                    put( "acceptable-heartbeat-pause", "3 s" );
+                    put( "heartbeat-interval", "1 s" );
+                    put( "heartbeat-request", new HashMap<String, Object>() {{
+                        put( "expected-response-after", "3 s" );
                     }} );
                 }} );
             }} );
         }} );
 
+    }
+
+
+    @Override
+    public Collection<Class> getMessageTypes() {
+        List<Class> messageTypes = new ArrayList<>();
+        messageTypes.add( UniqueValueActor.Request.class);
+        messageTypes.add( UniqueValueActor.Reservation.class);
+        messageTypes.add( UniqueValueActor.Cancellation.class);
+        messageTypes.add( UniqueValueActor.Confirmation.class);
+        return messageTypes;
     }
 }

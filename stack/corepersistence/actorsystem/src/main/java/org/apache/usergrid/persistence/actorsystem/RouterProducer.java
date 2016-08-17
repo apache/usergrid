@@ -19,33 +19,35 @@
 package org.apache.usergrid.persistence.actorsystem;
 
 import akka.actor.ActorSystem;
+
+import java.util.Collection;
 import java.util.Map;
 
 
+/**
+ * Interface used by ActorSystemManager to configure and create an Akka router.
+ */
 public interface RouterProducer {
 
-    String getName();
-
     /**
-     * Create cluster single manager for current region.
-     * Will be called once per router per JVM.
+     * Path to be used to send messages to this router.
      */
-    void createClusterSingletonManager( ActorSystem system );
+    String getRouterPath();
 
     /**
-     * Create cluster singleton proxy for region.
-     * Will be called once per router per JVM per region.
+     * Returns all message types that should be sent to this router for routing.
      */
-    void createClusterSingletonProxy( ActorSystem system, String role );
+    Collection<Class> getMessageTypes();
 
     /**
-     * Create other actors needed to support the router produced by the implementation.
-     */
-    void createLocalSystemActors( ActorSystem localSystem );
-
-    /**
-     * Add configuration for the router to configuration map
+     * Add configuration for the router to existing ActorSystem configuration.
+     * Called before ActorSystem is created.
      */
     void addConfiguration(Map<String, Object> configMap );
 
+    /**
+     * Produce router and any supporting objects.
+     * Called after ActorSystem is created.
+     */
+    void produceRouter( ActorSystem system, String role );
 }

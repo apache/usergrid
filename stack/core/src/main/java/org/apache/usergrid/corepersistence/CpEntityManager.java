@@ -36,6 +36,8 @@ import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.mq.QueueManager;
+import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
@@ -65,6 +67,7 @@ import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.mq.Message;
 import org.apache.usergrid.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,6 +158,9 @@ public class CpEntityManager implements EntityManager {
 
     private EntityCollectionManager ecm;
 
+    public QueueManagerFactory queueManagerFactory;
+
+
     //    /** Short-term cache to keep us from reloading same Entity during single request. */
 //    private LoadingCache<EntityScope, org.apache.usergrid.persistence.model.entity.Entity> entityCache;
 
@@ -178,7 +184,8 @@ public class CpEntityManager implements EntityManager {
                             final CollectionService collectionService,
                             final ConnectionService connectionService,
                             final CollectionSettingsFactory collectionSettingsFactory,
-                            final UUID applicationId ) {
+                            final UUID applicationId,
+                            final QueueManagerFactory queueManagerFactory) {
 
         this.entityManagerFig = entityManagerFig;
         this.actorSystemFig = actorSystemFig;
@@ -243,6 +250,8 @@ public class CpEntityManager implements EntityManager {
 
         // set to false for now
         this.skipAggregateCounters = false;
+
+        this.queueManagerFactory = queueManagerFactory;
     }
 
 
@@ -1493,6 +1502,21 @@ public class CpEntityManager implements EntityManager {
         return entity;
     }
 
+    public Message storeEventAsMessage(Mutator<ByteBuffer> m, Event event, long timestamp) {
+
+        counterUtils.addEventCounterMutations(m, applicationId, event, timestamp);
+
+        QueueManager q = queueManagerFactory.getQueueManager(applicationId);
+
+        Message message = new Message();
+        message.setType("event");
+        message.setCategory(event.getCategory());
+        message.setStringProperty("message", event.getMessage());
+        message.setTimestamp(timestamp);
+        q.postToQueue("events", message);
+
+        return message;
+    }
 
     @Override
     public Entity createItemInCollection( EntityRef entityRef, String collectionName,
@@ -2772,10 +2796,13 @@ public class CpEntityManager implements EntityManager {
                 }
             }
 
-            //doesn't allow the mutator to be ignored.
-            counterUtils.addEventCounterMutations( null, applicationId, event, timestamp );
+            Mutator<ByteBuffer> batch = createMutator( cass.getApplicationKeyspace( applicationId ), be );
+            Message message = storeEventAsMessage( batch, event, timestamp );
 
             incrementEntityCollection( "events", timestamp );
+
+            entity.setUuid( message.getUuid() );
+            batch.execute();
 
             return entity;
         }

@@ -17,69 +17,48 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.*;
-
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.index.CollectionSettings;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
 import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
-import org.apache.usergrid.corepersistence.results.IdQueryExecutor;
-import org.apache.usergrid.persistence.map.MapManager;
-import org.apache.usergrid.persistence.map.MapScope;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
-
-import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.results.ConnectionRefQueryExecutor;
 import org.apache.usergrid.corepersistence.results.EntityQueryExecutor;
+import org.apache.usergrid.corepersistence.results.IdQueryExecutor;
 import org.apache.usergrid.corepersistence.service.CollectionSearch;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionSearch;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.ConnectedEntityRef;
-import org.apache.usergrid.persistence.ConnectionRef;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.Query.Level;
-import org.apache.usergrid.persistence.RelationManager;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.RoleRef;
-import org.apache.usergrid.persistence.Schema;
-import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.SimpleRoleRef;
 import org.apache.usergrid.persistence.cassandra.ConnectionRefImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.SearchByEdge;
-import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.*;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchEdgeType;
 import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.map.MapManager;
+import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.usergrid.utils.MapUtils;
-
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
 import rx.Observable;
 
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createCollectionEdge;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionEdge;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createConnectionSearchByEdge;
-import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getNameFromEdgeType;
+import java.util.*;
+
+import static org.apache.usergrid.corepersistence.util.CpNamingUtils.*;
 import static org.apache.usergrid.persistence.Schema.*;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.InflectionUtils.singularize;
@@ -954,7 +933,7 @@ public class CpRelationManager implements RelationManager {
         final Id sourceId = headEntity.asId();
 
         final Optional<String> queryString = query.isGraphSearch()? Optional.<String>absent(): query.getQl();
-
+        final boolean isConnecting = query.isConnecting();
 
         if ( query.getResultsLevel() == Level.REFS || query.getResultsLevel() == Level.IDS ) {
 
@@ -968,7 +947,7 @@ public class CpRelationManager implements RelationManager {
 
                     final ConnectionSearch search =
                         new ConnectionSearch( applicationScope, sourceId, entityType, connection, toExecute.getLimit(),
-                            queryString, cursor );
+                            queryString, cursor, isConnecting );
                     return connectionService.searchConnectionAsRefs( search );
                 }
             }.next();
@@ -983,7 +962,7 @@ public class CpRelationManager implements RelationManager {
                 //we need the callback so as we get a new cursor, we execute a new search and re-initialize our builders
                 final ConnectionSearch search =
                     new ConnectionSearch( applicationScope, sourceId, entityType, connection, toExecute.getLimit(),
-                        queryString, cursor );
+                        queryString, cursor, isConnecting );
                 return connectionService.searchConnection( search );
             }
         }.next();

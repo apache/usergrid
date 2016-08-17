@@ -548,11 +548,24 @@ public class ManagementServiceImpl implements ManagementService {
             if ( !validateAdminInfo( username, name, email, password ) ) {
                 return null;
             }
-            if ( areActivationChecksDisabled() ) {
-                user = createAdminUserInternal( null, username, name, email, password, true, false, userProperties );
+
+            // sysadmin can omit password field in the request and that will try to fetch an existing admin user to
+            // associate to the requested organization
+            if((password == null || password.isEmpty()) && SubjectUtils.isServiceAdmin()){
+                user = getAdminUserByEmail(email);
+                if(user == null ){
+                    throw new IllegalArgumentException("Password should be sent in the request or should be a valid admin user email.");
+                }
             }
-            else {
-                user = createAdminUserInternal( null, username, name, email, password, activated, disabled, userProperties );
+
+
+            if(user == null) {
+                // if external SSO is enabled and we're adding a user to an org, auto activate the user
+                if (tokens.isExternalSSOProviderEnabled() || areActivationChecksDisabled()) {
+                    user = createAdminUser(null, username, name, email, password, true, false, userProperties);
+                } else {
+                    user = createAdminUser(null, username, name, email, password, activated, disabled, userProperties);
+                }
             }
 
             if(logger.isTraceEnabled()){
@@ -903,10 +916,13 @@ public class ManagementServiceImpl implements ManagementService {
             user.getEmail(), user.getConfirmed(), user.getActivated(), user.getDisabled(),
             user.getDynamicProperties(), true );
 
+
         // special case for sysadmin and test account only
         if (    !user.getEmail().equals( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ) )
              && !user.getEmail().equals( properties .getProperty( PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL ) ) ) {
-            this.startAdminUserActivationFlow( organizationId, userInfo );
+            if(!tokens.isExternalSSOProviderEnabled()) {
+                this.startAdminUserActivationFlow(organizationId, userInfo);
+            }
         }
 
         return userInfo;
@@ -951,7 +967,7 @@ public class ManagementServiceImpl implements ManagementService {
     }
 
 
-    private boolean validateAdminInfo( String username, String name, String email, String password ) throws Exception {
+    protected boolean validateAdminInfo( String username, String name, String email, String password ) throws Exception {
         if ( email == null ) {
             return false;
         }
@@ -961,18 +977,18 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
-        if ( !em.isPropertyValueUniqueForEntity( "user", "username", username ) ) {
+        if ( !( tokens.isExternalSSOProviderEnabled() && SubjectUtils.isServiceAdmin()) && !em.isPropertyValueUniqueForEntity( "user", "username", username ) ) {
             throw new DuplicateUniquePropertyExistsException( "user", "username", username );
         }
 
-        if ( !em.isPropertyValueUniqueForEntity( "user", "email", email ) ) {
+        if ( !(tokens.isExternalSSOProviderEnabled()&& SubjectUtils.isServiceAdmin())  && !em.isPropertyValueUniqueForEntity( "user", "email", email ) ) {
             throw new DuplicateUniquePropertyExistsException( "user", "email", email );
         }
         return true;
     }
 
 
-    private UserInfo createAdminUserInternal( UUID organizationId, String username, String name, String email, String password,
+    protected UserInfo createAdminUserInternal( UUID organizationId, String username, String name, String email, String password,
                                               boolean activated, boolean disabled, Map<String, Object> userProperties )
             throws Exception {
         logger.info( "createAdminUserInternal: {}", username );
@@ -1525,6 +1541,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public String getAccessTokenForAdminUser( UUID userId, long duration ) throws Exception {
+
         return getTokenForPrincipal( ACCESS, null, smf.getManagementAppId(), ADMIN_USER, userId, duration );
     }
 
@@ -1618,7 +1635,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public Map<String, Object> getAdminUserOrganizationData( UUID userId ) throws Exception {
         UserInfo user = getAdminUserByUuid( userId );
-        return getAdminUserOrganizationData( user, true );
+        return getAdminUserOrganizationData( user, true, true);
     }
 
 
@@ -1630,7 +1647,7 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public Map<String, Object> getAdminUserOrganizationData( UserInfo user, boolean deep ) throws Exception {
+    public Map<String, Object> getAdminUserOrganizationData(UserInfo user, boolean includeApps, boolean includeOrgUsers) throws Exception {
 
         Map<String, Object> json = new HashMap<>();
 
@@ -1659,10 +1676,11 @@ public class ManagementServiceImpl implements ManagementService {
             jsonOrganization.put( PROPERTY_UUID, organization.getKey() );
             jsonOrganization.put( "properties", getOrganizationByUuid( organization.getKey() ).getProperties() );
 
-            if ( deep ) {
-                BiMap<UUID, String> applications = getApplicationsForOrganization( organization.getKey() );
-                jsonOrganization.put( "applications", applications.inverse() );
-
+            if ( includeApps ) {
+                BiMap<UUID, String> applications = getApplicationsForOrganization(organization.getKey());
+                jsonOrganization.put("applications", applications.inverse());
+            }
+            if ( includeOrgUsers ){
                 List<UserInfo> users = getAdminUsersForOrganization( organization.getKey() );
                 Map<String, Object> jsonUsers = new HashMap<>();
                 for ( UserInfo u : users ) {
@@ -1722,7 +1740,9 @@ public class ManagementServiceImpl implements ManagementService {
         invalidateManagementAppAuthCache();
 
         if ( email ) {
-            sendAdminUserInvitedEmail( user, organization );
+            if(!tokens.isExternalSSOProviderEnabled()) {
+                sendAdminUserInvitedEmail(user, organization);
+            }
         }
     }
 
@@ -3473,4 +3493,29 @@ public class ManagementServiceImpl implements ManagementService {
         scopedCache.invalidate();
         localShiroCache.invalidateAll();
     }
+
+    @Override
+    public void createOrganizationPostProcessing( final OrganizationInfo orgInfo,
+                                                  final Map<String,String> properties ){
+        // do nothing, this is a hook for any classes extending the ManagementServiceInterface
+
+    }
+
+    @Override
+    public void createAdminUserPostProcessing( final UserInfo userInfo, final Map<String,String> properties){
+        // do nothing, this is a hook for any classes extending the ManagementServiceInterface
+    }
+
+    @Override
+    public void addUserToOrganizationPostProcessing( final UserInfo userInfo, final String organizationName,
+                                                          final Map<String,String> properties){
+        // do nothing, this is a hook for any classes extending the ManagementServiceInterface
+    }
+
+    @Override
+    public void removeUserFromOrganizationPostProcessing( final UserInfo userInfo, final String organizationName,
+                                                     final Map<String,String> properties){
+        // do nothing, this is a hook for any classes extending the ManagementServiceInterface
+    }
+
 }

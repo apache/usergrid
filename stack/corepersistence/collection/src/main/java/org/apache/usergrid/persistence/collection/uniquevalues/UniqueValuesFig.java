@@ -36,6 +36,10 @@ public interface UniqueValuesFig extends GuicyFig, Serializable {
 
     String UNIQUEVALUE_AUTHORITATIVE_REGION = "collection.uniquevalues.authoritative.region";
 
+    String UNIQUEVALUE_REQUEST_TIMEOUT = "collection.uniquevalues.request.timeout";
+
+    String UNIQUEVALUE_REQUEST_RETRY_COUNT = "collection.uniquevalues.request.retrycount";
+
 
     /**
      * Unique Value cache TTL in seconds.
@@ -62,6 +66,19 @@ public interface UniqueValuesFig extends GuicyFig, Serializable {
      * Primary authoritative region (used if none other specified).
      */
     @Key(UNIQUEVALUE_AUTHORITATIVE_REGION)
-    @Default("default")
     String getAuthoritativeRegion();
+
+    /**
+     * Number of milliseconds before timing out the unique value request to the Actor System
+     */
+    @Key(UNIQUEVALUE_REQUEST_TIMEOUT)
+    @Default("5000")
+    int getRequestTimeout();
+
+    /**
+     * Number of actor instances to create on each.
+     */
+    @Key(UNIQUEVALUE_REQUEST_RETRY_COUNT)
+    @Default("2")
+    int getRequestRetryCount();
 }

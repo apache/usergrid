@@ -254,7 +254,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 logger.trace("SysadminLocalhostFilter.authorize");
             }
 
-            if (!request.getSecurityContext().isUserInRole( ROLE_SERVICE_ADMIN )) {
+            if ( !isServiceAdmin() && !isBasicAuthServiceAdmin(request)) {
                 // not a sysadmin request
                 return;
             }
@@ -303,7 +303,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 logger.trace("OrganizationFilter.authorize");
             }
 
-            if ( !isPermittedAccessToOrganization( getOrganizationIdentifier() ) ) {
+            if ( !isPermittedAccessToOrganization( getOrganizationIdentifier() ) && !isBasicAuthServiceAdmin(request) ) {
                 if (logger.isTraceEnabled()) {
                     logger.trace("No organization access authorized");
                 }
@@ -375,7 +375,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                     throw mappableSecurityException( "unauthorized", "No application guest access authorized" );
                 }
             }
-            if ( !isPermittedAccessToApplication( getApplicationIdentifier() ) ) {
+            if ( !isPermittedAccessToApplication( getApplicationIdentifier() ) && !isBasicAuthServiceAdmin(request) ) {
                 throw mappableSecurityException( "unauthorized", "No application access authorized" );
             }
         }
@@ -397,7 +397,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 logger.trace("SystemFilter.authorize");
             }
             try {
-                if (!request.getSecurityContext().isUserInRole( ROLE_SERVICE_ADMIN )) {
+                if (!isBasicAuthServiceAdmin(request) && !isServiceAdmin()) {
                     if (logger.isTraceEnabled()) {
                         logger.trace("You are not the system admin.");
                     }
@@ -429,7 +429,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 if (logger.isTraceEnabled()) {
                     logger.trace("AdminUserFilter.authorize");
                 }
-                if (!isUser( getUserIdentifier() ) && !isServiceAdmin() ) {
+                if (!isUser( getUserIdentifier() ) && !isServiceAdmin() && !isBasicAuthServiceAdmin(request) ) {
                     throw mappableSecurityException( "unauthorized", "No admin user access authorized" );
                 }
             }
@@ -537,6 +537,12 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
             }
 
         }
+    }
+
+    private static boolean isBasicAuthServiceAdmin(ContainerRequestContext request){
+
+        return request.getSecurityContext().isUserInRole( ROLE_SERVICE_ADMIN );
+
     }
 
 
