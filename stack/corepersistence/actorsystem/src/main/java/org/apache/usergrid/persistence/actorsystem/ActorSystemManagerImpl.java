@@ -69,7 +69,6 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     private ActorSystem clusterSystem = null;
 
 
-
     @Inject
     public ActorSystemManagerImpl( ActorSystemFig actorSystemFig ) {
         this.actorSystemFig = actorSystemFig;
@@ -132,12 +131,6 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
 
     @Override
-    public void registerMessageType(Class messageType, String routerPath) {
-        routersByMessageType.put( messageType, routerPath );
-    }
-
-
-    @Override
     public ActorRef getClientActor() {
         return clientActor;
     }
@@ -191,15 +184,11 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
         logger.info("Initializing Akka for hostname {} region {} regionList {} seeds {}",
             hostname, currentRegion, regionList, actorSystemFig.getSeeds() );
 
-        Config config = readClusterSystemConfig();
+        Config config = createConfiguration();
 
-        clusterSystem = createClusterSystemsFromConfigs( config );
+        clusterSystem = createClusterSystem( config );
 
         createClientActors( clusterSystem );
-
-        for ( RouterProducer routerProducer : routerProducers ) {
-            routerProducer.createLocalSystemActors( clusterSystem );
-        }
 
         mediator = DistributedPubSub.get( clusterSystem ).mediator();
     }
@@ -273,7 +262,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     /**
      * Read cluster config and add seed nodes to it.
      */
-    private Config readClusterSystemConfig() {
+    private Config createConfiguration() {
 
         Config config = null;
 
@@ -333,32 +322,33 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
 
     /**
-     * Create actor system for this region, with cluster singleton manager & proxy.
+     * Create cluster system for this the current region
      */
-    private ActorSystem createClusterSystemsFromConfigs( Config config ) {
-
+    private ActorSystem createClusterSystem( Config config ) {
 
         // there is only 1 akka system for a Usergrid cluster
         final String clusterName = "ClusterSystem";
 
-
-        if( clusterSystem == null) {
+        if ( clusterSystem == null) {
 
             logger.info("Class: {}. ActorSystem [{}] not initialized, creating...", this, clusterName);
 
             clusterSystem = ActorSystem.create( clusterName, config );
 
             for ( RouterProducer routerProducer : routerProducers ) {
-                logger.info("Creating router producer [{}] for region [{}]", routerProducer.getName(), currentRegion );
-                routerProducer.createClusterSingletonManager( clusterSystem );
+                logger.info("Creating router [{}] for region [{}]", routerProducer.getRouterPath(), currentRegion );
+                routerProducer.produceRouter( clusterSystem, "io" );
             }
 
             for ( RouterProducer routerProducer : routerProducers ) {
-                logger.info("Creating [{}] proxy for region [{}] role 'io'", routerProducer.getName(), currentRegion);
-                routerProducer.createClusterSingletonProxy( clusterSystem, "io" );
+                Iterator<Class> messageTypes = routerProducer.getMessageTypes().iterator();
+                while ( messageTypes.hasNext() ) {
+                    Class messageType = messageTypes.next();
+                    routersByMessageType.put( messageType, routerProducer.getRouterPath() );
+                }
             }
 
-            //add a shutdown hook to clean all actor systems if the JVM exits without the servlet container knowing
+            // add a shutdown hook to clean all actor systems if the JVM exits without the servlet container knowing
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
                 public void run() {
@@ -452,8 +442,6 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
         logger.info("Shutting down Akka cluster: {}", clusterSystem.name());
         clusterSystem.shutdown();
-
-
     }
 
 }

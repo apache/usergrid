@@ -94,8 +94,13 @@ public class ConnectionServiceImpl implements ConnectionService {
 
 
         if ( !query.isPresent() ) {
-            results =
-                pipelineBuilder.traverseConnection( search.getConnectionName(), search.getEntityType() ).loadEntities();
+            if(search.getIsConnecting()){
+                results = pipelineBuilder.traverseReverseConnection(search.getConnectionName(), search.getEntityType()).loadEntities();
+            }
+            else {
+                results =
+                    pipelineBuilder.traverseConnection(search.getConnectionName(), search.getEntityType()).loadEntities();
+            }
         }
 
         else {

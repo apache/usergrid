@@ -17,24 +17,16 @@
 package org.apache.usergrid.persistence;
 
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
+import org.apache.usergrid.AbstractCoreIT;
+import org.apache.usergrid.persistence.Query.Level;
+import org.apache.usergrid.persistence.entities.User;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.persistence.entities.User;
-import org.apache.usergrid.persistence.Query.Level;
+import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class EntityConnectionsIT extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( EntityConnectionsIT.class );
@@ -333,6 +325,53 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         res = em.getSourceEntities(wilmaEntity, "likes", "user", Level.ALL_PROPERTIES);
         assertEquals( 1, res.size() );
         assertEquals( "user", res.getEntity().getType() );
+    }
+
+    //not required . addd tests at service layer.
+    @Test
+    public void testGetConnectingEntitiesCursor() throws Exception {
+
+        UUID applicationId = app.getId( );
+        assertNotNull( applicationId );
+
+        EntityManager em = app.getEntityManager();
+        assertNotNull( em );
+
+        User fred = new User();
+        fred.setUsername( "fred" );
+        fred.setEmail( "fred@flintstones.com" );
+        Entity fredEntity = em.create( fred );
+        assertNotNull( fredEntity );
+
+        User wilma = new User();
+        wilma.setUsername( "wilma" );
+        wilma.setEmail( "wilma@flintstones.com" );
+        Entity wilmaEntity = em.create( wilma );
+        assertNotNull( wilmaEntity );
+
+        User John = new User();
+        John.setUsername( "John" );
+        John.setEmail( "John@flintstones.com" );
+        Entity JohnEntity = em.create( John );
+        assertNotNull( JohnEntity );
+
+        em.createConnection( fredEntity, "likes", wilmaEntity );
+        em.createConnection( fredEntity, "likes", JohnEntity );
+
+
+        app.refreshIndex();
+
+        // now query via the testConnection, this should work
+
+        Query query = Query.fromQLNullSafe("" );
+        query.setConnectionType( "likes" );
+//        query.setConnecting(true);
+        query.setEntityType( "user" );
+
+        // goes through "traverseReverseConnection"
+        Results r = em.searchTargetEntities(fredEntity, query);
+
+        assertEquals( 2, r.size() );
     }
 
 

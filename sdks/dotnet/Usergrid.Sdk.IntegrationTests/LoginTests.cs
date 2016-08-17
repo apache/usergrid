@@ -24,14 +24,14 @@ namespace Usergrid.Sdk.IntegrationTests
         [Test]
         public void ShouldLoginSuccessfullyWithClientCredentials()
         {
-            var client = new Client(Organization, Application);
+            var client = new Client(Organization, Application, ApiUri);
             client.Login(ClientId, ClientSecret, AuthType.Organization);
         }
 
 		[Test]
 		public void ShouldThrowWithInvalidOrganizationCredentials()
 		{
-			var client = new Client (Organization, Application);
+			var client = new Client (Organization, Application, ApiUri);
 
 			try
 			{
@@ -48,14 +48,14 @@ namespace Usergrid.Sdk.IntegrationTests
 		[Test]
 		public void ShouldLoginSuccessfullyWithApplicationCredentials()
 		{
-			var client = new Client(Organization, Application);
+			var client = new Client(Organization, Application, ApiUri);
 			client.Login(ApplicationId, ApplicationSecret, AuthType.Application);
 		}
 
 		[Test]
 		public void ShouldThrowWithInvalidApplicationCredentials()
 		{
-			var client = new Client (Organization, Application);
+			var client = new Client (Organization, Application, ApiUri);
 
 			try
 			{
@@ -72,14 +72,14 @@ namespace Usergrid.Sdk.IntegrationTests
 		[Test]
 		public void ShouldLoginSuccessfullyWithUserCredentials()
 		{
-			var client = new Client(Organization, Application);
+			var client = new Client(Organization, Application, ApiUri);
 			client.Login(UserId, UserSecret, AuthType.User);
 		}
 
         [Test]
         public void ShouldThrowWithInvalidUserCredentials()
         {
-            var client = new Client(Organization, Application);
+            var client = new Client(Organization, Application, ApiUri);
 
             try
             {

@@ -62,6 +62,14 @@ public interface FilterFactory {
      */
     ReadGraphConnectionFilter readGraphConnectionFilter( final String connectionName );
 
+
+    /**
+     * Generate a new instance of the command with the specified parameters
+     *
+     * @param connectionName The connection name to use when reverse traversing the graph
+     */
+    ReadGraphReverseConnectionFilter readGraphReverseConnectionFilter( final String connectionName );
+
     /**
      * Generate a new instance of the command with the specified parameters
      *
