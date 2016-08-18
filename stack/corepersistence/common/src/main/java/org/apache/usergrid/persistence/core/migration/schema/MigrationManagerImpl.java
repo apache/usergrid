@@ -106,6 +106,9 @@ public class MigrationManagerImpl implements MigrationManager {
 
 
             }
+
+            dataStaxCluster.waitForSchemaAgreement();
+
         }
         catch ( Throwable t ) {
             logger.error( "Unable to perform migration", t );
@@ -132,7 +135,6 @@ public class MigrationManagerImpl implements MigrationManager {
 
         logger.info( "Created column family {}", columnFamily.getColumnFamily().getName() );
 
-        dataStaxCluster.waitForSchemaAgreement();
     }
 
     private void createTable(TableDefinition tableDefinition ) throws Exception {
@@ -146,7 +148,6 @@ public class MigrationManagerImpl implements MigrationManager {
 
         logger.info("Created table: {}", tableDefinition.getTableName());
 
-        dataStaxCluster.waitForSchemaAgreement();
     }
 
 
