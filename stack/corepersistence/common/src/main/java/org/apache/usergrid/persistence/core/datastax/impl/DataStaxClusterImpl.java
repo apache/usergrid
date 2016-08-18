@@ -113,11 +113,10 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         );
 
         clusterSession.execute(createApplicationKeyspace);
-        clusterSession.executeAsync(updateApplicationKeyspace);
+        clusterSession.execute(updateApplicationKeyspace);
 
         logger.info("Created/Updated keyspace: {}", cassandraFig.getApplicationKeyspace());
 
-        waitForSchemaAgreement();
     }
 
     /**
@@ -128,7 +127,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
         while ( true ) {
 
-            if( this.cluster.getMetadata().checkSchemaAgreement() ){
+            if( getCluster().getMetadata().checkSchemaAgreement() ){
                 return;
             }
 
