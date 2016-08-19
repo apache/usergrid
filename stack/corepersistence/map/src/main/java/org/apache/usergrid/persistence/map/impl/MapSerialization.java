@@ -21,10 +21,12 @@ package org.apache.usergrid.persistence.map.impl;
 
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
+import org.apache.usergrid.persistence.map.MapKeyResults;
 import org.apache.usergrid.persistence.map.MapScope;
 
 
@@ -87,4 +89,13 @@ public interface MapSerialization extends Migration {
      * @param key The key used to delete the entry
      */
     void delete( final MapScope scope, final String key );
+
+    /**
+     * Get a list of keys for the given map scope.
+     * @param cursor Optional pagingState
+     * @param limit number of keys to return
+     * @return List of keys
+     */
+    MapKeyResults getAllKeys(final MapScope mapScope, final String cursor, final int limit);
+
 }

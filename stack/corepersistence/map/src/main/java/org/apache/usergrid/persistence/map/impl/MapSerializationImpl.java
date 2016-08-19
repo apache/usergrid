@@ -34,12 +34,15 @@ import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.shard.ExpandingShardLocator;
 import org.apache.usergrid.persistence.core.shard.StringHashUtils;
+import org.apache.usergrid.persistence.map.MapKeyResults;
 import org.apache.usergrid.persistence.map.MapScope;
 
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
+import static org.apache.commons.lang.StringUtils.isBlank;
 
 
 @Singleton
@@ -67,7 +70,7 @@ public class MapSerializationImpl implements MapSerialization {
             put( "column1", DataType.Name.BLOB );
             put( "value", DataType.Name.BLOB ); }};
     private static final Map<String, String> MAP_KEYS_CLUSTERING_ORDER =
-        new HashMap<String, String>(){{ put( "column1", "ASC" ); }};
+        new HashMap<String, String>(){{ put( "column1", "DESC" ); }};
 
 
 
@@ -162,12 +165,12 @@ public class MapSerializationImpl implements MapSerialization {
                 .value("value", DataType.text().serialize(value, ProtocolVersion.NEWEST_SUPPORTED));
 
 
-            final int bucket = BUCKET_LOCATOR.getCurrentBucket( key );
+            final int bucket = BUCKET_LOCATOR.getCurrentBucket( scope.getName() );
             mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
                 .using(timeToLive)
-                .value("key", getMapKeyPartitionKey(scope, key, bucket))
-                .value("column1", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED))
-                .value("value", DataType.text().serialize(value, ProtocolVersion.NEWEST_SUPPORTED));
+                .value("key", getMapKeyPartitionKey(scope, bucket))
+                .value("column1", DataType.text().serialize(key, ProtocolVersion.NEWEST_SUPPORTED))
+                .value("value", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED));
         }else{
 
             mapEntry = QueryBuilder.insertInto(MAP_ENTRIES_TABLE)
@@ -176,12 +179,12 @@ public class MapSerializationImpl implements MapSerialization {
                 .value("value", DataType.text().serialize(value, ProtocolVersion.NEWEST_SUPPORTED));
 
             // get a bucket number for the map keys table
-            final int bucket = BUCKET_LOCATOR.getCurrentBucket( key );
+            final int bucket = BUCKET_LOCATOR.getCurrentBucket( scope.getName() );
 
             mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
-                .value("key", getMapKeyPartitionKey(scope, key, bucket))
-                .value("column1", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED))
-                .value("value", DataType.text().serialize(value, ProtocolVersion.NEWEST_SUPPORTED));
+                .value("key", getMapKeyPartitionKey(scope, bucket))
+                .value("column1", DataType.text().serialize(key, ProtocolVersion.NEWEST_SUPPORTED))
+                .value("value", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED));
 
         }
 
@@ -216,10 +219,10 @@ public class MapSerializationImpl implements MapSerialization {
         session.execute(mapEntry);
 
 
-        final int bucket = BUCKET_LOCATOR.getCurrentBucket( key );
+        final int bucket = BUCKET_LOCATOR.getCurrentBucket( scope.getName() );
         Statement mapKey;
         mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
-            .value("key", getMapKeyPartitionKey(scope, key, bucket))
+            .value("key", getMapKeyPartitionKey(scope, bucket))
             .value("column1", DataType.text().serialize(key, ProtocolVersion.NEWEST_SUPPORTED))
             .value("value", DataType.serializeValue(null, ProtocolVersion.NEWEST_SUPPORTED));
 
@@ -253,12 +256,12 @@ public class MapSerializationImpl implements MapSerialization {
         session.execute(mapEntry);
 
 
-        final int bucket = BUCKET_LOCATOR.getCurrentBucket( key );
+        final int bucket = BUCKET_LOCATOR.getCurrentBucket( scope.getName() );
         Statement mapKey;
         mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
-            .value("key", getMapKeyPartitionKey(scope, key, bucket))
+            .value("key", getMapKeyPartitionKey(scope, bucket))
             .value("column1", DataType.text().serialize(key, ProtocolVersion.NEWEST_SUPPORTED))
-            .value("value", DataType.serializeValue(null, ProtocolVersion.NEWEST_SUPPORTED));
+            .value("value", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED));
 
         session.execute(mapKey);
     }
@@ -276,16 +279,17 @@ public class MapSerializationImpl implements MapSerialization {
 
 
         // not sure which bucket the value is in, execute a delete against them all
-        final int[] buckets = BUCKET_LOCATOR.getAllBuckets( key );
+        final int[] buckets = BUCKET_LOCATOR.getAllBuckets( scope.getName() );
         List<ByteBuffer> mapKeys = new ArrayList<>();
         for( int bucket :  buckets){
-            mapKeys.add( getMapKeyPartitionKey(scope, key, bucket));
+            mapKeys.add( getMapKeyPartitionKey(scope, bucket));
         }
 
         Statement deleteMapKey;
         Clause inKey = QueryBuilder.in("key", mapKeys);
+        Clause column1Equals = QueryBuilder.eq("column1", DataType.text().serialize(key, ProtocolVersion.NEWEST_SUPPORTED));
         deleteMapKey = QueryBuilder.delete().from(MAP_KEYS_TABLE)
-            .where(inKey);
+            .where(inKey).and(column1Equals);
         session.execute(deleteMapKey);
 
 
@@ -318,6 +322,48 @@ public class MapSerializationImpl implements MapSerialization {
 
     }
 
+    @Override
+    public MapKeyResults getAllKeys(final MapScope scope, final String cursor, final int limit ){
+
+        final int[] buckets = BUCKET_LOCATOR.getAllBuckets( scope.getName() );
+        final List<ByteBuffer> partitionKeys = new ArrayList<>(NUM_BUCKETS.length);
+
+        for (int bucket : buckets) {
+
+            partitionKeys.add(getMapKeyPartitionKey(scope, bucket));
+        }
+
+        Clause in = QueryBuilder.in("key", partitionKeys);
+
+        Statement statement;
+        if( isBlank(cursor) ){
+            statement = QueryBuilder.select().all().from(MAP_KEYS_TABLE)
+                .where(in)
+                .setFetchSize(limit);
+        }else{
+            statement = QueryBuilder.select().all().from(MAP_KEYS_TABLE)
+                .where(in)
+                .setFetchSize(limit)
+                .setPagingState(PagingState.fromString(cursor));
+        }
+
+
+        ResultSet resultSet = session.execute(statement);
+        PagingState pagingState = resultSet.getExecutionInfo().getPagingState();
+
+        final List<String> keys = new ArrayList<>();
+        Iterator<Row> resultIterator = resultSet.iterator();
+        int size = 0;
+        while( resultIterator.hasNext() && size < limit){
+
+            size++;
+            keys.add((String)DataType.text().deserialize(resultIterator.next().getBytes("column1"), ProtocolVersion.NEWEST_SUPPORTED));
+
+        }
+
+        return new MapKeyResults(pagingState != null ? pagingState.toString() : null, keys);
+
+    }
 
     private ByteBuffer getValueCQL( MapScope scope, String key, final ConsistencyLevel consistencyLevel ) {
 
@@ -456,10 +502,10 @@ public class MapSerializationImpl implements MapSerialization {
 
     }
 
-    private ByteBuffer getMapKeyPartitionKey(MapScope scope, String key, int bucketNumber){
+    private ByteBuffer getMapKeyPartitionKey(MapScope scope, int bucketNumber){
 
         return serializeKeys(scope.getApplication().getUuid(),
-            scope.getApplication().getType(), scope.getName(), key, bucketNumber);
+            scope.getApplication().getType(), scope.getName(), "", bucketNumber);
 
     }
 }
