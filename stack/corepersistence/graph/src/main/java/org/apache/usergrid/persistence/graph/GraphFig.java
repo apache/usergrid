@@ -134,7 +134,7 @@ public interface GraphFig extends GuicyFig {
     long getShardMinDelta();
 
 
-    @Default("250000")
+    @Default("100000")
     @Key(SHARD_CACHE_SIZE)
     long getShardCacheSize();
 
