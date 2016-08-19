@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.map;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import net.jcip.annotations.NotThreadSafe;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,6 +47,7 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith( ITRunner.class )
 @UseModules( { TestMapModule.class } )
+@NotThreadSafe
 public class MapManagerTest {
 
 
