@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.entities.Group;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.SearchByEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
@@ -270,12 +271,32 @@ public class CpNamingUtils {
 
 
     /**
+     * Generate an entity Id from the given UUID
+     *
+     * @param entityId the entity's UUID
+     */
+    public static Id generateEntityId( UUID entityId, String entityType ) {
+        return new SimpleId( entityId, entityType );
+    }
+
+
+    /**
      * Generate an applicationId from the given UUID
      *
      * @param applicationId the applicationId
      */
     public static Id generateApplicationId( UUID applicationId ) {
-        return new SimpleId( applicationId, Application.ENTITY_TYPE );
+        return generateEntityId( applicationId, Application.ENTITY_TYPE );
+    }
+
+
+    /**
+     * Generate an organizationId from the given UUID
+     *
+     * @param organizationId the organizationId
+     */
+    public static Id generateOrganizationId( UUID organizationId ) {
+        return generateEntityId( organizationId, Group.ENTITY_TYPE );
     }
 
 

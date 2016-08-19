@@ -22,6 +22,9 @@ package org.apache.usergrid.corepersistence.asyncevents.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 
+/**
+ * Event that will signal to finish the actual delete (post-mark delete) for an Entity
+ */
 public final class EntityDeleteEvent extends AsyncEvent {
 
 

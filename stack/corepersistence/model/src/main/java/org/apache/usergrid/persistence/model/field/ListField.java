@@ -51,14 +51,21 @@ public class ListField<T> extends AbstractField<List<T>> {
 
 
     @Override
-    public FieldTypeName getTypeName() {
+    public final FieldTypeName getTypeName() {
         return FieldTypeName.LIST;
 
     }
 
-    public int size(){
+    public final int size(){
         return this.value.size();
     }
 
+    /**
+     * This type of field is never unique
+     */
+    @Override
+    public boolean isUnique() {
+        return false;
+    }
 
 }

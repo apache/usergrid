@@ -34,7 +34,7 @@ import com.google.common.base.Preconditions;
 
 
 public class AssetUtils {
-    private static Logger LOG = LoggerFactory.getLogger( AssetUtils.class );
+    private static final Logger logger = LoggerFactory.getLogger( AssetUtils.class );
 
     public static final String FILE_METADATA = "file-metadata";
     public static final String CONTENT_TYPE = "content-type";
@@ -62,7 +62,7 @@ public class AssetUtils {
                 moded = DateUtils.parseDate( headerValue, DEFAULT_PATTERNS );
             }
             catch ( ParseException pe ) {
-                LOG.error( "Could not parse date format from If-Modified-Since header: " + headerValue );
+                logger.error( "Could not parse date format from If-Modified-Since header: {}", headerValue );
             }
         }
         return moded;

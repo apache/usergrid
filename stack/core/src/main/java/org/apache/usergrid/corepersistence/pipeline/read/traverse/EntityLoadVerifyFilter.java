@@ -71,7 +71,9 @@ public class EntityLoadVerifyFilter extends AbstractFilter<FilterResult<Id>, Fil
         final Observable<FilterResult<Entity>> entityObservable =
             filterResultObservable.buffer( pipelineContext.getLimit() ).flatMap( bufferedIds -> {
 
-                logger.trace( "Attempting to batch load ids {}", bufferedIds );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Attempting to batch load ids {}", bufferedIds);
+                }
 
                 final Observable<EntitySet> entitySetObservable =
                     Observable.from( bufferedIds ).map( filterResultId -> filterResultId.getValue() ).toList()

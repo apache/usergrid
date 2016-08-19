@@ -111,7 +111,9 @@ public class ApplicationsResource extends AbstractContextResource {
                                                                   @FormParam( "name" ) String applicationName )
             throws Exception {
 
-        logger.debug("newApplicationForOrganizationFromForm");
+        if (logger.isTraceEnabled()) {
+            logger.trace("newApplicationForOrganizationFromForm");
+        }
 
         Preconditions.checkArgument( !isEmpty( applicationName ),
                 "The 'name' parameter is required and cannot be empty: " + applicationName );

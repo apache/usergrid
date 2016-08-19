@@ -18,9 +18,6 @@ package org.apache.usergrid.rest.applications.collection.users;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,7 +62,7 @@ import static org.junit.Assert.fail;
 
 public class UserResourceIT extends AbstractRestIT {
 
-    private static Logger log = LoggerFactory.getLogger(UserResourceIT.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserResourceIT.class);
     UserRepo userRepo;
     CollectionEndpoint usersResource;
     CollectionEndpoint userResource;
@@ -700,7 +697,7 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void test_POST_batch() throws IOException {
 
-        log.info("UserResourceIT.test_POST_batch");
+        logger.info("UserResourceIT.test_POST_batch");
 
 
         List<Entity> batch = new ArrayList<>();
@@ -1014,7 +1011,7 @@ public class UserResourceIT extends AbstractRestIT {
             assertTrue(false);
         } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
-            log.info("Error Response Body: " + uie.getResponse().readEntity(String.class));
+            logger.info("Error Response Body: " + uie.getResponse().readEntity(String.class));
         }
 
         assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), status);
@@ -1025,7 +1022,7 @@ public class UserResourceIT extends AbstractRestIT {
             assertTrue(false);
         } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
-            log.info("Error Response Body: " + uie.getResponse().readEntity(String.class));
+            logger.info("Error Response Body: " + uie.getResponse().readEntity(String.class));
         }
 
         assertEquals(Response.Status.FORBIDDEN.getStatusCode(), status);
@@ -1215,7 +1212,7 @@ public class UserResourceIT extends AbstractRestIT {
             fail("Should have thrown an exception");
         } catch (BadRequestException uie) {
             status = uie.getResponse().getStatus();
-            log.info("Error Response Body: {}" , uie.getResponse().getEntity());
+            logger.info("Error Response Body: {}" , uie.getResponse().getEntity());
         }
 
         assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), status);

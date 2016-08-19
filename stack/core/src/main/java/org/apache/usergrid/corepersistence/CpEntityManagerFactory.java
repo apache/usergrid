@@ -16,41 +16,35 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-
+import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
+import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.exception.ConflictException;
-import org.apache.usergrid.persistence.AbstractEntity;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityFactory;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.locking.LockManager;
+import org.apache.usergrid.mq.QueueManagerFactory;
+import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.CounterUtils;
 import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
+import org.apache.usergrid.persistence.collection.exception.CollectionRuntimeException;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.migration.data.MigrationDataProvider;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -60,30 +54,23 @@ import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.exceptions.ApplicationAlreadyExistsException;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.SearchByEdgeType;
+import org.apache.usergrid.persistence.graph.*;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.utils.UUIDUtils;
-
-import com.google.common.base.Optional;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.TypeLiteral;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import rx.Observable;
 
-import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import java.util.*;
 
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static org.apache.usergrid.persistence.Schema.PROPERTY_NAME;
 import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 
@@ -95,21 +82,23 @@ import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 public class CpEntityManagerFactory implements EntityManagerFactory, ApplicationContextAware {
 
     private static final Logger logger = LoggerFactory.getLogger( CpEntityManagerFactory.class );
+
     private final EntityManagerFig entityManagerFig;
+    private final ActorSystemFig actorSystemFig;
 
     private ApplicationContext applicationContext;
 
     private Setup setup = null;
 
+    EntityManager managementAppEntityManager = null;
+
     // cache of already instantiated entity managers
-    private LoadingCache<UUID, EntityManager> entityManagers
-        = CacheBuilder.newBuilder().maximumSize(100).build(new CacheLoader<UUID, EntityManager>() {
-            public EntityManager load(UUID appId) { // no checked exception
-                return _getEntityManager(appId);
-            }
-        });
+    private final String ENTITY_MANAGER_CACHE_SIZE = "entity.manager.cache.size";
+    private final LoadingCache<UUID, EntityManager> entityManagers;
 
     private final ApplicationIdCache applicationIdCache;
+
+    Application managementApp = null;
 
     private ManagerCache managerCache;
 
@@ -122,27 +111,208 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final CollectionService collectionService;
     private final ConnectionService connectionService;
     private final GraphManagerFactory graphManagerFactory;
+    private final CollectionSettingsFactory collectionSettingsFactory;
+    private ActorSystemManager actorSystemManager;
+    private UniqueValuesService uniqueValuesService;
+    private final LockManager lockManager;
 
-    public CpEntityManagerFactory( final CassandraService cassandraService, final CounterUtils counterUtils,
-                                   final Injector injector ) {
+    private final QueueManagerFactory queueManagerFactory;
+
+    public static final String MANAGEMENT_APP_INIT_MAXRETRIES= "management.app.init.max-retries";
+    public static final String MANAGEMENT_APP_INIT_INTERVAL = "management.app.init.interval";
+
+
+    public CpEntityManagerFactory(
+        final CassandraService cassandraService, final CounterUtils counterUtils, final Injector injector ) {
 
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
         this.injector = injector;
         this.reIndexService = injector.getInstance(ReIndexService.class);
         this.entityManagerFig = injector.getInstance(EntityManagerFig.class);
+        this.actorSystemFig = injector.getInstance( ActorSystemFig.class );
         this.managerCache = injector.getInstance( ManagerCache.class );
         this.metricsFactory = injector.getInstance( MetricsFactory.class );
         this.indexService = injector.getInstance( AsyncEventService.class );
         this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
         this.collectionService = injector.getInstance( CollectionService.class );
         this.connectionService = injector.getInstance( ConnectionService.class );
+        this.collectionSettingsFactory = injector.getInstance( CollectionSettingsFactory.class );
 
-        //this line always needs to be last due to the temporary cicular dependency until spring is removed
+        Properties properties = cassandraService.getProperties();
+        this.entityManagers = createEntityManagerCache( properties );
+
+        logger.info("EntityManagerFactoring starting...");
+
+        if ( actorSystemFig.getEnabled() ) {
+            try {
+                logger.info("Akka cluster starting...");
+
+                this.uniqueValuesService = injector.getInstance( UniqueValuesService.class );
+                this.actorSystemManager = injector.getInstance( ActorSystemManager.class );
+
+                actorSystemManager.registerRouterProducer( uniqueValuesService );
+                actorSystemManager.start();
+                actorSystemManager.waitForClientActor();
+
+            } catch (Throwable t) {
+                logger.error("Error starting Akka", t);
+                throw t;
+            }
+        }
+        this.lockManager = injector.getInstance( LockManager.class );
+        this.queueManagerFactory = injector.getInstance( QueueManagerFactory.class );
+
+
+        // this line always needs to be last due to the temporary cicular dependency until spring is removed
         this.applicationIdCache = injector.getInstance(ApplicationIdCacheFactory.class).getInstance(
             getManagementEntityManager() );
 
+        checkManagementApp( properties );
+    }
 
+
+    private LoadingCache<UUID, EntityManager> createEntityManagerCache(Properties properties) {
+
+        int entityManagerCacheSize = 100;
+        try {
+            entityManagerCacheSize = Integer.parseInt( properties.getProperty( ENTITY_MANAGER_CACHE_SIZE, "100" ));
+        } catch ( Exception e ) {
+            logger.error("Error parsing " + ENTITY_MANAGER_CACHE_SIZE + ". Will use " + entityManagerCacheSize, e );
+        }
+
+        return CacheBuilder.newBuilder()
+            .maximumSize(entityManagerCacheSize)
+            .build(new CacheLoader<UUID, EntityManager>() {
+
+                public EntityManager load( UUID appId ) { // no checked exception
+
+                    // create new entity manager and pre-fetch its application
+                    EntityManager entityManager = _getEntityManager( appId );
+                    Application app = null;
+                    Throwable throwable = null;
+                    try {
+                        app = entityManager.getApplication();
+                    } catch (Throwable t) {
+                        throwable = t;
+                    }
+
+                    // the management app is a special case
+                    if ( CpNamingUtils.MANAGEMENT_APPLICATION_ID.equals( appId ) ) {
+
+                        if ( app != null ) {
+                            // we successfully fetched up the management app, cache it for a rainy day
+                            managementAppEntityManager = entityManager;
+
+                        } else if ( managementAppEntityManager != null ) {
+                            // failed to fetch management app, use cached one
+                            entityManager = managementAppEntityManager;
+                            logger.error("Failed to fetch management app");
+                        }
+                    }
+
+                    // missing keyspace means we have not done bootstrap yet
+                    final boolean isBootstrapping;
+                    if ( throwable instanceof CollectionRuntimeException ) {
+                        CollectionRuntimeException cre = (CollectionRuntimeException) throwable;
+                        isBootstrapping = cre.isBootstrapping();
+                    } else {
+                        isBootstrapping = false;
+                    }
+
+                    // work around for https://issues.apache.org/jira/browse/USERGRID-1291
+                    // throw exception so that we do not cache
+                    // TODO: determine how application name can intermittently be null
+                    if ( app != null && app.getName() == null ) {
+                        throw new RuntimeException( "Name is null for application " + appId, throwable );
+                    }
+
+                    if ( app == null && !isBootstrapping ) {
+                        throw new RuntimeException( "Error getting application " + appId, throwable );
+
+                    } // else keyspace is missing because setup/bootstrap not done yet
+
+                    return entityManager;
+                }
+            });
+    }
+
+
+    private void checkManagementApp(Properties properties) {
+
+        int maxRetries = 100;
+        try {
+            maxRetries = Integer.parseInt( properties.getProperty( MANAGEMENT_APP_INIT_MAXRETRIES, "100" ));
+
+        } catch ( Exception e ) {
+            logger.error("Error parsing " + MANAGEMENT_APP_INIT_MAXRETRIES + ". Will use " + maxRetries, e );
+        }
+
+        int interval = 1000;
+        try {
+            interval = Integer.parseInt( properties.getProperty( MANAGEMENT_APP_INIT_INTERVAL, "1000" ));
+
+        } catch ( Exception e ) {
+            logger.error("Error parsing " + MANAGEMENT_APP_INIT_INTERVAL + ". Will use " + maxRetries, e );
+        }
+
+        // hold up construction until we can access the management app
+        int retries = 0;
+        boolean managementAppFound = false;
+        boolean bootstrapping = false;
+        Set<Class> seenBefore = new HashSet<>(10);
+        while ( !managementAppFound && retries++ < maxRetries ) {
+            try {
+                // bypass entity manager cache and get managementApp
+                managementApp = _getEntityManager( getManagementAppId() ).getApplication();
+                managementAppFound = true;
+
+            } catch ( Throwable t ) {
+
+                if ( t instanceof CollectionRuntimeException ) {
+                    CollectionRuntimeException cre = (CollectionRuntimeException)t;
+                    if ( cre.isBootstrapping() ) {
+                        // we're bootstrapping, ignore this and continue
+                        bootstrapping = true;
+                        break;
+                    }
+                }
+                Throwable cause = t;
+
+                // there was an error, be as informative as possible
+                StringBuilder sb = new StringBuilder();
+                sb.append(retries).append(": Error (");
+
+                if ( t instanceof UncheckedExecutionException ) {
+                    UncheckedExecutionException uee = (UncheckedExecutionException)t;
+                    if ( uee.getCause() instanceof RuntimeException ) {
+                        cause = uee.getCause().getCause();
+                        sb.append(cause.getClass().getSimpleName()).append(") ")
+                          .append(uee.getCause().getMessage());
+                    } else {
+                        cause = uee.getCause();
+                        sb.append(cause.getClass().getSimpleName()).append(") ").append(t.getMessage());
+                    }
+                } else {
+                    sb.append(t.getCause().getClass().getSimpleName()).append(") ").append(t.getMessage());
+                }
+
+                String msg = sb.toString();
+                if ( !seenBefore.contains( cause.getClass() ) ) {
+                    logger.error( msg, t);
+                } else {
+                    logger.error(msg);
+                }
+                seenBefore.add( cause.getClass() );
+
+                try { Thread.sleep( interval ); } catch (InterruptedException ignored) {}
+            }
+        }
+
+        if ( !managementAppFound && !bootstrapping ) {
+            // exception here will prevent WAR from being deployed
+            throw new RuntimeException( "Unable to get management app after " + retries + " retries" );
+        }
     }
 
 
@@ -156,8 +326,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-
-    private void init() {
+    private void initMgmtAppInternal() {
 
         EntityManager em = getEntityManager(getManagementAppId());
         indexService.queueInitializeApplicationIndex(CpNamingUtils.getApplicationScope(getManagementAppId()));
@@ -166,12 +335,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             if ( em.getApplication() == null ) {
                 logger.info("Creating management application");
                 Map mgmtAppProps = new HashMap<String, Object>();
-                mgmtAppProps.put(PROPERTY_NAME, "systemapp");
+                mgmtAppProps.put(PROPERTY_NAME, CassandraService.MANAGEMENT_APPLICATION);
                 em.create( getManagementAppId(), TYPE_APPLICATION, mgmtAppProps);
                 em.getApplication();
             }
-
-//            entityIndex.refreshAsync();
 
         } catch (Exception ex) {
             throw new RuntimeException("Fatal error creating management application", ex);
@@ -184,51 +351,64 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-
     @Override
     public EntityManager getEntityManager(UUID applicationId) {
         try {
             return entityManagers.get( applicationId );
         }
-        catch ( Exception ex ) {
-            logger.error("Error getting oldAppInfo manager", ex);
+        catch ( Throwable t ) {
+            logger.error("Error getting entity manager", t);
         }
         return _getEntityManager(applicationId);
     }
 
 
     private EntityManager _getEntityManager( UUID applicationId ) {
-        EntityManager em = new CpEntityManager(cassandraService, counterUtils, indexService, managerCache,
-            metricsFactory, entityManagerFig, graphManagerFactory,  collectionService, connectionService, applicationId );
+
+        EntityManager em = new CpEntityManager(
+            cassandraService,
+            counterUtils,
+            indexService,
+            managerCache,
+            metricsFactory,
+            actorSystemFig,
+            entityManagerFig,
+            graphManagerFactory,
+            collectionService,
+            connectionService,
+            collectionSettingsFactory,
+            applicationId,
+            queueManagerFactory);
 
         return em;
     }
 
     @Override
     public Entity createApplicationV2(String organizationName, String name) throws Exception {
-        return createApplicationV2( organizationName, name, null, null );
+        return createApplicationV2( organizationName, name, null, null, false);
     }
 
 
     @Override
     public Entity createApplicationV2(
-        String orgName, String name, UUID applicationId, Map<String, Object> properties) throws Exception {
+        String orgName, String name, UUID applicationId, Map<String, Object> properties, boolean forMigration) throws Exception {
 
         String appName = buildAppName( orgName, name );
 
+        final UUID appId = applicationIdCache.getApplicationId( appName );
 
-        final Optional<UUID> appId = applicationIdCache.getApplicationId( appName );
-
-        if ( appId.isPresent()) {
+        if ( appId != null ) {
             throw new ApplicationAlreadyExistsException( name );
         }
 
         applicationId = applicationId==null ?  UUIDGenerator.newTimeUUID() : applicationId;
 
-        logger.debug( "New application orgName {} orgAppName {} id {} ",
-            new Object[] { orgName, name, applicationId.toString() } );
+        if (logger.isDebugEnabled()) {
+            logger.debug("New application orgName {} orgAppName {} id {} ",
+                orgName, name, applicationId.toString());
+        }
 
-        return initializeApplicationV2( orgName, applicationId, appName, properties );
+        return initializeApplicationV2( orgName, applicationId, appName, properties, forMigration);
     }
 
 
@@ -242,24 +422,25 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
      * @return UUID of newly created Entity of type application_info
      */
     @Override
-    public Entity initializeApplicationV2( String organizationName, final UUID applicationId, String name,
-                                       Map<String, Object> properties ) throws Exception {
+    public Entity initializeApplicationV2(String organizationName, final UUID applicationId, String name,
+                                          Map<String, Object> properties, boolean forMigration) throws Exception {
 
-        // Ensure our management system exists before creating our application
-        init();
+        // Ensure the management application is initialized
+        initMgmtAppInternal();
 
-        EntityManager managementEm = getEntityManager( getManagementAppId() );
-        EntityManager appEm = getEntityManager(applicationId);
+        // Get entity managers by bypassing the entity manager cache because it expects apps to already exist
+        final EntityManager managementEm = _getEntityManager( getManagementAppId() );
+        EntityManager appEm = _getEntityManager(applicationId);
 
         final String appName = buildAppName(organizationName, name);
 
         // check for pre-existing application
 
-        if ( lookupApplication( appName ).isPresent()) {
+        if ( lookupApplication( appName ) != null ) {
             throw new ApplicationAlreadyExistsException( appName );
         }
 
-        getSetup().setupApplicationKeyspace( applicationId, appName );
+        // Initialize the index for this new application
         appEm.initializeIndex();
         indexService.queueInitializeApplicationIndex(CpNamingUtils.getApplicationScope(applicationId));
         if ( properties == null ) {
@@ -267,7 +448,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         }
         properties.put( PROPERTY_NAME, appName );
         appEm.create(applicationId, TYPE_APPLICATION, properties);
-        appEm.resetRoles();
+
+        // only reset roles if this application isn't being migrated (meaning dictionary and role data already exists)
+        if(!forMigration){
+            appEm.resetRoles();
+        }
+
 
 
         // create application info entity in the management app
@@ -441,7 +627,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     }
 
 
-    public Optional<UUID> lookupApplication( String orgAppName ) throws Exception {
+    public UUID lookupApplication(String orgAppName ) throws Exception {
         return applicationIdCache.getApplicationId(orgAppName);
     }
 
@@ -473,9 +659,10 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         Id managementId = new SimpleId( managementApp.getUuid(), managementApp.getType() );
 
 
-
-        logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}",
-            new Object[]{edgeType, managementId.getType(), managementId.getUuid()});
+        if (logger.isDebugEnabled()) {
+            logger.debug("getApplications(): Loading edges of edgeType {} from {}:{}",
+                edgeType, managementId.getType(), managementId.getUuid());
+        }
 
         Observable<MarkedEdge> edges = gm.loadEdgesFromSource(
             new SimpleSearchByEdgeType( managementId, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
@@ -510,19 +697,26 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void setup() throws Exception {
-        getSetup().initSubsystems();
+        getSetup().initSchema();
+        lockManager.setup();
     }
 
 
     @Override
-    public void boostrap() throws Exception {
+    public void bootstrap() throws Exception {
 
-        //we want to make sure our keyspaces exist
-        setup();
-        //create the defautl applications
-        getSetup().createDefaultApplications();
-        //init any other data we need
-        init();
+        // Always make sure the database schema is initialized
+        getSetup().initSchema();
+
+        // Roll the new 2.x Migration classes to the latest version supported
+        getSetup().runDataMigration();
+
+        // Make sure the management application is created
+        initMgmtAppInternal();
+
+        // Ensure management app is initialized
+        getSetup().initMgmtApp();
+
     }
 
 
@@ -614,7 +808,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             results = em.searchCollection( em.getApplicationRef(), "propertymaps", q);
 
         } catch (Exception ex) {
-            logger.error("Error getting service property for delete of property: " + name, ex);
+            logger.error("Error getting service property for delete of property: {}", name, ex);
             return false;
         }
 
@@ -632,7 +826,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             em.update( propsEntity );
 
         } catch (Exception ex) {
-            logger.error("Error deleting service property orgAppName: " + name, ex);
+            logger.error("Error deleting service property orgAppName: {}", name, ex);
             return false;
         }
 

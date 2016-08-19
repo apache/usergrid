@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.AbstractCoreIT;
-import org.apache.usergrid.persistence.model.field.value.Location;
 import org.apache.usergrid.utils.MapUtils;
 
 import static org.junit.Assert.assertEquals;
@@ -37,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 
 
 public class GeoIT extends AbstractCoreIT {
-    private static final Logger LOG = LoggerFactory.getLogger(GeoIT.class);
+    private static final Logger logger = LoggerFactory.getLogger(GeoIT.class);
 
     int NEARBY_RADIUS = 10000;
     int CIRCUMFERENCE_OF_THE_EARTH = 40000000;
@@ -71,13 +70,61 @@ public class GeoIT extends AbstractCoreIT {
         super();
     }
 
-    /**
-     * Validate the ability to remove an entity's location and remove them from searches
-     * 1. Create an entity with location
-     * 2. Query with a globally large distance to verify location
-     * 3. Remove the entity's location
-     * 4. Repeat the query, expecting no results
-     */
+
+    @Test
+    public void testRoundingGeolocationIssue() throws Exception {
+        EntityManager em = app.getEntityManager();
+        assertNotNull(em);
+
+        //1. Create an entity with location
+        Entity office = createEntitywithLocation( em,"office",37.334115,-121.894340);
+        assertNotNull(office);
+
+        Entity pizza = createEntitywithLocation( em,"pizza",37.335616,-121.894168);
+        assertNotNull(pizza);
+
+        Entity market = createEntitywithLocation( em,"market",37.336499,-121.894356);
+        assertNotNull(market);
+
+        Entity park = createEntitywithLocation( em,"park",37.339079,-121.891422);
+        assertNotNull(park);
+
+        Entity news = createEntitywithLocation( em,"news",37.337812,-121.890784);
+        assertNotNull(news);
+
+        Entity hotel = createEntitywithLocation( em,"hotel",37.334370,-121.895081);
+        assertNotNull(hotel);
+
+
+        app.refreshIndex();
+
+        //2. Query with a globally large distance to verify location
+
+        Query query = Query.fromQL("select * where location within 609.7 of 37.334110260009766, -121.89434051513672");
+        Results listResults = em.searchCollection(em.getApplicationRef(), "collars", query);
+        assertEquals( 5, listResults.size());
+
+        query = Query.fromQL("select * where location within 609.8 of 37.334110260009766, -121.89434051513672");
+        listResults = em.searchCollection(em.getApplicationRef(), "collars", query);
+        assertEquals( 6, listResults.size());
+
+
+    }
+
+
+    private Entity createEntitywithLocation( final EntityManager em,String name ,Double lat,Double lon) throws Exception {
+        Map<String, Object> properties = new LinkedHashMap<String, Object>() {{
+        put("name", name);
+        put("location", new LinkedHashMap<String, Object>() {{
+            put("latitude", lat);
+            put("longitude", lon);
+        }});
+    }};
+
+        return em.create("collars", properties);
+    }
+
+
     @Test
     public void testRemovedLocationQuery() throws Exception {
         //Get the EntityManager instance
@@ -125,7 +172,7 @@ public class GeoIT extends AbstractCoreIT {
      */
     @Test
     public void testMovingTarget() throws Exception {
-        LOG.info("GeoIT.testMovingTarget");
+        logger.info("GeoIT.testMovingTarget");
         //Get the EntityManager instance
         EntityManager em = app.getEntityManager();
         assertNotNull(em);
@@ -157,6 +204,49 @@ public class GeoIT extends AbstractCoreIT {
         //4. Run the same query again to verify the entity is no longer in the area
         listResults = em.searchCollection(em.getApplicationRef(), "users", query);
         assertEquals(0, listResults.size());
+
+        em.delete(user);
+    }
+
+
+    /**
+     * Validate the ability to query a moving entity
+     * 1. Create an entity with location
+     * 2. Query from a point near the entity's location
+     * 3. Move the entity farther away from the center point
+     * 4. Run the same query again to verify the entity is no longer in the area
+     */
+    @Test
+    public void validateDistanceQueryExists() throws Exception {
+        logger.info("GeoIT.validateDistanceQueryExists");
+        //Get the EntityManager instance
+        EntityManager em = app.getEntityManager();
+        assertNotNull(em);
+
+        //1. Create an entity with location
+        Map<String, Object> properties = new LinkedHashMap<String, Object>() {{
+            put("username", "edanuff");
+            put("email", "ed@anuff.com");
+            put("location", new LinkedHashMap<String, Object>() {{
+                put("latitude", 37.776753);
+                put("longitude", -122.407846);
+            }});
+        }};
+        Entity user = em.create("user", properties);
+        assertNotNull(user);
+        app.refreshIndex();
+
+        final double lat = 37.776753;
+        final double lon = -122.407846;
+
+        //2. Query from a point near the entity's location
+        Query query = Query.fromQL("select * where location within 100 of "
+            + lat + "," + lon);
+        Results listResults = em.searchCollection(em.getApplicationRef(), "users", query);
+        assertEquals(1, listResults.size());
+        Entity entity = listResults.getEntity();
+        assertTrue(entity.getMetadata("distance")!=null);
+        assertTrue(Double.parseDouble( entity.getMetadata("distance").toString())>0);
 
         em.delete(user);
     }
@@ -234,7 +324,7 @@ public class GeoIT extends AbstractCoreIT {
         for (Map<String, Object> location : LOCATION_PROPERTIES) {
             Entity entity = em.create("store", location);
             assertNotNull(entity);
-            LOG.debug("Entity {} created", entity.getProperty("name"));
+            logger.debug("Entity {} created", entity.getProperty("name"));
         }
         app.refreshIndex();
         //2. validate the size of the result
@@ -275,7 +365,7 @@ public class GeoIT extends AbstractCoreIT {
         for (Map<String, Object> location : locations) {
             Entity entity = em.create("store", location);
             assertNotNull(entity);
-            LOG.debug("Entity {} created", entity.getProperty("name"));
+            logger.debug("Entity {} created", entity.getProperty("name"));
         }
         app.refreshIndex();
         //2. validate the size of the result
@@ -346,7 +436,7 @@ public class GeoIT extends AbstractCoreIT {
      *    circumference of the earth
      */
     public void testGeoFromNearbyLocation() throws Exception {
-        LOG.info( "GeoIT.testGeoFromNearbyLocation" );
+        logger.info( "GeoIT.testGeoFromNearbyLocation" );
         //1. create entities with geo
         EntityManager em = loadGeolocationTestEntities();
 
@@ -383,7 +473,7 @@ public class GeoIT extends AbstractCoreIT {
      */
     @Test
     public void testGeoFromMultipleLocations() throws Exception {
-        LOG.info("GeoIT.testGeoFromMultipleLocations");
+        logger.info("GeoIT.testGeoFromMultipleLocations");
         //1 Create entities with geo
         EntityManager em = loadGeolocationTestEntities();
         //2 Create a list of points from different geographic areas
@@ -461,11 +551,20 @@ public class GeoIT extends AbstractCoreIT {
         int count = 0;
         Results results;
 
+        double previousDistance = 0d;
         do {
             results = em.searchCollection(em.getApplicationRef(), "stores", query);
 
             for (Entity entity : results.getEntities()) {
                 assertEquals(String.valueOf(count), entity.getName());
+
+                Object distanceObject = entity.getMetadata("distance");
+                assertNotNull( distanceObject );
+                assertTrue( distanceObject instanceof Double );
+                double distance = (Double)distanceObject;
+                assertTrue( distance >= previousDistance );
+                previousDistance = distance;
+
                 count++;
             }
 
@@ -508,12 +607,21 @@ public class GeoIT extends AbstractCoreIT {
         int count = 0;
         Results results;
 
+
+        double previousDistance = 0d;
         do {
             results = em.searchCollection(em.getApplicationRef(), "stores", query);
 
             for (Entity entity : results.getEntities()) {
                 //TODO:can we assert order
                 final int expected = numEntities - count - 1;
+
+                Object distanceObject = entity.getMetadata("distance");
+                assertNotNull( distanceObject );
+                assertTrue( distanceObject instanceof Double );
+                double distance = (Double)distanceObject;
+                assertTrue( distance >= previousDistance );
+                previousDistance = distance;
 
                 assertEquals(String.valueOf(expected), entity.getName());
                 count++;
@@ -574,8 +682,18 @@ public class GeoIT extends AbstractCoreIT {
         do {
             Results results = em.searchCollection(em.getApplicationRef(), "stores", query);
 
+            double previousDistance = 0d;
+
             for (Entity entity : results.getEntities()) {
                 assertEquals(String.valueOf(count), entity.getName());
+
+                Object distanceObject = entity.getMetadata("distance");
+                assertNotNull( distanceObject );
+                assertTrue( distanceObject instanceof Double );
+                double distance = (Double)distanceObject;
+                assertTrue( distance >= previousDistance );
+                previousDistance = distance;
+
                 count++;
             }
         }
@@ -696,7 +814,7 @@ public class GeoIT extends AbstractCoreIT {
 
         long endTime = System.currentTimeMillis();
 
-        LOG.info("Runtime took {} milliseconds to search", endTime - startTime);
+        logger.info("Runtime took {} milliseconds to search", endTime - startTime);
     }
 
 
@@ -708,14 +826,14 @@ public class GeoIT extends AbstractCoreIT {
      * 4. return the entity manager
      */
     private EntityManager loadGeolocationTestEntities() throws Exception {
-        LOG.info("GeoIT.loadGeolocationTestEntities");
+        logger.info("GeoIT.loadGeolocationTestEntities");
         //1. Get an instance of the entity manager
 
         EntityManager em = app.getEntityManager();
         assertNotNull(em);
         //2. load test entities
         for (Map<String, Object> location : LOCATION_PROPERTIES) {
-            LOG.info("Create entity with location '{}'", location.get("name"));
+            logger.info("Create entity with location '{}'", location.get("name"));
             Entity entity = em.create("store", location);
             assertNotNull(entity);
         }

@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
@@ -119,9 +120,10 @@ public abstract class DirectedEdgeMeta {
 
         @Override
         public int hashCode() {
-            int result = id.hashCode();
-            result = 31 * result + nodeType.hashCode();
-            return result;
+            return new HashCodeBuilder()
+                .append(id)
+                .append(nodeType)
+                .toHashCode();
         }
     }
 
@@ -457,7 +459,7 @@ public abstract class DirectedEdgeMeta {
 
 
                 final SearchByIdType search =
-                        new SimpleSearchByIdType( targetId, edgeType, maxValue, order, sourceType,  null );
+                        new SimpleSearchByIdType( targetId, edgeType, maxValue, order, sourceType,  Optional.absent() );
 
                 return serialization.getEdgesToTargetBySourceType( edgeColumnFamilies, scope, search, shards );
             }
@@ -517,7 +519,7 @@ public abstract class DirectedEdgeMeta {
                 final String edgeType = types[0];
 
                 final SimpleSearchByEdge search =
-                        new SimpleSearchByEdge( sourceId, edgeType, targetId, maxValue, order, null );
+                        new SimpleSearchByEdge( sourceId, edgeType, targetId, maxValue, order,  Optional.absent() );
 
                 return serialization.getEdgeVersions( edgeColumnFamilies, scope, search, shards );
             }

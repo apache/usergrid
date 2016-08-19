@@ -18,12 +18,11 @@ package org.apache.usergrid.rest.management;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.usergrid.java.client.exception.ClientException;
 import org.apache.usergrid.rest.test.resource.model.*;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
@@ -31,6 +30,7 @@ import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.RestClient;
 
 import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
 
@@ -291,18 +291,17 @@ public class OrganizationsIT extends AbstractRestIT {
 
     /**
      * Returns error from unimplemented delete method by trying to call the delete organization endpoint
-     * @throws IOException
      */
-    @Ignore("It should return a 501, so when this is fixed the test can be run")
     @Test
     public void noOrgDelete() throws IOException {
 
         try {
-            //Delete default organization
+            // attempt to delete default organization
             clientSetup.getRestClient().management().orgs().org( clientSetup.getOrganizationName() ).delete();
             fail( "Delete is not implemented yet" );
-        }catch(ClientErrorException uie){
-            assertEquals( Response.Status.NOT_IMPLEMENTED ,uie.getResponse().getStatus());
+
+        } catch( ServerErrorException see ){
+            assertEquals( Response.Status.NOT_IMPLEMENTED.getStatusCode(), see.getResponse().getStatus());
         }
     }
 
@@ -382,6 +381,65 @@ public class OrganizationsIT extends AbstractRestIT {
         orgResponse = management().orgs().org( clientSetup.getOrganizationName() ).get();
 
         assertEquals( 6, orgResponse.getProperties().get( "puppies" ));
+
+    }
+
+    @Test
+    public void testOrganizationNoDuplicateConnectionsPUT() throws Exception {
+
+        RestClient restClient = clientSetup.getRestClient();
+
+        //Setup what will be interested into the organization
+        Map<String, Object> properties = new HashMap<String, Object>();
+        Entity entity = new Entity( properties );
+
+        Organization orgPayload = clientSetup.getOrganization();
+        orgPayload.put( "properties", properties );
+
+
+        //retrieve the organization
+        Organization orgResponse = management().orgs().org( clientSetup.getOrganizationName() ).get();
+
+
+        this.refreshIndex();
+        //attempt to post duplicate connection
+        Entity userPostResponse = management().orgs().org( clientSetup.getOrganizationName() ).users().user( clientSetup.getEmail() ).put( entity );
+
+        Entity duplicateConnectionAdmins = management().orgs().org( clientSetup.getOrganizationName() ).users().get( Entity.class );
+        ArrayList organizationAdminUsers = ( ArrayList ) duplicateConnectionAdmins.get( "data" );
+        assertEquals(1,organizationAdminUsers.size() );
+
+    }
+
+    @Test
+    public void testOrganizationNoDuplicateConnectionsPOST() throws Exception {
+
+        RestClient restClient = clientSetup.getRestClient();
+
+        //Setup what will be interested into the organization
+        Map<String, Object> properties = new HashMap<String, Object>();
+        properties.put( "email",clientSetup.getEmail() );
+        Entity entity = new Entity( properties );
+
+        Organization orgPayload = clientSetup.getOrganization();
+        orgPayload.put( "properties", properties );
+
+
+        //retrieve the organization
+        Organization orgResponse = management().orgs().org( clientSetup.getOrganizationName() ).get();
+
+
+        this.refreshIndex();
+        //attempt to post duplicate connection
+        try {
+            Entity userPostResponse = management().orgs().org( clientSetup.getOrganizationName() ).users().post( Entity.class, entity );
+        }catch(Exception e){
+            //nom nom nom
+        }
+
+        Entity duplicateConnectionAdmins = management().orgs().org( clientSetup.getOrganizationName() ).users().get( Entity.class );
+        ArrayList organizationAdminUsers = ( ArrayList ) duplicateConnectionAdmins.get( "data" );
+        assertEquals(1,organizationAdminUsers.size() );
 
     }
 

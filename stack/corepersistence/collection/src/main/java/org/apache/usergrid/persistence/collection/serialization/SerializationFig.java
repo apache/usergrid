@@ -54,4 +54,8 @@ public interface SerializationFig extends GuicyFig {
     @Default( "5000000" )
     int getMaxEntitySize();
 
+    @Key ( "usergrid.uniqueverify.poolsize" )
+    @Default( "150" )
+    int getUniqueVerifyPoolSize();
+
 }

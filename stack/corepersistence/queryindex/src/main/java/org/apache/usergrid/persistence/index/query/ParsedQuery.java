@@ -202,4 +202,8 @@ public class ParsedQuery {
     public Operand getRootOperand() {
         return rootOperand;
     }
+
+    public boolean isGeoQuery(){
+        return getOriginalQuery().contains("location") && getOriginalQuery().contains("within");
+    }
 }

@@ -40,7 +40,7 @@ public class WriteUniqueVerifyException extends CollectionRuntimeException {
     /**
      * Get map of Fields in violation, keyed by field name.
      */
-    public Map<String, Field> getVioliations() {
+    public Map<String, Field> getViolations() {
         return violations;
     }
 }

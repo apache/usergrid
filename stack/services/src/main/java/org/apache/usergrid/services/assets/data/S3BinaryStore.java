@@ -54,7 +54,7 @@ public class S3BinaryStore implements BinaryStore {
     private static final Iterable<? extends Module> MODULES = ImmutableSet
             .of( new JavaUrlHttpCommandExecutorServiceModule(), new Log4JLoggingModule(), new NettyPayloadModule() );
 
-    private static final Logger LOG = LoggerFactory.getLogger( S3BinaryStore.class );
+    private static final Logger logger = LoggerFactory.getLogger( S3BinaryStore.class );
     private static final long FIVE_MB = ( FileUtils.ONE_MB * 5 );
     private static String WORKERS_PROP_NAME = "usergrid.binary.upload-workers";
 
@@ -158,7 +158,7 @@ public class S3BinaryStore implements BinaryStore {
                 if ( StringUtils.isNumeric( workersString ) ) {
                     workers = Integer.parseInt( workersString );
                 } else if ( !StringUtils.isEmpty( workersString )) {
-                    LOG.error("Ignoring invalid setting for {}", WORKERS_PROP_NAME);
+                    logger.error("Ignoring invalid setting for {}", WORKERS_PROP_NAME);
                 }
                 executorService = Executors.newFixedThreadPool( workers );
             }
@@ -218,7 +218,9 @@ public class S3BinaryStore implements BinaryStore {
         @Override
         public Void call() {
 
-            LOG.debug( "Writing temp file for S3 upload" );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Writing temp file for S3 upload");
+            }
 
             // determine max size file allowed, default to 50mb
             long maxSizeBytes = 50 * FileUtils.ONE_MB;
@@ -243,7 +245,9 @@ public class S3BinaryStore implements BinaryStore {
                 written += data.length;
                 written += IOUtils.copyLarge( inputStream, os, 0, maxSizeBytes + 1 );
 
-                LOG.debug("Write temp file {} length {}", tempFile.getName(), written);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Write temp file {} length {}", tempFile.getName(), written);
+                }
 
             } catch ( IOException e ) {
                 throw new RuntimeException( "Error creating temp file", e );
@@ -253,7 +257,7 @@ public class S3BinaryStore implements BinaryStore {
                     try {
                         os.flush();
                     } catch (IOException e) {
-                        LOG.error( "Error flushing data to temporary upload file", e );
+                        logger.error( "Error flushing data to temporary upload file", e );
                     }
                     IOUtils.closeQuietly( os );
                 }
@@ -264,8 +268,10 @@ public class S3BinaryStore implements BinaryStore {
             Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
 
             if ( tempFile.length() > maxSizeBytes ) {
-                LOG.debug("File too large. Temp file size (bytes) = {}, " +
-                          "Max file size (bytes) = {} ", tempFile.length(), maxSizeBytes);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("File too large. Temp file size (bytes) = {}, Max file size (bytes) = {}",
+                            tempFile.length(), maxSizeBytes);
+                }
                 try {
                     EntityManager em = emf.getEntityManager( appId );
                     fileMetadata.put( "error", "Asset size " + tempFile.length()
@@ -274,7 +280,7 @@ public class S3BinaryStore implements BinaryStore {
                     tempFile.delete();
 
                 } catch ( Exception e ) {
-                    LOG.error( "Error updating entity with error message", e);
+                    logger.error( "Error updating entity with error message", e);
                 }
                 return null;
             }
@@ -284,7 +290,9 @@ public class S3BinaryStore implements BinaryStore {
 
             try {  // start the upload
 
-                LOG.debug( "S3 upload thread started" );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("S3 upload thread started");
+                }
 
                 BlobStore blobStore = getContext().getBlobStore();
 
@@ -306,11 +314,15 @@ public class S3BinaryStore implements BinaryStore {
                 String md5sum = Hex.encodeHexString( blob.getMetadata().getContentMetadata().getContentMD5() );
                 fileMetadata.put( AssetUtils.CHECKSUM, md5sum );
 
-                LOG.debug( "S3 upload starting" );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("S3 upload starting");
+                }
 
                 String eTag = blobStore.putBlob( bucketName, blob );
 
-                LOG.debug( "S3 upload complete eTag=" + eTag);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("S3 upload complete eTag=" + eTag);
+                }
 
                 // update entity with eTag
                 EntityManager em = emf.getEntityManager( appId );
@@ -320,7 +332,7 @@ public class S3BinaryStore implements BinaryStore {
                 em.update( entity );
             }
             catch ( Exception e ) {
-                LOG.error( "error uploading", e );
+                logger.error( "error uploading", e );
             }
 
             if ( tempFile != null && tempFile.exists() ) {

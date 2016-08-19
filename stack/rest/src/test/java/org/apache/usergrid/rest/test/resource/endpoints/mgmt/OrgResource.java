@@ -18,7 +18,6 @@
 package org.apache.usergrid.rest.test.resource.endpoints.mgmt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.usergrid.java.client.exception.ClientException;
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
 import org.apache.usergrid.rest.test.resource.endpoints.UrlResource;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
@@ -29,14 +28,10 @@ import org.apache.usergrid.rest.test.resource.state.ClientContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.StringReader;
 
@@ -86,7 +81,9 @@ public class OrgResource  extends NamedResource {
             .accept( MediaType.APPLICATION_JSON )
             .post( Entity.json( null ), String.class );
 
-        logger.debug("Response from post: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from post: " + responseString);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         ApiResponse response;
@@ -135,10 +132,13 @@ public class OrgResource  extends NamedResource {
             .accept( MediaType.APPLICATION_JSON )
             .post( Entity.json( organization ), String.class );
 
-        logger.debug("Response from put: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from put: " + responseString);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         ApiResponse response;
+
         try {
             response = mapper.readValue( new StringReader(responseString), ApiResponse.class);
         } catch (IOException e) {

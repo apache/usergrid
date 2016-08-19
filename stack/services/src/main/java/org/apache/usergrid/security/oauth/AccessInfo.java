@@ -41,7 +41,7 @@ public class AccessInfo {
     String state;
     Long passwordChanged;
 
-    protected Map<String, Object> properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
+    protected Map<String, Object> properties = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 
 
     public AccessInfo() {

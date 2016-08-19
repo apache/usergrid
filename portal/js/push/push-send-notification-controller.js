@@ -54,7 +54,6 @@ AppServices.Controllers.controller('PushSendNotificationCtrl', ['ug', '$scope',
         var type = $scope.send.controlGroup;
         var payload = {
           payloads: {},
-          deliver: null,
           debug: true
         };
         payload.payloads[$scope.send.selectedNotifier._data.name] =

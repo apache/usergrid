@@ -45,4 +45,16 @@ public interface FieldSet {
      * @return
      */
     public boolean isEmpty();
+
+    /**
+     * Return true if there was at least entity repaired ( removed ) during the building of this set.
+     * @return
+     */
+    public boolean getEntityRepairExecuted();
+
+    /**
+     * Return true if there was at least entity repaired ( removed ) during the building of this set.
+     * @return
+     */
+    public void setEntityRepairExecuted(final boolean entityRepairExecuted);
 }

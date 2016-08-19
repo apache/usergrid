@@ -30,17 +30,24 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.security.shiro.Realm;
 import org.apache.usergrid.security.shiro.UsergridAuthorizationInfo;
 import org.apache.usergrid.security.tokens.TokenService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class OrganizationPrincipal extends PrincipalIdentifier {
 
+    private static final  Logger logger = LoggerFactory.getLogger(OrganizationPrincipal.class);
+
     OrganizationInfo organization;
 
+    /**
+     * Needed for Jackson, do not remove
+     */
+    public OrganizationPrincipal() {
+    }
 
-    public OrganizationPrincipal() {}
 
-
-    public OrganizationPrincipal( OrganizationInfo organization ) {
+    public OrganizationPrincipal(OrganizationInfo organization) {
         this.organization = organization;
     }
 
@@ -79,29 +86,32 @@ public class OrganizationPrincipal extends PrincipalIdentifier {
         Map<UUID, String> applicationSet = HashBiMap.create();
         ApplicationInfo application = null;
 
-        role( info, Realm.ROLE_ORGANIZATION_ADMIN );
-        role( info, Realm.ROLE_APPLICATION_ADMIN );
+        role(info, Realm.ROLE_ORGANIZATION_ADMIN);
+        role(info, Realm.ROLE_APPLICATION_ADMIN);
 
-        grant( info, "organizations:access:" + organization.getUuid() );
-        organizationSet.put( organization.getUuid(), organization.getName() );
+        grant(info, "organizations:access:" + organization.getUuid());
+        organizationSet.put(organization.getUuid(), organization.getName());
 
         Map<UUID, String> applications = null;
-        try {
-            applications = management.getApplicationsForOrganization( organization.getUuid() );
-        }
-        catch ( Exception e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        if ( ( applications != null ) && !applications.isEmpty() ) {
-            grant( info, "applications:admin,access,get,put,post,delete:" + StringUtils
-                .join(applications.keySet(), ',') );
 
-            applicationSet.putAll( applications );
+        try {
+            applications = management.getApplicationsForOrganization(organization.getUuid());
+        } catch (Exception e) {
+            //todo seems to just be ignored, seems like a bad ida...
+            logger.error("Error in OrganizationPrincipal.grant()", e);
+
+        }
+
+        if ((applications != null) && !applications.isEmpty()) {
+            grant(info, "applications:admin,access,get,put,post,delete:" + StringUtils
+                .join(applications.keySet(), ','));
+
+            applicationSet.putAll(applications);
         }
 
         info.setOrganization(organization);
         info.addOrganizationSet(organizationSet);
+        //todo application is always null here - never is set
         info.setApplication(application);
         info.addApplicationSet(applicationSet);
     }

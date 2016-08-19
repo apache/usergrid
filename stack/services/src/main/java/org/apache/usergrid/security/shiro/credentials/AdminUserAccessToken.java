@@ -19,6 +19,9 @@ package org.apache.usergrid.security.shiro.credentials;
 
 public class AdminUserAccessToken extends AbstractAccessTokenCredentials implements AdminUserCredentials {
 
+    /**
+     * Needed for Jackson. Do not remove
+     */
     public AdminUserAccessToken() {}
 
     public AdminUserAccessToken( String token ) {

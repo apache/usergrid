@@ -21,15 +21,13 @@ package org.apache.usergrid.persistence.collection.serialization;
 import java.util.Collection;
 import java.util.Iterator;
 
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.ConsistencyLevel;
 import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
-
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.model.ConsistencyLevel;
 
 
 /**
@@ -39,27 +37,19 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
 
 
     /**
-     * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
-     *
-     * @param applicationScope scope
-     * @param uniqueValue Object to be written
-     *
-     * @return MutatationBatch that encapsulates operation, caller may or may not execute.
-     */
-    MutationBatch write( ApplicationScope applicationScope, UniqueValue uniqueValue );
-
-    /**
-     * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds.
+     * Write the specified UniqueValue to Cassandra with optional timeToLive in milliseconds. -1 is the same as no ttl
+     * (lives forever)
      *
      * @param applicationScope scope
      * @param uniqueValue Object to be written
      * @param timeToLive How long object should live in seconds.  -1 implies store forever
-     * @return MutatationBatch that encapsulates operation, caller may or may not execute.
+     * @return BatchStatement that encapsulates CQL statements, caller may or may not execute.
      */
-    MutationBatch write( ApplicationScope applicationScope, UniqueValue uniqueValue, int timeToLive );
+    BatchStatement writeCQL(ApplicationScope applicationScope, UniqueValue uniqueValue, int timeToLive );
 
     /**
-     * Load UniqueValue that matches field from collection or null if that value does not exist.
+     * Load UniqueValue that matches field from collection or null if that value does not exist.  Returns the oldest
+     * unique value entry if more than 1 exists
      *
      * @param applicationScope scope in which to look for field name/value
      * @param type The type the unique value exists within
@@ -67,9 +57,23 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
      *
      * @return UniqueValueSet containing fields from the collection that exist in cassandra
      *
-     * @throws ConnectionException on error connecting to Cassandra
      */
-    UniqueValueSet load( ApplicationScope applicationScope, String type, Collection<Field> fields ) throws ConnectionException;
+    UniqueValueSet load( ApplicationScope applicationScope, String type, Collection<Field> fields );
+
+
+    /**
+     * Load UniqueValue that matches field from collection or null if that value does not exist.  Returns the oldest
+     * unique value entry if more than 1 exists
+     *
+     * @param applicationScope scope in which to look for field name/value
+     * @param type The type the unique value exists within
+     * @param fields Field name/value to search for
+     *
+     * @return UniqueValueSet containing fields from the collection that exist in cassandra
+     *
+     */
+    UniqueValueSet load( ApplicationScope applicationScope, String type, Collection<Field> fields,
+                         boolean useReadRepair );
 
     /**
     * Load UniqueValue that matches field from collection or null if that value does not exist.
@@ -79,11 +83,12 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
     * @param type The type the unique value exists within
     * @param fields Field name/value to search for
     * @return UniqueValueSet containing fields from the collection that exist in cassandra
-    * @throws ConnectionException on error connecting to Cassandra
+    *
+    * @param useReadRepair
+     * @return UniqueValueSet containing fields from the collection that exist in cassandra
     */
-    UniqueValueSet load( ApplicationScope applicationScope, ConsistencyLevel consistencyLevel, String type,
-                         Collection<Field> fields ) throws ConnectionException;
-
+    UniqueValueSet load(ApplicationScope applicationScope, ConsistencyLevel consistencyLevel, String type,
+                        Collection<Field> fields, boolean useReadRepair);
 
     /**
      * Loads the currently persisted history of every unique value the entity has held.  This will
@@ -101,9 +106,9 @@ public interface UniqueValueSerializationStrategy extends Migration, VersionedDa
      *
      * @param applicationScope The scope of the application
      * @param uniqueValue Object to be deleted.
-     * @return MutatationBatch that encapsulates operation, caller may or may not execute.
+     * @return BatchStatement that encapsulates the CQL statements, caller may or may not execute.
      */
-    MutationBatch delete( ApplicationScope applicationScope, UniqueValue uniqueValue );
+    BatchStatement deleteCQL( ApplicationScope applicationScope, UniqueValue uniqueValue );
 
 
 }

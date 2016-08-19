@@ -66,7 +66,7 @@ import rx.Observable;
  */
 public class GraphManagerImpl implements GraphManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger( GraphManagerImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( GraphManagerImpl.class );
 
     private final ApplicationScope scope;
 
@@ -188,7 +188,9 @@ public class GraphManagerImpl implements GraphManager {
             final MutationBatch edgeMutation = storageEdgeSerialization.writeEdge( scope, edge1, timestamp );
 
 
-            LOG.debug( "Marking edge {} as deleted to commit log", edge1 );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Marking edge {} as deleted to commit log", edge1);
+            }
             try {
                 edgeMutation.execute();
             }
@@ -223,7 +225,7 @@ public class GraphManagerImpl implements GraphManager {
                 //fire our delete listener and wait for the results
                 edgeDeleteListener.receive( scope, marked, startTimestamp ).doOnNext(
                     //log them
-                    count -> LOG.debug( "removed {} types for edge {} ", count, edge ) )
+                    count -> logger.trace( "removed {} types for edge {} ", count, edge ) )
                     //return the marked edge
                     .map( count -> marked ) );
 
@@ -241,7 +243,9 @@ public class GraphManagerImpl implements GraphManager {
             final MutationBatch nodeMutation = nodeSerialization.mark( scope, id, timestamp );
 
 
-            LOG.debug( "Marking node {} as deleted to node mark", node );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Marking node {} as deleted to node mark", node);
+            }
             try {
                 nodeMutation.execute();
             }
@@ -265,7 +269,7 @@ public class GraphManagerImpl implements GraphManager {
 
 
         final Observable<Id> nodeObservable =
-            Observable.just( inputNode ).map( node -> nodeSerialization.getMaxVersion( scope, inputNode ) ).takeWhile(
+            Observable.just( inputNode ).map( node -> nodeSerialization.getMaxVersion( scope, node ) ).takeWhile(
                 maxTimestamp -> maxTimestamp.isPresent() )
 
                 //map our delete listener
@@ -273,7 +277,7 @@ public class GraphManagerImpl implements GraphManager {
                     //set to 0 if nothing is emitted
                 .lastOrDefault( 0 )
                     //log for posterity
-                .doOnNext( count -> LOG.debug( "Removed {} edges from node {}", count, inputNode ) )
+                .doOnNext( count -> logger.trace( "Removed {} edges from node {}", count, inputNode ) )
                     //return our id
                 .map( count -> inputNode );
 
@@ -477,6 +481,10 @@ public class GraphManagerImpl implements GraphManager {
                 } ).filter( simpleMarkedEdge -> {
                     if(!filterMarked){
                         return true;
+                    }
+
+                    if(logger.isTraceEnabled()){
+                        logger.trace("Filtering edge {}", simpleMarkedEdge);
                     }
 
                     //if any one of these is true, we filter it

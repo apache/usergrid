@@ -36,7 +36,7 @@ import org.apache.usergrid.persistence.model.entity.EntityMap;
  */
 public class EntityMappingParser implements FieldParser {
 
-    private static final Logger log = LoggerFactory.getLogger( EntityMappingParser.class );
+    private static final Logger logger = LoggerFactory.getLogger( EntityMappingParser.class );
 
 
     /**
@@ -52,7 +52,7 @@ public class EntityMappingParser implements FieldParser {
     /**
      * List of all field tuples to return
      */
-    private List<EntityField> fields = new ArrayList<>();
+    private Set<EntityField> fields = new HashSet<>();
 
 
     /**
@@ -92,6 +92,12 @@ public class EntityMappingParser implements FieldParser {
         fields.add( EntityField.create( fieldStack.peek(), value ) );
     }
 
+    private void visitNull( ) {
+        fields.add( EntityField.create( fieldStack.peek()) );
+    }
+
+
+
 
     private void visit( final float value ) {
         fields.add( EntityField.create( fieldStack.peek(), value ) );
@@ -107,8 +113,7 @@ public class EntityMappingParser implements FieldParser {
 
         //we don't support indexing 2 dimensional arrays.  Short circuit with a warning so we can track operationally
         if(!lastCollection.isEmpty() && lastCollection.peek() instanceof Collection){
-            log.warn( "Encountered 2 collections consecutively.  " +
-                "N+1 dimensional arrays are unsupported, only arrays of depth 1 are supported" );
+            logger.warn( "Encountered 2 collections consecutively.  N+1 dimensional arrays are unsupported, only arrays of depth 1 are supported" );
             return;
         }
 
@@ -192,6 +197,12 @@ public class EntityMappingParser implements FieldParser {
             return;
         }
 
+        if ( object == null ) {
+
+            visitNull();
+            return;
+        }
+
 
     }
 
@@ -202,11 +213,15 @@ public class EntityMappingParser implements FieldParser {
      */
     private void iterate( final Map<String, ?> map ) {
 
+        lastCollection.push( map );
+
         for ( final Map.Entry<String, ?> jsonField : map.entrySet() ) {
             pushField( jsonField.getKey() );
             visitValue( jsonField.getValue() );
             popField();
         }
+
+        lastCollection.pop();
     }
 
 
@@ -236,7 +251,7 @@ public class EntityMappingParser implements FieldParser {
     /**
      * Parse the map field
      */
-    public List<EntityField> parse( final Map<String, ?> map ) {
+    public Set<EntityField> parse(final Map<String, ?> map ) {
         iterate( map );
 
         return fields;

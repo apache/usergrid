@@ -23,7 +23,7 @@ import org.apache.usergrid.persistence.model.field.value.Location;
 /**
  * Basic field for storing location data
  */
-public class LocationField extends AbstractField<Location> {
+public final class LocationField extends AbstractField<Location> {
 
     /**
      * Create a location field with the given point
@@ -41,9 +41,16 @@ public class LocationField extends AbstractField<Location> {
         super();
     }
 
+    /**
+     * This type of field is never unique
+     */
+    @Override
+    public boolean isUnique() {
+        return false;
+    }
 
     @Override
-    public FieldTypeName getTypeName() {
+    public final FieldTypeName getTypeName() {
             return FieldTypeName.LOCATION;
         }
 }

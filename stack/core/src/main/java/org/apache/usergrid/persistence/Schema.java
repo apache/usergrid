@@ -559,7 +559,7 @@ public class Schema implements SchemaManager {
             return schemaNode;
         }
         catch ( Exception e ) {
-            logger.error( "Unable to get schema for entity type " + entityType, e );
+            logger.error( "Unable to get schema for entity type {}", entityType, e );
         }
         return null;
     }
@@ -1155,12 +1155,14 @@ public class Schema implements SchemaManager {
 
 
     public static String defaultCollectionName( String entityType ) {
+
         try {
             return collectionNameCache.get( entityType );
         }
         catch ( ExecutionException ex ) {
-            ex.printStackTrace();
+            logger.error("Error getting defaultCollectionName name from cache", ex);
         }
+
         return _defaultCollectionName( entityType );
     }
 
@@ -1478,7 +1480,7 @@ public class Schema implements SchemaManager {
                         return;
                     }
                     catch ( Exception e ) {
-                        logger.error( "Unable to set entity property " + property, e );
+                        logger.error( "Unable to set entity property {}", property, e );
                     }
                 }
                 try {
@@ -1486,7 +1488,7 @@ public class Schema implements SchemaManager {
                     return;
                 }
                 catch ( Exception e ) {
-                    logger.error( "Unable to set entity property " + property, e );
+                    logger.error( "Unable to set entity property {}", property, e );
                 }
             }
         }
@@ -1501,7 +1503,7 @@ public class Schema implements SchemaManager {
                 return descriptor.getReadMethod().invoke( entity );
             }
             catch ( Exception e ) {
-                logger.error( "Unable to get entity property " + property, e );
+                logger.error( "Unable to get entity property {}", property, e );
             }
             return null;
         }
@@ -1533,7 +1535,7 @@ public class Schema implements SchemaManager {
                     }
                 }
                 catch ( Exception e ) {
-                    logger.error( "Unable to get entity property " + property, e );
+                    logger.error( "Unable to get entity property {}", property, e );
                 }
             }
         }
@@ -1583,8 +1585,13 @@ public class Schema implements SchemaManager {
         }
 
         String entityType = string( columns.get( PROPERTY_TYPE ) );
+
         if ( entityType == null ) {
-            logger.debug( "deserializeEntityProperties(): No type for entity found, entity probably doesn't exist" );
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("deserializeEntityProperties(): No type for entity found, entity probably doesn't exist");
+            }
+
             return null;
         }
         if ( checkId && !columns.containsKey( PROPERTY_UUID ) ) {
@@ -1594,10 +1601,13 @@ public class Schema implements SchemaManager {
 
         if ( checkRequired ) {
             Set<String> required_properties = Schema.getDefaultSchema().getRequiredProperties( entityType );
+
             if ( required_properties != null ) {
+
                 for ( String property_name : required_properties ) {
+
                     if ( !columns.containsKey( property_name ) ) {
-                        logger.error( "Entity (" + entityType + ") missing required property: " + property_name,
+                        logger.error( "Entity ({}) missing required property: {}", entityType, property_name,
                                 new Throwable() );
                         return null;
                     }

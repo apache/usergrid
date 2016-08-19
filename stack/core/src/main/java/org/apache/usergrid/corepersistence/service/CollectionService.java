@@ -21,6 +21,7 @@ package org.apache.usergrid.corepersistence.service;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
+import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
 
 
@@ -35,4 +36,8 @@ public interface CollectionService {
      * @return An observable with results page entries for the stream
      */
     Observable<ResultsPage<Entity>> searchCollection(final CollectionSearch search);
+
+
+
+    Observable<ResultsPage<Id>> searchCollectionIds(final CollectionSearch search);
 }

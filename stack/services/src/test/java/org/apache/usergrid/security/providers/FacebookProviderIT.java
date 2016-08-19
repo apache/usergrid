@@ -20,6 +20,7 @@ package org.apache.usergrid.security.providers;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.ExperimentalTest;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -37,6 +38,7 @@ import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.utils.MapUtils;
+import org.junit.experimental.categories.Category;
 
 import static org.apache.usergrid.TestHelper.newUUIDString;
 import static org.apache.usergrid.TestHelper.uniqueOrg;
@@ -63,7 +65,7 @@ public class FacebookProviderIT {
     public static void setup() throws Exception {
         providerFactory =  SpringResource.getInstance().getBean( SignInProviderFactory.class );
         UserInfo adminUser = setup.getMgmtSvc()
-                                  .createAdminUser( uniqueUsername(), "Facebook User", "user"+newUUIDString()+"@facebook.com", "test", false,
+                                  .createAdminUser( null, uniqueUsername(), "Facebook User", "user"+newUUIDString()+"@facebook.com", "test", false,
                                           false );
         OrganizationInfo organization = setup.getMgmtSvc().createOrganization( uniqueOrg(), adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "fb-application" ).getId();
@@ -71,7 +73,7 @@ public class FacebookProviderIT {
 
 
     @Test
-    @Ignore("Requires Facebook credentials")
+    @Category(ExperimentalTest.class)
     public void verifyGetOrCreateOk() throws Exception {
         Application application = setup.getEmf().getEntityManager( applicationId ).getApplication();
         Map fb_user = MapUtils.hashMap( "id", "12345678" ).map( "name", "Facebook User" ).map( "username", "fb.user" );

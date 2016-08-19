@@ -20,6 +20,7 @@ package org.apache.usergrid.security.providers;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.ExperimentalTest;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -37,13 +38,14 @@ import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
 import org.apache.usergrid.utils.MapUtils;
+import org.junit.experimental.categories.Category;
 
 import static junit.framework.Assert.assertNotNull;
 
 
 /** @author zznate */
-@Ignore("Experimental Ping Indentiyy test")
 
+@Category(ExperimentalTest.class )
 public class PingIdentityProviderIT {
     private static UserInfo adminUser;
     private static OrganizationInfo organization;
@@ -59,7 +61,7 @@ public class PingIdentityProviderIT {
     @BeforeClass
     public static void setup() throws Exception {
         adminUser = setup.getMgmtSvc()
-                         .createAdminUser( "pinguser", "Ping User", "ping-user@usergrid.com", "test", false, false );
+                         .createAdminUser( null, "pinguser", "Ping User", "ping-user@usergrid.com", "test", false, false );
         organization = setup.getMgmtSvc().createOrganization( "ping-organization", adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), "ping-application" ).getId();
     }

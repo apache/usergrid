@@ -21,9 +21,13 @@ package org.apache.usergrid.persistence.collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Ignore;
+import org.apache.usergrid.StressTest;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,17 +54,31 @@ import static org.junit.Assert.assertNotNull;
 
 @RunWith(ITRunner.class)
 @UseModules(TestCollectionModule.class)
-@Ignore("Stress test should not be run in embedded mode")
-public class EntityCollectionManagerStressTest {
-    private static final Logger log = LoggerFactory.getLogger(
+@Category(StressTest.class)
+public class EntityCollectionManagerStressTest extends AbstractUniqueValueTest {
+    private static final Logger logger = LoggerFactory.getLogger(
             EntityCollectionManagerStressTest.class );
 
     @Inject
     private EntityCollectionManagerFactory factory;
 
-      @Inject
+    @Inject
     @Rule
     public MigrationManagerRule migrationManagerRule;
+
+    @Inject
+    ActorSystemManager actorSystemManager;
+
+    @Inject
+    UniqueValuesService uniqueValuesService;
+
+
+    @Before
+    public void initAkka() {
+        // each test class needs unique port number
+        initAkka( 2552, actorSystemManager, uniqueValuesService );
+    }
+
 
     @Test
     public void writeThousands() {
@@ -80,7 +98,7 @@ public class EntityCollectionManagerStressTest {
             newEntity.setField(new StringField("name", String.valueOf(i)));
             newEntity.setField(new LocationField("location", new Location(120,40)));
 
-            Entity returned = manager.write(newEntity).toBlocking().last();
+            Entity returned = manager.write(newEntity, null ).toBlocking().last();
 
             assertNotNull("Returned has a id", returned.getId());
             assertNotNull("Returned has a version", returned.getVersion());
@@ -88,11 +106,11 @@ public class EntityCollectionManagerStressTest {
             ids.add(returned.getId());
 
             if ( i % 1000 == 0 ) {
-                log.info("   Wrote: " + i);
+                logger.info("   Wrote: " + i);
             }
         }
         timer.stop();
-        log.info( "Total time to write {} entries {}ms", limit, timer.getTime());
+        logger.info( "Total time to write {} entries {}ms", limit, timer.getTime());
         timer.reset();
 
         timer.start();
@@ -102,6 +120,6 @@ public class EntityCollectionManagerStressTest {
             assertNotNull("Returned has a version", entity.getVersion());
         }
         timer.stop();
-        log.info( "Total time to read {} entries {}ms", limit, timer.getTime());
+        logger.info( "Total time to read {} entries {}ms", limit, timer.getTime());
     }
 }

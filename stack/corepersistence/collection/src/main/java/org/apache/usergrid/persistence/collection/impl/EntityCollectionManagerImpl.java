@@ -19,40 +19,35 @@
 package org.apache.usergrid.persistence.collection.impl;
 
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.collection.EntityCollectionManager;
-import org.apache.usergrid.persistence.collection.EntitySet;
-import org.apache.usergrid.persistence.collection.FieldSet;
-import org.apache.usergrid.persistence.collection.MvccEntity;
-import org.apache.usergrid.persistence.collection.MvccLogEntry;
-import org.apache.usergrid.persistence.collection.VersionSet;
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.Session;
+import com.codahale.metrics.Timer;
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.MutationBatch;
+import com.netflix.astyanax.connectionpool.OperationResult;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.model.ColumnFamily;
+import com.netflix.astyanax.model.ConsistencyLevel;
+import com.netflix.astyanax.model.CqlResult;
+import com.netflix.astyanax.serializers.StringSerializer;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
+import org.apache.usergrid.persistence.collection.*;
 import org.apache.usergrid.persistence.collection.mvcc.stage.CollectionIoEvent;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkCommit;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.MarkStart;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.UniqueCleanup;
 import org.apache.usergrid.persistence.collection.mvcc.stage.delete.VersionCompact;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.RollbackAction;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteCommit;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteOptimisticVerify;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteStart;
-import org.apache.usergrid.persistence.collection.mvcc.stage.write.WriteUniqueVerify;
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.MvccLogEntrySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
+import org.apache.usergrid.persistence.collection.mvcc.stage.write.*;
+import org.apache.usergrid.persistence.collection.serialization.*;
+import org.apache.usergrid.persistence.collection.serialization.impl.LogEntryIterator;
 import org.apache.usergrid.persistence.collection.serialization.impl.MinMaxLogEntryIterator;
 import org.apache.usergrid.persistence.collection.serialization.impl.MutableFieldSet;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.rx.ObservableIterator;
@@ -64,27 +59,16 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-
-import com.codahale.metrics.Timer;
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.OperationResult;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.model.ColumnFamily;
-import com.netflix.astyanax.model.CqlResult;
-import com.netflix.astyanax.serializers.StringSerializer;
-
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action0;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 
 /**
- * Simple implementation.  Should perform  writes, delete and load. <p/> TODO: maybe refactor the stage operations into
- * their own classes for clarity and organization?
+ * Simple implementation.  Should perform  writes, delete and load.
  */
 public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
@@ -110,39 +94,60 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
 
     private final SerializationFig serializationFig;
+    private final CassandraConfig cassandraConfig;
 
 
     private final Keyspace keyspace;
+    private final Session session;
     private final Timer writeTimer;
     private final Timer deleteTimer;
     private final Timer fieldIdTimer;
     private final Timer fieldEntityTimer;
-    private final Timer updateTimer;
     private final Timer loadTimer;
     private final Timer getLatestTimer;
 
     private final ApplicationScope applicationScope;
     private final RxTaskScheduler rxTaskScheduler;
 
+    private final UniqueValuesService uniqueValuesService;
+    private final ActorSystemManager actorSystemManager;
+
 
     @Inject
-    public EntityCollectionManagerImpl( final WriteStart writeStart, final WriteUniqueVerify writeVerifyUnique,
-                                        final WriteOptimisticVerify writeOptimisticVerify,
-                                        final WriteCommit writeCommit, final RollbackAction rollback,
-                                        final MarkStart markStart, final MarkCommit markCommit,
-                                        final UniqueCleanup uniqueCleanup, final VersionCompact versionCompact,
-                                        final MvccEntitySerializationStrategy entitySerializationStrategy,
-                                        final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                                        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
-                                        final Keyspace keyspace, final MetricsFactory metricsFactory,
-                                        final SerializationFig serializationFig, final RxTaskScheduler rxTaskScheduler,
-                                        @Assisted final ApplicationScope applicationScope ) {
+    public EntityCollectionManagerImpl(
+        final WriteStart            writeStart,
+        final WriteUniqueVerify     writeVerifyUnique,
+        final WriteOptimisticVerify writeOptimisticVerify,
+        final WriteCommit           writeCommit,
+        final RollbackAction        rollback,
+        final MarkStart             markStart,
+        final MarkCommit            markCommit,
+        final UniqueCleanup         uniqueCleanup,
+        final VersionCompact        versionCompact,
+
+        final MvccEntitySerializationStrategy   entitySerializationStrategy,
+        final UniqueValueSerializationStrategy  uniqueValueSerializationStrategy,
+        final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
+
+        final Keyspace              keyspace,
+        final MetricsFactory        metricsFactory,
+        final SerializationFig      serializationFig,
+        final RxTaskScheduler       rxTaskScheduler,
+        final ActorSystemManager    actorSystemManager,
+        final UniqueValuesService   uniqueValuesService,
+        final CassandraConfig       cassandraConfig,
+        @Assisted final ApplicationScope applicationScope,
+        final Session session ) {
+
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.entitySerializationStrategy = entitySerializationStrategy;
         this.uniqueCleanup = uniqueCleanup;
         this.versionCompact = versionCompact;
         this.serializationFig = serializationFig;
         this.rxTaskScheduler = rxTaskScheduler;
+
+        this.actorSystemManager = actorSystemManager;
+        this.uniqueValuesService = uniqueValuesService;
 
         ValidationUtils.validateApplicationScope( applicationScope );
 
@@ -157,6 +162,7 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.markCommit = markCommit;
 
         this.keyspace = keyspace;
+        this.session = session;
 
 
         this.applicationScope = applicationScope;
@@ -165,14 +171,15 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         this.deleteTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.delete");
         this.fieldIdTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.fieldId");
         this.fieldEntityTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.fieldEntity");
-        this.updateTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.update");
         this.loadTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.load");
         this.getLatestTimer = metricsFactory.getTimer(EntityCollectionManagerImpl.class, "base.latest");
+
+        this.cassandraConfig = cassandraConfig;
     }
 
 
     @Override
-    public Observable<Entity> write( final Entity entity ) {
+    public Observable<Entity> write(final Entity entity, String region) {
 
         //do our input validation
         Preconditions.checkNotNull( entity, "Entity is required in the new stage of the mvcc write" );
@@ -183,28 +190,35 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
 
         // create our observable and start the write
-        final CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( applicationScope, entity );
+        final CollectionIoEvent<Entity> writeData = new CollectionIoEvent<Entity>( applicationScope, entity, region );
 
-        Observable<CollectionIoEvent<MvccEntity>> observable = stageRunner( writeData, writeStart );
+        Observable<CollectionIoEvent<MvccEntity>> observable =  stageRunner( writeData, writeStart );
 
 
-        final Observable<Entity> write = observable.map( writeCommit );
+        final Observable<Entity> write = observable.map( writeCommit ).map(ioEvent -> {
+
+            // fire this in the background so we don't block writes
+            Observable.just( ioEvent ).compose( uniqueCleanup )
+                .subscribeOn( rxTaskScheduler.getAsyncIOScheduler() ).subscribe();
+            return ioEvent;
+
+        }) // now extract the ioEvent we need to return and update the version
+        .map( ioEvent -> ioEvent.getEvent().getEntity().get() );
 
         return ObservableTimer.time( write, writeTimer );
     }
 
 
     @Override
-    public Observable<Id> mark( final Id entityId ) {
+    public Observable<Id> mark(final Id entityId, String region) {
 
         Preconditions.checkNotNull( entityId, "Entity id is required in this stage" );
         Preconditions.checkNotNull( entityId.getUuid(), "Entity id is required in this stage" );
         Preconditions.checkNotNull( entityId.getType(), "Entity type is required in this stage" );
 
-        Observable<Id> o = Observable.just( new CollectionIoEvent<>( applicationScope, entityId ) ).map( markStart )
-            .doOnNext( markCommit ).compose( uniqueCleanup ).map(
+        Observable<Id> o = Observable.just( new CollectionIoEvent<>( applicationScope, entityId, region ) )
+            .map( markStart ).doOnNext( markCommit ).compose( uniqueCleanup ).map(
                 entityEvent -> entityEvent.getEvent().getId() );
-
 
         return ObservableTimer.time( o, deleteTimer );
     }
@@ -237,7 +251,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
 
         Preconditions.checkNotNull( entityIds, "entityIds cannot be null" );
 
-        final Observable<EntitySet> entitySetObservable = Observable.create( new Observable.OnSubscribe<EntitySet>() {
+        final Observable<EntitySet> entitySetObservable =
+            Observable.create( new Observable.OnSubscribe<EntitySet>() {
 
             @Override
             public void call( final Subscriber<? super EntitySet> subscriber ) {
@@ -272,6 +287,19 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
         } );
     }
 
+    @Override
+    public Observable<MvccLogEntry> getVersionsFromMaxToMin( final Id entityId, final UUID startVersion ) {
+        ValidationUtils.verifyIdentity( entityId );
+
+        return Observable.create( new ObservableIterator<MvccLogEntry>( "Log entry iterator" ) {
+            @Override
+            protected Iterator<MvccLogEntry> getIterator() {
+                return new LogEntryIterator( mvccLogEntrySerializationStrategy, applicationScope, entityId, startVersion,
+                    serializationFig.getBufferSize() );
+            }
+        } );
+    }
+
 
     @Override
     public Observable<MvccLogEntry> delete( final Collection<MvccLogEntry> entries ) {
@@ -287,15 +315,11 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     public Observable<Id> getIdField( final String type, final Field field ) {
         final List<Field> fields = Collections.singletonList( field );
         final Observable<Id> idObservable = Observable.from( fields ).map( field1 -> {
-            try {
-                final UniqueValueSet set = uniqueValueSerializationStrategy.load( applicationScope, type, fields );
-                final UniqueValue value = set.getValue( field1.getName() );
-                return value == null ? null : value.getEntityId();
-            }
-            catch ( ConnectionException e ) {
-                logger.error( "Failed to getIdField", e );
-                throw new RuntimeException( e );
-            }
+
+            final UniqueValueSet set = uniqueValueSerializationStrategy.load( applicationScope, type, fields );
+            final UniqueValue value = set.getValue( field1.getName() );
+            return value == null ? null : value.getEntityId();
+
         } );
 
         return ObservableTimer.time( idObservable, fieldIdTimer );
@@ -306,76 +330,113 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
      * Retrieves all entities that correspond to each field given in the Collection.
      */
     @Override
-    public Observable<FieldSet> getEntitiesFromFields( final String type, final Collection<Field> fields ) {
+    public Observable<FieldSet> getEntitiesFromFields(final String type, final Collection<Field> fields,
+                                                      boolean uniqueIndexRepair) {
         final Observable<FieldSet> fieldSetObservable = Observable.just( fields ).map( fields1 -> {
-            try {
 
-                final UUID startTime = UUIDGenerator.newTimeUUID();
+            final UUID startTime = UUIDGenerator.newTimeUUID();
 
                 //Get back set of unique values that correspond to collection of fields
-                UniqueValueSet set = uniqueValueSerializationStrategy.load( applicationScope, type, fields1 );
+                //Purposely use string consistency as it's extremely important here, regardless of performance
+                UniqueValueSet set =
+                    uniqueValueSerializationStrategy
+                        .load( applicationScope, cassandraConfig.getDataStaxReadConsistentCl(), type, fields1 , uniqueIndexRepair);
 
                 //Short circuit if we don't have any uniqueValues from the given fields.
                 if ( !set.iterator().hasNext() ) {
+
+                    fields1.forEach( field -> {
+
+                        if(logger.isTraceEnabled()){
+                            logger.trace("Requested field [{}={}] not found in unique value table",
+                                field.getName(), field.getValue().toString());
+                        }
+
+                    });
+
+                    if(logger.isTraceEnabled()) {
+                        logger.trace("No unique values found for requested fields, returning empty FieldSet");
+                    }
+
                     return new MutableFieldSet( 0 );
                 }
 
+            //Short circuit if we don't have any uniqueValues from the given fields.
+            if ( !set.iterator().hasNext() ) {
+                return new MutableFieldSet( 0 );
+            }
 
-                //loop through each field, and construct an entity load
-                List<Id> entityIds = new ArrayList<>( fields1.size() );
-                List<UniqueValue> uniqueValues = new ArrayList<>( fields1.size() );
 
-                for ( final Field expectedField : fields1 ) {
+            //loop through each field, and construct an entity load
+            List<Id> entityIds = new ArrayList<>( fields1.size() );
+            List<UniqueValue> uniqueValues = new ArrayList<>( fields1.size() );
 
-                    UniqueValue value = set.getValue( expectedField.getName() );
+            for ( final Field expectedField : fields1 ) {
 
-                    if ( value == null ) {
-                        logger.debug( "Field does not correspond to a unique value" );
-                    }
+                UniqueValue value = set.getValue( expectedField.getName() );
 
-                    entityIds.add( value.getEntityId() );
-                    uniqueValues.add( value );
+                if ( value == null ) {
+                    logger.debug( "Field does not correspond to a unique value" );
                 }
 
-                //Load a entity for each entityId we retrieved.
-                final EntitySet entitySet = entitySerializationStrategy.load( applicationScope, entityIds, startTime );
+                entityIds.add( value.getEntityId() );
+                uniqueValues.add( value );
+            }
 
-                //now loop through and ensure the entities are there.
-                final MutationBatch deleteBatch = keyspace.prepareMutationBatch();
+            //Load a entity for each entityId we retrieved.
+            final EntitySet entitySet = entitySerializationStrategy.load( applicationScope, entityIds, startTime );
 
-                final MutableFieldSet response = new MutableFieldSet( fields1.size() );
+            final BatchStatement uniqueDeleteBatch = new BatchStatement();
 
-                for ( final UniqueValue expectedUnique : uniqueValues ) {
-                    final MvccEntity entity = entitySet.getEntity( expectedUnique.getEntityId() );
 
-                    //bad unique value, delete this, it's inconsistent
-                    if ( entity == null || !entity.getEntity().isPresent() ) {
-                        final MutationBatch valueDelete =
-                            uniqueValueSerializationStrategy.delete( applicationScope, expectedUnique );
-                        deleteBatch.mergeShallow( valueDelete );
-                        continue;
+            final MutableFieldSet response = new MutableFieldSet( fields1.size() );
+
+            for ( final UniqueValue expectedUnique : uniqueValues ) {
+                final MvccEntity entity = entitySet.getEntity( expectedUnique.getEntityId() );
+
+                //bad unique value, delete this, it's inconsistent
+                if ( entity == null || !entity.getEntity().isPresent() ) {
+
+                    if(logger.isTraceEnabled()) {
+                        logger.trace("Unique value [{}={}] does not have corresponding entity [{}], executing " +
+                                "read repair to remove stale unique value entry",
+                            expectedUnique.getField().getName(),
+                            expectedUnique.getField().getValue().toString(),
+                            expectedUnique.getEntityId()
+                        );
                     }
 
-
-                    //else add it to our result set
-                    response.addEntity( expectedUnique.getField(), entity );
+                    uniqueDeleteBatch.add(
+                        uniqueValueSerializationStrategy.deleteCQL( applicationScope, expectedUnique ));
+                    continue;
                 }
 
+                //TODO, we need to validate the property in the entity matches the property in the unique value
+
+
+
+                //else add it to our result set
+                response.addEntity( expectedUnique.getField(), entity );
+            }
+
+
+            if ( uniqueDeleteBatch.getStatements().size() > 0 ) {
+
+                response.setEntityRepairExecuted(true);
                 //TODO: explore making this an Async process
-                //We'll repair it again if we have to
-                deleteBatch.execute();
+                session.execute(uniqueDeleteBatch);
+            }
 
-                return response;
-            }
-            catch ( ConnectionException e ) {
-                logger.error( "Failed to getIdField", e );
-                throw new RuntimeException( e );
-            }
+
+            return response;
+
         } );
 
 
         return ObservableTimer.time( fieldSetObservable, fieldEntityTimer );
     }
+
+
 
 
     // fire the stages
@@ -406,7 +467,8 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
     public Observable<VersionSet> getLatestVersion( final Collection<Id> entityIds ) {
 
 
-        final Observable<VersionSet> observable =  Observable.create( new Observable.OnSubscribe<VersionSet>() {
+        final Observable<VersionSet> observable =
+            Observable.create( new Observable.OnSubscribe<VersionSet>() {
 
             @Override
             public void call( final Subscriber<? super VersionSet> subscriber ) {
@@ -436,9 +498,12 @@ public class EntityCollectionManagerImpl implements EntityCollectionManager {
                     StringSerializer.get() );
 
             OperationResult<CqlResult<String, String>> result =
-                keyspace.prepareQuery( CF_SYSTEM_LOCAL ).withCql( "SELECT now() FROM system.local;" ).execute();
+                keyspace.prepareQuery( CF_SYSTEM_LOCAL )
+                    .setConsistencyLevel(ConsistencyLevel.CL_ONE)
+                    .withCql( "SELECT now() FROM system.local;" )
+                    .execute();
 
-            if ( result.getResult().getRows().size() == 1 ) {
+            if ( result.getResult().getRows().size() > 0 ) {
                 return Health.GREEN;
             }
         }

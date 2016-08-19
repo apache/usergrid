@@ -31,7 +31,7 @@ import org.apache.usergrid.persistence.index.impl.ElasticSearchResource;
  * spring context within this singleton
  */
 public class SpringResource {
-    public static final Logger LOG = LoggerFactory.getLogger( SpringResource.class );
+    public static final Logger logger = LoggerFactory.getLogger( SpringResource.class );
 
     private static SpringResource instance;
 
@@ -44,12 +44,12 @@ public class SpringResource {
      * Cassandra.
      */
     private SpringResource() {
-        LOG.info( "Creating CassandraResource using {} for the ClassLoader.",
+        logger.info( "Creating CassandraResource using {} for the ClassLoader.",
             Thread.currentThread().getContextClassLoader() );
 
-        LOG.info( "-------------------------------------------------------------------" );
-        LOG.info( "Initializing Spring" );
-        LOG.info( "-------------------------------------------------------------------" );
+        logger.info( "-------------------------------------------------------------------" );
+        logger.info( "Initializing Spring" );
+        logger.info( "-------------------------------------------------------------------" );
 
 
         //wire up cassandra and elasticsearch before we start spring, otherwise this won't work

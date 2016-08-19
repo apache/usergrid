@@ -84,7 +84,7 @@ public class NodeShardAllocationTest {
 
         final long timeout = 30000;
         when( graphFig.getShardCacheTimeout() ).thenReturn( timeout );
-        when( graphFig.getShardMinDelta() ).thenReturn( timeout * 2 );
+        when( graphFig.getShardMinDelta() ).thenReturn( ( long ) (timeout * 2.5) );
     }
 
 
@@ -98,22 +98,22 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardCounterSerialization = mock( NodeShardApproximation.class );
-
 
         final TimeService timeService = mock( TimeService.class );
+
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
 
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardCounterSerialization, timeService, graphFig, shardGroupCompaction );
+                         timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
 
         final long timeservicetime = System.currentTimeMillis();
 
         when( timeService.getCurrentTime() ).thenReturn( timeservicetime );
 
-        final long expected = timeservicetime - 2 * graphFig.getShardCacheTimeout();
+        final long expected = ( long ) (timeservicetime - 2.5 * graphFig.getShardCacheTimeout());
 
         final long returned = approximation.getMinTime();
 
@@ -131,15 +131,15 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardCounterSerialization = mock( NodeShardApproximation.class );
-
-
         final TimeService timeService = mock( TimeService.class );
+
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
 
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardCounterSerialization, timeService, graphFig, shardGroupCompaction );
+                      timeService, graphFig, shardGroupCompaction, nodeShardCache);
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -175,14 +175,14 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardApproximation = mock( NodeShardApproximation.class );
-
-
         final TimeService timeService = mock( TimeService.class );
+
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
+                        timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -205,8 +205,6 @@ public class NodeShardAllocationTest {
 
         final long count = graphFig.getShardSize() - 1;
 
-        when( nodeShardApproximation.getCount( scope, futureShard, targetEdgeMeta ) ).thenReturn( count );
-
         final boolean result = approximation.auditShard( scope, shardEntryGroup, targetEdgeMeta );
 
         assertFalse( "Shard allocated", result );
@@ -223,14 +221,15 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardApproximation = mock( NodeShardApproximation.class );
-
 
         final TimeService timeService = mock( TimeService.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
+
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
+                        timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -254,9 +253,6 @@ public class NodeShardAllocationTest {
          */
         final long shardCount = ( long ) ( graphFig.getShardSize() * 2.5 );
 
-
-        //return a shard size equal to our max
-        when( nodeShardApproximation.getCount( scope, futureShard, targetEdgeMeta ) ).thenReturn( shardCount );
 
 
         //this is how many we should be iterating and should set the value of the last shard we keep
@@ -338,14 +334,15 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardApproximation = mock( NodeShardApproximation.class );
-
 
         final TimeService timeService = mock( TimeService.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
+
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
+                         timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -377,9 +374,6 @@ public class NodeShardAllocationTest {
         }
 
         iteratedEdges.add( returnedEdge );
-
-        //return a shard size equal to our max
-        when( nodeShardApproximation.getCount( scope, futureShard, targetEdgeMeta ) ).thenReturn( shardCount );
 
         ArgumentCaptor<Shard> shardValue = ArgumentCaptor.forClass( Shard.class );
 
@@ -429,14 +423,15 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardApproximation = mock( NodeShardApproximation.class );
-
 
         final TimeService timeService = mock( TimeService.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
+
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
+                       timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -456,8 +451,6 @@ public class NodeShardAllocationTest {
 
         final long shardCount = graphFig.getShardSize();
 
-        //return a shard size equal to our max
-        when( nodeShardApproximation.getCount( scope, futureShard, targetEdgeMeta ) ).thenReturn( shardCount );
 
         ArgumentCaptor<Shard> shardValue = ArgumentCaptor.forClass( Shard.class );
 
@@ -495,15 +488,17 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardApproximation = mock( NodeShardApproximation.class );
 
 
         final TimeService timeService = mock( TimeService.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
+
 
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
+                         timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -630,9 +625,6 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardApproximation = mock( NodeShardApproximation.class );
-
-
         final TimeService timeService = mock( TimeService.class );
 
         final long returnTime = System.currentTimeMillis() + graphFig.getShardCacheTimeout() * 2;
@@ -641,9 +633,12 @@ public class NodeShardAllocationTest {
 
         final MutationBatch batch = mock( MutationBatch.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
+
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
+                       timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
         final Id nodeId = IdGenerator.createId( "test" );
         final String type = "type";
@@ -712,8 +707,6 @@ public class NodeShardAllocationTest {
 
         final ShardedEdgeSerialization shardedEdgeSerialization = mock( ShardedEdgeSerialization.class );
 
-        final NodeShardApproximation nodeShardApproximation = mock( NodeShardApproximation.class );
-
 
         /**
          * Return 100000 milliseconds
@@ -734,9 +727,12 @@ public class NodeShardAllocationTest {
 
         when( graphFig.getShardMinDelta() ).thenReturn( tooSmallDelta );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class);
+
+
         NodeShardAllocation approximation =
                 new NodeShardAllocationImpl( edgeShardSerialization, edgeColumnFamilies, shardedEdgeSerialization,
-                        nodeShardApproximation, timeService, graphFig, shardGroupCompaction );
+                      timeService, graphFig, shardGroupCompaction, nodeShardCache );
 
 
         /**
@@ -752,7 +748,7 @@ public class NodeShardAllocationTest {
 
         //now test something that passes.
 
-        final long minDelta = cacheTimeout * 2;
+        final long minDelta = ( long ) (cacheTimeout * 2.5);
 
         when( graphFig.getShardMinDelta() ).thenReturn( minDelta );
 

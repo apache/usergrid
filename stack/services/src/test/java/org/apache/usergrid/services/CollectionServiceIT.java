@@ -144,6 +144,22 @@ public class CollectionServiceIT extends AbstractServiceIT {
         }
     }
 
+    @Test
+    public void testSizeReturnedInMetadata() throws Exception {
+
+        app.put( "name", "Tom" );
+        Entity cat = app.testRequest( ServiceAction.POST, 1, "cats" ).getEntity();
+        assertNotNull( cat );
+
+        Entity getEntityByName = app.testRequest( ServiceAction.GET, 1, "cats", cat.getName() ).getEntity();
+        Entity getEntityByUUID = app.testRequest( ServiceAction.GET, 1, "cats", cat.getUuid() ).getEntity();
+
+        assertNotNull(getEntityByName.getSize());
+        assertNotNull(getEntityByUUID.getSize());
+
+        app.clear();
+
+    }
 
     @Test
     public void testGenericEntityCollectionWithIdName() throws Exception {

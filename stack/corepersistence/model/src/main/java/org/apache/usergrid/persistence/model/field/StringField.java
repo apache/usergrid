@@ -20,7 +20,7 @@ package org.apache.usergrid.persistence.model.field;
 /**
  * A String field
  */
-public class StringField extends AbstractField<String> {
+public final class StringField extends AbstractField<String> {
 
 
     public static final int MAX_LENGTH = 500;
@@ -39,13 +39,13 @@ public class StringField extends AbstractField<String> {
 
 
     @Override
-    public FieldTypeName getTypeName() {
+    public final FieldTypeName getTypeName() {
                 return FieldTypeName.STRING;
             }
 
 
     @Override
-    public void validate() {
+    public final void validate() {
         //not unique, don't care
         if(!unique){
             return;

@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
@@ -45,7 +46,7 @@ public class DevicesResourceIT extends AbstractRestIT {
     public void putWithUUIDShouldCreateAfterDelete() throws IOException {
 
         Entity payload = new Entity().chainPut("name", "foo");
-        UUID uuid = UUID.randomUUID();
+        UUID uuid = UUIDGenerator.newTimeUUID();
 
 
         CollectionEndpoint devicesResource  =this.app().collection("devices");

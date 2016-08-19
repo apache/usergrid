@@ -195,7 +195,9 @@ public class QueueManagerImpl implements QueueManager {
         final UUID messageUuid = message.getUuid();
 
 
-        logger.debug( "Adding message with id '{}' to queue '{}'", messageUuid, queueId );
+        if (logger.isDebugEnabled()) {
+            logger.debug("Adding message with id '{}' to queue '{}'", messageUuid, queueId);
+        }
 
 
         batch.addInsertion( getQueueShardRowKey( queueId, shard_ts ), QUEUE_INBOX.getColumnFamily(),
@@ -209,7 +211,9 @@ public class QueueManagerImpl implements QueueManager {
         batch.addInsertion( bytebuffer( queueId ), QUEUE_PROPERTIES.getColumnFamily(),
                 createColumn( QUEUE_NEWEST, messageUuid, newest_ts, se, ue ) );
 
-        logger.debug( "Writing UUID {} with oldest timestamp {} and newest with timestamp {}", new Object[]{messageUuid, oldest_ts, newest_ts});
+        if (logger.isDebugEnabled()) {
+            logger.debug("Writing UUID {} with oldest timestamp {} and newest with timestamp {}", messageUuid, oldest_ts, newest_ts);
+        }
 
         batch.addInsertion( bytebuffer( getQueueId( "/" ) ), QUEUE_SUBSCRIBERS.getColumnFamily(),
                 createColumn( queuePath, queueId, timestamp, se, ue ) );
@@ -1038,7 +1042,9 @@ public class QueueManagerImpl implements QueueManager {
     public QueueIndexUpdate batchUpdateQueueIndex( QueueIndexUpdate indexUpdate, UUID subcriptionQueueId )
             throws Exception {
 
-        logger.info( "batchUpdateQueueIndex" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("batchUpdateQueueIndex");
+        }
 
         Mutator<ByteBuffer> batch = indexUpdate.getBatch();
 
@@ -1100,11 +1106,9 @@ public class QueueManagerImpl implements QueueManager {
                         setGreaterThanEqualityFlag( new DynamicComposite( entryName ) ).serialize(), false,
                         INDEX_ENTRY_LIST_COUNT ).execute().get().getColumns();
 
-        if ( logger.isInfoEnabled() ) {
-            logger.info( "Found {} previous index entries for {} of entity {}", new Object[] {
-                    entries.size(), entryName, queueId
-            } );
-        }
+        logger.info( "Found {} previous index entries for {} of entity {}",
+                entries.size(), entryName, queueId
+        );
 
         // Delete all matching entries from entry list
         for ( HColumn<ByteBuffer, ByteBuffer> entry : entries ) {
@@ -1271,7 +1275,9 @@ public class QueueManagerImpl implements QueueManager {
                     composite_cursor = "";
                 }
                 int hashCode = slice.hashCode();
-                logger.info( "Cursor hash code: {} ", hashCode );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Cursor hash code: {} ", hashCode);
+                }
                 composite_cursor += hashCode + ":" + r.getCursor();
             }
 

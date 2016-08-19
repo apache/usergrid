@@ -78,13 +78,14 @@ public class CpWalker {
 
         final GraphManager gm = em.getManagerCache().getGraphManager( applicationScope );
 
-        logger.debug( "Loading edges types from {}:{}\n   scope {}:{}",
-            new Object[] {
-                applicationId.getType(),
-                applicationId.getUuid(),
-                applicationScope.getApplication().getType(),
-                applicationScope.getApplication().getUuid()
-            } );
+        if (logger.isDebugEnabled()) {
+            logger.debug("Loading edges types from {}:{}\n   scope {}:{}",
+                    applicationId.getType(),
+                    applicationId.getUuid(),
+                    applicationScope.getApplication().getType(),
+                    applicationScope.getApplication().getUuid()
+                );
+        }
 
         final SearchByEdgeType.Order order;
         if ( reverse ) {
@@ -106,7 +107,9 @@ public class CpWalker {
         Observable<Edge> edges = gm.getEdgeTypesFromSource(
                     new SimpleSearchEdgeType( applicationId, edgeType, null ) ).flatMap( emittedEdgeType -> {
 
-            logger.debug( "Loading edges of type {} from node {}", edgeType, applicationId );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Loading edges of type {} from node {}", edgeType, applicationId);
+            }
 
             return gm.loadEdgesFromSource(
                 new SimpleSearchByEdgeType( applicationId, emittedEdgeType, Long.MAX_VALUE, order, Optional.absent() ) );

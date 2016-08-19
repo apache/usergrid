@@ -16,7 +16,9 @@
  */
 package org.apache.usergrid.services.notifiers;
 
+import com.google.inject.Injector;
 import org.apache.usergrid.persistence.entities.Notifier;
+import org.apache.usergrid.services.notifications.ApplicationQueueManagerCache;
 import org.apache.usergrid.services.notifications.ProviderAdapterFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +34,9 @@ public class NotifiersService extends AbstractCollectionService {
 
     public NotifiersService() {
         super();
-        logger.info("/notifiers");
+        if (logger.isTraceEnabled()) {
+            logger.trace("/notifiers");
+        }
     }
 
     @Override
@@ -52,6 +56,10 @@ public class NotifiersService extends AbstractCollectionService {
                 providerAdapter.validateCreateNotifier(payload);
                 NotificationsService ns = (NotificationsService) sm.getService("notifications");
                 ns.testConnection(notifier);
+
+                // clear the app's push manager cache when notifiers are added
+                ns.getApplicationContext().getBean(Injector.class)
+                    .getInstance(ApplicationQueueManagerCache.class).invalidate(em.getApplicationId());
             } catch (Exception e) {
                 logger.info("notifier testConnection() failed", e);
                 em.delete(notifier);

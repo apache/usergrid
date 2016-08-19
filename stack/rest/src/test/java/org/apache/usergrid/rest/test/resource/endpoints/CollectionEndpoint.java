@@ -16,21 +16,23 @@
  */
 package org.apache.usergrid.rest.test.resource.endpoints;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.usergrid.rest.test.resource.model.Collection;
-import org.apache.usergrid.rest.test.resource.state.ClientContext;
-import org.apache.usergrid.utils.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.apache.usergrid.rest.test.resource.state.ClientContext;
+import org.apache.usergrid.utils.StringUtils;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 /**
@@ -133,7 +135,9 @@ public class CollectionEndpoint extends NamedResource {
             .accept( acceptHeader )
             .get(String.class);
 
-        logger.debug("Response from get: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from get: " + responseString);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
@@ -246,7 +250,9 @@ public class CollectionEndpoint extends NamedResource {
             .accept(acceptHeader)
             .post( javax.ws.rs.client.Entity.json( payload ), String.class);
 
-        logger.debug("Response from post: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from post: " + responseString);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
@@ -274,7 +280,9 @@ public class CollectionEndpoint extends NamedResource {
             .accept( acceptHeader )
             .post( javax.ws.rs.client.Entity.json( null ), String.class);
 
-        logger.debug("Response from post: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from post: " + responseString);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
@@ -303,7 +311,9 @@ public class CollectionEndpoint extends NamedResource {
             .accept( acceptHeader )
             .post( javax.ws.rs.client.Entity.json( entityList ), String.class);
 
-        logger.debug("Response from post: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from post: " + responseString);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;
@@ -350,9 +360,11 @@ public class CollectionEndpoint extends NamedResource {
         // use string type so we can log actual response from server
         String responseString = resource.request()
             .accept(acceptHeader)
-            .post( javax.ws.rs.client.Entity.json( entity ), String.class);
+            .put( javax.ws.rs.client.Entity.json( entity ), String.class);
 
-        logger.debug("Response from put: " + responseString);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response from put: " + responseString);
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         org.apache.usergrid.rest.test.resource.model.ApiResponse response;

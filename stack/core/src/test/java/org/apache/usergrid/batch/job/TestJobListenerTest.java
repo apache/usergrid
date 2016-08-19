@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
  * Tests the TestJobListener.
  */
 public class TestJobListenerTest {
-    private static final Logger LOG = LoggerFactory.getLogger( TestJobListenerTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( TestJobListenerTest.class );
     JobExecution jobExecution = new JobExecution() {
         @Override
         public JobData getJobData() {
@@ -113,7 +113,7 @@ public class TestJobListenerTest {
         listener.setExpected( 100 );
 		listener.blockTilDone( waitTime );
         long elapsedTime = System.currentTimeMillis() - startTime;
-        LOG.info( "IdleOut in {} millis", elapsedTime );
+        logger.info( "IdleOut in {} millis", elapsedTime );
         // assertTrue( elapsedTime >= ( 1000L + TestJobListener.WAIT_MAX_MILLIS ) );
         assertTrue("Elapsed time: " + elapsedTime + " fails to be greater than idle wait time: " + waitTime,  elapsedTime>= waitTime );
     }
@@ -132,7 +132,7 @@ public class TestJobListenerTest {
                     Thread.sleep( 100 );
                 }
                 catch ( InterruptedException e ) {
-                    LOG.warn( "Thread got interrupted", e );
+                    logger.warn( "Thread got interrupted", e );
                 }
                 for ( int ii = 0; ii < 1000; ii++ ) {
                     listener.onSuccess( jobExecution );

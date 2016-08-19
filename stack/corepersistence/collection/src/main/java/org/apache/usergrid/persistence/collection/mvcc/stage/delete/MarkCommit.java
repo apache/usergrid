@@ -21,6 +21,10 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueException;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesFig;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,19 +57,26 @@ import rx.functions.Action1;
 @Singleton
 public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
 
-    private static final Logger LOG = LoggerFactory.getLogger( MarkCommit.class );
+    private static final Logger logger = LoggerFactory.getLogger( MarkCommit.class );
 
     private final MvccLogEntrySerializationStrategy logStrat;
     private final MvccEntitySerializationStrategy entityStrat;
     private final SerializationFig serializationFig;
     private final UniqueValueSerializationStrategy uniqueValueStrat;
     private final Keyspace keyspace;
+    private final ActorSystemFig actorSystemFig;
+    private final UniqueValuesFig uniqueValuesFig;
+    private final UniqueValuesService uniqueValuesService;
 
 
     @Inject
     public MarkCommit( final MvccLogEntrySerializationStrategy logStrat,
                        final MvccEntitySerializationStrategy entityStrat,
-                       final UniqueValueSerializationStrategy uniqueValueStrat, final SerializationFig serializationFig,
+                       final UniqueValueSerializationStrategy uniqueValueStrat,
+                       final SerializationFig serializationFig,
+                       final ActorSystemFig actorSystemFig,
+                       final UniqueValuesFig uniqueValuesFig,
+                       final UniqueValuesService uniqueValuesService,
                        final Keyspace keyspace ) {
 
 
@@ -76,6 +87,9 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
         this.entityStrat = entityStrat;
         this.serializationFig = serializationFig;
         this.uniqueValueStrat = uniqueValueStrat;
+        this.actorSystemFig = actorSystemFig;
+        this.uniqueValuesFig = uniqueValuesFig;
+        this.uniqueValuesService = uniqueValuesService;
         this.keyspace = keyspace;
     }
 
@@ -94,7 +108,7 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
         final ApplicationScope applicationScope = idIoEvent.getEntityCollection();
 
 
-        LOG.debug("Inserting tombstone for entity {} at version {}", entityId, version );
+        logger.debug("Inserting tombstone for entity {} at version {}", entityId, version );
 
         final MvccLogEntry startEntry =
                 new MvccLogEntryImpl( entityId, version, Stage.COMMITTED, MvccLogEntry.State.DELETED );
@@ -111,6 +125,26 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
         catch ( ConnectionException e ) {
             throw new RuntimeException( "Unable to mark entry as deleted" );
         }
+
+        // TODO: do we need this or can we rely on UniqueCleanup + Cassandra replication?
+//
+//        // actorSystemFig may be null in testing
+//        if ( actorSystemFig != null && actorSystemFig.getEnabled() ) {
+//
+//            String region = idIoEvent.getRegion();
+//            if ( region == null ) {
+//                region = uniqueValuesFig.getAuthoritativeRegion();
+//            }
+//            if ( region == null ) {
+//                region = actorSystemFig.getRegionLocal();
+//            }
+//
+//            try {
+//                uniqueValuesService.releaseUniqueValues( applicationScope, entityId, version, region );
+//            } catch (UniqueValueException e) {
+//                throw new RuntimeException( "Unable to release unique values for entity " + entityId );
+//            }
+//        }
     }
 }
 
@@ -177,4 +211,4 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
 //
 //        final int removedCount = deleteFieldsObservable.count().toBlocking().last();
 //
-//        LOG.debug("Removed unique values for {} entities of entity {}", removedCount, entityId );
+//        logger.debug("Removed unique values for {} entities of entity {}", removedCount, entityId );
