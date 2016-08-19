@@ -47,7 +47,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         this.cluster = buildCluster();
 
         // always initialize the keyspaces
-        this.createOrUpdateKeyspace();
+        this.createApplicationKeyspace();
 
         logger.info("Initialized datastax cluster client. Hosts={}, Idle Timeout={}s,  Pool Timeout={}s",
             cluster.getMetadata().getAllHosts().toString(),
@@ -95,27 +95,26 @@ public class DataStaxClusterImpl implements DataStaxCluster {
      * @throws Exception
      */
     @Override
-    public void createOrUpdateKeyspace() throws Exception {
+    public void createApplicationKeyspace() throws Exception {
 
-        clusterSession = getClusterSession();
+        boolean exists = getClusterSession().getCluster().getMetadata()
+            .getKeyspace(CQLUtils.quote(cassandraFig.getApplicationKeyspace())) != null;
+
+        if(exists){
+            return;
+        }
 
         final String createApplicationKeyspace = String.format(
             "CREATE KEYSPACE IF NOT EXISTS %s WITH replication = %s",
             CQLUtils.quote(cassandraFig.getApplicationKeyspace()),
-            CQLUtils.getFormattedReplication( cassandraFig.getStrategy(), cassandraFig.getStrategyOptions() )
+            CQLUtils.getFormattedReplication(cassandraFig.getStrategy(), cassandraFig.getStrategyOptions())
 
         );
 
-        final String updateApplicationKeyspace = String.format(
-            "ALTER KEYSPACE %s WITH replication = %s",
-            CQLUtils.quote(cassandraFig.getApplicationKeyspace()),
-            CQLUtils.getFormattedReplication( cassandraFig.getStrategy(), cassandraFig.getStrategyOptions() )
-        );
+        getClusterSession().execute(createApplicationKeyspace);
+        waitForSchemaAgreement();
 
-        clusterSession.execute(createApplicationKeyspace);
-        clusterSession.execute(updateApplicationKeyspace);
-
-        logger.info("Created/Updated keyspace: {}", cassandraFig.getApplicationKeyspace());
+        logger.info("Created keyspace: {}", cassandraFig.getApplicationKeyspace());
 
     }
 
@@ -126,8 +125,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     public void waitForSchemaAgreement() {
 
         while ( true ) {
-
-            if( getCluster().getMetadata().checkSchemaAgreement() ){
+            if( getClusterSession().getCluster().getMetadata().checkSchemaAgreement() ){
                 return;
             }
 
@@ -177,6 +175,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         Cluster.Builder datastaxCluster = Cluster.builder()
             .withClusterName(cassandraFig.getClusterName())
             .addContactPoints(cassandraFig.getHosts().split(","))
+            .withMaxSchemaAgreementWaitSeconds(30)
             .withCompression(ProtocolOptions.Compression.LZ4)
             .withLoadBalancingPolicy(loadBalancingPolicy)
             .withPoolingOptions(poolingOptions)

@@ -30,7 +30,7 @@ public interface DataStaxCluster {
 
     Session getApplicationSession();
 
-    void createOrUpdateKeyspace() throws Exception;
+    void createApplicationKeyspace() throws Exception;
 
     void waitForSchemaAgreement();
 
