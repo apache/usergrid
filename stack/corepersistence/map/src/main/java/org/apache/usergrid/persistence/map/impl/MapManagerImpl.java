@@ -19,9 +19,11 @@ package org.apache.usergrid.persistence.map.impl;
 
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.map.MapKeyResults;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapScope;
 
@@ -109,6 +111,12 @@ public class MapManagerImpl implements MapManager {
     public void delete( final String key ) {
         mapSerialization.delete(scope,key);
     }
+
+    @Override
+    public MapKeyResults getKeys(final String cursor, final int limit){
+        return mapSerialization.getAllKeys(scope, cursor, limit);
+    }
+
 
 
 

@@ -20,10 +20,7 @@
 package org.apache.usergrid.persistence.map;
 
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
@@ -80,6 +77,140 @@ public class MapManagerTest {
         final String returned = mm.getString( key );
 
         assertEquals( value, returned );
+    }
+
+    @Test
+    public void getAllKeys(){
+
+        MapManager mm = mmf.createMapManager(this.scope);
+
+        final String key1 = "key1";
+        final String key2 = "key2";;
+        final String value = "value";
+
+        mm.putString( key1, value );
+        mm.putString( key2, value );
+
+        MapKeyResults keyResults = mm.getKeys(null, 5);
+
+        assertEquals(2, keyResults.getKeys().size());
+
+    }
+
+    @Test
+    public void getAllKeysWithStart(){
+
+        MapManager mm = mmf.createMapManager(this.scope);
+
+        final String value = "value";
+
+        final String key1 = "key1";
+        final String key2 = "key2";
+        final String key3 = "key3";
+        final String key4 = "key4";
+        final String key5 = "key5";
+        final String key6 = "key6";
+
+        mm.putString( key1, value );
+        mm.putString( key2, value );
+        mm.putString( key3, value );
+        mm.putString( key4, value );
+        mm.putString( key5, value );
+        mm.putString( key6, value );
+
+        MapKeyResults keyResults = mm.getKeys(null, 3);
+
+        assertEquals(3, keyResults.getKeys().size());
+        assertEquals(key1, keyResults.getKeys().get(0));
+
+        assertNotNull(keyResults.getCursor());
+
+        MapKeyResults keyResults2 = mm.getKeys(keyResults.getCursor(), 3);
+
+        assertEquals(3, keyResults2.getKeys().size());
+        assertEquals(key4, keyResults2.getKeys().get(0));
+
+
+    }
+
+    @Test
+    public void getAllKeysAfterDelete(){
+
+        MapManager mm = mmf.createMapManager(this.scope);
+
+        final String value = "value";
+
+        final String key1 = "key1";
+        final String key2 = "key2";
+        final String key3 = "key3";
+        final String key4 = "key4";
+        final String key5 = "key5";
+        final String key6 = "key6";
+
+        mm.putString( key1, value );
+        mm.putString( key2, value );
+        mm.putString( key3, value );
+        mm.putString( key4, value );
+        mm.putString( key5, value );
+        mm.putString( key6, value );
+
+        MapKeyResults keyResults = mm.getKeys(null, 6);
+
+        assertEquals(6, keyResults.getKeys().size());
+        assertEquals(key1, keyResults.getKeys().get(0));
+
+
+        mm.delete(key1);
+        mm.delete(key2);
+        mm.delete(key3);
+
+        MapKeyResults keyResults2 = mm.getKeys(null, 6);
+
+        assertEquals(3, keyResults2.getKeys().size());
+        assertEquals(key4, keyResults2.getKeys().get(0));
+
+
+    }
+
+    @Test
+    public void getAllKeysAfterMassDelete(){
+
+        MapManager mm = mmf.createMapManager(this.scope);
+
+        final String value = "value";
+        final int count = 11000;
+
+        for ( int i=0; i < 11000; i++){
+            mm.putString("key"+i, value);
+        }
+
+        boolean done = false;
+        String cursor = null;
+        int total = 0;
+
+        while(!done && total < count){
+
+            MapKeyResults keyResults = mm.getKeys(cursor, 1000);
+
+            if( keyResults.getCursor() == null){
+                done=true;
+            }
+
+            cursor = keyResults.getCursor();
+            total += keyResults.getKeys().size();
+
+        }
+
+        assertEquals(count, total);
+
+        for ( int i=0; i < count - 500; i++){
+            mm.delete("key"+i);
+        }
+
+        MapKeyResults keyResults2 = mm.getKeys(null, 1000);
+        assertEquals(500, keyResults2.getKeys().size());
+
+
     }
 
     @Test
