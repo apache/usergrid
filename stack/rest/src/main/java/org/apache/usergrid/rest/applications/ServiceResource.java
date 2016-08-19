@@ -944,7 +944,12 @@ public class ServiceResource extends AbstractContextResource {
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
             }
             catch(AmazonServiceException ase){
-                logger.error(ase.getMessage());
+
+                if( ase.getStatusCode() > 499 ){
+                    logger.error(ase.getMessage());
+                }else if(logger.isDebugEnabled()){
+                    logger.debug(ase.getMessage());
+                }
                 return Response.status(ase.getStatusCode()).build();
             }
             catch(RuntimeException re){
