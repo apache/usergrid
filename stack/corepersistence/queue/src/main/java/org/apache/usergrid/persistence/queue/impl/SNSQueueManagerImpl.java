@@ -437,9 +437,17 @@ public class SNSQueueManagerImpl implements QueueManager {
         receiveMessageRequest.setVisibilityTimeout(
             Math.max( MIN_VISIBILITY_TIMEOUT, fig.getVisibilityTimeout() / 1000 ) );
 
-        // set SQS long polling to 3 secs < the client socket timeout (network delays) with min of 0 (no long poll)
-        receiveMessageRequest.setWaitTimeSeconds(
-            Math.max(0, ( fig.getQueueClientSocketTimeout() - fig.getQueuePollTimeshift() ) / 1000 ) );
+
+        int longPollTimeout = Math.min(20000, fig.getQueuePollTimeout()); // 20000 is the SQS maximum
+
+        // ensure the client's socket timeout is not less than the configure long poll timeout
+        if( fig.getQueueClientSocketTimeout() < longPollTimeout){
+
+            longPollTimeout = Math.max(0, fig.getQueueClientSocketTimeout() - 1000);
+
+        }
+
+        receiveMessageRequest.setWaitTimeSeconds( longPollTimeout / 1000 ); // convert to seconds
 
         try {
             ReceiveMessageResult result = sqs.receiveMessage( receiveMessageRequest );

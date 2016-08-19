@@ -101,8 +101,8 @@ public class NodeShardCacheImpl implements NodeShardCache {
                 final String propertyName = evt.getPropertyName();
 
                 if ( propertyName.equals( GraphFig.SHARD_CACHE_SIZE ) || propertyName
-                        .equals( GraphFig.SHARD_CACHE_TIMEOUT ) || propertyName
-                        .equals( GraphFig.SHARD_CACHE_REFRESH_WORKERS ) ) {
+                    .equals( GraphFig.SHARD_CACHE_TIMEOUT ) || propertyName
+                    .equals( GraphFig.SHARD_CACHE_REFRESH_WORKERS ) ) {
 
 
                     updateCache();
@@ -196,20 +196,22 @@ public class NodeShardCacheImpl implements NodeShardCache {
         }
 
         this.refreshExecutors = MoreExecutors
-                .listeningDecorator( Executors.newScheduledThreadPool( graphFig.getShardCacheRefreshWorkerCount() ) );
+            .listeningDecorator( Executors.newScheduledThreadPool( graphFig.getShardCacheRefreshWorkerCount() ) );
 
 
         this.graphs = CacheBuilder.newBuilder()
 
-                //we want to asynchronously load new values for existing ones, that way we wont' have to
-                //wait for a trip to cassandra
-                .refreshAfterWrite( graphFig.getShardCacheTimeout(), TimeUnit.MILLISECONDS )
+            //we want to asynchronously load new values for existing ones, that way we wont' have to
+            //wait for a trip to cassandra
+            .refreshAfterWrite( graphFig.getShardCacheTimeout(), TimeUnit.MILLISECONDS )
 
-                //set a static cache entry size here
-                .maximumSize(graphFig.getShardCacheSize())
 
-                //set our shard loader
-                .build( new ShardCacheLoader() );
+            //set a static cache entry size here
+            .maximumSize(graphFig.getShardCacheSize())
+
+            //set our shard loader
+            .build( new ShardCacheLoader() );
+
     }
 
 
@@ -272,7 +274,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
         private CacheEntry( final Iterator<ShardEntryGroup> shards ) {
             Preconditions.checkArgument( shards.hasNext(),
-                    "More than 1 entry must be present in the shard to load into cache" );
+                "More than 1 entry must be present in the shard to load into cache" );
 
             this.shards = new TreeMap<>();
             /**
@@ -330,7 +332,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
 
             final Iterator<ShardEntryGroup> edges =
-                    nodeShardAllocation.getShards( key.scope, Optional.<Shard>absent(), key.directedEdgeMeta );
+                nodeShardAllocation.getShards( key.scope, Optional.<Shard>absent(), key.directedEdgeMeta );
 
             final CacheEntry cacheEntry = new CacheEntry( edges );
 
