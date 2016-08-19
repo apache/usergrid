@@ -17,7 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
-import org.junit.Ignore;
+import org.apache.usergrid.locking.LockManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,35 +33,31 @@ import me.prettyprint.hector.api.Cluster;
 
 
 /** @author zznate */
-@Ignore( "Not a test" )
 public class CoreSchemaManager implements SchemaManager {
-    private static final Logger LOG = LoggerFactory.getLogger( CoreSchemaManager.class );
+    private static final Logger logger = LoggerFactory.getLogger( CoreSchemaManager.class );
 
     private final Setup setup;
     private final Cluster cluster;
+    private final LockManager lockManager;
 
 
-    public CoreSchemaManager( final Setup setup, final Cluster cluster ) {
+    public CoreSchemaManager( final Setup setup, final Cluster cluster, Injector injector ) {
         this.setup = setup;
         this.cluster = cluster;
+        this.lockManager = injector.getInstance( LockManager.class );
     }
 
 
     @Override
     public void create() {
         try {
-            setup.initSubsystems();
+            setup.initSchema();
+            lockManager.setup();
         }
         catch ( Exception ex ) {
-            LOG.error( "Could not setup usergrid core schema", ex );
+            logger.error( "Could not setup usergrid core schema", ex );
             throw new RuntimeException( "Could not setup usergrid core schema", ex );
         }
-    }
-
-
-    @Override
-    public boolean exists() {
-        return setup.keyspacesExist();
     }
 
 
@@ -69,13 +65,15 @@ public class CoreSchemaManager implements SchemaManager {
     public void populateBaseData() {
         try {
 
-            setup.setupStaticKeyspace();
-            setup.setupSystemKeyspace();
-            setup.createDefaultApplications();
+            setup.initSchema();
+            lockManager.setup();
+
+            setup.runDataMigration();
+            setup.initMgmtApp();
         }
 
         catch ( Exception ex ) {
-            LOG.error( "Could not create default applications", ex );
+            logger.error( "Could not create default applications", ex );
             throw new RuntimeException("Could not create default applications", ex );
         }
     }
@@ -83,7 +81,7 @@ public class CoreSchemaManager implements SchemaManager {
 
     @Override
     public void destroy() {
-        LOG.info( "dropping keyspaces" );
+        logger.info( "dropping keyspaces" );
         try {
             cluster.dropKeyspace( CassandraService.getApplicationKeyspace() );
         }
@@ -99,7 +97,7 @@ public class CoreSchemaManager implements SchemaManager {
             //swallow if it just doesn't exist
         }
 
-        LOG.info( "keyspaces dropped" );
+        logger.info( "keyspaces dropped" );
 
 
         final EsProvider provider =

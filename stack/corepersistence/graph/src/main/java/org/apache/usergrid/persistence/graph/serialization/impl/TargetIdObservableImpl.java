@@ -58,7 +58,9 @@ public class TargetIdObservableImpl implements TargetIdObservable {
         return edgesFromSourceObservable.edgesFromSourceDescending( gm, sourceNode ).map( edge -> {
             final Id targetNode = edge.getTargetNode();
 
-            logger.debug( "Emitting targetId of {}", edge );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Emitting targetId of {}", edge);
+            }
 
 
             return targetNode;

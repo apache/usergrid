@@ -28,10 +28,11 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
+import com.amazonaws.ClientConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.executor.TaskExecutorFactory;
 import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.queue.Queue;
@@ -87,6 +88,7 @@ public class SNSQueueManagerImpl implements QueueManager {
     private final QueueFig fig;
     private final ClusterFig clusterFig;
     private final CassandraFig cassandraFig;
+    private final ClientConfiguration clientConfiguration;
     private final AmazonSQSClient sqs;
     private final AmazonSNSClient sns;
     private final AmazonSNSAsyncClient snsAsync;
@@ -95,6 +97,8 @@ public class SNSQueueManagerImpl implements QueueManager {
 
     private static final JsonFactory JSON_FACTORY = new JsonFactory();
     private static final ObjectMapper mapper = new ObjectMapper( JSON_FACTORY );
+    private static final int MIN_CLIENT_SOCKET_TIMEOUT = 5000; // millis
+    private static final int MIN_VISIBILITY_TIMEOUT = 1; //seconds
 
     static {
 
@@ -165,6 +169,12 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         final Region region = getRegion();
 
+        this.clientConfiguration = new ClientConfiguration()
+            .withConnectionTimeout(queueFig.getQueueClientConnectionTimeout())
+            // don't let the socket timeout be configured less than 5 sec (network delays do happen)
+            .withSocketTimeout(Math.max(MIN_CLIENT_SOCKET_TIMEOUT, queueFig.getQueueClientSocketTimeout()))
+            .withGzip(true);
+
         try {
             sqs = createSQSClient( region );
             sns = createSNSClient( region );
@@ -183,27 +193,27 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         String primaryTopicArn = AmazonNotificationUtils.getTopicArn( sns, queueName, true );
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "SNS/SQS Setup: primaryTopicArn=" + primaryTopicArn );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "SNS/SQS Setup: primaryTopicArn={}", primaryTopicArn );
         }
 
         String queueUrl = AmazonNotificationUtils.getQueueUrlByName( sqs, queueName );
         String primaryQueueArn = AmazonNotificationUtils.getQueueArnByName( sqs, queueName );
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "SNS/SQS Setup: primaryQueueArn=" + primaryQueueArn );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "SNS/SQS Setup: primaryQueueArn={}", primaryQueueArn );
         }
 
         if ( primaryQueueArn == null ) {
-            if ( logger.isDebugEnabled() ) {
-                logger.debug( "SNS/SQS Setup: primaryQueueArn is null, creating queue..." );
+            if ( logger.isTraceEnabled() ) {
+                logger.trace( "SNS/SQS Setup: primaryQueueArn is null, creating queue..." );
             }
 
             queueUrl = AmazonNotificationUtils.createQueue( sqs, queueName, fig );
             primaryQueueArn = AmazonNotificationUtils.getQueueArnByUrl( sqs, queueUrl );
 
-            if ( logger.isDebugEnabled() ) {
-                logger.debug( "SNS/SQS Setup: New Queue URL=[{}] ARN=[{}]", queueUrl, primaryQueueArn );
+            if ( logger.isTraceEnabled() ) {
+                logger.trace( "SNS/SQS Setup: New Queue URL=[{}] ARN=[{}]", queueUrl, primaryQueueArn );
             }
         }
 
@@ -219,15 +229,15 @@ public class SNSQueueManagerImpl implements QueueManager {
         }
         catch ( AmazonServiceException e ) {
             logger.error(
-                String.format( "Unable to subscribe PRIMARY queue=[%s] to topic=[%s]", queueUrl, primaryTopicArn ), e );
+                "Unable to subscribe PRIMARY queue=[{}] to topic=[{}]", queueUrl, primaryTopicArn, e );
         }
 
         if ( fig.isMultiRegion() && scope.getRegionImplementation() == QueueScope.RegionImplementation.ALL ) {
 
             String multiRegion = fig.getRegionList();
 
-            if ( logger.isDebugEnabled() ) {
-                logger.debug( "MultiRegion Setup specified, regions: [{}]", multiRegion );
+            if ( logger.isTraceEnabled() ) {
+                logger.trace( "MultiRegion Setup specified, regions: [{}]", multiRegion );
             }
 
             String[] regionNames = multiRegion.split( "," );
@@ -261,7 +271,9 @@ public class SNSQueueManagerImpl implements QueueManager {
                 arrQueueArns.put( queueArn, regionName );
             }
 
-            logger.debug( "Creating Subscriptions..." );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Creating Subscriptions...");
+            }
 
             for ( Map.Entry<String, String> queueArnEntry : arrQueueArns.entrySet() ) {
                 String queueARN = queueArnEntry.getKey();
@@ -297,20 +309,21 @@ public class SNSQueueManagerImpl implements QueueManager {
 
                         SubscribeResult subscribeResult = subscribeSnsClient.subscribe( subscribeRequest );
                         String subscriptionARN = subscribeResult.getSubscriptionArn();
-                        if ( logger.isDebugEnabled() ) {
-                            logger.debug(
+                        if ( logger.isTraceEnabled() ) {
+                            logger.trace(
                                 "Successfully subscribed Queue ARN=[{}] to Topic ARN=[{}], subscription ARN=[{}]",
                                 queueARN, topicARN, subscriptionARN );
                         }
                     }
                     catch ( Exception e ) {
-                        logger.error( String
-                            .format( "ERROR Subscribing Queue ARN/Region=[%s / %s] and Topic ARN/Region=[%s / %s]",
-                                queueARN, strSqsRegion, topicARN, strSnsRegion ), e );
+                        logger.error( "ERROR Subscribing Queue ARN/Region=[{} / {}] and Topic ARN/Region=[{} / {}]",
+                                queueARN, strSqsRegion, topicARN, strSnsRegion , e );
                     }
                 }
 
-                logger.info( "Adding permission to receive messages..." );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Adding permission to receive messages...");
+                }
                 // add permission to each queue, providing a list of topics that it's subscribed to
                 AmazonNotificationUtils
                     .setQueuePermissionsToReceive( subscribeSqsClient, subscribeQueueUrl, topicArnList );
@@ -326,10 +339,10 @@ public class SNSQueueManagerImpl implements QueueManager {
      */
 
     private AmazonSNSAsyncClient createAsyncSNSClient( final Region region, final ExecutorService executor ) {
+
         final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
-
-
-        final AmazonSNSAsyncClient sns = new AmazonSNSAsyncClient( ugProvider.getCredentials(), executor );
+        final AmazonSNSAsyncClient sns =
+            new AmazonSNSAsyncClient( ugProvider.getCredentials(), clientConfiguration, executor );
 
         sns.setRegion( region );
 
@@ -341,9 +354,10 @@ public class SNSQueueManagerImpl implements QueueManager {
      * Create the async sqs client
      */
     private AmazonSQSAsyncClient createAsyncSQSClient( final Region region, final ExecutorService executor ) {
-        final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
 
-        final AmazonSQSAsyncClient sqs = new AmazonSQSAsyncClient( ugProvider.getCredentials(), executor );
+        final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
+        final AmazonSQSAsyncClient sqs =
+            new AmazonSQSAsyncClient( ugProvider.getCredentials(),clientConfiguration,  executor );
 
         sqs.setRegion( region );
 
@@ -355,9 +369,10 @@ public class SNSQueueManagerImpl implements QueueManager {
      * The Synchronous SNS client is used for creating topics and subscribing queues.
      */
     private AmazonSNSClient createSNSClient( final Region region ) {
-        final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
 
-        final AmazonSNSClient sns = new AmazonSNSClient( ugProvider.getCredentials() );
+        final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
+        final AmazonSNSClient sns =
+            new AmazonSNSClient( ugProvider.getCredentials(), clientConfiguration );
 
         sns.setRegion( region );
 
@@ -399,8 +414,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
     @Override
-    public List<QueueMessage> getMessages( final int limit, final int transactionTimeout, final int waitTime,
-                                                    final Class klass ) {
+    public List<QueueMessage> getMessages(final int limit, final Class klass) {
 
         if ( sqs == null ) {
             logger.error( "SQS is null - was not initialized properly" );
@@ -409,21 +423,30 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         String url = getReadQueue().getUrl();
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Getting up to {} messages from {}", limit, url );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Getting up to {} messages from {}", limit, url );
         }
 
+        ArrayList<String> requestMessageAttributeNames = new ArrayList<String>(1);
+        requestMessageAttributeNames.add("ApproximateReceiveCount");
+
+
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest( url );
+        receiveMessageRequest.setAttributeNames(requestMessageAttributeNames);
         receiveMessageRequest.setMaxNumberOfMessages( limit );
-        receiveMessageRequest.setVisibilityTimeout( Math.max( 1, transactionTimeout / 1000 ) );
-        receiveMessageRequest.setWaitTimeSeconds( waitTime / 1000 );
+        receiveMessageRequest.setVisibilityTimeout(
+            Math.max( MIN_VISIBILITY_TIMEOUT, fig.getVisibilityTimeout() / 1000 ) );
+
+        // set SQS long polling to 3 secs < the client socket timeout (network delays) with min of 0 (no long poll)
+        receiveMessageRequest.setWaitTimeSeconds(
+            Math.max(0, ( fig.getQueueClientSocketTimeout() - fig.getQueuePollTimeshift() ) / 1000 ) );
 
         try {
             ReceiveMessageResult result = sqs.receiveMessage( receiveMessageRequest );
             List<Message> messages = result.getMessages();
 
-            if ( logger.isDebugEnabled() ) {
-                logger.debug( "Received {} messages from {}", messages.size(), url );
+            if ( logger.isTraceEnabled() ) {
+                logger.trace( "Received {} messages from {}", messages.size(), url );
             }
 
             List<QueueMessage> queueMessages = new ArrayList<>( messages.size() );
@@ -452,23 +475,25 @@ public class SNSQueueManagerImpl implements QueueManager {
                     }
                 }
                 catch ( Exception e ) {
-                    logger.error( String.format( "failed to deserialize message: %s", message.getBody() ), e );
+                    logger.error( "failed to deserialize message: {}", message.getBody(), e );
                     throw new RuntimeException( e );
                 }
 
                 QueueMessage queueMessage = new QueueMessage( message.getMessageId(), message.getReceiptHandle(), payload,
                     message.getAttributes().get( "type" ) );
                 queueMessage.setStringBody( originalBody );
+                int receiveCount = Integer.valueOf(message.getAttributes().get("ApproximateReceiveCount"));
+                queueMessage.setReceiveCount( receiveCount );
                 queueMessages.add( queueMessage );
             }
 
             return  queueMessages ;
         }
         catch ( com.amazonaws.services.sqs.model.QueueDoesNotExistException dne ) {
-            logger.error( String.format( "Queue does not exist! [%s]", url ), dne );
+            logger.error( "Queue does not exist! [{}]", url , dne );
         }
         catch ( Exception e ) {
-            logger.error( String.format( "Programming error getting messages from queue=[%s] exist!", url ), e );
+            logger.error( "Programming error getting messages from queue=[{}] exist!", url, e );
         }
 
         return  new ArrayList<>( 0 ) ;
@@ -516,8 +541,8 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         String topicArn = getWriteTopicArn();
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Publishing Message...{} to arn: {}", stringBody, topicArn );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Publishing Message...{} to arn: {}", stringBody, topicArn );
         }
 
         PublishRequest publishRequest = new PublishRequest( topicArn, stringBody );
@@ -531,8 +556,8 @@ public class SNSQueueManagerImpl implements QueueManager {
 
             @Override
             public void onSuccess( PublishRequest request, PublishResult result ) {
-                if ( logger.isDebugEnabled() ) {
-                    logger.debug( "Successfully published... messageID=[{}],  arn=[{}]", result.getMessageId(),
+                if ( logger.isTraceEnabled() ) {
+                    logger.trace( "Successfully published... messageID=[{}],  arn=[{}]", result.getMessageId(),
                         request.getTopicArn() );
                 }
             }
@@ -561,13 +586,12 @@ public class SNSQueueManagerImpl implements QueueManager {
             logger.error( "SQS client is null, perhaps it failed to initialize successfully" );
             return;
         }
-
         final String stringBody = toString( body );
 
         String url = getReadQueue().getUrl();
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Publishing Message...{} to url: {}", stringBody, url );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Publishing Message...{} to url: {}", stringBody, url );
         }
 
         SendMessageRequest request = new SendMessageRequest( url, stringBody );
@@ -583,8 +607,8 @@ public class SNSQueueManagerImpl implements QueueManager {
 
             @Override
             public void onSuccess( final SendMessageRequest request, final SendMessageResult sendMessageResult ) {
-                if ( logger.isDebugEnabled() ) {
-                    logger.debug( "Successfully send... messageBody=[{}],  url=[{}]", request.getMessageBody(),
+                if ( logger.isTraceEnabled() ) {
+                    logger.trace( "Successfully send... messageBody=[{}],  url=[{}]", request.getMessageBody(),
                         request.getQueueUrl() );
                 }
             }
@@ -604,8 +628,8 @@ public class SNSQueueManagerImpl implements QueueManager {
     @Override
     public void commitMessage( final QueueMessage queueMessage ) {
         String url = getReadQueue().getUrl();
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Commit message {} to queue {}", queueMessage.getMessageId(), url );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Commit message {} to queue {}", queueMessage.getMessageId(), url );
         }
 
         sqs.deleteMessage(
@@ -617,8 +641,8 @@ public class SNSQueueManagerImpl implements QueueManager {
     public void commitMessages( final List<QueueMessage> queueMessages ) {
         String url = getReadQueue().getUrl();
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Commit messages {} to queue {}", queueMessages.size(), url );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Commit messages {} to queue {}", queueMessages.size(), url );
         }
 
         List<DeleteMessageBatchRequestEntry> entries = new ArrayList<>();
@@ -661,8 +685,10 @@ public class SNSQueueManagerImpl implements QueueManager {
      * Create the SQS client for the specified settings
      */
     private AmazonSQSClient createSQSClient( final Region region ) {
+
         final UsergridAwsCredentialsProvider ugProvider = new UsergridAwsCredentialsProvider();
-        final AmazonSQSClient sqs = new AmazonSQSClient( ugProvider.getCredentials() );
+        final AmazonSQSClient sqs =
+            new AmazonSQSClient( ugProvider.getCredentials(), clientConfiguration );
 
         sqs.setRegion( region );
 

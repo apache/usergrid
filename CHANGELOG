@@ -1,4 +1,16 @@
 
+Usergrid 2.1.0
+--------------------------------------------------------------------------------
+
+Usergrid 2.1.0 is a major release of Usergrid with a completely rewritten 
+persistence, index and query engine based on Cassandra and ElasticSearch.
+The REST API remains the same as in Usergrid 1.x but with the addition of some
+new system APIs for managing the query index and data migrations.
+ 
+Usergrid 2.1.0 will not work with a Usergrid 1.x database and currently
+there is no migration tool for upgrading a 1.x system to 2.1.
+
+
 Usergrid 1.0.2
 --------------------------------------------------------------------------------
 
@@ -23,6 +35,7 @@ New features
 
 Here's the full list of JIRA issues resolved:
 https://issues.apache.org/jira/issues/?jql=project%3Dusergrid%20and%20fixVersion%3D1.0.2
+
 
 Usergrid 1.0.1
 --------------------------------------------------------------------------------

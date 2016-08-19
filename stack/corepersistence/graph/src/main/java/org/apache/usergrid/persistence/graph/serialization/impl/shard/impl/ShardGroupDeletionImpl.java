@@ -91,7 +91,7 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
         catch ( RejectedExecutionException ree ) {
 
             //ignore, if this happens we don't care, we're saturated, we can check later
-            logger.error( "Rejected shard delete check for group {}", edgeIterator );
+            logger.info( "Rejected shard delete check for group {}", edgeIterator );
 
             return Futures.immediateFuture( DeleteResult.NOT_CHECKED );
         }
@@ -103,7 +103,7 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
         Futures.addCallback( future, new FutureCallback<DeleteResult>() {
             @Override
             public void onSuccess( @Nullable final ShardGroupDeletion.DeleteResult result ) {
-                logger.trace( "Successfully completed delete of task {}", result );
+                if (logger.isTraceEnabled()) logger.trace( "Successfully completed delete of task {}", result );
             }
 
 
@@ -125,31 +125,46 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
                                                    final ShardEntryGroup shardEntryGroup,
                                                    final Iterator<MarkedEdge> edgeIterator ) {
 
-        logger.trace( "Beginning audit of shard group {}", shardEntryGroup );
+        //Use ths to TEMPORARILY remove deletes from occurring
+        //return DeleteResult.NO_OP;
+
+        if (logger.isTraceEnabled()) logger.trace( "Beginning audit of shard group {}", shardEntryGroup );
 
         /**
          * Compaction is pending, we cannot check it
          */
         if ( shardEntryGroup.isCompactionPending() ) {
-            logger.trace( "Shard group {} is compacting, not auditing group", shardEntryGroup );
+            if (logger.isTraceEnabled()) logger.trace( "Shard group {} is compacting, not auditing group", shardEntryGroup );
             return DeleteResult.COMPACTION_PENDING;
         }
 
+        if (logger.isTraceEnabled()) logger.trace( "Shard group {} has no compaction pending", shardEntryGroup );
 
         final long currentTime = timeService.getCurrentTime();
 
         if ( shardEntryGroup.isNew( currentTime ) ) {
-            logger.trace( "Shard group {} contains a shard that is is too new, not auditing group", shardEntryGroup );
+            if (logger.isTraceEnabled()) logger.trace( "Shard group {} contains a shard that is is too new, not auditing group", shardEntryGroup );
             return DeleteResult.TOO_NEW;
+        }
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("Shard group {} has passed the delta timeout at {}", shardEntryGroup, currentTime);
         }
 
         /**
          * We have edges, and therefore cannot delete them
          */
         if ( edgeIterator.hasNext() ) {
-            logger.trace( "Shard group {} has edges, not deleting", shardEntryGroup );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Shard group {} has edges, not deleting", shardEntryGroup);
+            }
 
             return DeleteResult.CONTAINS_EDGES;
+        }
+
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("Shard group {} has no edges continuing to delete", shardEntryGroup, currentTime);
         }
 
 
@@ -163,8 +178,17 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
 
             //skip the min shard
             if(shard.isMinShard()){
-                logger.trace( "Shard {} in group {} is the minimum, not deleting", shard, shardEntryGroup );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Shard {} in group {} is the minimum, not deleting", shard, shardEntryGroup);
+                }
                 continue;
+            }
+
+            //The shard is not compacted, we cannot remove it.  This should never happen, a bit of an "oh shit" scenario.
+            //the isCompactionPending should return false in this case
+            if(!shard.isCompacted()){
+                logger.warn( "Shard {} in group {} is not compacted yet was checked.  Short circuiting", shard, shardEntryGroup );
+                return DeleteResult.NO_OP;
             }
 
 
@@ -181,7 +205,7 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
 
             result = DeleteResult.DELETED;
 
-            logger.trace( "Removing shard {} in group {}", shard, shardEntryGroup );
+            logger.info( "Removing shard {} in group {}", shard, shardEntryGroup );
         }
 
 
@@ -196,7 +220,9 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
            }
        }
 
-        logger.trace( "Completed auditing shard group {}", shardEntryGroup );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Completed auditing shard group {}", shardEntryGroup);
+        }
 
         return result;
     }

@@ -19,6 +19,8 @@ package org.apache.usergrid.persistence;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.usergrid.persistence.Query.Level;
 
 
@@ -28,20 +30,23 @@ public class PagingResultsIterator implements ResultsIterator, Iterable {
     private Results results;
     private Iterator currentPageIterator;
     private Level level;
+    private Level overrideLevel;
 
 
     public PagingResultsIterator( Results results ) {
-        this( results, results.level );
+        this( results, results.level, null);
     }
 
 
     /**
      * @param level overrides the default level from the Results - in case you want to return, say, UUIDs where the
      * Query was set for Entities
+     * @param overrideLevel
      */
-    public PagingResultsIterator( Results results, Level level ) {
+    public PagingResultsIterator(Results results, Level level, Level overrideLevel) {
         this.results = results;
         this.level = level;
+        this.overrideLevel = overrideLevel;
         initCurrentPageIterator();
     }
 
@@ -86,16 +91,32 @@ public class PagingResultsIterator implements ResultsIterator, Iterable {
      */
     private boolean initCurrentPageIterator() {
         List currentPage;
+        Level origLevel = level;
+        if(overrideLevel != null){
+            level=overrideLevel;
+            if(results.getIds()!=null){
+
+                List<EntityRef> userRefs = results.getIds().stream()
+                    .map( uuid -> new SimpleEntityRef("user", uuid)).collect(Collectors.toList());
+
+                results.setRefs(userRefs);
+
+            }
+        }
+
         if ( results != null ) {
             switch ( level ) {
                 case IDS:
                     currentPage = results.getIds();
+                    level = origLevel;
                     break;
                 case REFS:
                     currentPage = results.getRefs();
+                    level = origLevel;
                     break;
                 default:
                     currentPage = results.getEntities();
+                    level = origLevel;
             }
             if ( currentPage.size() > 0 ) {
                 currentPageIterator = currentPage.iterator();

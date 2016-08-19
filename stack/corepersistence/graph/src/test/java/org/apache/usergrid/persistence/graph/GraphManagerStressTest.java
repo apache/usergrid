@@ -19,20 +19,10 @@
 package org.apache.usergrid.persistence.graph;
 
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.google.common.base.Optional;
+import com.google.inject.Inject;
 import org.apache.commons.lang3.time.StopWatch;
-
+import org.apache.usergrid.StressTest;
 import org.apache.usergrid.persistence.core.guice.MigrationManagerRule;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.test.ITRunner;
@@ -42,27 +32,31 @@ import org.apache.usergrid.persistence.graph.guice.TestGraphModule;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-
-import com.google.common.base.Optional;
-import com.google.inject.Inject;
-
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Subscriber;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+
 import static org.apache.usergrid.persistence.graph.test.util.EdgeTestUtils.createEdge;
-import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
 @RunWith(ITRunner.class)
 @UseModules(TestGraphModule.class)
-@Ignore("Stress test should not be run in embedded mode")
+@Category(StressTest.class)
 public class GraphManagerStressTest {
-    private static final Logger log = LoggerFactory.getLogger( GraphManagerStressTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( GraphManagerStressTest.class );
 
     @Inject
     private GraphManagerFactory factory;
@@ -89,7 +83,7 @@ public class GraphManagerStressTest {
 
 
     @Test
-    @Ignore("Too heavy for normal build process")
+    @Category(StressTest.class)
     public void writeThousands() throws InterruptedException {
         EdgeGenerator generator = new EdgeGenerator() {
 
@@ -126,7 +120,7 @@ public class GraphManagerStressTest {
                                                                     .toBlocking().toIterable();
 
                                 for ( MarkedEdge edge : edges ) {
-                                    log.debug( "Firing on next for edge {}", edge );
+                                    logger.debug( "Firing on next for edge {}", edge );
 
                                     subscriber.onNext( edge );
                                 }
@@ -177,7 +171,7 @@ public class GraphManagerStressTest {
     }
 
 
-    @Ignore("Too heavy for normal build process")
+    @Category(StressTest.class)
     @Test
     public void writeThousandsSingleSource() throws InterruptedException {
         EdgeGenerator generator = new EdgeGenerator() {
@@ -205,7 +199,7 @@ public class GraphManagerStressTest {
 
 
     @Test
-    @Ignore("Too heavy for normal build process")
+    @Category(StressTest.class)
     public void writeThousandsSingleTarget() throws InterruptedException {
         EdgeGenerator generator = new EdgeGenerator() {
 
@@ -256,12 +250,12 @@ public class GraphManagerStressTest {
             ids.add( returned );
 
             if ( i % 1000 == 0 ) {
-                log.info( "   Wrote: " + i );
+                logger.info( "   Wrote: " + i );
             }
         }
 
         timer.stop();
-        log.info( "Total time to write {} entries {}ms", limit, timer.getTime() );
+        logger.info( "Total time to write {} entries {}ms", limit, timer.getTime() );
         timer.reset();
 
         timer.start();
@@ -296,7 +290,7 @@ public class GraphManagerStressTest {
         assertEquals( 0, ids.size() );
 
 
-        log.info( "Total time to read {} entries {}ms", limit, timer.getTime() );
+        logger.info( "Total time to read {} entries {}ms", limit, timer.getTime() );
     }
 
 

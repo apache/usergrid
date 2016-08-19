@@ -118,7 +118,7 @@ public class UsersResource extends AbstractContextResource {
                                                            @QueryParam("callback") @DefaultValue("callback")
                                                            String callback ) throws Exception {
 
-        logger.info( "New user for organization: " + username + " (" + email + ")");
+        logger.info( "New user for organization: {} ({})", username, email);
 
         ApiResponse response = createApiResponse();
         response.setAction( "create user" );
@@ -129,12 +129,22 @@ public class UsersResource extends AbstractContextResource {
         }
 
         if ( user == null ) {
-            user = management.createAdminUser( username, name, email, password, false, false );
 
-            // A null may be returned if the user fails validation check
-            if ( user != null ) {
-                management.startAdminUserPasswordResetFlow( user );
+            if ( tokens.isExternalSSOProviderEnabled() ){
+                //autoactivating user, since the activation is done via the external sso provider.
+                user = management.createAdminUser(organization.getUuid(),username,name,email,password,true,false);
             }
+            else {
+                user = management.createAdminUser(organization.getUuid(), username, name, email, password, false, false);
+                // A null may be returned if the user fails validation check
+                if (user != null) {
+                    management.startAdminUserPasswordResetFlow(organization.getUuid(), user);
+                }
+            }
+
+            // DO NOT REMOVE - used for external classes to hook into any post-processing
+            management.createAdminUserPostProcessing(user, null);
+
         }
 
         if ( user == null ) {
@@ -143,6 +153,9 @@ public class UsersResource extends AbstractContextResource {
 
         management.addAdminUserToOrganization( user, organization, true );
 
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.addUserToOrganizationPostProcessing(user, organization.getName(), null);
+
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         result.put( "user", user );
         response.setData( result );
@@ -150,26 +163,6 @@ public class UsersResource extends AbstractContextResource {
 
         return response;
     }
-
-	/*
-     * @RequireOrganizationAccess
-	 *
-	 * @POST
-	 *
-	 * @Consumes(MediaType.MULTIPART_FORM_DATA) public JSONWithPadding
-	 * newUserForOrganizationFromMultipart(
-	 *
-	 * @Context UriInfo ui, @FormDataParam("username") String username,
-	 *
-	 * @FormDataParam("name") String name,
-	 *
-	 * @FormDataParam("email") String email,
-	 *
-	 * @FormDataParam("password") String password) throws Exception {
-	 *
-	 * return newUserForOrganizationFromForm(ui, username, name, email,
-	 * password); }
-	 */
 
 
     @RequireOrganizationAccess
@@ -189,6 +182,9 @@ public class UsersResource extends AbstractContextResource {
             throw new ManagementException( "No user found for: " + userIdStr );
         }
         management.addAdminUserToOrganization( user, organization, true );
+
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.addUserToOrganizationPostProcessing(user, organization.getName(), null);
 
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         result.put( "user", user );
@@ -213,9 +209,12 @@ public class UsersResource extends AbstractContextResource {
 
         UserInfo user = management.getAdminUserByEmail( email );
         if ( user == null ) {
-            throw new ManagementException( "Username not found: " + email );
+            throw new ManagementException( "User with specified email not found: " + email );
         }
         management.addAdminUserToOrganization( user, organization, true );
+
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.addUserToOrganizationPostProcessing(user, organization.getName(), null);
 
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         result.put( "user", user );
@@ -252,6 +251,9 @@ public class UsersResource extends AbstractContextResource {
         }
         management.addAdminUserToOrganization( user, organization, true );
 
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.addUserToOrganizationPostProcessing(user, organization.getName(), null);
+
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         result.put( "user", user );
         response.setData( result );
@@ -277,6 +279,9 @@ public class UsersResource extends AbstractContextResource {
             return null;
         }
         management.removeAdminUserFromOrganization( user.getUuid(), organization.getUuid() );
+
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.removeUserFromOrganizationPostProcessing(user, organization.getName(), null);
 
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         result.put( "user", user );
@@ -314,6 +319,9 @@ public class UsersResource extends AbstractContextResource {
         }
         management.removeAdminUserFromOrganization( user.getUuid(), organization.getUuid() );
 
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.removeUserFromOrganizationPostProcessing(user, organization.getName(), null);
+
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         result.put( "user", user );
         response.setData( result );
@@ -340,6 +348,9 @@ public class UsersResource extends AbstractContextResource {
             return null;
         }
         management.removeAdminUserFromOrganization( user.getUuid(), organization.getUuid() );
+
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.removeUserFromOrganizationPostProcessing(user, organization.getName(), null);
 
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         result.put( "user", user );

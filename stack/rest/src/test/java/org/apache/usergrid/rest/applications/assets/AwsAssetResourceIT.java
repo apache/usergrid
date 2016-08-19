@@ -18,6 +18,7 @@ package org.apache.usergrid.rest.applications.assets;
 
 
 import com.amazonaws.SDKGlobalConfiguration;
+
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.io.IOUtils;
 import org.apache.usergrid.rest.applications.assets.aws.NoAWSCredsRule;
@@ -32,6 +33,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +52,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
 
     private String access_token;
     private Map<String, Object> originalProperties;
-    private Logger LOG = LoggerFactory.getLogger( AwsAssetResourceIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( AwsAssetResourceIT.class );
 
     /**
      * Mark tests as ignored if no AWS creds are present
@@ -69,6 +73,25 @@ public class AwsAssetResourceIT extends AbstractRestIT {
     @After
     public void teardown(){
         setTestProperties(originalProperties);
+    }
+
+
+    @Test
+    public void ensureMissingFileReturns404(){
+        Map<String, String> payload = hashMap( "name", "assettest" );
+        ApiResponse postResponse = pathResource( getOrgAppPath( "missingFile" ) ).post( payload );
+        UUID assetId = postResponse.getEntities().get( 0 ).getUuid();
+        assertNotNull( assetId );
+
+        try {
+            pathResource( getOrgAppPath( "missingFile/assettest" ) ).getAssetAsStream( true );
+            fail("Should fail as there isn't an asset to retrieve.");
+        }catch(NotFoundException nfe){
+        }
+        catch(Exception e){
+            fail("Shouldn't return any other kind of exception");
+        }
+
     }
 
     @Test
@@ -129,7 +152,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         }catch ( AwsPropertiesNotFoundException e ){
             fail("Shouldn't interrupt runtime if access key isnt found.");
         }
-        catch( ClientErrorException uie){
+        catch( InternalServerErrorException uie){
             assertEquals( 500, uie.getResponse().getStatus() );
         }
         finally{
@@ -152,13 +175,13 @@ public class AwsAssetResourceIT extends AbstractRestIT {
             FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
             ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( form );
             UUID assetId = postResponse.getEntities().get(0).getUuid();
-            LOG.info( "Waiting for upload to finish..." );
+            logger.info( "Waiting for upload to finish..." );
             Thread.sleep( 5000 );
 
             // check that entire file was uploaded
 
             ApiResponse getResponse = pathResource( getOrgAppPath( "foos/" +assetId ) ).get( ApiResponse.class );
-            LOG.info( "Upload complete!" );
+            logger.info( "Upload complete!" );
             InputStream is = pathResource( getOrgAppPath( "foos/" + assetId ) ).getAssetAsStream();
             byte[] foundData = IOUtils.toByteArray( is );
             assertEquals( data.length, foundData.length );
@@ -171,8 +194,8 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         }catch ( AwsPropertiesNotFoundException e ){
             fail("Shouldn't interrupt runtime if access key isnt found.");
         }
-        catch( ClientErrorException uie){
-            assertEquals( 500, uie.getResponse().getStatus() );
+        catch(ForbiddenException fe){
+            assertEquals( 403, fe.getResponse().getStatus() );
         }
         finally{
             setTestProperties( errorTestProperties );
@@ -321,13 +344,13 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
         ApiResponse postResponse = pathResource( getOrgAppPath( "foos" ) ).post( form );
         UUID assetId = postResponse.getEntities().get(0).getUuid();
-        LOG.info( "Waiting for upload to finish..." );
+        logger.info( "Waiting for upload to finish..." );
         Thread.sleep( 5000 );
 
         // check that entire file was uploaded
 
         ApiResponse getResponse = pathResource( getOrgAppPath( "foos/" +assetId ) ).get( ApiResponse.class );
-        LOG.info( "Upload complete!" );
+        logger.info( "Upload complete!" );
         InputStream is = pathResource( getOrgAppPath( "foos/" + assetId ) ).getAssetAsStream();
         byte[] foundData = IOUtils.toByteArray( is );
         assertEquals( data.length, foundData.length );
@@ -355,7 +378,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
             UUID assetId = postResponse.getEntities().get(0).getUuid();
 
             String errorMessage = null;
-            LOG.info( "Waiting for upload to finish..." );
+            logger.info( "Waiting for upload to finish..." );
             Thread.sleep( 1000 );
 
             // attempt to get asset entity, it should contain error

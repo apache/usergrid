@@ -29,8 +29,9 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
+import com.google.common.base.Optional;
+import org.apache.usergrid.persistence.core.CassandraConfig;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -67,16 +68,20 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
 import com.netflix.astyanax.Serializer;
 import com.netflix.astyanax.util.RangeBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
 /**
- * TODO: Rafactor this to use shards only, no shard groups, just collections of shards.  The parent caller can aggregate
- * the results of multiple groups together, this has an impedance mismatch in the API layer.
+ *
  */
 @Singleton
 public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
+
+    private static final Logger logger = LoggerFactory.getLogger( ShardedEdgeSerializationImpl.class );
+
 
     protected final Keyspace keyspace;
     protected final CassandraConfig cassandraConfig;
@@ -118,15 +123,11 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
             @Override
             void writeEdge( final MutationBatch batch,
-                            final MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily,
+                            final MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily,
                             final ApplicationScope scope, final RowKey rowKey, final DirectedEdge edge,
                             final Shard shard, final boolean isDeleted ) {
 
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope.getApplication(), rowKey ) ).putColumn( edge, isDeleted );
-
-                if ( !isDeleted ) {
-                    writeEdgeShardStrategy.increment( scope, shard, 1, directedEdgeMeta );
-                }
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -147,17 +148,12 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
             @Override
             void writeEdge( final MutationBatch batch,
-                            final MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily,
+                            final MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily,
                             final ApplicationScope scope, final RowKeyType rowKey, final DirectedEdge edge,
                             final Shard shard, final boolean isDeleted ) {
 
 
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope.getApplication(), rowKey ) ).putColumn( edge, isDeleted );
-
-
-                if ( !isDeleted ) {
-                    writeEdgeShardStrategy.increment( scope, shard, 1, directedEdgeMeta );
-                }
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -176,16 +172,12 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
             @Override
             void writeEdge( final MutationBatch batch,
-                            final MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily,
+                            final MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily,
                             final ApplicationScope scope, final RowKey rowKey, final DirectedEdge edge,
                             final Shard shard, final boolean isDeleted ) {
 
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope.getApplication(), rowKey ) ).putColumn( edge, isDeleted );
 
-
-                if ( !isDeleted ) {
-                    writeEdgeShardStrategy.increment( scope, shard, 1, targetEdgeMeta );
-                }
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -206,17 +198,12 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
             @Override
             void writeEdge( final MutationBatch batch,
-                            final MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily,
+                            final MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily,
                             final ApplicationScope scope, final RowKeyType rowKey, final DirectedEdge edge,
                             final Shard shard, final boolean isDeleted ) {
 
                 batch.withRow( columnFamilies.getTargetNodeSourceTypeCfName(), ScopedRowKey.fromKey( scope.getApplication(), rowKey ) )
                      .putColumn( edge, isDeleted );
-
-
-                if ( !isDeleted ) {
-                    writeEdgeShardStrategy.increment( scope, shard, 1, directedEdgeMeta );
-                }
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -236,16 +223,11 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
             @Override
             void writeEdge( final MutationBatch batch,
-                            final MultiTennantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> columnFamily,
+                            final MultiTenantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> columnFamily,
                             final ApplicationScope scope, final EdgeRowKey rowKey, final Long column, final Shard shard,
                             final boolean isDeleted ) {
                 batch.withRow( columnFamilies.getGraphEdgeVersions(), ScopedRowKey.fromKey( scope.getApplication(), rowKey ) )
                      .putColumn( column, isDeleted );
-
-
-                if ( !isDeleted ) {
-                    writeEdgeShardStrategy.increment( scope, shard, 1, directedEdgeMeta );
-                }
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -260,12 +242,11 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
             @Override
             void writeEdge( final MutationBatch batch,
-                            final MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily,
+                            final MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily,
                             final ApplicationScope scope, final RowKey rowKey, final DirectedEdge edge,
                             final Shard shard, final boolean isDeleted ) {
 
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope.getApplication(), rowKey ) ).deleteColumn( edge );
-                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -281,14 +262,13 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
             @Override
             void writeEdge( final MutationBatch batch,
-                            final MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily,
+                            final MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily,
                             final ApplicationScope scope, final RowKeyType rowKey, final DirectedEdge edge,
                             final Shard shard, final boolean isDeleted ) {
 
 
                 batch.withRow( columnFamilies.getSourceNodeTargetTypeCfName(), ScopedRowKey.fromKey( scope.getApplication(), rowKey ) )
                      .deleteColumn( edge );
-                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -303,12 +283,11 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
             @Override
             void writeEdge( final MutationBatch batch,
-                            final MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily,
+                            final MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily,
                             final ApplicationScope scope, final RowKey rowKey, final DirectedEdge edge,
                             final Shard shard, final boolean isDeleted ) {
 
                 batch.withRow( columnFamily, ScopedRowKey.fromKey( scope.getApplication(), rowKey ) ).deleteColumn( edge );
-                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -325,13 +304,12 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
             @Override
             void writeEdge( final MutationBatch batch,
-                            final MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily,
+                            final MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily,
                             final ApplicationScope scope, final RowKeyType rowKey, final DirectedEdge edge,
                             final Shard shard, final boolean isDeleted ) {
 
                 batch.withRow( columnFamilies.getTargetNodeSourceTypeCfName(), ScopedRowKey.fromKey( scope.getApplication(), rowKey ) )
                      .deleteColumn( edge );
-                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -346,12 +324,11 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
             @Override
             void writeEdge( final MutationBatch batch,
-                            final MultiTennantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> columnFamily,
+                            final MultiTenantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> columnFamily,
                             final ApplicationScope scope, final EdgeRowKey rowKey, final Long column, final Shard shard,
                             final boolean isDeleted ) {
                 batch.withRow( columnFamilies.getGraphEdgeVersions(), ScopedRowKey.fromKey( scope.getApplication(), rowKey ) )
                      .deleteColumn( column );
-                writeEdgeShardStrategy.increment( scope, shard, -1, directedEdgeMeta );
             }
         }.createBatch( scope, shards, timestamp );
     }
@@ -367,19 +344,23 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
         final Id sourceId = search.sourceNode();
         final String type = search.getType();
         final long maxTimestamp = search.getMaxTimestamp();
-        final MultiTennantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> columnFamily =
+        final MultiTenantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> columnFamily =
                 columnFamilies.getGraphEdgeVersions();
         final Serializer<Long> serializer = columnFamily.getColumnSerializer();
 
 
         final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( DescendingTimestampComparator.INSTANCE, search.getOrder());
 
+        Optional<Long> lastTimestamp = Optional.absent();
+        if(search.last().isPresent()){
+            lastTimestamp = Optional.of(search.last().get().getTimestamp());
+        }
 
 
 
         final EdgeSearcher<EdgeRowKey, Long, MarkedEdge> searcher =
                 new EdgeSearcher<EdgeRowKey, Long, MarkedEdge>( scope, shards, search.getOrder(),  comparator, maxTimestamp,
-                        search.last().transform( TRANSFORM ) ) {
+                        search.last().transform( TRANSFORM ), lastTimestamp ) {
 
 
                     @Override
@@ -418,7 +399,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                 };
 
         return new ShardsColumnIterator<>( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 
@@ -430,21 +411,29 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateSearchByEdgeType( search );
 
+        if(logger.isTraceEnabled()){
+            logger.trace("getEdgesFromSource shards: {}", shards);
+        }
+
         final Id sourceId = search.getNode();
         final String type = search.getType();
         final long maxTimestamp = search.getMaxTimestamp();
-        final MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily =
+        final MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily =
                 columnFamilies.getSourceNodeCfName();
         final Serializer<DirectedEdge> serializer = columnFamily.getColumnSerializer();
 
 
         final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( TargetDirectedEdgeDescendingComparator.INSTANCE, search.getOrder());
 
+        Optional<Long> lastTimestamp = Optional.absent();
+        if(search.last().isPresent()){
+            lastTimestamp = Optional.of(search.last().get().getTimestamp());
+        }
 
 
         final EdgeSearcher<RowKey, DirectedEdge, MarkedEdge> searcher =
                 new EdgeSearcher<RowKey, DirectedEdge, MarkedEdge>( scope, shards, search.getOrder(), comparator, maxTimestamp,
-                        search.last().transform( TRANSFORM ) ) {
+                        search.last().transform( TRANSFORM ), lastTimestamp ) {
 
 
                     @Override
@@ -481,7 +470,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
         return new ShardsColumnIterator<>( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 
@@ -498,16 +487,20 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
         final String type = search.getType();
         final String targetType = search.getIdType();
         final long maxTimestamp = search.getMaxTimestamp();
-        final MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily =
+        final MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily =
                 columnFamilies.getSourceNodeTargetTypeCfName();
         final Serializer<DirectedEdge> serializer = columnFamily.getColumnSerializer();
 
         final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( TargetDirectedEdgeDescendingComparator.INSTANCE, search.getOrder());
 
+        Optional<Long> lastTimestamp = Optional.absent();
+        if(search.last().isPresent()){
+            lastTimestamp = Optional.of(search.last().get().getTimestamp());
+        }
 
         final EdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge> searcher =
                 new EdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge>( scope, shards, search.getOrder(), comparator, maxTimestamp,
-                        search.last().transform( TRANSFORM ) ) {
+                        search.last().transform( TRANSFORM ), lastTimestamp ) {
 
                     @Override
                     protected Serializer<DirectedEdge> getSerializer() {
@@ -542,7 +535,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                 };
 
         return new ShardsColumnIterator( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 
@@ -555,15 +548,20 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
         final Id targetId = search.getNode();
         final String type = search.getType();
         final long maxTimestamp = search.getMaxTimestamp();
-        final MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily =
+        final MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily =
                 columnFamilies.getTargetNodeCfName();
         final Serializer<DirectedEdge> serializer = columnFamily.getColumnSerializer();
 
         final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( SourceDirectedEdgeDescendingComparator.INSTANCE, search.getOrder());
 
+        Optional<Long> lastTimestamp = Optional.absent();
+        if(search.last().isPresent()){
+            lastTimestamp = Optional.of(search.last().get().getTimestamp());
+        }
+
         final EdgeSearcher<RowKey, DirectedEdge, MarkedEdge> searcher =
                 new EdgeSearcher<RowKey, DirectedEdge, MarkedEdge>( scope, shards, search.getOrder(),comparator,  maxTimestamp,
-                        search.last().transform( TRANSFORM ) ) {
+                        search.last().transform( TRANSFORM ), lastTimestamp ) {
 
                     @Override
                     protected Serializer<DirectedEdge> getSerializer() {
@@ -599,7 +597,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
         return new ShardsColumnIterator<>( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 
@@ -616,16 +614,20 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
         final String sourceType = search.getIdType();
         final String type = search.getType();
         final long maxTimestamp = search.getMaxTimestamp();
-        final MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily =
+        final MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily =
                 columnFamilies.getTargetNodeSourceTypeCfName();
         final Serializer<DirectedEdge> serializer = columnFamily.getColumnSerializer();
 
         final OrderedComparator<MarkedEdge> comparator = new OrderedComparator<>( SourceDirectedEdgeDescendingComparator.INSTANCE, search.getOrder());
 
+        Optional<Long> lastTimestamp = Optional.absent();
+        if(search.last().isPresent()){
+            lastTimestamp = Optional.of(search.last().get().getTimestamp());
+        }
 
         final EdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge> searcher =
                 new EdgeSearcher<RowKeyType, DirectedEdge, MarkedEdge>( scope, shards, search.getOrder(), comparator, maxTimestamp,
-                        search.last().transform( TRANSFORM ) ) {
+                        search.last().transform( TRANSFORM ), lastTimestamp ) {
                     @Override
                     protected Serializer<DirectedEdge> getSerializer() {
                         return serializer;
@@ -658,7 +660,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                 };
 
         return new ShardsColumnIterator<>( searcher, columnFamily, keyspace, cassandraConfig.getReadCL(),
-                graphFig.getScanPageSize() );
+                graphFig.getScanPageSize(), graphFig.getSmartShardSeekEnabled() );
     }
 
 
@@ -677,7 +679,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
         /**
          * Return the column family used for the write
          */
-        protected abstract MultiTennantColumnFamily<ScopedRowKey<R>, C> getColumnFamily();
+        protected abstract MultiTenantColumnFamily<ScopedRowKey<R>, C> getColumnFamily();
 
         /**
          * Get the row key
@@ -699,7 +701,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
          * Write the edge with the given data
          */
         abstract void writeEdge( final MutationBatch batch,
-                                 final MultiTennantColumnFamily<ScopedRowKey<R>, C> columnFamily,
+                                 final MultiTenantColumnFamily<ScopedRowKey<R>, C> columnFamily,
                                  final ApplicationScope scope, final R rowKey, final C column, final Shard shard,
                                  final boolean isDeleted );
 
@@ -716,7 +718,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
             final C column = getDirectedEdge();
-            final MultiTennantColumnFamily<ScopedRowKey<R>, C> columnFamily = getColumnFamily();
+            final MultiTenantColumnFamily<ScopedRowKey<R>, C> columnFamily = getColumnFamily();
             final boolean isDeleted = isDeleted();
 
 
@@ -736,7 +738,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
      */
     private abstract class SourceWriteOp extends RowOp<RowKey, DirectedEdge> {
 
-        private final MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily;
+        private final MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily;
         private final Id sourceNodeId;
 
 
@@ -761,7 +763,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
         @Override
-        protected MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getColumnFamily() {
+        protected MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getColumnFamily() {
             return columnFamily;
         }
 
@@ -790,7 +792,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
      */
     private abstract class SourceTargetTypeWriteOp extends RowOp<RowKeyType, DirectedEdge> {
 
-        private final MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily;
+        private final MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily;
         private final Id sourceNodeId;
         private final String type;
         private Id targetId;
@@ -815,7 +817,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
         @Override
-        protected MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getColumnFamily() {
+        protected MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getColumnFamily() {
             return columnFamily;
         }
 
@@ -844,7 +846,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
      */
     private abstract class TargetWriteOp extends RowOp<RowKey, DirectedEdge> {
 
-        private final MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily;
+        private final MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> columnFamily;
         private final Id targetNode;
 
 
@@ -869,7 +871,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
         @Override
-        protected MultiTennantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getColumnFamily() {
+        protected MultiTenantColumnFamily<ScopedRowKey<RowKey>, DirectedEdge> getColumnFamily() {
             return columnFamily;
         }
 
@@ -898,7 +900,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
      */
     private abstract class TargetSourceTypeWriteOp extends RowOp<RowKeyType, DirectedEdge> {
 
-        private final MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily;
+        private final MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> columnFamily;
         private final Id targetNode;
 
         private final Id sourceNode;
@@ -926,7 +928,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
         @Override
-        protected MultiTennantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getColumnFamily() {
+        protected MultiTenantColumnFamily<ScopedRowKey<RowKeyType>, DirectedEdge> getColumnFamily() {
             return columnFamily;
         }
 
@@ -955,7 +957,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
      */
     private abstract class EdgeVersions extends RowOp<EdgeRowKey, Long> {
 
-        private final MultiTennantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> columnFamily;
+        private final MultiTenantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> columnFamily;
         private final Id targetNode;
 
         private final Id sourceNode;
@@ -983,7 +985,7 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
 
 
         @Override
-        protected MultiTennantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> getColumnFamily() {
+        protected MultiTenantColumnFamily<ScopedRowKey<EdgeRowKey>, Long> getColumnFamily() {
             return columnFamily;
         }
 

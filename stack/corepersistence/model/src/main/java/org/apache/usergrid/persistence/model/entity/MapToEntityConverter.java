@@ -32,6 +32,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 public class MapToEntityConverter{
+
     public static final Logger logger = LoggerFactory.getLogger(MapToEntityConverter.class);
 
     private final JsonFactory jsonFactory = new JsonFactory();
@@ -41,153 +42,122 @@ public class MapToEntityConverter{
     static final String lat = "latitude";
     static final String lon = "longitude";
 
+
     public  Entity fromMap( Map<String, Object> map,  boolean topLevel ) {
 
         Entity  entity = new Entity();
         return fromMap( entity, map, null, null, topLevel );
     }
 
-    public Entity fromMap(final Entity entity,final  Map<String, Object> map,final  SchemaManager schemaManager, final String entityType, boolean topLevel) {
+
+    public Entity fromMap(final Entity entity,final  Map<String, Object> map,final
+        SchemaManager schemaManager, final String entityType, boolean topLevel) {
 
         for ( String fieldName : map.keySet() ) {
-            if(fieldName.equals("size")){
-                continue;
-            }
+
             Object value = map.get( fieldName );
             boolean unique = schemaManager == null ? topLevel :  topLevel && schemaManager.isPropertyUnique(entityType, fieldName);
-            //cannot store fields that aren't locations
+            entity.setField( processField( fieldName, value, unique));
 
-            if ( value instanceof String ) {
-                String stringValue =(String)value;
-                entity.setField(new StringField(fieldName, stringValue, unique));
-
-            } else if ( value instanceof Boolean ) {
-                entity.setField( new BooleanField( fieldName, (Boolean)value, unique  ));
-
-            } else if ( value instanceof Integer ) {
-                entity.setField( new IntegerField( fieldName, (Integer)value, unique ));
-
-            } else if ( value instanceof Double ) {
-                entity.setField( new DoubleField( fieldName, (Double)value, unique  ));
-
-            } else if ( value instanceof Float ) {
-                entity.setField( new FloatField( fieldName, (Float)value, unique ));
-
-            } else if ( value instanceof Long ) {
-
-                entity.setField( new LongField( fieldName, (Long)value, unique ));
-
-            } else if ( value instanceof List) {
-                entity.setField( listToListField( fieldName, (List)value ));
-
-            } else if ( value instanceof UUID) {
-                entity.setField( new UUIDField( fieldName, (UUID)value, unique ));
-
-            } else if ( value instanceof Map ) {
-                processMapValue( value, fieldName, entity);
-
-            } else if ( value instanceof Enum ) {
-                entity.setField( new StringField( fieldName, value.toString(), unique ));
-
-            } else if ( value != null ) {
-                byte[] valueSerialized;
-                try {
-                    valueSerialized = objectMapper.writeValueAsBytes( value );
-                }
-                catch ( JsonProcessingException e ) {
-                    throw new RuntimeException( "Can't serialize object ",e );
-                }
-
-                ByteBuffer byteBuffer = ByteBuffer.wrap(valueSerialized);
-                ByteArrayField bf = new ByteArrayField( fieldName, byteBuffer.array(), value.getClass() );
-                entity.setField( bf );
-            }
         }
-
 
         return entity;
     }
 
 
-    private  ListField listToListField( String fieldName, List list ) {
+    private  ListField processListValue(String fieldName, List list ) {
 
         if (list.isEmpty()) {
             return new ArrayField( fieldName );
         }
 
-        Object sample = list.get(0);
+        final List<Object> returnList = new ArrayList<>();
 
-        if ( sample instanceof Map ) {
-            return new ArrayField( fieldName, processListForField( list ));
 
-        } else if ( sample instanceof List ) {
-            return new ArrayField<List>( fieldName, processListForField( list ));
+        list.forEach( sample -> {
 
-        } else if ( sample instanceof String ) {
-            return new ArrayField<String>( fieldName, (List<String>)list );
+            if ( sample instanceof Map ) {
 
-        } else if ( sample instanceof Boolean ) {
-            return new ArrayField<Boolean>( fieldName, (List<Boolean>)list );
+                returnList.add( fromMap( (Map<String, Object>) sample, false ) );
 
-        } else if ( sample instanceof Integer ) {
-            return new ArrayField<Integer>( fieldName, (List<Integer>)list );
+            } else if ( sample instanceof List ) {
 
-        } else if ( sample instanceof Double ) {
-            return new ArrayField<Double>( fieldName, (List<Double>)list );
+                returnList.add( processListForListField( fieldName, (List) sample ) );
 
-        } else if ( sample instanceof Long ) {
-            return new ArrayField<Long>( fieldName, (List<Long>)list );
+            } else {
 
-        } else {
-            throw new RuntimeException("Unknown type " + sample.getClass().getName());
-        }
+                returnList.add( sample );
+
+            }
+
+        });
+
+
+        return new ArrayField<>( fieldName, returnList);
+
     }
-    private  List processListForField( List list ) {
+
+
+
+    private  List processListForListField(String fieldName, List list ) {
         if ( list.isEmpty() ) {
             return list;
         }
-        Object sample = list.get(0);
 
-        if ( sample instanceof Map ) {
-            List<Entity> newList = new ArrayList<Entity>();
-            for ( Map<String, Object> map : (List<Map<String, Object>>)list ) {
-                newList.add( fromMap( map, false ) );
-            }
-            return newList;
+        List<Object> newList = new ArrayList<>();
 
-        } else if ( sample instanceof List ) {
-            List<Object> newList = new ArrayList<Object>();
-            for (Object o : list) {
-                if (o instanceof List) {
-                    newList.add(processListForField((List) o));
-                } else {
+        list.forEach( sample -> {
+
+            if ( sample instanceof Map ) {
+
+                newList.add( processMapValue( sample, fieldName) );
+
+            } else if ( sample instanceof List ) {
+
+                for (Object o : list) {
+
                     newList.add(o);
+
                 }
+
+            } else {
+
+                newList.add( sample );
+
             }
-            return newList;
+
+        });
+
+        return newList;
+
+    }
+
+
+    private Field processMapValue( Object value, String fieldName) {
+
+        // check to see if the map is truly a location object
+        if ( locationKey.equalsIgnoreCase(fieldName) ) {
+
+            return processLocationField((Map<String, Object>) value, fieldName);
 
         } else {
-            return list;
+
+            // not a location element, process it as a normal map
+            return processMapField( value, fieldName);
         }
     }
 
 
-    private  void processMapValue( Object value, String fieldName, Entity entity) {
+    private Field processMapField ( Object value, String fieldName) {
 
-        // is the map really a location element?
-        if ("location" .equals(fieldName.toString().toLowerCase()) ) {
-            processLocationField((Map<String, Object>) value, fieldName, entity);
-        } else {
-            // not a location element, process it as map
-            entity.setField(new EntityObjectField(fieldName,
-                    fromMap((Map<String, Object>) value, false))); // recursion
-        }
+        return new EntityObjectField( fieldName, fromMap( (Map<String, Object>)value, false));
     }
+
 
     /**
      * for location we need to parse two formats potentially and convert to a typed field
      */
-    private void processLocationField(Map<String, Object> value, String fieldName, Entity entity) {
+    private Field processLocationField(Map<String, Object> value, String fieldName) {
         // get the object to inspect
         Map<String, Object> origMap = value;
         Map<String, Object> m = new HashMap<String, Object>();
@@ -216,8 +186,11 @@ public class MapToEntityConverter{
                         "Latitude and longitude must be doubles (e.g. 32.1234).");
                 }
             } else if (m.containsKey("lat") && m.containsKey("lon")) {
-                logger.warn("Entity contains latitude and longitude in old format location{lat,long}"
-                );
+
+                if(logger.isDebugEnabled()){
+                    logger.debug("Entity contains latitude and longitude in old format location{lat,long}");
+                }
+
                 try {
                     latVal = Double.parseDouble(m.get("lat").toString());
                     lonVal = Double.parseDouble(m.get("lon").toString());
@@ -230,13 +203,93 @@ public class MapToEntityConverter{
                     + "latitude and longitude, or lat and lon");
             }
 
-            entity.setField(new LocationField(fieldName, new Location(latVal, lonVal)));
+           return new LocationField(fieldName, new Location(latVal, lonVal));
         } else {
-            //can't process non enties
-            logger.warn(
-                "entity cannot process location values that don't have valid location{latitude,longitude} values, changing to generic object"
-            );
-            entity.setField(new EntityObjectField(fieldName,fromMap( value, false))); // recursion
+
+            if(logger.isDebugEnabled()){
+                logger.debug(
+                    "entity cannot process location values that don't have valid " +
+                        "location{latitude,longitude} values, changing to generic object");
+            }
+
+           return new EntityObjectField(fieldName,fromMap( value, false)); // recursion
         }
     }
+
+
+
+    private Field processField(final String fieldName, final Object value, final boolean unique) {
+
+        Field processedField;
+
+        if ( value instanceof String ) {
+
+            String stringValue =(String)value;
+            processedField = new StringField(fieldName, stringValue, unique);
+
+        } else if ( value instanceof Boolean ) {
+
+            processedField = new BooleanField( fieldName, (Boolean)value, unique  );
+
+        } else if ( value instanceof Integer ) {
+
+            processedField = new IntegerField( fieldName, (Integer)value, unique );
+
+        } else if ( value instanceof Double ) {
+
+            processedField = new DoubleField( fieldName, (Double)value, unique  );
+
+        } else if ( value instanceof Float ) {
+
+            processedField = new FloatField( fieldName, (Float)value, unique );
+
+        } else if ( value instanceof Long ) {
+
+            processedField = new LongField( fieldName, (Long)value, unique );
+
+        } else if ( value instanceof List) {
+
+            processedField = processListValue( fieldName, (List)value );
+
+        } else if ( value instanceof UUID) {
+
+            processedField = new UUIDField( fieldName, (UUID)value, unique );
+
+        } else if ( value instanceof Map ) {
+
+            processedField = processMapValue( value, fieldName);
+
+        } else if ( value instanceof Enum ) {
+
+            processedField = new StringField( fieldName, value.toString(), unique );
+
+        } else if ( value == null ){
+
+            // not supported from outside API yet, but let's keep it in serialization it's a handled in this logic
+            processedField = new NullField( fieldName, unique );
+
+        } else {
+
+            byte[] valueSerialized;
+            try {
+
+                valueSerialized = objectMapper.writeValueAsBytes( value );
+
+            }
+            catch ( JsonProcessingException e ) {
+
+                throw new RuntimeException( "Can't serialize object ",e );
+
+            }
+
+            ByteBuffer byteBuffer = ByteBuffer.wrap(valueSerialized);
+            processedField = new ByteArrayField( fieldName, byteBuffer.array(), value.getClass() );
+
+        }
+
+        return processedField;
+
+    }
+
+
 }

@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
@@ -55,6 +56,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
+@Ignore("Pending re-enable of delete functionality")
 public class ShardGroupDeletionImplTest {
 
 
@@ -318,6 +320,7 @@ public class ShardGroupDeletionImplTest {
     }
 
 
+
     private DirectedEdgeMeta getDirectedEdgeMeta() {
 
         final Id sourceId = createId( "source" );
@@ -327,6 +330,8 @@ public class ShardGroupDeletionImplTest {
 
         return directedEdgeMeta;
     }
+
+
 
 
     private void initExecutor( final int numberThreads, final int queueLength ) {

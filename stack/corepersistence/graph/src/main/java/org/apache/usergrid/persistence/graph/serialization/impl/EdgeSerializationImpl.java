@@ -26,15 +26,15 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
+import com.google.common.base.Optional;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.consistency.TimeService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
-import org.apache.usergrid.persistence.graph.GraphFig;
-import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.SearchByEdge;
-import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.SearchByIdType;
+import org.apache.usergrid.persistence.graph.*;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByIdType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdgeMeta;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
@@ -303,6 +303,15 @@ public class EdgeSerializationImpl implements EdgeSerialization {
             protected Iterator<MarkedEdge> getIterator( final Collection<Shard> readShards ) {
                 return shardedEdgeSerialization.getEdgeVersions( edgeColumnFamilies, scope, search, readShards );
             }
+
+            @Override
+            protected Iterator<MarkedEdge> getIteratorFullRange( final Collection<Shard> readShards ) {
+
+                final SearchByEdge searchFullRange = new SimpleSearchByEdge(
+                    search.sourceNode(), search.getType(),search.targetNode(), Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.absent());
+
+                return shardedEdgeSerialization.getEdgeVersions( edgeColumnFamilies, scope, searchFullRange, readShards );
+            }
         };
     }
 
@@ -328,6 +337,15 @@ public class EdgeSerializationImpl implements EdgeSerialization {
             @Override
             protected Iterator<MarkedEdge> getIterator( final Collection<Shard> readShards ) {
                 return shardedEdgeSerialization.getEdgesFromSource( edgeColumnFamilies, scope, edgeType, readShards );
+            }
+
+            @Override
+            protected Iterator<MarkedEdge> getIteratorFullRange( final Collection<Shard> readShards ) {
+
+                final SearchByEdgeType searchFullRange = new SimpleSearchByEdgeType(
+                    edgeType.getNode(), edgeType.getType(), Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.absent(), false );
+
+                return shardedEdgeSerialization.getEdgesFromSource( edgeColumnFamilies, scope, searchFullRange, readShards );
             }
         };
     }
@@ -357,6 +375,17 @@ public class EdgeSerializationImpl implements EdgeSerialization {
                 return shardedEdgeSerialization
                         .getEdgesFromSourceByTargetType( edgeColumnFamilies, scope, edgeType, readShards );
             }
+
+            @Override
+            protected Iterator<MarkedEdge> getIteratorFullRange (final Collection<Shard> readShards) {
+
+                final SearchByIdType edgeTypeFullRange = new SimpleSearchByIdType(
+                    edgeType.getNode(), edgeType.getType(), Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+                    edgeType.getIdType(), Optional.absent(), false );
+
+                return shardedEdgeSerialization
+                    .getEdgesFromSourceByTargetType( edgeColumnFamilies, scope, edgeTypeFullRange, readShards);
+            }
         };
     }
 
@@ -382,6 +411,17 @@ public class EdgeSerializationImpl implements EdgeSerialization {
             protected Iterator<MarkedEdge> getIterator( final Collection<Shard> readShards ) {
                 return shardedEdgeSerialization.getEdgesToTarget( edgeColumnFamilies, scope, edgeType, readShards );
             }
+
+            @Override
+            protected Iterator<MarkedEdge> getIteratorFullRange( final Collection<Shard> readShards ) {
+
+                final SearchByEdgeType edgeTypeFullRange = new SimpleSearchByEdgeType(
+                    edgeType.getNode(), edgeType.getType(), Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+                    Optional.absent(), false );
+
+                return shardedEdgeSerialization.getEdgesToTarget( edgeColumnFamilies, scope, edgeTypeFullRange, readShards );
+            }
+
         };
     }
 
@@ -410,6 +450,17 @@ public class EdgeSerializationImpl implements EdgeSerialization {
             protected Iterator<MarkedEdge> getIterator( final Collection<Shard> readShards ) {
                 return shardedEdgeSerialization
                         .getEdgesToTargetBySourceType( edgeColumnFamilies, scope, edgeType, readShards );
+            }
+
+            @Override
+            protected Iterator<MarkedEdge> getIteratorFullRange( final Collection<Shard> readShards ) {
+
+                final SearchByIdType edgeTypeFullRange = new SimpleSearchByIdType(
+                    edgeType.getNode(), edgeType.getType(), Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+                    edgeType.getIdType(), Optional.absent(), false );
+
+                return shardedEdgeSerialization.getEdgesToTargetBySourceType( edgeColumnFamilies, scope, edgeTypeFullRange, readShards);
+
             }
         };
     }

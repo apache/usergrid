@@ -44,7 +44,7 @@ public enum ApplicationCF implements CFEnum {
     APPLICATION_AGGREGATE_COUNTERS( "Application_Aggregate_Counters", "LongType", COUNTERTYPE.getClassName() ),
 
     /** Entity counters */
-    ENTITY_COUNTERS( "Entity_Counters", "BytesType", COUNTERTYPE.getClassName() ),;
+    ENTITY_COUNTERS( "Entity_Counters", "BytesType", COUNTERTYPE.getClassName() );
 
     private final String cf;
     private final String comparator;

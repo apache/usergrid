@@ -37,4 +37,17 @@ public interface EntityManagerFig extends GuicyFig {
     @Key( "usergrid.entityManager_sleep_ms" )
     @Default( "100" )
     int sleep();
+
+    @Key( "usergrid.entityManager.enable_deindex_on_update" )
+    @Default( "true" )
+    boolean getDeindexOnUpdate();
+
+    /**
+     * Comma-separated list of one or more Amazon regions to use if multiregion
+     * is set to true.
+     */
+    @Key( "usergrid.queue.regionList" )
+    @Default("us-east-1")
+    String getRegionList();
+
 }

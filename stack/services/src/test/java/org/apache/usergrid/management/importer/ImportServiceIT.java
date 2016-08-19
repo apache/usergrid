@@ -64,7 +64,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-//@Concurrent
 public class ImportServiceIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ImportServiceIT.class);
@@ -102,7 +101,7 @@ public class ImportServiceIT {
         }
 
         //creates sample test application
-        adminUser = setup.getMgmtSvc().createAdminUser(
+        adminUser = setup.getMgmtSvc().createAdminUser( null,
             username, username, username+"@test.com", username, false, false );
         organization = setup.getMgmtSvc().createOrganization( username, adminUser, true );
         applicationId = setup.getMgmtSvc().createApplication( organization.getUuid(), username+"app" ).getId();
@@ -139,7 +138,7 @@ public class ImportServiceIT {
 
     // test case to check if application is imported correctly
     @Test
-    @Ignore("Import organization not supported")
+    @Ignore("Pending merge of export-feature branch. Import organization not supported")
     public void testImportApplication() throws Exception {
 
         EntityManager em = setup.getEmf().getEntityManager( applicationId );
@@ -182,7 +181,7 @@ public class ImportServiceIT {
            // wait...
         }
 
-        logger.debug("\n\nImport the application\n\n");
+        logger.debug("Import the application\n\n");
 
         // import
         S3Import s3Import = new S3ImportImpl();
@@ -204,7 +203,9 @@ public class ImportServiceIT {
            // wait...
         }
 
-        logger.debug("\n\nVerify Import\n\n");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Verify Import");
+        }
 
         try {
             //checks if temp import files are created i.e. downloaded from S3
@@ -214,14 +215,19 @@ public class ImportServiceIT {
 
             // check if all collections in the application are updated
             for (String collectionName : collections) {
-                logger.debug("Checking collection {}", collectionName);
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Checking collection {}", collectionName);
+                }
 
                 Results collection = em.getCollection(applicationId, collectionName, null, Level.ALL_PROPERTIES);
 
                 for (Entity eachEntity : collection.getEntities() ) {
 
-                    logger.debug("Checking entity {} {}:{}",
-                        new Object[] { eachEntity.getName(), eachEntity.getType(), eachEntity.getUuid()} );
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Checking entity {} {}:{}",
+                            new Object[]{eachEntity.getName(), eachEntity.getType(), eachEntity.getUuid()});
+                    }
 
                     //check for dictionaries --> checking permissions in the dictionaries
                     EntityRef er;
@@ -261,7 +267,7 @@ public class ImportServiceIT {
 
     // test case to check if all applications file for an organization are imported correctly
     @Test
-    @Ignore("Import organization not supported")
+    @Ignore("Pending merge of export-feature branch. Import organization not supported")
     public void testImportOrganization() throws Exception {
 
         // creates 5 entities in usertests collection
@@ -456,7 +462,7 @@ public class ImportServiceIT {
      * Test to the doImport method with null organziation ID
      */
     @Test
-    @Ignore("Import organization not supported")
+    @Ignore("Pending merge of export-feature branch. Import organization not supported")
     public void testDoImportWithNullOrganizationID() throws Exception {
         // import
         S3Import s3Import = new S3ImportImpl();
@@ -482,7 +488,7 @@ public class ImportServiceIT {
      * Test to the doImport method with fake organization ID
      */
     @Test
-    @Ignore("Import organization not supported")
+    @Ignore("Pending merge of export-feature branch. Import organization not supported")
     public void testDoImportWithFakeOrganizationID() throws Exception {
 
         UUID fakeOrgId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
@@ -512,7 +518,7 @@ public class ImportServiceIT {
      * Test to the doImport method with fake application ID
      */
     @Test
-    @Ignore("Import application not supported")
+    @Ignore("Pending merge of export-feature branch. Import application not supported")
     public void testDoImportWithFakeApplicationID() throws Exception {
 
         UUID fakeappId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
@@ -544,7 +550,7 @@ public class ImportServiceIT {
      * Test to the doImport Collection method with fake application ID
      */
     @Test
-    @Ignore("Import application not supported")
+    @Ignore("Pending merge of export-feature branch. Import application not supported")
     public void testDoImportCollectionWithFakeApplicationID() throws Exception {
 
         UUID fakeappId = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );

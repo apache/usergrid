@@ -20,16 +20,17 @@ package org.apache.usergrid.rest.management.users;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
-import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.SecurityUtils;
 import org.apache.usergrid.management.ActivationState;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
-import org.apache.usergrid.rest.management.ManagementResource;
 import org.apache.usergrid.rest.management.users.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.security.annotations.RequireAdminUserAccess;
-import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
+import org.apache.usergrid.security.tokens.TokenInfo;
+import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
 import org.apache.usergrid.services.ServiceResults;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -63,7 +64,7 @@ public class UserResource extends AbstractContextResource {
 
     String errorMsg;
 
-    String token;
+    String token = null;
 
 
     public UserResource() {
@@ -72,6 +73,10 @@ public class UserResource extends AbstractContextResource {
 
     public UserResource init( UserInfo user ) {
         this.user = user;
+        PrincipalIdentifier userPrincipal  = (PrincipalIdentifier) SecurityUtils.getSubject().getPrincipal();
+        if ( userPrincipal != null && userPrincipal.getAccessTokenCredentials() != null ) {
+            this.token = userPrincipal.getAccessTokenCredentials().getToken();
+        }
         return this;
     }
 
@@ -89,13 +94,19 @@ public class UserResource extends AbstractContextResource {
         return getSubResource( OrganizationsResource.class ).init( user );
     }
 
-
+    @RequireAdminUserAccess
     @PUT
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     public ApiResponse setUserInfo( @Context UriInfo ui, Map<String, Object> json,
                                         @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
+
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException(  "External SSO integration is enabled, admin users must update" +
+                " info via provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
+        }
+
 
         if ( json == null ) {
             return null;
@@ -109,6 +120,10 @@ public class UserResource extends AbstractContextResource {
         String email = string( json.remove( "email" ) );
         String username = string( json.remove( "username" ) );
         String name = string( json.remove( "name" ) );
+
+        if ( "me".equals( username ) ) {
+            throw new IllegalArgumentException( "Username 'me' is reserved" );
+        }
 
         management.updateAdminUser( user, username, name, email, json );
 
@@ -126,6 +141,11 @@ public class UserResource extends AbstractContextResource {
     public ApiResponse setUserPasswordPut( @Context UriInfo ui, Map<String, Object> json,
                                                @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
+
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException( "External SSO integration is enabled, admin users must reset passwords via" +
+                " provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
+        }
 
         if ( json == null ) {
             return null;
@@ -191,9 +211,11 @@ public class UserResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "get admin user" );
 
-        String token = management.getAccessTokenForAdminUser( SubjectUtils.getUser().getUuid(), ttl );
-        Map<String, Object> userOrganizationData = management.getAdminUserOrganizationData( user, !shallow );
-        userOrganizationData.put( "token", token );
+        // commenting out creation of token each time and setting the token value to the one sent in the request.
+        // String token = management.getAccessTokenForAdminUser( user.getUuid(), ttl );
+
+        Map<String, Object> userOrganizationData = management.getAdminUserOrganizationData( user, !shallow, !shallow);
+        //userOrganizationData.put( "token", token );
         response.setData( userOrganizationData );
         response.setSuccess();
 
@@ -206,29 +228,32 @@ public class UserResource extends AbstractContextResource {
     @Produces( MediaType.TEXT_HTML )
     public Viewable showPasswordResetForm( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
-
-        if ( externalTokensEnabled ) {
-            throw new IllegalArgumentException( "Admin Users must reset passwords via " +
-                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException( "External SSO integration is enabled, admin users must reset password via" +
+                " provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
         }
+
+        UUID organizationId = null;
 
         try {
             this.token = token;
+            TokenInfo tokenInfo = management.getPasswordResetTokenInfoForAdminUser(token);
+            if (tokenInfo != null) {
+                organizationId = tokenInfo.getWorkflowOrgId();
+            }
 
-            if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), token ) ) {
-                return handleViewable( "resetpw_set_form", this );
+            if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), tokenInfo ) ) {
+                return handleViewable( "resetpw_set_form", this, organizationId );
             }
             else {
-                return handleViewable( "resetpw_email_form", this );
+                return handleViewable( "resetpw_email_form", this, organizationId );
             }
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, organizationId );
         }
     }
 
@@ -243,18 +268,23 @@ public class UserResource extends AbstractContextResource {
                                              @FormParam( "recaptcha_challenge_field" ) String challenge,
                                              @FormParam( "recaptcha_response_field" ) String uresponse ) {
 
-        logger.debug("handlePasswordResetForm");
-
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
-
-        if ( externalTokensEnabled ) {
-            throw new IllegalArgumentException( "Admin Users must reset passwords via " +
-                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        if (logger.isTraceEnabled()) {
+            logger.trace("handlePasswordResetForm");
         }
+
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException(  "External SSO integration is enabled, admin users must reset password via" +
+                " provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
+        }
+
+        UUID organizationId = null;
 
         try {
             this.token = token;
+            TokenInfo tokenInfo = management.getPasswordResetTokenInfoForAdminUser(token);
+            if (tokenInfo != null) {
+                organizationId = tokenInfo.getWorkflowOrgId();
+            }
 
             //      if(user == null) {
             //        errorMsg = "Incorrect username entered";
@@ -262,26 +292,26 @@ public class UserResource extends AbstractContextResource {
             //      }
 
             if ( ( password1 != null ) || ( password2 != null ) ) {
-                if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), token ) ) {
+                if ( management.checkPasswordResetTokenForAdminUser( user.getUuid(), tokenInfo ) ) {
                     if ( ( password1 != null ) && password1.equals( password2 ) ) {
                         management.setAdminUserPassword( user.getUuid(), password1 );
                         management.revokeAccessTokenForAdminUser( user.getUuid(), token );
-                        return handleViewable( "resetpw_set_success", this );
+                        return handleViewable( "resetpw_set_success", this, organizationId );
                     }
                     else {
                         errorMsg = "Passwords didn't match, let's try again...";
-                        return handleViewable( "resetpw_set_form", this );
+                        return handleViewable( "resetpw_set_form", this, organizationId );
                     }
                 }
                 else {
                     errorMsg = "Sorry, you have an invalid token. Let's try again...";
-                    return handleViewable( "resetpw_email_form", this );
+                    return handleViewable( "resetpw_email_form", this, organizationId );
                 }
             }
 
             if ( !useReCaptcha() ) {
-                management.startAdminUserPasswordResetFlow( user );
-                return handleViewable( "resetpw_email_success", this );
+                management.startAdminUserPasswordResetFlow( null, user );
+                return handleViewable( "resetpw_email_success", this, organizationId );
             }
 
             ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
@@ -291,19 +321,19 @@ public class UserResource extends AbstractContextResource {
                     reCaptcha.checkAnswer( httpServletRequest.getRemoteAddr(), challenge, uresponse );
 
             if ( reCaptchaResponse.isValid() ) {
-                management.startAdminUserPasswordResetFlow( user );
-                return handleViewable( "resetpw_email_success", this );
+                management.startAdminUserPasswordResetFlow( null, user );
+                return handleViewable( "resetpw_email_success", this, organizationId );
             }
             else {
                 errorMsg = "Incorrect Captcha";
-                return handleViewable( "resetpw_email_form", this );
+                return handleViewable( "resetpw_email_form", this, organizationId );
             }
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, organizationId );
         }
     }
 
@@ -328,26 +358,27 @@ public class UserResource extends AbstractContextResource {
     @Produces( MediaType.TEXT_HTML )
     public Viewable activate( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
-
-        if ( externalTokensEnabled ) {
-            throw new IllegalArgumentException( "Admin Users must activate via " +
-                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException(  "External SSO integration is enabled, admin users must activate via" +
+                " provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
         }
+
+        UUID organizationId = null;
 
         try {
-            management.handleActivationTokenForAdminUser( user.getUuid(), token );
-            return handleViewable( "activate", this );
+            TokenInfo tokenInfo = management.getActivationTokenInfoForAdminUser(token) ;
+            organizationId = tokenInfo.getWorkflowOrgId();
+            management.handleActivationTokenForAdminUser( user.getUuid(), tokenInfo );
+            return handleViewable( "activate", this, organizationId );
         }
         catch ( TokenException e ) {
-            return handleViewable( "bad_activation_token", this );
+            return handleViewable( "bad_activation_token", this, organizationId );
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, organizationId );
         }
     }
 
@@ -357,29 +388,30 @@ public class UserResource extends AbstractContextResource {
     @Produces( MediaType.TEXT_HTML )
     public Viewable confirm( @Context UriInfo ui, @QueryParam( "token" ) String token ) {
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
-
-        if ( externalTokensEnabled ) {
-            throw new IllegalArgumentException( "Admin Users must confirm via " +
-                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException( "External SSO integration is enabled, admin users must confirm " +
+                "via provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER ) );
         }
+
+        UUID organizationId = null;
 
         try {
-            ActivationState state = management.handleConfirmationTokenForAdminUser( user.getUuid(), token );
+            TokenInfo tokenInfo = management.getConfirmationTokenInfoForAdminUser(token) ;
+            organizationId = tokenInfo.getWorkflowOrgId();
+            ActivationState state = management.handleConfirmationTokenForAdminUser( user.getUuid(), tokenInfo );
             if ( state == ActivationState.CONFIRMED_AWAITING_ACTIVATION ) {
-                return handleViewable( "confirm", this );
+                return handleViewable( "confirm", this, organizationId );
             }
-            return handleViewable( "activate", this );
+            return handleViewable( "activate", this, organizationId );
         }
         catch ( TokenException e ) {
-            return handleViewable( "bad_confirmation_token", this );
+            return handleViewable( "bad_confirmation_token", this, organizationId );
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return new Viewable( "error", e );
+            return handleViewable( "error", e, organizationId );
         }
     }
 
@@ -392,19 +424,16 @@ public class UserResource extends AbstractContextResource {
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
-
-        if ( externalTokensEnabled ) {
-            throw new IllegalArgumentException( "Admin Users must reactivate via " +
-                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException( "External SSO integration is enabled, admin user must re-activate " +
+                "via provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER ) );
         }
 
         logger.info( "Send activation email for user: {}" , user.getUuid() );
 
         ApiResponse response = createApiResponse();
 
-        management.startAdminUserActivationFlow( user );
+        management.startAdminUserActivationFlow( null, user );
 
         response.setAction( "reactivate user" );
         return response;
@@ -418,6 +447,11 @@ public class UserResource extends AbstractContextResource {
     public ApiResponse revokeTokensPost( @Context UriInfo ui,
                                              @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
+
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException( "External SSO integration is enabled, admin user tokens must be revoked " +
+                "via provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
+        }
 
         UUID adminId = user.getUuid();
 
@@ -450,6 +484,11 @@ public class UserResource extends AbstractContextResource {
     public ApiResponse revokeTokenPost( @Context UriInfo ui,
                                             @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback,
                                             @QueryParam( "token" ) String token ) throws Exception {
+
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException( "External SSO integration is enabled, admin user token must be revoked via " +
+                "via provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER ) );
+        }
 
         UUID adminId = user.getUuid();
         this.token = token;

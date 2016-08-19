@@ -20,20 +20,14 @@
 package org.apache.usergrid.persistence.graph.impl.stage;
 
 
-import java.util.Iterator;
 import java.util.UUID;
 
-import com.google.common.base.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.rx.ObservableIterator;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
-import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 
 import com.google.common.base.Preconditions;
@@ -42,8 +36,6 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 
 import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
 
 
 /**
@@ -53,7 +45,7 @@ import rx.functions.Func1;
 public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
 
 
-    private static final Logger LOG = LoggerFactory.getLogger( EdgeDeleteRepairImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( EdgeDeleteRepairImpl.class );
 
     protected final EdgeSerialization storageSerialization;
     protected final GraphFig graphFig;
@@ -81,8 +73,12 @@ public class EdgeDeleteRepairImpl implements EdgeDeleteRepair {
         //merge source and target then deal with the distinct values
         return Observable.just( edge ).filter( markedEdge-> markedEdge.isDeleted() )
                 .doOnNext( markedEdge -> {
-                    //it's still in the same state as it was when we queued it. Remove it
-                        LOG.info( "Removing edge {} ", markedEdge );
+
+                        //it's still in the same state as it was when we queued it. Remove it
+                        if(logger.isDebugEnabled()){
+                            logger.debug( "Removing edge {} ", markedEdge );
+                        }
+
 
                         //remove from the commit log
 

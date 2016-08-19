@@ -48,7 +48,9 @@ public class FileImportJob extends OnlyOnceJob {
     ImportService importService;
 
     public FileImportJob() {
-        logger.info( "FileImportJob created " + this );
+        if (logger.isTraceEnabled()) {
+            logger.info("FileImportJob created");
+        }
     }
 
     @Override
@@ -81,7 +83,7 @@ public class FileImportJob extends OnlyOnceJob {
             throw t;
         }
 
-        logger.info("File Import Service completed job: " + jobExecution.getJobName() );
+        logger.info("File Import Service completed job: {}", jobExecution.getJobName() );
     }
 
     @Override

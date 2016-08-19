@@ -39,9 +39,7 @@ public interface EntityCollectionManagerFactory {
      *
      * @return The EntityCollectionManager to perform operations within the applicationscope provided
      */
-    EntityCollectionManager
-        createCollectionManager( ApplicationScope applicationScope );
-
+    EntityCollectionManager createCollectionManager( ApplicationScope applicationScope );
 
     void invalidate();
 }

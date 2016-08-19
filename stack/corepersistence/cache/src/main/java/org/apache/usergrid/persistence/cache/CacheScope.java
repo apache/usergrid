@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.persistence.cache;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -34,5 +35,28 @@ public class CacheScope implements ApplicationScope {
     @Override
     public Id getApplication() {
         return appId;
+    }
+
+    @Override
+    public boolean equals( Object o){
+
+        if ( this == o ) {
+            return true;
+        }
+        if ( !( o instanceof CacheScope ) ) {
+            return false;
+        }
+
+        final CacheScope cacheScope = ( CacheScope ) o;
+
+        return appId.equals(cacheScope.appId);
+
+    }
+
+    @Override
+    public int hashCode(){
+        return new HashCodeBuilder()
+            .append(appId)
+            .toHashCode();
     }
 }

@@ -117,16 +117,18 @@ public abstract class ShardGroupColumnIterator implements Iterator<MarkedEdge> {
      */
     protected abstract Iterator<MarkedEdge> getIterator( Collection<Shard> readShards );
 
+    protected abstract Iterator<MarkedEdge> getIteratorFullRange( Collection<Shard> readShards );
+
 
     public boolean advance() {
 
-        logger.trace( "Advancing from shard entry group iterator" );
+        if (logger.isTraceEnabled()) logger.trace( "Advancing from shard entry group iterator" );
 
         while ( entryGroupIterator.hasNext() ) {
 
             final ShardEntryGroup group = entryGroupIterator.next();
 
-            logger.trace( "Shard entry group is {}.  Searching for edges in the shard", group );
+            if (logger.isTraceEnabled()) logger.trace( "Shard entry group is {}.  Searching for edges in the shard", group );
 
             elements = getIterator( group.getReadShards() );
 
@@ -134,20 +136,20 @@ public abstract class ShardGroupColumnIterator implements Iterator<MarkedEdge> {
              * We're done, we have some columns to return
              */
             if ( elements.hasNext() ) {
-                logger.trace( "Found edges in shard entry group {}", group );
+                if (logger.isTraceEnabled()) logger.trace( "Found edges in shard entry group {}", group );
                 return true;
             }
             else {
-                logger.trace( "Our shard is empty, we need to perform an audit on shard group {}", group );
+                if (logger.isTraceEnabled()) logger.trace( "Our shard is empty, we need to perform an audit on shard group {}", group );
 
                 //fire and forget if we miss it here, we'll get it next read
-                shardGroupDeletion.maybeDeleteShard(this.applicationScope, this.directedEdgeMeta, group, getIterator( group.getReadShards() ) );
+                shardGroupDeletion.maybeDeleteShard(this.applicationScope, this.directedEdgeMeta, group, getIteratorFullRange( group.getReadShards() ) );
 
 
             }
         }
 
-        logger.trace( "Completed iterating shard group iterator" );
+        if (logger.isTraceEnabled()) logger.trace( "Completed iterating shard group iterator" );
 
         return false;
     }

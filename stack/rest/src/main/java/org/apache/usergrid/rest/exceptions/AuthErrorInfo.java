@@ -43,6 +43,7 @@ public enum AuthErrorInfo {
     INVALID_USERNAME_OR_PASSWORD_ERROR( "auth_invalid_username_or_password",
             "Unable to authenticate due to username or password being incorrect" ), //
     UNVERIFIED_OAUTH_ERROR( "auth_unverified_oath", "Unable to authenticate OAuth credentials" ), //
+    EXTERNALSSOPROVIDER_UNACTIVATED_ADMINUSER("externalssoprovider_unactivated_adminuser","Admin user not found or does not have access to any organizations."),
     NO_DOMAIN_ERROR( "auth_no_application", "Unable to authenticate due to application not found" ), //
     NOT_DOMAIN_OWNER_ERROR( "auth_not_application_owner", "" ), //
     EXPIRED_ACCESS_TOKEN_ERROR( "expired_token", "Unable to authenticate due to expired access token" ), //

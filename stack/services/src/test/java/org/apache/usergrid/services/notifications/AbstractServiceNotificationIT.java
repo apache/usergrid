@@ -16,23 +16,18 @@
  */
 package org.apache.usergrid.services.notifications;
 
-import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.entities.Notification;
-import org.apache.usergrid.persistence.entities.Receipt;
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.services.ServiceManagerFactory;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.rules.TestName;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.PathQuery;
+import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.entities.Notification;
+import org.apache.usergrid.persistence.entities.Receipt;
 import org.apache.usergrid.services.AbstractServiceIT;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -47,7 +42,7 @@ public abstract class AbstractServiceNotificationIT extends AbstractServiceIT {
         return ns;
     }
 
-    protected Notification scheduleNotificationAndWait(Notification notification)
+    protected Notification notificationWaitForComplete(Notification notification)
             throws Exception {
         long timeout = System.currentTimeMillis() + 60000;
         while (System.currentTimeMillis() < timeout) {
@@ -105,17 +100,17 @@ public abstract class AbstractServiceNotificationIT extends AbstractServiceIT {
     }
 
     protected void checkStatistics(Notification notification, long sent,  long errors) throws Exception{
-        Map<String, Long> statistics = null;
+        Map<String, Object> statistics = null;
         long timeout = System.currentTimeMillis() + 10000;
         while (System.currentTimeMillis() < timeout) {
             Thread.sleep(200);
             statistics = app.getEntityManager().get(notification.getUuid(), Notification.class).getStatistics();
-            if (statistics.get("sent")==sent && statistics.get("errors")==errors) {
+            if ((Long)statistics.get("sent")==sent && (Long)statistics.get("errors")==errors) {
                 break;
             }
         }
-        assertEquals(sent, statistics.get("sent").longValue());
-        assertEquals(errors, statistics.get("errors").longValue());
+        assertEquals(sent, ((Long)statistics.get("sent")).longValue());
+        assertEquals(errors, ((Long)statistics.get("errors")).longValue());
     }
 
 }

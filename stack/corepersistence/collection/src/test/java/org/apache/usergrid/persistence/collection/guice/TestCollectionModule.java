@@ -29,6 +29,7 @@ import org.apache.usergrid.persistence.core.migration.data.TestMigrationDataProv
 import com.google.inject.TypeLiteral;
 
 
+
 public class TestCollectionModule extends TestModule {
 
     @Override
@@ -38,17 +39,13 @@ public class TestCollectionModule extends TestModule {
         install( new CollectionModule() {
             @Override
             public void configureMigrationProvider() {
-                //configure our migration data provider
 
+                //configure our migration data provider
                 TestMigrationDataProvider<EntityIdScope> migrationDataProvider = new TestMigrationDataProvider<>();
                 bind(new TypeLiteral< MigrationDataProvider<EntityIdScope>>(){}).toInstance( migrationDataProvider );
             }
         } );
 
-        /**
-         * Test modules
-         */
-//        install(new MaxMigrationModule());
-
     }
+
 }

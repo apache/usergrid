@@ -30,7 +30,7 @@ namespace Usergrid.Sdk.IntegrationTests
         [Test]
         public void ShouldManageGroupLifecycle()
         {
-            var client = new Client(Organization, Application);
+            var client = new Client(Organization, Application, ApiUri);
             client.Login(ClientId, ClientSecret, AuthType.Organization);
 
             var group = client.GetGroup<MyUsergridGroup>("group1");
@@ -68,7 +68,7 @@ namespace Usergrid.Sdk.IntegrationTests
         [Test]
         public void ShouldManageUsersInGroup()
         {
-            var client = new Client(Organization, Application);
+            var client = new Client(Organization, Application, ApiUri);
             client.Login(ClientId, ClientSecret, AuthType.Organization);
 
             var user = SetupUsergridUser(client, new MyUsergridUser {UserName = "user1", Password = "user1", Email = "user1@gmail.com", City = "city1"});

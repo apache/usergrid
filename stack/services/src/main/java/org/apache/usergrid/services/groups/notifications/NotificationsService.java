@@ -26,7 +26,9 @@ public class NotificationsService extends
             .getLogger(NotificationsService.class);
 
     public NotificationsService() {
-        logger.info("/groups/*/notifications");
+        if (logger.isTraceEnabled()) {
+            logger.trace("/groups/*/notifications");
+        }
     }
 
 }

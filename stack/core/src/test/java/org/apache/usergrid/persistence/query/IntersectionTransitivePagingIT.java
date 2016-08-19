@@ -43,7 +43,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class IntersectionTransitivePagingIT{
 
-    private static final Logger LOG = LoggerFactory.getLogger( IntersectionTransitivePagingIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( IntersectionTransitivePagingIT.class );
 
     private static final String union = "select * where city = 'San Francisco' AND postalCode = 94100";
     private static final String unionReverse = "select * where postalCode = 94100 AND city = 'San Francisco'";
@@ -171,7 +171,7 @@ public class IntersectionTransitivePagingIT{
 
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Query took {} ms to return {} entities", stop - start, expectedResults.size() );
+        logger.info( "Query took {} ms to return {} entities", stop - start, expectedResults.size() );
 
         assertEquals( "All names returned", expectedResults.size(), currentExpectedIndex );
     }

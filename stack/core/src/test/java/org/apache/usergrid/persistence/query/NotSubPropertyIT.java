@@ -44,7 +44,7 @@ import static org.junit.Assert.assertEquals;
 public class NotSubPropertyIT {
 
 
-    private static final Logger LOG = LoggerFactory.getLogger( IntersectionUnionPagingIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( IntersectionUnionPagingIT.class );
 
     private static final String notQuery = "select * where NOT subArray.usageType = 'true' order by created asc";
 
@@ -93,7 +93,7 @@ public class NotSubPropertyIT {
 
         long start = System.currentTimeMillis();
 
-        LOG.info( "Writing {} entities.", size );
+        logger.info( "Writing {} entities.", size );
 
 
         List<UUID> expected = new ArrayList<UUID>( size );
@@ -130,7 +130,7 @@ public class NotSubPropertyIT {
 
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Writes took {} ms", stop - start );
+        logger.info( "Writes took {} ms", stop - start );
 
         app.refreshIndex();
 
@@ -171,7 +171,7 @@ public class NotSubPropertyIT {
 
         long stop = System.currentTimeMillis();
 
-        LOG.info( "Query took {} ms to return {} entities", stop - start, expectedResults.size() );
+        logger.info( "Query took {} ms to return {} entities", stop - start, expectedResults.size() );
 
         assertEquals( "All names returned", expectedResults.size(), expectedIndex );
     }

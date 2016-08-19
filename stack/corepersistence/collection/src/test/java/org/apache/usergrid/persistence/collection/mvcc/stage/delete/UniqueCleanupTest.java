@@ -430,7 +430,6 @@ public class UniqueCleanupTest {
 //    /**
 //     * Tests what happens when our listeners are VERY slow
 //     */
-////    @Ignore( "Test is a work in progress" )
 //    @Test( timeout = 10000 )
 //    public void multipleListenerMultipleVersionsNoThreadsToRun()
 //            throws ExecutionException, InterruptedException, ConnectionException {

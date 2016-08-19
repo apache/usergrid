@@ -27,7 +27,7 @@ import static junit.framework.TestCase.assertSame;
 
 /** This tests the CassandraResource. */
 public class SpringResourceTest {
-    public static final Logger LOG = LoggerFactory.getLogger( SpringResourceTest.class );
+    public static final Logger logger = LoggerFactory.getLogger( SpringResourceTest.class );
 
 
 
@@ -40,18 +40,18 @@ public class SpringResourceTest {
     @Test
     public void testDoubleTrouble() throws Throwable {
         SpringResource c1 = SpringResource.getInstance();
-        LOG.info( "Starting up first Spring instance: {}", c1 );
+        logger.info( "Starting up first Spring instance: {}", c1 );
 
-        LOG.debug( "Waiting for the new instance to come online." );
+        logger.debug( "Waiting for the new instance to come online." );
 
         SchemaManager c1SchemaManager = c1.getBean( SchemaManager.class );
 
         SpringResource c2 = SpringResource.getInstance();
-        LOG.debug( "Starting up second Spring instance: {}", c2 );
+        logger.debug( "Starting up second Spring instance: {}", c2 );
 
         SchemaManager c2SchemaManager = c2.getBean( SchemaManager.class );
 
-        LOG.debug( "Waiting a few seconds for second instance to be ready before shutting down." );
+        logger.debug( "Waiting a few seconds for second instance to be ready before shutting down." );
 
         assertSame("Instances should be from the same spring context", c1SchemaManager, c2SchemaManager);
 

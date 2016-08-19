@@ -46,7 +46,7 @@ import static org.apache.usergrid.services.ServicePayload.payload;
 
 public class PopulateSample extends ToolBase {
 
-    private static final Logger logger = LoggerFactory.getLogger( Export.class );
+    private static final Logger logger = LoggerFactory.getLogger( PopulateSample.class );
 
 
     @Override
@@ -66,7 +66,7 @@ public class PopulateSample extends ToolBase {
         logger.info( "Starting test..." );
         startSpring();
 
-        UserInfo user = managementService.createAdminUser( "admin", "admin", "admin@ug.com", "none", false, false );
+        UserInfo user = managementService.createAdminUser( null, "admin", "admin", "admin@ug.com", "none", false, false );
 
         logger.info( "Creating organization: sample-organization" );
         // management

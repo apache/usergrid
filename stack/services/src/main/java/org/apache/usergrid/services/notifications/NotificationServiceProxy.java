@@ -21,9 +21,6 @@ import org.apache.usergrid.persistence.entities.Notifier;
 
 import java.util.Set;
 
-/**
- * Created by ApigeeCorporation on 8/6/14.
- */
 public interface NotificationServiceProxy {
 
     public void finishedBatch(Notification notification, long successes, long failures) throws Exception;

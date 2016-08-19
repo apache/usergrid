@@ -40,7 +40,9 @@ public class ExportJob extends OnlyOnceJob {
     ExportService exportService;
 
     public ExportJob() {
-        logger.info( "ExportJob created " + this );
+        if (logger.isTraceEnabled()) {
+            logger.trace("ExportJob created");
+        }
     }
 
 
@@ -59,8 +61,7 @@ public class ExportJob extends OnlyOnceJob {
             exportService.doExport( jobExecution );
         }
         catch ( Exception e ) {
-            logger.error( "Export Service failed to complete job" );
-            logger.error(e.getMessage());
+            logger.error( "Export Service failed to complete job: {}", e.getMessage() );
             return;
         }
 

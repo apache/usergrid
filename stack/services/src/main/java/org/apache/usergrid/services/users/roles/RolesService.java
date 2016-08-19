@@ -38,7 +38,9 @@ public class RolesService extends org.apache.usergrid.services.roles.RolesServic
 
     public RolesService() {
         super();
-        logger.info( "/users/*/roles" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("/users/*/roles");
+        }
     }
 
 
@@ -50,6 +52,7 @@ public class RolesService extends org.apache.usergrid.services.roles.RolesServic
             em.addUserToRole( user.getUuid(), entity.getName() );
             ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
             scopedCache.invalidate();
+            localShiroCache.invalidateAll();
         }
         return new ServiceResults( this, context, Type.COLLECTION, Results.fromRef( entity ), null, null );
     }
@@ -63,6 +66,7 @@ public class RolesService extends org.apache.usergrid.services.roles.RolesServic
             em.addUserToRole( user.getUuid(), entity.getName() );
             ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
             scopedCache.invalidate();
+            localShiroCache.invalidateAll();
         }
         return new ServiceResults( this, context, Type.COLLECTION, Results.fromRef( entity ), null, null );
     }
@@ -76,6 +80,7 @@ public class RolesService extends org.apache.usergrid.services.roles.RolesServic
             em.removeUserFromRole( user.getUuid(), results.getEntity().getName() );
             ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
             scopedCache.invalidate();
+            localShiroCache.invalidateAll();
         }
         return results;
     }
@@ -89,6 +94,7 @@ public class RolesService extends org.apache.usergrid.services.roles.RolesServic
             em.removeUserFromRole( user.getUuid(), results.getEntity().getName() );
             ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
             scopedCache.invalidate();
+            localShiroCache.invalidateAll();
         }
         return results;
     }

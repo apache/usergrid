@@ -33,18 +33,23 @@ import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.security.shiro.Realm;
 import org.apache.usergrid.security.shiro.UsergridAuthorizationInfo;
 import org.apache.usergrid.security.shiro.credentials.AccessTokenCredentials;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
+import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getSubject;
 
 
 public class ApplicationUserPrincipal extends UserPrincipal {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminUserPrincipal.class);
 
+    /**
+     * Needed for Jackson, do not remove
+     */
     public ApplicationUserPrincipal() {}
 
     public ApplicationUserPrincipal( UUID applicationId, UserInfo user ) {
@@ -84,18 +89,17 @@ public class ApplicationUserPrincipal extends UserPrincipal {
             catch ( Exception e ) {
                 logger.error( "Unable to retrieve token info", e );
             }
-            logger.debug( "Token: {}", token );
+            if (logger.isDebugEnabled()) {
+                logger.debug("Token: {}", token);
+            }
         }
 
         grant( info, getPermissionFromPath( applicationId, "access" ) );
 
-                /*
-                 * grant(info, principal, getPermissionFromPath(applicationId,
-                 * "get,put,post,delete", "/users/${user}",
-                 * "/users/${user}/feed", "/users/${user}/activities",
-                 * "/users/${user}/groups", "/users/${user}/following/*",
-                 * "/users/${user}/following/user/*"));
-                 */
+        if ( SubjectUtils.getUser() != null ) {
+            // ensure that the /org/app/users/me end-point always works for logged in user
+            grant( info, "applications:get:" + applicationId + ":/users/" + SubjectUtils.getUser().getUuid() );
+        }
 
         EntityManager em = emf.getEntityManager( applicationId );
         try {

@@ -1,0 +1,834 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Usergrid 2.1.0 Deployment Guide &mdash; Apache Usergrid 2.x documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Apache Usergrid 2.x documentation" href="../index.html"/>
+        <link rel="next" title="Presentations &amp; Videos" href="../reference/presos-and-videos.html"/>
+        <link rel="prev" title="COMING SOON..." href="../sdks/tbd.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../index.html" class="icon icon-home"> Apache Usergrid
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              2.x
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Using Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/creating-account.html">Creating a Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/using-the-api.html">Using the API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Storage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/data-store-dbms.html">The Usergrid Data Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/optimizing-access.html">Data Store Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/collections.html">Collections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-storage/entities.html">Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Data Queries</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/querying-your-data.html">Querying your data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/query-parameters.html">Query parameters &amp; clauses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/operators-and-types.html">Query operators &amp; data types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-queries/advanced-query-usage.html">Advanced query usage</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Entity Connections</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/connecting-entities.html">Connecting entities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/retrieving-entities.html">Retrieving connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../entity-connections/disconnecting-entities.html">Disconnecting entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Push Notifications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/overview.html">Push notifications overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/adding-push-support.html">Adding push notifications support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/getting-started.html">Getting started with push notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/tutorial.html">Tutorial: Push notifications sample app</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/registering.html">Registering with a notification service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-notifiers.html">Creating notifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/managing-users-and-devices.html">Managing users and devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/creating-and-managing-notifications.html">Creating and managing notifications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../push-notifications/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Security &amp; Authentication</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/app-security.html">Security &amp; token authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-permissions.html">Using permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/using-roles.html">Using roles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-users-and-application-clients.html">Authenticating users &amp; app clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/user-authentication-types.html">Authentication levels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/changing-token-time-live-ttl.html">Changing token expiration (time-to-live)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/authenticating-api-requests.html">Authenticating API requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/revoking-tokens-logout.html">Revoking tokens (logout)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/facebook-sign.html">Facebook sign in</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../security-and-auth/securing-your-app.html">Security best practices</a></li>
+</ul>
+<p class="caption"><span class="caption-text">User Management &amp; Social Graph</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-management.html">User management &amp; social graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/working-user-data.html">Working with User Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/group.html">Working with group data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/activity.html">Activity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html">Social Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/user-connections.html#creating-other-connections">Creating other connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-management/messagee-example.html">App Example - Messagee</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Geo-location</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../geolocation/geolocation.html">Geolocating your Entities</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Assets &amp; Files</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/uploading-assets.html">Uploading assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/retrieving-assets.html">Retrieving assets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../assets-and-files/folders.html">Folders</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Counters &amp; Events</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/events-and-counters.html">Counters &amp; events</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html">Creating &amp; incrementing counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#decrementing-resetting-counters">Decrementing/resetting counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/creating-and-incrementing-counters.html#using-counters-hierarchically">Using counters hierarchically</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../counters-and-events/retrieving-counters.html">Retrieving counters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Organizations &amp; Applications</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/managing.html">Organization &amp; application management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/organization.html">Organization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/application.html">Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../orgs-and-apps/admin-user.html">Admin user</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html">Methods</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#models">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rest-endpoints/api-docs.html#sub-types">Sub-Types</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Client SDKs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Installing Usergrid</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Usergrid 2.1.0 Deployment Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#intended-audience">Intended audience</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#prerequsites">Prerequsites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-started">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deploying-the-usergrid-stack">Deploying the Usergrid Stack</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#stack-step-1-setup-cassandra">Stack STEP #1: Setup Cassandra</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stack-step-2-setup-elasticsearch">Stack STEP #2: Setup ElasticSearch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stack-step-3-setup-tomcat">Stack STEP #3: Setup Tomcat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stack-step-4-configure-usergrid-stack-logging">Stack STEP #4: Configure Usergrid Stack &amp; Logging</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#example-usergrid-stack-properties-file">Example Usergrid Stack Properties File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configure-logging">Configure Logging</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#stack-step-5-deploy-root-war-to-tomcat">Stack STEP #5: Deploy ROOT.war to Tomcat</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#initialize-the-usergrid-database">Initialize the Usergrid Database</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#deploying-the-usergrid-portal">Deploying the Usergrid Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#additional-resources">Additional Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-end">The End</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">More about Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/presos-and-videos.html">Presentations &amp; Videos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contribute-code.html">How to Contribute Code &amp; Docs</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Apache Usergrid</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Usergrid 2.1.0 Deployment Guide</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/installation/deployment-guide.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usergrid-2-1-0-deployment-guide">
+<h1>Usergrid 2.1.0 Deployment Guide<a class="headerlink" href="#usergrid-2-1-0-deployment-guide" title="Permalink to this headline">¶</a></h1>
+<p>This document explains how to deploy the Usergrid v2.1.0
+Backend-as-a-Service (BaaS), which comprises the Usergrid Stack, a Java
+web application, and the Usergrid Portal, which is an HTML5/JavaScript
+application.</p>
+<div class="section" id="intended-audience">
+<h2>Intended audience<a class="headerlink" href="#intended-audience" title="Permalink to this headline">¶</a></h2>
+<p>You should be able to follow this guide if you are a developer, system
+admin or operations person with some knowledge of Java application
+deployment and good knowledge of Linux and the bash shell.</p>
+<p>This guide is a starting point and does NOT explain everything you need
+to know to run Usergrid at-scale and in production. To do that you will
+need some additional skills and knowledge around running, monitoring and
+trouble-shooting Tomcat applications, multi-node Cassandra &amp;
+ElasticSearch clusters and more.</p>
+</div>
+<div class="section" id="prerequsites">
+<h2>Prerequsites<a class="headerlink" href="#prerequsites" title="Permalink to this headline">¶</a></h2>
+<p>Below are the software requirements for Usergrid 2.1.0 Stack and Portal.
+You can install them all on one computer for development purposes, and
+for deployment you can deploy them separately using clustering.</p>
+<ul class="simple">
+<li>Linux or a UNIX-like system (Usergrid may run on Windows, but we
+haven&#8217;t tried it)</li>
+<li><a class="reference external" href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Java SE 8
+JDK</a></li>
+<li><a class="reference external" href="https://tomcat.apache.org/download-70.cgi">Apache Tomcat 7+</a></li>
+<li><a class="reference external" href="http://cassandra.apache.org/download/">Apache Cassandra 1.2.1+</a></li>
+<li><a class="reference external" href="https://www.elastic.co/downloads/elasticsearch">ElasticSearch
+1.4+</a></li>
+</ul>
+<p>Optional but helpful:</p>
+<ul class="simple">
+<li>An HTTP or REST client, such as <a class="reference external" href="http://curl.haxx.se">curl</a></li>
+<li>A web server such as <a class="reference external" href="https://httpd.apache.org">Apache HTTPD</a> for
+running the Usergrid Portal</li>
+</ul>
+</div>
+<div class="section" id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p><strong>Download the Apache Usergrid 2.1.0 binary release</strong> from the official
+Usergrid releases page:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://usergrid.apache.org/releases">Apache Usergrid Releases</a></li>
+</ul>
+<p>When you un-tar the Usergrid binary release, you will see a directory
+layout like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>+-- apache-usergrid-2.1.0
+    |
+    +-- LICENSE
+    |
+    +-- NOTICE
+    |
+    +-- CHANGELOG
+    |
+    +-- stack
+    |   |
+    |   + ROOT.war
+    |
+    +-- portal
+    |   |
+    |   +-- dist
+    |       |
+    |       + usergrid-portal.tar
+    |
+    +-- sdks
+    |   |
+    |   +-- html5-javascript (JavaScript SDK and source)
+    |   |
+    |   +-- java (Java SDK and source)
+</pre></div>
+</div>
+<p>The files that you need for deploying Usergrid Stack and Portal are
+<code class="docutils literal"><span class="pre">ROOT.war</span></code> and <code class="docutils literal"><span class="pre">usergrid-portal.tar</span></code>.</p>
+</div>
+<div class="section" id="deploying-the-usergrid-stack">
+<h2>Deploying the Usergrid Stack<a class="headerlink" href="#deploying-the-usergrid-stack" title="Permalink to this headline">¶</a></h2>
+<p>The Usergrid Stack is a Java EE web application that runs on Tomcat,
+uses the Cassandra database for storage and the ElasticSearch
+search-engine for queries.</p>
+<p>Before installing the Usegrid Stack into Tomcat, you&#8217;ll start by setting
+up the required database and search engine nodes.</p>
+<div class="section" id="stack-step-1-setup-cassandra">
+<h3>Stack STEP #1: Setup Cassandra<a class="headerlink" href="#stack-step-1-setup-cassandra" title="Permalink to this headline">¶</a></h3>
+<p>Usergrid needs access to at least one Apache Cassandra node. You can
+setup a single node of Cassandra on your computer for development and
+testing. For production deployment, a three or more node cluster is
+recommended.</p>
+<p><strong>Use the right Java.</strong> Cassandra requires Java and we recommend that
+you use the same version of Java for Cassandra as you use to run Tomcat
+and ElasticSearch.</p>
+<p><strong>Refer to the</strong> <a class="reference external" href="http://wiki.apache.org/cassandra/GettingStarted">Apache Cassandra
+documentation</a> <strong>for
+instructions on how to install Cassandra</strong>. The <a class="reference external" href="http://docs.datastax.com/en/cassandra/1.2/cassandra/features/featuresTOC.html">Datastax documentation
+for Cassandra
+1.2</a>
+is also helpful. Once you are up and running make a note of these
+things:</p>
+<ul class="simple">
+<li>The name of the Cassandra cluster</li>
+<li>Hostname or IP address of each Cassandra node</li>
+<li>Port number used for Cassandra RPC (the default is 9160)</li>
+<li>Replication factor of Cassandra cluster</li>
+</ul>
+</div>
+<div class="section" id="stack-step-2-setup-elasticsearch">
+<h3>Stack STEP #2: Setup ElasticSearch<a class="headerlink" href="#stack-step-2-setup-elasticsearch" title="Permalink to this headline">¶</a></h3>
+<p>Usergrid also needs access to at least one ElasticSearch node. As with
+Cassandra, you can setup single ElasticSearch node on your computer, and
+you should run a cluster in production.</p>
+<p><strong>Use the right Java</strong>. ElasticSearch requires Java and you <em>must</em>
+ensure that you use the same version of Java for ElasticSearch as you do
+for running Tomcat.</p>
+<p><strong>Refer to the</strong> <a class="reference external" href="https://www.elastic.co/guide/en/elasticsearch/reference/1.4/index.html">ElasticSearch 1.4
+documentation</a>
+<strong>for instructions on how to install</strong>. Once you are up and running make
+a note of these things:</p>
+<ul class="simple">
+<li>The name of the ElasticSearch cluster</li>
+<li>Hostname or IP address of each ElasticSearch node</li>
+<li>Port number used for ElasticSearch protocol (the default is 9200)</li>
+</ul>
+<p><strong>Running a single-node?</strong> If you are running a single-node
+ElasticSearch cluster then you should set the number of replicas to
+zero, otherwise the cluster will report status YELLOW.</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -XPUT &#39;localhost:9200/_settings&#39; -d &#39;{&quot;index&quot; : { &quot;number_of_replicas&quot; : 0}}&#39;
+</pre></div>
+</div>
+</div>
+<div class="section" id="stack-step-3-setup-tomcat">
+<h3>Stack STEP #3: Setup Tomcat<a class="headerlink" href="#stack-step-3-setup-tomcat" title="Permalink to this headline">¶</a></h3>
+<p>The Usergrid Stack is contained in a file named ROOT.war, a standard
+Java EE WAR ready for deployment to Tomcat. On each machine that will
+run the Usergrid Stack you must install the Java SE 8 JDK and Tomcat 7+.</p>
+<p><strong>Refer to the</strong> <a class="reference external" href="https://tomcat.apache.org/tomcat-7.0-doc/setup.html">Apache Tomcat
+7</a>
+<strong>documentation for instructions on how to install</strong>. Once Tomcat
+installed, you need to create and edit some configuration files.</p>
+</div>
+<div class="section" id="stack-step-4-configure-usergrid-stack-logging">
+<h3>Stack STEP #4: Configure Usergrid Stack &amp; Logging<a class="headerlink" href="#stack-step-4-configure-usergrid-stack-logging" title="Permalink to this headline">¶</a></h3>
+<p>You must create a Usergrid properties file called
+<code class="docutils literal"><span class="pre">usergrid-deployment.properties</span></code>. The properties in this file tell
+Usergrid how to communicate with Cassandra and ElasticSearch, and how to
+form URLs using the hostname you wish to use for Usegrid. There are many
+properties that you can set to configure Usergrid.</p>
+<p>Once you have created your Usergrid properties file, place it in the
+Tomcat lib directory. On a Linux system, that directory is probably
+located at <code class="docutils literal"><span class="pre">/usr/share/tomcat7/lib</span></code>.</p>
+<p><strong>What goes in a properties file?</strong></p>
+<p>The default properties file that is built into Usergrid contains the
+full list of properties, defaults and some documentation:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/apache/usergrid/blob/master/stack/config/src/main/resources/usergrid-default.properties">The Default Usergrid Properties
+File</a></li>
+</ul>
+<p>You should review the defaults in the above file. To get you started,
+let&#8217;s look at a minimal example properties file that you can edit and
+use as your own.</p>
+<div class="section" id="example-usergrid-stack-properties-file">
+<h4>Example Usergrid Stack Properties File<a class="headerlink" href="#example-usergrid-stack-properties-file" title="Permalink to this headline">¶</a></h4>
+<p>Below is an minimal example Usergrid properties file with the parts you
+need to change indicated like shell variables, e.g.
+<code class="docutils literal"><span class="pre">${USERGRID_CLUSTER_NAME}</span></code>.</p>
+<p>Example 1: usergrid-deployment.properties file</p>
+<div class="highlight-python"><div class="highlight"><pre>usergrid.cluster_name=${USERGRID_CLUSTER_NAME}
+
+cassandra.url=${CASSANDRA_HOSTS}
+cassanrda.cluster=${CASSANDRA_CLUSTER_NAME}
+
+elasticsearch.cluster_name=${ELASTICSEARCH_CLUSTER_NAME}
+elasticsearch.hosts=${ELASTIC_SEARCH_HOSTS}
+
+######################################################
+# Admin and test user setup
+
+usergrid.sysadmin.login.allowed=true
+usergrid.sysadmin.login.name=superuser
+usergrid.sysadmin.login.password=${SUPER_USER_PASSWORD}
+usergrid.sysadmin.login.email=${SUPER_USER_EMAIL}
+
+usergrid.sysadmin.email=${SUPER_USER_EMAIL}
+usergrid.sysadmin.approve.users=true
+usergrid.sysadmin.approve.organizations=true
+
+# Base mailer account - default for all outgoing messages
+usergrid.management.mailer=Admin &lt;${SUPER_USER_EMAIL}&gt;
+
+usergrid.setup-test-account=true
+usergrid.test-account.app=test-app
+usergrid.test-account.organization=test-organization
+usergrid.test-account.admin-user.username=test
+usergrid.test-account.admin-user.name=Test User
+usergrid.test-account.admin-user.email=${TEST_ADMIN_USER_EMAIL}
+usergrid.test-account.admin-user.password=${TEST_ADMIN_USER_PASSWORD}
+
+######################################################
+# Auto-confirm and sign-up notifications settings
+
+usergrid.management.admin_users_require_confirmation=false
+usergrid.management.admin_users_require_activation=false
+
+usergrid.management.organizations_require_activation=false
+usergrid.management.notify_sysadmin_of_new_organizations=true
+usergrid.management.notify_sysadmin_of_new_admin_users=true
+
+######################################################
+# URLs
+
+# Redirect path when request come in for TLD
+usergrid.redirect_root=${BASEURL}/status
+
+usergrid.view.management.organizations.organization.activate=${BASEURL}/accounts/welcome
+usergrid.view.management.organizations.organization.confirm=${BASEURL}/accounts/welcome
+
+usergrid.view.management.users.user.activate=${BASEURL}/accounts/welcome
+usergrid.view.management.users.user.confirm=${BASEURL}/accounts/welcome
+
+usergrid.admin.confirmation.url=${BASEURL}/management/users/%s/confirm
+usergrid.user.confirmation.url=${BASEURL}/%s/%s/users/%s/confirm
+usergrid.organization.activation.url=${BASEURL}/management/organizations/%s/activate
+usergrid.admin.activation.url=${BASEURL}/management/users/%s/activate
+usergrid.user.activation.url=${BASEURL}%s/%s/users/%s/activate
+
+usergrid.admin.resetpw.url=${BASEURL}/management/users/%s/resetpw
+usergrid.user.resetpw.url=${BASEURL}/%s/%s/users/%s/resetpw
+</pre></div>
+</div>
+<p>Here&#8217;s a guide to the things you need to set in the above properties
+file.</p>
+<p><strong>Table 1: Values to set in Example Properties file:</strong></p>
+<table class="usergrid-table">
+<tr>
+  <th><p>Value</p>
+</th>
+  <th><p>Description</p>
+</th>
+</tr>
+<tr>
+    <td><p><strong>BASEURL</strong></p>
+</td>
+    <td><p>This is the base URL for the Usergrid installation, e.g.
+<code class="docutils literal"><span class="pre">https://api.example.com</span></code>.</p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>USERGRID_CLUSTER_NAME</strong></p>
+</td>
+    <td><p>This is your name for your Usergrid installation.</p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>CASSANDRA_CLUSTER_NAME</strong></p>
+</td>
+    <td><p>Name of Cassandra cluster, must match what&#8217;s in Cassandra configuration.</p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>CASSANDRA_HOSTS</strong></p>
+</td>
+    <td><p>Comma-separated lists of Cassandra hosts, with port numbers if you are
+not using the default 9160. The default for this property is
+<code class="docutils literal"><span class="pre">localhost:9160</span></code></p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>ELASTICSEARCH_CLUSTER_NAME</strong></p>
+</td>
+    <td><p>Name of ElasticSearch cluster, must match what&#8217;s in ElasticSearch
+configuration.</p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>ELASTICSEARCH_HOSTS</strong></p>
+</td>
+    <td><p>Comma-separated lists of ElasticSearch hosts, with port numbers if you
+are not using the default 9300. The default for this property is
+<code class="docutils literal"><span class="pre">localhost:9300</span></code></p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>SUPER_USER_EMAIL</strong></p>
+</td>
+    <td><p>Email address of person responsible for the superuser account.</p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>SUPER_USER_PASSWORD</strong></p>
+</td>
+    <td><p>Password for the superuser account.</p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>TEST_ADMIN_USER_EMAIL</strong></p>
+</td>
+    <td><p>If <code class="docutils literal"><span class="pre">usergrid.setup-test-account=true</span></code>, as shown below, Usergrid will
+create a test account and you should specify a valid email here.</p>
+</td>
+</tr>
+<tr>
+    <td><p><strong>TEST_ADMIN_USER_PASSWORD</strong></p>
+</td>
+    <td><p>Password for the username &#8216;test&#8217; account.</p>
+</td>
+</tr>
+</table><p>Make sure you set all of the above properties when you edit this example
+for your installation.</p>
+</div>
+<div class="section" id="configure-logging">
+<h4>Configure Logging<a class="headerlink" href="#configure-logging" title="Permalink to this headline">¶</a></h4>
+<p>Usegrid includes the Apache Log4j logging system and you can control the
+levels of logs for each Usergrid package and even down to the class
+level by providing your own <code class="docutils literal"><span class="pre">log4j.properties</span></code> file.</p>
+<p>To configure logging you need to:</p>
+<ol class="arabic simple">
+<li>Create a <code class="docutils literal"><span class="pre">log4j.properties</span></code> file and place it on the computer where
+Tomcat is running</li>
+<li>Add <code class="docutils literal"><span class="pre">-D</span></code> system property to Tomcat so that Tomcat can find your
+Log4j properties file.</li>
+</ol>
+<div class="section" id="example-logging-configuration">
+<h5>Example Logging Configuration<a class="headerlink" href="#example-logging-configuration" title="Permalink to this headline">¶</a></h5>
+<p>The Log4j properties file below is a good starting point for Usergrid.
+It configures <code class="docutils literal"><span class="pre">ERROR</span></code> level logging for the 3rd party libraries that
+Usergrid depends on, and INFO level logging for Usergrid. Plus, it
+configures some noisy parts of Usergrid to be quiet.</p>
+<p>Example 2: log4.properties file</p>
+<div class="highlight-python"><div class="highlight"><pre># output messages into a rolling log file as well as stdout
+log4j.rootLogger=ERROR,stdout
+
+# stdout
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%d %p (%t) [%c] - %m%n
+
+log4j.logger.org.apache.usergrid=INFO
+
+log4j.logger.me.prettyprint.cassandra.hector.TimingLogger=WARN
+log4j.logger.org.apache.usergrid.rest.security.AllowAjaxFilter=WARN
+log4j.logger.me.prettyprint.hector.api.beans.AbstractComposite=ERROR
+</pre></div>
+</div>
+</div>
+<div class="section" id="add-logging-configuration-to-tomcat">
+<h5>Add Logging Configuration to Tomcat<a class="headerlink" href="#add-logging-configuration-to-tomcat" title="Permalink to this headline">¶</a></h5>
+<p>You can configure Tomcat to use your Log4j properties file but adding a
+system property to Tomcat named <code class="docutils literal"><span class="pre">log4j.configuration</span></code> which must be
+set to a <code class="docutils literal"><span class="pre">file:/</span></code> URL that points to your properties file. One way to
+add the above property to the Tomcat start-up is to add a line to a
+Tomcat <code class="docutils literal"><span class="pre">setenv.sh</span></code> script in Tomcat&#8217;s bin directory. If that file does
+not exist, then create it.</p>
+<p>For example, if your property file is in
+<code class="docutils literal"><span class="pre">/usr/share/tomcat7/lib/log4j.properties</span></code>, then you would add the
+following line to <code class="docutils literal"><span class="pre">setenv.sh</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>export JAVA_OPTS=&quot;-Dlog4j.configuration=file:///usr/share/tomcat7/lib/log4j.properties&quot;
+</pre></div>
+</div>
+<p>If the file already exists and already sets the JAVA_OPTS variable,
+then you&#8217;ll have to add your <code class="docutils literal"><span class="pre">-D</span></code> option to ones already there. Also
+note, you might want set other <code class="docutils literal"><span class="pre">-D</span></code> and <code class="docutils literal"><span class="pre">-X</span></code> options in that setenv
+file, e.g. Java heap size.</p>
+</div>
+</div>
+</div>
+<div class="section" id="stack-step-5-deploy-root-war-to-tomcat">
+<h3>Stack STEP #5: Deploy ROOT.war to Tomcat<a class="headerlink" href="#stack-step-5-deploy-root-war-to-tomcat" title="Permalink to this headline">¶</a></h3>
+<p>The next step is to deploy the Usergrid Stack software to Tomcat. There
+are a variey of ways of doing this and the simplest is probably to place
+the Usergrid Stack <code class="docutils literal"><span class="pre">ROOT.war</span></code> file into the Tomcat <code class="docutils literal"><span class="pre">webapps</span></code>
+directory, then restart Tomcat.</p>
+<p><strong>For example, on Linux...</strong></p>
+<p>You would probabaly copy the ROOT.war file like so:</p>
+<div class="highlight-python"><div class="highlight"><pre>cp ROOT.war /usr/share/tomcat7/webapps
+</pre></div>
+</div>
+<p>And you would restart Tomcat 7 like so:</p>
+<div class="highlight-python"><div class="highlight"><pre>/etc/init.d/tomcat7 restart
+</pre></div>
+</div>
+<p>You can watch the Tomcat log in <code class="docutils literal"><span class="pre">/var/log/tomcat7/catalina.out</span></code> for
+errors:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">tail</span> <span class="o">-</span><span class="n">f</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">log</span><span class="o">/</span><span class="n">tomcat7</span><span class="o">/</span><span class="n">catalina</span><span class="o">.</span><span class="n">out</span>
+</pre></div>
+</div>
+<p>Look for messages like this, which indicate that the ROOT.war file was
+deployed:</p>
+<div class="highlight-python"><div class="highlight"><pre>INFO: Starting service Catalina
+Jan 29, 2016 1:00:32 PM org.apache.catalina.core.StandardEngine startInternal
+INFO: Starting Servlet Engine: Apache Tomcat/7.0.59
+Jan 29, 2016 1:00:32 PM org.apache.catalina.startup.HostConfig deployWAR
+INFO: Deploying web application archive /usr/share/tomcat7/webapps/ROOT.war
+</pre></div>
+</div>
+<p><strong>Does it work?</strong></p>
+<p>Check to see if Usergrid is up and running by calling the status
+end-point. If your web browser is running on the same computer as Tomcat
+(and Tomcat is on port 8080), then you can browse to
+<a class="reference external" href="http://localhost:8080/status">http://localhost:8080/status</a> to view the Usergrid status page.</p>
+<p>Or you can use curl:</p>
+<div class="highlight-python"><div class="highlight"><pre>curl http://localhost:8080/status
+</pre></div>
+</div>
+<p>If you get a JSON file of status data, then you&#8217;re ready to move to the
+next step. You should see a response that begins like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>{
+  &quot;timestamp&quot; : 1454090178953,
+    &quot;duration&quot; : 10,
+    &quot;status&quot; : {
+      &quot;started&quot; : 1453957327516,
+      &quot;uptime&quot; : 132851437,
+      &quot;version&quot; : &quot;201601240200-595955dff9ee4a706de9d97b86c5f0636fe24b43&quot;,
+      &quot;cassandraAvailable&quot; : true,
+      &quot;cassandraStatus&quot; : &quot;GREEN&quot;,
+      &quot;managementAppIndexStatus&quot; : &quot;GREEN&quot;,
+      &quot;queueDepth&quot; : 0,
+      &quot;org.apache.usergrid.count.AbstractBatcher&quot; : {
+        &quot;add_invocation&quot; : {
+          &quot;type&quot; : &quot;timer&quot;,
+          &quot;unit&quot; : &quot;microseconds&quot;,
+
+ ... etc. ...
+</pre></div>
+</div>
+<div class="section" id="initialize-the-usergrid-database">
+<h4>Initialize the Usergrid Database<a class="headerlink" href="#initialize-the-usergrid-database" title="Permalink to this headline">¶</a></h4>
+<p>Next, you must initialize the Usergrid database, index and query
+systems.</p>
+<p>To do this you must issue a series of HTTP operations using the
+superuser credentials. You can only do this if Usergrid is configured to
+allow superused login via this property
+<code class="docutils literal"><span class="pre">usergrid.sysadmin.login.allowed=true</span></code> and if you used the above
+example properties file, it is allowed.</p>
+<p>The three operation you must perform are expressed by the curl commands
+below and, of course, you will have ot change the password &#8216;test&#8217; to
+match the superuser password that you set in your Usergrid properties
+file.</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X PUT http://localhost:8080/system/database/setup     -u superuser:test
+curl -X PUT http://localhost:8080/system/database/bootstrap -u superuser:test
+curl -X GET http://localhost:8080/system/superuser/setup    -u superuser:test
+</pre></div>
+</div>
+<p>When you issue each of those curl commands, you should see a success
+message like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="s">&quot;action&quot;</span> <span class="p">:</span> <span class="s">&quot;cassandra setup&quot;</span><span class="p">,</span>
+    <span class="s">&quot;status&quot;</span> <span class="p">:</span> <span class="s">&quot;ok&quot;</span><span class="p">,</span>
+    <span class="s">&quot;timestamp&quot;</span> <span class="p">:</span> <span class="mi">1454100922067</span><span class="p">,</span>
+    <span class="s">&quot;duration&quot;</span> <span class="p">:</span> <span class="mi">374</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>If you don&#8217;t see a success message, then refer to the Tomcat logs for
+error message and seek help from the <a class="reference external" href="http://usergrid.apache.org/community">Usergrid
+community</a>.</p>
+<p>Now that you&#8217;ve gotten Usergrid up and running, you&#8217;re ready to deploy
+the Usergrid Portal.</p>
+</div>
+</div>
+</div>
+<div class="section" id="deploying-the-usergrid-portal">
+<h2>Deploying the Usergrid Portal<a class="headerlink" href="#deploying-the-usergrid-portal" title="Permalink to this headline">¶</a></h2>
+<p>The Usergrid Portal is an HTML5/JavaScript application, a bunch of
+static files that can be deployed to any web server, e.g. Apache HTTPD
+or Tomcat.</p>
+<p>To deploy the Portal to a web server, you will un-tar the
+<code class="docutils literal"><span class="pre">usergrid-portal.tar</span></code> file into directory that serves as the root
+directory of your web pages.</p>
+<p>For example, with Tomcat on Linux you might do something like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>cp usergrid-portal.tar /usr/share/tomcat7/webapps
+cd /usr/share/tomcat7/webapps
+tar xf usergrid-portal.tar
+</pre></div>
+</div>
+<p>Then you will probably want to rename the Portal directory to something
+that will work well in a URL. For example, if you want your Portal to
+exist at the path <code class="docutils literal"><span class="pre">/portal</span></code> then:</p>
+<div class="highlight-python"><div class="highlight"><pre>mv usergrid-portal.2.0.18 portal
+</pre></div>
+</div>
+<p>Once you have done that there is one more step. You need to configure
+the portal so that it can find the Usergrid stack. You do that by
+editing the <code class="docutils literal"><span class="pre">portal/config.js</span></code> and changing this line:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Usergrid</span><span class="o">.</span><span class="n">overrideUrl</span> <span class="o">=</span> <span class="s">&#39;http://localhost:8080/&#39;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>To set the hostname that you will be using for your Usergrid
+installation.</p>
+<p>Start your web server and Portal should be up and running at
+<a class="reference external" href="http://localhost:8080/portal">http://localhost:8080/portal</a> or wherever you deployed it.</p>
+</div>
+<div class="section" id="additional-resources">
+<h2>Additional Resources<a class="headerlink" href="#additional-resources" title="Permalink to this headline">¶</a></h2>
+<p>Resources that might be useful to those deploying Usergrid:</p>
+<p><a class="reference external" href="https://github.com/snoopdave/usergrid-vagrant">Usergrid-Vagrant</a>: A
+VagrantFile and set of bash scripts that will launch a Linux Virtual
+Machine running Cassandra, ElasticSearch, Tomcat and the Usergrid 2.1
+Stack and Portal.</p>
+<p><a class="reference external" href="https://github.com/apache/usergrid/tree/master/deployment/aws">Usergrid AWS
+Cluster</a>:
+An AWS Cloud Formation template and supporting scripts that create a set
+of multiple EC2 instances running Usergrid Stack/Portal and a set of EC2
+instances running Cassandra and ElasticSearch.</p>
+</div>
+<div class="section" id="the-end">
+<h2>The End<a class="headerlink" href="#the-end" title="Permalink to this headline">¶</a></h2>
+<p>That&#8217;s all folks.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../reference/presos-and-videos.html" class="btn btn-neutral float-right" title="Presentations &amp; Videos" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../sdks/tbd.html" class="btn btn-neutral" title="COMING SOON..." accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2013-2015, Apache Usergrid.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'2.x',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

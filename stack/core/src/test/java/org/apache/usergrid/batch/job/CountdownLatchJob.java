@@ -33,7 +33,6 @@ import org.apache.usergrid.batch.JobExecution;
  * @author tnine
  */
 @Component("countdownLatch")
-@Ignore("Not a test")
 public class CountdownLatchJob implements Job {
 
     private CountDownLatch latch = null;

@@ -1,0 +1,22 @@
+{
+  "ug_base_url": "<your usergrid api endpoint>",
+
+  "sqs": {
+    "region_name": "<aws region for using SQS>",
+    "aws_access_key_id": "<aws key for: creating queue, writing messages>",
+    "aws_secret_access_key": "<aws secret>"
+  },
+
+  "credential_map": {
+    "example1":{''
+      "comments": "for each org you want to load/publish entities to there should be an entry in this map with the org name as the key and the client_id and secret to use when publishing entities",
+      "client_id": "<client_id>",
+      "client_secret": "<client_secret>"
+    },
+    "example2":{
+      "comments": "for each org you want to load/publish entities to there should be an entry in this map with the org name as the key and the client_id and secret to use when publishing entities",
+      "client_id": "<client_id>",
+      "client_secret": "<client_secret>"
+    }
+  }
+}

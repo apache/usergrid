@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.CandidateResult;
+import org.apache.usergrid.persistence.index.GeoCandidateResult;
 import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -31,6 +32,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 import com.google.common.base.Preconditions;
+import org.elasticsearch.search.SearchHit;
 
 
 public class IndexingUtils {
@@ -114,6 +116,7 @@ public class IndexingUtils {
     public static final String FIELD_LOCATION = "location";
     public static final String FIELD_STRING = "string";
     public static final String FIELD_UUID = "uuid";
+    public static final String FIELD_NULL = "null";
 
 
     /**
@@ -221,27 +224,59 @@ public class IndexingUtils {
     }
 
 
+    public static CandidateResult parseIndexDocId( final SearchHit hit ) {
+        return parseIndexDocId(hit.getId());
+    }
+
+    public static CandidateResult parseIndexDocId( final SearchHit hit, boolean isGeo ) {
+
+        final String documentId = hit.getId();
+        final double distance = isGeo ? (double) hit.sortValues()[0] : -1;
+        return parseIndexDocId(documentId,distance);
+    }
+
+    public static CandidateResult parseIndexDocId( final String documentId ) {
+        return parseIndexDocId(documentId,-1);
+    }
+        /**
+         * Parse the document id into a candidate result
+         */
+    public static CandidateResult parseIndexDocId( final String documentId, final double distance ) {
+
+        final Matcher matcher = DOCUMENT_PATTERN.matcher(documentId);
+
+        Preconditions.checkArgument(matcher.matches(), "Pattern for document id did not match expected format");
+        Preconditions.checkArgument(matcher.groupCount() == 9, "9 groups expected in the pattern");
+
+        //Other fields can be parsed using groups.  The groups start at value 1, group 0 is the entire match
+        final String entityUUID = matcher.group(3);
+        final String entityType = matcher.group(4);
+
+        final String versionUUID = matcher.group(5);
+
+
+        Id entityId = new SimpleId(UUID.fromString(entityUUID), entityType);
+
+        return distance >= 0
+            ? new GeoCandidateResult(entityId, UUID.fromString(versionUUID), documentId, distance)
+            : new CandidateResult(entityId, UUID.fromString(versionUUID), documentId);
+    }
+
     /**
      * Parse the document id into a candidate result
      */
-    public static CandidateResult parseIndexDocId( final String documentId ) {
+    public static UUID parseAppIdFromIndexDocId( final String documentId) {
 
+        final Matcher matcher = DOCUMENT_PATTERN.matcher(documentId);
 
-        final Matcher matcher = DOCUMENT_PATTERN.matcher( documentId );
-
-        Preconditions.checkArgument( matcher.matches(), "Pattern for document id did not match expected format" );
-        Preconditions.checkArgument( matcher.groupCount() == 9, "9 groups expected in the pattern" );
+        Preconditions.checkArgument(matcher.matches(), "Pattern for document id did not match expected format");
+        Preconditions.checkArgument(matcher.groupCount() == 9, "9 groups expected in the pattern");
 
         //Other fields can be parsed using groups.  The groups start at value 1, group 0 is the entire match
-        final String entityUUID = matcher.group( 3 );
-        final String entityType = matcher.group( 4 );
+        final String appUUID = matcher.group(1);
 
-        final String versionUUID = matcher.group( 5 );
+        return UUID.fromString(appUUID);
 
-
-        Id entityId = new SimpleId( UUID.fromString( entityUUID ), entityType );
-
-        return new CandidateResult( entityId, UUID.fromString( versionUUID ), documentId );
     }
 
 
@@ -261,5 +296,9 @@ public class IndexingUtils {
         sb.append( FIELD_SEPERATOR );
         sb.append( ENTITY_TYPE_NAME).append("(" ).append( type ).append( ")" );
         return sb.toString();
+    }
+
+    public static UUID getApplicationIdFromIndexDocId(String documentId) {
+        return parseAppIdFromIndexDocId(documentId);
     }
 }

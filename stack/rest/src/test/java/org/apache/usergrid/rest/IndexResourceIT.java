@@ -20,6 +20,7 @@
 
 package org.apache.usergrid.rest;
 
+import org.apache.usergrid.ExperimentalTest;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
@@ -27,6 +28,7 @@ import org.apache.usergrid.rest.test.resource.model.Token;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +46,7 @@ import static org.junit.Assert.*;
 public class IndexResourceIT extends AbstractRestIT {
 
     //Used for all MUUserResourceITTests
-    private Logger LOG = LoggerFactory.getLogger(IndexResourceIT.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IndexResourceIT.class);
 
     public IndexResourceIT(){
 
@@ -99,8 +101,8 @@ public class IndexResourceIT extends AbstractRestIT {
 
     }
 
-    @Ignore
     @Test
+    @Category(ExperimentalTest.class)
     public void TestAddIndex() throws Exception{
 
 

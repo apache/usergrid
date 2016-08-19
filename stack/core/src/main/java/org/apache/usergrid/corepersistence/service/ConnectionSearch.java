@@ -36,11 +36,12 @@ public class ConnectionSearch {
     private final int limit;
     private final Optional<String> query;
     private final Optional<String> cursor;
+    private final boolean isConnecting;
 
 
     public ConnectionSearch( final ApplicationScope applicationScope, final Id sourceNodeId, final Optional<String> entityType,
                              final String connectionName, final int limit, final Optional<String> query, final
-                             Optional<String> cursor ) {
+                             Optional<String> cursor, boolean isConnecting ) {
         this.applicationScope = applicationScope;
         this.sourceNodeId = sourceNodeId;
         this.entityType = entityType;
@@ -48,6 +49,7 @@ public class ConnectionSearch {
         this.limit = limit;
         this.query = query;
         this.cursor = cursor;
+        this.isConnecting = isConnecting;
     }
 
 
@@ -83,5 +85,9 @@ public class ConnectionSearch {
 
     public Optional<String> getEntityType() {
         return entityType;
+    }
+
+    public boolean getIsConnecting(){
+        return isConnecting;
     }
 }

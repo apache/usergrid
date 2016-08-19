@@ -34,8 +34,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import org.apache.usergrid.rest.AbstractContextResource;
-import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 
 
@@ -66,7 +64,7 @@ public class DatabaseResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "cassandra setup" );
 
-        logger.info( "Setting up Cassandra" );
+        logger.info( "Setting up Cassandra (runDatabaseSetup)" );
 
 
         emf.setup();
@@ -89,10 +87,10 @@ public class DatabaseResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "cassandra setup" );
 
-        logger.info( "Setting up Cassandra" );
+        logger.info( "Setting up Cassandra (runSystemSetup)" );
 
 
-        emf.boostrap();
+        emf.bootstrap();
         management.setup();
 
         response.setSuccess();

@@ -19,24 +19,31 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.index.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.ValidationUtils;
+import org.apache.usergrid.persistence.index.CandidateResult;
+import org.apache.usergrid.persistence.index.EntityIndex;
+import org.apache.usergrid.persistence.index.EntityIndexBatch;
+import org.apache.usergrid.persistence.index.IndexAlias;
+import org.apache.usergrid.persistence.index.IndexEdge;
+import org.apache.usergrid.persistence.index.IndexLocationStrategy;
+import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-import rx.Observable;
+
+import com.google.common.base.Optional;
 
 
 public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
-    private static final Logger log = LoggerFactory.getLogger( EsEntityIndexBatchImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( EsEntityIndexBatchImpl.class );
 
 
     private final IndexAlias alias;
@@ -64,22 +71,26 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
 
     @Override
     public EntityIndexBatch index( final IndexEdge indexEdge, final Entity entity ) {
+        return index( indexEdge,entity, Optional.absent() );
+    }
+
+    @Override
+    public EntityIndexBatch index( final IndexEdge indexEdge, final Entity entity, final Optional<Set<String>> fieldsToIndex ) {
         IndexValidationUtils.validateIndexEdge(indexEdge);
         ValidationUtils.verifyEntityWrite(entity);
         ValidationUtils.verifyVersion( entity.getVersion() );
 
         final String writeAlias = alias.getWriteAlias();
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Indexing to alias {} with scope {} on edge {} with entity data {}",
-                    new Object[] { writeAlias, applicationScope, indexEdge, entity } );
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Indexing to alias {} with scope {} on edge {} with entity data {}",
+                    writeAlias, applicationScope, indexEdge, entity.getFieldMap().keySet() );
         }
 
         //add app id for indexing
-        container.addIndexRequest(new IndexOperation(writeAlias, applicationScope, indexEdge, entity));
+        container.addIndexRequest(new IndexOperation(writeAlias, applicationScope, indexEdge, entity,fieldsToIndex));
         return this;
     }
-
 
     @Override
     public EntityIndexBatch deindex( final SearchEdge searchEdge, final Id id, final UUID version ) {
@@ -94,9 +105,9 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             throw new IllegalStateException("No indexes exist for " + indexLocationStrategy.getAlias().getWriteAlias());
         }
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Deindexing to indexes {} with scope {} on edge {} with id {} and version {} ",
-                new Object[] { indexes, applicationScope, searchEdge, id, version } );
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Deindexing to indexes {} with scope {} on edge {} with id {} and version {} ",
+                indexes, applicationScope, searchEdge, id, version );
         }
 
 
@@ -113,9 +124,9 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
             throw new IllegalStateException("No indexes exist for " + indexLocationStrategy.getAlias().getWriteAlias());
         }
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Deindexing to indexes {} with with documentId {} ",
-                new Object[] { indexes, docId } );
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Deindexing to indexes {} with with documentId {} ",
+                indexes, docId );
         }
 
 

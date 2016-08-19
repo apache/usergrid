@@ -643,7 +643,7 @@ public class ConversionUtils {
             }
         }
         catch ( Exception e ) {
-            logger.error( "Unable to get object from bytes for type " + type.getName(), e );
+            logger.error( "Unable to get object from bytes for type {}", type.getName(), e );
         }
         return null;
     }
@@ -683,7 +683,7 @@ public class ConversionUtils {
             }
         }
         catch ( Exception e ) {
-            logger.error( "Unable to get object from bytes for type " + type.getName(), e );
+            logger.error( "Unable to get object from bytes for type {}", type.getName(), e );
         }
         return null;
     }
@@ -748,7 +748,7 @@ public class ConversionUtils {
             }
         }
         catch ( Exception e ) {
-            logger.error( "Unable to get object from bytes for type " + type.getName(), e );
+            logger.error( "Unable to get object from bytes for type {}", type.getName(), e );
         }
         return null;
     }

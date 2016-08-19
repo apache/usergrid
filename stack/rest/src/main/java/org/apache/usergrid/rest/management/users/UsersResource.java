@@ -28,8 +28,8 @@ import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
-import org.apache.usergrid.rest.management.ManagementResource;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
+import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +45,8 @@ import java.util.UUID;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
+import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isServiceAdmin;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER_URL;
 
 
 @Component( "org.apache.usergrid.rest.management.users.UsersResource" )
@@ -61,7 +63,9 @@ public class UsersResource extends AbstractContextResource {
 
 
     public UsersResource() {
-        logger.debug( "ManagementUsersResource initialized" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("ManagementUsersResource initialized");
+        }
     }
 
 
@@ -89,7 +93,7 @@ public class UsersResource extends AbstractContextResource {
 
     private UserResource getUserResource(UserInfo user, String type, String value) throws ManagementException {
         if (user == null) {
-            throw new ManagementException("Could not find organization for " + type + " : " + value);
+            throw new ManagementException("Could not find user for " + type + ": " + value);
         }
         return getSubResource(UserResource.class).init( user );
     }
@@ -112,20 +116,35 @@ public class UsersResource extends AbstractContextResource {
                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
             throws Exception {
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
-
-        if ( externalTokensEnabled ) {
-            throw new IllegalArgumentException( "Admin Users must signup via " +
-                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException(  "External SSO integration is enabled, admin users registering without an org" +
+                " must do so via provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
         }
 
-        logger.info( "Create user: " + username );
+        // email is only required parameter
+        if (StringUtils.isBlank(email)) {
+            throw new IllegalArgumentException( "email form parameter is required" );
+        }
+
+        if ( "me".equals( username ) ) {
+            throw new IllegalArgumentException( "Username 'me' is reserved" );
+        }
+
+        // if username not provided, email will be used
+        logger.info( "Create user: {}", (StringUtils.isNotBlank(username) ? username : email) );
 
         ApiResponse response = createApiResponse();
         response.setAction( "create user" );
 
-        UserInfo user = management.createAdminUser( username, name, email, password, false, false );
+
+        UserInfo user = null;
+        if ( tokens.isExternalSSOProviderEnabled() ){
+            //autoactivating user, since the activation is done via the external sso provider.
+            user = management.createAdminUser(null,username,name,email,password,true,false);
+        }
+        else {
+            user = management.createAdminUser(null, username, name, email, password, false, false);
+        }
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         if ( user != null ) {
             result.put( "user", user );
@@ -136,31 +155,23 @@ public class UsersResource extends AbstractContextResource {
             throw mappableSecurityException( AuthErrorInfo.BAD_CREDENTIALS_SYNTAX_ERROR );
         }
 
+        // DO NOT REMOVE - used for external classes to hook into any post-processing
+        management.createAdminUserPostProcessing(user, null);
+
         return response;
     }
-
-	/*
-     * @POST
-	 *
-	 * @Consumes(MediaType.MULTIPART_FORM_DATA) public JSONWithPadding
-	 * createUserFromMultipart(@Context UriInfo ui,
-	 *
-	 * @FormDataParam("username") String username,
-	 *
-	 * @FormDataParam("name") String name,
-	 *
-	 * @FormDataParam("email") String email,
-	 *
-	 * @FormDataParam("password") String password) throws Exception {
-	 *
-	 * return createUser(ui, username, name, email, password); }
-	 */
 
 
     @GET
     @Path( "resetpw" )
     @Produces( MediaType.TEXT_HTML )
     public Viewable showPasswordResetForm( @Context UriInfo ui ) {
+
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException( "External SSO integration is enabled, admin users must reset password via" +
+                " provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
+        }
+
         return handleViewable( "resetpw_email_form", this );
     }
 
@@ -172,6 +183,11 @@ public class UsersResource extends AbstractContextResource {
     public Viewable handlePasswordResetForm( @Context UriInfo ui, @FormParam( "email" ) String email,
                                              @FormParam( "recaptcha_challenge_field" ) String challenge,
                                              @FormParam( "recaptcha_response_field" ) String uresponse ) {
+
+        if ( tokens.isExternalSSOProviderEnabled() && !isServiceAdmin() ) {
+            throw new IllegalArgumentException( "External SSO integration is enabled, admin users must reset password via" +
+                " provider: "+ properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
+        }
 
         try {
             if ( isBlank( email ) ) {
@@ -199,7 +215,7 @@ public class UsersResource extends AbstractContextResource {
             if (reCaptchaPassed) {
                 user = management.findAdminUser(email);
                 if (user != null) {
-                    management.startAdminUserPasswordResetFlow(user);
+                    management.startAdminUserPasswordResetFlow(null, user);
                     return handleViewable("resetpw_email_success", this);
                 } else {
                     errorMsg = "We don't recognize that email, try again...";

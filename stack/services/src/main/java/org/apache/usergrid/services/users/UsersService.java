@@ -55,12 +55,14 @@ import static org.apache.usergrid.utils.ConversionUtils.string;
 
 public class UsersService extends AbstractCollectionService {
 
-    private static final Logger LOG = LoggerFactory.getLogger( UsersService.class );
+    private static final Logger logger = LoggerFactory.getLogger( UsersService.class );
 
 
     public UsersService() {
         super();
-        LOG.debug( "/users" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("/users");
+        }
 
         makeConnectionPrivate( "following" );
 
@@ -216,6 +218,7 @@ public class UsersService extends AbstractCollectionService {
             em.grantUserPermission( entityRef.getUuid(), permission );
             ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
             scopedCache.invalidate();
+            localShiroCache.invalidateAll();
 
             return genericServiceResults().withData( em.getUserPermissions( entityRef.getUuid() ) );
         }
@@ -286,6 +289,7 @@ public class UsersService extends AbstractCollectionService {
 
             ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
             scopedCache.invalidate();
+            localShiroCache.invalidateAll();
 
             return genericServiceResults().withData( em.getUserPermissions( entityRef.getUuid() ) );
         }

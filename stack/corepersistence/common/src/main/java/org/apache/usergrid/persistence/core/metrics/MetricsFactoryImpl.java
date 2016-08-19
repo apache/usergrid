@@ -18,7 +18,6 @@ package org.apache.usergrid.persistence.core.metrics;
 
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -29,7 +28,6 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.Meter;
-import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
@@ -49,7 +47,7 @@ public class MetricsFactoryImpl implements MetricsFactory {
     private MetricRegistry registry;
     private GraphiteReporter graphiteReporter;
     private JmxReporter jmxReporter;
-    private static final Logger LOG = LoggerFactory.getLogger(MetricsFactoryImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(MetricsFactoryImpl.class);
 
 
     @Inject
@@ -64,7 +62,7 @@ public class MetricsFactoryImpl implements MetricsFactory {
                 .build(graphite);
             graphiteReporter.start(30, TimeUnit.SECONDS);
         } else {
-            LOG.warn("MetricsService:Logger not started.");
+            logger.warn("MetricsService:Logger not started.");
         }
 
         jmxReporter = JmxReporter.forRegistry(registry).build();

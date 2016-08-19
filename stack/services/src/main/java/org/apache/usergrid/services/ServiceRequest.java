@@ -213,7 +213,9 @@ public class ServiceRequest {
         }
         catch ( Exception e ) {
             // don't log as error because some exceptions are not actually errors, e.g. resource not found
-            logger.debug( debugString(), e );
+            if (logger.isDebugEnabled()) {
+                logger.debug(debugString(), e);
+            }
             throw e;
         }
     }
@@ -234,6 +236,11 @@ public class ServiceRequest {
         return sb.toString();
     }
 
+    public ServiceContext getAppContext() throws Exception {
+        Service s = services.getService( serviceName );
+
+        return s.getContext( action,this,null,payload );
+    }
 
     public ServiceResults execute( ServiceResults previousResults ) throws Exception {
 

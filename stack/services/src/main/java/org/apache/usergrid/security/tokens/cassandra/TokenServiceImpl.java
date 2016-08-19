@@ -17,34 +17,43 @@
 package org.apache.usergrid.security.tokens.cassandra;
 
 
-import java.nio.ByteBuffer;
-import java.util.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.util.Assert;
+import com.google.inject.Injector;
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.mutation.Mutator;
+import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.management.ApplicationCreator;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
+import org.apache.usergrid.security.sso.SSOProviderFactory;
 import org.apache.usergrid.security.tokens.TokenCategory;
 import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.security.tokens.exceptions.BadTokenException;
 import org.apache.usergrid.security.tokens.exceptions.ExpiredTokenException;
 import org.apache.usergrid.security.tokens.exceptions.InvalidTokenException;
+import org.apache.usergrid.security.sso.ExternalSSOProvider;
+import org.apache.usergrid.utils.ConversionUtils;
 import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.util.Assert;
 
-import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.mutation.Mutator;
+import javax.ws.rs.client.Client;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 import static java.lang.System.currentTimeMillis;
-
 import static me.prettyprint.hector.api.factory.HFactory.createColumn;
 import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
@@ -53,20 +62,13 @@ import static org.apache.commons.codec.digest.DigestUtils.sha;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.getColumnMap;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.PRINCIPAL_TOKEN_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
-import static org.apache.usergrid.security.tokens.TokenCategory.ACCESS;
-import static org.apache.usergrid.security.tokens.TokenCategory.EMAIL;
-import static org.apache.usergrid.security.tokens.TokenCategory.OFFLINE;
-import static org.apache.usergrid.security.tokens.TokenCategory.REFRESH;
-import static org.apache.usergrid.utils.ConversionUtils.HOLDER;
-import static org.apache.usergrid.utils.ConversionUtils.bytebuffer;
-import static org.apache.usergrid.utils.ConversionUtils.bytes;
-import static org.apache.usergrid.utils.ConversionUtils.getLong;
-import static org.apache.usergrid.utils.ConversionUtils.string;
-import static org.apache.usergrid.utils.ConversionUtils.uuid;
+import static org.apache.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.security.AuthPrincipalType.ADMIN_USER;
+import static org.apache.usergrid.security.tokens.TokenCategory.*;
+import static org.apache.usergrid.utils.ConversionUtils.*;
 import static org.apache.usergrid.utils.MapUtils.hasKeys;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
 
 
 public class TokenServiceImpl implements TokenService {
@@ -88,6 +90,8 @@ public class TokenServiceImpl implements TokenService {
     private static final String TOKEN_ENTITY = "entity";
     private static final String TOKEN_APPLICATION = "application";
     private static final String TOKEN_STATE = "state";
+    private static final String TOKEN_WORKFLOW_ORG_ID = "workflowOrgId";
+
 
     private static final String TOKEN_TYPE_ACCESS = "access";
 
@@ -107,6 +111,7 @@ public class TokenServiceImpl implements TokenService {
         set.add( TOKEN_APPLICATION );
         set.add( TOKEN_STATE );
         set.add( TOKEN_DURATION );
+        set.add( TOKEN_WORKFLOW_ORG_ID );
         TOKEN_PROPERTIES = Collections.unmodifiableSet(set);
     }
 
@@ -151,9 +156,10 @@ public class TokenServiceImpl implements TokenService {
 
     protected EntityManagerFactory emf;
 
+    protected MetricsFactory metricsFactory;
+
 
     public TokenServiceImpl() {
-
     }
 
 
@@ -204,13 +210,21 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public String createToken( TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
                                Map<String, Object> state, long duration ) throws Exception {
-        return createToken( tokenCategory, type, principal, state, duration, System.currentTimeMillis() );
+        return createToken( tokenCategory, type, principal, state, duration, null, System.currentTimeMillis() );
+    }
+
+
+    @Override
+    public String createToken( TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
+                               Map<String, Object> state, long duration, UUID workflowOrgId ) throws Exception {
+        return createToken( tokenCategory, type, principal, state, duration, workflowOrgId, System.currentTimeMillis() );
     }
 
 
     /** Exposed for testing purposes. The interface does not allow creation timestamp checking */
     public String createToken( TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
-                               Map<String, Object> state, long duration, long creationTimestamp ) throws Exception {
+                               Map<String, Object> state, long duration, UUID workflowOrgId,
+                               long creationTimestamp ) throws Exception {
 
         long maxTokenTtl = getMaxTtl( tokenCategory, principal );
 
@@ -237,7 +251,8 @@ public class TokenServiceImpl implements TokenService {
         if ( type == null ) {
             type = TOKEN_TYPE_ACCESS;
         }
-        TokenInfo tokenInfo = new TokenInfo( uuid, type, timestamp, timestamp, 0, duration, principal, state );
+        TokenInfo tokenInfo = new TokenInfo( uuid, type, timestamp, timestamp, 0, duration, principal,
+                state, workflowOrgId );
         putTokenInfo( tokenInfo );
 
         // generate token from the UUID that we created
@@ -248,6 +263,14 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public void importToken(String token, TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
                             Map<String, Object> state, long duration) throws Exception {
+
+        importToken(token, tokenCategory, type, principal, state, duration, null);
+    }
+
+
+    @Override
+    public void importToken(String token, TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
+                            Map<String, Object> state, long duration, UUID workflowOrgId) throws Exception {
 
         // same logic as create token
 
@@ -278,47 +301,94 @@ public class TokenServiceImpl implements TokenService {
             type = TOKEN_TYPE_ACCESS;
         }
 
-        TokenInfo tokenInfo = new TokenInfo( uuid, type, timestamp, timestamp, 0, duration, principal, state );
+        TokenInfo tokenInfo = new TokenInfo( uuid, type, timestamp, timestamp, 0, duration, principal,
+                state, workflowOrgId );
         putTokenInfo( tokenInfo );
     }
 
 
     @Override
     public TokenInfo getTokenInfo( String token ) throws Exception {
+        return getTokenInfo(token, true);
+    }
 
-        UUID uuid = getUUIDForToken( token );
 
-        if ( uuid == null ) {
-            return null;
+    @Override
+    public TokenInfo getTokenInfo( String token, boolean updateAccessTime ) throws Exception {
+
+        UUID uuid;
+
+
+        /** Pre-validation of the token string based on Usergrid's encoding scheme.
+         *
+         * If the token does not parse out a UUID, then it's not a Usergrid token.  Check if External SSO provider
+         * is configured, which is not Usergrid and immediately try to validate the token based on this parsing
+         * information.
+         */
+        try{
+            uuid = getUUIDForToken( token );
+        }
+        catch (ExpiredTokenException expiredTokenException){
+            throw new ExpiredTokenException(expiredTokenException.getMessage());
+        }
+        catch(Exception e){
+
+            // If the token doesn't parse as a Usergrid token, see if an external provider other than Usergrid is
+            // enabled.  If so, just validate the external token.
+            try{
+                if( isExternalSSOProviderEnabled() && !getExternalSSOProvider().equalsIgnoreCase("usergrid")) {
+                    return validateExternalToken(token, 1, getExternalSSOProvider());
+                }else{
+                    throw new IllegalArgumentException("invalid external provider : " + getExternalSSOProvider()); // re-throw the error
+                }
+            }
+            catch (NullPointerException npe){
+                throw new IllegalArgumentException("The SSO provider in the config is empty.");
+            }
+
         }
 
-        TokenInfo tokenInfo = getTokenInfo( uuid );
+        final TokenInfo tokenInfo;
 
-        if ( tokenInfo == null ) {
-            return null;
+        /**
+         * Now try actual Usergrid token validations.  First try locally.  If that fails and SSO is enabled with
+         * Usergrid being a provider, validate the external token.
+         */
+        try {
+            tokenInfo = getTokenInfo( uuid );
+        } catch (InvalidTokenException e){
+            // Try the request from Usergrid, conditions are specific so we don't incur perf hits for unncessary
+            // token validations that are known to not
+            if ( isExternalSSOProviderEnabled() && getExternalSSOProvider().equalsIgnoreCase("usergrid") ){
+                return validateExternalToken( token, maxPersistenceTokenAge, getExternalSSOProvider() );
+            }else{
+                throw e; // re-throw the error
+            }
         }
 
-        //update the token
-        long now = currentTimeMillis();
+        if (updateAccessTime) {
+            //update the token
+            long now = currentTimeMillis();
 
-        long maxTokenTtl = getMaxTtl( TokenCategory.getFromBase64String( token ), tokenInfo.getPrincipal() );
+            long maxTokenTtl = getMaxTtl(TokenCategory.getFromBase64String(token), tokenInfo.getPrincipal());
 
-        Mutator<UUID> batch = createMutator( cassandra.getUsergridApplicationKeyspace(), ue );
+            Mutator<UUID> batch = createMutator(cassandra.getUsergridApplicationKeyspace(), ue);
 
-        HColumn<String, Long> col =
-                createColumn( TOKEN_ACCESSED, now, calcTokenTime( tokenInfo.getExpiration( maxTokenTtl ) ),
-                        se, le );
-        batch.addInsertion( uuid, TOKENS_CF, col );
+            HColumn<String, Long> col =
+                    createColumn(TOKEN_ACCESSED, now, calcTokenTime(tokenInfo.getExpiration(maxTokenTtl)),
+                            se, le);
+            batch.addInsertion(uuid, TOKENS_CF, col);
 
-        long inactive = now - tokenInfo.getAccessed();
-        if ( inactive > tokenInfo.getInactive() ) {
-            col = createColumn( TOKEN_INACTIVE, inactive, calcTokenTime( tokenInfo.getExpiration( maxTokenTtl ) ),
-                    se, le );
-            batch.addInsertion( uuid, TOKENS_CF, col );
-            tokenInfo.setInactive( inactive );
+            long inactive = now - tokenInfo.getAccessed();
+            if (inactive > tokenInfo.getInactive()) {
+                col = createColumn(TOKEN_INACTIVE, inactive, calcTokenTime(tokenInfo.getExpiration(maxTokenTtl)),
+                        se, le);
+                batch.addInsertion(uuid, TOKENS_CF, col);
+                tokenInfo.setInactive(inactive);
+            }
+
+            batch.execute();
         }
-
-        batch.execute();
 
         return tokenInfo;
     }
@@ -449,7 +519,13 @@ public class TokenServiceImpl implements TokenService {
         }
         @SuppressWarnings("unchecked") Map<String, Object> state =
                 ( Map<String, Object> ) JsonUtils.fromByteBuffer( columns.get( TOKEN_STATE ) );
-        return new TokenInfo( uuid, type, created, accessed, inactive, duration, principal, state );
+
+        UUID workflowOrgId = null;
+        if (columns.containsKey(TOKEN_WORKFLOW_ORG_ID)) {
+            workflowOrgId = ConversionUtils.uuid(columns.get(TOKEN_WORKFLOW_ORG_ID));
+        }
+
+        return new TokenInfo( uuid, type, created, accessed, inactive, duration, principal, state, workflowOrgId );
     }
 
 
@@ -505,6 +581,11 @@ public class TokenServiceImpl implements TokenService {
                             be ) );
         }
 
+        if ( tokenInfo.getWorkflowOrgId() != null ) {
+            m.addInsertion( tokenUUID, TOKENS_CF,
+                    createColumn( TOKEN_WORKFLOW_ORG_ID, bytebuffer( tokenInfo.getWorkflowOrgId() ), ttl, se, be ) );
+        }
+
         m.execute();
     }
 
@@ -540,7 +621,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
 
-    private UUID getUUIDForToken( String token ) throws ExpiredTokenException, BadTokenException {
+    private UUID getUUIDForToken(String token ) throws ExpiredTokenException, BadTokenException {
         TokenCategory tokenCategory = TokenCategory.getFromBase64String( token );
         byte[] bytes = decodeBase64( token.substring( TokenCategory.BASE64_PREFIX_LENGTH ) );
         UUID uuid = uuid( bytes );
@@ -564,7 +645,7 @@ public class TokenServiceImpl implements TokenService {
         long expirationDelta = System.currentTimeMillis() - expires;
 
         if ( expires != Long.MAX_VALUE && expirationDelta > 0 ) {
-            throw new ExpiredTokenException( String.format( "Token expired %d millisecons ago.", expirationDelta ) );
+            throw new ExpiredTokenException( String.format( "Token expired %d milliseconds ago.", expirationDelta ) );
         }
         return uuid;
     }
@@ -618,6 +699,8 @@ public class TokenServiceImpl implements TokenService {
     @Autowired
     public void setEntityManagerFactory( EntityManagerFactory emf ) {
         this.emf = emf;
+        final Injector injector = ((CpEntityManagerFactory)emf).getApplicationContext().getBean( Injector.class );
+        metricsFactory = injector.getInstance(MetricsFactory.class);
     }
 
 
@@ -674,4 +757,92 @@ public class TokenServiceImpl implements TokenService {
 
 
     private static final int MAX_TTL = 20 * 365 * 24 * 60 * 60;
+
+
+    //-------------------------------------------------------------------------------------------------------
+    //
+    // Central SSO implementation
+
+    public static final String CENTRAL_CONNECTION_POOL_SIZE = "usergrid.central.connection.pool.size";
+    public static final String CENTRAL_CONNECTION_TIMEOUT =   "usergrid.central.connection.timeout";
+    public static final String CENTRAL_READ_TIMEOUT =         "usergrid.central.read.timeout";
+
+
+    // names for metrics to be collected
+    private static final String SSO_TOKENS_REJECTED =         "sso.tokens_rejected";
+    private static final String SSO_TOKENS_VALIDATED =        "sso.tokens_validated";
+    private static final String SSO_CREATED_LOCAL_ADMINS =    "sso.created_local_admins";
+    private static final String SSO_PROCESSING_TIME =         "sso.processing_time";
+
+    //SSO2 implementation
+    public static final String USERGRID_EXTERNAL_SSO_ENABLED = "usergrid.external.sso.enabled";
+    public static final String USERGRID_EXTERNAL_SSO_PROVIDER =    "usergrid.external.sso.provider";
+    public static final String USERGRID_EXTERNAL_SSO_PROVIDER_URL = "usergrid.external.sso.url";
+    public static final String USERGRID_EXTERNAL_SSO_PROVIDER_USER_PROVISION_URL
+        = "usergrid.external.sso.userprovision.url";
+
+
+    private static Client jerseyClient = null;
+
+    @Autowired
+    private ApplicationCreator applicationCreator;
+
+    @Autowired
+    protected ManagementService management;
+
+    @Autowired
+    private SSOProviderFactory ssoProviderFactory;
+
+    MetricsFactory getMetricsFactory() {
+        return metricsFactory;
+    }
+
+
+    public boolean isExternalSSOProviderEnabled() {
+        return Boolean.valueOf(properties.getProperty( USERGRID_EXTERNAL_SSO_ENABLED ));
+    }
+
+    private String getExternalSSOProvider(){
+            return properties.getProperty(USERGRID_EXTERNAL_SSO_PROVIDER);
+    }
+
+    /**
+     * <p>
+     * Validates access token from other or "external" Usergrid system.
+     * Calls other system's /management/me endpoint to get the User
+     * associated with the access token. If user does not exist locally,
+     * then user and organizations will be created. If no user is returned
+     * from the other cluster, then return null.
+     * </p>
+     * <p/>
+     * <p> Part of Usergrid Central SSO feature.
+     * See <a href="https://issues.apache.org/jira/browse/USERGRID-567">USERGRID-567</a>
+     * for details about Usergrid Central SSO.
+     * </p>
+     *
+     * @param extAccessToken Access token from external Usergrid system.
+     * @param ttl            Time to live for token.
+     */
+    public TokenInfo validateExternalToken(String extAccessToken, long ttl, String provider) throws Exception {
+
+
+        ExternalSSOProvider ssoProvider = ssoProviderFactory.getProvider();
+
+        if(provider.equalsIgnoreCase("usergrid")){
+
+            UserInfo userinfo = ssoProvider.validateAndReturnUserInfo(extAccessToken,ttl);
+
+            // Store the external Usergrid access_token as if it were one of our own so we don't have to make the
+            // external HTTP validation call on subsequent requests
+            importToken( extAccessToken, TokenCategory.ACCESS, null, new AuthPrincipalInfo(
+                ADMIN_USER, userinfo.getUuid(), CpNamingUtils.MANAGEMENT_APPLICATION_ID), null, ttl );
+            return getTokenInfo( extAccessToken );
+
+        }else{
+
+            return ssoProvider.validateAndReturnTokenInfo(extAccessToken,ttl);
+        }
+
+    }
+
 }

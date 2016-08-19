@@ -6,6 +6,7 @@ target
 # Icon must ends with two \r.
 Icon
 
+/website/tmp
 
 # Thumbnails
 ._*
