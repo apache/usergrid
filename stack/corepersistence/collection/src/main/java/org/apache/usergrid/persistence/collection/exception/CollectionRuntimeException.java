@@ -61,7 +61,7 @@ public class CollectionRuntimeException extends RuntimeException {
         if ( getCause() instanceof BadRequestException ) {
             BadRequestException bre = (BadRequestException)getCause();
             String msg = bre.getMessage();
-            if ( msg.contains("Keyspace") && msg.contains( "does not exist" ) ) {
+            if ( (msg.contains("Keyspace") && msg.contains( "does not exist" )) || msg.contains("unconfigured columnfamily")) {
                 return true;
             }
         }
