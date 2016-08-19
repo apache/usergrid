@@ -112,7 +112,6 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         );
 
         getClusterSession().execute(createApplicationKeyspace);
-        waitForSchemaAgreement();
 
         logger.info("Created keyspace: {}", cassandraFig.getApplicationKeyspace());
 

@@ -94,9 +94,6 @@ public class MigrationManagerImpl implements MigrationManager {
                     for (MultiTenantColumnFamilyDefinition cf : columnFamilies) {
                         testAndCreateColumnFamilyDef(cf);
                     }
-                    // creation of tables happens with the datastax driver and it auto checks schema on schema queries
-                    // the CF def creation uses Asytanax, so manually check the schema agreement
-                    dataStaxCluster.waitForSchemaAgreement();
                 }
 
 
@@ -134,6 +131,10 @@ public class MigrationManagerImpl implements MigrationManager {
         }
 
         keyspace.createColumnFamily( columnFamily.getColumnFamily(), columnFamily.getOptions() );
+
+        // creation of tables happens with the datastax driver and it auto checks schema on schema queries
+        // the CF def creation uses Asytanax, so manually check the schema agreement
+        dataStaxCluster.waitForSchemaAgreement();
 
         logger.info( "Created column family {}", columnFamily.getColumnFamily().getName() );
 
