@@ -28,7 +28,7 @@ import org.apache.cassandra.db.marshal.UTF8Type;
 
 import org.apache.usergrid.persistence.core.astyanax.*;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
-import org.apache.usergrid.persistence.core.migration.util.AstayanxUtils;
+import org.apache.usergrid.persistence.core.migration.util.AstyanaxUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 
@@ -143,7 +143,7 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
             return 0;
         }
         catch ( ConnectionException e ) {
-            AstayanxUtils.isKeyspaceMissing("Unable to connect to cassandra to retrieve status", e);
+            AstyanaxUtils.isSchemaMissing("Unable to connect to cassandra to retrieve status", e);
             return 0;
         }
     }
