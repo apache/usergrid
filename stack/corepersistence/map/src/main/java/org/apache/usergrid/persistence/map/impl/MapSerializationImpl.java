@@ -70,7 +70,7 @@ public class MapSerializationImpl implements MapSerialization {
             put( "column1", DataType.Name.BLOB );
             put( "value", DataType.Name.BLOB ); }};
     private static final Map<String, String> MAP_KEYS_CLUSTERING_ORDER =
-        new HashMap<String, String>(){{ put( "column1", "DESC" ); }};
+        new HashMap<String, String>(){{ put( "column1", "ASC" ); }};
 
 
 
@@ -465,7 +465,7 @@ public class MapSerializationImpl implements MapSerialization {
         }
 
         // UUIDs are 16 bytes, allocate the buffer accordingly
-        int size = 16+ownerType.length()+mapName.length()+mapKey.length();
+        int size = 16+ownerType.getBytes().length+mapName.getBytes().length+mapKey.getBytes().length;
         if(bucketNumber > 0 ){
             // ints are 4 bytes
             size += 4;

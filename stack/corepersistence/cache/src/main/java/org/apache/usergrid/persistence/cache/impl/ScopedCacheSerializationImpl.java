@@ -303,7 +303,7 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
         keys.add(3, rowKeyString);
 
         // UUIDs are 16 bytes, allocate the buffer accordingly
-        int size = 16+ownerType.length()+rowKeyString.length();
+        int size = 16+ownerType.getBytes().length+rowKeyString.getBytes().length;
 
         // ints are 4 bytes, add for the bucket
         size += 4;
