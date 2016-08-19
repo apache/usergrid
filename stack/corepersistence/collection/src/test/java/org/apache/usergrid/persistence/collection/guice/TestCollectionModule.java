@@ -20,8 +20,6 @@
 package org.apache.usergrid.persistence.collection.guice;
 
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
@@ -30,8 +28,6 @@ import org.apache.usergrid.persistence.core.migration.data.TestMigrationDataProv
 
 import com.google.inject.TypeLiteral;
 
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class TestCollectionModule extends TestModule {
@@ -43,29 +39,13 @@ public class TestCollectionModule extends TestModule {
         install( new CollectionModule() {
             @Override
             public void configureMigrationProvider() {
-                //configure our migration data provider
 
+                //configure our migration data provider
                 TestMigrationDataProvider<EntityIdScope> migrationDataProvider = new TestMigrationDataProvider<>();
                 bind(new TypeLiteral< MigrationDataProvider<EntityIdScope>>(){}).toInstance( migrationDataProvider );
             }
         } );
 
-        /**
-         * Test modules
-         */
-//        install(new MaxMigrationModule());
-
-    }
-
-
-    private static Map<String, Injector> injectorsByName = new HashMap<>();
-
-    public static Injector getInjector( String name ) {
-        Injector i = injectorsByName.get( name );
-        if ( i == null ) {
-            i = Guice.createInjector( new TestCollectionModule() );
-        }
-        return i;
     }
 
 }

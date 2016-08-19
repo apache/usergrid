@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.core.migration.schema;
 import java.util.Collection;
 import java.util.Set;
 
+import com.datastax.driver.core.KeyspaceMetadata;
 import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
@@ -72,7 +73,7 @@ public class MigrationManagerImpl implements MigrationManager {
 
         try {
 
-            dataStaxCluster.createOrUpdateKeyspace();
+            dataStaxCluster.createApplicationKeyspace();
 
             for ( Migration migration : migrations ) {
 
@@ -93,6 +94,9 @@ public class MigrationManagerImpl implements MigrationManager {
                     for (MultiTenantColumnFamilyDefinition cf : columnFamilies) {
                         testAndCreateColumnFamilyDef(cf);
                     }
+                    // creation of tables happens with the datastax driver and it auto checks schema on schema queries
+                    // the CF def creation uses Asytanax, so manually check the schema agreement
+                    dataStaxCluster.waitForSchemaAgreement();
                 }
 
 
@@ -106,8 +110,6 @@ public class MigrationManagerImpl implements MigrationManager {
 
 
             }
-
-            dataStaxCluster.waitForSchemaAgreement();
 
         }
         catch ( Throwable t ) {
@@ -139,12 +141,21 @@ public class MigrationManagerImpl implements MigrationManager {
 
     private void createTable(TableDefinition tableDefinition ) throws Exception {
 
-        String CQL = CQLUtils.getTableCQL( cassandraFig, tableDefinition, CQLUtils.ACTION.CREATE );
-        if (logger.isDebugEnabled()){
-            logger.debug( CQL );
+        KeyspaceMetadata keyspaceMetadata = dataStaxCluster.getClusterSession().getCluster().getMetadata()
+            .getKeyspace(CQLUtils.quote(cassandraFig.getApplicationKeyspace()));
+
+        boolean exists =  keyspaceMetadata != null && keyspaceMetadata.getTable(tableDefinition.getTableName()) != null;
+
+        if( exists ){
+            return;
+        }
+
+        String CQL = CQLUtils.getTableCQL(cassandraFig, tableDefinition, CQLUtils.ACTION.CREATE);
+        if (logger.isDebugEnabled()) {
+            logger.debug(CQL);
         }
         dataStaxCluster.getApplicationSession()
-            .execute( CQL );
+            .execute(CQL);
 
         logger.info("Created table: {}", tableDefinition.getTableName());
 
