@@ -92,7 +92,7 @@ public interface MapManager {
     void delete( final String key );
 
     /**
-     * Return a page of keys that exist within the map
+     * Return a page of keys that exist within the map.  Keys are sorted descending.
      * @param cursor
      * @param limit
      */
