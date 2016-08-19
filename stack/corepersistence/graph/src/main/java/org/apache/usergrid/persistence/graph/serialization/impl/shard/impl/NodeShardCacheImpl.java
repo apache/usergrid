@@ -72,18 +72,8 @@ import com.google.inject.Inject;
 @Singleton
 public class NodeShardCacheImpl implements NodeShardCache {
 
-    /**
-     * Only cache shards that have < 10k groups.  This is an arbitrary amount, and may change with profiling and
-     * testing
-     */
-    private static final int MAX_WEIGHT_PER_ELEMENT = 10000;
-
-
     private final NodeShardAllocation nodeShardAllocation;
     private final GraphFig graphFig;
-
-
-
     private ListeningScheduledExecutorService refreshExecutors;
     private LoadingCache<CacheKey, CacheEntry> graphs;
 
@@ -111,8 +101,8 @@ public class NodeShardCacheImpl implements NodeShardCache {
                 final String propertyName = evt.getPropertyName();
 
                 if ( propertyName.equals( GraphFig.SHARD_CACHE_SIZE ) || propertyName
-                        .equals( GraphFig.SHARD_CACHE_TIMEOUT ) || propertyName
-                        .equals( GraphFig.SHARD_CACHE_REFRESH_WORKERS ) ) {
+                    .equals( GraphFig.SHARD_CACHE_TIMEOUT ) || propertyName
+                    .equals( GraphFig.SHARD_CACHE_REFRESH_WORKERS ) ) {
 
 
                     updateCache();
@@ -206,20 +196,20 @@ public class NodeShardCacheImpl implements NodeShardCache {
         }
 
         this.refreshExecutors = MoreExecutors
-                .listeningDecorator( Executors.newScheduledThreadPool( graphFig.getShardCacheRefreshWorkerCount() ) );
+            .listeningDecorator( Executors.newScheduledThreadPool( graphFig.getShardCacheRefreshWorkerCount() ) );
 
 
         this.graphs = CacheBuilder.newBuilder()
 
-                //we want to asynchronously load new values for existing ones, that way we wont' have to
-                //wait for a trip to cassandra
-                .refreshAfterWrite( graphFig.getShardCacheTimeout(), TimeUnit.MILLISECONDS )
+            //we want to asynchronously load new values for existing ones, that way we wont' have to
+            //wait for a trip to cassandra
+            .refreshAfterWrite( graphFig.getShardCacheTimeout(), TimeUnit.MILLISECONDS )
 
-                        //set our weight function, since not all shards are equal
-                .maximumWeight(MAX_WEIGHT_PER_ELEMENT * graphFig.getShardCacheSize() ).weigher( new ShardWeigher() )
+            //set a static cache entry size here
+            .maximumSize(graphFig.getShardCacheSize())
 
-                        //set our shard loader
-                .build( new ShardCacheLoader() );
+            //set our shard loader
+            .build( new ShardCacheLoader() );
     }
 
 
@@ -282,7 +272,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
         private CacheEntry( final Iterator<ShardEntryGroup> shards ) {
             Preconditions.checkArgument( shards.hasNext(),
-                    "More than 1 entry must be present in the shard to load into cache" );
+                "More than 1 entry must be present in the shard to load into cache" );
 
             this.shards = new TreeMap<>();
             /**
@@ -340,7 +330,7 @@ public class NodeShardCacheImpl implements NodeShardCache {
 
 
             final Iterator<ShardEntryGroup> edges =
-                    nodeShardAllocation.getShards( key.scope, Optional.<Shard>absent(), key.directedEdgeMeta );
+                nodeShardAllocation.getShards( key.scope, Optional.<Shard>absent(), key.directedEdgeMeta );
 
             final CacheEntry cacheEntry = new CacheEntry( edges );
 
@@ -363,16 +353,4 @@ public class NodeShardCacheImpl implements NodeShardCache {
         //TODO, use RX for sliding window buffering and duplicate removal
     }
 
-
-
-    /**
-     * Calculates the weight of the entry by geting the size of the cache
-     */
-    final class ShardWeigher implements Weigher<CacheKey, CacheEntry> {
-
-        @Override
-        public int weigh( final CacheKey key, final CacheEntry value ) {
-            return value.getCacheSize();
-        }
-    }
 }
