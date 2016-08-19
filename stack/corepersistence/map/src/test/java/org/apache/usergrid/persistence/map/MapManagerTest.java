@@ -121,14 +121,14 @@ public class MapManagerTest {
         MapKeyResults keyResults = mm.getKeys(null, 3);
 
         assertEquals(3, keyResults.getKeys().size());
-        assertEquals(key1, keyResults.getKeys().get(0));
+        assertEquals(key6, keyResults.getKeys().get(0));
 
         assertNotNull(keyResults.getCursor());
 
         MapKeyResults keyResults2 = mm.getKeys(keyResults.getCursor(), 3);
 
         assertEquals(3, keyResults2.getKeys().size());
-        assertEquals(key4, keyResults2.getKeys().get(0));
+        assertEquals(key3, keyResults2.getKeys().get(0));
 
 
     }
@@ -157,17 +157,17 @@ public class MapManagerTest {
         MapKeyResults keyResults = mm.getKeys(null, 6);
 
         assertEquals(6, keyResults.getKeys().size());
-        assertEquals(key1, keyResults.getKeys().get(0));
+        assertEquals(key6, keyResults.getKeys().get(0));
 
 
-        mm.delete(key1);
-        mm.delete(key2);
-        mm.delete(key3);
+        mm.delete(key4);
+        mm.delete(key5);
+        mm.delete(key6);
 
         MapKeyResults keyResults2 = mm.getKeys(null, 6);
 
         assertEquals(3, keyResults2.getKeys().size());
-        assertEquals(key4, keyResults2.getKeys().get(0));
+        assertEquals(key3, keyResults2.getKeys().get(0));
 
 
     }

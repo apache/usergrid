@@ -169,6 +169,11 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             .setIdleTimeoutSeconds(cassandraFig.getTimeout() / 1000)
             .setPoolTimeoutMillis(cassandraFig.getPoolTimeout());
 
+        // purposely add a couple seconds to the driver's lower level socket timeouts vs. cassandra timeouts
+        final SocketOptions socketOptions = new SocketOptions()
+            .setConnectTimeoutMillis(cassandraFig.getPoolTimeout() + 2000)
+            .setReadTimeoutMillis(cassandraFig.getTimeout() + 2000);
+
         final QueryOptions queryOptions = new QueryOptions()
             .setConsistencyLevel(defaultConsistencyLevel);
 
@@ -180,6 +185,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             .withLoadBalancingPolicy(loadBalancingPolicy)
             .withPoolingOptions(poolingOptions)
             .withQueryOptions(queryOptions)
+            .withSocketOptions(socketOptions)
             .withProtocolVersion(getProtocolVersion(cassandraFig.getVersion()));
 
         // only add auth credentials if they were provided
