@@ -198,14 +198,15 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
 
         String comparator = UUID_TYPE_REVERSED;
 
-        int size = 16+fieldEntry.getField().getName().length()+fieldEntry.getField().getValue().toString().length()+
-            fieldEntry.getField().getTypeName().name().length();
+        int size = 16+fieldEntry.getField().getName().getBytes().length
+            +fieldEntry.getField().getValue().toString().getBytes().length+
+            fieldEntry.getField().getTypeName().name().getBytes().length;
 
         // we always need to add length for the 2 byte comparator short,  2 byte length short and 1 byte equality
         size += keys.size()*5;
 
         // uuid type comparator is longest, ensure we allocate buffer using the max size to avoid overflow
-        size += keys.size()*comparator.length();
+        size += keys.size()*comparator.getBytes().length;
 
         ByteBuffer stuff = ByteBuffer.allocate(size);
 
@@ -228,7 +229,7 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
                 stuff.putShort((short) ('耀' | a));
             }else{
                 comparator = "UTF8Type"; // only strings are being serialized other than UUIDs here
-                stuff.putShort((short)comparator.length());
+                stuff.putShort((short)comparator.getBytes().length);
                 stuff.put(DataType.serializeValue(comparator, ProtocolVersion.NEWEST_SUPPORTED));
             }
 
@@ -293,13 +294,13 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
         keys.add(entityVersion.getEntityId().getType());
 
         // UUIDs are 16 bytes
-        int size = 16+16+entityVersion.getEntityId().getType().length();
+        int size = 16+16+entityVersion.getEntityId().getType().getBytes().length;
 
         // we always need to add length for the 2 byte comparator short,  2 byte length short and 1 byte equality
         size += keys.size()*5;
 
         // we always add comparator to the buffer as well
-        size += keys.size()*comparator.length();
+        size += keys.size()*comparator.getBytes().length;
 
         ByteBuffer stuff = ByteBuffer.allocate(size);
 
@@ -311,7 +312,7 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
                 comparator = "UTF8Type"; // if it's not a UUID, the only other thing we're serializing is text
             }
 
-            stuff.putShort((short)comparator.length());
+            stuff.putShort((short)comparator.getBytes().length);
             stuff.put(DataType.serializeValue(comparator, ProtocolVersion.NEWEST_SUPPORTED));
 
             ByteBuffer kb = DataType.serializeValue(key, ProtocolVersion.NEWEST_SUPPORTED);
@@ -457,8 +458,9 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
 
 
         // UUIDs are 16 bytes, allocate the buffer accordingly
-        int size = 16 + applicationType.length() + 16 + applicationType.length() + collectionName.length() +
-            fieldType.length() + fieldName.length()+fieldValueString.length();
+        int size = 16 + applicationType.getBytes().length + 16 + applicationType.getBytes().length +
+            collectionName.getBytes().length + fieldType.getBytes().length + fieldName.getBytes().length
+            + fieldValueString.getBytes().length;
 
 
         // we always need to add length for the 2 byte short and 1 byte equality
@@ -503,7 +505,8 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
         keys.add(entityId);
         keys.add(entityType);
 
-        int size = 16+applicationType.length()+16+applicationType.length()+collectionName.length()+16+entityType.length();
+        int size = 16+applicationType.getBytes().length+16+applicationType.getBytes().length
+            +collectionName.getBytes().length+16+entityType.getBytes().length;
 
         // we always need to add length for the 2 byte short and 1 byte equality
         size += keys.size()*3;

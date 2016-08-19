@@ -41,6 +41,7 @@ import com.google.inject.Inject;
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
 @RunWith( ITRunner.class )
@@ -121,14 +122,53 @@ public class MapManagerTest {
         MapKeyResults keyResults = mm.getKeys(null, 3);
 
         assertEquals(3, keyResults.getKeys().size());
-        assertEquals(key6, keyResults.getKeys().get(0));
+        assertTrue("should contain key1", keyResults.getKeys().contains(key1));
 
         assertNotNull(keyResults.getCursor());
 
         MapKeyResults keyResults2 = mm.getKeys(keyResults.getCursor(), 3);
 
         assertEquals(3, keyResults2.getKeys().size());
-        assertEquals(key3, keyResults2.getKeys().get(0));
+        assertTrue("should contain key4", keyResults2.getKeys().contains(key4));
+
+
+    }
+
+    @Test
+    public void testKeysOrdering(){
+
+        MapManager mm = mmf.createMapManager(this.scope);
+
+        final String value = "value";
+
+        final String key1 = "key1";
+        final String key2 = "key2";
+        final String key3 = "key3";
+        final String key4 = "key4";
+        final String key5 = "key5";
+        final String key6 = "key6";
+
+        mm.putString( key1, value );
+        mm.putString( key2, value );
+        mm.putString( key3, value );
+        mm.putString( key4, value );
+        mm.putString( key5, value );
+        mm.putString( key6, value );
+
+        MapKeyResults keyResults = mm.getKeys(null, 6);
+
+        assertEquals(6, keyResults.getKeys().size());
+        assertEquals(key1, keyResults.getKeys().get(0));
+
+
+        mm.delete(key1);
+        mm.delete(key2);
+        mm.delete(key3);
+
+        MapKeyResults keyResults2 = mm.getKeys(null, 6);
+
+        assertEquals(3, keyResults2.getKeys().size());
+        assertEquals(key4, keyResults2.getKeys().get(0));
 
 
     }
@@ -157,8 +197,6 @@ public class MapManagerTest {
         MapKeyResults keyResults = mm.getKeys(null, 6);
 
         assertEquals(6, keyResults.getKeys().size());
-        assertEquals(key6, keyResults.getKeys().get(0));
-
 
         mm.delete(key4);
         mm.delete(key5);
@@ -167,8 +205,6 @@ public class MapManagerTest {
         MapKeyResults keyResults2 = mm.getKeys(null, 6);
 
         assertEquals(3, keyResults2.getKeys().size());
-        assertEquals(key3, keyResults2.getKeys().get(0));
-
 
     }
 
