@@ -680,7 +680,6 @@ def exclude_edge(collection_name, edge_name):
 
 
 def confirm_user_entity(app, source_entity, attempts=0):
-
     if not config.get('confirm_user_entity', False):
         return source_entity
 
@@ -729,8 +728,7 @@ def confirm_user_entity(app, source_entity, attempts=0):
 
 
 def create_connection(app, collection_name, source_entity, edge_name, target_entity):
-    
-    target_org, target_app, target_collection  = get_target_mapping(app, collection_name)
+    target_org, target_app, target_collection = get_target_mapping(app, collection_name)
 
     source_identifier = get_source_identifier(source_entity)
     target_identifier = get_source_identifier(target_entity)
@@ -796,6 +794,7 @@ def create_connection(app, collection_name, source_entity, edge_name, target_ent
                 cache.set(create_connection_url, 1)
 
             return True
+
         else:
             if res_create.is_server_error():
 
@@ -814,11 +813,15 @@ def create_connection(app, collection_name, source_entity, edge_name, target_ent
                 if config.get('repair_data', False):
                     logger.warning('FAILED [%s] (WILL attempt repair) to create connection at URL=[%s]: %s' % (
                         r_create.status_code, create_connection_url, r_create.text))
+
                     migrate_data(app, source_entity.get('type'), source_entity, force=True)
                     migrate_data(app, target_entity.get('type'), target_entity, force=True)
+
                     time.sleep(2)
+
                     reput(app, source_entity.get('type'), source_entity, force_uuid=True)
                     reput(app, target_entity.get('type'), target_entity, force_uuid=True)
+
                     time.sleep(2)
 
                 else:
@@ -833,8 +836,7 @@ def create_connection(app, collection_name, source_entity, edge_name, target_ent
 
 
 def delete_connection(app, collection_name, source_entity, edge_name, target_entity):
-
-    target_org, target_app, target_collection  = get_target_mapping(app, collection_name)
+    target_org, target_app, target_collection = get_target_mapping(app, collection_name)
 
     source_identifier = get_source_identifier(source_entity)
     target_identifier = get_source_identifier(target_entity)
@@ -946,7 +948,7 @@ def migrate_out_graph_edge_type(app, collection_name, source_entity, edge_name, 
     logger.debug(
         'Processing edge type=[%s] of entity [%s / %s / %s]' % (edge_name, app, collection_name, source_identifier))
 
-    target_org, target_app, target_collection  = get_target_mapping(app, collection_name)
+    target_org, target_app, target_collection = get_target_mapping(app, collection_name)
 
     connection_query_url = connection_query_url_template.format(
         org=config.get('org'),
@@ -1148,7 +1150,7 @@ def migrate_graph(app, collection_name, source_entity, depth=0):
                 response = migrate_in_graph_edge_type(app, collection_name, source_entity, edge_name,
                                                       depth) and response
 
-        return response
+    return response
 
 
 def collect_entities(collection_name, url):
@@ -1174,7 +1176,7 @@ def prune_edge_by_name(edge_name, app, collection_name, source_entity):
 
     entity_tag = '[%s / %s / %s (%s)]' % (app, collection_name, source_uuid, get_uuid_time(source_uuid))
 
-    target_org, target_app, target_collection  = get_target_mapping(app, collection_name)
+    target_org, target_app, target_collection = get_target_mapping(app, collection_name)
 
     target_connection_query_url = connection_query_url_template.format(
         org=target_org,
@@ -1251,7 +1253,7 @@ def reput(app, collection_name, source_entity, force_uuid=False):
     else:
         source_identifier = get_source_identifier(source_entity)
 
-    target_org, target_app, target_collection  = get_target_mapping(app, collection_name)
+    target_org, target_app, target_collection = get_target_mapping(app, collection_name)
 
     target_entity_url_by_name = put_entity_url_template.format(org=target_org,
                                                                app=target_app,
@@ -1435,7 +1437,7 @@ def migrate_data(app, collection_name, source_entity, attempts=0, force=False):
                     return repair_user_role(app, collection_name, source_entity)
 
                 elif target_collection in ['users', 'user']:
-                    return handle_user_migration_conflict(app, collection_name, source_entity)
+                    return repair_user_role(app, collection_name, source_entity)
 
                 elif 'duplicate_unique_property_exists' in r.text:
 
@@ -1475,55 +1477,8 @@ def migrate_data(app, collection_name, source_entity, attempts=0, force=False):
     return migrate_data(app, collection_name, source_entity, attempts=attempts + 1)
 
 
-def handle_user_migration_conflict(app, collection_name, source_entity, attempts=0, depth=0):
-    if collection_name in ['users', 'user']:
-        return False
-
-    username = source_entity.get('username')
-
-    target_org, target_app, target_collection  = get_target_mapping(app, collection_name)
-
-    target_entity_url = get_entity_url_template.format(org=target_org,
-                                                       app=target_app,
-                                                       collection=target_collection,
-                                                       uuid=username,
-                                                       **config.get('target_endpoint'))
-
-    # There is retry build in, here is the short circuit
-    if attempts >= 5:
-        logger.critical(
-            'Aborting after [%s] attempts to audit user [%s] at URL [%s]' % (attempts, username, target_entity_url))
-
-        return False
-
-    r = session_target.get(url=target_entity_url)
-
-    if r.status_code == 200:
-        target_entity = r.json().get('entities')[0]
-
-        if source_entity.get('created') < target_entity.get('created'):
-            return repair_user_role(app, collection_name, source_entity)
-
-    elif r.status_code / 100 == 5:
-        audit_logger.warning(
-            'CONFLICT: handle_user_migration_conflict failed attempt [%s] GET [%s] on TARGET URL=[%s] - : %s' % (
-                attempts, r.status_code, target_entity_url, r.text))
-
-        time.sleep(DEFAULT_RETRY_SLEEP)
-
-        return handle_user_migration_conflict(app, collection_name, source_entity, attempts)
-
-    else:
-        audit_logger.error(
-            'CONFLICT: Failed handle_user_migration_conflict attempt [%s] GET [%s] on TARGET URL=[%s] - : %s' % (
-                attempts, r.status_code, target_entity_url, r.text))
-
-        return False
-
-
 def get_best_source_entity(app, collection_name, source_entity, depth=0):
-
-    target_org, target_app, target_collection  = get_target_mapping(app, collection_name)
+    target_org, target_app, target_collection = get_target_mapping(app, collection_name)
 
     target_pk = 'uuid'
 
@@ -1672,8 +1627,7 @@ def repair_unique_value_at_target(app, collection_name, source_entity, attempts=
 
 
 def repair_user_role(app, collection_name, source_entity, attempts=0, depth=0):
-    
-    target_org, target_app, target_collection  = get_target_mapping(app, collection_name)
+    target_org, target_app, target_collection = get_target_mapping(app, collection_name)
 
     # For the users collection, there seemed to be cases where a USERNAME was created/existing with the a
     # different UUID which caused a 'collision' - so the point is to delete the entity with the differing
@@ -1683,6 +1637,7 @@ def repair_user_role(app, collection_name, source_entity, attempts=0, depth=0):
 
     if target_collection in ['users', 'user']:
         target_pk = 'username'
+
     elif target_collection in ['roles', 'role']:
         target_pk = 'name'
 
@@ -1696,38 +1651,69 @@ def repair_user_role(app, collection_name, source_entity, attempts=0, depth=0):
 
     logger.warning('Repairing: Deleting name=[%s] entity at URL=[%s]' % (target_name, target_entity_url_by_name))
 
-    r = session_target.delete(target_entity_url_by_name)
+    r_put_by_pk = session_target.delete(target_entity_url_by_name)
 
-    res = UsergridResponseWrapper(r)
+    ur_delete_name = UsergridResponseWrapper(r_put_by_pk)
 
-    if not res.is_error() or (r.status_code in [404, 401] and 'service_resource_not_found' in r.text):
-        logger.info('Deletion of entity at URL=[%s] was [%s]' % (target_entity_url_by_name, r.status_code))
+    if ur_delete_name.is_success():
+        logger.warn('DELETE by Name for REPAIR was successful at URL %s' % target_entity_url_by_name)
+    else:
+        logger.warn('DELETE by Name for REPAIR was **NOT** successful at URL %s' % target_entity_url_by_name)
 
-        best_source_entity = get_best_source_entity(app, collection_name, source_entity)
+    target_entity_url_by_uuid = get_entity_url_template.format(org=target_org,
+                                                               app=target_app,
+                                                               collection=target_collection,
+                                                               limit=1000,
+                                                               uuid=source_entity.get('uuid'),
+                                                               **config.get('target_endpoint'))
 
-        target_entity_url_by_uuid = get_entity_url_template.format(org=target_org,
-                                                                   app=target_app,
-                                                                   collection=target_collection,
-                                                                   uuid=best_source_entity.get('uuid'),
-                                                                   **config.get('target_endpoint'))
+    r_delete_by_uuid = session_target.delete(target_entity_url_by_uuid)
 
-        r = session_target.put(target_entity_url_by_uuid, data=json.dumps(best_source_entity))
-        res = UsergridResponseWrapper(r)
+    ur_delete_by_uuid = UsergridResponseWrapper(r_delete_by_uuid)
 
-        if not res.is_error():
-            logger.info('Successfully repaired user at URL=[%s]' % target_entity_url_by_uuid)
-            return True
+    if ur_delete_by_uuid.is_success():
+        logger.warn('DELETE by UUID for REPAIR was successful at URL %s' % target_entity_url_by_uuid)
+    else:
+        logger.warn('DELETE by UUID for REPAIR was **NOT** successful at URL %s' % target_entity_url_by_uuid)
 
-        else:
-            logger.critical('Failed to PUT [%s] the desired entity  at URL=[%s]: %s' % (
-                r.status_code, target_entity_url_by_name, res.error_message()))
-            return False
+    ql = "select * where name='%s'" % target_name
+
+    url_delete_by_query = collection_query_url_template.format(org=target_org,
+                                                               app=target_app,
+                                                               ql=ql,
+                                                               collection=target_collection,
+                                                               limit=1000,
+                                                               **config.get('target_endpoint'))
+
+    r_delete_by_query = session_target.delete(url_delete_by_query)
+
+    ur_delete_by_query = UsergridResponseWrapper(r_delete_by_query)
+
+    if ur_delete_by_query.is_success() and ur_delete_by_query.first() is not None:
+        logger.warn('DELETE by QUERY for REPAIR was successful at URL %s' % url_delete_by_query)
+    else:
+        logger.warn('DELETE by QUERY for REPAIR was **NOT** successful at URL %s, entities=[%s]' % (
+            url_delete_by_query, len(ur_delete_by_query.entity_array)))
+
+    best_source_entity = get_best_source_entity(app, collection_name, source_entity)
+
+    target_entity_url_by_uuid = get_entity_url_template.format(org=target_org,
+                                                               app=target_app,
+                                                               collection=target_collection,
+                                                               uuid=best_source_entity.get(target_pk),
+                                                               **config.get('target_endpoint'))
+
+    r_put_by_pk = session_target.put(target_entity_url_by_uuid, data=json.dumps(best_source_entity))
+
+    ur_put_by_pk = UsergridResponseWrapper(r_put_by_pk)
+
+    if ur_put_by_pk.is_success():
+        logger.warn('Successfully repaired user at URL=[%s]' % target_entity_url_by_uuid)
+        return True
 
     else:
-        # log an error and keep going if we cannot delete the entity at the specified URL.  Unlikely, but if so
-        # then this entity is borked
-        logger.critical(
-            'Deletion of entity at URL=[%s] FAILED [%s]: %s' % (target_entity_url_by_name, r.status_code, r.text))
+        logger.critical('REPAIR FAILED to PUT [%s] the desired entity  at URL=[%s]: %s' % (
+            r_put_by_pk.status_code, target_entity_url_by_name, ur_delete_name.error_message()))
         return False
 
 
@@ -1735,7 +1721,7 @@ def get_target_mapping(app, collection_name):
     target_org = config.get('org_mapping', {}).get(config.get('org'), config.get('org'))
     target_app = config.get('app_mapping', {}).get(app, app)
     target_collection = config.get('collection_mapping', {}).get(collection_name, collection_name)
-    
+
     return target_org, target_app, target_collection
 
 
@@ -2050,7 +2036,7 @@ def migrate_user_credentials(app, collection_name, source_entity, attempts=0):
 
     source_identifier = get_source_identifier(source_entity)
 
-    target_org, target_app, target_collection  = get_target_mapping(app, collection_name)
+    target_org, target_app, target_collection = get_target_mapping(app, collection_name)
 
     # get the URLs for the source and target users
 

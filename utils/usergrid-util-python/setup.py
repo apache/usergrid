@@ -21,7 +21,7 @@ from setuptools import setup, find_packages
 
 __author__ = 'Jeff.West@yahoo.com'
 
-VERSION = '1.0.0'
+VERSION = '1.2.26'
 
 setup(
         name='usergrid-tools',
@@ -37,9 +37,10 @@ setup(
 
         install_requires=[
             'requests',
-            'usergrid>=0.1.3',
+            'usergrid>=0.2.2',
             'time_uuid',
             'argparse',
+            'boto',
             'redis',
             'ConcurrentLogHandler',
         ],
@@ -47,9 +48,15 @@ setup(
         entry_points={
             'console_scripts': [
                 'usergrid_iterator = usergrid_tools.iterators.simple_iterator:main',
+                'migration_request_listener = usergrid_tools.migration.usergrid_data_migrator:sqs_listener',
+
+                'usergrid_counter_test= usergrid_tools.counters.counter_test:main',
+
                 'usergrid_data_migrator = usergrid_tools.migration.usergrid_data_migrator:main',
+                'usergrid_data_migrator_2 = usergrid_tools.migration.usergrid_data_migrator:testfile',
                 'usergrid_data_exporter = usergrid_tools.import_export.usergrid_data_exporter:main',
                 'usergrid_data_importer = usergrid_tools.import_export.usergrid_data_importer:main',
+
                 'usergrid_entity_index_test = usergrid_tools.indexing.entity_index_test:main',
                 'usergrid_batch_index_test = usergrid_tools.indexing.batch_index_test:main',
                 'usergrid_parse_importer = usergrid_tools.parse_importer.parse_importer:main',
