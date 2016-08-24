@@ -79,7 +79,34 @@ public class UsersService extends AbstractCollectionService {
 
     @Override
     public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception {
-        super.getItemByName(context, name);
+        String nameProperty = Schema.getDefaultSchema().aliasProperty( getEntityType() );
+
+        if ( nameProperty == null ) {
+            nameProperty = "name";
+        }
+
+        EntityRef entity = null;
+        Identifier id = Identifier.from( name );
+
+        if ( id != null ) {
+            entity = em.getUserByIdentifier( id );
+        }
+
+        if ( entity == null ) {
+            throw new ServiceResourceNotFoundException( context );
+        }
+
+        if ( !context.moreParameters() ) {
+            entity = em.get( entity );
+            entity = importEntity( context, ( Entity ) entity );
+        }
+
+        checkPermissionsForEntity( context, entity );
+
+        List<ServiceRequest> nextRequests = context.getNextServiceRequests( entity );
+
+        return new ServiceResults( this, context, ServiceResults.Type.COLLECTION, Results.fromRef( entity ), null,
+                nextRequests );
     }
 
 
