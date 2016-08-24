@@ -578,8 +578,8 @@ class CollectionWorker(Process):
 
                                 if QSIZE_OK:
                                     collection_worker_logger.info(
-                                        'Counter=%s, collection_queue=%s, entity_queue=[%s]' % (
-                                            counter, self.work_queue.qsize(), self.entity_queue.qsize()))
+                                        'Collection=%s, Counter=%s, collection_queue=%s, entity_queue=[%s]' % (
+                                            collection_name, counter, self.work_queue.qsize(), self.entity_queue.qsize()))
                             except:
                                 pass
 
@@ -2144,9 +2144,9 @@ def do_operation(apps_and_collections, operation):
                 collection_count += 1
                 collection_queue.put((app, collection_name))
 
-            [collection_queue.put((None, None)) for x in collection_workers]
-
             logger.info('Finished publishing [%s] collections for app [%s] !' % (collection_count, app))
+
+        [collection_queue.put((None, None)) for x in collection_workers]
 
         # only start the threads if there is work to do
         if collection_count > 0:
