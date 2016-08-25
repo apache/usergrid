@@ -99,6 +99,8 @@ public abstract class ToolBase {
 
         //job scheduler also not needed for tools
         System.setProperty("usergrid.scheduler.enabled", "false");
+        System.setProperty("usergrid.cluster.enabled", "false");
+
 
 
 
