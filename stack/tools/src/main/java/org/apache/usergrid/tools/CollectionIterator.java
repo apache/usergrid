@@ -20,31 +20,19 @@ package org.apache.usergrid.tools;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.common.base.*;
 import com.google.common.base.Optional;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.model.Column;
-import com.netflix.astyanax.model.ConsistencyLevel;
-import com.netflix.astyanax.util.RangeBuilder;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
-import org.apache.usergrid.corepersistence.results.EntityQueryExecutor;
 import org.apache.usergrid.corepersistence.results.IdQueryExecutor;
 import org.apache.usergrid.corepersistence.service.CollectionSearch;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
-import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
-import org.apache.usergrid.persistence.collection.serialization.impl.*;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.*;
-import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.InflectionUtils;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,11 +41,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
-
-import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
-import rx.*;
 
 import static org.apache.usergrid.persistence.Schema.getDefaultSchema;
 
@@ -71,6 +54,14 @@ public class CollectionIterator extends ToolBase {
     private static final String ENTITY_TYPE_ARG = "entityType";
 
     private static final String REMOVE_CONNECTIONS_ARG = "removeConnections";
+
+    private static final String LATEST_TIMESTAMP_ARG = "latestTimestamp";
+
+    private static final String EARLIEST_TIMESTAMP_ARG = "earliestTimestamp";
+
+    private static final String SECONDS_IN_PAST_ARG = "secondsInPast";
+
+    private static final Long DEFAULT_SECONDS_IN_PAST = 60L * 60L; // hour
 
     private EntityManager em;
 
@@ -95,10 +86,28 @@ public class CollectionIterator extends ToolBase {
         options.addOption( collectionOption );
 
         Option removeConnectionsOption =
-            OptionBuilder.withArgName(REMOVE_CONNECTIONS_ARG).hasArg().isRequired( false ).withDescription( "remove orphaned connections" )
-                .create(REMOVE_CONNECTIONS_ARG);
+                OptionBuilder.withArgName(REMOVE_CONNECTIONS_ARG).hasArg().isRequired( false ).withDescription( "remove orphaned connections" )
+                        .create(REMOVE_CONNECTIONS_ARG);
 
         options.addOption( removeConnectionsOption );
+
+        Option earliestTimestampOption =
+                OptionBuilder.withArgName(EARLIEST_TIMESTAMP_ARG).hasArg().isRequired( false ).withDescription( "earliest timestamp to delete" )
+                        .create(EARLIEST_TIMESTAMP_ARG);
+
+        options.addOption( earliestTimestampOption );
+
+        Option latestTimestampOption =
+                OptionBuilder.withArgName(LATEST_TIMESTAMP_ARG).hasArg().isRequired( false ).withDescription( "latest timestamp to delete" )
+                        .create(LATEST_TIMESTAMP_ARG);
+
+        options.addOption( latestTimestampOption );
+
+        Option secondsInPastOption =
+            OptionBuilder.withArgName(SECONDS_IN_PAST_ARG).hasArg().isRequired( false ).withDescription( "how many seconds old orphan must be to be deleted" )
+                .create(SECONDS_IN_PAST_ARG);
+
+        options.addOption( secondsInPastOption );
 
 
         return options;
@@ -116,18 +125,62 @@ public class CollectionIterator extends ToolBase {
 
         startSpring();
 
-        if (line.getOptionValue(APPLICATION_ARG).isEmpty()) {
+        String applicationOption = line.getOptionValue(APPLICATION_ARG);
+        String entityTypeOption = line.getOptionValue(ENTITY_TYPE_ARG);
+        String removeConnectionsOption = line.getOptionValue(REMOVE_CONNECTIONS_ARG);
+        String earliestTimestampOption = line.getOptionValue(EARLIEST_TIMESTAMP_ARG);
+        String latestTimestampOption = line.getOptionValue(LATEST_TIMESTAMP_ARG);
+        String secondsInPastOption = line.getOptionValue(SECONDS_IN_PAST_ARG);
+
+        if (isBlank(applicationOption)) {
             throw new RuntimeException("Application ID not provided.");
         }
         final UUID app = UUID.fromString(line.getOptionValue(APPLICATION_ARG));
 
-        String removeOrphansOption = line.getOptionValue(REMOVE_CONNECTIONS_ARG);
-        final boolean removeOrphans = !removeOrphansOption.isEmpty() && removeOrphansOption.toLowerCase().equals("yes");
+        if (isBlank(entityTypeOption)) {
+            throw new RuntimeException("Entity type (singular collection name) not provided.");
+        }
+        String entityType = entityTypeOption;
 
-        String entityType = line.getOptionValue(ENTITY_TYPE_ARG);
+        final boolean removeOrphans = !isBlank(removeConnectionsOption) && removeConnectionsOption.toLowerCase().equals("yes");
+
+        if (!isBlank(secondsInPastOption) && !isBlank(latestTimestampOption)) {
+            throw new RuntimeException("Can't specify both latest timestamp and seconds in past options.");
+        }
+
+        long earliest = 0L;
+        if (!isBlank(earliestTimestampOption)) {
+            try {
+                earliest = Long.parseLong(earliestTimestampOption);
+            } catch (Exception e) {
+                throw new RuntimeException("Cannot convert earliest timestamp to long: " + earliestTimestampOption);
+            }
+        }
+        final long earliestTimestamp = earliest;
+
+        long currentTimestamp = System.currentTimeMillis();
+
+        // default to DEFAULT_SECONDS_IN_PAST
+        long latest = currentTimestamp - (DEFAULT_SECONDS_IN_PAST * 1000L);
+        if (!isBlank(latestTimestampOption)) {
+            try {
+                latest = Long.parseLong(latestTimestampOption);
+            } catch (Exception e) {
+                throw new RuntimeException("Cannot convert latest timestamp to long: " + latestTimestampOption);
+            }
+        } else if (!isBlank(secondsInPastOption)) {
+            try {
+                long secondsInPast = Long.parseLong(secondsInPastOption);
+                latest = currentTimestamp - (secondsInPast * 1000L);
+            } catch (Exception e) {
+                throw new RuntimeException("Cannot convert seconds in past to long: " + secondsInPastOption);
+            }
+        }
+        final long latestTimestamp = latest;
 
         logger.info("Starting Tool: CollectionIterator");
         logger.info("Orphans {} be deleted", removeOrphans ? "WILL" : "will not");
+        logger.info("Timestamp range {} to {}", Long.toString(earliestTimestamp), Long.toString(latestTimestamp));
         logger.info("Using Cassandra consistency level: {}", System.getProperty("usergrid.read.cl", "CL_LOCAL_QUORUM"));
 
         em = emf.getEntityManager( app );
@@ -184,15 +237,17 @@ public class CollectionIterator extends ToolBase {
 
                         logger.info("{} - {} - entity data found", uuid, dateString);
                     }else{
-                        if (removeOrphans) {
+                        if (removeOrphans && timestamp >= earliestTimestamp && timestamp <= latestTimestamp) {
                             logger.info("{} - {} - entity data NOT found, REMOVING", uuid, dateString);
                             try {
                                 em.removeFromCollection(headEntity, collectionName, entityRef );
                             } catch (Exception e) {
                                 logger.error("{} - exception while trying to remove orphaned connection, {}", uuid, e.getMessage());
                             }
+                        } else if (removeOrphans) {
+                            logger.info("{} - {} ({}) - entity data NOT found, not removing because timestamp not in range", uuid, dateString, timestamp);
                         } else {
-                            logger.info("{} - {} - entity data NOT found", uuid, dateString);
+                            logger.info("{} - {} ({}) - entity data NOT found", uuid, dateString, timestamp);
                         }
                     }
                 } catch (Exception e) {
