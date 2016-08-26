@@ -70,6 +70,8 @@ public class CollectionIterator extends ToolBase {
 
     private static final String ENTITY_TYPE_ARG = "entityType";
 
+    private static final String REMOVE_CONNECTIONS_ARG = "removeConnections";
+
     private EntityManager em;
 
     @Override
@@ -87,10 +89,16 @@ public class CollectionIterator extends ToolBase {
         options.addOption( appOption );
 
         Option collectionOption =
-            OptionBuilder.withArgName(ENTITY_TYPE_ARG).hasArg().isRequired( true ).withDescription( "collection name" )
-                .create(ENTITY_TYPE_ARG);
+                OptionBuilder.withArgName(ENTITY_TYPE_ARG).hasArg().isRequired( true ).withDescription( "singular collection name" )
+                        .create(ENTITY_TYPE_ARG);
 
         options.addOption( collectionOption );
+
+        Option removeConnectionsOption =
+            OptionBuilder.withArgName(REMOVE_CONNECTIONS_ARG).hasArg().isRequired( false ).withDescription( "remove orphaned connections" )
+                .create(REMOVE_CONNECTIONS_ARG);
+
+        options.addOption( removeConnectionsOption );
 
 
         return options;
@@ -108,18 +116,22 @@ public class CollectionIterator extends ToolBase {
 
         startSpring();
 
-        UUID appToFilter = null;
-        if (!line.getOptionValue(APPLICATION_ARG).isEmpty()) {
-            appToFilter = UUID.fromString(line.getOptionValue(APPLICATION_ARG));
+        if (line.getOptionValue(APPLICATION_ARG).isEmpty()) {
+            throw new RuntimeException("Application ID not provided.");
         }
+        final UUID app = UUID.fromString(line.getOptionValue(APPLICATION_ARG));
+
+        String removeOrphansOption = line.getOptionValue(REMOVE_CONNECTIONS_ARG);
+        final boolean removeOrphans = !removeOrphansOption.isEmpty() && removeOrphansOption.toLowerCase().equals("yes");
 
         String entityType = line.getOptionValue(ENTITY_TYPE_ARG);
 
-        logger.info("Staring Tool: CollectionIterator");
+        logger.info("Starting Tool: CollectionIterator");
+        logger.info("Orphans {} be deleted", removeOrphans ? "WILL" : "will not");
         logger.info("Using Cassandra consistency level: {}", System.getProperty("usergrid.read.cl", "CL_LOCAL_QUORUM"));
 
-        em = emf.getEntityManager( appToFilter );
-        EntityRef headEntity = new SimpleEntityRef("application", appToFilter);
+        em = emf.getEntityManager( app );
+        EntityRef headEntity = new SimpleEntityRef("application", app);
 
         CollectionService collectionService = injector.getInstance(CollectionService.class);
         String collectionName = InflectionUtils.pluralize(entityType);
@@ -131,8 +143,6 @@ public class CollectionIterator extends ToolBase {
         com.google.common.base.Optional<String> queryString = com.google.common.base.Optional.absent();
 
         CollectionInfo collection = getDefaultSchema().getCollection(headEntity.getType(), collectionName);
-
-        final UUID app = appToFilter;
 
 
         IdQueryExecutor idQueryExecutor = new IdQueryExecutor(query.getCursor()) {
@@ -157,7 +167,8 @@ public class CollectionIterator extends ToolBase {
             ids.forEach( uuid -> {
 
                 try {
-                    org.apache.usergrid.persistence.Entity retrieved = em.get(new SimpleEntityRef(entityType, uuid));
+                    EntityRef entityRef = new SimpleEntityRef(entityType, uuid);
+                    org.apache.usergrid.persistence.Entity retrieved = em.get(entityRef);
 
                     long timestamp = 0;
                     String dateString = "NOT TIME-BASED";
@@ -173,7 +184,16 @@ public class CollectionIterator extends ToolBase {
 
                         logger.info("{} - {} - entity data found", uuid, dateString);
                     }else{
-                        logger.info("{} - {} - entity data NOT found", uuid, dateString);
+                        if (removeOrphans) {
+                            logger.info("{} - {} - entity data NOT found, REMOVING", uuid, dateString);
+                            try {
+                                em.removeFromCollection(headEntity, collectionName, entityRef );
+                            } catch (Exception e) {
+                                logger.error("{} - exception while trying to remove orphaned connection, {}", uuid, e.getMessage());
+                            }
+                        } else {
+                            logger.info("{} - {} - entity data NOT found", uuid, dateString);
+                        }
                     }
                 } catch (Exception e) {
                     logger.error("{} - exception while trying to load entity data, {} ", uuid, e.getMessage());
