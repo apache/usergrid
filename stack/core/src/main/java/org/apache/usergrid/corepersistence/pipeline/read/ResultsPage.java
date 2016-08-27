@@ -23,7 +23,9 @@ package org.apache.usergrid.corepersistence.pipeline.read;
 import java.util.List;
 
 import org.apache.usergrid.corepersistence.pipeline.cursor.ResponseCursor;
-import org.apache.usergrid.persistence.model.entity.Entity;
+import org.apache.usergrid.corepersistence.results.ObservableQueryExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -33,6 +35,9 @@ import org.apache.usergrid.persistence.model.entity.Entity;
  * @param T the type of results page
  */
 public class ResultsPage<T> {
+
+    private static final Logger logger = LoggerFactory.getLogger( ResultsPage.class );
+
 
     private final List<T> entityList;
 
@@ -57,6 +62,13 @@ public class ResultsPage<T> {
      * Return true if the results page is empty
      */
     public boolean hasMoreResults() {
+        if(logger.isTraceEnabled()){
+            if(entityList != null && entityList.size() == limit){
+                logger.trace("hasMoreResults = true, entityList size: {}, limit: {}", entityList.size(), limit);
+            }else{
+                logger.trace("hasMoreResults = false, entityList size: {}, limit: {}", entityList!= null ? entityList.size() : "null", limit);
+            }
+        }
         return entityList != null && entityList.size() == limit;
     }
 
