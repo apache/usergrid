@@ -219,7 +219,7 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
 
             result = DeleteResult.DELETED;
 
-            logger.info( "{} - Marking shard {} as deleted in group {}", Thread.currentThread().getName()shard, shardEntryGroup );
+            logger.info( "Marking shard {} as deleted in group {}", shard, shardEntryGroup );
         }
 
 
