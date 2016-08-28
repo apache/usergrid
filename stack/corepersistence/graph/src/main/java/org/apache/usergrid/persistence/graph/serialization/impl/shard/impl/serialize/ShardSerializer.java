@@ -58,6 +58,7 @@ public class ShardSerializer extends AbstractSerializer<Shard> {
         }
 
         composite.addComponent( shard.isCompacted(), BOOLEAN_SERIALIZER);
+        composite.addComponent( shard.isDeleted(), BOOLEAN_SERIALIZER);
 
         return composite.serialize();
     }
@@ -67,7 +68,7 @@ public class ShardSerializer extends AbstractSerializer<Shard> {
     public Shard fromByteBuffer( final ByteBuffer byteBuffer ) {
 
         DynamicComposite composite = DynamicComposite.fromByteBuffer( byteBuffer );
-        Preconditions.checkArgument( composite.size() == 5, "Composite should 5 elements" );
+        Preconditions.checkArgument( composite.size() == 5 || composite.size() == 6, "Composite should 5 elements" );
 
 
         final byte version = composite.get(0, BYTE_SERIALIZER);
@@ -76,9 +77,15 @@ public class ShardSerializer extends AbstractSerializer<Shard> {
         final DirectedEdge shardEnd = composite.get( 3, EDGE_SERIALIZER);
         final boolean isCompacted = composite.get( 4, BOOLEAN_SERIALIZER);
 
-
         final Shard shard = new Shard(shardIndex, shardCreated, isCompacted);
         shard.setShardEnd(Optional.fromNullable(shardEnd));
+
+        if( composite.size() == 6){
+            final boolean isDeleted = composite.get( 5, BOOLEAN_SERIALIZER);
+            shard.setDeleted(isDeleted);
+        }
+
+
         return shard;
 
     }

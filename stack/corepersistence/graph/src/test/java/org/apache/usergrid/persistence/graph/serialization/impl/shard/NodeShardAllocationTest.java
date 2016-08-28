@@ -564,7 +564,7 @@ public class NodeShardAllocationTest {
 
 
         final Iterator<ShardEntryGroup> result =
-                approximation.getShards( scope, Optional.<Shard>absent(), directedEdgeMeta );
+                approximation.getShards( scope, directedEdgeMeta );
 
 
         assertTrue( "Shards present", result.hasNext() );
@@ -663,7 +663,7 @@ public class NodeShardAllocationTest {
 
 
         final Iterator<ShardEntryGroup> result =
-                approximation.getShards( scope, Optional.<Shard>absent(), directedEdgeMeta );
+                approximation.getShards( scope, directedEdgeMeta );
 
 
         ShardEntryGroup shardEntryGroup = result.next();
