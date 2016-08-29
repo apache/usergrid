@@ -128,17 +128,20 @@ public class MultiRowShardColumnIterator<R, C, T> implements Iterator<T> {
             currentShard = currentShardIterator.next();
 
             // handle marked deleted shards
-            if( currentShard.isDeleted() && currentShardIterator.hasNext()){
+            while ( currentShard.isDeleted() && currentShardIterator.hasNext()){
 
                 if(logger.isTraceEnabled()) {
                     logger.trace("Shard is marked deleted, advancing to next - {}", currentShard);
                 }
 
                 currentShard = currentShardIterator.next();
-            }else if ( currentShard.isDeleted() && !currentShardIterator.hasNext()){
+            }
+
+            // if the last shard is deleted, return false, there is no next to seek
+            if ( currentShard.isDeleted() && !currentShardIterator.hasNext()){
 
                 if(logger.isTraceEnabled()) {
-                    logger.trace("Shard is marked deleted, and there is no more - {}", currentShard);
+                    logger.trace("Shard is marked deleted, and there are no more shards - {}", currentShard);
                 }
 
                 return false;
