@@ -27,6 +27,7 @@ import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.results.IdQueryExecutor;
 import org.apache.usergrid.corepersistence.service.CollectionSearch;
 import org.apache.usergrid.corepersistence.service.CollectionService;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
@@ -195,8 +196,12 @@ public class CollectionIterator extends ToolBase {
 
         CollectionService collectionService = injector.getInstance(CollectionService.class);
         String collectionName = InflectionUtils.pluralize(entityType);
+        String simpleEdgeType = CpNamingUtils.getEdgeTypeFromCollectionName(collectionName);
+        logger.info("simpleEdgeType: {}", simpleEdgeType);
 
         ApplicationScope applicationScope = new ApplicationScopeImpl(new SimpleId(app, "application"));
+        Id applicationScopeId = applicationScope.getApplication();
+        logger.info("applicationScope.getApplication(): {}", applicationScopeId);
         EdgeSerialization edgeSerialization = injector.getInstance(EdgeSerialization.class);
 
         Query query = new Query();
@@ -251,9 +256,12 @@ public class CollectionIterator extends ToolBase {
                             logger.info("{} - {} - entity data NOT found, REMOVING", uuid, dateString);
                             try {
                                 //em.removeItemFromCollection(headEntity, collectionName, entityRef );
-                                Edge edge = new SimpleEdge(applicationScope.getApplication(), entityType, entityRef.asId(), timestamp);
+                                logger.info("entityRef.asId(): {}", entityRef.asId());
+                                Edge edge = new SimpleEdge(applicationScopeId, simpleEdgeType, entityRef.asId(), timestamp);
                                 MarkedEdge markedEdge = new SimpleMarkedEdge(edge, true);
-                                edgeSerialization.deleteEdge(applicationScope, markedEdge, uuid).execute();
+                                MutationBatch batch = edgeSerialization.deleteEdge(applicationScope, markedEdge, UUIDUtils.newTimeUUID());
+                                logger.info("BATCH: {}", batch);
+                                batch.execute();
                             } catch (Exception e) {
                                 logger.error("{} - exception while trying to remove orphaned connection, {}", uuid, e.getMessage());
                             }
