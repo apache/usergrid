@@ -22,12 +22,19 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import com.google.common.base.Optional;
+import com.netflix.astyanax.MutationBatch;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.corepersistence.results.IdQueryExecutor;
 import org.apache.usergrid.corepersistence.service.CollectionSearch;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
+import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.*;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
@@ -189,6 +196,9 @@ public class CollectionIterator extends ToolBase {
         CollectionService collectionService = injector.getInstance(CollectionService.class);
         String collectionName = InflectionUtils.pluralize(entityType);
 
+        ApplicationScope applicationScope = new ApplicationScopeImpl(new SimpleId(app, "application"));
+        EdgeSerialization edgeSerialization = injector.getInstance(EdgeSerialization.class);
+
         Query query = new Query();
         query.setCollection(collectionName);
         query.setLimit(1000);
@@ -240,7 +250,10 @@ public class CollectionIterator extends ToolBase {
                         if (removeOrphans && timestamp >= earliestTimestamp && timestamp <= latestTimestamp) {
                             logger.info("{} - {} - entity data NOT found, REMOVING", uuid, dateString);
                             try {
-                                em.removeFromCollection(headEntity, collectionName, entityRef );
+                                //em.removeItemFromCollection(headEntity, collectionName, entityRef );
+                                Edge edge = new SimpleEdge(applicationScope.getApplication(), entityType, entityRef.asId(), timestamp);
+                                MarkedEdge markedEdge = new SimpleMarkedEdge(edge, true);
+                                edgeSerialization.deleteEdge(applicationScope, markedEdge, uuid).execute();
                             } catch (Exception e) {
                                 logger.error("{} - exception while trying to remove orphaned connection, {}", uuid, e.getMessage());
                             }
