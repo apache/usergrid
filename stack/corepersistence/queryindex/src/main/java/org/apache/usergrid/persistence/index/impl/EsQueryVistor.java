@@ -241,21 +241,19 @@ public class EsQueryVistor implements QueryVisitor {
 
         // or field is just a string that does need a prefix
         if ( value.indexOf( "*" ) != -1 ) {
+
             final WildcardQueryBuilder wildcardQuery =
-                    QueryBuilders.wildcardQuery( IndexingUtils.FIELD_STRING_NESTED, value );
-            queryBuilders.push( fieldNameTerm( name, wildcardQuery ) );
+                QueryBuilders.wildcardQuery( IndexingUtils.FIELD_STRING_NESTED, value );
+            final QueryFilterBuilder wildcardFilter = FilterBuilders.queryFilter(fieldNameTerm( name, wildcardQuery ));
+            filterBuilders.push( wildcardFilter);
         }
         else {
             final MatchQueryBuilder termQuery = QueryBuilders.matchQuery( IndexingUtils.FIELD_STRING_NESTED, value );
+            final QueryFilterBuilder wildcardFilter = FilterBuilders.queryFilter(fieldNameTerm( name, termQuery ));
+            filterBuilders.push( wildcardFilter);
 
-            queryBuilders.push( fieldNameTerm( name, termQuery ) );
         }
-
-
-        //no op for filters, push an empty operation
-
-        //TODO, validate this works
-        filterBuilders.push( NoOpFilterBuilder.INSTANCE );
+        queryBuilders.push( NoOpQueryBuilder.INSTANCE );
     }
 
 
@@ -348,14 +346,13 @@ public class EsQueryVistor implements QueryVisitor {
                 //Because of our legacy behavior, where we match CCCC*, we need to use the unanalyzed string to ensure that
                 //we start
 
+
                 final WildcardQueryBuilder wildcardQuery =
                         QueryBuilders.wildcardQuery( IndexingUtils.FIELD_STRING_NESTED_UNANALYZED, stringValue );
 
                 final QueryFilterBuilder wildcardFilter = FilterBuilders.queryFilter(fieldNameTerm( name, wildcardQuery ));
                 filterBuilders.push( wildcardFilter);
                 queryBuilders.push( NoOpQueryBuilder.INSTANCE );
-//                queryBuilders.push( fieldNameTerm( name, wildcardQuery ) );
-//                filterBuilders.push( NoOpFilterBuilder.INSTANCE );
                 return;
             }
 
