@@ -57,6 +57,8 @@ public class ShardManager extends ToolBase {
 
     private static final String SHARD_TYPE_ARG = "shardType";
 
+    private static final String SHARD_INDEX_ARG = "shardIndex";
+
 
     @Override
     @SuppressWarnings("static-access")
@@ -84,10 +86,16 @@ public class ShardManager extends ToolBase {
         options.addOption(repairOption);
 
         Option shardTypeOption =
-            OptionBuilder.withArgName(SHARD_TYPE_ARG).hasArg().isRequired(true).withDescription("either collection or connection")
+            OptionBuilder.withArgName(SHARD_TYPE_ARG).hasArg().isRequired(false).withDescription("either collection or connection")
                 .create(SHARD_TYPE_ARG);
 
         options.addOption(shardTypeOption);
+
+        Option shardIndexOption =
+            OptionBuilder.withArgName(SHARD_INDEX_ARG).hasArg().isRequired(false).withDescription("the shardIndex")
+                .create(SHARD_INDEX_ARG);
+
+        options.addOption(shardIndexOption);
 
         return options;
     }
@@ -115,10 +123,13 @@ public class ShardManager extends ToolBase {
 
         String shardType = line.getOptionValue(SHARD_TYPE_ARG);
 
+        String shardIndex = line.getOptionValue(SHARD_INDEX_ARG);
+
         boolean repair = false;
         if( isNotEmpty(repairTask) && (
             repairTask.equalsIgnoreCase("removeAllShardEnds") || repairTask.equalsIgnoreCase("removeLastShardEnd") ||
-            repairTask.equalsIgnoreCase("resetAllCompactionStatus"))) {
+            repairTask.equalsIgnoreCase("resetAllCompactionStatus") || repairTask.equalsIgnoreCase("setCompacted") ||
+                repairTask.equalsIgnoreCase("clearCompacted"))) {
 
             repair = true;
         }
@@ -156,13 +167,30 @@ public class ShardManager extends ToolBase {
         while (shards.hasNext()) {
             Shard shard = shards.next();
 
+
             logger.info("Seeking over shard: {}", shard);
 
             if(repair) {
 
                 logger.info("Repair enabled with task: {}", repairTask);
 
-                if( repairTask.equalsIgnoreCase("removeLastShardEnd") && firstShard){
+                if ( repairTask.equalsIgnoreCase("setCompacted") && isNotEmpty(shardIndex)  && Long.valueOf(shardIndex).equals(shard.getShardIndex())){
+
+                    logger.info("Setting compacted=true for shard: {}", shard);
+
+                    shard.setCompacted(true);
+                    edgeShardSerialization.writeShardMeta(applicationScope, shard, directedEdgeMeta).execute();
+
+
+                }else if ( repairTask.equalsIgnoreCase("clearCompacted") && isNotEmpty(shardIndex)  && Long.valueOf(shardIndex).equals(shard.getShardIndex())){
+
+                    logger.info("Setting compacted=false for shard: {}", shard);
+
+                    shard.setCompacted(false);
+                    edgeShardSerialization.writeShardMeta(applicationScope, shard, directedEdgeMeta).execute();
+
+
+                } else if( repairTask.equalsIgnoreCase("removeLastShardEnd") && firstShard){
 
                     logger.info("Removing shard end from shard: {}", shard);
 
@@ -176,7 +204,7 @@ public class ShardManager extends ToolBase {
                     shard.setShardEnd(Optional.absent());
                     edgeShardSerialization.writeShardMeta(applicationScope, shard, directedEdgeMeta).execute();
 
-                } else if ( repairTask.equalsIgnoreCase("resetAllCompactionStatus")){
+                } else if ( repairTask.equalsIgnoreCase("resetAllCompactionStatus") && shard.getShardIndex() != 0){
 
                     logger.info("Setting compacted=false for shard: {}", shard);
 
