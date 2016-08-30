@@ -17,16 +17,15 @@
 package org.apache.usergrid.query.validator.users;
 
 import net.jcip.annotations.NotThreadSafe;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.query.validator.AbstractQueryIT;
 import org.apache.usergrid.query.validator.QueryRequest;
 import org.apache.usergrid.query.validator.QueryResponse;
 import org.apache.usergrid.query.validator.QueryResultsMatcher;
 import org.apache.usergrid.utils.StringUtils;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.util.List;
 
@@ -105,7 +104,6 @@ public class UserQueryIT extends AbstractQueryIT {
     }
 
     @Test
-    @Ignore("TODO: uncomment this test when you are ready to fix USERGRID-1314")
     public void nameBeginswithAndSexEqualAndAgeGreaterthanequalOrSexEqual_sortNameDesc() {
         String sqlite = "SELECT * FROM users WHERE name LIKE 'a%' and sex = 'male' and age >= 35 or sex = 'female' " +
             "ORDER BY name desc LIMIT 10";
@@ -120,7 +118,6 @@ public class UserQueryIT extends AbstractQueryIT {
     }
 
     @Test
-    @Ignore("TODO: uncomment this test when you are ready to fix USERGRID-1314")
     public void nameBeginswithAndSexEqualAndAgeGreaterthanequalOrSexEqual_sortAddressAscNameDesc() {
         String sqlite = "SELECT * FROM users WHERE name LIKE 'a%' and sex = 'male' and age >= 35 or sex = 'female' " +
             "ORDER BY address asc, name desc LIMIT 4";
@@ -136,7 +133,6 @@ public class UserQueryIT extends AbstractQueryIT {
     }
 
     @Test
-    @Ignore("TODO: uncomment this test when you are ready to fix USERGRID-1314")
     public void nameBeginswithAndSexEqualAndAgeGreaterthanequalOrSexEqual_sortAddressAscNameDesc_limitL4() {
         String sqlite = "SELECT * FROM users WHERE name LIKE 'a%' and sex = 'male' and age >= 35 or sex = 'female' " +
             "ORDER BY address asc, name desc LIMIT 4";
@@ -354,11 +350,10 @@ public class UserQueryIT extends AbstractQueryIT {
     }
 
     @Test
-    @Ignore("TODO: uncomment this test when you are ready to fix USERGRID-1314")
     public void nameBeginswithAndSexEqualAndAgeGreaterthanequalOrSexEqual() {
         String sqlite = "SELECT * FROM users WHERE name LIKE 'a%' and sex = 'male' and age >= 20 " +
-            "or sex = 'female' LIMIT 10";
-        String api = "select * where name = 'a*' and sex = 'male' and age >= 20 or sex = 'female'";
+            "or sex = 'female' ORDER BY address asc, name desc LIMIT 10";
+        String api = "select * where name = 'a*' and sex = 'male' and age >= 20 or sex = 'female' ORDER BY address asc, name desc";
 
         QueryRequest request = new QueryRequest();
         request.setDbQuery(sqlite);
@@ -368,11 +363,10 @@ public class UserQueryIT extends AbstractQueryIT {
     }
 
     @Test
-    @Ignore("TODO: uncomment this test when you are ready to fix USERGRID-1314")
     public void nameBeginswithAndSexEqualAndAgeGreaterthanequalOrSexEqual_limitL20() {
         String sqlite = "SELECT * FROM users WHERE name LIKE 'a%' and sex = 'male' and age >= 20 " +
-            "or sex = 'female' LIMIT 20";
-        String api = "select * where name = 'a*' and sex = 'male' and age >= 20 or sex = 'female'";
+            "or sex = 'female' ORDER BY address asc, name desc LIMIT 20";
+        String api = "select * where name = 'a*' and sex = 'male' and age >= 20 or sex = 'female' ORDER BY address asc, name desc";
         int limit = 20;
 
         QueryRequest request = new QueryRequest();
