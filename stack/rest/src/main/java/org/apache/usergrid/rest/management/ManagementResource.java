@@ -395,6 +395,7 @@ public class ManagementResource extends AbstractContextResource {
 
             //moved the check for sso enabled form MangementServiceImpl since was unable to get the current user there to check if its super user.
             if( tokens.isExternalSSOProviderEnabled()
+                && properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER).equalsIgnoreCase("usergrid")
                 && !userServiceAdmin(username) ){
                 OAuthResponse response =
                     OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
@@ -625,13 +626,14 @@ public class ManagementResource extends AbstractContextResource {
             return; // we only care about username/password auth
         }
 
-        if ( tokens.isExternalSSOProviderEnabled() ) {
-            // when external tokens enabled then only superuser can obtain an access token
-            if ( !userServiceAdmin(username)) {
-                // this guy is not the superuser
+        // when external tokens enabled with Usergrid provider then only superuser can obtain an access token
+        if ( tokens.isExternalSSOProviderEnabled()
+            && properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER).equalsIgnoreCase("usergrid")
+            && !userServiceAdmin(username) ) {
+
                 throw new IllegalArgumentException( "External SSO integration is enabled, admin users must login via provider: "+
                     properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
-            }
+
         }
     }
 
