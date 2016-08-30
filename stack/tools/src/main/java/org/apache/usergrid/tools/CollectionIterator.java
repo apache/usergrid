@@ -267,7 +267,7 @@ public class CollectionIterator extends ToolBase {
 
 
            return markedEdge;
-        }).toBlocking().last();
+        }).toBlocking().lastOrDefault(null);
 
     }
 }
