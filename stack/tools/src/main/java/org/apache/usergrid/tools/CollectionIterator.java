@@ -24,6 +24,7 @@ import java.util.*;
 import com.google.common.base.Optional;
 import com.netflix.astyanax.MutationBatch;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
+import org.apache.usergrid.corepersistence.results.EntityQueryExecutor;
 import org.apache.usergrid.corepersistence.results.IdQueryExecutor;
 import org.apache.usergrid.corepersistence.service.CollectionSearch;
 import org.apache.usergrid.corepersistence.service.CollectionService;
@@ -31,13 +32,14 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.graph.*;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.graph.serialization.EdgeSerialization;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.*;
+import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.utils.InflectionUtils;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -212,29 +214,18 @@ public class CollectionIterator extends ToolBase {
 
         CollectionInfo collection = getDefaultSchema().getCollection(headEntity.getType(), collectionName);
 
+        GraphManagerFactory gmf = injector.getInstance( GraphManagerFactory.class );
+        GraphManager gm = gmf.createEdgeManager(applicationScope);
 
-        IdQueryExecutor idQueryExecutor = new IdQueryExecutor(query.getCursor()) {
-            @Override
-            protected rx.Observable<ResultsPage<Id>> buildNewResultsPage(
-                final Optional<String> cursor) {
 
-                final CollectionSearch search =
-                    new CollectionSearch(new ApplicationScopeImpl(new SimpleId(app, "application")), new SimpleId(app, "application"), collectionName, collection.getType(), query.getLimit(),
-                        queryString, cursor);
+        final SimpleSearchByEdgeType search =
+            new SimpleSearchByEdgeType( applicationScopeId, simpleEdgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
+                Optional.absent(), false );
 
-                return collectionService.searchCollectionIds(search);
-            }
-        };
+        gm.loadEdgesFromSource(search).map(markedEdge -> {
 
-        while ( idQueryExecutor.hasNext() ){
-
-            Results results = idQueryExecutor.next();
-
-            List<UUID> ids = results.getIds();
-
-            ids.forEach( uuid -> {
-
-                try {
+            UUID uuid = markedEdge.getTargetNode().getUuid();
+            try {
                     EntityRef entityRef = new SimpleEntityRef(entityType, uuid);
                     org.apache.usergrid.persistence.Entity retrieved = em.get(entityRef);
 
@@ -257,8 +248,6 @@ public class CollectionIterator extends ToolBase {
                             try {
                                 //em.removeItemFromCollection(headEntity, collectionName, entityRef );
                                 logger.info("entityRef.asId(): {}", entityRef.asId());
-                                Edge edge = new SimpleEdge(applicationScopeId, simpleEdgeType, entityRef.asId(), timestamp);
-                                MarkedEdge markedEdge = new SimpleMarkedEdge(edge, true);
                                 MutationBatch batch = edgeSerialization.deleteEdge(applicationScope, markedEdge, UUIDUtils.newTimeUUID());
                                 logger.info("BATCH: {}", batch);
                                 batch.execute();
@@ -276,10 +265,9 @@ public class CollectionIterator extends ToolBase {
                 }
 
 
-            });
 
-        }
-
+           return markedEdge;
+        }).toBlocking().last();
 
     }
 }
