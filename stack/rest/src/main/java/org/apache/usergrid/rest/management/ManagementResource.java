@@ -42,6 +42,7 @@ import org.apache.usergrid.security.sso.ApigeeSSO2Provider;
 import org.apache.usergrid.security.sso.ExternalSSOProvider;
 import org.apache.usergrid.security.sso.SSOProviderFactory;
 import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
+import org.apache.usergrid.security.tokens.exceptions.BadTokenException;
 import org.apache.usergrid.utils.JsonUtils;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
@@ -196,14 +197,22 @@ public class ManagementResource extends AbstractContextResource {
         String ssoUserId = null;
         if(ssoEnabled && !user.getUsername().equals(properties.getProperty(USERGRID_SYSADMIN_LOGIN_NAME))){
             ExternalSSOProvider provider = ssoProviderFactory.getProvider();
-            final Map<String, String> decodedTokenDetails = provider.getDecodedTokenDetails(access_token);
-            final String expiry = decodedTokenDetails.containsKey("expiry") ? decodedTokenDetails.get("expiry") : "0";
 
-            tokenTtl =
-                Long.valueOf(expiry) - System.currentTimeMillis()/1000;
+            try {
+                final Map<String, String> decodedTokenDetails = provider.getDecodedTokenDetails(access_token);
+                final String expiry = decodedTokenDetails.containsKey("expiry") ? decodedTokenDetails.get("expiry") : "0";
 
-            if( provider instanceof ApigeeSSO2Provider ) {
-                ssoUserId = decodedTokenDetails.get("user_id");
+                tokenTtl =
+                    Long.valueOf(expiry) - System.currentTimeMillis() / 1000;
+
+                if (provider instanceof ApigeeSSO2Provider) {
+                    ssoUserId = decodedTokenDetails.get("user_id");
+                }
+            }catch (BadTokenException e){
+
+                // even when SSO is enabled, this could be a local token
+                tokenTtl = tokens.getTokenInfo(access_token).getDuration();
+
             }
 
         }else{
