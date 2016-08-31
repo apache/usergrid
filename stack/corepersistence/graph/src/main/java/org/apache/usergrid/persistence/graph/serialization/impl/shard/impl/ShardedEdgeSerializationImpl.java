@@ -729,6 +729,16 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                 final R rowKey = getRowKey( shard );
                 writeEdge( batch, columnFamily, scope, rowKey, column, shard, isDeleted );
 
+                if(getDirectedEdge() instanceof DirectedEdge){
+                    DirectedEdge directedEdge = (DirectedEdge) getDirectedEdge();
+                    if( shard != null && shard.getShardEnd().isPresent()
+                        && directedEdge.timestamp > shard.getShardEnd().get().timestamp){
+
+                        logger.warn("Writing edge past shard end for edge: {}, shard: {}", directedEdge, shard );
+
+                    }
+                }
+
                 // if an edge is being written to this shard, un-delete it in case it was previously marked
                 // don't un-delete if the edge write is to actually remove an edge
                 // Usergrid allows entities to be written with a UUID generated from the past (time)
