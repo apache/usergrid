@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueException;
@@ -136,10 +137,10 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         // akkaFig may be null when this is called from JUnit tests
         if ( actorSystemFig != null && actorSystemFig.getEnabled() ) {
             String region = ioEvent.getRegion();
-            if ( region == null ) {
+            if ( StringUtils.isEmpty(region) ) {
                 region = uniqueValuesFig.getAuthoritativeRegion();
             }
-            if ( region == null ) {
+            if ( StringUtils.isEmpty(region) ) {
                 region = actorSystemFig.getRegionLocal();
             }
             confirmUniqueFieldsAkka( mvccEntity, version, applicationScope, region );

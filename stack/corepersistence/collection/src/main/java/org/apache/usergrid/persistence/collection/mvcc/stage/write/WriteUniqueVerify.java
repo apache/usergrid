@@ -29,6 +29,7 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
@@ -124,10 +125,10 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
         final ApplicationScope applicationScope = ioevent.getEntityCollection();
 
         String region = ioevent.getRegion();
-        if ( region == null ) {
+        if ( StringUtils.isEmpty(region) ) {
             region = uniqueValuesFig.getAuthoritativeRegion();
         }
-        if ( region == null ) {
+        if ( StringUtils.isEmpty(region) ) {
             region = actorSystemFig.getRegionLocal();
         }
         try {
