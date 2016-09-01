@@ -729,12 +729,12 @@ public class ShardedEdgeSerializationImpl implements ShardedEdgeSerialization {
                 final R rowKey = getRowKey( shard );
                 writeEdge( batch, columnFamily, scope, rowKey, column, shard, isDeleted );
 
-                if(getDirectedEdge() instanceof DirectedEdge){
+                if(logger.isTraceEnabled() && getDirectedEdge() instanceof DirectedEdge){
                     DirectedEdge directedEdge = (DirectedEdge) getDirectedEdge();
                     if( shard != null && shard.getShardEnd().isPresent()
                         && directedEdge.timestamp > shard.getShardEnd().get().timestamp){
 
-                        logger.warn("Writing edge past shard end for edge: {}, shard: {}", directedEdge, shard );
+                        logger.trace("Writing edge past shard end for edge: {}, shard: {}", directedEdge, shard );
 
                     }
                 }
