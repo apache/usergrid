@@ -33,16 +33,16 @@ public class CollectionIoEvent<T> implements Serializable {
 
     final private T event;
 
-    final private String region;
+    final private String authoritativeRegion;
 
     public CollectionIoEvent( final ApplicationScope context, final T event ) {
         this( context, event, null );
     }
 
-    public CollectionIoEvent( final ApplicationScope context, final T event, String region ) {
+    public CollectionIoEvent( final ApplicationScope context, final T event, String authoritativeRegion ) {
         this.context = context;
         this.event = event;
-        this.region = region;
+        this.authoritativeRegion = authoritativeRegion;
     }
 
 
@@ -55,7 +55,7 @@ public class CollectionIoEvent<T> implements Serializable {
         return event;
     }
 
-    public String getRegion() {
-        return region;
+    public String getAuthoritativeRegion() {
+        return authoritativeRegion;
     }
 }
