@@ -173,7 +173,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
                 // don't use read repair on this pre-write check
                 // stronger consistency is extremely important here, more so than performance
-                UniqueValueSet set = uniqueValueStrat.load(scope, cassandraFig.getConsistentReadCL(),
+                UniqueValueSet set = uniqueValueStrat.load(scope, cassandraFig.getReadCL(),
                     written.getEntityId().getType(), Collections.singletonList(written.getField()), false);
 
                 set.forEach(uniqueValue -> {
