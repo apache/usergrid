@@ -16,7 +16,11 @@ A highly-scalable data platform for mobile applications.
 
 ## Building
 
-From the command line, go to the usergrid directory and type the following:
+First, build the [Java SDK](https://github.com/apache/usergrid-java) as the stack uses this as a dependency for some modules:
+
+    mvn clean install -DskipTests=true
+
+From the command line, go to the usergrid `stack/` directory and type the following:
 
     mvn clean install -DskipTests=true
 
