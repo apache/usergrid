@@ -1,2 +1,0 @@
-include ':push', ':UsergridAndroidSDK'
-project (":UsergridAndroidSDK").projectDir = new File("../../UsergridAndroidSDK")
