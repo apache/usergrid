@@ -38,6 +38,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.*;
 
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER;
 import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER_URL;
 import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
@@ -660,7 +661,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void testSuperuserOnlyWhenValidateExternalTokensEnabled() throws Exception {
+    public void testSuperuserOnlyWhenValidateExternalTokensEnabledForUsergridProvider() throws Exception {
 
         // create an org and an admin user
 
@@ -673,6 +674,7 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         String suToken = clientSetup.getSuperuserToken().getAccessToken();
         Map<String, String> props = new HashMap<String, String>();
+        props.put(USERGRID_EXTERNAL_SSO_PROVIDER, "usergrid");
         props.put(USERGRID_EXTERNAL_SSO_ENABLED, "true");
         props.put(USERGRID_EXTERNAL_SSO_PROVIDER_URL, getBaseURI().toURL().toExternalForm() );
         pathResource( "testproperties" ).post( props );

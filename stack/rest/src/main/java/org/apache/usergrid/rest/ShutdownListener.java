@@ -72,7 +72,7 @@ public class ShutdownListener implements ServletContextListener {
         ActorSystemManager actorSystemManager = injector.getInstance(ActorSystemManager.class);
 
         // stop the Akka actor system
-        actorSystemManager.shutdownAll();
+        //actorSystemManager.shutdownAll();
 
         boolean started = Boolean.parseBoolean(
             properties.getProperty(JobServiceBoostrap.START_SCHEDULER_PROP, "true"));

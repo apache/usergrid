@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.graph.serialization.impl.shard.impl;
 import java.util.Collections;
 import java.util.Iterator;
 
+import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,6 @@ import org.apache.usergrid.persistence.graph.SearchByEdgeType;
 import org.apache.usergrid.persistence.graph.exception.GraphRuntimeException;
 import org.apache.usergrid.persistence.graph.serialization.util.GraphValidation;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.netflix.astyanax.MutationBatch;
@@ -78,11 +78,10 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
 
     @Override
-    public Iterator<ShardEntryGroup> getShards( final ApplicationScope scope, final Optional<Shard> maxShardId,
-                                                final DirectedEdgeMeta directedEdgeMeta ) {
+    public Iterator<ShardEntryGroup> getShards(final ApplicationScope scope,
+                                               final DirectedEdgeMeta directedEdgeMeta) {
 
         ValidationUtils.validateApplicationScope( scope );
-        Preconditions.checkNotNull( maxShardId, "maxShardId cannot be null" );
         GraphValidation.validateDirectedEdgeMeta( directedEdgeMeta );
 
         Iterator<Shard> existingShards;
@@ -93,7 +92,7 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
         }
 
         else {
-            existingShards = edgeShardSerialization.getShardMetaData( scope, maxShardId, directedEdgeMeta );
+            existingShards = edgeShardSerialization.getShardMetaData( scope, Optional.absent(), directedEdgeMeta );
 
             /**
              * We didn't get anything out of cassandra, so we need to create the minimum shard
@@ -297,8 +296,8 @@ public class NodeShardAllocationImpl implements NodeShardAllocation {
 
         for ( DirectedEdgeMeta.NodeMeta node : directedEdgeMeta.getNodes() ) {
 
-            //short circuit
-            if ( !isNew || node.getId().getUuid().version() > 2 ) {
+            //short circuit if not a type 1 time UUID
+            if ( !isNew || node.getId().getUuid().version() != 1 ) {
                 return false;
             }
 
