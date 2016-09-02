@@ -25,13 +25,15 @@ public class SmartShard<R, T> {
     final ScopedRowKey<R> rowKey;
     final T shardEnd;
     final long shardIndex;
+    final boolean isDeleted;
 
 
-    public SmartShard(final ScopedRowKey<R> rowKey, final long shardIndex, final T shardEnd){
+    public SmartShard(final ScopedRowKey<R> rowKey, final long shardIndex, final T shardEnd, final boolean isDeleted){
 
         this.rowKey = rowKey;
         this.shardIndex = shardIndex;
         this.shardEnd = shardEnd;
+        this.isDeleted = isDeleted;
     }
 
 
@@ -48,12 +50,15 @@ public class SmartShard<R, T> {
         return shardIndex;
     }
 
+    public boolean isDeleted(){
+        return isDeleted;
+    }
 
 
     @Override
     public String toString(){
 
-        return "Shard { rowKey="+rowKey + ", shardEnd="+shardEnd+" }";
+        return "Shard { rowKey="+rowKey + ", shardIndex="+shardIndex+", shardEnd="+shardEnd+", isDeleted="+isDeleted+" }";
 
 
     }

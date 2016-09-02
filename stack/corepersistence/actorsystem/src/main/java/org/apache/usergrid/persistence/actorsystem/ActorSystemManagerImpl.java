@@ -349,12 +349,12 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
             }
 
             // add a shutdown hook to clean all actor systems if the JVM exits without the servlet container knowing
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run() {
-                    shutdownAll();
-                }
-            });
+//            Runtime.getRuntime().addShutdownHook(new Thread() {
+//                @Override
+//                public void run() {
+//                    shutdownAll();
+//                }
+//            });
 
         }
 

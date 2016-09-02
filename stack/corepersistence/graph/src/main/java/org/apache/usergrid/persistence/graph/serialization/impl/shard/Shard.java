@@ -32,8 +32,9 @@ public class Shard implements Comparable<Shard> {
 
     private final long shardIndex;
     private final long createdTime;
-    private final boolean compacted;
+    private boolean compacted;
     private Optional<DirectedEdge> shardEnd;
+    private boolean deleted;
 
 
     public Shard( final long shardIndex, final long createdTime, final boolean compacted ) {
@@ -41,6 +42,7 @@ public class Shard implements Comparable<Shard> {
         this.createdTime = createdTime;
         this.compacted = compacted;
         this.shardEnd = Optional.absent();
+        this.deleted = false;
     }
 
 
@@ -67,6 +69,10 @@ public class Shard implements Comparable<Shard> {
         return compacted;
     }
 
+    public void setCompacted(final boolean compacted){
+        this.compacted = compacted;
+    }
+
 
     /**
      * Returns true if this is the minimum shard
@@ -82,6 +88,14 @@ public class Shard implements Comparable<Shard> {
 
     public Optional<DirectedEdge> getShardEnd() {
         return shardEnd;
+    }
+
+    public boolean isDeleted(){
+        return deleted;
+    }
+
+    public void setDeleted( final boolean deleted){
+        this.deleted = deleted;
     }
 
 
@@ -174,6 +188,7 @@ public class Shard implements Comparable<Shard> {
         }else{
             string.append("null");
         }
+        string.append(", isDeleted=").append(deleted);
         string.append(" }");
 
         return string.toString();

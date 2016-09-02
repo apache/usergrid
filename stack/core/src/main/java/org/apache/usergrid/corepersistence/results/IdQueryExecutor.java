@@ -36,6 +36,8 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 
 
@@ -45,6 +47,9 @@ import rx.Observable;
 @Deprecated//Required for 1.0 compatibility
 public abstract class IdQueryExecutor extends ObservableQueryExecutor<Id> {
 
+    private static final Logger logger = LoggerFactory.getLogger( IdQueryExecutor.class );
+
+
 
     protected IdQueryExecutor( final Optional<String> startCursor ) {
         super( startCursor );
@@ -53,6 +58,11 @@ public abstract class IdQueryExecutor extends ObservableQueryExecutor<Id> {
 
     @Override
     protected Results createResults( final ResultsPage resultsPage ) {
+
+        if(logger.isTraceEnabled()){
+            logger.trace("Creating Id results from resultsPage");
+        }
+
         final List<Id> ids = resultsPage.getEntityList();
 
         List<UUID> uuids = ids.stream().map(id -> id.getUuid()).collect(Collectors.toList());

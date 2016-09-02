@@ -88,7 +88,7 @@ public class UsersResource extends ServiceResource {
 
     @Override
     @Path("{itemName}")
-    public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName )
+    public AbstractContextResource addNameParameter( @Context UriInfo ui, @PathParam("itemName") PathSegment itemName)
             throws Exception {
 
         if(logger.isTraceEnabled()){
@@ -109,7 +109,17 @@ public class UsersResource extends ServiceResource {
         addParameter( getServiceParameters(), itemName.getPath() );
 
         addMatrixParams( getServiceParameters(), ui, itemName );
-        Identifier id = Identifier.from( itemName.getPath() );
+
+        String forceString = ui.getQueryParameters().getFirst("force");
+
+        Identifier id;
+        if (forceString != null && "email".equals(forceString.toLowerCase())) {
+            id = Identifier.fromEmail(itemName.getPath().toLowerCase());
+        } else if (forceString != null && "name".equals(forceString.toLowerCase())) {
+            id = Identifier.fromName(itemName.getPath().toLowerCase());
+        } else {
+            id = Identifier.from(itemName.getPath());
+        }
         if ( id == null ) {
             throw new IllegalArgumentException( "Not a valid user identifier: " + itemName.getPath() );
         }

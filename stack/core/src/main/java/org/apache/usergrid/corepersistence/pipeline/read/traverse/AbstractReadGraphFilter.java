@@ -198,7 +198,14 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
 
         //if it's our first pass, there's no cursor to generate
         if(cursorValue == null){
+            if(logger.isTraceEnabled()){
+                logger.trace("Cursor value is null, creating filter result with no cursor");
+            }
             return new FilterResult<>( emit, parent );
+        }
+
+        if(logger.isTraceEnabled()){
+            logger.trace("Cursor value is not null, creating filter result with cursor: {}", cursorValue.toString());
         }
 
         return super.createFilterResult( emit, cursorValue, parent );
