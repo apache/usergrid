@@ -23,11 +23,9 @@ import java.io.FileReader;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.model.Column;
-import com.netflix.astyanax.model.ConsistencyLevel;
-import com.netflix.astyanax.util.RangeBuilder;
-import org.apache.usergrid.persistence.Entity;
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.Session;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
@@ -73,7 +71,7 @@ public class UniqueValueManager extends ToolBase {
     private final MultiTenantColumnFamily<ScopedRowKey<TypeField>, EntityVersion> CF_UNIQUE_VALUES =
         new MultiTenantColumnFamily<>( "Unique_Values_V2", ROW_KEY_SER, ENTITY_VERSION_SER );
 
-    private com.netflix.astyanax.Keyspace keyspace;
+    private Session session;
 
     private MvccEntitySerializationStrategy mvccEntitySerializationStrategy;
 
@@ -136,7 +134,7 @@ public class UniqueValueManager extends ToolBase {
                     "Example: 'b9398e88-ef7f-11e5-9e41-0a2cb9e6caa9|user|email|baasadmins@apigee.com'");
         }
 
-        keyspace = injector.getInstance(com.netflix.astyanax.Keyspace.class);
+        session = injector.getInstance(Session.class);
         mvccEntitySerializationStrategy = injector.getInstance(MvccEntitySerializationStrategy.class);
         uniqueValueSerializationStrategy = injector.getInstance(UniqueValueSerializationStrategy.class);
 
@@ -161,7 +159,7 @@ public class UniqueValueManager extends ToolBase {
 
                 UniqueValueSet uniqueValueSet = uniqueValueSerializationStrategy.load(
                         new ApplicationScopeImpl(new SimpleId(appUuid, "application")),
-                        ConsistencyLevel.valueOf(System.getProperty("usergrid.read.cl", "CL_LOCAL_QUORUM")), entityType,
+                        ConsistencyLevel.valueOf(System.getProperty("usergrid.read.cl", "LOCAL_QUORUM")), entityType,
                         Collections.singletonList(new StringField(fieldType, fieldValue)), false);
 
                 StringBuilder stringBuilder = new StringBuilder();
@@ -188,7 +186,10 @@ public class UniqueValueManager extends ToolBase {
                     uniqueValueSet.forEach(uniqueValue -> {
                         logger.info("DELETING UNIQUE VALUE");
                         try {
-                            uniqueValueSerializationStrategy.delete(new ApplicationScopeImpl(new SimpleId(appUuid, "application")), uniqueValue).execute();
+                            BatchStatement batchStatement = uniqueValueSerializationStrategy.
+                                deleteCQL(new ApplicationScopeImpl(new SimpleId(appUuid, "application")), uniqueValue);
+
+                            session.execute(batchStatement);
                         }
                         catch (Exception e) {
                             logger.error("Exception thrown for UV delete: " + e.getMessage());
