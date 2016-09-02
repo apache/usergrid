@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    tools:context="org.apache.usergrid.push.SettingsActivity"
+    android:background="@color/colorPrimary"
+    android:minHeight="30dp">
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/orgId"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:minWidth="300dp"
+        android:background="@android:color/white"
+        android:layout_marginTop="30dp"
+        android:hint="Org Id"
+        android:paddingStart="10dp"
+        android:minHeight="30dp"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:maxWidth="300dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/appId"
+        android:minWidth="300dp"
+        android:background="@android:color/white"
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/orgId"
+        android:layout_centerHorizontal="true"
+        android:hint="App Id"
+        android:paddingStart="10dp"
+        android:minHeight="30dp"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:maxWidth="300dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/url"
+        android:minWidth="300dp"
+        android:background="@android:color/white"
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/appId"
+        android:layout_centerHorizontal="true"
+        android:hint="URL"
+        android:paddingStart="10dp"
+        android:minHeight="30dp"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:maxWidth="300dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/notifierId"
+        android:minWidth="300dp"
+        android:background="@android:color/white"
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/url"
+        android:layout_centerHorizontal="true"
+        android:hint="Notifier Id"
+        android:paddingStart="10dp"
+        android:minHeight="30dp"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:maxWidth="300dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save"
+        android:id="@+id/saveButton"
+        android:layout_marginTop="23dp"
+        android:layout_below="@+id/notifierId"
+        android:layout_alignEnd="@+id/notifierId" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cancel"
+        android:id="@+id/cancelButton"
+        android:layout_alignTop="@+id/saveButton"
+        android:layout_alignStart="@+id/notifierId" />
+</RelativeLayout>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".activities.MainActivity"
+    android:background="@color/lightBlue">
+
+    <ImageView
+        android:layout_width="125dp"
+        android:layout_height="125dp"
+        android:id="@+id/imageView"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/usergridguy"
+        android:layout_marginTop="20dp"
+        android:adjustViewBounds="true" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/usernameText"
+        android:minWidth="250dp"
+        android:background="@android:color/white"
+        android:height="40dp"
+        android:layout_below="@+id/imageView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:hint="Username"
+        android:paddingStart="10dp"
+        android:singleLine="true"
+        android:minLines="1"
+        android:maxLines="1"
+        android:minHeight="30dp"
+        android:paddingEnd="10dp"
+        android:maxWidth="250dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/passwordEditText"
+        android:minWidth="250dp"
+        android:background="@android:color/white"
+        android:height="40dp"
+        android:layout_marginTop="15dp"
+        android:layout_below="@+id/usernameText"
+        android:layout_alignStart="@+id/usernameText"
+        android:hint="Password"
+        android:paddingStart="10dp"
+        android:singleLine="true"
+        android:maxLines="1"
+        android:minLines="1"
+        android:minHeight="30dp"
+        android:maxWidth="250dp"
+        android:paddingEnd="10dp"
+        android:inputType="textPassword" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sign In"
+        android:id="@+id/signInButton"
+        android:layout_below="@+id/passwordEditText"
+        android:layout_alignEnd="@+id/passwordEditText"
+        android:layout_marginTop="25dp"
+        android:minWidth="250dp"
+        android:background="@color/colorPrimary"
+        android:textColor="@android:color/white" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Create Account"
+        android:id="@+id/createAccountTextView"
+        android:layout_below="@+id/signInButton"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:textColor="@color/colorPrimary"
+        android:clickable="true" />
+
+</RelativeLayout>
