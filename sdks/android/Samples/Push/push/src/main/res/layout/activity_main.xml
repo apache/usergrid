@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".MainActivity"
+    android:background="@color/colorPrimary">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/usergridGuy"
+        android:minWidth="175dp"
+        android:minHeight="175dp"
+        android:maxHeight="175dp"
+        android:maxWidth="175dp"
+        android:clickable="false"
+        android:src="@drawable/usergridguy"
+        android:layout_centerVertical="true"
+        android:layout_alignStart="@+id/pushToAllDevices" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Push To All Devices"
+        android:id="@+id/pushToAllDevices"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:minHeight="175dp"
+        android:maxWidth="175dp"
+        android:minWidth="175dp"
+        android:maxHeight="175dp"
+        android:background="#95b8cb"
+        android:textColor="#ffffff"
+        android:textSize="10dp"
+        android:clickable="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Push To This Device"
+        android:id="@+id/pushToThisDevice"
+        android:minHeight="175dp"
+        android:maxWidth="175dp"
+        android:minWidth="175dp"
+        android:maxHeight="175dp"
+        android:background="#95b8cb"
+        android:textColor="@color/background_floating_material_light"
+        android:textSize="10dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@+id/usergridGuy"
+        android:clickable="true" />
+
+    <ImageButton
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:id="@+id/infoButton"
+        android:src="@drawable/info"
+        android:background="@null"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop" />
+
+</RelativeLayout>

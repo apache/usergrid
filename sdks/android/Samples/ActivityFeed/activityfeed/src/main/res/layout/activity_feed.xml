@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white">
+
+    <EditText
+        android:id="@+id/messageEdit"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:hint="Message"
+        android:layout_alignBottom="@+id/chatSendButton"
+        android:layout_toStartOf="@+id/chatSendButton"
+        android:paddingEnd="10dp"
+        android:paddingStart="10dp" />
+
+    <Button
+        android:id="@+id/chatSendButton"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:background="@color/colorPrimary"
+        android:text="Send"
+        android:textColor="@color/background_material_light"
+        android:layout_alignParentTop="false"
+        android:layout_alignParentStart="false" />
+
+    <ListView
+        android:id="@+id/messagesContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="false"
+        android:layout_alignParentTop="false"
+        android:layout_marginBottom="50dp"
+        android:listSelector="@android:color/transparent"
+        android:transcriptMode="alwaysScroll"
+        android:divider="@null"
+        android:background="@color/switch_thumb_normal_material_light"
+        android:paddingBottom="10dp"
+        android:stackFromBottom="true" />
+
+</RelativeLayout>
