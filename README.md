@@ -18,7 +18,7 @@ Apache Usergrid provides all code necessary to build and power modern mobile app
 
 * The admin portal is a pure HTML5+JavaScript app allowing you to register developers and let them manage their apps in a multi-tenant cluster. Located under [`/portal`](portal)
 
-* SDKs for [iOS](sdks/ios), [Android](sdks/android), [HTML5/JavaScript](sdks/html5-javascript), [node.js](sdks/nodejs), [Ruby on Rails](ruby-on-rails), [pure Ruby](sdks/ruby), [PHP](sdks/php), (server-side) [Java](sdks/java), [.Net / Windows](sdks/dotnet), and [Perl](sdks/perl), located in their respective subdirectories under [`/sdks`](sdks).
+* SDKs for [Swift](https://github.com/apache/usergrid-swift), [Android](https://github.com/apache/usergrid-android), [HTML5/JavaScript](https://github.com/apache/usergrid-javascript), [node.js](https://github.com/apache/usergrid-nodejs), [Java](https://github.com/apache/usergrid-java), [.Net / Windows](https://github.com/apache/usergrid-dotnet), and [Python](https://github.com/apache/usergrid-python).
 
 * a command-line client “ugc” allowing you to complete most maintenance tasks, as well as queries in a manner similar to the mysql or the mongo shell, located under [`/ugc`](ugc). You can install it on your machine with a simple `sudo gem install ugc`
 
