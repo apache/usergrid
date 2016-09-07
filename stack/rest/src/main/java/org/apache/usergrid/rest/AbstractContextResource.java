@@ -125,6 +125,9 @@ public abstract class AbstractContextResource {
             logger.trace("getSubResource: {}", t.getCanonicalName());
         }
         T subResource = resourceContext.getResource(t);
+        if(!subResource.isEnabled()){
+            return null;
+        }
         subResource.setParent(this);
         return subResource;
     }
@@ -274,5 +277,11 @@ public abstract class AbstractContextResource {
             return true;
         }
         return false;
+    }
+
+    public boolean isEnabled(){
+
+        return true;
+
     }
 }

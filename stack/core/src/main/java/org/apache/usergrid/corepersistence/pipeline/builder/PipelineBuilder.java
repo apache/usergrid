@@ -20,9 +20,11 @@
 package org.apache.usergrid.corepersistence.pipeline.builder;
 
 
+import com.google.inject.Injector;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterFactory;
 import org.apache.usergrid.corepersistence.pipeline.Pipeline;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
+import org.apache.usergrid.corepersistence.pipeline.read.SearchFilterFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Id;
 
@@ -30,6 +32,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import org.apache.usergrid.system.UsergridFeatures;
 
 
 /**
@@ -38,12 +41,12 @@ import com.google.inject.assistedinject.Assisted;
  */
 public class PipelineBuilder {
 
-
-
     private final ApplicationScope applicationScope;
     private Optional<String> cursor = Optional.absent();
     private int limit = 10;
     private final FilterFactory filterFactory;
+    private SearchFilterFactory searchFilterFactory = null;
+    private final Injector injector;
 
 
     /**
@@ -51,9 +54,19 @@ public class PipelineBuilder {
      * @param filterFactory
      */
     @Inject
-    public PipelineBuilder( final FilterFactory filterFactory, @Assisted final ApplicationScope applicationScope ) {
+    public PipelineBuilder( final FilterFactory filterFactory, @Assisted final ApplicationScope applicationScope,
+                            final Injector injector ) {
         this.filterFactory = filterFactory;
         this.applicationScope = applicationScope;
+        this.injector = injector;
+
+        if(UsergridFeatures.isQueryFeatureEnabled()) {
+
+            this.searchFilterFactory = injector.getInstance(SearchFilterFactory.class);
+
+        }
+
+
     }
 
 

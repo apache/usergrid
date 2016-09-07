@@ -28,15 +28,14 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.inject.Injector;
 import org.apache.usergrid.corepersistence.asyncevents.model.*;
+import org.apache.usergrid.corepersistence.index.*;
 import org.apache.usergrid.persistence.index.impl.*;
+import org.apache.usergrid.system.UsergridFeatures;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
-import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
-import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
-import org.apache.usergrid.corepersistence.index.ReplicatedIndexLocationStrategy;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.corepersistence.util.ObjectJsonSerializer;
@@ -97,7 +96,6 @@ import rx.schedulers.Schedulers;
 @Singleton
 public class AsyncEventServiceImpl implements AsyncEventService {
 
-
     private static final Logger logger = LoggerFactory.getLogger(AsyncEventServiceImpl.class);
 
     // SQS maximum receive messages is 10
@@ -105,12 +103,12 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     public static final String QUEUE_NAME = "index"; //keep this short as AWS limits queue name size to 80 chars
 
     private final QueueManager queue;
-    private final IndexProcessorFig indexProcessorFig;
+    private final EventServiceFig eventServiceFig;
     private final QueueFig queueFig;
-    private final IndexProducer indexProducer;
+    private IndexProducer indexProducer = null;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
-    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
-    private final EntityIndexFactory entityIndexFactory;
+    private IndexLocationStrategyFactory indexLocationStrategyFactory;
+    private EntityIndexFactory entityIndexFactory = null;
     private final EventBuilder eventBuilder;
     private final RxTaskScheduler rxTaskScheduler;
 
@@ -132,25 +130,33 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     //the actively running subscription
     private List<Subscription> subscriptions = new ArrayList<>();
 
+    private final Injector injector;
+
 
     @Inject
     public AsyncEventServiceImpl(final QueueManagerFactory queueManagerFactory,
-                                 final IndexProcessorFig indexProcessorFig,
-                                 final IndexProducer indexProducer,
+                                 final EventServiceFig eventServiceFig,
                                  final MetricsFactory metricsFactory,
                                  final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                                 final IndexLocationStrategyFactory indexLocationStrategyFactory,
                                  final EntityIndexFactory entityIndexFactory,
                                  final EventBuilder eventBuilder,
                                  final MapManagerFactory mapManagerFactory,
                                  final QueueFig queueFig,
                                  @EventExecutionScheduler
-                                    final RxTaskScheduler rxTaskScheduler ) {
-        this.indexProducer = indexProducer;
+                                    final RxTaskScheduler rxTaskScheduler,
+                                 final Injector injector ) {
 
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
-        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.entityIndexFactory = entityIndexFactory;
+        this.injector = injector;
+        if(UsergridFeatures.isQueryFeatureEnabled() ) {
+
+            this.entityIndexFactory = this.injector.getInstance(EntityIndexFactory.class);
+            this.indexProducer = this.injector.getInstance(IndexProducer.class);
+            this.indexLocationStrategyFactory = this.injector.getInstance(IndexLocationStrategyFactory.class);
+        }
+
+
         this.eventBuilder = eventBuilder;
 
         final MapScope mapScope = new MapScopeImpl( CpNamingUtils.getManagementApplicationId(),  "indexEvents");
@@ -162,7 +168,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         QueueScope queueScope = new QueueScopeImpl(QUEUE_NAME, QueueScope.RegionImplementation.ALL);
         this.queue = queueManagerFactory.getQueueManager(queueScope);
 
-        this.indexProcessorFig = indexProcessorFig;
+        this.eventServiceFig = eventServiceFig;
         this.queueFig = queueFig;
 
         this.writeTimer = metricsFactory.getTimer(AsyncEventServiceImpl.class, "async_event.write");
@@ -528,7 +534,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         final UUID newMessageId = UUIDGenerator.newTimeUUID();
 
         final int expirationTimeInSeconds =
-            ( int ) TimeUnit.MILLISECONDS.toSeconds( indexProcessorFig.getIndexMessageTtl() );
+            ( int ) TimeUnit.MILLISECONDS.toSeconds( eventServiceFig.getIndexMessageTtl() );
 
         //write to the map in ES
         esMapPersistence.putString( newMessageId.toString(), jsonValue, expirationTimeInSeconds );
@@ -716,7 +722,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      * Loop through and start the workers
      */
     public void start() {
-        final int count = indexProcessorFig.getWorkerCount();
+        final int count = eventServiceFig.getWorkerCount();
 
         for (int i = 0; i < count; i++) {
             startWorker();
@@ -761,7 +767,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                     inFlight.addAndGet( drainList.size() );
                                 }
                                 catch ( Throwable t ) {
-                                    final long sleepTime = indexProcessorFig.getFailureRetryTime();
+                                    final long sleepTime = eventServiceFig.getFailureRetryTime();
 
                                     logger.error( "Failed to dequeue.  Sleeping for {} milliseconds", sleepTime, t );
 
@@ -820,7 +826,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                                  }
                                              } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
                             //end flatMap
-                        }, indexProcessorFig.getEventConcurrencyFactor() );
+                        }, eventServiceFig.getEventConcurrencyFactor() );
 
             //start in the background
 

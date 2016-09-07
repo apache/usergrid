@@ -26,6 +26,7 @@ import org.apache.usergrid.corepersistence.pipeline.PipelineOperation;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterFactory;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
+import org.apache.usergrid.corepersistence.pipeline.read.SearchFilterFactory;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.ConnectionRefFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.ConnectionRefResumeFilter;
 import org.apache.usergrid.corepersistence.pipeline.read.collect.IdResumeFilter;
@@ -42,15 +43,24 @@ import rx.Observable;
  */
 public class IdBuilder {
 
-
+    private final SearchFilterFactory searchFilterFactory;
     private final FilterFactory filterFactory;
     private final Pipeline<FilterResult<Id>> pipeline;
 
 
+    public IdBuilder( final Pipeline<FilterResult<Id>> pipeline, final FilterFactory filterFactory,
+                      final SearchFilterFactory searchFilterFactory  ) {
+        this.pipeline = pipeline;
+        this.filterFactory = filterFactory;
+        this.searchFilterFactory = searchFilterFactory;
+    }
+
     public IdBuilder( final Pipeline<FilterResult<Id>> pipeline, final FilterFactory filterFactory ) {
         this.pipeline = pipeline;
         this.filterFactory = filterFactory;
+        this.searchFilterFactory = null;
     }
+
 
 
     /**
@@ -74,7 +84,7 @@ public class IdBuilder {
     public IdBuilder traverseReverseConnection( final String connectionName, final Optional<String> entityType ) {
         final PipelineOperation<FilterResult<Id>, FilterResult<Id>> filter;
         filter = filterFactory.readGraphReverseConnectionFilter( connectionName );
-        return new IdBuilder( pipeline.withFilter(filter ), filterFactory );
+        return new IdBuilder( pipeline.withFilter(filter ), filterFactory, searchFilterFactory );
     }
 
 
@@ -87,7 +97,7 @@ public class IdBuilder {
         final Pipeline<FilterResult<Id>> newFilter =
             pipeline.withFilter( filterFactory.readGraphCollectionFilter( collectionName ) );
 
-        return new IdBuilder( newFilter, filterFactory );
+        return new IdBuilder( newFilter, filterFactory, searchFilterFactory );
     }
 
 
@@ -108,7 +118,7 @@ public class IdBuilder {
         }
 
 
-        return new IdBuilder( pipeline.withFilter(filter ), filterFactory );
+        return new IdBuilder( pipeline.withFilter(filter ), filterFactory, searchFilterFactory );
     }
 
 
@@ -121,10 +131,10 @@ public class IdBuilder {
      */
     public CandidateBuilder searchCollection( final String collectionName, final String ql, final String entityType  ) {
 
-        final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( filterFactory.searchCollectionFilter(
+        final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( searchFilterFactory.searchCollectionFilter(
             ql, collectionName, entityType ) );
 
-        return new CandidateBuilder( newFilter, filterFactory );
+        return new CandidateBuilder( newFilter, filterFactory, searchFilterFactory );
     }
 
 
@@ -138,10 +148,10 @@ public class IdBuilder {
     public CandidateBuilder searchConnection( final String connectionName, final String ql ,  final Optional<String> entityType) {
 
 
-        final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( filterFactory.searchConnectionFilter(
+        final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( searchFilterFactory.searchConnectionFilter(
             ql, connectionName, entityType ) );
 
-        return new CandidateBuilder( newFilter, filterFactory );
+        return new CandidateBuilder( newFilter, filterFactory, searchFilterFactory );
     }
 
 

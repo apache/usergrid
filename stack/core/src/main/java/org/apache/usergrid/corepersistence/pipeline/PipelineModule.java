@@ -25,6 +25,8 @@ import org.apache.usergrid.corepersistence.pipeline.read.FilterFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import org.apache.usergrid.corepersistence.pipeline.read.SearchFilterFactory;
+import org.apache.usergrid.system.UsergridFeatures;
 
 
 /**
@@ -35,9 +37,17 @@ public class PipelineModule extends AbstractModule {
     @Override
     protected void configure() {
 
-            //Use Guice to create the builder since we don't really need to do anything
+        //Use Guice to create the builder since we don't really need to do anything
         //other than DI when creating the filters
         install( new FactoryModuleBuilder().build( FilterFactory.class ) );
+
+        if( UsergridFeatures.isQueryFeatureEnabled() ) {
+
+            // only inject search filters that use Elasticsearch if the UG feature is enabled
+            install( new FactoryModuleBuilder().build( SearchFilterFactory.class ) );
+
+        }
+
 
         install( new FactoryModuleBuilder().build( PipelineBuilderFactory.class ) );
     }

@@ -20,8 +20,9 @@
 package org.apache.usergrid.corepersistence.asyncevents;
 
 
+import com.google.inject.Injector;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
-import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
+import org.apache.usergrid.corepersistence.index.EventServiceFig;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -35,6 +36,7 @@ import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import org.apache.usergrid.system.UsergridFeatures;
 
 
 /**
@@ -43,46 +45,52 @@ import com.google.inject.Singleton;
 @Singleton
 public class AsyncIndexProvider implements Provider<AsyncEventService> {
 
-    private final IndexProcessorFig indexProcessorFig;
+    private final EventServiceFig eventServiceFig;
 
     private final QueueManagerFactory queueManagerFactory;
     private final MetricsFactory metricsFactory;
     private final RxTaskScheduler rxTaskScheduler;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final EventBuilder eventBuilder;
-    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
-    private final EntityIndexFactory entityIndexFactory;
-    private final IndexProducer indexProducer;
+    private IndexLocationStrategyFactory indexLocationStrategyFactory;
+    private EntityIndexFactory entityIndexFactory = null;
+    private IndexProducer indexProducer = null;
     private final MapManagerFactory mapManagerFactory;
     private final QueueFig queueFig;
 
     private AsyncEventService asyncEventService;
+    private final Injector injector;
 
 
     @Inject
-    public AsyncIndexProvider(final IndexProcessorFig indexProcessorFig,
+    public AsyncIndexProvider(final EventServiceFig eventServiceFig,
                               final QueueManagerFactory queueManagerFactory,
                               final MetricsFactory metricsFactory,
                               @EventExecutionScheduler final RxTaskScheduler rxTaskScheduler,
                               final EntityCollectionManagerFactory entityCollectionManagerFactory,
                               final EventBuilder eventBuilder,
-                              final IndexLocationStrategyFactory indexLocationStrategyFactory,
-                              final EntityIndexFactory entityIndexFactory,
-                              final IndexProducer indexProducer,
                               final MapManagerFactory mapManagerFactory,
-                              final QueueFig queueFig) {
+                              final QueueFig queueFig,
+                              final Injector injector) {
 
-        this.indexProcessorFig = indexProcessorFig;
+        this.eventServiceFig = eventServiceFig;
         this.queueManagerFactory = queueManagerFactory;
         this.metricsFactory = metricsFactory;
         this.rxTaskScheduler = rxTaskScheduler;
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.eventBuilder = eventBuilder;
-        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
-        this.entityIndexFactory = entityIndexFactory;
-        this.indexProducer = indexProducer;
         this.mapManagerFactory = mapManagerFactory;
         this.queueFig = queueFig;
+        this.injector = injector;
+
+        if(UsergridFeatures.isQueryFeatureEnabled()) {
+
+            this.entityIndexFactory = this.injector.getInstance(EntityIndexFactory.class);
+            this.indexProducer = this.injector.getInstance(IndexProducer.class);
+            this.indexLocationStrategyFactory = this.injector.getInstance(IndexLocationStrategyFactory.class);
+
+
+        }
     }
 
 
@@ -98,21 +106,21 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
 
 
     private AsyncEventService getIndexService() {
-        final String value = indexProcessorFig.getQueueImplementation();
+        final String value = eventServiceFig.getQueueImplementation();
 
         final Implementations impl = Implementations.valueOf(value);
 
         switch (impl) {
             case LOCAL:
-                AsyncEventServiceImpl eventService = new AsyncEventServiceImpl(scope -> new LocalQueueManager(), indexProcessorFig, indexProducer, metricsFactory,
-                    entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory, eventBuilder,mapManagerFactory, queueFig,rxTaskScheduler);
+                AsyncEventServiceImpl eventService = new AsyncEventServiceImpl(scope -> new LocalQueueManager(), eventServiceFig, metricsFactory,
+                    entityCollectionManagerFactory, entityIndexFactory, eventBuilder,mapManagerFactory, queueFig,rxTaskScheduler, injector);
                 eventService.MAX_TAKE = 1000;
                 return eventService;
             case SQS:
                 throw new IllegalArgumentException("Configuration value of SQS is no longer allowed. Use SNS instead with only a single region");
             case SNS:
-                return new AsyncEventServiceImpl(queueManagerFactory, indexProcessorFig, indexProducer, metricsFactory,
-                    entityCollectionManagerFactory, indexLocationStrategyFactory,entityIndexFactory, eventBuilder, mapManagerFactory, queueFig, rxTaskScheduler );
+                return new AsyncEventServiceImpl(queueManagerFactory, eventServiceFig, metricsFactory,
+                    entityCollectionManagerFactory,entityIndexFactory, eventBuilder, mapManagerFactory, queueFig, rxTaskScheduler, injector );
             default:
                 throw new IllegalArgumentException("Configuration value of " + getErrorValues() + " are allowed");
         }

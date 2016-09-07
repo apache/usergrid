@@ -24,6 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.google.inject.Injector;
+import org.apache.usergrid.persistence.index.impl.IndexOperation;
+import org.apache.usergrid.system.UsergridFeatures;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,20 +61,28 @@ public class EventBuilderImpl implements EventBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger( EventBuilderImpl.class );
 
-    private final IndexService indexService;
+    private IndexService indexService = null;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final GraphManagerFactory graphManagerFactory;
     private final SerializationFig serializationFig;
+    private final Injector injector;
+
 
 
     @Inject
-    public EventBuilderImpl( final IndexService indexService,
-                             final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                             final GraphManagerFactory graphManagerFactory, final SerializationFig serializationFig ) {
-        this.indexService = indexService;
+    public EventBuilderImpl( final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                             final GraphManagerFactory graphManagerFactory, final SerializationFig serializationFig,
+                             final Injector injector ) {
+
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.graphManagerFactory = graphManagerFactory;
         this.serializationFig = serializationFig;
+        this.injector = injector;
+
+        if(UsergridFeatures.isQueryFeatureEnabled()) {
+
+            this.indexService = injector.getInstance(IndexService.class);
+        }
     }
 
 
@@ -83,6 +94,10 @@ public class EventBuilderImpl implements EventBuilder {
         if (logger.isDebugEnabled()) {
             logger.debug("Indexing  in app scope {} with entity {} and new edge {}",
                     applicationScope, entity, newEdge);
+        }
+
+        if( indexService == null ){
+            return Observable.just(new IndexOperationMessage());
         }
 
         return indexService.indexEdge( applicationScope, entity, newEdge );
@@ -98,7 +113,15 @@ public class EventBuilderImpl implements EventBuilder {
 
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
         return gm.deleteEdge( edge )
-            .flatMap( deletedEdge -> indexService.deleteIndexEdge( applicationScope, deletedEdge ));
+            .flatMap( deletedEdge -> {
+
+                if ( indexService != null ) {
+                    return indexService.deleteIndexEdge(applicationScope, deletedEdge);
+                }else{
+                    return Observable.just(new IndexOperationMessage());
+                }
+
+            });
     }
 
 
@@ -127,9 +150,14 @@ public class EventBuilderImpl implements EventBuilder {
         if(mostRecentlyMarked != null){
 
             // fetch entity versions to be de-index by looking in cassandra
-            deIndexObservable =
-                indexService.deIndexEntity(applicationScope, entityId, mostRecentlyMarked.getVersion(),
-                    getVersionsOlderThanMarked(ecm, entityId, mostRecentlyMarked.getVersion()));
+            if(indexService != null ) {
+                deIndexObservable =
+                    indexService.deIndexEntity(applicationScope, entityId, mostRecentlyMarked.getVersion(),
+                        getVersionsOlderThanMarked(ecm, entityId, mostRecentlyMarked.getVersion()));
+            }
+
+
+
 
             ecmDeleteObservable =
                 ecm.getVersionsFromMaxToMin( entityId, mostRecentlyMarked.getVersion() )
@@ -169,7 +197,16 @@ public class EventBuilderImpl implements EventBuilder {
                 return modified.getValue() >= entityIndexOperation.getUpdatedSince();
             } )
             //perform indexing on the task scheduler and start it
-            .flatMap( entity -> indexService.indexEntity( applicationScope, entity ) );
+            .flatMap( entity -> {
+
+                if( indexService != null ) {
+                    return indexService.indexEntity(applicationScope, entity);
+                }else{
+                    return Observable.just(new IndexOperationMessage());
+                }
+
+
+            } );
     }
 
 
@@ -181,6 +218,9 @@ public class EventBuilderImpl implements EventBuilder {
             logger.debug("Removing old versions of entity {} from index in app scope {}", entityId, applicationScope );
         }
 
+        if(indexService == null){
+            return Observable.just(new IndexOperationMessage());
+        }
         final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
 

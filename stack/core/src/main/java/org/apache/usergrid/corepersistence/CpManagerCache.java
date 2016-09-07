@@ -16,6 +16,7 @@
 package org.apache.usergrid.corepersistence;
 
 
+import com.google.inject.Injector;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -31,6 +32,7 @@ import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.map.MapScope;
 
 import com.google.inject.Inject;
+import org.apache.usergrid.system.UsergridFeatures;
 
 
 /**
@@ -40,30 +42,35 @@ import com.google.inject.Inject;
 public class CpManagerCache implements ManagerCache {
 
     private final EntityCollectionManagerFactory ecmf;
-    private final EntityIndexFactory eif;
+    private EntityIndexFactory eif = null;
     private final GraphManagerFactory gmf;
     private final MapManagerFactory mmf;
-    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
-    private final IndexProducer indexProducer;
+    private IndexLocationStrategyFactory indexLocationStrategyFactory;
+    private final Injector injector;
 
     // TODO: consider making these cache sizes and timeouts configurable
 
 
     @Inject
     public CpManagerCache( final EntityCollectionManagerFactory ecmf,
-                           final EntityIndexFactory eif,
                            final GraphManagerFactory gmf,
                            final MapManagerFactory mmf,
-                           final IndexLocationStrategyFactory indexLocationStrategyFactory,
-                           final IndexProducer indexProducer
+                           final Injector injector
     ) {
 
+
         this.ecmf = ecmf;
-        this.eif = eif;
+        if(UsergridFeatures.isQueryFeatureEnabled()) {
+
+            this.eif = injector.getInstance(EntityIndexFactory.class);
+            this.indexLocationStrategyFactory = injector.getInstance(IndexLocationStrategyFactory.class);
+
+
+        }
+
         this.gmf = gmf;
         this.mmf = mmf;
-        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
-        this.indexProducer = indexProducer;
+        this.injector = injector;
     }
 
 
@@ -91,11 +98,6 @@ public class CpManagerCache implements ManagerCache {
     @Override
     public MapManager getMapManager( MapScope mapScope ) {
         return mmf.createMapManager( mapScope );
-    }
-
-    @Override
-    public IndexProducer getIndexProducer() {
-        return indexProducer;
     }
 
 

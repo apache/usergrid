@@ -88,29 +88,6 @@ public interface FilterFactory {
      */
     ReadGraphConnectionByIdFilter readGraphConnectionByIdFilter( final String connectionName, final Id targetId );
 
-    /**
-     * Generate a new instance of the command with the specified parameters
-     *
-     * @param query The query to use when querying the entities in the collection
-     * @param collectionName The collection name to use when querying
-     */
-    SearchCollectionFilter searchCollectionFilter( @Assisted( "query" ) final String query,
-                                                   @Assisted( "collectionName" ) final String collectionName,
-                                                   @Assisted( "entityType" ) final String entityType );
-
-
-    /**
-     * Generate a new instance of the command with the specified parameters
-     *
-     * @param query The query to use when querying the entities in the connection
-     * @param connectionName The type of connection to query
-     * @param connectedEntityType The type of entity in the connection.  Leave absent to query all entity types
-     */
-    SearchConnectionFilter searchConnectionFilter( @Assisted( "query" ) final String query,
-                                                   @Assisted( "connectionName" ) final String connectionName,
-                                                   @Assisted( "connectedEntityType" )
-                                                   final Optional<String> connectedEntityType );
-
 
     /**
      * Generate a new instance of the command with the specified parameters
