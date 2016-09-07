@@ -17,10 +17,8 @@
 package org.apache.usergrid.query.validator.users;
 
 import net.jcip.annotations.NotThreadSafe;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.apache.usergrid.system.UsergridFeatures;
+import org.junit.*;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.query.validator.AbstractQueryIT;
 import org.apache.usergrid.query.validator.QueryRequest;
@@ -29,6 +27,10 @@ import org.apache.usergrid.query.validator.QueryResultsMatcher;
 import org.apache.usergrid.utils.StringUtils;
 
 import java.util.List;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 
 /**
@@ -41,6 +43,15 @@ public class UserQueryIT extends AbstractQueryIT {
     public static void setDatas() throws InterruptedException{
         createInitializationDatas("user");
     }
+
+    @Before
+    public void checkFeatures(){
+
+        assumeTrue(UsergridFeatures.isQueryFeatureEnabled());
+
+    }
+
+
 
     @Test
     public void sexEqualAndNameEqual() {

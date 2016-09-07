@@ -17,6 +17,7 @@
 package org.apache.usergrid.corepersistence;
 
 
+import org.apache.usergrid.system.UsergridFeatures;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,6 @@ public class CpSetup implements Setup {
 
     private static final Logger logger = LoggerFactory.getLogger( CpSetup.class );
 
-
     private final Injector injector;
 
 
@@ -77,8 +77,13 @@ public class CpSetup implements Setup {
     @Override
     public void initSchema() throws Exception {
 
-        // Initialize the management app index in Elasticsearch
-        this.emf.initializeManagementIndex();
+        if(UsergridFeatures.isQueryFeatureEnabled()) {
+
+            // Initialize the management app index in Elasticsearch
+            this.emf.initializeManagementIndex();
+
+        }
+
 
         // Create the schema (including keyspace) in Cassandra
         setupSchema();
@@ -125,8 +130,10 @@ public class CpSetup implements Setup {
         cass.createColumnFamilies( getApplicationKeyspace(),
             getCfDefs( ApplicationCF.class, getApplicationKeyspace() ) );
 
-        cass.createColumnFamilies( getApplicationKeyspace(),
-            getCfDefs( QueuesCF.class, getApplicationKeyspace() ) );
+        if( UsergridFeatures.isQueryFeatureEnabled() || UsergridFeatures.isGraphFeatureEnabled() ) {
+            cass.createColumnFamilies(getApplicationKeyspace(),
+                getCfDefs(QueuesCF.class, getApplicationKeyspace()));
+        }
 
         logger.info( "Keyspace and legacy column families initialized" );
     }

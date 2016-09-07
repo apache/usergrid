@@ -22,6 +22,7 @@ package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 import java.util.*;
 
+import com.google.inject.Injector;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
@@ -30,6 +31,7 @@ import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
 import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
+import org.apache.usergrid.system.UsergridFeatures;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,21 +61,28 @@ import rx.Observable;
 public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate>, FilterResult<Entity>> {
 
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
-    private final EntityIndexFactory entityIndexFactory;
-    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
-    private final IndexProducer indexProducer;
+    private EntityIndexFactory entityIndexFactory = null;
+    private IndexLocationStrategyFactory indexLocationStrategyFactory;
+    private IndexProducer indexProducer = null;
+    private final Injector injector;
 
 
     @Inject
-    public CandidateEntityFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                                  final EntityIndexFactory entityIndexFactory,
-                                  final IndexLocationStrategyFactory indexLocationStrategyFactory,
-                                  final IndexProducer indexProducer
-                                  ) {
+    public CandidateEntityFilter(final EntityCollectionManagerFactory entityCollectionManagerFactory,
+                                 final Injector injector ) {
+
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
-        this.entityIndexFactory = entityIndexFactory;
-        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
-        this.indexProducer = indexProducer;
+        this.injector = injector;
+
+
+        if(UsergridFeatures.isQueryFeatureEnabled()) {
+
+            this.entityIndexFactory = this.injector.getInstance(EntityIndexFactory.class);
+            this.indexProducer = this.injector.getInstance(IndexProducer.class);
+            this.indexLocationStrategyFactory = this.injector.getInstance(IndexLocationStrategyFactory.class);
+
+
+        }
     }
 
 

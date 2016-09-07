@@ -19,6 +19,7 @@ package org.apache.usergrid.rest;
 import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.services.notifications.QueueListener;
+import org.apache.usergrid.system.UsergridFeatures;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +62,7 @@ public class JobServiceBoostrap implements
     @Override
     public void onApplicationEvent( ContextRefreshedEvent event ) {
         String start = properties.getProperty( START_SCHEDULER_PROP, "true" );
-        if ( Boolean.parseBoolean( start ) ) {
+        if ( Boolean.parseBoolean( start ) && (UsergridFeatures.isGraphFeatureEnabled() || UsergridFeatures.isQueryFeatureEnabled()) ) {
             logger.info( "Starting Scheduler Service..." );
             jobScheduler.startAsync();
             jobScheduler.awaitRunning();

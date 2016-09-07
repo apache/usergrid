@@ -81,7 +81,7 @@ public class ServiceResource extends AbstractContextResource {
     @Autowired
     private AwsSdkS3BinaryStore awsSdkS3BinaryStore;
 
-    protected ServiceManager services;
+    public ServiceManager services;
 
     List<ServiceParameter> serviceParameters = null;
 

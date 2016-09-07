@@ -60,6 +60,7 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.system.UsergridFeatures;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +106,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private CassandraService cassandraService;
     private CounterUtils counterUtils;
     private Injector injector;
-    private final ReIndexService reIndexService;
+    private ReIndexService reIndexService = null;
     private final MetricsFactory metricsFactory;
     private final AsyncEventService indexService;
     private final CollectionService collectionService;
@@ -128,7 +129,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
         this.injector = injector;
-        this.reIndexService = injector.getInstance(ReIndexService.class);
         this.entityManagerFig = injector.getInstance(EntityManagerFig.class);
         this.actorSystemFig = injector.getInstance( ActorSystemFig.class );
         this.managerCache = injector.getInstance( ManagerCache.class );
@@ -169,6 +169,12 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             getManagementEntityManager() );
 
         checkManagementApp( properties );
+
+        if(UsergridFeatures.isQueryFeatureEnabled()) {
+
+            this.reIndexService = this.injector.getInstance(ReIndexService.class);
+
+        }
     }
 
 
@@ -329,7 +335,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private void initMgmtAppInternal() {
 
         EntityManager em = getEntityManager(getManagementAppId());
-        indexService.queueInitializeApplicationIndex(CpNamingUtils.getApplicationScope(getManagementAppId()));
+
+        if( UsergridFeatures.isQueryFeatureEnabled() ) {
+
+            indexService.queueInitializeApplicationIndex(CpNamingUtils.getApplicationScope(getManagementAppId()));
+        }
 
         try {
             if ( em.getApplication() == null ) {
@@ -440,9 +450,14 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             throw new ApplicationAlreadyExistsException( appName );
         }
 
-        // Initialize the index for this new application
-        appEm.initializeIndex();
-        indexService.queueInitializeApplicationIndex(CpNamingUtils.getApplicationScope(applicationId));
+
+        if( UsergridFeatures.isQueryFeatureEnabled() ) {
+
+            // Initialize the index for this new application
+            appEm.initializeIndex();
+
+            indexService.queueInitializeApplicationIndex(CpNamingUtils.getApplicationScope(applicationId));
+        }
         if ( properties == null ) {
             properties = new TreeMap<>( CASE_INSENSITIVE_ORDER);
         }
@@ -507,9 +522,11 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             CpNamingUtils.APPLICATION_INFOS , CpNamingUtils.APPLICATION_INFO ).lastOrDefault( null )
              .map( appInfo -> {
 
-                 //start the index rebuild
-                 final ReIndexRequestBuilder builder = reIndexService.getBuilder().withApplicationId( applicationId );
-                 reIndexService.rebuildIndex( builder );
+                     if( UsergridFeatures.isQueryFeatureEnabled() ) {
+                         //start the index rebuild
+                         final ReIndexRequestBuilder builder = reIndexService.getBuilder().withApplicationId(applicationId);
+                         reIndexService.rebuildIndex(builder);
+                     }
 
                  //load the entity
                  final EntityManager managementEm = getEntityManager( getManagementAppId() );

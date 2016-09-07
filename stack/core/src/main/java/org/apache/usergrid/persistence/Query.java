@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.index.query.tree.Operand;
 import org.apache.usergrid.persistence.index.utils.ClassUtils;
 import org.apache.usergrid.persistence.index.utils.ListUtils;
 import org.apache.usergrid.persistence.index.utils.MapUtils;
+import org.apache.usergrid.system.UsergridFeatures;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -41,8 +42,6 @@ import java.util.Map.Entry;
 
 
 public class Query {
-
-
 
     public enum Level {
         IDS, REFS, CORE_PROPERTIES, ALL_PROPERTIES, LINKED_PROPERTIES
@@ -199,6 +198,12 @@ public class Query {
         List<CounterFilterPredicate> counterFilters = null;
 
         String ql = QueryUtils.queryStrFrom( params );
+        final boolean queryFeatureEnabled = UsergridFeatures.isQueryFeatureEnabled();
+
+        if( StringUtils.isNotEmpty(ql) && (!queryFeatureEnabled && !ql.equalsIgnoreCase("select *")) ){
+            throw new UnsupportedOperationException("Query features are not enabled.");
+        }
+
         String type = ListUtils.first( params.get( "type" ) );
         Boolean reversed = ListUtils.firstBoolean( params.get( "reversed" ) );
         String connection = ListUtils.first( params.get( "connectionType" ) );

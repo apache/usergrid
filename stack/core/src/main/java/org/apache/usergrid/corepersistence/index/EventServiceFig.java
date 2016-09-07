@@ -29,7 +29,7 @@ import org.safehaus.guicyfig.Key;
  * Application id cache fig
  */
 @FigSingleton
-public interface IndexProcessorFig extends GuicyFig {
+public interface EventServiceFig extends GuicyFig {
 
 
     String FAILURE_REJECTED_RETRY_WAIT_TIME = "elasticsearch.rejected_retry_wait";
