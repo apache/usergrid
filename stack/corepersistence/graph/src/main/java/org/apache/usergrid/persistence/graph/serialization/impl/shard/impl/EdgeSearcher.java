@@ -80,6 +80,10 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
 
     public List<ScopedRowKey<R>> getRowKeys() {
 
+        if(logger.isTraceEnabled()) {
+            logger.trace("Shards: {}", shards);
+        }
+
         List<ScopedRowKey<R>> rowKeys = new ArrayList<>(shards.size());
 
         for(Shard shard : shards){
@@ -89,12 +93,18 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
             rowKeys.add( rowKey );
         }
 
+        if(logger.isTraceEnabled()) {
+            logger.trace("Resulting Shards: {}", rowKeys);
+        }
 
         return rowKeys;
     }
 
     public List<SmartShard> getRowKeysWithShardEnd(){
 
+        if(logger.isTraceEnabled()) {
+            logger.trace("Shards: {}", shards);
+        }
 
         final List<SmartShard> rowKeysWithShardEnd = new ArrayList<>(shards.size());
 
@@ -111,8 +121,13 @@ public abstract class EdgeSearcher<R, C, T> implements ColumnParser<C, T>, Colum
                 shardEnd = null;
             }
 
-            rowKeysWithShardEnd.add(new SmartShard(rowKey, shard.getShardIndex(), shardEnd));
+            rowKeysWithShardEnd.add(new SmartShard(rowKey, shard.getShardIndex(), shardEnd, shard.isDeleted()));
         }
+
+        if(logger.isTraceEnabled()) {
+            logger.trace("Resulting Smart Shards: {}", rowKeysWithShardEnd);
+        }
+
 
         return rowKeysWithShardEnd;
 

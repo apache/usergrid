@@ -33,6 +33,7 @@ import com.netflix.astyanax.Keyspace;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixThreadPoolProperties;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
@@ -131,15 +132,15 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
         final ApplicationScope applicationScope = ioevent.getEntityCollection();
 
-        String region = ioevent.getRegion();
-        if ( region == null ) {
-            region = uniqueValuesFig.getAuthoritativeRegion();
+        String authoritativeRegion = ioevent.getAuthoritativeRegion();
+        if ( StringUtils.isEmpty(authoritativeRegion) ) {
+            authoritativeRegion = uniqueValuesFig.getAuthoritativeRegion();
         }
-        if ( region == null ) {
-            region = actorSystemFig.getRegionLocal();
+        if ( StringUtils.isEmpty(authoritativeRegion) ) {
+            authoritativeRegion = actorSystemFig.getRegionLocal();
         }
         try {
-            akkaUvService.reserveUniqueValues( applicationScope, entity, mvccEntity.getVersion(), region );
+            akkaUvService.reserveUniqueValues( applicationScope, entity, mvccEntity.getVersion(), authoritativeRegion );
 
         } catch (UniqueValueException e) {
             Map<String, Field> violations = new HashMap<>();
@@ -178,8 +179,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
 
             // don't use read repair on this pre-write check
-            // stronger consistency is extremely important here, more so than performance
-            UniqueValueSet set = uniqueValueStrat.load(scope, cassandraFig.getDataStaxReadConsistentCl(),
+            UniqueValueSet set = uniqueValueStrat.load(scope, cassandraFig.getDataStaxReadCl(),
                 written.getEntityId().getType(), Collections.singletonList(written.getField()), false);
 
             set.forEach(uniqueValue -> {

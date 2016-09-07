@@ -27,13 +27,12 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.Session;
 
-import org.apache.cassandra.utils.ByteBufferUtil;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
-import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
@@ -69,13 +68,13 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
     private static final Map<String, String> UNIQUE_VALUES_LOG_CLUSTERING_ORDER =
         new HashMap<String, String>(){{ put( "column1", "ASC" );}};
 
-    private final static TableDefinition uniqueValues =
-        new TableDefinition( UNIQUE_VALUES_TABLE, UNIQUE_VALUES_PARTITION_KEYS, UNIQUE_VALUES_COLUMN_KEYS,
-            UNIQUE_VALUES_COLUMNS, TableDefinition.CacheOption.KEYS, UNIQUE_VALUES_CLUSTERING_ORDER);
+    private final static TableDefinitionImpl uniqueValues =
+        new TableDefinitionImpl( UNIQUE_VALUES_TABLE, UNIQUE_VALUES_PARTITION_KEYS, UNIQUE_VALUES_COLUMN_KEYS,
+            UNIQUE_VALUES_COLUMNS, TableDefinitionImpl.CacheOption.KEYS, UNIQUE_VALUES_CLUSTERING_ORDER);
 
-    private final static TableDefinition uniqueValuesLog =
-        new TableDefinition( UNIQUE_VALUES_LOG_TABLE, UNIQUE_VALUES_LOG_PARTITION_KEYS, UNIQUE_VALUES_LOG_COLUMN_KEYS,
-            UNIQUE_VALUES_LOG_COLUMNS, TableDefinition.CacheOption.KEYS, UNIQUE_VALUES_LOG_CLUSTERING_ORDER);
+    private final static TableDefinitionImpl uniqueValuesLog =
+        new TableDefinitionImpl( UNIQUE_VALUES_LOG_TABLE, UNIQUE_VALUES_LOG_PARTITION_KEYS, UNIQUE_VALUES_LOG_COLUMN_KEYS,
+            UNIQUE_VALUES_LOG_COLUMNS, TableDefinitionImpl.CacheOption.KEYS, UNIQUE_VALUES_LOG_CLUSTERING_ORDER);
 
 
     /**
@@ -102,10 +101,10 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
     }
 
     @Override
-    public Collection<TableDefinition> getTables() {
+    public Collection<TableDefinitionImpl> getTables() {
 
-        final TableDefinition uniqueValues = getUniqueValuesTable();
-        final TableDefinition uniqueValuesLog = getEntityUniqueLogTable();
+        final TableDefinitionImpl uniqueValues = getUniqueValuesTable();
+        final TableDefinitionImpl uniqueValuesLog = getEntityUniqueLogTable();
 
         return Arrays.asList( uniqueValues, uniqueValuesLog );
 
@@ -113,13 +112,13 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
 
 
     @Override
-    protected TableDefinition getUniqueValuesTable(){
+    protected TableDefinitionImpl getUniqueValuesTable(){
         return uniqueValues;
     }
 
 
     @Override
-    protected TableDefinition getEntityUniqueLogTable(){
+    protected TableDefinitionImpl getEntityUniqueLogTable(){
         return uniqueValuesLog;
     }
 

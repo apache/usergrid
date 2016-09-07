@@ -92,12 +92,12 @@ public interface QueueFig extends GuicyFig {
     int getQueueClientConnectionTimeout();
 
     @Key( "usergrid.queue.client.socket.timeout")
-    @Default( "20000" ) // 20 seconds
+    @Default( "50000" ) // 50 seconds
     int getQueueClientSocketTimeout();
 
-    @Key( "usergrid.queue.poll.timeshift")
-    @Default( "3000" ) // 3 seconds
-    int getQueuePollTimeshift();
+    @Key( "usergrid.queue.poll.timeout")
+    @Default( "10000" ) // 10 seconds
+    int getQueuePollTimeout();
 
     @Key( "usergrid.queue.quorum.fallback")
     @Default("false") // 30 seconds

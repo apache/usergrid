@@ -27,6 +27,7 @@ import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,13 +80,15 @@ public class MigrationManagerImpl implements MigrationManager {
 
                 final Collection<MultiTenantColumnFamilyDefinition> columnFamilies = migration.getColumnFamilies();
 
-                final Collection<TableDefinition> tables = migration.getTables();
+                final Collection<TableDefinitionImpl> tables = migration.getTables();
 
 
                 if ((columnFamilies == null || columnFamilies.size() == 0) &&
                     (tables == null || tables.size() == 0)) {
                     logger.warn(
-                        "Class {} implements {} but returns null for getColumnFamilies and getTables for migration.  Either implement this method or remove the interface from the class",
+                        "Class {} implements {} but returns null for getColumnFamilies and " +
+                            "getTables for migration.  Either implement this method or remove " +
+                            "the interface from the class",
                         migration.getClass().getSimpleName(), Migration.class.getSimpleName());
                     continue;
                 }
@@ -98,7 +101,7 @@ public class MigrationManagerImpl implements MigrationManager {
 
 
                 if ( tables != null && !tables.isEmpty() ) {
-                    for (TableDefinition tableDefinition : tables) {
+                    for (TableDefinitionImpl tableDefinition : tables) {
 
                         createTable(tableDefinition);
 
@@ -140,18 +143,19 @@ public class MigrationManagerImpl implements MigrationManager {
 
     }
 
-    private void createTable(TableDefinition tableDefinition ) throws Exception {
+    private void createTable(TableDefinitionImpl tableDefinition ) throws Exception {
 
         KeyspaceMetadata keyspaceMetadata = dataStaxCluster.getClusterSession().getCluster().getMetadata()
             .getKeyspace(CQLUtils.quote(cassandraFig.getApplicationKeyspace()));
 
-        boolean exists =  keyspaceMetadata != null && keyspaceMetadata.getTable(tableDefinition.getTableName()) != null;
+        boolean exists =  keyspaceMetadata != null
+            && keyspaceMetadata.getTable(tableDefinition.getTableName()) != null;
 
         if( exists ){
             return;
         }
 
-        String CQL = CQLUtils.getTableCQL(cassandraFig, tableDefinition, CQLUtils.ACTION.CREATE);
+        String CQL = tableDefinition.getTableCQL(cassandraFig, TableDefinition.ACTION.CREATE);
         if (logger.isDebugEnabled()) {
             logger.debug(CQL);
         }

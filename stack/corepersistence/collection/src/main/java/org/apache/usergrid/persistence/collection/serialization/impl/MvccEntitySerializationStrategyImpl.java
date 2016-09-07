@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -344,7 +344,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
     }
 
     @Override
-    public Collection<TableDefinition> getTables() {
+    public Collection<TableDefinitionImpl> getTables() {
 
         return Collections.emptyList();
     }

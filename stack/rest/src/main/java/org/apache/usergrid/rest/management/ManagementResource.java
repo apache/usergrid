@@ -42,6 +42,7 @@ import org.apache.usergrid.security.sso.ApigeeSSO2Provider;
 import org.apache.usergrid.security.sso.ExternalSSOProvider;
 import org.apache.usergrid.security.sso.SSOProviderFactory;
 import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
+import org.apache.usergrid.security.tokens.exceptions.BadTokenException;
 import org.apache.usergrid.utils.JsonUtils;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
@@ -196,14 +197,22 @@ public class ManagementResource extends AbstractContextResource {
         String ssoUserId = null;
         if(ssoEnabled && !user.getUsername().equals(properties.getProperty(USERGRID_SYSADMIN_LOGIN_NAME))){
             ExternalSSOProvider provider = ssoProviderFactory.getProvider();
-            final Map<String, String> decodedTokenDetails = provider.getDecodedTokenDetails(access_token);
-            final String expiry = decodedTokenDetails.containsKey("expiry") ? decodedTokenDetails.get("expiry") : "0";
 
-            tokenTtl =
-                Long.valueOf(expiry) - System.currentTimeMillis()/1000;
+            try {
+                final Map<String, String> decodedTokenDetails = provider.getDecodedTokenDetails(access_token);
+                final String expiry = decodedTokenDetails.containsKey("expiry") ? decodedTokenDetails.get("expiry") : "0";
 
-            if( provider instanceof ApigeeSSO2Provider ) {
-                ssoUserId = decodedTokenDetails.get("user_id");
+                tokenTtl =
+                    Long.valueOf(expiry) - System.currentTimeMillis() / 1000;
+
+                if (provider instanceof ApigeeSSO2Provider) {
+                    ssoUserId = decodedTokenDetails.get("user_id");
+                }
+            }catch (BadTokenException e){
+
+                // even when SSO is enabled, this could be a local token
+                tokenTtl = tokens.getTokenInfo(access_token).getDuration();
+
             }
 
         }else{
@@ -395,6 +404,7 @@ public class ManagementResource extends AbstractContextResource {
 
             //moved the check for sso enabled form MangementServiceImpl since was unable to get the current user there to check if its super user.
             if( tokens.isExternalSSOProviderEnabled()
+                && properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER).equalsIgnoreCase("usergrid")
                 && !userServiceAdmin(username) ){
                 OAuthResponse response =
                     OAuthResponse.errorResponse( SC_BAD_REQUEST ).setError( OAuthError.TokenResponse.INVALID_GRANT )
@@ -625,13 +635,14 @@ public class ManagementResource extends AbstractContextResource {
             return; // we only care about username/password auth
         }
 
-        if ( tokens.isExternalSSOProviderEnabled() ) {
-            // when external tokens enabled then only superuser can obtain an access token
-            if ( !userServiceAdmin(username)) {
-                // this guy is not the superuser
+        // when external tokens enabled with Usergrid provider then only superuser can obtain an access token
+        if ( tokens.isExternalSSOProviderEnabled()
+            && properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER).equalsIgnoreCase("usergrid")
+            && !userServiceAdmin(username) ) {
+
                 throw new IllegalArgumentException( "External SSO integration is enabled, admin users must login via provider: "+
                     properties.getProperty(TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER) );
-            }
+
         }
     }
 

@@ -29,7 +29,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Using;
 import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.*;
 
@@ -46,9 +46,6 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.common.base.Preconditions;
-
-import com.netflix.astyanax.ColumnListMutation;
-
 
 
 /**
@@ -498,12 +495,12 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     public abstract Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies();
 
     @Override
-    public abstract Collection<TableDefinition> getTables();
+    public abstract Collection<TableDefinitionImpl> getTables();
 
     /**
      * Get the CQL table definition for the unique values log table
      */
-    protected abstract TableDefinition getUniqueValuesTable();
+    protected abstract TableDefinitionImpl getUniqueValuesTable();
 
 
     protected abstract List<Object> deserializePartitionKey(ByteBuffer bb);
@@ -525,7 +522,7 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     /**
      * Get the CQL table definition for the unique values log table
      */
-    protected abstract TableDefinition getEntityUniqueLogTable();
+    protected abstract TableDefinitionImpl getEntityUniqueLogTable();
 
 
     public class AllUniqueFieldsIterator implements Iterable<UniqueValue>, Iterator<UniqueValue> {

@@ -31,7 +31,7 @@ import com.datastax.driver.core.querybuilder.Using;
 import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
-import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
 import org.apache.usergrid.persistence.core.shard.ExpandingShardLocator;
 import org.apache.usergrid.persistence.core.shard.StringHashUtils;
 import org.apache.usergrid.persistence.map.MapKeyResults;
@@ -306,15 +306,15 @@ public class MapSerializationImpl implements MapSerialization {
 
 
     @Override
-    public Collection<TableDefinition> getTables() {
+    public Collection<TableDefinitionImpl> getTables() {
 
-        final TableDefinition mapEntries =
-            new TableDefinition( MAP_ENTRIES_TABLE, MAP_ENTRIES_PARTITION_KEYS, MAP_ENTRIES_COLUMN_KEYS,
-                MAP_ENTRIES_COLUMNS, TableDefinition.CacheOption.KEYS, MAP_ENTRIES_CLUSTERING_ORDER);
+        final TableDefinitionImpl mapEntries =
+            new TableDefinitionImpl( MAP_ENTRIES_TABLE, MAP_ENTRIES_PARTITION_KEYS, MAP_ENTRIES_COLUMN_KEYS,
+                MAP_ENTRIES_COLUMNS, TableDefinitionImpl.CacheOption.KEYS, MAP_ENTRIES_CLUSTERING_ORDER);
 
-        final TableDefinition mapKeys =
-            new TableDefinition( MAP_KEYS_TABLE, MAP_KEYS_PARTITION_KEYS, MAP_KEYS_COLUMN_KEYS,
-                MAP_KEYS_COLUMNS, TableDefinition.CacheOption.KEYS, MAP_KEYS_CLUSTERING_ORDER);
+        final TableDefinitionImpl mapKeys =
+            new TableDefinitionImpl( MAP_KEYS_TABLE, MAP_KEYS_PARTITION_KEYS, MAP_KEYS_COLUMN_KEYS,
+                MAP_KEYS_COLUMNS, TableDefinitionImpl.CacheOption.KEYS, MAP_KEYS_CLUSTERING_ORDER);
 
 
 

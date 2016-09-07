@@ -131,7 +131,7 @@ public class MarkCommit implements Action1<CollectionIoEvent<MvccEntity>> {
 //        // actorSystemFig may be null in testing
 //        if ( actorSystemFig != null && actorSystemFig.getEnabled() ) {
 //
-//            String region = idIoEvent.getRegion();
+//            String region = idIoEvent.getAuthoritativeRegion();
 //            if ( region == null ) {
 //                region = uniqueValuesFig.getAuthoritativeRegion();
 //            }
