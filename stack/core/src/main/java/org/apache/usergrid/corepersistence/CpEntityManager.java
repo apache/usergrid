@@ -290,8 +290,11 @@ public class CpEntityManager implements EntityManager {
     public <A extends Entity> A create( String entityType, Class<A> entityClass, Map<String, Object> properties )
             throws Exception {
 
-        if ( ( entityType != null ) && ( entityType.startsWith( TYPE_ENTITY ) || entityType
-                .startsWith( "entities" ) ) ) {
+        if ( ( entityType != null ) &&
+            ( entityType.startsWith( TYPE_ENTITY ) || entityType.startsWith( "entities" )
+                // safeguard against creating entities with type keyvaluemaps since we have specific Usergrid
+                // keyvaluemap implementation
+                || entityType.startsWith( "keyvaluemaps" ) || entityType.startsWith( "keyvaluemap" )) ) {
             throw new IllegalArgumentException( "Invalid entity type" );
         }
         A e = null;
