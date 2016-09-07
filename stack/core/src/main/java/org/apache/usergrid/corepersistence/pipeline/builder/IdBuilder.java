@@ -55,12 +55,6 @@ public class IdBuilder {
         this.searchFilterFactory = searchFilterFactory;
     }
 
-    public IdBuilder( final Pipeline<FilterResult<Id>> pipeline, final FilterFactory filterFactory ) {
-        this.pipeline = pipeline;
-        this.filterFactory = filterFactory;
-        this.searchFilterFactory = null;
-    }
-
 
 
     /**

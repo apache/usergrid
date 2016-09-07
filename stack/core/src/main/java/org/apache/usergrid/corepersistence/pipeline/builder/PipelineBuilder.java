@@ -106,7 +106,7 @@ public class PipelineBuilder {
     public IdBuilder fromId(final Id entityId){
         Pipeline<FilterResult<Id>> pipeline =  new Pipeline( applicationScope, this.cursor,limit ).withFilter(  filterFactory.getEntityIdFilter( entityId ) );
 
-        return new IdBuilder( pipeline, filterFactory );
+        return new IdBuilder( pipeline, filterFactory, searchFilterFactory );
     }
 
 
