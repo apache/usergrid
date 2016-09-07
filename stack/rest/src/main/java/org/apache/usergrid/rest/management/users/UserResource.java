@@ -433,7 +433,7 @@ public class UserResource extends AbstractContextResource {
 
         ApiResponse response = createApiResponse();
 
-        management.startAdminUserActivationFlow( null, user );
+        management.startAdminUserActivationFlow( null, user, true);
 
         response.setAction( "reactivate user" );
         return response;
