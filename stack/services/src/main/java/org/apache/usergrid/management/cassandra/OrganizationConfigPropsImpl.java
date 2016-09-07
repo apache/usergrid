@@ -17,6 +17,7 @@
 package org.apache.usergrid.management.cassandra;
 
 
+import org.apache.usergrid.management.AccountCreationProps;
 import org.apache.usergrid.management.OrganizationConfigProps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,10 +207,45 @@ public class OrganizationConfigPropsImpl implements OrganizationConfigProps {
         orgProperties.put(name,value);
     }
 
+    protected String getWorkflowUrlOverrideProperty(WorkflowUrl urlType) {
+        String propertyName = null;
+        switch (urlType) {
+            case ORGANIZATION_ACTIVATION_URL:
+                propertyName = AccountCreationProps.PROPERTIES_ORGANIZATION_ACTIVATION_URL;
+                break;
+            case ADMIN_ACTIVATION_URL:
+                propertyName = AccountCreationProps.PROPERTIES_ADMIN_ACTIVATION_URL;
+                break;
+            case ADMIN_CONFIRMATION_URL:
+                propertyName = AccountCreationProps.PROPERTIES_ADMIN_CONFIRMATION_URL;
+                break;
+            case ADMIN_RESETPW_URL:
+                propertyName = AccountCreationProps.PROPERTIES_ADMIN_RESETPW_URL;
+                break;
+            case USER_ACTIVATION_URL:
+                propertyName = AccountCreationProps.PROPERTIES_USER_ACTIVATION_URL;
+                break;
+            case USER_CONFIRMATION_URL:
+                propertyName = AccountCreationProps.PROPERTIES_USER_CONFIRMATION_URL;
+                break;
+            case USER_RESETPW_URL:
+                propertyName = AccountCreationProps.PROPERTIES_USER_RESETPW_URL;
+                break;
+            default:
+                return null;
+        }
+
+        return getProperty(propertyName);
+    }
+
     @Override
     public String getFullUrlTemplate(WorkflowUrl urlType) {
         String urlTemplate = null;
-        if (urlPaths.containsKey(urlType)) {
+        String propertyValue = getWorkflowUrlOverrideProperty(urlType);
+        if (propertyValue != null) {
+            urlTemplate = propertyValue;
+        }
+        else if (urlPaths.containsKey(urlType)) {
             urlTemplate = getProperty(ORGPROPERTIES_API_URL_BASE) + urlPaths.get(urlType);
         }
         return urlTemplate;
