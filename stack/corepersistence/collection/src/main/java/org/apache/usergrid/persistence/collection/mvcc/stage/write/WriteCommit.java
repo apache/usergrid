@@ -26,6 +26,7 @@ import java.util.UUID;
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.Session;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueException;
@@ -148,14 +149,14 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
 
         // akkaFig may be null when this is called from JUnit tests
         if ( actorSystemFig != null && actorSystemFig.getEnabled() ) {
-            String region = ioEvent.getRegion();
-            if ( region == null ) {
-                region = uniqueValuesFig.getAuthoritativeRegion();
+            String authoritativeRegion = ioEvent.getAuthoritativeRegion();
+            if ( StringUtils.isEmpty(authoritativeRegion) ) {
+                authoritativeRegion = uniqueValuesFig.getAuthoritativeRegion();
             }
-            if ( region == null ) {
-                region = actorSystemFig.getRegionLocal();
+            if ( StringUtils.isEmpty(authoritativeRegion) ) {
+                authoritativeRegion = actorSystemFig.getRegionLocal();
             }
-            confirmUniqueFieldsAkka( mvccEntity, version, applicationScope, region );
+            confirmUniqueFieldsAkka( mvccEntity, version, applicationScope, authoritativeRegion );
         } else {
             confirmUniqueFields( mvccEntity, version, applicationScope, logMutation );
         }

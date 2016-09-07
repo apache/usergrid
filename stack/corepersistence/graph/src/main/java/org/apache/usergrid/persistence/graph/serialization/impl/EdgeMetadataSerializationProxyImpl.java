@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
-import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -290,7 +290,7 @@ public class EdgeMetadataSerializationProxyImpl implements EdgeMetadataSerializa
     }
 
     @Override
-    public Collection<TableDefinition> getTables() {
+    public Collection<TableDefinitionImpl> getTables() {
 
         return Collections.emptyList();
     }

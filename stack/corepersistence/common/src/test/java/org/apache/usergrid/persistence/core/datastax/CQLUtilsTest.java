@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.core.datastax;
 import com.datastax.driver.core.DataType;
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
 import org.apache.usergrid.persistence.core.guice.TestCommonModule;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
@@ -69,17 +70,17 @@ public class CQLUtilsTest {
 
 
 
-        TableDefinition table1 = new TableDefinition(
+        TableDefinitionImpl table1 = new TableDefinitionImpl(
             CQLUtils.quote("table1"),
             partitionKeys,
             columnKeys,
             columns,
-            TableDefinition.CacheOption.KEYS,
+            TableDefinitionImpl.CacheOption.KEYS,
             clusteringOrder
             );
 
-        String createCQL = CQLUtils.getTableCQL(cassandraFig, table1, CQLUtils.ACTION.CREATE);
-        String updateCQL = CQLUtils.getTableCQL(cassandraFig, table1, CQLUtils.ACTION.UPDATE);
+        String createCQL = table1.getTableCQL(cassandraFig, TableDefinition.ACTION.CREATE);
+        String updateCQL = table1.getTableCQL(cassandraFig, TableDefinition.ACTION.UPDATE);
 
         assertTrue(
             createCQL.contains(CQLUtils.CREATE_TABLE ) &&
@@ -121,16 +122,16 @@ public class CQLUtilsTest {
 
 
 
-        TableDefinition table1 = new TableDefinition(
+        TableDefinitionImpl table1 = new TableDefinitionImpl(
             CQLUtils.quote("table1"),
             partitionKeys,
             columnKeys,
             columns,
-            TableDefinition.CacheOption.KEYS,
+            TableDefinitionImpl.CacheOption.KEYS,
             clusteringOrder
         );
 
-        String createCQL = CQLUtils.getTableCQL(cassandraFig, table1, CQLUtils.ACTION.CREATE);
+        String createCQL = table1.getTableCQL(cassandraFig, TableDefinition.ACTION.CREATE);
         logger.info(createCQL);
         assertTrue(
             createCQL.contains( "\"keys_only\"" ) &&
@@ -164,16 +165,16 @@ public class CQLUtilsTest {
 
 
 
-        TableDefinition table1 = new TableDefinition(
+        TableDefinitionImpl table1 = new TableDefinitionImpl(
             CQLUtils.quote("table1"),
             partitionKeys,
             columnKeys,
             columns,
-            TableDefinition.CacheOption.KEYS,
+            TableDefinitionImpl.CacheOption.KEYS,
             clusteringOrder
         );
 
-        String createCQL = CQLUtils.getTableCQL(cassandraFig, table1, CQLUtils.ACTION.CREATE);
+        String createCQL = table1.getTableCQL(cassandraFig, TableDefinition.ACTION.CREATE);
         logger.info(createCQL);
         assertTrue(
             createCQL.contains( "'keys':'ALL'"  ) &&

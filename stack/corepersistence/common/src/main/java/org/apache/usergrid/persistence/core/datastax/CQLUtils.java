@@ -23,43 +23,23 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.core.CassandraFig;
-import org.apache.usergrid.persistence.core.util.StringUtils;
+import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
 
 import java.nio.ByteBuffer;
 import java.util.*;
 
 public class CQLUtils {
 
-    private final CassandraFig cassandraFig;
     private final static ObjectMapper mapper = new ObjectMapper();
-
-    public enum ACTION {
-        CREATE, UPDATE
-    }
 
     static String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS";
     static String ALTER_TABLE = "ALTER TABLE";
-    static String WITH ="WITH";
-    static String AND = "AND";
-    static String EQUAL = "=";
-    static String COMPRESSION = "compression";
-    static String COMPACTION = "compaction";
-    static String CACHING = "caching";
-    static String GC_GRACE_SECONDS = "gc_grace_seconds";
-    static String PRIMARY_KEY = "PRIMARY KEY";
-    static String COMPACT_STORAGE = "COMPACT STORAGE";
-    static String CLUSTERING_ORDER_BY = "CLUSTERING ORDER BY";
-    static String COMMA = ",";
-    static String PAREN_LEFT = "(";
-    static String PAREN_RIGHT = ")";
 
     static String COMPOSITE_TYPE = "'org.apache.cassandra.db.marshal.DynamicCompositeType(a=>org.apache.cassandra.db.marshal.AsciiType,A=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.AsciiType),b=>org.apache.cassandra.db.marshal.BytesType,B=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.BytesType),i=>org.apache.cassandra.db.marshal.IntegerType,I=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.IntegerType),l=>org.apache.cassandra.db.marshal.LongType,L=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.LongType),s=>org.apache.cassandra.db.marshal.UTF8Type,S=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.UTF8Type),t=>org.apache.cassandra.db.marshal.TimeUUIDType,T=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.TimeUUIDType),u=>org.apache.cassandra.db.marshal.UUIDType,U=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.UUIDType),x=>org.apache.cassandra.db.marshal.LexicalUUIDType,X=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.LexicalUUIDType))'";
 
+
     @Inject
-    public CQLUtils ( final CassandraFig cassandraFig ){
-
-        this.cassandraFig = cassandraFig;
-
+    public CQLUtils ( ) {
     }
 
 
@@ -79,64 +59,6 @@ public class CQLUtils {
     public static String getMapAsCQLString(Map<String, Object> map) throws JsonProcessingException {
 
         return mapper.writeValueAsString(map).replace("\"", "'");
-    }
-
-
-    public static String getTableCQL( CassandraFig cassandraFig, TableDefinition tableDefinition,
-                               ACTION tableAction) throws Exception {
-
-        StringJoiner cql = new StringJoiner(" ");
-
-        if ( tableAction.equals(ACTION.CREATE) ){
-            cql.add(CREATE_TABLE);
-        } else if ( tableAction.equals(ACTION.UPDATE) ){
-            cql.add(ALTER_TABLE);
-        }else{
-            throw new Exception("Invalid Action specified.  Must of of type CQLUtils.Action");
-        }
-
-        cql.add( tableDefinition.getTableName() );
-
-
-
-        if ( tableAction.equals(ACTION.CREATE) ){
-
-            cql.add(PAREN_LEFT).add( spaceSeparatedKeyValue(tableDefinition.getColumns()) ).add(COMMA)
-                .add(PRIMARY_KEY)
-                .add(PAREN_LEFT).add(PAREN_LEFT)
-                .add( StringUtils.join(tableDefinition.getPartitionKeys(), COMMA) ).add(PAREN_RIGHT);
-
-            if ( tableDefinition.getColumnKeys() != null && !tableDefinition.getColumnKeys().isEmpty() ){
-
-                cql.add(COMMA).add( StringUtils.join(tableDefinition.getColumnKeys(), COMMA) );
-            }
-
-            cql.add(PAREN_RIGHT).add(PAREN_RIGHT)
-                .add(WITH)
-                .add(CLUSTERING_ORDER_BY)
-                .add(PAREN_LEFT)
-                .add( spaceSeparatedKeyValue(tableDefinition.getClusteringOrder()) )
-                .add(PAREN_RIGHT)
-                .add(AND)
-                .add(COMPACT_STORAGE)
-                .add(AND);
-
-        } else if ( tableAction.equals(ACTION.UPDATE) ){
-            cql.add(WITH);
-
-        }
-
-
-        cql.add(COMPACTION).add(EQUAL).add( getMapAsCQLString( tableDefinition.getCompaction() ) )
-            .add(AND)
-            .add(COMPRESSION).add(EQUAL).add( getMapAsCQLString( tableDefinition.getCompression() ) )
-            .add(AND)
-            .add(GC_GRACE_SECONDS).add(EQUAL).add( tableDefinition.getGcGraceSeconds() )
-            .add(AND)
-            .add(CACHING).add(EQUAL).add( getCachingOptions( cassandraFig, tableDefinition.getCacheOption() ) );
-
-        return cql.toString();
-
     }
 
     public static String quote( String value){
@@ -162,7 +84,7 @@ public class CQLUtils {
     }
 
 
-    public static String getCachingOptions(CassandraFig cassandraFig, TableDefinition.CacheOption cacheOption) throws JsonProcessingException {
+    public static String getCachingOptions(CassandraFig cassandraFig, TableDefinitionImpl.CacheOption cacheOption) throws JsonProcessingException {
 
         // Cassandra 2.0 and below has a different CQL syntax for caching
         if( Double.parseDouble( cassandraFig.getVersion() ) <= 2.0 ){
@@ -177,7 +99,7 @@ public class CQLUtils {
     }
 
 
-    public static String getCacheValue( TableDefinition.CacheOption cacheOption ) throws JsonProcessingException {
+    public static String getCacheValue( TableDefinitionImpl.CacheOption cacheOption ) throws JsonProcessingException {
 
 
         Map<String, Object>  cacheValue = new HashMap<>(2);
@@ -213,7 +135,7 @@ public class CQLUtils {
 
     }
 
-    public static String getLegacyCacheValue( TableDefinition.CacheOption cacheOption ){
+    public static String getLegacyCacheValue( TableDefinitionImpl.CacheOption cacheOption ){
 
         String cacheValue;
         switch (cacheOption) {

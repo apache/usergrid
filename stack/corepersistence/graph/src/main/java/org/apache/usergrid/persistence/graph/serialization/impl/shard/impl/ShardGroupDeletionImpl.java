@@ -191,21 +191,35 @@ public class ShardGroupDeletionImpl implements ShardGroupDeletion {
                 return DeleteResult.NO_OP;
             }
 
+            if(shard.isDeleted()){
+                if(logger.isTraceEnabled()){
+                    logger.trace("Shard {} already deleted.  Short circuiting.", shard);
+                }
+                return DeleteResult.NO_OP;
+            }
 
-            final MutationBatch shardRemovalMutation =
-                edgeShardSerialization.removeShardMeta( applicationScope, shard, directedEdgeMeta );
+            shard.setDeleted(true);
+
+            final MutationBatch setShardDeletedFlagMutation =
+                edgeShardSerialization.writeShardMeta(applicationScope, shard, directedEdgeMeta );
+
+            /* Previously the below was used for actually deleting the shard vs.a marking strategy with read filtering
+
+                 final MutationBatch shardRemovalMutation =
+                    edgeShardSerialization.removeShardMeta( applicationScope, shard, directedEdgeMeta );
+            */
 
             if ( rollup == null ) {
-                rollup = shardRemovalMutation;
+                rollup = setShardDeletedFlagMutation;
             }
 
             else {
-                rollup.mergeShallow( shardRemovalMutation );
+                rollup.mergeShallow( setShardDeletedFlagMutation );
             }
 
             result = DeleteResult.DELETED;
 
-            logger.info( "Removing shard {} in group {}", shard, shardEntryGroup );
+            logger.info( "Marking shard {} as deleted in group {}", shard, shardEntryGroup );
         }
 
 

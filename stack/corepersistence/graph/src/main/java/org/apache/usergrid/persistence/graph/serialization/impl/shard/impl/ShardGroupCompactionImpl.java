@@ -346,7 +346,7 @@ public class ShardGroupCompactionImpl implements ShardGroupCompaction {
 
             //Overwrite our shard index with a newly created one that has been marked as compacted
             Shard compactedShard = new Shard( targetShard.getShardIndex(), timeService.getCurrentTime(), true );
-            compactedShard.setShardEnd(targetShard.getShardEnd());
+            compactedShard.setShardEnd(Optional.absent());
 
             if(logger.isTraceEnabled()) {
                 logger.trace("Shard has been fully compacted.  Marking shard {} as compacted in Cassandra", compactedShard);

@@ -107,6 +107,9 @@ public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
     public boolean hasNext() {
 
         if ( !complete && results == null) {
+            if(logger.isTraceEnabled()){
+                logger.trace("Iterator not complete and there are results object is null, advancing");
+            }
             advance();
         }
 

@@ -106,6 +106,7 @@ public class CpEntityManager implements EntityManager {
     public static final String APPLICATION_COLLECTION = "application.collection.";
     public static final String APPLICATION_ENTITIES = "application.entities";
     public static final long ONE_COUNT = 1L;
+    public static final String AUTHORITATIVE_REGION_SETTING = "authoritativeRegion";
 
     private final UUID applicationId;
     private final EntityManagerFig entityManagerFig;
@@ -522,7 +523,7 @@ public class CpEntityManager implements EntityManager {
 
         try {
 
-            String region = lookupRegionForType( entity.getType() );
+            String region = lookupAuthoritativeRegionForType( entity.getType() );
 
             cpEntity = ecm.write( cpEntity, region ).toBlocking().last();
 
@@ -625,7 +626,7 @@ public class CpEntityManager implements EntityManager {
         Id entityId = new SimpleId( entityRef.getUuid(), entityRef.getType() );
 
         //Step 1 & 2 of delete
-        String region = this.lookupRegionForType( entityRef.getType() );
+        String region = this.lookupAuthoritativeRegionForType( entityRef.getType() );
         return ecm.mark( entityId, region ).mergeWith( gm.markNode( entityId, createGraphOperationTimestamp() ) );
 
     }
@@ -1138,7 +1139,7 @@ public class CpEntityManager implements EntityManager {
         Optional<Map<String, Object>> existingSettings =
             collectionSettings.getCollectionSettings( collectionName );
         if ( existingSettings.isPresent() ) {
-            region = existingSettings.get().get("region").toString();
+            region = existingSettings.get().get(AUTHORITATIVE_REGION_SETTING).toString();
         }
 
         //TODO: does this call and others like it need a graphite reporter?
@@ -1818,12 +1819,12 @@ public class CpEntityManager implements EntityManager {
         }
 
         // if region specified
-        Object region = newSettings.get("region");
+        Object region = newSettings.get(AUTHORITATIVE_REGION_SETTING);
         if ( region != null ) {
 
             // passing an empty string causes region to be removed from settings
             if ( region.toString().trim().isEmpty() ) {
-                updatedSettings.remove("region");
+                updatedSettings.remove(AUTHORITATIVE_REGION_SETTING);
 
             } else {
                 // make sure region is in the configured region list
@@ -1831,7 +1832,7 @@ public class CpEntityManager implements EntityManager {
                 if (!regionList.contains( region )) {
                     throw new NullArgumentException( "Region " + region + " not in region list" );
                 }
-                updatedSettings.put("region", region);
+                updatedSettings.put(AUTHORITATIVE_REGION_SETTING, region);
             }
         }
 
@@ -2827,7 +2828,7 @@ public class CpEntityManager implements EntityManager {
                     cpEntity.getId().getType(), cpEntity.getId().getUuid(), cpEntity.getVersion() );
             }
 
-            String region = lookupRegionForType( entity.getType() );
+            String region = lookupAuthoritativeRegionForType( entity.getType() );
 
             //this does the write so before adding to a collection everything already exists already.
             cpEntity = ecm.write( cpEntity, region ).toBlocking().last();
@@ -3138,7 +3139,7 @@ public class CpEntityManager implements EntityManager {
     }
 
 
-    private  String lookupRegionForType( String type ) {
+    private  String lookupAuthoritativeRegionForType(String type ) {
 
         String region = null;
         String collectionName = Schema.defaultCollectionName( type );
@@ -3151,8 +3152,8 @@ public class CpEntityManager implements EntityManager {
         Optional<Map<String, Object>> existingSettings =
             collectionSettings.getCollectionSettings( collectionName );
 
-        if ( existingSettings.isPresent() && existingSettings.get().get("region") != null ) {
-            region = existingSettings.get().get("region").toString();
+        if ( existingSettings.isPresent() && existingSettings.get().get(AUTHORITATIVE_REGION_SETTING) != null ) {
+            region = existingSettings.get().get(AUTHORITATIVE_REGION_SETTING).toString();
         }
 
         return region;

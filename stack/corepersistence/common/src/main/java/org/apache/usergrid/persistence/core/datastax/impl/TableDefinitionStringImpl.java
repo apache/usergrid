@@ -17,18 +17,32 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.core.datastax;
-
+package org.apache.usergrid.persistence.core.datastax.impl;
 
 import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 
-public interface TableDefinition {
 
-    enum ACTION {
-        CREATE, UPDATE
+public class TableDefinitionStringImpl implements TableDefinition {
+
+    private String tableName;
+    private String cql;
+
+
+    public TableDefinitionStringImpl( String tableName, String cql ) {
+        this.tableName = tableName;
+        this.cql = cql;
     }
 
-    String getTableName();
 
-    String getTableCQL( CassandraFig cassandraFig, ACTION tableAction ) throws Exception;
+    @Override
+    public String getTableName() {
+        return tableName;
+    }
+
+
+    @Override
+    public String getTableCQL(CassandraFig cassandraFig, ACTION tableAction) throws Exception {
+        return cql;
+    }
 }

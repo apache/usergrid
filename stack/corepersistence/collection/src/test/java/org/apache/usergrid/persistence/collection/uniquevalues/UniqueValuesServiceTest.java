@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 
 import java.util.Collection;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -137,9 +138,10 @@ public class UniqueValuesServiceTest extends AbstractUniqueValueTest {
 
         for (int i = 0; i < numUsers; i++) {
 
+            String username = "user_" + UUID.randomUUID().toString();
+
             // multiple threads simultaneously trying to create a user with the same propertyName
             for (int j = 0; j < numThreads; j++) {
-                String username = "user_" + i;
 
                 execService.submit( () -> {
 
