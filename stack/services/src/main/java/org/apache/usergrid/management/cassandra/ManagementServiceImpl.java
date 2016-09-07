@@ -921,7 +921,7 @@ public class ManagementServiceImpl implements ManagementService {
         if (    !user.getEmail().equals( properties.getProperty( PROPERTIES_SYSADMIN_LOGIN_EMAIL ) )
              && !user.getEmail().equals( properties .getProperty( PROPERTIES_TEST_ACCOUNT_ADMIN_USER_EMAIL ) ) ) {
             if(!tokens.isExternalSSOProviderEnabled()) {
-                this.startAdminUserActivationFlow(organizationId, userInfo);
+                this.startAdminUserActivationFlow(organizationId, userInfo, false);
             }
         }
 
@@ -2556,9 +2556,14 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public void startAdminUserActivationFlow( UUID organizationId, UserInfo user ) throws Exception {
+    public void startAdminUserActivationFlow(UUID organizationId, UserInfo user,
+                                             boolean fromReactivate) throws Exception {
+        // re-activation flow ( or auto-activated flow )
         if ( user.isActivated() ) {
-            sendAdminUserConfirmationEmail( organizationId, user );
+            // send email always if from re-activation, otherwise check the property flag
+            if ( fromReactivate || newAdminUsersRequireConfirmation() ) {
+                sendAdminUserConfirmationEmail(organizationId, user);
+            }
             sendAdminUserActivatedEmail( user );
             sendSysAdminNewAdminActivatedNotificationEmail( organizationId, user );
         }
@@ -2647,7 +2652,6 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     public void sendAdminUserConfirmationEmail( UUID organizationId, UserInfo user ) throws Exception {
-        if (properties.newAdminUsersRequireConfirmation()) {
             String token = getConfirmationTokenForAdminUser(user.getUuid(), 0, organizationId);
             OrganizationConfig orgConfig = organizationId != null ?
                 getOrganizationConfigByUuid(organizationId) : getOrganizationConfigForUserInfo(user);
@@ -2656,7 +2660,6 @@ public class ManagementServiceImpl implements ManagementService {
             sendAdminUserEmail(user, "User Account Confirmation: " + user.getEmail(),
                 emailMsg(hashMap("confirm_email", user.getEmail()).map("confirmation_url", confirmation_url),
                     PROPERTIES_EMAIL_ADMIN_CONFIRMATION));
-        }
     }
 
 
