@@ -534,7 +534,7 @@ public class AdminUsersIT extends AbstractRestIT {
     @Test
     public void reactivateTest() throws Exception {
         //call reactivate endpoint on default user
-        clientSetup.getRestClient().management().users().user( clientSetup.getUsername() ).reactivate();
+        clientSetup.getRestClient().management().users().user( clientSetup.getUsername() ).reactivate().get();
         refreshIndex();
 
         //Create mocked inbox and check to see if you recieved an email in the users inbox.

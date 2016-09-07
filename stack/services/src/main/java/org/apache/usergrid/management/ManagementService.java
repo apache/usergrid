@@ -247,7 +247,7 @@ public interface ManagementService {
 
 	void removeOrganizationApplication( UUID organizationId, UUID applicationId ) throws Exception;
 
-	void startAdminUserActivationFlow( UUID organizationId, UserInfo user ) throws Exception;
+	void startAdminUserActivationFlow(UUID organizationId, UserInfo user, boolean fromReactivate) throws Exception;
 
 	void sendAdminUserEmail( UserInfo user, String subject, String html ) throws Exception;
 
