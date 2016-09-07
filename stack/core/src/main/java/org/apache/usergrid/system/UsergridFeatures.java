@@ -63,7 +63,7 @@ public class UsergridFeatures {
 
     public static boolean isKvmFeatureEnabled(){
 
-        return  getFeaturesEnabled().contains(Feature.KVM);
+        return true;
 
     }
 }

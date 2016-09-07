@@ -148,8 +148,8 @@ public class ApplicationResource extends CollectionResource {
         return getEventsResource( ui );
     }
 
-    //@RequireApplicationAccess
-    @Path("maps")
+    @RequireApplicationAccess
+    @Path("keyvaluemaps")
     public KvmResource getKvmResource(@Context UriInfo ui ) throws Exception {
         return getSubResource( KvmResource.class );
     }

@@ -43,9 +43,7 @@ import java.util.*;
 
 @Component("org.apache.usergrid.rest.applications.kvm.KvmResource")
 @Scope("prototype")
-@Produces({ MediaType.APPLICATION_JSON, "application/javascript", "application/x-javascript", "text/ecmascript",
-    "application/ecmascript", "text/jscript"
-})
+@Produces(MediaType.APPLICATION_JSON)
 public class KvmResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( KvmResource.class );
@@ -87,14 +85,21 @@ public class KvmResource extends AbstractContextResource {
             throw new IllegalArgumentException("Only 1 map can be created at a time.");
         }
 
+        enforceQueryFeature(ui);
+
         final String mapName = json.keySet().iterator().next();
-        final Object meta = json.get(mapName);
-        if( !(meta instanceof Map) ){
+
+        if( !(json.get(mapName) instanceof Map) ){
             throw new IllegalArgumentException("New map details must be provided as a JSON object.");
         }
+        final Map<String, Object> meta = (Map<String, Object>)json.get(mapName);
 
         if(StringUtils.isEmpty(mapName)){
             throw new IllegalArgumentException("Property mapName is required.");
+        }
+
+        if( json.containsKey("metadata") ){
+            json.remove("metadata");
         }
 
         final String appMap = services.getApplicationId().toString();
@@ -103,10 +108,11 @@ public class KvmResource extends AbstractContextResource {
         final MapManager mapManager = mmf.createMapManager(mapScope);
 
         final Map<String, Object> mapDetails = new HashMap<String, Object>(){{
-
-            put("active", true);
-            put("modified", System.currentTimeMillis() );
-            put("details", meta);
+            put("metadata", new HashMap<String, Object>(){{
+                put("active", true);
+                put("modified", System.currentTimeMillis() );
+            }});
+            putAll(meta);
 
         }};
 
@@ -121,7 +127,7 @@ public class KvmResource extends AbstractContextResource {
         response.setAction( "post" );
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
-        response.setProperty("maps", Collections.singletonList(map));
+        response.setProperty("maps", map);
 
         return response;
 
@@ -135,6 +141,7 @@ public class KvmResource extends AbstractContextResource {
                                 @QueryParam("cursor") String cursor) {
 
         limit = validateLimit(limit);
+        enforceQueryFeature(ui);
 
         final String appMap = services.getApplicationId().toString();
 
@@ -144,14 +151,12 @@ public class KvmResource extends AbstractContextResource {
 
         MapKeyResults mapKeyResults = mapManager.getKeys(cursor, limit );
 
-        List<Map<String, Object>> results = new ArrayList<>();
+        Map<String, Object> results = new HashMap<>();
 
         Observable.from(mapKeyResults.getKeys()).flatMap(key -> {
-            return Observable.just(new HashMap<String, Object>() {{
-                put(key, JsonUtils.parse(mapManager.getString(key)));
-            }});
+            return Observable.just(results.put(key, JsonUtils.parse(mapManager.getString(key))));
 
-        }).doOnNext(entry -> results.add(entry)).toBlocking().lastOrDefault(null);
+        }).toBlocking().lastOrDefault(null);
 
 
         ApiResponse response = createApiResponse();
@@ -177,6 +182,7 @@ public class KvmResource extends AbstractContextResource {
                                 @PathParam("mapName") String mapName ) {
 
         limit = validateLimit(limit);
+        enforceQueryFeature(ui);
 
         final String appMap = services.getApplicationId().toString();
 
@@ -193,7 +199,7 @@ public class KvmResource extends AbstractContextResource {
         response.setAction( "get" );
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
-        response.setProperty("maps", Collections.singletonList(map));
+        response.setProperty("maps", map);
 
         return response;
 
@@ -205,7 +211,7 @@ public class KvmResource extends AbstractContextResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public ApiResponse createEntries( @Context UriInfo ui,
-                                      List<Map<String,Object>> json,
+                                      Map<String,Object> json,
                                       @PathParam("mapName") String mapName ) {
 
         if ( json.size() > BATCH_SIZE_MAX ){
@@ -216,18 +222,16 @@ public class KvmResource extends AbstractContextResource {
             throw new IllegalArgumentException("Property mapName is required.");
         }
 
+        enforceQueryFeature(ui);
+
         final MapScope mapScope = new MapScopeImpl(services.getApplication().asId(), mapName);
         final MapManagerFactory mmf = injector.getInstance(MapManagerFactory.class);
         final MapManager mapManager = mmf.createMapManager(mapScope);
 
         //TODO maybe RX flatmap this or parallel stream
-        json.forEach( item -> {
-
-            String key = item.keySet().iterator().next();
-            Object value = item.get(key);
+        json.forEach( (key, value) -> {
 
             mapManager.putString(key, value.toString());
-
 
         });
 
@@ -236,7 +240,6 @@ public class KvmResource extends AbstractContextResource {
         response.setAction( "post" );
         response.setApplication( services.getApplication() );
         response.setParams( ui.getQueryParameters() );
-        response.setProperty("mapName", mapName);
         response.setProperty("entries", json);
 
         return response;
@@ -257,13 +260,13 @@ public class KvmResource extends AbstractContextResource {
         }
 
         limit = validateLimit(limit);
+        enforceQueryFeature(ui);
 
         final MapScope mapScope = new MapScopeImpl(services.getApplication().asId(), mapName);
         final MapManagerFactory mmf = injector.getInstance(MapManagerFactory.class);
         final MapManager mapManager = mmf.createMapManager(mapScope);
 
         MapKeyResults mapKeyResults = mapManager.getKeys(cursor, limit );
-
 
         ApiResponse response = createApiResponse();
         response.setAction( "get" );
@@ -292,6 +295,7 @@ public class KvmResource extends AbstractContextResource {
         }
 
         limit = validateLimit(limit);
+        enforceQueryFeature(ui);
 
         final MapScope mapScope = new MapScopeImpl(services.getApplication().asId(), mapName);
         final MapManagerFactory mmf = injector.getInstance(MapManagerFactory.class);
@@ -299,11 +303,10 @@ public class KvmResource extends AbstractContextResource {
 
         MapKeyResults mapKeyResults = mapManager.getKeys(cursor, limit );
 
-        List<Map<String, String>> results = new ArrayList<>();
+        Map<String, Object> results = new HashMap<>();
         Observable.from(mapKeyResults.getKeys()).flatMap(key ->{
-            return Observable.just(new HashMap<String, String>(){{put(key, mapManager.getString(key));}});
-
-        }).doOnNext(entry -> results.add(entry)).toBlocking().lastOrDefault(null);
+            return Observable.just(results.put(key, mapManager.getString(key)));
+        }).toBlocking().lastOrDefault(null);
 
 
         ApiResponse response = createApiResponse();
@@ -323,27 +326,34 @@ public class KvmResource extends AbstractContextResource {
     @GET
     @Path("{mapName}/entries/{keyName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ApiResponse getEntry( @Context UriInfo ui,
+    public Object getEntry( @Context UriInfo ui,
                                    @PathParam("mapName") String mapName,
-                                   @PathParam("keyName") String keyName ) {
+                                   @PathParam("keyName") String keyName,
+                                   @QueryParam("rawData") @DefaultValue("false") boolean rawData) {
 
+        enforceQueryFeature(ui);
 
         final MapScope mapScope = new MapScopeImpl(services.getApplication().asId(), mapName);
         final MapManagerFactory mmf = injector.getInstance(MapManagerFactory.class);
         final MapManager mapManager = mmf.createMapManager(mapScope);
 
 
-        List<Map<String, String>> results = new ArrayList<>();
-        results.add(new HashMap<String, String>(){{put(keyName, mapManager.getString(keyName));}});
+        Map<String, Object> results = new HashMap<>();
+        Object value = mapManager.getString(keyName);
+        results.put(keyName, value);
+
+        if( !rawData ) {
+            ApiResponse response = createApiResponse();
+            response.setAction("get");
+            response.setApplication(services.getApplication());
+            response.setParams(ui.getQueryParameters());
+            response.setProperty("entries", results);
+            return response;
+        }else{
+            return value;
+        }
 
 
-        ApiResponse response = createApiResponse();
-        response.setAction( "get" );
-        response.setApplication( services.getApplication() );
-        response.setParams( ui.getQueryParameters() );
-        response.setProperty("entries", results);
-
-        return response;
 
     }
 
@@ -351,6 +361,16 @@ public class KvmResource extends AbstractContextResource {
     private int validateLimit(final int limit){
 
         return limit > 0 && limit < PAGE_SIZE_MAX ? limit : PAGE_SIZE_DEFAULT;
+
+    }
+
+    private void enforceQueryFeature(UriInfo ui) {
+
+        if( StringUtils.isNotEmpty(ui.getQueryParameters().getFirst("ql"))){
+
+            throw new IllegalArgumentException("Query feature not supported for keyvaluemaps");
+
+        }
 
     }
 
