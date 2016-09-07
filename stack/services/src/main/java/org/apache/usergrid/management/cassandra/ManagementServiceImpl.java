@@ -2647,14 +2647,16 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     public void sendAdminUserConfirmationEmail( UUID organizationId, UserInfo user ) throws Exception {
-        String token = getConfirmationTokenForAdminUser(user.getUuid(), 0, organizationId);
-        OrganizationConfig orgConfig = organizationId != null ?
+        if (properties.newAdminUsersRequireConfirmation()) {
+            String token = getConfirmationTokenForAdminUser(user.getUuid(), 0, organizationId);
+            OrganizationConfig orgConfig = organizationId != null ?
                 getOrganizationConfigByUuid(organizationId) : getOrganizationConfigForUserInfo(user);
-        String confirmation_url = orgConfig.getFullUrl(WorkflowUrl.ADMIN_CONFIRMATION_URL, user.getUuid().toString()) +
+            String confirmation_url = orgConfig.getFullUrl(WorkflowUrl.ADMIN_CONFIRMATION_URL, user.getUuid().toString()) +
                 "?token=" + token;
-        sendAdminUserEmail( user, "User Account Confirmation: " + user.getEmail(),
-                emailMsg( hashMap( "confirm_email", user.getEmail() ).map( "confirmation_url", confirmation_url ),
-                        PROPERTIES_EMAIL_ADMIN_CONFIRMATION ) );
+            sendAdminUserEmail(user, "User Account Confirmation: " + user.getEmail(),
+                emailMsg(hashMap("confirm_email", user.getEmail()).map("confirmation_url", confirmation_url),
+                    PROPERTIES_EMAIL_ADMIN_CONFIRMATION));
+        }
     }
 
 
