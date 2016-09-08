@@ -23,16 +23,20 @@ import java.io.FileReader;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.base.*;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.model.Column;
 import com.netflix.astyanax.model.ConsistencyLevel;
 import com.netflix.astyanax.util.RangeBuilder;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
+import org.apache.usergrid.persistence.collection.MvccEntity;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
+import org.apache.usergrid.persistence.collection.serialization.UniqueValue;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.UniqueValueSet;
 import org.apache.usergrid.persistence.collection.serialization.impl.*;
+import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
@@ -58,6 +62,10 @@ public class UniqueValueManager extends ToolBase {
     private static final String OPERATION_ARG = "op";
 
     private static final String CONFIRM_DELETE_ARG = "confirmDelete";
+
+    private static final String CONFIRM_UPDATE_ARG = "confirmUpdate";
+
+    private static final String SERIALIZATION_REPAIR_ARG = "useSerializationRepair";
 
     private static final String FILEPATH_ARG = "file";
 
@@ -100,6 +108,18 @@ public class UniqueValueManager extends ToolBase {
 
         options.addOption( confirmDeleteOption );
 
+        Option confirmUpdateOption =
+            OptionBuilder.withArgName(CONFIRM_UPDATE_ARG).isRequired( false ).withDescription( "confirm update" )
+                .create(CONFIRM_UPDATE_ARG);
+
+        options.addOption( confirmUpdateOption );
+
+        Option useSerializationRepair =
+            OptionBuilder.withArgName(SERIALIZATION_REPAIR_ARG).isRequired( false ).withDescription( "use unique value serialization repair to keep oldest index" )
+                .create(SERIALIZATION_REPAIR_ARG);
+
+        options.addOption( useSerializationRepair );
+
         Option filepathOption =
             OptionBuilder.withArgName(FILEPATH_ARG).hasArg().isRequired( true )
                 .withDescription( "path to file containing UV info" ).create(FILEPATH_ARG);
@@ -126,8 +146,11 @@ public class UniqueValueManager extends ToolBase {
 
         String operation = line.getOptionValue(OPERATION_ARG) != null ? line.getOptionValue(OPERATION_ARG) : "get";
         boolean deleteOp = operation.toLowerCase().equals("delete");
+        boolean updateOp = operation.toLowerCase().equals("update");
         if (deleteOp && !line.hasOption(CONFIRM_DELETE_ARG)) {
             throw new RuntimeException("Must add confirmDelete option to use delete.");
+        }else if( updateOp && !line.hasOption(CONFIRM_UPDATE_ARG) ){
+            throw new RuntimeException("Must add confirmUpdate option to use update.");
         }
         String filepath = line.getOptionValue(FILEPATH_ARG);
         if (filepath == null || filepath.isEmpty()) {
@@ -144,15 +167,21 @@ public class UniqueValueManager extends ToolBase {
 
         File listFile = new File(filepath);
 
+        boolean useSerializationRepair = false;
+        if(line.hasOption(SERIALIZATION_REPAIR_ARG)){
+            useSerializationRepair = true;
+        }
+
         try (BufferedReader br = new BufferedReader(new FileReader(listFile))) {
             String fileLine;
             while ((fileLine = br.readLine()) != null) {
                 String[] valuesArray = fileLine.trim().split("\\|");
-                if (valuesArray.length != 4) {
+                if (valuesArray.length != 4 && valuesArray.length != 5) {
                     logger.info("Line: >"+fileLine+"<");
                     throw new RuntimeException("Invalid file -- should contain one row per entity formatted like " +
-                            "'{uuid}|{entityType}|{fieldType}|{fieldValue}'.  " +
-                            "Example: 'b9398e88-ef7f-11e5-9e41-0a2cb9e6caa9|user|email|whatever@usergrid.com'");
+                            "'{uuid}|{entityType}|{fieldType}|{fieldValue}|{newEntityUUID}'.  " +
+                            "Example: 'b9398e88-ef7f-11e5-9e41-0a2cb9e6caa9|user|email|whatever@usergrid.com|newEntityUUID'.  " +
+                            "Param {newEntityUUID} is optional.");
                 }
                 UUID appUuid = UUID.fromString(valuesArray[0]);
                 String entityType = valuesArray[1];
@@ -160,9 +189,42 @@ public class UniqueValueManager extends ToolBase {
                 String fieldValue = valuesArray[3];
 
                 UniqueValueSet uniqueValueSet = uniqueValueSerializationStrategy.load(
-                        new ApplicationScopeImpl(new SimpleId(appUuid, "application")),
-                        ConsistencyLevel.valueOf(System.getProperty("usergrid.read.cl", "CL_LOCAL_QUORUM")), entityType,
-                        Collections.singletonList(new StringField(fieldType, fieldValue)), false);
+                    new ApplicationScopeImpl(new SimpleId(appUuid, "application")),
+                    ConsistencyLevel.valueOf(System.getProperty("usergrid.read.cl", "CL_LOCAL_QUORUM")), entityType,
+                    Collections.singletonList(new StringField(fieldType, fieldValue)), useSerializationRepair);
+
+                if( updateOp) {
+
+                    if(valuesArray.length!=5){
+                        throw new RuntimeException("Missing param {newEntityUUID}");
+                    }
+                    String updateUUID = valuesArray[4];
+
+                    ApplicationScope applicationScope = new ApplicationScopeImpl(new SimpleId(appUuid, "application"));
+                    com.google.common.base.Optional<MvccEntity> entity =
+                        mvccEntitySerializationStrategy.load(applicationScope, new SimpleId(UUID.fromString(updateUUID), entityType));
+
+                    if( !entity.isPresent()
+                        || !entity.get().getEntity().isPresent() ){
+                        throw new RuntimeException("Unable to update unique value index because supplied UUID "+updateUUID+" does not exist");
+                    }
+
+                    logger.info("Delete unique value: {}",  uniqueValueSet.getValue(fieldType));
+                    uniqueValueSerializationStrategy.delete(applicationScope, uniqueValueSet.getValue(fieldType)).execute();
+
+                    UniqueValue newUniqueValue =
+                        new UniqueValueImpl(new StringField(fieldType, fieldValue), entity.get().getId(), entity.get().getVersion());
+                    logger.info("Writing new unique value: {}", newUniqueValue);
+                    uniqueValueSerializationStrategy.write(applicationScope, newUniqueValue).execute();
+
+                    logger.info("Re-loading unique value set for field");
+
+                }
+
+                uniqueValueSet = uniqueValueSerializationStrategy.load(
+                    new ApplicationScopeImpl(new SimpleId(appUuid, "application")),
+                    ConsistencyLevel.valueOf(System.getProperty("usergrid.read.cl", "CL_LOCAL_QUORUM")), entityType,
+                    Collections.singletonList(new StringField(fieldType, fieldValue)), useSerializationRepair);
 
                 StringBuilder stringBuilder = new StringBuilder();
 
@@ -198,114 +260,4 @@ public class UniqueValueManager extends ToolBase {
             }
         }
     }
-
-        /*
-        } else {
-
-            logger.info("Running entity unique scanner only");
-
-
-            // scan through all unique values and log some info
-
-            Iterator<com.netflix.astyanax.model.Row<ScopedRowKey<TypeField>, EntityVersion>> rows = null;
-            try {
-
-                rows = keyspace.prepareQuery(CF_UNIQUE_VALUES)
-                    .setConsistencyLevel(ConsistencyLevel.valueOf(System.getProperty("usergrid.read.cl", "CL_LOCAL_QUORUM")))
-                    .getAllRows()
-                    .withColumnRange(new RangeBuilder().setLimit(1000).build())
-                    .execute().getResult().iterator();
-
-            } catch (ConnectionException e) {
-
-                logger.error("Error connecting to cassandra", e);
-            }
-
-
-            UUID finalAppToFilter = appToFilter;
-
-            if( rows != null) {
-                rows.forEachRemaining(row -> {
-
-                    count.incrementAndGet();
-
-                    if(count.get() % 1000 == 0 ){
-                        logger.info("Scanned {} rows in {}", count.get(), CF_UNIQUE_VALUES.getName());
-                    }
-
-                    final String fieldName = row.getKey().getKey().getField().getName();
-                    final String fieldValue = row.getKey().getKey().getField().getValue().toString();
-                    final String scopeType = row.getKey().getScope().getType();
-                    final UUID scopeUUID = row.getKey().getScope().getUuid();
-
-
-                    if (!fieldName.equalsIgnoreCase(fieldType) ||
-                        (finalAppToFilter != null && !finalAppToFilter.equals(scopeUUID))
-                        ) {
-                        // do nothing
-
-                    } else {
-
-
-                        // if we have more than 1 column, let's check for a duplicate
-                        if (row.getColumns() != null && row.getColumns().size() > 1) {
-
-                            final List<EntityVersion> values = new ArrayList<>(row.getColumns().size());
-
-                            Iterator<Column<EntityVersion>> columns = row.getColumns().iterator();
-                            columns.forEachRemaining(column -> {
-
-
-                                final EntityVersion entityVersion = column.getName();
-
-
-                                logger.trace(
-                                    scopeType + ": " + scopeUUID + ", " +
-                                        fieldName + ": " + fieldValue + ", " +
-                                        "entity type: " + entityVersion.getEntityId().getType() + ", " +
-                                        "entity uuid: " + entityVersion.getEntityId().getUuid()
-                                );
-
-
-                                if (entityType != null &&
-                                    entityVersion.getEntityId().getType().equalsIgnoreCase(entityType)
-                                    ) {
-
-                                    // add the first value into the list
-                                    if (values.size() == 0) {
-
-                                        values.add(entityVersion);
-
-
-                                    } else {
-
-                                        if (!values.get(0).getEntityId().getUuid().equals(entityVersion.getEntityId().getUuid())) {
-
-                                            values.add(entityVersion);
-
-                                            logger.error("Duplicate found for field [{}={}].  Entry 1: [{}], Entry 2: [{}]",
-                                                fieldName, fieldValue, values.get(0).getEntityId(), entityVersion.getEntityId());
-
-                                        }
-
-                                    }
-
-
-                                }
-
-                            });
-                        }
-                    }
-
-
-                });
-            }else{
-
-                logger.warn("No rows returned from table: {}", CF_UNIQUE_VALUES.getName());
-
-            }
-
-        }
-    }
-    */
 }
