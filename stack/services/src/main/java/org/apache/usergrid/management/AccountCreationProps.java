@@ -54,6 +54,14 @@ public interface AccountCreationProps {
     String PROPERTIES_EMAIL_USER_PIN_REQUEST = "usergrid.management.email.user-pin";
     String PROPERTIES_EMAIL_FOOTER = "usergrid.management.email.footer";
 
+    String PROPERTIES_USER_ACTIVATION_URL = "usergrid.user.activation.url";
+    String PROPERTIES_USER_CONFIRMATION_URL = "usergrid.user.confirmation.url";
+    String PROPERTIES_USER_RESETPW_URL = "usergrid.user.resetpw.url";
+    String PROPERTIES_ADMIN_ACTIVATION_URL = "usergrid.admin.activation.url";
+    String PROPERTIES_ADMIN_CONFIRMATION_URL = "usergrid.admin.confirmation.url";
+    String PROPERTIES_ORGANIZATION_ACTIVATION_URL = "usergrid.organization.activation.url";
+    String PROPERTIES_ADMIN_RESETPW_URL = "usergrid.admin.resetpw.url";
+
     String PROPERTIES_USERGRID_SYSADMIN_LOGIN_FETCH_ORGS = "usergrid.sysadmin.login.fetch_orgs";
 
     String PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION =
