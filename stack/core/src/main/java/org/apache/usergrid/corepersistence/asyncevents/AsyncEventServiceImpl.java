@@ -57,12 +57,12 @@ import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-import org.apache.usergrid.persistence.queue.QueueFig;
-import org.apache.usergrid.persistence.queue.QueueManager;
-import org.apache.usergrid.persistence.queue.QueueManagerFactory;
-import org.apache.usergrid.persistence.queue.QueueMessage;
-import org.apache.usergrid.persistence.queue.QueueScope;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
+import org.apache.usergrid.persistence.queue.LegacyQueueFig;
+import org.apache.usergrid.persistence.queue.LegacyQueueManager;
+import org.apache.usergrid.persistence.queue.LegacyQueueManagerFactory;
+import org.apache.usergrid.persistence.queue.LegacyQueueMessage;
+import org.apache.usergrid.persistence.queue.LegacyQueueScope;
+import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
@@ -104,9 +104,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     public int MAX_TAKE = 10;
     public static final String QUEUE_NAME = "index"; //keep this short as AWS limits queue name size to 80 chars
 
-    private final QueueManager queue;
+    private final LegacyQueueManager queue;
     private final IndexProcessorFig indexProcessorFig;
-    private final QueueFig queueFig;
+    private final LegacyQueueFig queueFig;
     private final IndexProducer indexProducer;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
@@ -134,7 +134,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
 
     @Inject
-    public AsyncEventServiceImpl(final QueueManagerFactory queueManagerFactory,
+    public AsyncEventServiceImpl(final LegacyQueueManagerFactory queueManagerFactory,
                                  final IndexProcessorFig indexProcessorFig,
                                  final IndexProducer indexProducer,
                                  final MetricsFactory metricsFactory,
@@ -143,7 +143,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                  final EntityIndexFactory entityIndexFactory,
                                  final EventBuilder eventBuilder,
                                  final MapManagerFactory mapManagerFactory,
-                                 final QueueFig queueFig,
+                                 final LegacyQueueFig queueFig,
                                  @EventExecutionScheduler
                                     final RxTaskScheduler rxTaskScheduler ) {
         this.indexProducer = indexProducer;
@@ -159,7 +159,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         this.rxTaskScheduler = rxTaskScheduler;
 
-        QueueScope queueScope = new QueueScopeImpl(QUEUE_NAME, QueueScope.RegionImplementation.ALL);
+        LegacyQueueScope queueScope = new LegacyQueueScopeImpl(QUEUE_NAME, LegacyQueueScope.RegionImplementation.ALL);
         this.queue = queueManagerFactory.getQueueManager(queueScope);
 
         this.indexProcessorFig = indexProcessorFig;
@@ -233,7 +233,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     /**
      * Take message from SQS
      */
-    private List<QueueMessage> take() {
+    private List<LegacyQueueMessage> take() {
 
         final Timer.Context timer = this.readTimer.time();
 
@@ -251,7 +251,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     /**
      * Ack message in SQS
      */
-    public void ack(final List<QueueMessage> messages) {
+    public void ack(final List<LegacyQueueMessage> messages) {
 
         final Timer.Context timer = this.ackTimer.time();
 
@@ -275,7 +275,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      * @param messages
      * @return
      */
-    private List<IndexEventResult> callEventHandlers(final List<QueueMessage> messages) {
+    private List<IndexEventResult> callEventHandlers(final List<LegacyQueueMessage> messages) {
 
         if (logger.isDebugEnabled()) {
             logger.debug("callEventHandlers with {} message(s)", messages.size());
@@ -422,7 +422,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     }
 
-    private IndexOperationMessage handleEntityIndexUpdate(final QueueMessage message) {
+    private IndexOperationMessage handleEntityIndexUpdate(final LegacyQueueMessage message) {
 
         Preconditions.checkNotNull( message, "Queue Message cannot be null for handleEntityIndexUpdate" );
 
@@ -457,7 +457,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     }
 
-    private IndexOperationMessage handleEdgeIndex(final QueueMessage message) {
+    private IndexOperationMessage handleEdgeIndex(final LegacyQueueMessage message) {
 
         Preconditions.checkNotNull( message, "Queue Message cannot be null for handleEdgeIndex" );
 
@@ -486,7 +486,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         offer( new EdgeDeleteEvent( queueFig.getPrimaryRegion(), applicationScope, edge ) );
     }
 
-    private IndexOperationMessage  handleEdgeDelete(final QueueMessage message) {
+    private IndexOperationMessage  handleEdgeDelete(final LegacyQueueMessage message) {
 
         Preconditions.checkNotNull( message, "Queue Message cannot be null for handleEdgeDelete" );
 
@@ -668,7 +668,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         offer( new EntityDeleteEvent(queueFig.getPrimaryRegion(), new EntityIdScope( applicationScope, entityId ) ) );
     }
 
-    private IndexOperationMessage handleEntityDelete(final QueueMessage message) {
+    private IndexOperationMessage handleEntityDelete(final LegacyQueueMessage message) {
 
         Preconditions.checkNotNull(message, "Queue Message cannot be null for handleEntityDelete");
 
@@ -700,7 +700,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     }
 
 
-    private void handleInitializeApplicationIndex(final AsyncEvent event, final QueueMessage message) {
+    private void handleInitializeApplicationIndex(final AsyncEvent event, final LegacyQueueMessage message) {
         Preconditions.checkNotNull(message, "Queue Message cannot be null for handleInitializeApplicationIndex");
         Preconditions.checkArgument(event instanceof InitializeApplicationIndexEvent, String.format("Event Type for handleInitializeApplicationIndex must be APPLICATION_INDEX, got %s", event.getClass()));
 
@@ -741,15 +741,15 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     private void startWorker() {
         synchronized (mutex) {
 
-            Observable<List<QueueMessage>> consumer =
-                    Observable.create( new Observable.OnSubscribe<List<QueueMessage>>() {
+            Observable<List<LegacyQueueMessage>> consumer =
+                    Observable.create( new Observable.OnSubscribe<List<LegacyQueueMessage>>() {
                         @Override
-                        public void call( final Subscriber<? super List<QueueMessage>> subscriber ) {
+                        public void call( final Subscriber<? super List<LegacyQueueMessage>> subscriber ) {
 
                             //name our thread so it's easy to see
                             Thread.currentThread().setName( "QueueConsumer_" + counter.incrementAndGet() );
 
-                            List<QueueMessage> drainList = null;
+                            List<LegacyQueueMessage> drainList = null;
 
                             do {
                                 try {
@@ -799,7 +799,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                                      List<IndexEventResult> indexEventResults = callEventHandlers( messages );
 
                                                      // submit the processed messages to index producer
-                                                     List<QueueMessage> messagesToAck = submitToIndex( indexEventResults );
+                                                     List<LegacyQueueMessage> messagesToAck = submitToIndex( indexEventResults );
 
                                                      if ( messagesToAck.size() < messages.size() ) {
                                                          logger.warn( "Missing {} message(s) from index processing",
@@ -834,7 +834,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      * Submit results to index and return the queue messages to be ack'd
      *
      */
-    private List<QueueMessage> submitToIndex(List<IndexEventResult> indexEventResults) {
+    private List<LegacyQueueMessage> submitToIndex(List<IndexEventResult> indexEventResults) {
 
         // if nothing came back then return empty list
         if(indexEventResults==null){
@@ -842,7 +842,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         }
 
         IndexOperationMessage combined = new IndexOperationMessage();
-        List<QueueMessage> queueMessages = indexEventResults.stream()
+        List<LegacyQueueMessage> queueMessages = indexEventResults.stream()
 
             // filter out messages that are not present, they were not processed and put into the results
             .filter( result -> result.getQueueMessage().isPresent() )
@@ -898,10 +898,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     public class IndexEventResult{
         private final Optional<IndexOperationMessage> indexOperationMessage;
-        private final Optional<QueueMessage> queueMessage;
+        private final Optional<LegacyQueueMessage> queueMessage;
         private final long creationTime;
 
-        public IndexEventResult(Optional<IndexOperationMessage> indexOperationMessage, Optional<QueueMessage> queueMessage, long creationTime){
+        public IndexEventResult(Optional<IndexOperationMessage> indexOperationMessage, Optional<LegacyQueueMessage> queueMessage, long creationTime){
 
             this.queueMessage = queueMessage;
             this.creationTime = creationTime;
@@ -912,7 +912,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             return indexOperationMessage;
         }
 
-        public Optional<QueueMessage> getQueueMessage() {
+        public Optional<LegacyQueueMessage> getQueueMessage() {
             return queueMessage;
         }
 

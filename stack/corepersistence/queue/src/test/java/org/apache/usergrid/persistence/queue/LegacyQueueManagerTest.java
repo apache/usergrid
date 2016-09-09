@@ -34,7 +34,7 @@ import org.apache.usergrid.persistence.core.aws.NoAWSCredsRule;
 import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.queue.guice.TestQueueModule;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
+import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
 
 import com.google.inject.Inject;
 
@@ -45,12 +45,12 @@ import static org.junit.Assume.assumeTrue;
 
 @RunWith( ITRunner.class )
 @UseModules( { TestQueueModule.class } )
-public class QueueManagerTest {
+public class LegacyQueueManagerTest {
 
     @Inject
-    protected QueueFig queueFig;
+    protected LegacyQueueFig queueFig;
     @Inject
-    protected QueueManagerFactory qmf;
+    protected LegacyQueueManagerFactory qmf;
 
     /**
      * Mark tests as ignored if no AWS creds are present
@@ -59,8 +59,8 @@ public class QueueManagerTest {
     public NoAWSCredsRule awsCredsRule = new NoAWSCredsRule();
 
 
-    protected QueueScope scope;
-    private QueueManager qm;
+    protected LegacyQueueScope scope;
+    private LegacyQueueManager qm;
 
     public static long queueSeed = System.currentTimeMillis();
 
@@ -68,7 +68,7 @@ public class QueueManagerTest {
     @Before
     public void mockApp() {
 
-        this.scope = new QueueScopeImpl( "testQueue"+queueSeed++, QueueScope.RegionImplementation.LOCAL);
+        this.scope = new LegacyQueueScopeImpl( "testQueue"+queueSeed++, LegacyQueueScope.RegionImplementation.LOCAL);
         qm = qmf.getQueueManager(scope);
     }
 
@@ -82,9 +82,9 @@ public class QueueManagerTest {
     public void send() throws Exception{
         String value = "bodytest";
         qm.sendMessage(value);
-        List<QueueMessage> messageList = qm.getMessages(1, String.class);
+        List<LegacyQueueMessage> messageList = qm.getMessages(1, String.class);
         assertTrue(messageList.size() >= 1);
-        for(QueueMessage message : messageList){
+        for(LegacyQueueMessage message : messageList){
             assertTrue(message.getBody().equals(value));
             qm.commitMessage(message);
         }
@@ -102,9 +102,9 @@ public class QueueManagerTest {
         List<Map<String,String>> bodies = new ArrayList<>();
         bodies.add(values);
         qm.sendMessages(bodies);
-        List<QueueMessage> messageList = qm.getMessages(1, values.getClass());
+        List<LegacyQueueMessage> messageList = qm.getMessages(1, values.getClass());
         assertTrue(messageList.size() >= 1);
-        for(QueueMessage message : messageList){
+        for(LegacyQueueMessage message : messageList){
             assertTrue(message.getBody().equals(values));
         }
         qm.commitMessages(messageList);
@@ -133,9 +133,9 @@ public class QueueManagerTest {
         }
         assertTrue(depth>0);
 
-        List<QueueMessage> messageList = qm.getMessages(10, values.getClass());
+        List<LegacyQueueMessage> messageList = qm.getMessages(10, values.getClass());
         assertTrue(messageList.size() <= 500);
-        for(QueueMessage message : messageList){
+        for(LegacyQueueMessage message : messageList){
             assertTrue(message.getBody().equals(values));
         }
         if(messageList.size()>0) {

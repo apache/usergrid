@@ -24,8 +24,8 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.queue.*;
-import org.apache.usergrid.persistence.queue.QueueManager;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
+import org.apache.usergrid.persistence.queue.LegacyQueueManager;
+import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
 import org.apache.usergrid.services.ServiceManager;
 import org.apache.usergrid.services.ServiceManagerFactory;
 import org.slf4j.Logger;
@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class QueueListener  {
     public  final int MESSAGE_TRANSACTION_TIMEOUT =  25 * 1000;
-    private final QueueManagerFactory queueManagerFactory;
+    private final LegacyQueueManagerFactory queueManagerFactory;
 
     public  long DEFAULT_SLEEP = 5000;
 
@@ -83,7 +83,7 @@ public abstract class QueueListener  {
      */
     public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, Injector injector, Properties props){
         //TODO: change current injectors to use service module instead of CpSetup
-        this.queueManagerFactory = injector.getInstance( QueueManagerFactory.class );
+        this.queueManagerFactory = injector.getInstance( LegacyQueueManagerFactory.class );
         this.smf = smf;
         this.emf = injector.getInstance( EntityManagerFactory.class ); //emf;
         this.metricsService = injector.getInstance(MetricsFactory.class);
@@ -169,8 +169,8 @@ public abstract class QueueListener  {
         if (logger.isTraceEnabled()) {
             logger.trace("getting from queue {} ", queueName);
         }
-        QueueScope queueScope = new QueueScopeImpl( queueName, QueueScope.RegionImplementation.LOCAL);
-        QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
+        LegacyQueueScope queueScope = new LegacyQueueScopeImpl( queueName, LegacyQueueScope.RegionImplementation.LOCAL);
+        LegacyQueueManager legacyQueueManager = queueManagerFactory.getQueueManager(queueScope);
         // run until there are no more active jobs
         long runCount = 0;
 
@@ -181,7 +181,7 @@ public abstract class QueueListener  {
                 Timer.Context timerContext = timer.time();
                 //Get the messages out of the queue.
                 //TODO: a model class to get generic queueMessages out of the queueManager. Ask Shawn what should go here.
-                rx.Observable.from( queueManager.getMessages(getBatchSize(), ImportQueueMessage.class))
+                rx.Observable.from( legacyQueueManager.getMessages(getBatchSize(), ImportQueueMessage.class))
                     .buffer(getBatchSize())
                     .doOnNext(messages -> {
                         try {
@@ -197,7 +197,7 @@ public abstract class QueueListener  {
                                 // asking for a onMessage call.
                                 onMessage(messages);
 
-                                queueManager.commitMessages(messages);
+                                legacyQueueManager.commitMessages(messages);
 
                                 meter.mark(messages.size());
                                 if (logger.isTraceEnabled()) {
@@ -267,7 +267,7 @@ public abstract class QueueListener  {
      * This will be the method that does the job dependant execution.
      * @param messages
      */
-    public abstract void onMessage(List<QueueMessage> messages) throws Exception;
+    public abstract void onMessage(List<LegacyQueueMessage> messages) throws Exception;
 
     public abstract String getQueueName();
 

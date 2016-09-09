@@ -29,8 +29,8 @@ import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.queue.LocalQueueManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
-import org.apache.usergrid.persistence.queue.QueueFig;
-import org.apache.usergrid.persistence.queue.QueueManagerFactory;
+import org.apache.usergrid.persistence.queue.LegacyQueueFig;
+import org.apache.usergrid.persistence.queue.LegacyQueueManagerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -45,7 +45,7 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
 
     private final IndexProcessorFig indexProcessorFig;
 
-    private final QueueManagerFactory queueManagerFactory;
+    private final LegacyQueueManagerFactory queueManagerFactory;
     private final MetricsFactory metricsFactory;
     private final RxTaskScheduler rxTaskScheduler;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
@@ -54,14 +54,14 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     private final EntityIndexFactory entityIndexFactory;
     private final IndexProducer indexProducer;
     private final MapManagerFactory mapManagerFactory;
-    private final QueueFig queueFig;
+    private final LegacyQueueFig queueFig;
 
     private AsyncEventService asyncEventService;
 
 
     @Inject
     public AsyncIndexProvider(final IndexProcessorFig indexProcessorFig,
-                              final QueueManagerFactory queueManagerFactory,
+                              final LegacyQueueManagerFactory queueManagerFactory,
                               final MetricsFactory metricsFactory,
                               @EventExecutionScheduler final RxTaskScheduler rxTaskScheduler,
                               final EntityCollectionManagerFactory entityCollectionManagerFactory,
@@ -70,7 +70,7 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
                               final EntityIndexFactory entityIndexFactory,
                               final IndexProducer indexProducer,
                               final MapManagerFactory mapManagerFactory,
-                              final QueueFig queueFig) {
+                              final LegacyQueueFig queueFig) {
 
         this.indexProcessorFig = indexProcessorFig;
         this.queueManagerFactory = queueManagerFactory;

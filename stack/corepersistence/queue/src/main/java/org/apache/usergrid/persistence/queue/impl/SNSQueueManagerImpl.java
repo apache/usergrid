@@ -35,11 +35,11 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.executor.TaskExecutorFactory;
 import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
-import org.apache.usergrid.persistence.queue.Queue;
-import org.apache.usergrid.persistence.queue.QueueFig;
-import org.apache.usergrid.persistence.queue.QueueManager;
-import org.apache.usergrid.persistence.queue.QueueMessage;
-import org.apache.usergrid.persistence.queue.QueueScope;
+import org.apache.usergrid.persistence.queue.LegacyQueue;
+import org.apache.usergrid.persistence.queue.LegacyQueueFig;
+import org.apache.usergrid.persistence.queue.LegacyQueueManager;
+import org.apache.usergrid.persistence.queue.LegacyQueueMessage;
+import org.apache.usergrid.persistence.queue.LegacyQueueScope;
 import org.apache.usergrid.persistence.queue.util.AmazonNotificationUtils;
 
 import com.amazonaws.AmazonServiceException;
@@ -80,12 +80,12 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 
-public class SNSQueueManagerImpl implements QueueManager {
+public class SNSQueueManagerImpl implements LegacyQueueManager {
 
     private static final Logger logger = LoggerFactory.getLogger( SNSQueueManagerImpl.class );
 
-    private final QueueScope scope;
-    private final QueueFig fig;
+    private final LegacyQueueScope scope;
+    private final LegacyQueueFig fig;
     private final ClusterFig clusterFig;
     private final CassandraFig cassandraFig;
     private final ClientConfiguration clientConfiguration;
@@ -121,16 +121,16 @@ public class SNSQueueManagerImpl implements QueueManager {
             }
         } );
 
-    private final LoadingCache<String, Queue> readQueueUrlMap =
-        CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<String, Queue>() {
+    private final LoadingCache<String, LegacyQueue> readQueueUrlMap =
+        CacheBuilder.newBuilder().maximumSize( 1000 ).build( new CacheLoader<String, LegacyQueue>() {
             @Override
-            public Queue load( String queueName ) throws Exception {
+            public LegacyQueue load(String queueName ) throws Exception {
 
-                Queue queue = null;
+                LegacyQueue queue = null;
 
                 try {
                     GetQueueUrlResult result = sqs.getQueueUrl( queueName );
-                    queue = new Queue( result.getQueueUrl() );
+                    queue = new LegacyQueue( result.getQueueUrl() );
                 }
                 catch ( QueueDoesNotExistException queueDoesNotExistException ) {
                     logger.error( "Queue {} does not exist, will create", queueName );
@@ -142,7 +142,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
                 if ( queue == null ) {
                     String url = AmazonNotificationUtils.createQueue( sqs, queueName, fig );
-                    queue = new Queue( url );
+                    queue = new LegacyQueue( url );
                 }
 
                 setupTopics( queueName );
@@ -153,8 +153,8 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
     @Inject
-    public SNSQueueManagerImpl( @Assisted QueueScope scope, QueueFig fig, ClusterFig clusterFig,
-                                CassandraFig cassandraFig, QueueFig queueFig ) {
+    public SNSQueueManagerImpl(@Assisted LegacyQueueScope scope, LegacyQueueFig fig, ClusterFig clusterFig,
+                               CassandraFig cassandraFig, LegacyQueueFig queueFig ) {
         this.scope = scope;
         this.fig = fig;
         this.clusterFig = clusterFig;
@@ -232,7 +232,7 @@ public class SNSQueueManagerImpl implements QueueManager {
                 "Unable to subscribe PRIMARY queue=[{}] to topic=[{}]", queueUrl, primaryTopicArn, e );
         }
 
-        if ( fig.isMultiRegion() && scope.getRegionImplementation() == QueueScope.RegionImplementation.ALL ) {
+        if ( fig.isMultiRegion() && scope.getRegionImplementation() == LegacyQueueScope.RegionImplementation.ALL ) {
 
             String multiRegion = fig.getRegionList();
 
@@ -391,7 +391,7 @@ public class SNSQueueManagerImpl implements QueueManager {
     }
 
 
-    public Queue getReadQueue() {
+    public LegacyQueue getReadQueue() {
         String queueName = getName();
 
         try {
@@ -414,7 +414,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
     @Override
-    public List<QueueMessage> getMessages(final int limit, final Class klass) {
+    public List<LegacyQueueMessage> getMessages(final int limit, final Class klass) {
 
         if ( sqs == null ) {
             logger.error( "SQS is null - was not initialized properly" );
@@ -457,7 +457,7 @@ public class SNSQueueManagerImpl implements QueueManager {
                 logger.trace( "Received {} messages from {}", messages.size(), url );
             }
 
-            List<QueueMessage> queueMessages = new ArrayList<>( messages.size() );
+            List<LegacyQueueMessage> queueMessages = new ArrayList<>( messages.size() );
 
             for ( Message message : messages ) {
 
@@ -487,7 +487,7 @@ public class SNSQueueManagerImpl implements QueueManager {
                     throw new RuntimeException( e );
                 }
 
-                QueueMessage queueMessage = new QueueMessage( message.getMessageId(), message.getReceiptHandle(), payload,
+                LegacyQueueMessage queueMessage = new LegacyQueueMessage( message.getMessageId(), message.getReceiptHandle(), payload,
                     message.getAttributes().get( "type" ) );
                 queueMessage.setStringBody( originalBody );
                 int receiveCount = Integer.valueOf(message.getAttributes().get("ApproximateReceiveCount"));
@@ -634,7 +634,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
     @Override
-    public void commitMessage( final QueueMessage queueMessage ) {
+    public void commitMessage( final LegacyQueueMessage queueMessage ) {
         String url = getReadQueue().getUrl();
         if ( logger.isTraceEnabled() ) {
             logger.trace( "Commit message {} to queue {}", queueMessage.getMessageId(), url );
@@ -646,7 +646,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
 
     @Override
-    public void commitMessages( final List<QueueMessage> queueMessages ) {
+    public void commitMessages( final List<LegacyQueueMessage> queueMessages ) {
         String url = getReadQueue().getUrl();
 
         if ( logger.isTraceEnabled() ) {
@@ -655,7 +655,7 @@ public class SNSQueueManagerImpl implements QueueManager {
 
         List<DeleteMessageBatchRequestEntry> entries = new ArrayList<>();
 
-        for ( QueueMessage message : queueMessages ) {
+        for ( LegacyQueueMessage message : queueMessages ) {
             entries.add( new DeleteMessageBatchRequestEntry( message.getMessageId(), message.getHandle() ) );
         }
 

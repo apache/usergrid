@@ -17,15 +17,14 @@
  */
 package org.apache.usergrid.persistence.queue.impl;
 
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.queue.QueueScope;
+import org.apache.usergrid.persistence.queue.LegacyQueueScope;
 
-public class QueueScopeImpl implements QueueScope {
+public class LegacyQueueScopeImpl implements LegacyQueueScope {
 
     private final String name;
     private final RegionImplementation regionImpl;
 
-    public QueueScopeImpl(  final String name, final RegionImplementation regionImpl) {
+    public LegacyQueueScopeImpl(final String name, final RegionImplementation regionImpl) {
         this.name = name;
         this.regionImpl = regionImpl;
     }
@@ -46,11 +45,11 @@ public class QueueScopeImpl implements QueueScope {
         if ( this == o ) {
             return true;
         }
-        if ( !( o instanceof QueueScopeImpl ) ) {
+        if ( !( o instanceof LegacyQueueScopeImpl) ) {
             return false;
         }
 
-        final QueueScopeImpl queueScope = ( QueueScopeImpl ) o;
+        final LegacyQueueScopeImpl queueScope = (LegacyQueueScopeImpl) o;
 
         if ( !name.equals( queueScope.name ) ) {
             return false;

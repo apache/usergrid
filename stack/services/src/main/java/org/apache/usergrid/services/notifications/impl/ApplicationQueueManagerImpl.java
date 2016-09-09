@@ -47,8 +47,8 @@ import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.persistence.entities.Receipt;
 import org.apache.usergrid.persistence.entities.User;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.persistence.queue.QueueManager;
-import org.apache.usergrid.persistence.queue.QueueMessage;
+import org.apache.usergrid.persistence.queue.LegacyQueueManager;
+import org.apache.usergrid.persistence.queue.LegacyQueueMessage;
 import org.apache.usergrid.services.notifications.ApplicationQueueManager;
 import org.apache.usergrid.services.notifications.ApplicationQueueMessage;
 import org.apache.usergrid.services.notifications.JobScheduler;
@@ -72,7 +72,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationQueueManagerImpl.class);
 
     private final EntityManager em;
-    private final QueueManager qm;
+    private final LegacyQueueManager qm;
     private final JobScheduler jobScheduler;
     private final MetricsFactory metricsFactory;
     private final String queueName;
@@ -93,11 +93,11 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
 
 
 
-    public ApplicationQueueManagerImpl( JobScheduler jobScheduler, EntityManager entityManager,
-                                        QueueManager queueManager, MetricsFactory metricsFactory,
-                                        Properties properties) {
+    public ApplicationQueueManagerImpl(JobScheduler jobScheduler, EntityManager entityManager,
+                                       LegacyQueueManager legacyQueueManager, MetricsFactory metricsFactory,
+                                       Properties properties) {
         this.em = entityManager;
-        this.qm = queueManager;
+        this.qm = legacyQueueManager;
         this.jobScheduler = jobScheduler;
         this.metricsFactory = metricsFactory;
         this.queueName = getQueueNames(properties);
@@ -473,7 +473,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
      * @throws Exception
      */
     @Override
-    public Observable sendBatchToProviders(final List<QueueMessage> messages, final String queuePath) {
+    public Observable sendBatchToProviders(final List<LegacyQueueMessage> messages, final String queuePath) {
         if (logger.isTraceEnabled()) {
             logger.trace("sending batch of {} notifications.", messages.size());
         }
@@ -483,7 +483,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
         final ConcurrentHashMap<UUID, TaskManager> taskMap = new ConcurrentHashMap<UUID, TaskManager>(messages.size());
         final ConcurrentHashMap<UUID, Notification> notificationMap = new ConcurrentHashMap<UUID, Notification>(messages.size());
 
-        final Func1<QueueMessage, ApplicationQueueMessage> func = queueMessage -> {
+        final Func1<LegacyQueueMessage, ApplicationQueueMessage> func = queueMessage -> {
             boolean messageCommitted = false;
             ApplicationQueueMessage message = null;
             try {

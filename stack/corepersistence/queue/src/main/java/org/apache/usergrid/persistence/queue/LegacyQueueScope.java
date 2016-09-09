@@ -21,7 +21,7 @@ package org.apache.usergrid.persistence.queue;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
 
-public interface QueueScope  {
+public interface LegacyQueueScope {
 
     /**
      * LOCAL will create a SNS topic with a queue subscription in a single AWS region.

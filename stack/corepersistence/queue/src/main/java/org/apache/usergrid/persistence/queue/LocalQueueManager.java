@@ -34,17 +34,17 @@ import java.util.concurrent.TimeUnit;
 /**
  * Default queue manager implementation, uses in memory linked queue
  */
-public class LocalQueueManager implements QueueManager {
+public class LocalQueueManager implements LegacyQueueManager {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalQueueManager.class);
 
-    public ArrayBlockingQueue<QueueMessage> queue = new ArrayBlockingQueue<>(10000);
+    public ArrayBlockingQueue<LegacyQueueMessage> queue = new ArrayBlockingQueue<>(10000);
 
     @Override
-    public    List<QueueMessage> getMessages(int limit, Class klass) {
-        List<QueueMessage> returnQueue = new ArrayList<>();
+    public    List<LegacyQueueMessage> getMessages(int limit, Class klass) {
+        List<LegacyQueueMessage> returnQueue = new ArrayList<>();
         try {
-            QueueMessage message=null;
+            LegacyQueueMessage message=null;
             int count = 5;
             do {
                 message = queue.poll(100, TimeUnit.MILLISECONDS);
@@ -64,11 +64,11 @@ public class LocalQueueManager implements QueueManager {
     }
 
     @Override
-    public void commitMessage(QueueMessage queueMessage) {
+    public void commitMessage(LegacyQueueMessage queueMessage) {
     }
 
     @Override
-    public void commitMessages(List<QueueMessage> queueMessages) {
+    public void commitMessages(List<LegacyQueueMessage> queueMessages) {
     }
 
     @Override
@@ -76,7 +76,7 @@ public class LocalQueueManager implements QueueManager {
         for(Object body : bodies){
             String uuid = UUID.randomUUID().toString();
             try {
-                queue.put(new QueueMessage(uuid, "handle_" + uuid, body, "put type here"));
+                queue.put(new LegacyQueueMessage(uuid, "handle_" + uuid, body, "put type here"));
             }catch (InterruptedException ie){
                 throw new RuntimeException(ie);
             }
@@ -88,7 +88,7 @@ public class LocalQueueManager implements QueueManager {
     public <T extends Serializable> void sendMessage( final T body ) throws IOException {
         String uuid = UUID.randomUUID().toString();
         try {
-            queue.offer(new QueueMessage(uuid, "handle_" + uuid, body, "put type here"),5000,TimeUnit.MILLISECONDS);
+            queue.offer(new LegacyQueueMessage(uuid, "handle_" + uuid, body, "put type here"),5000,TimeUnit.MILLISECONDS);
         }catch (InterruptedException ie){
             throw new RuntimeException(ie);
         }

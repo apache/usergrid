@@ -18,14 +18,14 @@
 package org.apache.usergrid.persistence.queue.guice;
 
 
-import org.apache.usergrid.persistence.queue.QueueManagerInternalFactory;
+import org.apache.usergrid.persistence.queue.LegacyQueueManagerInternalFactory;
 import org.apache.usergrid.persistence.queue.impl.QueueManagerFactoryImpl;
 import org.apache.usergrid.persistence.queue.impl.SNSQueueManagerImpl;
 import org.safehaus.guicyfig.GuicyFigModule;
 
-import org.apache.usergrid.persistence.queue.QueueFig;
-import org.apache.usergrid.persistence.queue.QueueManager;
-import org.apache.usergrid.persistence.queue.QueueManagerFactory;
+import org.apache.usergrid.persistence.queue.LegacyQueueFig;
+import org.apache.usergrid.persistence.queue.LegacyQueueManager;
+import org.apache.usergrid.persistence.queue.LegacyQueueManagerFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
@@ -42,11 +42,11 @@ public class QueueModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        install(new GuicyFigModule(QueueFig.class));
+        install(new GuicyFigModule(LegacyQueueFig.class));
 
-        bind(QueueManagerFactory.class).to(QueueManagerFactoryImpl.class);
-        install(new FactoryModuleBuilder().implement(QueueManager.class, SNSQueueManagerImpl.class)
-            .build(QueueManagerInternalFactory.class));
+        bind(LegacyQueueManagerFactory.class).to(QueueManagerFactoryImpl.class);
+        install(new FactoryModuleBuilder().implement(LegacyQueueManager.class, SNSQueueManagerImpl.class)
+            .build(LegacyQueueManagerInternalFactory.class));
 
     }
 

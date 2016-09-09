@@ -6,7 +6,7 @@ import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
 @FigSingleton
-public interface QueueFig extends GuicyFig {
+public interface LegacyQueueFig extends GuicyFig {
 
     /**
      * Any region value string must exactly match the region names specified on this page:

@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.queue;
 /**
  * QueueManagerInternal guice factory
  */
-public interface QueueManagerInternalFactory {
-    QueueManager getQueueManager( final QueueScope scope );
+public interface LegacyQueueManagerInternalFactory {
+    LegacyQueueManager getQueueManager(final LegacyQueueScope scope );
 
 }

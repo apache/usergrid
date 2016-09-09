@@ -17,7 +17,7 @@
  */
 package org.apache.usergrid.persistence.queue;
 
-public class QueueMessage {
+public class LegacyQueueMessage {
     private final Object body;
     private final String messageId;
     private final String handle;
@@ -26,7 +26,7 @@ public class QueueMessage {
     private int receiveCount;
 
 
-    public QueueMessage(String messageId, String handle, Object body,String type) {
+    public LegacyQueueMessage(String messageId, String handle, Object body, String type) {
         this.body = body;
         this.messageId = messageId;
         this.handle = handle;
