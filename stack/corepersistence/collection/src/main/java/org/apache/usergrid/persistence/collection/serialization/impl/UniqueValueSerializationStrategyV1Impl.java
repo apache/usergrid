@@ -33,6 +33,7 @@ import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.field.Field;
@@ -73,11 +74,11 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
         new HashMap<String, String>(){{ put( "column1", "ASC" ); }};
 
 
-    private final static TableDefinitionImpl uniqueValues =
+    private final static TableDefinition uniqueValues =
         new TableDefinitionImpl( UNIQUE_VALUES_TABLE, UNIQUE_VALUES_PARTITION_KEYS, UNIQUE_VALUES_COLUMN_KEYS,
             UNIQUE_VALUES_COLUMNS, TableDefinitionImpl.CacheOption.KEYS, UNIQUE_VALUES_CLUSTERING_ORDER);
 
-    private final static TableDefinitionImpl uniqueValuesLog =
+    private final static TableDefinition uniqueValuesLog =
         new TableDefinitionImpl( UNIQUE_VALUES_LOG_TABLE, UNIQUE_VALUES_LOG_PARTITION_KEYS, UNIQUE_VALUES_LOG_COLUMN_KEYS,
             UNIQUE_VALUES_LOG_COLUMNS, TableDefinitionImpl.CacheOption.KEYS, UNIQUE_VALUES_LOG_CLUSTERING_ORDER);
 
@@ -106,10 +107,10 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
     }
 
     @Override
-    public Collection<TableDefinitionImpl> getTables() {
+    public Collection<TableDefinition> getTables() {
 
-        final TableDefinitionImpl uniqueValues = getUniqueValuesTable();
-        final TableDefinitionImpl uniqueValuesLog = getEntityUniqueLogTable();
+        final TableDefinition uniqueValues = getUniqueValuesTable();
+        final TableDefinition uniqueValuesLog = getEntityUniqueLogTable();
 
         return Arrays.asList( uniqueValues, uniqueValuesLog );
 
@@ -118,14 +119,14 @@ public class UniqueValueSerializationStrategyV1Impl  extends UniqueValueSerializ
 
 
     @Override
-    protected TableDefinitionImpl getUniqueValuesTable(){
+    protected TableDefinition getUniqueValuesTable(){
 
         return uniqueValues;
     }
 
 
     @Override
-    protected TableDefinitionImpl getEntityUniqueLogTable(){
+    protected TableDefinition getEntityUniqueLogTable(){
 
         return uniqueValuesLog;
 

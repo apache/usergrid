@@ -29,7 +29,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Using;
 import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.*;
 
@@ -62,10 +62,6 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     private final String TABLE_UNIQUE_VALUES;
     private final String TABLE_UNIQUE_VALUES_LOG;
 
-    private final Map COLUMNS_UNIQUE_VALUES;
-    private final Map COLUMNS_UNIQUE_VALUES_LOG;
-
-
     public static final int COL_VALUE = 0x0;
 
     private final Comparator<UniqueValue> uniqueValueComparator = new UniqueValueComparator();
@@ -96,10 +92,6 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
         TABLE_UNIQUE_VALUES = getUniqueValuesTable().getTableName();
         TABLE_UNIQUE_VALUES_LOG = getEntityUniqueLogTable().getTableName();
-
-        COLUMNS_UNIQUE_VALUES = getUniqueValuesTable().getColumns();
-        COLUMNS_UNIQUE_VALUES_LOG = getEntityUniqueLogTable().getColumns();
-
     }
 
     @Override
@@ -495,12 +487,12 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     public abstract Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies();
 
     @Override
-    public abstract Collection<TableDefinitionImpl> getTables();
+    public abstract Collection<TableDefinition> getTables();
 
     /**
      * Get the CQL table definition for the unique values log table
      */
-    protected abstract TableDefinitionImpl getUniqueValuesTable();
+    protected abstract TableDefinition getUniqueValuesTable();
 
 
     protected abstract List<Object> deserializePartitionKey(ByteBuffer bb);
@@ -522,7 +514,7 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     /**
      * Get the CQL table definition for the unique values log table
      */
-    protected abstract TableDefinitionImpl getEntityUniqueLogTable();
+    protected abstract TableDefinition getEntityUniqueLogTable();
 
 
     public class AllUniqueFieldsIterator implements Iterable<UniqueValue>, Iterator<UniqueValue> {

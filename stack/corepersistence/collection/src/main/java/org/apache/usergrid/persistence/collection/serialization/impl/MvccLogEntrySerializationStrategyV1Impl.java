@@ -35,7 +35,7 @@ import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
@@ -118,7 +118,7 @@ public class MvccLogEntrySerializationStrategyV1Impl
     }
 
     @Override
-    public Collection<TableDefinitionImpl> getTables() {
+    public Collection<TableDefinition> getTables() {
 
         return Collections.emptyList();
     }

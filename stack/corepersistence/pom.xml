@@ -74,7 +74,7 @@ limitations under the License.
         <antlr.version>3.5.2</antlr.version>
         <archaius.version>0.5.12</archaius.version>
         <astyanax.version>3.9.0</astyanax.version>
-        <cassandra.version>1.2.18</cassandra.version>
+        <cassandra.version>2.1.14</cassandra.version>
         <!--        <chop.version>1.0</chop.version>-->
         <commons.codec.version>1.6</commons.codec.version>
         <commons.collections.version>3.2.1</commons.collections.version>

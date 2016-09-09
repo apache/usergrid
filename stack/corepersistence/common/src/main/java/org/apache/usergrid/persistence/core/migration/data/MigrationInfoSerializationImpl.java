@@ -27,7 +27,7 @@ import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.UTF8Type;
 
 import org.apache.usergrid.persistence.core.astyanax.*;
-import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.migration.util.AstyanaxUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -208,7 +208,7 @@ public class MigrationInfoSerializationImpl implements MigrationInfoSerializatio
     }
 
     @Override
-    public Collection<TableDefinitionImpl> getTables() {
+    public Collection<TableDefinition> getTables() {
 
         return Collections.emptyList();
     }
