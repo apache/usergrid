@@ -23,7 +23,6 @@ package org.apache.usergrid.persistence.core.datastax.impl;
 import com.datastax.driver.core.DataType;
 import com.google.common.base.Preconditions;
 import org.apache.usergrid.persistence.core.CassandraFig;
-import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.util.StringUtils;
 
@@ -32,9 +31,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
 
-import static org.apache.usergrid.persistence.core.datastax.CQLUtils.getCachingOptions;
-import static org.apache.usergrid.persistence.core.datastax.CQLUtils.getMapAsCQLString;
-import static org.apache.usergrid.persistence.core.datastax.CQLUtils.spaceSeparatedKeyValue;
+import static org.apache.usergrid.persistence.core.datastax.CQLUtils.*;
+
 
 public class TableDefinitionImpl implements TableDefinition {
 

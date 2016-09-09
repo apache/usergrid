@@ -19,26 +19,23 @@
 package org.apache.usergrid.persistence.core.migration.schema;
 
 
-import java.util.Collection;
-import java.util.Set;
-
 import com.datastax.driver.core.KeyspaceMetadata;
-import org.apache.usergrid.persistence.core.CassandraFig;
-import org.apache.usergrid.persistence.core.datastax.CQLUtils;
-import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
-import org.apache.usergrid.persistence.core.datastax.TableDefinition;
-import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
 import com.netflix.astyanax.ddl.KeyspaceDefinition;
+import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.datastax.CQLUtils;
+import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.Set;
 
 
 /**
@@ -80,7 +77,7 @@ public class MigrationManagerImpl implements MigrationManager {
 
                 final Collection<MultiTenantColumnFamilyDefinition> columnFamilies = migration.getColumnFamilies();
 
-                final Collection<TableDefinitionImpl> tables = migration.getTables();
+                final Collection<TableDefinition> tables = migration.getTables();
 
 
                 if ((columnFamilies == null || columnFamilies.size() == 0) &&
@@ -101,7 +98,7 @@ public class MigrationManagerImpl implements MigrationManager {
 
 
                 if ( tables != null && !tables.isEmpty() ) {
-                    for (TableDefinitionImpl tableDefinition : tables) {
+                    for (TableDefinition tableDefinition : tables) {
 
                         createTable(tableDefinition);
 
@@ -143,7 +140,7 @@ public class MigrationManagerImpl implements MigrationManager {
 
     }
 
-    private void createTable(TableDefinitionImpl tableDefinition ) throws Exception {
+    private void createTable(TableDefinition tableDefinition ) throws Exception {
 
         KeyspaceMetadata keyspaceMetadata = dataStaxCluster.getClusterSession().getCluster().getMetadata()
             .getKeyspace(CQLUtils.quote(cassandraFig.getApplicationKeyspace()));

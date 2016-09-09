@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 
-/**
+/**ctor
  * Manages queues for usergrid.  Current implementation is sqs based.
  */
 public interface QueueManager {

@@ -33,7 +33,7 @@ import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKeySerializer;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
-import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.DirectedEdge;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeRowKey;
@@ -146,7 +146,7 @@ public class SizebasedEdgeColumnFamilies implements EdgeColumnFamilies {
     }
 
     @Override
-    public Collection<TableDefinitionImpl> getTables() {
+    public Collection<TableDefinition> getTables() {
 
         return Collections.emptyList();
     }

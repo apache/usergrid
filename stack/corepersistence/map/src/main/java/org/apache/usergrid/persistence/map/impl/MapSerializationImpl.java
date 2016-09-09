@@ -31,6 +31,7 @@ import com.datastax.driver.core.querybuilder.Using;
 import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
 import org.apache.usergrid.persistence.core.shard.ExpandingShardLocator;
 import org.apache.usergrid.persistence.core.shard.StringHashUtils;
@@ -306,13 +307,13 @@ public class MapSerializationImpl implements MapSerialization {
 
 
     @Override
-    public Collection<TableDefinitionImpl> getTables() {
+    public Collection<TableDefinition> getTables() {
 
-        final TableDefinitionImpl mapEntries =
+        final TableDefinition mapEntries =
             new TableDefinitionImpl( MAP_ENTRIES_TABLE, MAP_ENTRIES_PARTITION_KEYS, MAP_ENTRIES_COLUMN_KEYS,
                 MAP_ENTRIES_COLUMNS, TableDefinitionImpl.CacheOption.KEYS, MAP_ENTRIES_CLUSTERING_ORDER);
 
-        final TableDefinitionImpl mapKeys =
+        final TableDefinition mapKeys =
             new TableDefinitionImpl( MAP_KEYS_TABLE, MAP_KEYS_PARTITION_KEYS, MAP_KEYS_COLUMN_KEYS,
                 MAP_KEYS_COLUMNS, TableDefinitionImpl.CacheOption.KEYS, MAP_KEYS_CLUSTERING_ORDER);
 
@@ -381,7 +382,8 @@ public class MapSerializationImpl implements MapSerialization {
 
 
 
-    private <T> T getValuesCQL( final MapScope scope, final Collection<String> keys, final ResultsBuilderCQL<T> builder ) {
+    private <T> T getValuesCQL(
+        final MapScope scope, final Collection<String> keys, final ResultsBuilderCQL<T> builder ) {
 
         final List<ByteBuffer> serializedKeys = new ArrayList<>();
 

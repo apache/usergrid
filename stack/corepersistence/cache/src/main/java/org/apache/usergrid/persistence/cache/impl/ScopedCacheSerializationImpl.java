@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.cache.CacheScope;
 import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.*;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
 import org.apache.usergrid.persistence.core.shard.ExpandingShardLocator;
 import org.apache.usergrid.persistence.core.shard.StringHashUtils;
@@ -276,9 +277,9 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
     }
 
     @Override
-    public Collection<TableDefinitionImpl> getTables() {
+    public Collection<TableDefinition> getTables() {
 
-        final TableDefinitionImpl scopedCache =
+        final TableDefinition scopedCache =
             new TableDefinitionImpl( SCOPED_CACHE_TABLE, SCOPED_CACHE_PARTITION_KEYS, SCOPED_CACHE_COLUMN_KEYS,
                 SCOPED_CACHE_COLUMNS, TableDefinitionImpl.CacheOption.KEYS, SCOPED_CACHE_CLUSTERING_ORDER);
 
