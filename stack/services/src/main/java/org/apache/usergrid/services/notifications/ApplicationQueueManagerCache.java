@@ -20,7 +20,7 @@ import com.google.common.cache.*;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.queue.QueueManager;
+import org.apache.usergrid.persistence.queue.LegacyQueueManager;
 import org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,7 +103,7 @@ public class ApplicationQueueManagerCache{
 
 
     public ApplicationQueueManager getApplicationQueueManager( final EntityManager entityManager,
-                                                               final QueueManager queueManager,
+                                                               final LegacyQueueManager legacyQueueManager,
                                                                final JobScheduler jobScheduler,
                                                                final MetricsFactory metricsService,
                                                                final Properties properties ) {
@@ -124,7 +124,7 @@ public class ApplicationQueueManagerCache{
             manager = new ApplicationQueueManagerImpl(
                 jobScheduler,
                 entityManager,
-                queueManager,
+                legacyQueueManager,
                 metricsService,
                 properties
             );

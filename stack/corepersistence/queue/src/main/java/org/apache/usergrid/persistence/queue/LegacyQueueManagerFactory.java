@@ -17,19 +17,7 @@
  */
 package org.apache.usergrid.persistence.queue;
 
+public interface LegacyQueueManagerFactory {
+    public LegacyQueueManager getQueueManager(final LegacyQueueScope scope );
 
-public class Queue {
-    private final String url;
-
-    public Queue(String url) {
-        this.url = url;
-    }
-
-    public String getUrl(){
-        return url;
-    }
-
-    public boolean isEmpty(){
-        return url == null;
-    }
 }

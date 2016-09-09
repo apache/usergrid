@@ -27,8 +27,8 @@ import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 
 
-public class QueuePathsTest {
-    private static final Logger logger = LoggerFactory.getLogger( QueuePathsTest.class );
+public class LegacyQueuePathsTest {
+    private static final Logger logger = LoggerFactory.getLogger( LegacyQueuePathsTest.class );
 
 
     @Test

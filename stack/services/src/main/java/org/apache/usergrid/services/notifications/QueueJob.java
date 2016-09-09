@@ -24,7 +24,6 @@ import javax.annotation.PostConstruct;
 import com.google.inject.Injector;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.entities.Notification;
-import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

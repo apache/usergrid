@@ -24,7 +24,7 @@ import java.util.List;
 /**ctor
  * Manages queues for usergrid.  Current implementation is sqs based.
  */
-public interface QueueManager {
+public interface LegacyQueueManager {
 
     /**
      * Read messages from queue
@@ -32,7 +32,7 @@ public interface QueueManager {
      * @param klass class to cast the return from
      * @return List of Queue Messages
      */
-    List<QueueMessage> getMessages(int limit, Class klass);
+    List<LegacyQueueMessage> getMessages(int limit, Class klass);
 
     /**
      * get the queue depth
@@ -44,13 +44,13 @@ public interface QueueManager {
      * Commit the transaction
      * @param queueMessage
      */
-    void commitMessage( QueueMessage queueMessage);
+    void commitMessage( LegacyQueueMessage queueMessage);
 
     /**
      * commit multiple messages
      * @param queueMessages
      */
-    void commitMessages( List<QueueMessage> queueMessages);
+    void commitMessages( List<LegacyQueueMessage> queueMessages);
 
     /**
      * send messages to queue

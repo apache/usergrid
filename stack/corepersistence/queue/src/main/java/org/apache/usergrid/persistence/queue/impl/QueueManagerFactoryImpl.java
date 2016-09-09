@@ -33,26 +33,26 @@ import java.util.concurrent.ExecutionException;
  * manages whether we take in an external in memory override for queues.
  */
 @Singleton
-public class QueueManagerFactoryImpl implements QueueManagerFactory {
+public class QueueManagerFactoryImpl implements LegacyQueueManagerFactory {
 
     private static final Logger logger = LoggerFactory.getLogger( QueueManagerFactoryImpl.class );
 
-    private final QueueFig queueFig;
-    private final QueueManagerInternalFactory queuemanagerInternalFactory;
-    private final Map<String,QueueManager> defaultManager;
-    private final LoadingCache<QueueScope, QueueManager> queueManager =
+    private final LegacyQueueFig queueFig;
+    private final LegacyQueueManagerInternalFactory queuemanagerInternalFactory;
+    private final Map<String,LegacyQueueManager> defaultManager;
+    private final LoadingCache<LegacyQueueScope, LegacyQueueManager> queueManager =
         CacheBuilder
             .newBuilder()
             .initialCapacity(5)
             .maximumSize(100)
-            .build(new CacheLoader<QueueScope, QueueManager>() {
+            .build(new CacheLoader<LegacyQueueScope, LegacyQueueManager>() {
 
                 @Override
-                public QueueManager load( QueueScope scope ) throws Exception {
+                public LegacyQueueManager load(LegacyQueueScope scope ) throws Exception {
 
                     if ( queueFig.overrideQueueForDefault() ){
 
-                        QueueManager manager = defaultManager.get( scope.getName() );
+                        LegacyQueueManager manager = defaultManager.get( scope.getName() );
                         if ( manager == null ) {
                             manager = new LocalQueueManager();
                             defaultManager.put( scope.getName(), manager );
@@ -67,14 +67,14 @@ public class QueueManagerFactoryImpl implements QueueManagerFactory {
             });
 
     @Inject
-    public QueueManagerFactoryImpl(final QueueFig queueFig, final QueueManagerInternalFactory queuemanagerInternalFactory){
+    public QueueManagerFactoryImpl(final LegacyQueueFig queueFig, final LegacyQueueManagerInternalFactory queuemanagerInternalFactory){
         this.queueFig = queueFig;
         this.queuemanagerInternalFactory = queuemanagerInternalFactory;
         this.defaultManager = new HashMap<>(10);
     }
 
     @Override
-    public QueueManager getQueueManager(QueueScope scope) {
+    public LegacyQueueManager getQueueManager(LegacyQueueScope scope) {
 
         try {
             return queueManager.get(scope);

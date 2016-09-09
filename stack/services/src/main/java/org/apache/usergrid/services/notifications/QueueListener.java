@@ -18,17 +18,14 @@ package org.apache.usergrid.services.notifications;
 
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
-import com.google.common.cache.*;
 import com.google.inject.Injector;
 
-import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.queue.*;
-import org.apache.usergrid.persistence.queue.QueueManager;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
-import org.apache.usergrid.services.ServiceManager;
+import org.apache.usergrid.persistence.queue.LegacyQueueManager;
+import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
 import org.apache.usergrid.services.ServiceManagerFactory;
 import org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl;
 import org.slf4j.Logger;
@@ -46,7 +43,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class QueueListener  {
 
-    private final QueueManagerFactory queueManagerFactory;
+    private final LegacyQueueManagerFactory queueManagerFactory;
 
     public static long DEFAULT_SLEEP = 100;
 
@@ -75,7 +72,7 @@ public class QueueListener  {
     private int consecutiveCallsToRemoveDevices;
 
     public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, Properties props){
-        this.queueManagerFactory = smf.getApplicationContext().getBean( Injector.class ).getInstance(QueueManagerFactory.class);
+        this.queueManagerFactory = smf.getApplicationContext().getBean( Injector.class ).getInstance(LegacyQueueManagerFactory.class);
         this.smf = smf;
         this.emf = emf;
         this.metricsService = smf.getApplicationContext().getBean( Injector.class ).getInstance(MetricsFactory.class);
@@ -161,8 +158,8 @@ public class QueueListener  {
             logger.trace("getting from queue {} ", queueName);
         }
 
-        QueueScope queueScope = new QueueScopeImpl( queueName, QueueScope.RegionImplementation.LOCAL);
-        QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
+        LegacyQueueScope queueScope = new LegacyQueueScopeImpl( queueName, LegacyQueueScope.RegionImplementation.LOCAL);
+        LegacyQueueManager legacyQueueManager = queueManagerFactory.getQueueManager(queueScope);
 
         // run until there are no more active jobs
         final AtomicLong runCount = new AtomicLong(0);
@@ -170,7 +167,7 @@ public class QueueListener  {
         while ( true ) {
 
                 Timer.Context timerContext = timer.time();
-                rx.Observable.from(queueManager.getMessages(MAX_TAKE, ApplicationQueueMessage.class))
+                rx.Observable.from( legacyQueueManager.getMessages(MAX_TAKE, ApplicationQueueMessage.class))
                     .buffer(MAX_TAKE)
                     .doOnNext(messages -> {
 
@@ -180,10 +177,10 @@ public class QueueListener  {
                             }
 
                             if (messages.size() > 0) {
-                                HashMap<UUID, List<QueueMessage>> messageMap = new HashMap<>(messages.size());
+                                HashMap<UUID, List<LegacyQueueMessage>> messageMap = new HashMap<>(messages.size());
 
                                 //group messages into hash map by app id
-                                for (QueueMessage message : messages) {
+                                for (LegacyQueueMessage message : messages) {
                                     //TODO: stop copying around this area as it gets notification specific.
                                     ApplicationQueueMessage queueMessage = (ApplicationQueueMessage) message.getBody();
                                     UUID applicationId = queueMessage.getApplicationId();
@@ -191,7 +188,7 @@ public class QueueListener  {
                                     //Groups queue messages by application Id, ( they are all probably going to the same place )
                                     if (!messageMap.containsKey(applicationId)) {
                                         //For each app id it sends the set.
-                                        List<QueueMessage> applicationQueueMessages = new ArrayList<QueueMessage>();
+                                        List<LegacyQueueMessage> applicationQueueMessages = new ArrayList<LegacyQueueMessage>();
                                         applicationQueueMessages.add(message);
                                         messageMap.put(applicationId, applicationQueueMessages);
                                     } else {
@@ -203,13 +200,13 @@ public class QueueListener  {
                                 Observable merge = null;
 
                                 //send each set of app ids together
-                                for (Map.Entry<UUID, List<QueueMessage>> entry : messageMap.entrySet()) {
+                                for (Map.Entry<UUID, List<LegacyQueueMessage>> entry : messageMap.entrySet()) {
                                     UUID applicationId = entry.getKey();
 
                                     ApplicationQueueManager manager = applicationQueueManagerCache
                                         .getApplicationQueueManager(
                                             emf.getEntityManager(applicationId),
-                                            queueManager,
+                                            legacyQueueManager,
                                             new JobScheduler(smf.getServiceManager(applicationId), emf.getEntityManager(applicationId)),
                                             metricsService,
                                             properties
@@ -230,7 +227,7 @@ public class QueueListener  {
                                 if(merge!=null) {
                                     merge.toBlocking().lastOrDefault(null);
                                 }
-                                queueManager.commitMessages(messages);
+                                legacyQueueManager.commitMessages(messages);
 
                                 meter.mark(messages.size());
                                 if (logger.isTraceEnabled()) {
