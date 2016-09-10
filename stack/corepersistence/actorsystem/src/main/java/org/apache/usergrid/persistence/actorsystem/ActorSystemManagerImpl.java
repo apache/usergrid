@@ -194,7 +194,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
         clusterSystem = createClusterSystem( config );
 
         // register our cluster listener
-        clusterSystem.actorOf(Props.create(ClusterListener.class),
+        clusterSystem.actorOf(Props.create(ClusterListener.class, getSeedsByRegion(), getCurrentRegion()),
             "clusterListener");
 
         createClientActors( clusterSystem );

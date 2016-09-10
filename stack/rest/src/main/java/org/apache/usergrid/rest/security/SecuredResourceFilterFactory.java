@@ -254,7 +254,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 logger.trace("SysadminLocalhostFilter.authorize");
             }
 
-            if ( !isServiceAdmin() && !isBasicAuthServiceAdmin(request)) {
+            if ( !isServiceAdmin() ) {
                 // not a sysadmin request
                 return;
             }
@@ -303,7 +303,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 logger.trace("OrganizationFilter.authorize");
             }
 
-            if ( !isPermittedAccessToOrganization( getOrganizationIdentifier() ) && !isBasicAuthServiceAdmin(request) ) {
+            if ( !isPermittedAccessToOrganization( getOrganizationIdentifier() )  ) {
                 if (logger.isTraceEnabled()) {
                     logger.trace("No organization access authorized");
                 }
@@ -375,7 +375,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                     throw mappableSecurityException( "unauthorized", "No application guest access authorized" );
                 }
             }
-            if ( !isPermittedAccessToApplication( getApplicationIdentifier() ) && !isBasicAuthServiceAdmin(request) ) {
+            if ( !isPermittedAccessToApplication( getApplicationIdentifier() )  ) {
                 throw mappableSecurityException( "unauthorized", "No application access authorized" );
             }
         }
@@ -397,7 +397,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 logger.trace("SystemFilter.authorize");
             }
             try {
-                if (!isBasicAuthServiceAdmin(request) && !isServiceAdmin()) {
+                if (!isServiceAdmin()) {
                     if (logger.isTraceEnabled()) {
                         logger.trace("You are not the system admin.");
                     }
@@ -405,14 +405,11 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                         SecurityException.REALM );
                 }
             } catch (IllegalStateException e) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("This is an invalid state", e);
-                }
-                if ((request.getSecurityContext().getUserPrincipal() == null) ||
-                    !ROLE_SERVICE_ADMIN.equals( request.getSecurityContext().getUserPrincipal().getName() )) {
-                    throw mappableSecurityException( "unauthorized", "No system access authorized",
-                        SecurityException.REALM );
-                }
+
+                logger.error("This is an invalid state", e);
+                throw mappableSecurityException( "unauthorized", "No system access authorized",
+                    SecurityException.REALM );
+
             }
         }
 
@@ -429,7 +426,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 if (logger.isTraceEnabled()) {
                     logger.trace("AdminUserFilter.authorize");
                 }
-                if (!isUser( getUserIdentifier() ) && !isServiceAdmin() && !isBasicAuthServiceAdmin(request) ) {
+                if (!isUser( getUserIdentifier() ) && !isServiceAdmin() ) {
                     throw mappableSecurityException( "unauthorized", "No admin user access authorized" );
                 }
             }
@@ -471,7 +468,10 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 logger.debug( "PathPermissionsFilter.authorize" );
             }
 
-            if ( isServiceAdmin() || isBasicAuthServiceAdmin(request)){
+            if ( isServiceAdmin() ){
+                if(logger.isTraceEnabled()){
+                    logger.trace("User is sysadmin. Allowing access.");
+                }
                 // superuser can do anything, short circuit here and allow the request
                 return;
             }
@@ -544,12 +544,5 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
         }
     }
-
-    private static boolean isBasicAuthServiceAdmin(ContainerRequestContext request){
-
-        return request.getSecurityContext().isUserInRole( ROLE_SERVICE_ADMIN );
-
-    }
-
 
 }

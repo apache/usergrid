@@ -38,6 +38,7 @@ public class ClusterListener extends UntypedActor {
 
     public ClusterListener( ListMultimap<String, String> seedsByRegion, String currentRegion ){
 
+        // providing these to the lister as they may be used in near future to handle custom logic on member events
         this.seedsByRegion = seedsByRegion;
         this.currentRegion = currentRegion;
     }
