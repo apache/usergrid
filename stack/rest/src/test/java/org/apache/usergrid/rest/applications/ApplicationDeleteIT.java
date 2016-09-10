@@ -43,7 +43,6 @@ import static org.junit.Assert.fail;
 import static org.apache.usergrid.rest.management.organizations.applications
     .ApplicationResource.CONFIRM_APPLICATION_IDENTIFIER;
 
-
 public class ApplicationDeleteIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger(ApplicationDeleteIT.class);

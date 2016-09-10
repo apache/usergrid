@@ -303,7 +303,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 logger.trace("OrganizationFilter.authorize");
             }
 
-            if ( !isPermittedAccessToOrganization( getOrganizationIdentifier() )  ) {
+            if ( !isPermittedAccessToOrganization( getOrganizationIdentifier() ) && !isServiceAdmin() ) {
                 if (logger.isTraceEnabled()) {
                     logger.trace("No organization access authorized");
                 }
@@ -375,7 +375,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                     throw mappableSecurityException( "unauthorized", "No application guest access authorized" );
                 }
             }
-            if ( !isPermittedAccessToApplication( getApplicationIdentifier() )  ) {
+            if ( !isPermittedAccessToApplication( getApplicationIdentifier() ) && !isServiceAdmin()  ) {
                 throw mappableSecurityException( "unauthorized", "No application access authorized" );
             }
         }
@@ -397,7 +397,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 logger.trace("SystemFilter.authorize");
             }
             try {
-                if (!isServiceAdmin()) {
+                if (!isServiceAdmin() && !isBasicAuthServiceAdmin(request)) {
                     if (logger.isTraceEnabled()) {
                         logger.trace("You are not the system admin.");
                     }
@@ -468,7 +468,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 logger.debug( "PathPermissionsFilter.authorize" );
             }
 
-            if ( isServiceAdmin() ){
+            if ( isServiceAdmin() || isBasicAuthServiceAdmin(request) ){
                 if(logger.isTraceEnabled()){
                     logger.trace("User is sysadmin. Allowing access.");
                 }
@@ -543,6 +543,14 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
             }
 
         }
+
+
+    }
+
+    private static boolean isBasicAuthServiceAdmin(ContainerRequestContext request){
+
+        return request.getSecurityContext().isUserInRole( ROLE_SERVICE_ADMIN );
+
     }
 
 }
