@@ -471,6 +471,11 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
                 logger.debug( "PathPermissionsFilter.authorize" );
             }
 
+            if ( isServiceAdmin() || isBasicAuthServiceAdmin(request)){
+                // superuser can do anything, short circuit here and allow the request
+                return;
+            }
+
             final String PATH_MSG = "---- Checked permissions for path --------------------------------------------\n"
                 + "Requested path: {} \n"
                 + "Requested action: {} \n" + "Requested permission: {} \n"
@@ -504,6 +509,7 @@ public class SecuredResourceFilterFactory implements DynamicFeature {
 
                 Subject currentUser = SubjectUtils.getSubject();
 
+                // TODO is this right?
                 if ( currentUser == null ) {
                     return;
                 }
