@@ -86,7 +86,22 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
             }
 
             try {
-                UserInfo userInfo = management.verifyAdminUserPasswordCredentials(name.toLowerCase(), password);
+
+                UserInfo userInfo = null;
+                String rawPath = request.getUriInfo().getAbsolutePath().getRawPath();
+                // make sure the sysadmin can be provisioned, we've already done a user/pass check
+                if(rawPath.contains("superuser/setup") || rawPath.contains("database/setup") ||
+                    rawPath.contains("database/bootstrap")){
+
+                    // this is used as a hook just to allow the system filter since the database may not be set up
+                    request.setSecurityContext( new SysAdminRoleAuthenticator() );
+                    return;
+
+                }else {
+
+                    // do a proper shiro login so permissions can be leveraged appropriately later on
+                    userInfo = management.verifyAdminUserPasswordCredentials(name.toLowerCase(), password);
+                }
                 PrincipalCredentialsToken token = PrincipalCredentialsToken
                         .getFromAdminUserInfoAndPassword(userInfo, password, emf.getManagementAppId());
                 Subject subject = SubjectUtils.getSubject();
@@ -118,6 +133,45 @@ public class BasicAuthSecurityFilter extends SecurityFilter {
             }
 
 
+        }
+    }
+
+    private static class SysAdminRoleAuthenticator implements SecurityContext {
+
+        private final Principal principal;
+
+
+        SysAdminRoleAuthenticator() {
+            principal = new Principal() {
+                @Override
+                public String getName() {
+                    return ROLE_SERVICE_ADMIN;
+                }
+            };
+        }
+
+
+        @Override
+        public Principal getUserPrincipal() {
+            return principal;
+        }
+
+
+        @Override
+        public boolean isUserInRole( String role ) {
+            return role.equals( ROLE_SERVICE_ADMIN );
+        }
+
+
+        @Override
+        public boolean isSecure() {
+            return false;
+        }
+
+
+        @Override
+        public String getAuthenticationScheme() {
+            return SecurityContext.BASIC_AUTH;
         }
     }
 

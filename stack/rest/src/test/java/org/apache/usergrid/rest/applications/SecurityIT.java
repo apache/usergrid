@@ -17,6 +17,7 @@
 package org.apache.usergrid.rest.applications;
 
 
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
@@ -34,6 +35,7 @@ import static org.junit.Assert.fail;
  * These tests will execute requests against certain paths (with or without credentials) to ensure access is being
  * allowed according to the REST and Services permissions defined for the resource.
  */
+@NotThreadSafe
 public class SecurityIT extends AbstractRestIT {
 
     public SecurityIT() throws Exception {}
