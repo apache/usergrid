@@ -19,8 +19,9 @@ package org.apache.usergrid.security.shiro.credentials;
 
 public class AbstractPasswordCredentials implements PasswordCredentials {
 
-    private final String password;
+    private String password;
 
+    public AbstractPasswordCredentials(){} // do not remove, needed for jackson
 
     public AbstractPasswordCredentials( String password ) {
         this.password = password;
