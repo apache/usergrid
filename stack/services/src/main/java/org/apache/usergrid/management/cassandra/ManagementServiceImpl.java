@@ -783,8 +783,7 @@ public class ManagementServiceImpl implements ManagementService {
         List<OrganizationInfo> orgs = new ArrayList<>( results.size() );
         OrganizationInfo orgInfo;
         for ( Entity entity : results.getEntities() ) {
-            // TODO T.N. temporary hack to deal with duplicate orgs. Revert this
-            // commit after migration
+
             String path = ( String ) entity.getProperty( PROPERTY_PATH );
 
             if ( organizations.containsValue( path ) ) {

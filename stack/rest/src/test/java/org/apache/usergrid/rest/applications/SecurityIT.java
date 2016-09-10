@@ -19,6 +19,8 @@ package org.apache.usergrid.rest.applications;
 
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
+import org.apache.usergrid.rest.test.resource.model.Entity;
+import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.Test;
 
@@ -26,6 +28,7 @@ import javax.ws.rs.WebApplicationException;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * These tests will execute requests against certain paths (with or without credentials) to ensure access is being
@@ -107,6 +110,32 @@ public class SecurityIT extends AbstractRestIT {
             responseStatus = ex.getResponse().getStatus();
         }
         assertEquals(401, responseStatus);
+
+    }
+
+    @Test
+    public void testSysadminNoCredentials(){
+
+        int responseStatus = 0;
+        try{
+            this.pathResource("system/database/setup").put(false,  new Entity());
+        } catch (WebApplicationException ex) {
+            responseStatus = ex.getResponse().getStatus();
+        }
+        assertEquals(401, responseStatus);
+
+    }
+
+    @Test
+    public void testSysadminWithCredentials(){
+
+        try{
+            QueryParameters queryParameters = new QueryParameters();
+            queryParameters.addParam("access_token", clientSetup.getSuperuserToken().getAccessToken());
+            this.pathResource("system/database/setup").put(false,  new Entity(), queryParameters);
+        } catch (WebApplicationException ex) {
+            fail("Request should have been successful");
+        }
 
     }
 
