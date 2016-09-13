@@ -67,7 +67,9 @@ public class QueueManagerFactoryImpl implements LegacyQueueManagerFactory {
             });
 
     @Inject
-    public QueueManagerFactoryImpl(final LegacyQueueFig queueFig, final LegacyQueueManagerInternalFactory queuemanagerInternalFactory){
+    public QueueManagerFactoryImpl(
+        final LegacyQueueFig queueFig, final LegacyQueueManagerInternalFactory queuemanagerInternalFactory) {
+
         this.queueFig = queueFig;
         this.queuemanagerInternalFactory = queuemanagerInternalFactory;
         this.defaultManager = new HashMap<>(10);

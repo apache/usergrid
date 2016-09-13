@@ -20,72 +20,67 @@
 package org.apache.usergrid.persistence.queue;
 
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.qakka.AbstractTest;
+import org.apache.usergrid.persistence.qakka.App;
+import org.apache.usergrid.persistence.qakka.QakkaModule;
+import org.apache.usergrid.persistence.qakka.core.CassandraClient;
+import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
+import org.apache.usergrid.persistence.queue.guice.QueueModule;
+import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.apache.usergrid.persistence.core.aws.NoAWSCredsRule;
-import org.apache.usergrid.persistence.core.test.ITRunner;
-import org.apache.usergrid.persistence.core.test.UseModules;
-import org.apache.usergrid.persistence.queue.guice.TestQueueModule;
-import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
-
-import com.google.inject.Inject;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 
-@RunWith( ITRunner.class )
-@UseModules( { TestQueueModule.class } )
-public class LegacyQueueManagerTest {
-
-    @Inject
-    protected LegacyQueueFig queueFig;
-    @Inject
-    protected LegacyQueueManagerFactory qmf;
-
-    /**
-     * Mark tests as ignored if no AWS creds are present
-     */
-    @Rule
-    public NoAWSCredsRule awsCredsRule = new NoAWSCredsRule();
-
-
-    protected LegacyQueueScope scope;
-    private LegacyQueueManager qm;
+public class LegacyQueueManagerTest extends AbstractTest {
 
     public static long queueSeed = System.currentTimeMillis();
 
-
-    @Before
-    public void mockApp() {
-
-        this.scope = new LegacyQueueScopeImpl( "testQueue"+queueSeed++, LegacyQueueScope.RegionImplementation.LOCAL);
-        qm = qmf.getQueueManager(scope);
-    }
-
-    @org.junit.After
-    public void cleanup(){
-        qm.deleteQueue();
+    // give each test its own injector
+    @Override
+    protected Injector getInjector() {
+        return Guice.createInjector( new QueueModule() );
     }
 
 
     @Test
     public void send() throws Exception{
+
+        Injector myInjector = getInjector();
+
+        CassandraClient cassandraClient = myInjector.getInstance( CassandraClientImpl.class );
+        cassandraClient.getSession();
+
+        ActorSystemFig actorSystemFig = myInjector.getInstance( ActorSystemFig.class );
+        String region = actorSystemFig.getRegionLocal();
+
+        App app = myInjector.getInstance( App.class );
+        app.start( "localhost", getNextAkkaPort(), region );
+
+        final LegacyQueueScopeImpl scope =
+            new LegacyQueueScopeImpl( "testQueue" + queueSeed++, LegacyQueueScope.RegionImplementation.LOCAL );
+        LegacyQueueManagerFactory qmf = myInjector.getInstance( LegacyQueueManagerFactory.class );
+        LegacyQueueManager qm = qmf.getQueueManager(scope);
+
         String value = "bodytest";
         qm.sendMessage(value);
+
+        Thread.sleep(5000);
+
         List<LegacyQueueMessage> messageList = qm.getMessages(1, String.class);
         assertTrue(messageList.size() >= 1);
         for(LegacyQueueMessage message : messageList){
-            assertTrue(message.getBody().equals(value));
+            assertEquals( value, message.getBody() );
             qm.commitMessage(message);
         }
 
@@ -96,12 +91,32 @@ public class LegacyQueueManagerTest {
 
     @Test
     public void sendMore() throws Exception{
+
+        Injector myInjector = getInjector();
+
+        CassandraClient cassandraClient = myInjector.getInstance( CassandraClientImpl.class );
+        cassandraClient.getSession();
+
+        ActorSystemFig actorSystemFig = myInjector.getInstance( ActorSystemFig.class );
+        String region = actorSystemFig.getRegionLocal();
+
+        App app = myInjector.getInstance( App.class );
+        app.start( "localhost", getNextAkkaPort(), region );
+
+        final LegacyQueueScopeImpl scope =
+            new LegacyQueueScopeImpl( "testQueue" + queueSeed++, LegacyQueueScope.RegionImplementation.LOCAL );
+        LegacyQueueManagerFactory qmf = myInjector.getInstance( LegacyQueueManagerFactory.class );
+        LegacyQueueManager qm = qmf.getQueueManager(scope);
+
         HashMap<String,String> values = new HashMap<>();
         values.put("test","Test");
 
         List<Map<String,String>> bodies = new ArrayList<>();
         bodies.add(values);
         qm.sendMessages(bodies);
+
+        Thread.sleep(5000);
+
         List<LegacyQueueMessage> messageList = qm.getMessages(1, values.getClass());
         assertTrue(messageList.size() >= 1);
         for(LegacyQueueMessage message : messageList){
@@ -115,7 +130,25 @@ public class LegacyQueueManagerTest {
     }
 
     @Test
+    @Ignore("Not implemented yet")
     public void queueSize() throws Exception{
+
+        Injector myInjector = getInjector();
+
+        CassandraClient cassandraClient = myInjector.getInstance( CassandraClientImpl.class );
+        cassandraClient.getSession();
+
+        ActorSystemFig actorSystemFig = myInjector.getInstance( ActorSystemFig.class );
+        String region = actorSystemFig.getRegionLocal();
+
+        App app = myInjector.getInstance( App.class );
+        app.start( "localhost", getNextAkkaPort(), region );
+
+        final LegacyQueueScopeImpl scope =
+            new LegacyQueueScopeImpl( "testQueue" + queueSeed++, LegacyQueueScope.RegionImplementation.LOCAL );
+        LegacyQueueManagerFactory qmf = myInjector.getInstance( LegacyQueueManagerFactory.class );
+        LegacyQueueManager qm = qmf.getQueueManager(scope);
+
         HashMap<String,String> values = new HashMap<>();
         values.put("test", "Test");
 
