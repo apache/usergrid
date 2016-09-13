@@ -20,18 +20,8 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.apache.avro.generic.GenericData;
 import org.apache.usergrid.ExperimentalTest;
-import org.junit.Ignore;
 import org.junit.Test;
-
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +29,13 @@ import rx.Observable;
 import rx.Subscription;
 import rx.observables.ConnectableObservable;
 import rx.schedulers.Schedulers;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -61,8 +58,10 @@ public class RxTest {
         final CountDownLatch latch = new CountDownLatch( count+1 );
 
         final Subscription connectedObservable =
-            Observable.range( 0, count ).doOnNext( integer -> latch.countDown() ).doOnCompleted( () -> latch.countDown() ).subscribeOn( Schedulers.io() )
-                      .subscribe();
+            Observable.range( 0, count )
+                .doOnNext( integer -> latch.countDown() )
+                .doOnCompleted( () -> latch.countDown() ).subscribeOn( Schedulers.io() )
+                .subscribe();
 
 
         final boolean completed = latch.await( 3, TimeUnit.SECONDS );

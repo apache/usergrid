@@ -18,7 +18,6 @@
 package org.apache.usergrid.persistence.queue.guice;
 
 
-import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
 
 
@@ -26,7 +25,6 @@ public class TestQueueModule extends TestModule {
 
     @Override
     protected void configure() {
-        install( new CommonModule());
         install( new QueueModule() );
     }
 }
