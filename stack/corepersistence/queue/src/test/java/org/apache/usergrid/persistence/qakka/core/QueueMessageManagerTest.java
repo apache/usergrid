@@ -23,9 +23,11 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
+import org.apache.usergrid.persistence.qakka.core.impl.InMemoryQueue;
 import org.apache.usergrid.persistence.qakka.serialization.Result;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.App;
@@ -39,6 +41,7 @@ import org.apache.usergrid.persistence.qakka.serialization.queuemessages.Databas
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLog;
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLogSerialization;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -52,39 +55,37 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 
+@NotThreadSafe
 public class QueueMessageManagerTest extends AbstractTest {
     private static final Logger logger = LoggerFactory.getLogger( QueueMessageManagerTest.class );
 
     // TODO: test that multiple threads pulling from same queue will never pop same item
 
-    protected Injector myInjector = null;
-
     @Override
     protected Injector getInjector() {
-        if ( myInjector == null ) {
-            myInjector = Guice.createInjector( new QakkaModule() );
-        }
-        return myInjector;
+        return Guice.createInjector( new QakkaModule() );
     }
 
 
     @Test
     public void testBasicOperation() throws Exception {
 
-        CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
+        Injector injector = getInjector();
+
+        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
         cassandraClient.getSession();
 
-        DistributedQueueService distributedQueueService = getInjector().getInstance( DistributedQueueService.class );
-        ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
+        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+        ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = getInjector().getInstance( App.class );
+        App app = injector.getInstance( App.class );
         app.start( "localhost", getNextAkkaPort(), region );
 
         // create queue and send one message to it
         String queueName = "qmmt_queue_" + RandomStringUtils.randomAlphanumeric(15);
-        QueueManager queueManager = getInjector().getInstance( QueueManager.class );
-        QueueMessageManager qmm = getInjector().getInstance( QueueMessageManager.class );
+        QueueManager queueManager = injector.getInstance( QueueManager.class );
+        QueueMessageManager qmm = injector.getInstance( QueueMessageManager.class );
         queueManager.createQueue( new Queue( queueName, "test-type", region, region, 0L, 5, 10, null ));
         String jsonData = "{}";
         qmm.sendMessages( queueName, Collections.singletonList(region), null, null,
@@ -99,7 +100,7 @@ public class QueueMessageManagerTest extends AbstractTest {
         QueueMessage message = messages.get(0);
 
         // test that queue message data is present and correct
-        QueueMessageSerialization qms = getInjector().getInstance( QueueMessageSerialization.class );
+        QueueMessageSerialization qms = injector.getInstance( QueueMessageSerialization.class );
         DatabaseQueueMessageBody data = qms.loadMessageData( message.getMessageId() );
         Assert.assertNotNull( data );
         Assert.assertEquals( "application/json", data.getContentType() );
@@ -107,7 +108,7 @@ public class QueueMessageManagerTest extends AbstractTest {
         Assert.assertEquals( jsonData, jsonDataReturned );
 
         // test that transfer log is empty for our queue
-        TransferLogSerialization tlogs = getInjector().getInstance( TransferLogSerialization.class );
+        TransferLogSerialization tlogs = injector.getInstance( TransferLogSerialization.class );
         Result<TransferLog> all = tlogs.getAllTransferLogs( null, 1000 );
         List<TransferLog> logs = all.getEntities().stream()
                 .filter( log -> log.getQueueName().equals( queueName ) ).collect( Collectors.toList() );
@@ -125,31 +126,36 @@ public class QueueMessageManagerTest extends AbstractTest {
                 DatabaseQueueMessage.Type.INFLIGHT, message.getQueueMessageId() ));
 
         // test that audit log entry was written
-        AuditLogSerialization auditLogSerialization = getInjector().getInstance( AuditLogSerialization.class );
+        AuditLogSerialization auditLogSerialization = injector.getInstance( AuditLogSerialization.class );
         Result<AuditLog> auditLogs = auditLogSerialization.getAuditLogs( message.getMessageId() );
         Assert.assertEquals( 3, auditLogs.getEntities().size() );
+
+        distributedQueueService.shutdown();
     }
 
 
     @Test
     public void testQueueMessageTimeouts() throws Exception {
 
-        CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
+        Injector injector = getInjector();
+
+        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
         cassandraClient.getSession();
 
-        DistributedQueueService distributedQueueService = getInjector().getInstance( DistributedQueueService.class );
-        QakkaFig qakkaFig = getInjector().getInstance( QakkaFig.class );
-        ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
+        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+        QakkaFig qakkaFig             = injector.getInstance( QakkaFig.class );
+        ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
+        InMemoryQueue inMemoryQueue   = injector.getInstance( InMemoryQueue.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = getInjector().getInstance( App.class );
+        App app = injector.getInstance( App.class );
         app.start( "localhost", getNextAkkaPort(), region );
 
         // create some number of queue messages
 
-        QueueManager queueManager = getInjector().getInstance( QueueManager.class );
-        QueueMessageManager qmm = getInjector().getInstance( QueueMessageManager.class );
-        String queueName = "qmmt_queue_" + RandomStringUtils.randomAlphanumeric(15);
+        QueueManager queueManager = injector.getInstance( QueueManager.class );
+        QueueMessageManager qmm   = injector.getInstance( QueueMessageManager.class );
+        String queueName = "queue_testQueueMessageTimeouts_" + RandomStringUtils.randomAlphanumeric(15);
         queueManager.createQueue( new Queue( queueName, "test-type", region, region, 0L, 5, 10, null ));
 
         int numMessages = 40;
@@ -164,8 +170,15 @@ public class QueueMessageManagerTest extends AbstractTest {
                     DataType.serializeValue( "{}", ProtocolVersion.NEWEST_SUPPORTED ) );
         }
 
-        distributedQueueService.refresh();
-        Thread.sleep(1000);
+        int maxRetries = 15;
+        int retries = 0;
+        while ( retries++ < maxRetries ) {
+            //distributedQueueService.refresh();
+            Thread.sleep( 1000 );
+            if (inMemoryQueue.size( queueName ) == 40) {
+                break;
+            }
+        }
 
         // get all messages from queue
 
@@ -205,25 +218,29 @@ public class QueueMessageManagerTest extends AbstractTest {
                 // keep on going...
             }
         }
+
+        distributedQueueService.shutdown();
     }
 
 
     @Test
     public void testGetWithMissingData() throws InterruptedException {
 
-        CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
+        Injector injector = getInjector();
+
+        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
         cassandraClient.getSession();
 
-        getInjector().getInstance( App.class ); // init the INJECTOR
+        injector.getInstance( App.class ); // init the INJECTOR
 
-        ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
-        DistributedQueueService qas         = getInjector().getInstance( DistributedQueueService.class );
-        QueueManager qm               = getInjector().getInstance( QueueManager.class );
-        QueueMessageManager qmm       = getInjector().getInstance( QueueMessageManager.class );
-        QueueMessageSerialization qms = getInjector().getInstance( QueueMessageSerialization.class );
+        ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
+        DistributedQueueService qas         = injector.getInstance( DistributedQueueService.class );
+        QueueManager qm               = injector.getInstance( QueueManager.class );
+        QueueMessageManager qmm       = injector.getInstance( QueueMessageManager.class );
+        QueueMessageSerialization qms = injector.getInstance( QueueMessageSerialization.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = getInjector().getInstance( App.class );
+        App app = injector.getInstance( App.class );
         app.start( "localhost", getNextAkkaPort(), region );
 
         // create queue messages, every other one with missing data
@@ -267,6 +284,9 @@ public class QueueMessageManagerTest extends AbstractTest {
             count += messages.size();
             logger.debug("Got {} messages", ++count);
         }
+
+        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+        distributedQueueService.shutdown();
     }
 
 }

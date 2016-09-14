@@ -108,7 +108,7 @@ public class QueueRefresher extends UntypedActor {
                     }
 
                     if ( count > 0 ) {
-                        logger.debug( "Added {} in-memory for queue {}, new size = {}",
+                        logger.info( "Added {} in-memory for queue {}, new size = {}",
                                 count, queueName, inMemoryQueue.size( queueName ) );
                     }
                 }

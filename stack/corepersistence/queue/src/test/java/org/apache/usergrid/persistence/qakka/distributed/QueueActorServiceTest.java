@@ -23,6 +23,7 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.cassandra.utils.UUIDGen;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
@@ -36,49 +37,47 @@ import org.apache.usergrid.persistence.qakka.core.impl.InMemoryQueue;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessageBody;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
+import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLogSerialization;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.UUID;
 
 
+@NotThreadSafe
 public class QueueActorServiceTest extends AbstractTest {
     private static final Logger logger = LoggerFactory.getLogger( QueueActorServiceTest.class );
 
-    protected Injector myInjector = null;
 
     @Override
     protected Injector getInjector() {
-        if ( myInjector == null ) {
-            myInjector = Guice.createInjector( new QakkaModule() );
-        }
-        return myInjector;
+        return Guice.createInjector( new QakkaModule() );
     }
 
 
     @Test
     public void testBasicOperation() throws Exception {
 
-        CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
+        Injector injector = getInjector();
+
+        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
         cassandraClient.getSession();
 
-        ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
+        ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
 
-        App app = getInjector().getInstance( App.class );
+        App app = injector.getInstance( App.class );
         app.start( "localhost", getNextAkkaPort(), region );
 
-        DistributedQueueService distributedQueueService = getInjector().getInstance( DistributedQueueService.class );
-        QueueMessageSerialization serialization = getInjector().getInstance( QueueMessageSerialization.class );
+        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+        QueueMessageSerialization serialization = injector.getInstance( QueueMessageSerialization.class );
 
         String queueName = "testqueue_" + UUID.randomUUID();
-        QueueManager queueManager = getInjector().getInstance( QueueManager.class );
+        QueueManager queueManager = injector.getInstance( QueueManager.class );
         queueManager.createQueue( new Queue( queueName, "test-type", region, region, 0L, 5, 10, null ));
 
         // send 1 queue message, get back one queue message
@@ -109,27 +108,31 @@ public class QueueActorServiceTest extends AbstractTest {
 
         Assert.assertEquals( data, returnedData );
 
+        distributedQueueService.shutdown();
     }
 
 
     @Test
     public void testGetMultipleQueueMessages() throws InterruptedException {
 
-        CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
+        Injector injector = getInjector();
+
+        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
         cassandraClient.getSession();
 
-        ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
+        ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
 
-        App app = getInjector().getInstance( App.class );
+        App app = injector.getInstance( App.class );
         app.start("localhost", getNextAkkaPort(), region);
 
-        DistributedQueueService distributedQueueService = getInjector().getInstance( DistributedQueueService.class );
-        QueueMessageSerialization serialization = getInjector().getInstance( QueueMessageSerialization.class );
-        InMemoryQueue inMemoryQueue             = getInjector().getInstance( InMemoryQueue.class );
+        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+        QueueMessageSerialization serialization         = injector.getInstance( QueueMessageSerialization.class );
+        TransferLogSerialization xferLogSerialization   = injector.getInstance( TransferLogSerialization.class );
+        InMemoryQueue inMemoryQueue                     = injector.getInstance( InMemoryQueue.class );
 
-        String queueName = "testqueue_" + UUID.randomUUID();
-        QueueManager queueManager = getInjector().getInstance( QueueManager.class );
+        String queueName = "queue_testGetMultipleQueueMessages_" + UUID.randomUUID();
+        QueueManager queueManager = injector.getInstance( QueueManager.class );
         queueManager.createQueue(
                 new Queue( queueName, "test-type", region, region, 0L, 5, 10, null ));
 
@@ -142,21 +145,25 @@ public class QueueActorServiceTest extends AbstractTest {
                     DataType.serializeValue( data, ProtocolVersion.NEWEST_SUPPORTED ), "text/plain" );
             serialization.writeMessageData( messageId, messageBody );
 
+            xferLogSerialization.recordTransferLog(
+                queueName, actorSystemFig.getRegionLocal(), region, messageId );
+
             distributedQueueService.sendMessageToRegion(
                     queueName, region, region, messageId , null, null);
         }
 
         int maxRetries = 15;
         int retries = 0;
+        int count = 0;
         while ( retries++ < maxRetries ) {
-            distributedQueueService.refresh();
-            Thread.sleep( 3000 );
+            Thread.sleep( 1000 );
             if (inMemoryQueue.size( queueName ) == 100) {
+                count = 100;
                 break;
             }
         }
 
-        Assert.assertEquals( 100, inMemoryQueue.size( queueName ) );
+        Assert.assertEquals( 100, count );
 
         Assert.assertEquals( 25, distributedQueueService.getNextMessages( queueName, 25 ).size() );
         Assert.assertEquals( 75, inMemoryQueue.size( queueName ) );
@@ -170,6 +177,6 @@ public class QueueActorServiceTest extends AbstractTest {
         Assert.assertEquals( 25, distributedQueueService.getNextMessages( queueName, 25 ).size() );
         Assert.assertEquals( 0, inMemoryQueue.size( queueName ) );
 
+        distributedQueueService.shutdown();
     }
-
 }

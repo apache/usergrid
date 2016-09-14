@@ -33,6 +33,7 @@ import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLogSeri
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -41,31 +42,27 @@ import java.util.UUID;
 
 public class QueueActorHelperTest extends AbstractTest {
 
-    protected Injector myInjector = null;
 
     @Override
     protected Injector getInjector() {
-        if ( myInjector == null ) {
-            myInjector = Guice.createInjector( new QakkaModule() );
-        }
-        return myInjector;
+        return Guice.createInjector( new QakkaModule() );
     }
-
 
     @Test
     public void loadDatabaseQueueMessage() throws Exception {
 
-        CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
+        Injector injector = getInjector();
+        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
         cassandraClient.getSession();
 
-        getInjector().getInstance( App.class ); // init the INJECTOR
+        injector.getInstance( App.class ); // init the INJECTOR
 
-        ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
-        QueueMessageSerialization qms = getInjector().getInstance( QueueMessageSerialization.class );
-        QueueManager queueManager     = getInjector().getInstance( QueueManager.class );
+        ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
+        QueueMessageSerialization qms = injector.getInstance( QueueMessageSerialization.class );
+        QueueManager queueManager     = injector.getInstance( QueueManager.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = getInjector().getInstance( App.class );
+        App app = injector.getInstance( App.class );
         app.start( "localhost", getNextAkkaPort(), region );
 
         String queueName = "qat_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
@@ -88,27 +85,31 @@ public class QueueActorHelperTest extends AbstractTest {
 
         // load message
 
-        QueueActorHelper helper = getInjector().getInstance( QueueActorHelper.class );
+        QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
         DatabaseQueueMessage queueMessage = helper.loadDatabaseQueueMessage(
                 queueName, message.getQueueMessageId(), message.getType() );
 
         Assert.assertNotNull( queueMessage );
+
+        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+        distributedQueueService.shutdown();
     }
 
 
     @Test
     public void loadDatabaseQueueMessageNotFound() throws Exception {
 
-        CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
+        Injector injector = getInjector();
+        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
         cassandraClient.getSession();
 
 
-        getInjector().getInstance( App.class ); // init the INJECTOR
-        QueueManager queueManager = getInjector().getInstance( QueueManager.class );
+        injector.getInstance( App.class ); // init the INJECTOR
+        QueueManager queueManager = injector.getInstance( QueueManager.class );
 
-        ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
+        ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
-        App app = getInjector().getInstance( App.class );
+        App app = injector.getInstance( App.class );
         app.start( "localhost", getNextAkkaPort(), region );
 
         String queueName = "qat_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
@@ -118,29 +119,33 @@ public class QueueActorHelperTest extends AbstractTest {
 
         // load message
 
-        QueueActorHelper helper = getInjector().getInstance( QueueActorHelper.class );
+        QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
         DatabaseQueueMessage queueMessage = helper.loadDatabaseQueueMessage(
                 queueName, QakkaUtils.getTimeUuid(), DatabaseQueueMessage.Type.DEFAULT );
 
         Assert.assertNull( queueMessage );
+
+        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+        distributedQueueService.shutdown();
     }
 
 
     @Test
     public void putInflight() throws Exception {
 
-        CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
+        Injector injector = getInjector();
+        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
         cassandraClient.getSession();
 
 
-        getInjector().getInstance( App.class ); // init the INJECTOR
+        injector.getInstance( App.class ); // init the INJECTOR
 
-        ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
-        QueueMessageSerialization qms = getInjector().getInstance( QueueMessageSerialization.class );
-        QueueManager queueManager     = getInjector().getInstance( QueueManager.class );
+        ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
+        QueueMessageSerialization qms = injector.getInstance( QueueMessageSerialization.class );
+        QueueManager queueManager     = injector.getInstance( QueueManager.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = getInjector().getInstance( App.class );
+        App app = injector.getInstance( App.class );
         app.start( "localhost", getNextAkkaPort(), region );
 
         // write message to messages_available table
@@ -163,7 +168,7 @@ public class QueueActorHelperTest extends AbstractTest {
 
         // put message inflight
 
-        QueueActorHelper helper = getInjector().getInstance( QueueActorHelper.class );
+        QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
         helper.putInflight( queueName, message );
 
         // message must be gone from messages_available table
@@ -186,29 +191,33 @@ public class QueueActorHelperTest extends AbstractTest {
 
         // there must be an audit log record of the successful get operation
 
-        AuditLogSerialization auditLogSerialization = getInjector().getInstance( AuditLogSerialization.class );
+        AuditLogSerialization auditLogSerialization = injector.getInstance( AuditLogSerialization.class );
         Result<AuditLog> auditLogs = auditLogSerialization.getAuditLogs( message.getMessageId() );
         Assert.assertEquals( 1, auditLogs.getEntities().size() );
         Assert.assertEquals( AuditLog.Status.SUCCESS, auditLogs.getEntities().get(0).getStatus()  );
         Assert.assertEquals( AuditLog.Action.GET,     auditLogs.getEntities().get(0).getAction()  );
+
+        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+        distributedQueueService.shutdown();
     }
 
 
     @Test
     public void ackQueueMessage() throws Exception {
 
-        CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
+        Injector injector = getInjector();
+        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
         cassandraClient.getSession();
 
 
-        getInjector().getInstance( App.class ); // init the INJECTOR
+        injector.getInstance( App.class ); // init the INJECTOR
 
-        ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
-        QueueMessageSerialization qms = getInjector().getInstance( QueueMessageSerialization.class );
-        QueueManager queueManager     = getInjector().getInstance( QueueManager.class );
+        ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
+        QueueMessageSerialization qms = injector.getInstance( QueueMessageSerialization.class );
+        QueueManager queueManager     = injector.getInstance( QueueManager.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = getInjector().getInstance( App.class );
+        App app = injector.getInstance( App.class );
         app.start( "localhost", getNextAkkaPort(), region );
 
         UUID queueMessageId = QakkaUtils.getTimeUuid();
@@ -231,7 +240,7 @@ public class QueueActorHelperTest extends AbstractTest {
 
         // ack message
 
-        QueueActorHelper helper = getInjector().getInstance( QueueActorHelper.class );
+        QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
         helper.ackQueueMessage( queueName, message.getQueueMessageId() );
 
         // message must be gone from messages_available table
@@ -246,27 +255,31 @@ public class QueueActorHelperTest extends AbstractTest {
 
         // there should be an audit log record of the successful ack operation
 
-        AuditLogSerialization auditLogSerialization = getInjector().getInstance( AuditLogSerialization.class );
+        AuditLogSerialization auditLogSerialization = injector.getInstance( AuditLogSerialization.class );
         Result<AuditLog> auditLogs = auditLogSerialization.getAuditLogs( message.getMessageId() );
         Assert.assertEquals( 1, auditLogs.getEntities().size() );
         Assert.assertEquals( AuditLog.Status.SUCCESS, auditLogs.getEntities().get(0).getStatus()  );
         Assert.assertEquals( AuditLog.Action.ACK,     auditLogs.getEntities().get(0).getAction()  );
+
+        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+        distributedQueueService.shutdown();
     }
 
 
     @Test
     public void ackQueueMessageNotFound() throws Exception {
 
-        CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
+        Injector injector = getInjector();
+        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
         cassandraClient.getSession();
 
 
-        getInjector().getInstance( App.class ); // init the INJECTOR
-        QueueManager queueManager     = getInjector().getInstance( QueueManager.class );
-        ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
+        injector.getInstance( App.class ); // init the INJECTOR
+        QueueManager queueManager     = injector.getInstance( QueueManager.class );
+        ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = getInjector().getInstance( App.class );
+        App app = injector.getInstance( App.class );
         app.start( "localhost", getNextAkkaPort(), region );
 
         String queueName = "qat_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
@@ -278,7 +291,11 @@ public class QueueActorHelperTest extends AbstractTest {
 
         // ack message must fail
 
-        QueueActorHelper helper = getInjector().getInstance( QueueActorHelper.class );
-        Assert.assertEquals( DistributedQueueService.Status.BAD_REQUEST, helper.ackQueueMessage( queueName, queueMessageId ));
+        QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
+        Assert.assertEquals( DistributedQueueService.Status.BAD_REQUEST,
+            helper.ackQueueMessage( queueName, queueMessageId ));
+
+        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+        distributedQueueService.shutdown();
     }
 }

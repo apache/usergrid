@@ -43,7 +43,7 @@ public class AbstractTest {
 
     public AbstractTest() {
         if ( getInjector() == null ) {
-            setInjector( Guice.createInjector( new QueueModule() ) );
+            setInjector( Guice.createInjector( new QakkaModule() ) );
             MigrationManager migrationManager = getInjector().getInstance( MigrationManager.class );
             try {
                 migrationManager.migrate();
