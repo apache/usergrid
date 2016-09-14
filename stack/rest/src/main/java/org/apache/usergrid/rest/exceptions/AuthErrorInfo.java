@@ -35,6 +35,7 @@ public enum AuthErrorInfo {
     OAUTH2_UNSUPPORTED_GRANT_TYPE( "unsupported_grant_type", "Unable to authenticate (OAuth)" ), //
     OAUTH2_INVALID_SCOPE( "invalid_scope", "Unable to authenticate (OAuth" ), //
     INVALID_AUTH_ERROR( "auth_invalid", "Unable to authenticate" ), //
+    INVALID_CLIENT_CREDENTIALS_ERROR( "auth_invalid_credentials", "Unable to authenticate due to invalid client credentials" ),
     MISSING_CREDENTIALS_ERROR( "auth_missing_credentials", "Unable to authenticate due to missing credentials" ), //
     BAD_CREDENTIALS_SYNTAX_ERROR( "auth_bad_credentials_syntax",
             "Unable to authenticate due to improperly constructed credentials" ), //
