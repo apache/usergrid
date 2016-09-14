@@ -50,7 +50,7 @@ public class LegacyQueueManagerTest extends AbstractTest {
     // give each test its own injector
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector( new QueueModule() );
+        return Guice.createInjector( new TestModule() );
     }
 
 

@@ -39,6 +39,7 @@ import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardCounter
 import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardIterator;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardSerialization;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
+import org.apache.usergrid.persistence.queue.TestModule;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
@@ -55,7 +56,7 @@ public class ShardAllocatorTest extends AbstractTest {
 
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector( new QakkaModule() );
+        return Guice.createInjector( new TestModule() );
     }
 
 

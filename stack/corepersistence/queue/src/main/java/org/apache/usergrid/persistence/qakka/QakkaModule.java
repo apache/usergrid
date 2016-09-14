@@ -23,8 +23,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.multibindings.Multibinder;
 import com.netflix.config.ConfigurationManager;
-import org.apache.usergrid.persistence.actorsystem.ActorSystemModule;
-import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.qakka.api.URIStrategy;
 import org.apache.usergrid.persistence.qakka.api.impl.URIStrategyLocalhost;
@@ -67,15 +65,13 @@ public class QakkaModule extends AbstractModule {
             // load properties from one properties file using Netflix Archaius so that GuicyFig will see them
             ConfigurationManager.loadCascadedPropertiesFromResources( "qakka" );
         } catch (IOException e) {
-            throw new RuntimeException( "Cannot qakka.properties file", e );
+            logger.warn("Unable to load qakka.properties");
         }
     }
 
     @Override
     protected void configure() {
 
-        install( new CommonModule() );
-        install( new ActorSystemModule() );
         install( new GuicyFigModule( QakkaFig.class ) );
 
         bind( App.class );
