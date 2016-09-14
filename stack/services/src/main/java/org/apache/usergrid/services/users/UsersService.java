@@ -79,16 +79,12 @@ public class UsersService extends AbstractCollectionService {
 
     @Override
     public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception {
-        String nameProperty = Schema.getDefaultSchema().aliasProperty( getEntityType() );
-
-        if ( nameProperty == null ) {
-            nameProperty = "name";
-        }
-
+        
         EntityRef entity = null;
         Identifier id = Identifier.from( name );
 
         if ( id != null ) {
+            // get the entityRef from the unique value index
             entity = em.getUserByIdentifier( id );
         }
 
@@ -97,7 +93,14 @@ public class UsersService extends AbstractCollectionService {
         }
 
         if ( !context.moreParameters() ) {
+
+            // full load the entity from the database based on the UUID from the unique value index
             entity = em.get( entity );
+
+            if ( entity == null ) {
+                throw new ServiceResourceNotFoundException( context );
+            }
+
             entity = importEntity( context, ( Entity ) entity );
         }
 
