@@ -128,12 +128,12 @@ public class QueueWriter extends UntypedActor {
                                 QueueWriter.WriteStatus.SUCCESS_XFERLOG_DELETED ), getSender() );
 
                     } catch (Throwable e) {
-                        logger.error("Error deleting transferlog", e);
                         logger.debug( "Unable to delete transfer log for {} {} {} {}",
                                 qa.getQueueName(),
                                 qa.getSourceRegion(),
                                 qa.getDestRegion(),
                                 qa.getMessageId() );
+                        logger.debug("Error deleting transferlog", e);
 
                         getSender().tell( new QueueWriteResponse(
                                 QueueWriter.WriteStatus.SUCCESS_XFERLOG_NOTDELETED ), getSender() );

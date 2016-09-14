@@ -38,6 +38,8 @@ public interface DistributedQueueService {
 
     void refresh();
 
+    void shutdown();
+
     void refreshQueue(String queueName);
 
     void processTimeouts();

@@ -115,6 +115,5 @@ public class QakkaModule extends AbstractModule {
         migrationBinder.addBinding().to( Key.get( ShardCounterSerialization.class ) );
         migrationBinder.addBinding().to( Key.get( ShardSerialization.class ) );
         migrationBinder.addBinding().to( Key.get( TransferLogSerialization.class ) );
-
     }
 }

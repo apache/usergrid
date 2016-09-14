@@ -77,19 +77,25 @@ public class MultiShardMessageIterator implements Iterator<DatabaseQueueMessage>
     @Override
     public boolean hasNext() {
 
-        if ( shardIterator.hasNext() && currentIterator == null) {
-            advance();
-        }
+        try {
 
-        if ( shardIterator.hasNext() && !currentIterator.hasNext()) {
-            advance();
-        }
+            if (shardIterator.hasNext() && currentIterator == null) {
+                advance();
+            }
 
-        if ( !shardIterator.hasNext() && ( currentIterator == null || !currentIterator.hasNext()) ) {
-            advance();
-        }
+            if (shardIterator.hasNext() && !currentIterator.hasNext()) {
+                advance();
+            }
 
-        return currentIterator.hasNext();
+            if (!shardIterator.hasNext() && (currentIterator == null || !currentIterator.hasNext())) {
+                advance();
+            }
+
+            return currentIterator.hasNext();
+
+        } catch ( NoSuchElementException e ) {
+            return false;
+        }
     }
 
     @Override

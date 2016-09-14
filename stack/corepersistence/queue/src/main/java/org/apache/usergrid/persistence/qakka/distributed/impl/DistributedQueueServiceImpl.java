@@ -293,4 +293,8 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
         throw new QakkaRuntimeException(
                 "Error sending message " + message + "after " + retries );
     }
+
+    public void shutdown() {
+        actorSystemManager.shutdownAll();
+    }
 }

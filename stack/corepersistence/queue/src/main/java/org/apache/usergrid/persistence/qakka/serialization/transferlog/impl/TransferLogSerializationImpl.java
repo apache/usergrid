@@ -81,6 +81,9 @@ public class TransferLogSerializationImpl implements TransferLogSerialization {
                 .value(COLUMN_MESSAGE_ID, messageId )
                 .value(COLUMN_TRANSFER_TIME, System.currentTimeMillis() );
         cassandraClient.getSession().execute(insert);
+
+//        logger.debug("Recorded transfer log for queue {} dest {} messageId {}",
+//            queueName, dest, messageId);
     }
 
 
@@ -97,7 +100,6 @@ public class TransferLogSerializationImpl implements TransferLogSerialization {
         if ( rs.getAvailableWithoutFetching() == 0 ) {
             StringBuilder sb = new StringBuilder();
             sb.append( "Transfer log entry not found for queueName=" ).append( queueName );
-            sb.append( " source=" ).append( source );
             sb.append( " dest=" ).append( dest );
             sb.append( " messageId=" ).append( messageId );
             throw new QakkaException( sb.toString() );

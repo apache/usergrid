@@ -43,6 +43,8 @@ public class DatabaseQueueSerializationTest extends AbstractTest {
 
         queueSerialization.writeQueue(queue);
 
+        queueSerialization.deleteQueue( queue.getName() );
+
     }
 
     @Test
@@ -51,7 +53,7 @@ public class DatabaseQueueSerializationTest extends AbstractTest {
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
         cassandraClient.getSession();
         QueueSerialization queueSerialization = getInjector().getInstance( QueueSerialization.class );
-        
+
         DatabaseQueue queue = new DatabaseQueue("test1", "west", "west", 0L, 0, 0, "test_dlq");
 
         queueSerialization.writeQueue(queue);
@@ -59,6 +61,7 @@ public class DatabaseQueueSerializationTest extends AbstractTest {
 
         assertEquals(queue, returnedQueue);
 
+        queueSerialization.deleteQueue( queue.getName() );
     }
 
     @Test
@@ -67,7 +70,7 @@ public class DatabaseQueueSerializationTest extends AbstractTest {
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
         cassandraClient.getSession();
         QueueSerialization queueSerialization = getInjector().getInstance( QueueSerialization.class );
-        
+
         DatabaseQueue queue = new DatabaseQueue("test1", "west", "west", 0L, 0, 0, "test_dlq");
 
         queueSerialization.writeQueue(queue);

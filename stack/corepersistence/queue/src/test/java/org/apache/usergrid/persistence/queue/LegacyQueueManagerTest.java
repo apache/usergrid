@@ -28,6 +28,7 @@ import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.QakkaModule;
 import org.apache.usergrid.persistence.qakka.core.CassandraClient;
 import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
+import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.queue.guice.QueueModule;
 import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
 import org.junit.Ignore;
@@ -87,6 +88,9 @@ public class LegacyQueueManagerTest extends AbstractTest {
         messageList = qm.getMessages(1, String.class);
         assertTrue(messageList.size() <= 0);
 
+        DistributedQueueService distributedQueueService = myInjector.getInstance( DistributedQueueService.class );
+        distributedQueueService.shutdown();
+
     }
 
     @Test
@@ -127,6 +131,8 @@ public class LegacyQueueManagerTest extends AbstractTest {
         messageList = qm.getMessages(1, values.getClass());
         assertTrue(messageList.size() <= 0);
 
+        DistributedQueueService distributedQueueService = myInjector.getInstance( DistributedQueueService.class );
+        distributedQueueService.shutdown();
     }
 
     @Test
@@ -182,8 +188,9 @@ public class LegacyQueueManagerTest extends AbstractTest {
             Thread.sleep(1000);
         }
         assertEquals(initialDepth, depth);
+
+        DistributedQueueService distributedQueueService = myInjector.getInstance( DistributedQueueService.class );
+        distributedQueueService.shutdown();
     }
-
-
 
 }

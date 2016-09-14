@@ -47,8 +47,8 @@ import java.util.UUID;
 public class QueueReaderTest extends AbstractTest {
     private static final Logger logger = LoggerFactory.getLogger( QueueReaderTest.class );
 
-    
-    
+
+
     @Test
     public void testBasicOperation() throws Exception {
 
@@ -56,18 +56,18 @@ public class QueueReaderTest extends AbstractTest {
         cassandraClient.getSession();
 
 
-        getInjector().getInstance( App.class ); // init the INJECTOR 
-        
+        getInjector().getInstance( App.class ); // init the INJECTOR
+
         QakkaFig qakkaFig = getInjector().getInstance( QakkaFig.class );
         ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
         ShardSerialization shardSerialization = getInjector().getInstance( ShardSerialization.class );
 
         int numMessages = 200;
         // create queue messages, only first lot get queue message data
-        
+
         QueueMessageSerialization serialization = getInjector().getInstance( QueueMessageSerialization.class );
         String queueName = "qrt_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
-        
+
         Shard newShard = new Shard( queueName, actorSystemFig.getRegionLocal(),
                 Shard.Type.DEFAULT, 1L, QakkaUtils.getTimeUuid());
         shardSerialization.createShard( newShard );
@@ -77,16 +77,16 @@ public class QueueReaderTest extends AbstractTest {
             UUID messageId = QakkaUtils.getTimeUuid();
             UUID queueMessageId = QakkaUtils.getTimeUuid();
 
-            DatabaseQueueMessage message = new DatabaseQueueMessage( 
+            DatabaseQueueMessage message = new DatabaseQueueMessage(
                     messageId,
-                    DatabaseQueueMessage.Type.DEFAULT, 
-                    queueName, 
+                    DatabaseQueueMessage.Type.DEFAULT,
+                    queueName,
                     actorSystemFig.getRegionLocal(),
-                    null, 
-                    System.currentTimeMillis(), 
-                    null, 
+                    null,
+                    System.currentTimeMillis(),
+                    null,
                     queueMessageId);
-            serialization.writeMessage( message ); 
+            serialization.writeMessage( message );
         }
 
         InMemoryQueue inMemoryQueue = getInjector().getInstance( InMemoryQueue.class );
@@ -97,15 +97,15 @@ public class QueueReaderTest extends AbstractTest {
         ActorSystem system = ActorSystem.create("Test-" + queueName);
         ActorRef queueReaderRef = system.actorOf( Props.create( QueueRefresher.class, queueName ), "queueReader");
         QueueRefreshRequest refreshRequest = new QueueRefreshRequest( queueName );
-        queueReaderRef.tell( refreshRequest, null ); // tell sends message, returns immediately
-    
+
         // need to wait for refresh to complete
         int maxRetries = 10;
         int retries = 0;
         while ( inMemoryQueue.size( queueName ) < qakkaFig.getQueueInMemorySize() && retries++ < maxRetries ) {
-            Thread.sleep(1000);     
+            queueReaderRef.tell( refreshRequest, null ); // tell sends message, returns immediately
+            Thread.sleep(1000);
         }
-        
+
         Assert.assertEquals( numMessages, inMemoryQueue.size( queueName ) );
     }
 }
