@@ -553,7 +553,7 @@ public class ManagementServiceImpl implements ManagementService {
             // associate to the requested organization
             if((password == null || password.isEmpty()) && SubjectUtils.isServiceAdmin()){
                 user = getAdminUserByEmail(email);
-                if(user == null ){
+                if(user == null && !tokens.isExternalSSOProviderEnabled() ){
                     throw new IllegalArgumentException("Password should be sent in the request or should be a valid admin user email.");
                 }
             }
