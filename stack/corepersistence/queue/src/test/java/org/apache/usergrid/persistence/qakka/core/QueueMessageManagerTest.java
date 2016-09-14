@@ -41,6 +41,7 @@ import org.apache.usergrid.persistence.qakka.serialization.queuemessages.Databas
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLog;
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLogSerialization;
+import org.apache.usergrid.persistence.queue.TestModule;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
@@ -63,7 +64,7 @@ public class QueueMessageManagerTest extends AbstractTest {
 
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector( new QakkaModule() );
+        return Guice.createInjector( new TestModule() );
     }
 
 

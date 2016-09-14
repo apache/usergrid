@@ -33,6 +33,7 @@ import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLogSeri
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
+import org.apache.usergrid.persistence.queue.TestModule;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
@@ -45,7 +46,7 @@ public class QueueActorHelperTest extends AbstractTest {
 
     @Override
     protected Injector getInjector() {
-        return Guice.createInjector( new QakkaModule() );
+        return Guice.createInjector( new TestModule() );
     }
 
     @Test

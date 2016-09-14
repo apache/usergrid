@@ -15,36 +15,27 @@
  * copyright in this work, please see the NOTICE file in the top level
  * directory of this distribution.
  */
-package org.apache.usergrid.persistence.queue.guice;
 
+package org.apache.usergrid.persistence.qakka.api.impl;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemModule;
+import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.qakka.QakkaModule;
-import org.apache.usergrid.persistence.queue.LegacyQueueFig;
-import org.apache.usergrid.persistence.queue.LegacyQueueManager;
-import org.apache.usergrid.persistence.queue.LegacyQueueManagerFactory;
-import org.apache.usergrid.persistence.queue.LegacyQueueManagerInternalFactory;
-import org.apache.usergrid.persistence.queue.impl.QakkaQueueManager;
-import org.apache.usergrid.persistence.queue.impl.QueueManagerFactoryImpl;
-import org.safehaus.guicyfig.GuicyFigModule;
+import org.apache.usergrid.persistence.queue.guice.QueueModule;
 
 
 /**
- * Simple module for wiring our collection api
+ * Created by Dave Johnson (snoopdave@apache.org) on 9/14/16.
  */
-public class QueueModule extends AbstractModule {
+public class GuiceWebModule extends AbstractModule {
 
 
     @Override
     protected void configure() {
-
-        install(new GuicyFigModule(LegacyQueueFig.class));
-
-        bind(LegacyQueueManagerFactory.class).to(QueueManagerFactoryImpl.class);
-        install( new FactoryModuleBuilder().implement(LegacyQueueManager.class, QakkaQueueManager.class)
-            .build(LegacyQueueManagerInternalFactory.class));
-
+        install( new CommonModule() );
+        install( new ActorSystemModule() );
         install( new QakkaModule() );
     }
+
 }

@@ -23,6 +23,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
+import org.apache.usergrid.persistence.queue.TestModule;
 import org.apache.usergrid.persistence.queue.guice.QueueModule;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
@@ -43,7 +44,7 @@ public class AbstractTest {
 
     public AbstractTest() {
         if ( getInjector() == null ) {
-            setInjector( Guice.createInjector( new QakkaModule() ) );
+            setInjector( Guice.createInjector( new TestModule() ) );
             MigrationManager migrationManager = getInjector().getInstance( MigrationManager.class );
             try {
                 migrationManager.migrate();

@@ -24,7 +24,6 @@ import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
 import org.apache.usergrid.persistence.qakka.App;
-import org.apache.usergrid.persistence.qakka.QakkaModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -48,7 +47,7 @@ public class StartupListener extends GuiceServletContextListener {
             INJECTOR = Guice.createInjector( new ServletModule() {
                 @Override
                 protected void configureServlets() {
-                    install( new QakkaModule() );
+                    install( new GuiceWebModule() );
                 }
             } );
 
