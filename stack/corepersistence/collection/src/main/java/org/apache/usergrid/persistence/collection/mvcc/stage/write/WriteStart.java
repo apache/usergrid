@@ -36,7 +36,7 @@ import static org.apache.usergrid.persistence.core.util.ValidationUtils.verifyEn
 @Singleton
 public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIoEvent<MvccEntity>> {
 
-    private static final Logger LOG = LoggerFactory.getLogger( WriteStart.class );
+    private static final Logger logger = LoggerFactory.getLogger( WriteStart.class );
 
     private final MvccLogEntrySerializationStrategy logStrategy;
 
@@ -75,11 +75,11 @@ public class WriteStart implements Func1<CollectionIoEvent<Entity>, CollectionIo
                 try {
                     write.execute();
                 } catch (ConnectionException e) {
-                    LOG.error("Failed to execute write ", e);
+                    logger.error("Failed to execute write ", e);
                     throw new WriteStartException(nextStage, applicationScope,
                         "Failed to execute write ", e);
                 } catch (NullPointerException e) {
-                    LOG.error("Failed to execute write ", e);
+                    logger.error("Failed to execute write ", e);
                     throw new WriteStartException(nextStage, applicationScope,
                         "Failed to execute write", e);
                 }

@@ -19,6 +19,9 @@ package org.apache.usergrid.security.shiro.credentials;
 
 public class OrganizationAccessToken extends AbstractAccessTokenCredentials implements OrganizationCredentials {
 
+    // Do not remove, needed for Jackson to handle deserialization
+    protected OrganizationAccessToken(){}
+
     public OrganizationAccessToken( String token ) {
         super( token );
     }

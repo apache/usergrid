@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexEdge;
@@ -31,6 +32,7 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 
 
 /**
@@ -47,10 +49,13 @@ public class IndexOperation implements BatchOperation {
     public Map<String, Object> data;
 
     public IndexOperation( final String writeAlias, final ApplicationScope applicationScope, IndexEdge indexEdge,
-                           Entity entity ) {
-        this(writeAlias,IndexingUtils.createIndexDocId(applicationScope, entity,indexEdge), EntityToMapConverter.convert(applicationScope,indexEdge, entity));
+                           Entity entity, Optional<Set<String>> fieldsToIndex ) {
+
+        this( writeAlias, IndexingUtils.createIndexDocId( applicationScope, entity, indexEdge ),
+            EntityToMapConverter.convert( applicationScope, indexEdge, entity, fieldsToIndex ) );
 
     }
+
 
     public IndexOperation( final String writeAlias, String documentId, Map<String, Object> data ) {
         this.writeAlias = writeAlias;

@@ -102,7 +102,9 @@ public class RootResource extends AbstractContextResource implements MetricProce
         @QueryParam("deleted") @DefaultValue("false") Boolean deleted,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws URISyntaxException {
 
-        logger.info( "RootResource.getData" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("RootResource.getData");
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "get applications" );
@@ -172,9 +174,6 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
         ApiResponse response = createApiResponse();
 
-        AsyncEventService eventService = injector.getInstance(AsyncEventService.class);
-
-
         if ( !ignoreError ) {
 
             if ( !emf.getEntityStoreHealth().equals( Health.GREEN )) {
@@ -200,7 +199,6 @@ public class RootResource extends AbstractContextResource implements MetricProce
 
         // Core Persistence Query Index module status for Management App Index
         node.put( "managementAppIndexStatus", emf.getIndexHealth().toString() );
-        node.put( "queueDepth", eventService.getQueueDepth() );
 
 
         dumpMetrics(node);
@@ -223,6 +221,58 @@ public class RootResource extends AbstractContextResource implements MetricProce
         }
         return response.build();
     }
+
+    @GET
+    @Path("/status/queue")
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getQueueDepth(){
+
+        ApiResponse response = createApiResponse();
+        AsyncEventService eventService = injector.getInstance(AsyncEventService.class);
+
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+
+        String provider = "LOCAL";
+        String queueManagerClass = eventService.getQueueManagerClass();
+
+        if(queueManagerClass.contains("SNS") || queueManagerClass.contains("SQS")){
+            provider = "AWS";
+        }
+
+        node.put( "provider", provider );
+        node.put( "depth", eventService.getQueueDepth() );
+
+        response.setProperty( "status", node );
+        return response;
+
+    }
+
+    @GET
+    @Path("/status/heap")
+    @JSONP
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    public ApiResponse getHeapStats(){
+
+        ApiResponse response = createApiResponse();
+
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+
+        long heapAllocatedSize = Runtime.getRuntime().totalMemory();
+        long heapMaxSize = Runtime.getRuntime().maxMemory();
+        long heapFreeSize = Runtime.getRuntime().freeMemory();
+        long heapUsedSize = heapAllocatedSize - heapFreeSize;
+
+        node.put( "used", org.apache.usergrid.utils.StringUtils.readableByteSize(heapUsedSize) );
+        node.put( "free", org.apache.usergrid.utils.StringUtils.readableByteSize(heapFreeSize) );
+        node.put( "allocated", org.apache.usergrid.utils.StringUtils.readableByteSize(heapAllocatedSize) );
+        node.put( "max", org.apache.usergrid.utils.StringUtils.readableByteSize(heapMaxSize) );
+
+        response.setProperty( "status", node );
+        return response;
+
+    }
+
 
 
     private void dumpMetrics( ObjectNode node ) {
@@ -340,8 +390,8 @@ public class RootResource extends AbstractContextResource implements MetricProce
     @Path("orgs/{organizationName}")
     public OrganizationResource getOrganizationByName3( @PathParam("organizationName") String organizationName )
             throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("getOrganizationByName3");
+        if (logger.isTraceEnabled()) {
+            logger.trace("getOrganizationByName3");
         }
 
         return getOrganizationByName( organizationName );

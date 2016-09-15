@@ -19,6 +19,8 @@ package org.apache.usergrid.services.notifications;
 
 import java.util.*;
 
+import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.services.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,15 +40,6 @@ import org.apache.usergrid.persistence.queue.QueueManager;
 import org.apache.usergrid.persistence.queue.QueueManagerFactory;
 import org.apache.usergrid.persistence.queue.QueueScope;
 import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
-import org.apache.usergrid.services.AbstractCollectionService;
-import org.apache.usergrid.services.ServiceAction;
-import org.apache.usergrid.services.ServiceContext;
-import org.apache.usergrid.services.ServiceInfo;
-import org.apache.usergrid.services.ServiceManagerFactory;
-import org.apache.usergrid.services.ServiceParameter;
-import org.apache.usergrid.services.ServicePayload;
-import org.apache.usergrid.services.ServiceRequest;
-import org.apache.usergrid.services.ServiceResults;
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl;
 
@@ -84,9 +77,12 @@ public class NotificationsService extends AbstractCollectionService {
     private ServiceManagerFactory smf;
     private EntityManagerFactory emf;
     private QueueManagerFactory queueManagerFactory;
+    private ApplicationQueueManagerCache applicationQueueManagerCache;
 
     public NotificationsService() {
-        logger.info("/notifications");
+        if (logger.isTraceEnabled()) {
+            logger.trace("/notifications");
+        }
     }
 
     @Override
@@ -104,7 +100,10 @@ public class NotificationsService extends AbstractCollectionService {
         QueueScope queueScope = new QueueScopeImpl( name, QueueScope.RegionImplementation.LOCAL);
         queueManagerFactory = getApplicationContext().getBean( Injector.class ).getInstance(QueueManagerFactory.class);
         QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
-        notificationQueueManager = new ApplicationQueueManagerImpl(jobScheduler,em,queueManager,metricsService,props);
+        applicationQueueManagerCache = getApplicationContext().getBean(Injector.class).getInstance(ApplicationQueueManagerCache.class);
+        notificationQueueManager = applicationQueueManagerCache
+            .getApplicationQueueManager(em,queueManager, jobScheduler, metricsService ,props);
+
         gracePeriod = JobScheduler.SCHEDULER_GRACE_PERIOD;
     }
 
@@ -129,12 +128,34 @@ public class NotificationsService extends AbstractCollectionService {
 
     @Override
     public ServiceResults postCollection(ServiceContext context) throws Exception {
-        logger.info("NotificationService: start request.");
+        if (logger.isTraceEnabled()) {
+            logger.trace("NotificationService: start request.");
+        }
         Timer.Context timer = postTimer.time();
         postMeter.mark();
         try {
+
             validate(null, context.getPayload());
-            Notification.PathTokens pathTokens = getPathTokens(context.getRequest().getOriginalParameters());
+
+            // perform some input validates on useGraph payload property vs. ql= path query
+            final List<ServiceParameter> parameters = context.getRequest().getOriginalParameters();
+            for (ServiceParameter parameter : parameters){
+                if( parameter instanceof ServiceParameter.QueryParameter
+                    && context.getProperties().get("useGraph") != null
+                      && context.getProperties().get("useGraph").equals(true)){
+
+                    throw new IllegalArgumentException("Query ql parameter cannot be used with useGraph:true property value");
+                }
+            }
+
+            Notification.PathTokens pathTokens = getPathTokens(parameters);
+
+            // set defaults
+            context.getProperties().put("filters", context.getProperties().getOrDefault("filters", new HashMap<>()));
+            context.getProperties().put("useGraph", context.getProperties().getOrDefault("useGraph", false));
+            context.getProperties().put("saveReceipts", context.getProperties().getOrDefault("saveReceipts", true));
+            context.getProperties().put("processingFinished", 0L); // defaulting processing finished to 0
+            context.getProperties().put("deviceProcessedCount", 0); // defaulting processing finished to 0
             context.getProperties().put("state", Notification.State.CREATED);
             context.getProperties().put("pathQuery", pathTokens);
             context.setOwner(sm.getApplication());
@@ -149,16 +170,20 @@ public class NotificationsService extends AbstractCollectionService {
                 properties.put("started", notification.getStarted());
                 properties.put("state", notification.getState());
                 notification.addProperties(properties);
-                logger.info("ApplicationQueueMessage: notification {} properties updated in duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("ApplicationQueueMessage: notification {} properties updated in duration {} ms", notification.getUuid(), System.currentTimeMillis() - now);
+                }
             }
 
             long now = System.currentTimeMillis();
             notificationQueueManager.queueNotification(notification, null);
-            logger.info("NotificationService: notification {} post queue duration {} ms ", notification.getUuid(), System.currentTimeMillis() - now);
+            if (logger.isTraceEnabled()) {
+                logger.trace("NotificationService: notification {} post queue duration {} ms ", notification.getUuid(), System.currentTimeMillis() - now);
+            }
             // future: somehow return 202?
             return results;
         }catch (Exception e){
-            logger.error("serialization failed",e);
+            logger.error(e.getMessage());
             throw e;
         }finally {
             timer.stop();

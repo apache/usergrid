@@ -32,9 +32,12 @@ import com.netflix.astyanax.connectionpool.ConnectionPoolConfiguration;
 import com.netflix.astyanax.connectionpool.NodeDiscoveryType;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.connectionpool.impl.ConnectionPoolConfigurationImpl;
+import com.netflix.astyanax.connectionpool.impl.SimpleAuthenticationCredentials;
 import com.netflix.astyanax.connectionpool.impl.Slf4jConnectionPoolMonitorImpl;
 import com.netflix.astyanax.impl.AstyanaxConfigurationImpl;
 import com.netflix.astyanax.thrift.ThriftFamilyFactory;
+import org.apache.usergrid.persistence.core.CassandraConfig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +70,8 @@ public class CassandraClusterImpl implements CassandraCluster {
             .setDiscoveryType( NodeDiscoveryType.valueOf( cassandraFig.getDiscoveryType() ) )
             .setTargetCassandraVersion( cassandraFig.getVersion() )
             .setDefaultReadConsistencyLevel( cassandraConfig.getReadCL() )
-            .setDefaultWriteConsistencyLevel( cassandraConfig.getWriteCL() );
+            .setDefaultWriteConsistencyLevel( cassandraConfig.getWriteCL() )
+            .setMaxThriftSize( cassandraFig.getThriftBufferSize() );
 
 
         if(cassandraFig.useSharedPoolForLocks()){
@@ -157,12 +161,35 @@ public class CassandraClusterImpl implements CassandraCluster {
 
     private ConnectionPoolConfiguration getConnectionPoolConfig ( final String poolName, final int poolSize ){
 
-        return new ConnectionPoolConfigurationImpl( poolName )
-            .setPort( cassandraFig.getThriftPort() )
-            .setLocalDatacenter( cassandraFig.getLocalDataCenter() )
-            .setMaxConnsPerHost( poolSize )
-            .setSeeds( cassandraFig.getHosts() )
-            .setSocketTimeout( cassandraFig.getTimeout() );
+        ConnectionPoolConfiguration config;
+        final String username = cassandraFig.getUsername();
+        final String password = cassandraFig.getPassword();
+
+        if ( username != null && !username.isEmpty() && password != null && !password.isEmpty() ){
+
+            config = new ConnectionPoolConfigurationImpl( poolName )
+                .setPort( cassandraFig.getThriftPort() )
+                .setLocalDatacenter( cassandraFig.getLocalDataCenter() )
+                .setMaxConnsPerHost( poolSize )
+                .setSeeds( cassandraFig.getHosts() )
+                .setConnectTimeout( cassandraFig.getTimeout() )
+                .setSocketTimeout( cassandraFig.getTimeout() )
+                .setAuthenticationCredentials(new SimpleAuthenticationCredentials( username, password));
+
+        } else {
+
+            // create instance of the connection pool without credential if they are not set
+            config = new ConnectionPoolConfigurationImpl( poolName )
+                .setPort( cassandraFig.getThriftPort() )
+                .setLocalDatacenter( cassandraFig.getLocalDataCenter() )
+                .setMaxConnsPerHost( poolSize )
+                .setSeeds( cassandraFig.getHosts() )
+                .setSocketTimeout( cassandraFig.getTimeout() )
+                .setConnectTimeout( cassandraFig.getTimeout() );
+        }
+
+
+        return config;
 
     }
 

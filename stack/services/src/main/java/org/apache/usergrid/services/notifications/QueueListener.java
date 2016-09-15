@@ -45,10 +45,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * Singleton listens for notifications queue messages
  */
 public class QueueListener  {
-    public  final int MESSAGE_TRANSACTION_TIMEOUT =  25 * 1000;
+
     private final QueueManagerFactory queueManagerFactory;
 
-    public   long DEFAULT_SLEEP = 5000;
+    public static long DEFAULT_SLEEP = 100;
 
     private static final Logger logger = LoggerFactory.getLogger(QueueListener.class);
 
@@ -57,12 +57,10 @@ public class QueueListener  {
     private ServiceManagerFactory smf;
 
     private EntityManagerFactory emf;
+    private ApplicationQueueManagerCache applicationQueueManagerCache;
 
 
     private Properties properties;
-
-
-    private ServiceManager svcMgr;
 
     private long sleepWhenNoneFound = 0;
 
@@ -71,8 +69,8 @@ public class QueueListener  {
     private ExecutorService pool;
     private List<Future> futures;
 
-    public  final int MAX_THREADS = 2;
-    private Integer batchSize = 10;
+    private static final int PUSH_CONSUMER_MAX_THREADS = 8;
+    public static final int MAX_TAKE = 10;
     private String queueName;
     private int consecutiveCallsToRemoveDevices;
 
@@ -82,6 +80,8 @@ public class QueueListener  {
         this.emf = emf;
         this.metricsService = smf.getApplicationContext().getBean( Injector.class ).getInstance(MetricsFactory.class);
         this.properties = props;
+        this.applicationQueueManagerCache = smf.getApplicationContext().getBean(Injector.class).getInstance(ApplicationQueueManagerCache.class);
+
     }
 
     /**
@@ -89,30 +89,31 @@ public class QueueListener  {
      */
     public void start(){
         //TODO refactor this into a central component that will start/stop services
-//        boolean shouldRun = new Boolean(properties.getProperty("usergrid.notifications.listener.run", "false"));
 
-
-            logger.info("QueueListener: starting.");
+            if (logger.isDebugEnabled()) {
+                logger.debug("QueueListener: starting.");
+            }
             int threadCount = 0;
 
             try {
 
-                sleepBetweenRuns = new Long(properties.getProperty("usergrid.notifications.listener.sleep.between", ""+sleepBetweenRuns)).longValue();
-                sleepWhenNoneFound = new Long(properties.getProperty("usergrid.notifications.listener.sleep.after", ""+DEFAULT_SLEEP)).longValue();
-                batchSize = new Integer(properties.getProperty("usergrid.notifications.listener.batchSize", (""+batchSize)));
+                sleepBetweenRuns = new Long(properties.getProperty("usergrid.push.sleep", "" + DEFAULT_SLEEP));
+                sleepWhenNoneFound = new Long(properties.getProperty("usergrid.push.sleep", "" + DEFAULT_SLEEP));
                 consecutiveCallsToRemoveDevices = new Integer(properties.getProperty("usergrid.notifications.inactive.interval", ""+200));
                 queueName = ApplicationQueueManagerImpl.getQueueNames(properties);
 
-                int maxThreads = new Integer(properties.getProperty("usergrid.notifications.listener.maxThreads", ""+MAX_THREADS));
+                int maxThreads = new Integer(properties.getProperty("usergrid.push.worker_count", ""+PUSH_CONSUMER_MAX_THREADS));
 
-                futures = new ArrayList<Future>(maxThreads);
+                futures = new ArrayList<>(maxThreads);
 
                 //create our thread pool based on our threadcount.
 
                 pool = Executors.newFixedThreadPool(maxThreads);
 
                 while (threadCount++ < maxThreads) {
-                    logger.info("QueueListener: Starting thread {}.", threadCount);
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("QueueListener: Starting thread {}.", threadCount);
+                    }
                     final int threadNumber = threadCount;
                     Runnable task = new Runnable() {
                         @Override
@@ -134,37 +135,49 @@ public class QueueListener  {
             } catch (Exception e) {
                 logger.error("QueueListener: failed to start:", e);
             }
-            logger.info("QueueListener: done starting.");
+            if (logger.isTraceEnabled()) {
+                logger.trace("QueueListener: done starting.");
+            }
     }
 
     private void execute(int threadNumber){
+
         if(Thread.currentThread().isDaemon()) {
             Thread.currentThread().setDaemon(true);
         }
+
         Thread.currentThread().setName(getClass().getSimpleName()+"_PushNotifications-"+threadNumber);
 
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
-        logger.info("QueueListener: Starting execute process.");
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueListener: Starting execute process.");
+        }
+
         Meter meter = metricsService.getMeter(QueueListener.class, "execute.commit");
         com.codahale.metrics.Timer timer = metricsService.getTimer(QueueListener.class, "execute.dequeue");
-        svcMgr = smf.getServiceManager(smf.getManagementAppId());
-        logger.info("getting from queue {} ", queueName);
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("getting from queue {} ", queueName);
+        }
+
         QueueScope queueScope = new QueueScopeImpl( queueName, QueueScope.RegionImplementation.LOCAL);
         QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
+
         // run until there are no more active jobs
         final AtomicLong runCount = new AtomicLong(0);
-        //cache to retrieve push manager, cached per notifier, so many notifications will get same push manager
-        LoadingCache<UUID, ApplicationQueueManager> queueManagerMap = getQueueManagerCache(queueManager);
 
         while ( true ) {
 
                 Timer.Context timerContext = timer.time();
-                rx.Observable.from(queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 10000, ApplicationQueueMessage.class))
-                    .buffer(getBatchSize())
+                rx.Observable.from(queueManager.getMessages(MAX_TAKE, ApplicationQueueMessage.class))
+                    .buffer(MAX_TAKE)
                     .doOnNext(messages -> {
 
                         try {
-                            logger.info("retrieved batch of {} messages from queue {} ", messages.size(),queueName);
+                            if (logger.isTraceEnabled()) {
+                                logger.trace("retrieved batch of {} messages from queue {}", messages.size(), queueName);
+                            }
 
                             if (messages.size() > 0) {
                                 HashMap<UUID, List<QueueMessage>> messageMap = new HashMap<>(messages.size());
@@ -192,8 +205,19 @@ public class QueueListener  {
                                 //send each set of app ids together
                                 for (Map.Entry<UUID, List<QueueMessage>> entry : messageMap.entrySet()) {
                                     UUID applicationId = entry.getKey();
-                                    ApplicationQueueManager manager = queueManagerMap.get(applicationId);
-                                    logger.info("send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
+
+                                    ApplicationQueueManager manager = applicationQueueManagerCache
+                                        .getApplicationQueueManager(
+                                            emf.getEntityManager(applicationId),
+                                            queueManager,
+                                            new JobScheduler(smf.getServiceManager(applicationId), emf.getEntityManager(applicationId)),
+                                            metricsService,
+                                            properties
+                                        );
+
+                                    if (logger.isTraceEnabled()) {
+                                        logger.trace("send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
+                                    }
                                     Observable current = manager.sendBatchToProviders(entry.getValue(),queueName);
 
                                     if(merge == null)
@@ -209,15 +233,19 @@ public class QueueListener  {
                                 queueManager.commitMessages(messages);
 
                                 meter.mark(messages.size());
-                                logger.info("sent batch {} messages duration {} ms", messages.size(),System.currentTimeMillis() - now);
+                                if (logger.isTraceEnabled()) {
+                                    logger.trace("sent batch {} messages duration {} ms", messages.size(), System.currentTimeMillis() - now);
+                                }
 
                                 if(sleepBetweenRuns > 0) {
-                                    logger.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
+                                    if (logger.isTraceEnabled()) {
+                                        logger.trace("sleep between rounds...sleep...{}", sleepBetweenRuns);
+                                    }
                                     Thread.sleep(sleepBetweenRuns);
                                 }
 
                                 if(runCount.incrementAndGet() % consecutiveCallsToRemoveDevices == 0){
-                                    for(ApplicationQueueManager applicationQueueManager : queueManagerMap.asMap().values()){
+                                    for(ApplicationQueueManager applicationQueueManager : applicationQueueManagerCache.asMap().values()){
                                         try {
                                             applicationQueueManager.asyncCheckForInactiveDevices();
                                         }catch (Exception inactiveDeviceException){
@@ -230,7 +258,9 @@ public class QueueListener  {
                             }
 
                             else{
-                                logger.info("no messages...sleep...{}", sleepWhenNoneFound);
+                                if (logger.isTraceEnabled()) {
+                                    logger.trace("no messages...sleep...{}", sleepWhenNoneFound);
+                                }
                                 Thread.sleep(sleepWhenNoneFound);
                             }
                             timerContext.stop();
@@ -245,7 +275,9 @@ public class QueueListener  {
                                 logger.info("sleeping due to failures {} ms", sleeptime);
                                 Thread.sleep(sleeptime);
                             }catch (InterruptedException ie){
-                                logger.info("sleep interrupted");
+                                if (logger.isTraceEnabled()) {
+                                    logger.info("sleep interrupted");
+                                }
                             }
                         }
                     })
@@ -255,45 +287,10 @@ public class QueueListener  {
         }
     }
 
-    private LoadingCache<UUID, ApplicationQueueManager> getQueueManagerCache(final QueueManager queueManager) {
-        return CacheBuilder
-                    .newBuilder()
-                    .expireAfterAccess(10, TimeUnit.MINUTES)
-                    .removalListener(new RemovalListener<UUID, ApplicationQueueManager>() {
-                        @Override
-                        public void onRemoval(
-                                RemovalNotification<UUID, ApplicationQueueManager> queueManagerNotifiication) {
-                            try {
-                                queueManagerNotifiication.getValue().stop();
-                            } catch (Exception ie) {
-                                logger.error("Failed to shutdown from cache", ie);
-                            }
-                        }
-                    }).build(new CacheLoader<UUID, ApplicationQueueManager>() {
-                         @Override
-                         public ApplicationQueueManager load(final UUID applicationId) {
-                             try {
-                                 EntityManager entityManager = emf.getEntityManager(applicationId);
-                                 ServiceManager serviceManager = smf.getServiceManager(applicationId);
-
-                                 ApplicationQueueManagerImpl manager = new ApplicationQueueManagerImpl(
-                                         new JobScheduler(serviceManager, entityManager),
-                                         entityManager,
-                                         queueManager,
-                                         metricsService,
-                                         properties
-                                 );
-                                 return manager;
-                             } catch (Exception e) {
-                                 logger.error("Could not instantiate queue manager", e);
-                                 return null;
-                             }
-                         }
-                     });
-    }
-
     public void stop(){
-        logger.info("stop processes");
+        if (logger.isDebugEnabled()) {
+            logger.debug("stop processes");
+        }
 
         if(futures == null){
             return;
@@ -304,13 +301,5 @@ public class QueueListener  {
 
         pool.shutdownNow();
     }
-
-
-    public void setBatchSize(int batchSize){
-        this.batchSize = batchSize;
-    }
-    public int getBatchSize(){return batchSize;}
-
-
 
 }

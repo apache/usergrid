@@ -24,9 +24,8 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -39,7 +38,7 @@ public interface FieldParser {
      * Visit an object.  Start the root object here.
      * @param map
      */
-    List<EntityField> parse( final Map<String, ?> map );
+    Set<EntityField> parse(final Map<String, ?> map );
 
 
 }

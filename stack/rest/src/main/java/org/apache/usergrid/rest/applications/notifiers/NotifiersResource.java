@@ -23,6 +23,7 @@ import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.utils.CertificateUtils;
 import org.apache.usergrid.services.ServiceAction;
@@ -56,7 +57,9 @@ public class NotifiersResource extends ServiceResource {
     public AbstractContextResource addIdParameter(@Context UriInfo ui,
             @PathParam("entityId") PathSegment entityId) throws Exception {
 
-        logger.info("NotifiersResource.addIdParameter");
+        if (logger.isTraceEnabled()) {
+            logger.trace("NotifiersResource.addIdParameter");
+        }
 
         UUID itemId = UUID.fromString(entityId.getPath());
 
@@ -72,9 +75,10 @@ public class NotifiersResource extends ServiceResource {
     public AbstractContextResource addNameParameter(@Context UriInfo ui,
             @PathParam("itemName") PathSegment itemName) throws Exception {
 
-        logger.info("NotifiersResource.addNameParameter");
-
-        logger.info("Current segment is " + itemName.getPath());
+        if (logger.isTraceEnabled()) {
+            logger.trace("NotifiersResource.addNameParameter");
+            logger.trace("Current segment is {}", itemName.getPath());
+        }
 
         if (itemName.getPath().startsWith("{")) {
             Query query = Query.fromJsonString(itemName.getPath());
@@ -98,8 +102,8 @@ public class NotifiersResource extends ServiceResource {
     }
 
     /* Multipart POST create with uploaded p12Certificate */
+    @CheckPermissionsForPath
     @POST
-    @RequireApplicationAccess
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Override
     @JSONP
@@ -110,8 +114,8 @@ public class NotifiersResource extends ServiceResource {
             FormDataMultiPart multiPart)
             throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Notifiers.executeMultiPartPost");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Notifiers.executeMultiPartPost");
         }
 
         String certInfoParam = getValueOrNull(multiPart, "certInfo");

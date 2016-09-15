@@ -18,6 +18,7 @@ package org.apache.usergrid.rest.applications.assets;
 
 
 import com.amazonaws.SDKGlobalConfiguration;
+
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.io.IOUtils;
 import org.apache.usergrid.rest.applications.assets.aws.NoAWSCredsRule;
@@ -32,6 +33,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
@@ -69,6 +73,25 @@ public class AwsAssetResourceIT extends AbstractRestIT {
     @After
     public void teardown(){
         setTestProperties(originalProperties);
+    }
+
+
+    @Test
+    public void ensureMissingFileReturns404(){
+        Map<String, String> payload = hashMap( "name", "assettest" );
+        ApiResponse postResponse = pathResource( getOrgAppPath( "missingFile" ) ).post( payload );
+        UUID assetId = postResponse.getEntities().get( 0 ).getUuid();
+        assertNotNull( assetId );
+
+        try {
+            pathResource( getOrgAppPath( "missingFile/assettest" ) ).getAssetAsStream( true );
+            fail("Should fail as there isn't an asset to retrieve.");
+        }catch(NotFoundException nfe){
+        }
+        catch(Exception e){
+            fail("Shouldn't return any other kind of exception");
+        }
+
     }
 
     @Test
@@ -129,7 +152,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         }catch ( AwsPropertiesNotFoundException e ){
             fail("Shouldn't interrupt runtime if access key isnt found.");
         }
-        catch( ClientErrorException uie){
+        catch( InternalServerErrorException uie){
             assertEquals( 500, uie.getResponse().getStatus() );
         }
         finally{
@@ -171,8 +194,8 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         }catch ( AwsPropertiesNotFoundException e ){
             fail("Shouldn't interrupt runtime if access key isnt found.");
         }
-        catch( ClientErrorException uie){
-            assertEquals( 500, uie.getResponse().getStatus() );
+        catch(ForbiddenException fe){
+            assertEquals( 403, fe.getResponse().getStatus() );
         }
         finally{
             setTestProperties( errorTestProperties );

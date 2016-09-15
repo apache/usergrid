@@ -23,6 +23,8 @@ package org.apache.usergrid.rest.system;
 
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import com.google.common.base.Preconditions;
+import com.google.inject.Injector;
+
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilderImpl;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
@@ -67,6 +69,10 @@ public class IndexResource extends AbstractContextResource {
         super();
     }
 
+    public IndexResource( Injector injector) {
+        this.injector = injector;
+    }
+
 
     @RequireSystemAccess
     @POST
@@ -93,7 +99,9 @@ public class IndexResource extends AbstractContextResource {
 
 
         throws Exception {
-        logger.info("Getting status for index jobs");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Getting status for index jobs");
+        }
 
         Preconditions
             .checkNotNull(jobId, "query param jobId must not be null" );

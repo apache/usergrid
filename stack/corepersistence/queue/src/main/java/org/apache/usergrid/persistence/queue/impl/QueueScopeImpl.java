@@ -20,9 +20,6 @@ package org.apache.usergrid.persistence.queue.impl;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.queue.QueueScope;
 
-/**
- * Created by ApigeeCorporation on 10/3/14.
- */
 public class QueueScopeImpl implements QueueScope {
 
     private final String name;

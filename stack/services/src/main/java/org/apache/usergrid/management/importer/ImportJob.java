@@ -47,7 +47,9 @@ public class ImportJob extends OnlyOnceJob {
     ImportService importService;
 
     public ImportJob(){
-        logger.info( "ImportJob created " + this );
+        if (logger.isTraceEnabled()) {
+            logger.info("ImportJob created");
+        }
     }
 
     @Override
@@ -82,7 +84,9 @@ public class ImportJob extends OnlyOnceJob {
             throw t;
         }
 
-        logger.error("Import Service completed job");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Import Service completed job");
+        }
     }
 
     @Override

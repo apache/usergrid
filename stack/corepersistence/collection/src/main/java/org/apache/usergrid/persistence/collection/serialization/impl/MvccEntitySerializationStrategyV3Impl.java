@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.netflix.astyanax.serializers.StringSerializer;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,7 @@ import org.apache.usergrid.persistence.collection.exception.EntityTooLargeExcept
 import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImpl;
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
@@ -190,7 +191,7 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
                     try {
-                        return keyspace.prepareQuery( CF_ENTITY_DATA ).getKeySlice( rowKeys )
+                        return keyspace.prepareQuery( CF_ENTITY_DATA ).getKeySlice( scopedRowKeys )
                             .withColumnSlice( COL_VALUE ).execute().getResult();
                     }
                     catch ( ConnectionException e ) {
@@ -302,6 +303,12 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
 
         return Collections.singleton( cf );
+    }
+
+    @Override
+    public Collection<TableDefinition> getTables() {
+
+        return Collections.emptyList();
     }
 
 

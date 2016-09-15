@@ -27,7 +27,7 @@
 
     <groupId>org.apache.usergrid</groupId>
     <artifactId>usergrid</artifactId>
-    <version>2.1.1-SNAPSHOT</version>
+    <version>2.2.0-SNAPSHOT</version>
     <name>Usergrid Parent</name>
     <description>Parent module for the Apache Usergrid Project</description>
     <packaging>pom</packaging>
@@ -98,7 +98,7 @@
         <!-- =================================================================== -->
 
         <amber-version>0.22-incubating</amber-version>
-        <astyanax.version>1.56.49-SNAPSHOT-UG-1</astyanax.version>
+        <astyanax.version>3.9.0</astyanax.version>
         <aws.version>1.10.20</aws.version>
         <cassandra-version>1.2.18</cassandra-version>
         <guava.version>18.0</guava.version>
@@ -115,13 +115,13 @@
         <log4j-version>1.2.16</log4j-version>
         <org.springframework.version>3.2.13.RELEASE</org.springframework.version>
         <shiro-version>1.2.4</shiro-version>
-        <slf4j-version>1.6.1</slf4j-version>
+        <slf4j-version>1.7.2</slf4j-version>
         <snakeyaml-version>1.9</snakeyaml-version>
         <tomcat-version>7.0.64</tomcat-version>
         <antlr.version>3.4</antlr.version>
         <tika.version>1.4</tika.version>
         <mockito.version>1.10.8</mockito.version>
-        <io.apigee.gcm.version>1.0.0</io.apigee.gcm.version>
+        <io.apigee.gcm.version>1.0.1</io.apigee.gcm.version>
 
         <!-- only use half the cores on the machine for testing -->
         <usergrid.it.parallel>methods</usergrid.it.parallel>
@@ -195,9 +195,7 @@
         <module>core</module>
         <module>services</module>
         <module>rest</module>
-        <!-- Tools should be built separately
         <module>tools</module>
-        -->
         <!--
         <module>websocket</module>
         -->
@@ -212,8 +210,8 @@
         <!--
         Re-enable when query-validator updated to work with Core Persistence.
         https://issues.apache.org/jira/browse/USERGRID-221
-        <module>query-validator</module>
         -->
+        <module>query-validator</module>
     </modules>
 
     <dependencyManagement>
@@ -287,11 +285,6 @@
                 </exclusions>
             </dependency>
 
-            <dependency>
-                <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk-s3</artifactId>
-                <version>${aws.version}</version>
-            </dependency>
 
 
             <dependency>
@@ -471,6 +464,12 @@
                     <exclusion>
                         <artifactId>snappy-java</artifactId>
                         <groupId>org.xerial.snappy</groupId>
+                    </exclusion>
+
+                    <exclusion>
+                        <groupId>net.jpountz.lz4</groupId>
+                        <artifactId>*</artifactId>
+
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -781,12 +780,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.jboss.netty</groupId>
-                <artifactId>netty</artifactId>
-                <version>3.2.7.Final</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.jsoup</groupId>
                 <artifactId>jsoup</artifactId>
                 <version>1.6.0</version>
@@ -799,12 +792,6 @@
             <!--<artifactId>mongo-java-driver</artifactId>-->
             <!--<version>2.9.0</version>-->
             <!--</dependency>-->
-
-            <dependency>
-                <groupId>org.python</groupId>
-                <artifactId>jython</artifactId>
-                <version>2.5.0</version>
-            </dependency>
 
             <dependency>
                 <groupId>org.springframework</groupId>
@@ -1156,7 +1143,7 @@
             <dependency>
                 <groupId>org.apache.usergrid</groupId>
                 <artifactId>usergrid-java-client</artifactId>
-                <version>0.0.10-SNAPSHOT</version>
+                <version>2.2.0-SNAPSHOT</version>
             </dependency>
 
             <dependency>
@@ -1566,19 +1553,12 @@
             </build>
         </profile>
     </profiles>
-    <repositories>
-        <repository>
-            <id>local-dependencies</id>
-            <name>local-depedendencies</name>
-            <url>file://${project.basedir}/../m2/repository</url>
-        </repository>
-    </repositories>
 
     <scm>
-        <url>https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</url>
-        <connection>scm:git:http://git-wip-us.apache.org/repos/asf/incubator-usergrid.git</connection>
+        <url>https://git-wip-us.apache.org/repos/asf/usergrid.git</url>
+        <connection>scm:git:http://git-wip-us.apache.org/repos/asf/usergrid.git</connection>
         <tag>HEAD</tag>
-        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-usergrid.git
+        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/usergrid.git
         </developerConnection>
     </scm>
 

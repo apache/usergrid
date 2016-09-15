@@ -72,7 +72,7 @@ public interface QueueFig extends GuicyFig {
 
     // current msg size 1.2kb * 850000 = 1.02 GB (let this default be the most we'll queue in heap)
     @Key("usergrid.queue.publish.queuesize")
-    @Default("850000")
+    @Default("250000")
     int getAsyncQueueSize();
 
     /**
@@ -82,4 +82,25 @@ public interface QueueFig extends GuicyFig {
     @Key( "usergrid.queue.visibilityTimeout" )
     @Default("5000") // 5 seconds
     int getVisibilityTimeout();
+
+    @Key( "usergrid.queue.localquorum.timeout")
+    @Default("30000") // 30 seconds
+    int getLocalQuorumTimeout();
+
+    @Key( "usergrid.queue.client.connection.timeout")
+    @Default( "5000" ) // 5 seconds
+    int getQueueClientConnectionTimeout();
+
+    @Key( "usergrid.queue.client.socket.timeout")
+    @Default( "50000" ) // 50 seconds
+    int getQueueClientSocketTimeout();
+
+    @Key( "usergrid.queue.poll.timeout")
+    @Default( "10000" ) // 10 seconds
+    int getQueuePollTimeout();
+
+    @Key( "usergrid.queue.quorum.fallback")
+    @Default("false") // 30 seconds
+    boolean getQuorumFallback();
+
 }

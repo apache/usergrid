@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.apache.usergrid</groupId>
         <artifactId>usergrid</artifactId>
-        <version>2.1.1-SNAPSHOT</version>
+        <version>2.2.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>usergrid-rest</artifactId>
@@ -304,6 +304,14 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
             <version>${jackson-2-version}</version>
+        </dependency>
+
+        <!-- for mocking the Apigee SSO Service -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- databinding; ObjectMapper, JsonNode and related classes are here -->

@@ -102,13 +102,15 @@ public abstract class QueueListener  {
         boolean shouldRun = new Boolean(properties.getProperty("usergrid.queues.listener.run", "true"));
 
         if(shouldRun) {
-            logger.info("QueueListener: starting.");
+            if (logger.isTraceEnabled()) {
+                logger.trace("QueueListener: starting.");
+            }
             int threadCount = 0;
 
             try {
                 sleepBetweenRuns = new Long(properties.getProperty("usergrid.queues.listener.sleep.between", ""+sleepBetweenRuns)).longValue();
                 sleepWhenNoneFound = new Long(properties.getProperty("usergrid.queues.listener.sleep.after", ""+DEFAULT_SLEEP)).longValue();
-                batchSize = new Integer(properties.getProperty("usergrid.queues.listener.batchSize", (""+batchSize)));
+                batchSize = new Integer(properties.getProperty("usergrid.queues.listener.MAX_TAKE", (""+batchSize)));
                 consecutiveCallsToRemoveDevices = new Integer(properties.getProperty("usergrid.queues.inactive.interval", ""+200));
                 queueName = getQueueName();
 
@@ -121,14 +123,16 @@ public abstract class QueueListener  {
                 pool = Executors.newFixedThreadPool(maxThreads);
 
                 while (threadCount++ < maxThreads) {
-                    logger.info("QueueListener: Starting thread {}.", threadCount);
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("QueueListener: Starting thread {}.", threadCount);
+                    }
                     Runnable task = new Runnable() {
                         @Override
                         public void run() {
                             try {
                                 execute();
                             } catch (Exception e) {
-                                logger.error("failed to start push", e);
+                                logger.warn("failed to start push", e);
                             }
                         }
                     };
@@ -137,7 +141,9 @@ public abstract class QueueListener  {
             } catch (Exception e) {
                 logger.error("QueueListener: failed to start:", e);
             }
-            logger.info("QueueListener: done starting.");
+            if (logger.isTraceEnabled()) {
+                logger.trace("QueueListener: done starting.");
+            }
         }else{
             logger.info("QueueListener: never started due to config value usergrid.queues.listener.run.");
         }
@@ -156,9 +162,13 @@ public abstract class QueueListener  {
         Thread.currentThread().setName("queues_Processor"+UUID.randomUUID());
 
         final AtomicInteger consecutiveExceptions = new AtomicInteger();
-        logger.info("QueueListener: Starting execute process.");
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueListener: Starting execute process.");
+        }
         svcMgr = smf.getServiceManager(smf.getManagementAppId());
-        logger.info("getting from queue {} ", queueName);
+        if (logger.isTraceEnabled()) {
+            logger.trace("getting from queue {} ", queueName);
+        }
         QueueScope queueScope = new QueueScopeImpl( queueName, QueueScope.RegionImplementation.LOCAL);
         QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
         // run until there are no more active jobs
@@ -171,11 +181,13 @@ public abstract class QueueListener  {
                 Timer.Context timerContext = timer.time();
                 //Get the messages out of the queue.
                 //TODO: a model class to get generic queueMessages out of the queueManager. Ask Shawn what should go here.
-                rx.Observable.from( queueManager.getMessages(getBatchSize(), MESSAGE_TRANSACTION_TIMEOUT, 5000, ImportQueueMessage.class))
+                rx.Observable.from( queueManager.getMessages(getBatchSize(), ImportQueueMessage.class))
                     .buffer(getBatchSize())
                     .doOnNext(messages -> {
                         try {
-                            logger.info("retrieved batch of {} messages from queue {} ", messages.size(), queueName);
+                            if (logger.isTraceEnabled()) {
+                                logger.trace("retrieved batch of {} messages from queue {} ", messages.size(), queueName);
+                            }
 
                             if (messages.size() > 0) {
 
@@ -188,15 +200,21 @@ public abstract class QueueListener  {
                                 queueManager.commitMessages(messages);
 
                                 meter.mark(messages.size());
-                                logger.info("sent batch {} messages duration {} ms", messages.size(), System.currentTimeMillis() - now);
+                                if (logger.isTraceEnabled()) {
+                                    logger.trace("sent batch {} messages duration {} ms", messages.size(), System.currentTimeMillis() - now);
+                                }
 
                                 if (sleepBetweenRuns > 0) {
-                                    logger.info("sleep between rounds...sleep...{}", sleepBetweenRuns);
+                                    if (logger.isTraceEnabled()) {
+                                        logger.trace("sleep between rounds...sleep...{}", sleepBetweenRuns);
+                                    }
                                     Thread.sleep(sleepBetweenRuns);
                                 }
 
                             } else {
-                                logger.info("no messages...sleep...{}", sleepWhenNoneFound);
+                                if (logger.isTraceEnabled()) {
+                                    logger.trace("no messages...sleep...{}", sleepWhenNoneFound);
+                                }
                                 Thread.sleep(sleepWhenNoneFound);
                             }
                             timerContext.stop();
@@ -208,10 +226,14 @@ public abstract class QueueListener  {
                                 long sleeptime = sleepWhenNoneFound * consecutiveExceptions.incrementAndGet();
                                 long maxSleep = 15000;
                                 sleeptime = sleeptime > maxSleep ? maxSleep : sleeptime;
-                                logger.info("sleeping due to failures {} ms", sleeptime);
+                                if (logger.isTraceEnabled()) {
+                                    logger.trace("sleeping due to failures {} ms", sleeptime);
+                                }
                                 Thread.sleep(sleeptime);
                             } catch (InterruptedException ie) {
-                                logger.info("sleep interrupted");
+                                if (logger.isTraceEnabled()) {
+                                    logger.trace("sleep interrupted");
+                                }
                             }
                         }
                     }).toBlocking().lastOrDefault(null);
@@ -220,7 +242,9 @@ public abstract class QueueListener  {
 
 
     public void stop(){
-        logger.info("stop processes");
+        if (logger.isTraceEnabled()) {
+            logger.trace("stop processes");
+        }
 
         if(futures == null){
             return;

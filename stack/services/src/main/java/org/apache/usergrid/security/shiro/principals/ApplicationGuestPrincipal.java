@@ -43,7 +43,9 @@ public class ApplicationGuestPrincipal extends PrincipalIdentifier {
 
     ApplicationInfo application;
 
-
+    /**
+     * Needed for Jackson, do not remove
+     */
     public ApplicationGuestPrincipal( ) {}
 
     public ApplicationGuestPrincipal( ApplicationInfo application ) {

@@ -20,19 +20,18 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.subject.SimplePrincipalCollection;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.cache.CacheFactory;
 import org.apache.usergrid.persistence.cache.CacheScope;
 import org.apache.usergrid.persistence.cache.ScopedCache;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.security.shiro.principals.*;
+import org.apache.usergrid.security.shiro.utils.LocalShiroCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-import java.util.UUID;
 
 
 /**
@@ -45,44 +44,61 @@ public class ShiroCache<K, V> implements Cache<K,V> {
     private final CacheFactory<String, V> cacheFactory;
     private final TypeReference typeRef;
     private final Integer cacheTtl;
+    private final LocalShiroCache localShiroCache;
 
-    public ShiroCache( TypeReference typeRef, CacheFactory<String, V> cacheFactory, Integer cacheTtl ) {
+    public ShiroCache(TypeReference typeRef, CacheFactory<String, V> cacheFactory, Integer cacheTtl, LocalShiroCache<K,V> localShiroCache) {
         this.typeRef = typeRef;
         this.cacheFactory = cacheFactory;
         this.cacheTtl = cacheTtl;
+        this.localShiroCache = localShiroCache;
     }
 
     @Override
     public V get(K key) throws CacheException {
         if ( cacheTtl == 0 ) return null;
 
+        V value;
+
+        //check cache first
+        value = (V) localShiroCache.get(getKeyString(key));
+        if( value !=null ){
+            if(logger.isTraceEnabled()) {
+                logger.trace("Shiro value served from local cache: {}", value);
+            }
+            return value;
+
+        }
+
         ScopedCache<String, V> scopedCache = getCacheScope(key);
         if ( scopedCache != null ) {
-            V value = scopedCache.get(getKeyString(key), typeRef);
 
-            if ( logger.isDebugEnabled() ) {
+            value = scopedCache.get(getKeyString(key), typeRef);
+
+            if(value != null) {
+
+                if(logger.isTraceEnabled()) {
+                    logger.trace("Shiro value service from cassandra cache: {}", value);
+                }
+
+                localShiroCache.put(getKeyString(key), value);
+            }
+
+            if ( logger.isTraceEnabled() ) {
                 if (value instanceof UsergridAuthorizationInfo) {
                     UsergridAuthorizationInfo info = (UsergridAuthorizationInfo) value;
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Got from AUTHZ cache {} for app {}", getKeyString(key), info.toString());
-                    }
-
+                    logger.trace("Got from AUTHZ cache {} for app {}", getKeyString(key), info.toString());
                 } else if (value instanceof UsergridAuthenticationInfo) {
                     UsergridAuthenticationInfo info = (UsergridAuthenticationInfo) value;
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Got from AUTHC cache {} for app {}", getKeyString(key), info.toString());
-                    }
+                    logger.trace("Got from AUTHC cache {} for app {}", getKeyString(key), info.toString());
 
                 } else if (value == null) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Got NULL from cache app {} for key {}", getKeyString(key), key.toString());
-                    }
+                    logger.trace("Got NULL from cache app {} for key {}", getKeyString(key), key.toString());
                 }
             }
 
-            return value;
         }
-        return null;
+
+        return value;
     }
 
     @Override
@@ -91,19 +107,20 @@ public class ShiroCache<K, V> implements Cache<K,V> {
 
         ScopedCache<String, V> scopedCache = getCacheScope(key);
         if ( scopedCache != null ) {
-            V ret = scopedCache.put(getKeyString(key), value, cacheTtl);
 
-            if ( logger.isDebugEnabled() ) {
+            V ret = scopedCache.put(getKeyString(key), value, cacheTtl);
+            localShiroCache.invalidate(getKeyString(key));
+
+            if ( logger.isTraceEnabled() ) {
                 if (value instanceof UsergridAuthorizationInfo) {
                     UsergridAuthorizationInfo info = (UsergridAuthorizationInfo) value;
-                    logger.debug("Put to AUTHZ cache {} for app {}", getKeyString(key), info.toString());
+                    logger.trace("Put to AUTHZ cache {} for app {}", getKeyString(key), info.toString());
 
                 } else if (value instanceof UsergridAuthenticationInfo) {
                     UsergridAuthenticationInfo info = (UsergridAuthenticationInfo) value;
-                    logger.debug("Put to AUTHC cache {} for app {}", getKeyString(key), info.toString());
+                    logger.trace("Put to AUTHC cache {} for app {}", getKeyString(key), info.toString());
                 }
             }
-
             return ret;
         }
         return null;
@@ -116,12 +133,15 @@ public class ShiroCache<K, V> implements Cache<K,V> {
         ScopedCache<String, V> scopedCache = getCacheScope(key);
         if ( scopedCache != null ) {
             scopedCache.remove( getKeyString(key) );
+
         }
+        localShiroCache.invalidate(getKeyString(key));
         return null;
     }
 
     @Override
     public void clear() throws CacheException {
+        localShiroCache.invalidateAll();
         // no-op: Usergrid logic will invalidate cache as necessary
     }
 
@@ -162,16 +182,74 @@ public class ShiroCache<K, V> implements Cache<K,V> {
     /** key is the user UUID in string form + class name of key */
     private String getKeyString( K key ) {
 
-        if ( key instanceof SimplePrincipalCollection) {
-            SimplePrincipalCollection spc = (SimplePrincipalCollection)key;
+        String ret = null;
 
-            if ( spc.getPrimaryPrincipal() instanceof UserPrincipal) {
-                UserPrincipal p = (UserPrincipal) spc.getPrimaryPrincipal();
-                return p.getUser().getUuid().toString();
+        Throwable throwable = null;
+
+        String errorMessage = null;
+
+        try {
+
+            final String typeName = typeRef.getType().getTypeName();
+
+            if (key instanceof SimplePrincipalCollection) {
+
+                SimplePrincipalCollection spc = (SimplePrincipalCollection) key;
+
+                if (spc.getPrimaryPrincipal() instanceof UserPrincipal) {
+
+                    // principal is a user, use UUID as cache key
+                    UserPrincipal p = (UserPrincipal) spc.getPrimaryPrincipal();
+                    ret = p.getUser().getUuid().toString() + "_" + typeName;
+
+                } else if (spc.getPrimaryPrincipal() instanceof PrincipalIdentifier) {
+
+                    // principal is not user, try to get something unique as cache key
+                    PrincipalIdentifier p = (PrincipalIdentifier) spc.getPrimaryPrincipal();
+                    if (p.getAccessTokenCredentials() != null) {
+                        ret = p.getAccessTokenCredentials().getToken() + "_" + typeName;
+                    } else {
+                        ret = p.getApplicationId() + "_" + typeName;
+                    }
+
+                } else {
+                    errorMessage = "Unknown principal type: " + key.getClass().getSimpleName();
+                }
+
+            } else if (key instanceof ApplicationGuestPrincipal) {
+                ApplicationGuestPrincipal agp = (ApplicationGuestPrincipal) key;
+                ret = agp.getApplicationId() + "_" + typeName;
+
+            } else if (key instanceof ApplicationPrincipal) {
+                ApplicationPrincipal ap = (ApplicationPrincipal) key;
+                ret = ap.getApplicationId() + "_" + typeName;
+
+            } else if (key instanceof OrganizationPrincipal) {
+                OrganizationPrincipal op = (OrganizationPrincipal) key;
+                ret = op.getOrganizationId() + "_" + typeName;
+
+            } else if (key instanceof UserPrincipal) {
+                UserPrincipal up = (UserPrincipal) key;
+                ret = up.getUser().getUuid() + "_" + typeName;
+
+            } else {
+                errorMessage = "Unknown key type: " + key.getClass().getSimpleName();
             }
+
+        } catch ( Throwable t ) {
+            throwable = t;
         }
 
-        return key.toString() + "_" + key.getClass().getSimpleName();
+        if ( throwable != null ) {
+            errorMessage = "Error generating cache key for key type " + key.getClass().getSimpleName();
+            throw new CacheException( errorMessage, throwable );
+        }
+
+        if ( ret == null ) {
+            throw new CacheException( errorMessage );
+        }
+
+        return ret;
     }
 
 }

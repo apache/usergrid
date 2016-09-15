@@ -27,6 +27,7 @@ import org.apache.shiro.subject.Subject;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
+import org.apache.usergrid.management.exceptions.ExternalSSOProviderAdminUserNotFoundException;
 import org.apache.usergrid.management.exceptions.ManagementException;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
@@ -70,8 +71,12 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter implements C
 
     @Override
     public void filter(ContainerRequestContext request) throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Filtering: " + request.getUriInfo().getBaseUri());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Filtering: {}", request.getUriInfo().getBaseUri());
+        }
+
+        if( bypassSecurityCheck(request) ){
+            return;
         }
 
         try {
@@ -95,7 +100,8 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter implements C
 
                 AuthPrincipalInfo principal = null;
                 try {
-                    TokenInfo tokenInfo = tokens.getTokenInfo( accessToken );
+                    // will update access time in principal if statements below, don't do it here
+                    TokenInfo tokenInfo = tokens.getTokenInfo( accessToken, false );
                     principal = tokenInfo.getPrincipal();
                 } catch (BadTokenException e1) {
                     throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );
@@ -103,7 +109,10 @@ public class OAuth2AccessTokenSecurityFilter extends SecurityFilter implements C
                     throw mappableSecurityException( EXPIRED_ACCESS_TOKEN_ERROR );
                 } catch (InvalidTokenException ite) {
                     throw mappableSecurityException( INVALID_AUTH_ERROR );
-                } catch (IndexOutOfBoundsException ioobe) {
+                }
+                catch (ExternalSSOProviderAdminUserNotFoundException eAdminUserNotFound){
+                    throw mappableSecurityException(EXTERNALSSOPROVIDER_UNACTIVATED_ADMINUSER);
+                } catch(IndexOutOfBoundsException ioobe) {
                     // token is just some rubbish string
                     throw mappableSecurityException( BAD_ACCESS_TOKEN_ERROR );
                 } catch (Exception e) {

@@ -29,8 +29,8 @@ public class MessagesService extends AbstractCollectionService {
 
     public MessagesService() {
         super();
-        if (logger.isDebugEnabled()) {
-            logger.debug("/messages");
+        if (logger.isTraceEnabled()) {
+            logger.trace("/messages");
         }
     }
 }

@@ -17,17 +17,11 @@
 package org.apache.usergrid.rest;
 
 
+import org.apache.usergrid.system.ServerEnvironmentProps;
 import java.util.Properties;
 
 
 public class ServerEnvironmentProperties {
-
-    public static final String API_BASE = "swagger.basepath";
-
-    public static final String RECAPTCHA_PUBLIC = "usergrid.recaptcha.public";
-    public static final String RECAPTCHA_PRIVATE = "usergrid.recaptcha.private";
-
-    public static final String REDIRECT_ROOT = "usergrid.redirect_root";
 
     private Properties properties;
 
@@ -37,27 +31,33 @@ public class ServerEnvironmentProperties {
     }
 
 
+    public Properties getProperties() {
+        return properties;
+    }
+
+
     public String getProperty( String key ) {
         return properties.getProperty( key );
     }
 
 
+    @Deprecated // use OrganizationConfig to access, as this can be overridden for an org
     public String getApiBase() {
-        return properties.getProperty( API_BASE );
+        return properties.getProperty(ServerEnvironmentProps.API_URL_BASE);
     }
 
 
     public String getRecaptchaPublic() {
-        return properties.getProperty( RECAPTCHA_PUBLIC );
+        return properties.getProperty( ServerEnvironmentProps.RECAPTCHA_PUBLIC );
     }
 
 
     public String getRecaptchaPrivate() {
-        return properties.getProperty( RECAPTCHA_PRIVATE );
+        return properties.getProperty( ServerEnvironmentProps.RECAPTCHA_PRIVATE );
     }
 
 
     public String getRedirectRoot() {
-        return properties.getProperty( REDIRECT_ROOT );
+        return properties.getProperty( ServerEnvironmentProps.REDIRECT_ROOT );
     }
 }

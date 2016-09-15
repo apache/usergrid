@@ -18,6 +18,8 @@ package org.apache.usergrid.rest.exceptions;
 
 
 import org.apache.usergrid.rest.ApiResponse;
+import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +58,7 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
     @Override
     public Response toResponse( E e ) {
         // if we don't know what type of error it is then it's a 500
-        return toResponse( INTERNAL_SERVER_ERROR, (E) new UncaughtException(e) );
+        return toResponse( INTERNAL_SERVER_ERROR, e );
     }
 
 
@@ -69,11 +71,11 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
 
         if ( status >= 500 ) {
             // only log real errors as errors
-            logger.error( e.getClass().getCanonicalName() + " 5XX Uncaught Exception (" + status + ")", e );
+            logger.error( "{} 5XX Uncaught Exception ({})", e.getClass().getCanonicalName(), status, e );
 
         } else {
             if (logger.isDebugEnabled()) {
-                logger.debug(e.getClass().getCanonicalName() + " Uncaught Exception (" + status + ")", e);
+                logger.debug( "{} Following Exception Thrown ({})", e.getClass().getCanonicalName(), status, e );
             }
         }
 
@@ -103,9 +105,9 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
     private Response toResponse( int status, String jsonResponse ) {
         if ( status >= 500 ) {
             // only log real errors as errors
-            logger.error( "Server Error (" + status + "):\n" + jsonResponse );
+            logger.error( "Server Error ({}):\n{}", status, jsonResponse );
         } else if ( logger.isDebugEnabled() ) {
-            logger.debug( "Server Error (" + status + "):\n" + jsonResponse );
+            logger.debug( "Client Error ({}):\n{}", status, jsonResponse );
         }
 
         String callback = httpServletRequest.getParameter( "callback" );

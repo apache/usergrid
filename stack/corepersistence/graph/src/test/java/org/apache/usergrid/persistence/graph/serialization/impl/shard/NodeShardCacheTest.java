@@ -102,7 +102,7 @@ public class NodeShardCacheTest {
         /**
          * Simulate returning no shards at all.
          */
-        when( allocation.getShards( same( scope ), same( max ), same( directedEdgeMeta ) ) )
+        when( allocation.getShards( same( scope ), same( directedEdgeMeta ) ) )
 
                 //use "thenAnswer" so we always return the value, even if  it's invoked more than 1 time.
                 .thenAnswer( new Answer<Iterator<ShardEntryGroup>>() {
@@ -191,7 +191,7 @@ public class NodeShardCacheTest {
         /**
          * Simulate returning no shards at all.
          */
-        when( allocation.getShards( same( scope ), any( Optional.class ), same( directedEdgeMeta ) ) )
+        when( allocation.getShards( same( scope ), same( directedEdgeMeta ) ) )
 
                 //use "thenAnswer" so we always return the value, even if  it's invoked more than 1 time.
                 .thenAnswer( new Answer<Iterator<ShardEntryGroup>>() {

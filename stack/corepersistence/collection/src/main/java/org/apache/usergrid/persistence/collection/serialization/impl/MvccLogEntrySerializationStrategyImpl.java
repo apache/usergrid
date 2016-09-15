@@ -60,7 +60,7 @@ import com.netflix.astyanax.serializers.AbstractSerializer;
  */
 public abstract class MvccLogEntrySerializationStrategyImpl<K> implements MvccLogEntrySerializationStrategy {
 
-    private static final Logger LOG = LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
 
     private static final StageSerializer SER = new StageSerializer();
 
@@ -277,7 +277,9 @@ public abstract class MvccLogEntrySerializationStrategyImpl<K> implements MvccLo
 
         final long timestamp = version.timestamp();
 
-        LOG.debug( "Writing version with timestamp '{}'", timestamp );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Writing version with timestamp '{}'", timestamp);
+        }
 
         final Id applicationId = collectionScope.getApplication();
 

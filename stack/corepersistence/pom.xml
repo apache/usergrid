@@ -26,42 +26,45 @@ limitations under the License.
     <artifactId>persistence</artifactId>
     <name>Usergrid Persistence</name>
     <packaging>pom</packaging>
-    <version>2.1.1-SNAPSHOT</version>
+    <version>2.2.0-SNAPSHOT</version>
 
-  <profiles>
+    <profiles>
 
-    <!-- better to have keep this sonar profile in your maven settings.xml -->
-    <profile>
-      <id>sonar</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <properties>
-        <sonar.host.url>http://localhost:9000</sonar.host.url>
-        <sonar.jdbc.url>jdbc:h2:tcp://localhost:9092/sonar</sonar.jdbc.url>
-        <sonar.jdbc.username>sonar</sonar.jdbc.username>
-        <sonar.jdbc.password>sonar</sonar.jdbc.password>
-      </properties>
-    </profile>
+        <!-- better to have keep this sonar profile in your maven settings.xml -->
+        <profile>
+            <id>sonar</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <sonar.host.url>http://localhost:9000</sonar.host.url>
+                <sonar.jdbc.url>jdbc:h2:tcp://localhost:9092/sonar</sonar.jdbc.url>
+                <sonar.jdbc.username>sonar</sonar.jdbc.username>
+                <sonar.jdbc.password>sonar</sonar.jdbc.password>
+            </properties>
+        </profile>
 
-      <profile>
-          <id>jacoco</id>
-          <build>
-              <plugins>
-                  <plugin>
-                      <groupId>org.apache.maven.plugins</groupId>
-                      <artifactId>maven-surefire-plugin</artifactId>
-                      <version>${surefire.plugin.version}</version>
-                      <configuration>
-                          <argLine>-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec</argLine>
-                          <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest</excludedGroups>
-                      </configuration>
-                  </plugin>
-              </plugins>
-          </build>
-      </profile>
+        <profile>
+            <id>jacoco</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${surefire.plugin.version}</version>
+                        <configuration>
+                            <argLine>
+                                -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec
+                            </argLine>
+                            <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest
+                            </excludedGroups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
 
-  </profiles>
+    </profiles>
 
     <properties>
 
@@ -70,13 +73,14 @@ limitations under the License.
 
         <antlr.version>3.5.2</antlr.version>
         <archaius.version>0.5.12</archaius.version>
-        <astyanax.version>1.56.49-SNAPSHOT-UG-1</astyanax.version>
+        <astyanax.version>3.9.0</astyanax.version>
         <cassandra.version>1.2.18</cassandra.version>
-<!--        <chop.version>1.0</chop.version>-->
+        <!--        <chop.version>1.0</chop.version>-->
         <commons.codec.version>1.6</commons.codec.version>
         <commons.collections.version>3.2.1</commons.collections.version>
         <commons.io.version>2.4</commons.io.version>
         <commons.lang.version>3.1</commons.lang.version>
+        <datastax.version>2.1.9</datastax.version>
         <elasticsearch.version>1.4.4</elasticsearch.version>
         <fasterxml-uuid.version>3.1.3</fasterxml-uuid.version>
         <guava.version>18.0</guava.version>
@@ -91,10 +95,10 @@ limitations under the License.
         <rx.version>1.0.14</rx.version>
         <slf4j.version>1.7.2</slf4j.version>
         <surefire.version>2.16</surefire.version>
-        <aws.version>1.10.6</aws.version>
         <metrics.version>3.0.0</metrics.version>
         <surefire.plugin.version>2.18.1</surefire.plugin.version>
         <jacoco.version>0.7.5.201505241946</jacoco.version>
+        <aws.version>1.10.20</aws.version>
 
     </properties>
 
@@ -107,6 +111,7 @@ limitations under the License.
         <module>map</module>
         <module>queue</module>
         <module>cache</module>
+        <module>actorsystem</module>
     </modules>
 
     <build>
@@ -127,7 +132,8 @@ limitations under the License.
                             <archaius.deployment.environment>UNIT</archaius.deployment.environment>
                         </systemPropertyVariables>
                         <argLine>-Xms2G -Xmx4G</argLine>
-                        <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest</excludedGroups>
+                        <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest
+                        </excludedGroups>
                     </configuration>
                 </plugin>
 
@@ -214,25 +220,96 @@ limitations under the License.
                 <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
 
+            <!--<plugin>-->
+                <!--<groupId>org.apache.rat</groupId>-->
+                <!--<artifactId>apache-rat-plugin</artifactId>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<phase>verify</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>check</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+                <!--<configuration>-->
+                    <!--<excludes>-->
+                        <!--<exclude>**/Coverage.md</exclude>-->
+                        <!--<exclude>**/jacoco/**</exclude>-->
+                        <!--<exclude>**/README.md</exclude>-->
+                        <!--<exclude>**/CHANGES.txt</exclude>-->
+                        <!--<exclude>**/*.json</exclude>-->
+                        <!--<exclude>**/*.log</exclude>-->
+                        <!--<exclude>**/*.md5</exclude>-->
+                        <!--<exclude>**/*.opts</exclude>-->
+
+                        <!--&lt;!&ndash; git and IDE project files &ndash;&gt;-->
+                        <!--<exclude>**/.git/**</exclude>-->
+                        <!--<exclude>**/.gitignore</exclude>-->
+                        <!--<exclude>**/.idea/**</exclude>-->
+                        <!--<exclude>**/*.iml</exclude>-->
+                        <!--<exclude>**/*.log</exclude>-->
+                        <!--<exclude>**/nbactions.xml</exclude>-->
+                        <!--<exclude>**/nb-configuration.xml</exclude>-->
+                        <!--<exclude>**/.classpath/**</exclude>-->
+                        <!--<exclude>**/.project</exclude>-->
+                        <!--<exclude>**/.settings/**</exclude>-->
+
+                        <!--&lt;!&ndash; temporary build files &ndash;&gt;-->
+                        <!--<exclude>**/logs/**</exclude>-->
+                        <!--<exclude>**/docs/**</exclude>-->
+                        <!--<exclude>**/tmp/**</exclude>-->
+                        <!--<exclude>**/target/**</exclude>-->
+                        <!--<exclude>**/antlr3/**</exclude>-->
+                        <!--<exclude>**/META-INF/**</exclude>-->
+                        <!--<exclude>**/dependency-reduced-pom.xml</exclude>-->
+                        <!--<exclude>**/**QueryFilter.tokens</exclude>-->
+                        <!--<exclude>**/**QueryFilterLexer.java</exclude>-->
+                        <!--<exclude>**/**QueryFilterParser.java</exclude>-->
+                        <!--<exclude>**/**.conf</exclude>-->
+                        <!--<exclude>**/**.csv</exclude>-->
+                        <!--<exclude>**/aws.properties</exclude>-->
+                        <!--<exclude>**/tempExport*</exclude>-->
+                        <!--<exclude>loadtests/loadtest_setup.sh</exclude>-->
+                        <!--<exclude>loadtests/gatling/user-files/request-bodies/**</exclude>-->
+                        <!--<exclude>loadtests/.java-version</exclude>-->
+
+                        <!--&lt;!&ndash; gatling loadtest data files &ndash;&gt;-->
+                        <!--<exclude>loadtests/src/main/scala/org/apache/usergrid/datagenerators/datafiles/**.txt</exclude>-->
+                        <!--<exclude>loadtests/src/main/scala/org/apache/usergrid/datagenerators/**.txt</exclude>-->
+                        <!--<exclude>loadtests/src/test/resources/**.csv</exclude>-->
+
+                        <!--&lt;!&ndash; other &ndash;&gt;-->
+                        <!--<exclude>**/catalina_base/**</exclude>-->
+                        <!--<exclude>**/m2/**</exclude>-->
+                        <!--<exclude>**/*.asc</exclude>-->
+                        <!--<exclude>**/dummy.txt</exclude>-->
+                        <!--<exclude>**/cloudbees.xml</exclude>-->
+                        <!--<exclude>**/catalina_base/**</exclude>-->
+
+                    <!--</excludes>-->
+                <!--</configuration>-->
+
+            <!--</plugin>-->
+
         </plugins>
 
-      <resources>
-        <resource>
-          <directory>src/main/resources</directory>
-          <filtering>true</filtering>
-          <includes>
-            <include>**/*.properties</include>
-          </includes>
-        </resource>
-        <!-- include everything else without filtering -->
-        <resource>
-          <directory>src/main/resources</directory>
-          <filtering>false</filtering>
-          <includes>
-            <include>**</include>
-          </includes>
-        </resource>
-      </resources>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.properties</include>
+                </includes>
+            </resource>
+            <!-- include everything else without filtering -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>**</include>
+                </includes>
+            </resource>
+        </resources>
 
         <testResources>
             <testResource>
@@ -245,13 +322,5 @@ limitations under the License.
         </testResources>
 
     </build>
-
-    <repositories>
-        <repository>
-            <id>local-dependencies</id>
-            <name>local-depedendencies</name>
-            <url>file://${project.basedir}/../m2/repository</url>
-        </repository>
-    </repositories>
 
 </project>

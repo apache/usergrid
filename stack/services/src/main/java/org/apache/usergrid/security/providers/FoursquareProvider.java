@@ -110,7 +110,7 @@ public class FoursquareProvider extends AbstractProvider {
         location.put( "longitude", ( Double ) fq_location.get( "lng" ) );
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( JsonUtils.mapToFormattedJsonString( location ) );
+            logger.debug( "FoursquareProvider.createOrAuthenticate: {}", JsonUtils.mapToFormattedJsonString( location ) );
         }
 
         // Only the first name is guaranteed to be here
@@ -129,7 +129,7 @@ public class FoursquareProvider extends AbstractProvider {
                 Results r = entityManager.searchCollection( entityManager.getApplicationRef(), "users", query );
 
                 if ( r.size() > 1 ) {
-                    logger.error( "Multiple users for FQ ID: " + fq_user_id );
+                    logger.error( "Multiple users for FQ ID: {}", fq_user_id );
                     throw new BadTokenException( "multiple users with same Foursquare ID" );
                 }
 

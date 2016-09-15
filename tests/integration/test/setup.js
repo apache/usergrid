@@ -23,6 +23,7 @@ var entities = require("../lib/entities");
 var config = require("../config");
 var async = require("async");
 var uuid = require("uuid");
+var random = require("../lib/random");
 
 module.exports = {
     users: [],
@@ -37,8 +38,9 @@ module.exports = {
                         password: "pwd" + id,
                         name: id + " name",
                         email: id + "@uge2e.com"
-                    }
+                    };
                     users.add(admin, function(err, user) {
+                        //console.log(user);
                         users.addToRole(user.username, "admin", function(err) {
                             module.exports.admins.push(admin);
                             cb(err, err ? null : admin);
@@ -55,14 +57,15 @@ module.exports = {
                         userArr.push({
                             username: id + "user",
                             password: "pwd" + id,
-                            name: id + " name",
+                            name: id + "name",
                             email: id + "@uge2e.com"
                         });
                     }
-                    async.each(
+                    async.eachSeries(
                         userArr,
                         function(user, cb) {
                             users.add(user, function(err, user) {
+                                module.exports.users.push(user);
                                 cb(err, user);
                             });
                         },
@@ -74,14 +77,24 @@ module.exports = {
                 function(cb) {
                     // create entities
                     var numberOfRecords = 20;
-                    async.parallel([
+                    var entity = {
+                        firstProperty: "somethingConsistent",
+                        secondProperty: "somethingRandom: " + random.randomString(10),
+                        thirdPropertyTypeInt: random.randomNumber(5),
+                        location: {  // Apigee San Jose
+                            latitude: 37.3338716,
+                            longitude: -121.894249
+                        }
+                    };
+                    async.series([
                             function(cb) {
-                                entities.create('dogs', numberOfRecords, function(err, body) {
+
+                                entities.create('dogs', entity, numberOfRecords, function(err, body) {
                                     cb(err);
                                 });
                             },
                             function(cb) {
-                                entities.create('horses', numberOfRecords, function(err, body) {
+                                entities.create('horses', entity, numberOfRecords, function(err, body) {
                                     cb(err);
                                 });
                             }
@@ -95,4 +108,4 @@ module.exports = {
                 cb(err);
             });
     }
-}
+};

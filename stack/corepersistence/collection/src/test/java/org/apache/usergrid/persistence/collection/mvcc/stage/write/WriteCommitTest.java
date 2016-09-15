@@ -18,7 +18,13 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 
 
+import com.datastax.driver.core.Session;
+import com.google.inject.Inject;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 
 import org.apache.usergrid.persistence.collection.MvccEntity;
@@ -53,6 +59,8 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
 
         final ApplicationScope context = mock( ApplicationScope.class );
 
+        final Session session = mock(Session.class);
+
 
         //mock returning a mock mutation when we do a log entry write
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
@@ -84,10 +92,13 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
 
 
         //run the stage
-        WriteCommit newStage = new WriteCommit( logStrategy, mvccEntityStrategy, uniqueValueStrategy );
+        WriteCommit newStage =
+            new WriteCommit( logStrategy, mvccEntityStrategy, uniqueValueStrategy, null, null, null, session );
 
 
-        Entity result = newStage.call( new CollectionIoEvent<MvccEntity>( context, mvccEntityInput ) ).getEvent().getEntity().get();
+
+        Entity result = newStage.call(
+            new CollectionIoEvent<MvccEntity>( context, mvccEntityInput ) ).getEvent().getEntity().get();
 
 
         //verify the log entry is correct
@@ -116,6 +127,9 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
         /**
          * Write up mock mutations so we don't npe on the our operations, but rather on the input
          */
+
+        final Session session = mock(Session.class);
+
         final MvccLogEntrySerializationStrategy logStrategy = mock( MvccLogEntrySerializationStrategy.class );
         final MutationBatch logMutation = mock( MutationBatch.class );
 
@@ -131,7 +145,8 @@ public class WriteCommitTest extends AbstractMvccEntityStageTest {
         when( mvccEntityStrategy.write( any( ApplicationScope.class ), any( MvccEntity.class ) ) )
                 .thenReturn( entityMutation );
 
-        new WriteCommit( logStrategy, mvccEntityStrategy, uniqueValueStrategy ).call( event );
+        new WriteCommit( logStrategy, mvccEntityStrategy, uniqueValueStrategy, null, null, null, session ).call( event );
+
     }
 }
 

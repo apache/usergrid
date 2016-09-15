@@ -26,8 +26,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 
+import org.apache.usergrid.persistence.core.CassandraConfig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -50,8 +51,6 @@ import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.util.RangeBuilder;
 
 import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 import static org.junit.Assert.assertEquals;
@@ -96,6 +95,22 @@ public class MultiKeyColumnNameIteratorTest {
             @Override
             public ConsistencyLevel getWriteCL() {
                 return ConsistencyLevel.CL_QUORUM;
+            }
+
+            @Override
+            public com.datastax.driver.core.ConsistencyLevel getDataStaxReadCl() {
+                return com.datastax.driver.core.ConsistencyLevel.LOCAL_ONE;
+            }
+
+            @Override
+            public com.datastax.driver.core.ConsistencyLevel getDataStaxReadConsistentCl() {
+                return com.datastax.driver.core.ConsistencyLevel.ALL;
+            }
+
+
+            @Override
+            public com.datastax.driver.core.ConsistencyLevel getDataStaxWriteCl() {
+                return com.datastax.driver.core.ConsistencyLevel.QUORUM;
             }
 
 

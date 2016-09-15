@@ -17,14 +17,13 @@
 package org.apache.usergrid.services;
 
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.shiro.subject.Subject;
+
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
@@ -34,10 +33,15 @@ import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
 import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.persistence.Query.Level;
+import org.apache.usergrid.security.shiro.principals.AdminUserPrincipal;
+import org.apache.usergrid.security.shiro.principals.ApplicationPrincipal;
+import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
+import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
+import static org.apache.usergrid.persistence.Schema.TYPE_APPLICATION;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 
 
@@ -49,6 +53,11 @@ public class AbstractCollectionService extends AbstractService {
     public AbstractCollectionService() {
         declareMetadataType( "indexes" );
     }
+
+    public AbstractCollectionService(ServiceRequest serviceRequest){
+        setServiceManager( serviceRequest.getServices() );
+    }
+
 
     @Override
     public Entity getEntity( ServiceRequest request, UUID uuid ) throws Exception {
@@ -73,7 +82,7 @@ public class AbstractCollectionService extends AbstractService {
             nameProperty = "name";
         }
 
-        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name, false);
         if ( entity != null ) {
             entity = importEntity( request, entity );
         }
@@ -94,8 +103,8 @@ public class AbstractCollectionService extends AbstractService {
         }
 
         if ( entity == null ) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("miss on entityType: {} with uuid: {}", getEntityType(), id);
+            if (logger.isTraceEnabled()) {
+                logger.trace("miss on entityType: {} with uuid: {}", getEntityType(), id);
             }
             String msg = "Cannot find entity associated with uuid: " + id;
             throw new EntityNotFoundException( msg );
@@ -117,16 +126,34 @@ public class AbstractCollectionService extends AbstractService {
             checkPermissionsForEntity( context, entity );
         }
 
-        // the context of the entity they're trying to load isn't owned by the owner
-        // in the path, don't return it
+        // check ownership based on graph
         if ( !em.isCollectionMember( context.getOwner(), context.getCollectionName(), entity ) ) {
-            logger.info( "Someone tried to GET entity {} they don't own. Entity id {} with owner {}", new Object[] {
-                    getEntityType(), id, context.getOwner()
-            } );
-            throw new ServiceResourceNotFoundException( context );
-        }
 
-        // TODO check that entity is in fact in the collection
+            // the entity is already loaded in the scope of the owner and type ( collection ) so it must exist at this point
+            // if for some reason it's not a member of the collection, it should be and read repair it
+            if( context.getOwner().getType().equals(TYPE_APPLICATION) ){
+                logger.warn( "Edge missing for entity id {} with owner {}. Executing edge read repair to create new edge in " +
+                    "collection {}", id, context.getOwner(), context.getCollectionName());
+
+                em.addToCollection( context.getOwner(), context.getCollectionName(), entity);
+
+                // do a final check to be absolutely sure we're good now before returning back to the client
+                // TODO : Keep thinking if the double-check read after repair is necessary.  Favoring stability here
+                if ( !em.isCollectionMember( context.getOwner(), context.getCollectionName(), entity ) ) {
+                    logger.error( "Edge read repair failed for entity id {} with owner {} in collection {}",
+                        id, context.getOwner(), context.getCollectionName());
+
+                    throw new ServiceResourceNotFoundException( context );
+                }
+
+            }
+            // if not head application, then we can't assume the ownership is meant to be there
+            else{
+                throw new ServiceResourceNotFoundException( context );
+            }
+
+
+        }
 
         List<ServiceRequest> nextRequests = context.getNextServiceRequests( entity );
 
@@ -144,50 +171,23 @@ public class AbstractCollectionService extends AbstractService {
     @Override
     public ServiceResults getItemByName( ServiceContext context, String name ) throws Exception {
 
-        String nameProperty = Schema.getDefaultSchema().aliasProperty( getEntityType() );
-        if ( nameProperty == null ) {
-            nameProperty = "name";
-        }
+        // just get the UUID and then getItemById such that same results are being returned in both cases
+        // don't use uniqueIndexRepair on read only logic
+        UUID entityId = em.getUniqueIdFromAlias( getEntityType(), name, false);
 
-        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
+        if ( entityId == null ) {
 
-        if ( entity == null ) {
-
-            if (logger.isDebugEnabled()) {
-                logger.debug("miss on entityType: {} with name: {}", getEntityType(), name);
+            if (logger.isTraceEnabled()) {
+                logger.trace("Miss on entityType: {} with name: {}", getEntityType(), name);
             }
 
             String msg = "Cannot find entity with name: "+name;
             throw new EntityNotFoundException( msg );
+
         }
 
-        // the context of the entity they're trying to load isn't owned by the owner
-        // in the path, don't return it
-        if ( !em.isCollectionMember( context.getOwner(), context.getCollectionName(), entity ) ) {
-            logger.info( "Someone tried to GET entity {} they don't own. Entity name {} with owner {}", new Object[] {
-                    getEntityType(), name, context.getOwner()
-            } );
-            throw new ServiceResourceNotFoundException( context );
-        }
+        return getItemById( context, entityId, false);
 
-        if ( !context.moreParameters() ) {
-            entity = importEntity( context, entity );
-        }
-
-        checkPermissionsForEntity( context, entity );
-
-    /*
-     * Level level = Level.REFS; if (isEmpty(parameters)) {
-     * level = Level.ALL_PROPERTIES; }
-     *
-     * Results results = em.searchCollectionForProperty(owner,
-     * getCollectionName(), null, nameProperty, name, null, null, 1, level);
-     * EntityRef entity = results.getRef();
-     */
-
-        List<ServiceRequest> nextRequests = context.getNextServiceRequests( entity );
-
-        return new ServiceResults( this, context, Type.COLLECTION, Results.fromRef( entity ), null, nextRequests );
     }
 
 
@@ -246,8 +246,8 @@ public class AbstractCollectionService extends AbstractService {
             return getItemsByQuery( context, new Query() );
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Limiting collection to " + Query.DEFAULT_LIMIT);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Limiting collection to {}", Query.DEFAULT_LIMIT);
         }
 
         int count = Query.DEFAULT_LIMIT;
@@ -278,6 +278,12 @@ public class AbstractCollectionService extends AbstractService {
 
         if ( item != null ) {
             validateEntityType( item, id );
+
+            if( context.getOwner().getType().equals(TYPE_APPLICATION)) {
+                // this will repair any missing edges
+                em.addToCollection(context.getOwner(), context.getCollectionName(), item);
+            }
+
             updateEntity( context, item, context.getPayload() );
             item = importEntity( context, item );
         }
@@ -297,8 +303,8 @@ public class AbstractCollectionService extends AbstractService {
             return getItemByName( context, name );
         }
 
-       // EntityRef ref = em.getAlias( getEntityType(), name );
-        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
+        // use unique index repair here before any write logic if there are problems
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name, true);
         if ( entity == null ) {
             // null entity ref means we tried to put a non-existing entity
             // before we create a new entity for it, we should check for permission
@@ -313,7 +319,14 @@ public class AbstractCollectionService extends AbstractService {
         else {
             entity = importEntity( context, entity );
             checkPermissionsForEntity( context, entity );
+
+            if( context.getOwner().getType().equals(TYPE_APPLICATION)) {
+                // this will repair any missing edges
+                em.addToCollection(context.getOwner(), context.getCollectionName(), entity);
+            }
+
             updateEntity( context, entity );
+
         }
 
         return new ServiceResults( this, context, Type.COLLECTION, Results.fromEntity( entity ), null, null );
@@ -346,6 +359,50 @@ public class AbstractCollectionService extends AbstractService {
         return new ServiceResults( this, context, Type.COLLECTION, r, null, null );
     }
 
+    @Override
+    public ServiceResults postCollectionSettings( ServiceRequest serviceRequest ) throws Exception {
+        setServiceManager( serviceRequest.getServices() );
+        ServiceContext context = serviceRequest.getAppContext();
+
+        checkPermissionsForCollection( context );
+        //TODO: write rest test for these line of codes
+        Subject currentUser = SubjectUtils.getSubject();
+        Object currentUserPrincipal =currentUser.getPrincipal();
+
+        Map collectionSchema = null;
+
+        if(currentUserPrincipal instanceof AdminUserPrincipal) {
+            AdminUserPrincipal adminUserPrincipal = ( AdminUserPrincipal ) currentUserPrincipal;
+
+            collectionSchema = em.createCollectionSettings( context.getCollectionName(),
+                adminUserPrincipal.getUser().getEmail(), context.getProperties() );
+        }
+        else if(currentUserPrincipal instanceof ApplicationPrincipal){
+            collectionSchema = em.createCollectionSettings( context.getCollectionName(),
+                "app credentials", context.getProperties() );
+        }
+        else if ( currentUserPrincipal instanceof PrincipalIdentifier ) {
+            collectionSchema = em.createCollectionSettings( context.getCollectionName(),
+                "generic credentials", context.getProperties() );
+        }
+
+        return new ServiceResults( this, context, Type.COLLECTION, Results.fromData( collectionSchema ), null, null );
+
+    }
+
+    @Override
+    public ServiceResults getCollectionSettings( ServiceRequest serviceRequest ) throws Exception {
+        setServiceManager( serviceRequest.getServices() );
+        ServiceContext context = serviceRequest.getAppContext();
+        context.setAction( ServiceAction.GET );
+        checkPermissionsForCollection( context );
+
+        Object collectionSchema = em.getCollectionSettings( context.getCollectionName() );
+
+        return new ServiceResults( this, context, Type.COLLECTION, Results.fromData( collectionSchema ), null, null );
+
+    }
+
 
     @Override
     public ServiceResults postCollection( ServiceContext context ) throws Exception {
@@ -356,43 +413,53 @@ public class AbstractCollectionService extends AbstractService {
             List<Entity> entities = new ArrayList<Entity>();
             List<Map<String, Object>> batch = context.getPayload().getBatchProperties();
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("Attempting to batch create " + batch.size() + " entities in collection " + context
-                    .getCollectionName());
+            if (logger.isTraceEnabled()) {
+                logger.trace("Attempting to batch create {} entities in collection {}",
+                        batch.size(), context.getCollectionName());
             }
 
-            int i = 1;
+
+            final Map<String, Boolean> nameValues = new HashMap<>(batch.size());
 
             for ( Map<String, Object> p : batch ) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Creating entity " + i + " in collection " + context.getCollectionName());
+
+                // track unique name value in the batch to identify if duplicates are trying to be created
+                String name = (String) p.get("name");
+                if( name !=null && nameValues.get(name) !=null ){
+                    logger.warn("Batch contains more than 1 entity with the same name: {}", name);
+                }else{
+                    nameValues.put(name, true);
                 }
 
-                Entity item = null;
 
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Creating entity [{}] in collection [{}]", p, context.getCollectionName());
+                }
+
+
+                Entity item = null;
                 try {
                     item = em.createItemInCollection( context.getOwner(), context.getCollectionName(), getEntityType(),
                             p );
                 }
                 catch ( Exception e ) {
-                    // TODO should we not log this as error?
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Entity " + i + " unable to be created in collection " + context.getCollectionName(),
-                            e);
-                    }
 
-                    i++;
+                    logger.error("Entity [{}] unable to be created in collection [{}] due to [{} - {}]", p, context.getCollectionName(),
+                            e.getClass().getSimpleName(), e.getMessage());
+
+                    // move on as we can't block the whole batch if only 1 failed
                     continue;
                 }
-                if (logger.isDebugEnabled()) {
-                    logger.debug(
-                        "Entity " + i + " created in collection " + context.getCollectionName() + " with UUID " + item
-                            .getUuid());
+
+
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Successfully created entity [{}] in collection [{}]", p, context.getCollectionName());
                 }
+
 
                 item = importEntity( context, item );
                 entities.add( item );
-                i++;
+
             }
             return new ServiceResults( this, context, Type.COLLECTION, Results.fromEntities( entities ), null, null );
         }
@@ -450,7 +517,8 @@ public class AbstractCollectionService extends AbstractService {
             return super.postItemByName( context, name );
         }
 
-        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
+        // use unique index repair here before any write logic if there are problems
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name, true);
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }
@@ -504,7 +572,8 @@ public class AbstractCollectionService extends AbstractService {
             return getItemByName( context, name );
         }
 
-        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name );
+        // use unique index repair here before any write logic if there are problems
+        Entity entity = em.getUniqueEntityFromAlias( getEntityType(), name, true);
         if ( entity == null ) {
             throw new ServiceResourceNotFoundException( context );
         }

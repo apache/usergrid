@@ -16,30 +16,58 @@
  */
 package org.apache.usergrid.management;
 
+import org.apache.usergrid.system.ServerEnvironmentProps;
+
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 public interface OrganizationConfigProps {
-    String PROPERTIES_DEFAULT_CONNECTION_PARAM = "usergrid.rest.default-connection-param";
-    String PROPERTIES_ADMIN_SYSADMIN_EMAIL = AccountCreationProps.PROPERTIES_ADMIN_SYSADMIN_EMAIL;
-    String PROPERTIES_ADMIN_ACTIVATION_URL = AccountCreationProps.PROPERTIES_ADMIN_ACTIVATION_URL;
-    String PROPERTIES_ADMIN_CONFIRMATION_URL = AccountCreationProps.PROPERTIES_ADMIN_CONFIRMATION_URL;
-    String PROPERTIES_ADMIN_RESETPW_URL = AccountCreationProps.PROPERTIES_ADMIN_RESETPW_URL;
+    String ORGPROPERTIES_API_URL_BASE = ServerEnvironmentProps.API_URL_BASE;
+    String ORGPROPERTIES_DEFAULT_CONNECTION_PARAM = "usergrid.rest.default-connection-param";
+    String ORGPROPERTIES_ADMIN_SYSADMIN_EMAIL = AccountCreationProps.PROPERTIES_ADMIN_SYSADMIN_EMAIL;
 
-    Set<String> getPropertyNames();
+    // these can not currently be set as org config items, but they select
+    // the full URL to be created from the org-specific API URL base and the
+    // hardcoded paths
+    //
+    // use these specifiers with getFullUrl() to select the URL to be built
+    enum WorkflowUrl {
+        ORGANIZATION_ACTIVATION_URL,
+        ADMIN_ACTIVATION_URL,
+        ADMIN_CONFIRMATION_URL,
+        ADMIN_RESETPW_URL,
+        USER_ACTIVATION_URL,
+        USER_CONFIRMATION_URL,
+        USER_RESETPW_URL
+    }
 
-    Map<String, String> getPropertyMap();
+    Set<String> getOrgPropertyNames();
+
+    Properties getPropertiesMap();
+
+    Map<String, String> getDefaultPropertiesMap();
+
+    Map<String, String> getOrgPropertiesMap();
+
+    String getOrgPropertyNameRegex();
 
     String getProperty(String name);
 
     String getProperty(String name, String defaultValue);
 
-    boolean isProperty(String name, boolean defaultValue);
+    boolean boolProperty(String name, boolean defaultValue);
 
     int intProperty(String name, int defaultValue);
 
     long longProperty(String name, long defaultValue);
 
     void setProperty(String name, String value);
+
+    String getFullUrlTemplate(WorkflowUrl urlType);
+
+    String getFullUrl(WorkflowUrl urlType, Object ... arguments);
+
+    boolean orgPropertyNameValid(String name);
 
 }

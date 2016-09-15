@@ -21,9 +21,6 @@ package org.apache.usergrid.services.exceptions;
 import static org.apache.usergrid.utils.JsonUtils.mapToJsonString;
 
 
-/**
- * Created by ApigeeCorporation on 7/23/15.
- */
 public class AwsPropertiesNotFoundException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 

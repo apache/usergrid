@@ -65,7 +65,9 @@ public class QueueResource extends AbstractContextResource {
     @Path("{subPath}")
     public QueueResource getSubPath( @Context UriInfo ui, @PathParam("subPath") String subPath ) throws Exception {
 
-        logger.info( "QueueResource.getSubPath" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.getSubPath");
+        }
 
         return getSubResource( QueueResource.class ).init( mq, queuePath + "/" + subPath );
     }
@@ -75,7 +77,9 @@ public class QueueResource extends AbstractContextResource {
     @Path("subscribers")
     public QueueSubscriberResource getSubscribers( @Context UriInfo ui ) throws Exception {
 
-        logger.info( "QueueResource.getSubscribers" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.getSubscribers");
+        }
 
         return getSubResource( QueueSubscriberResource.class ).init( mq, queuePath );
     }
@@ -85,7 +89,9 @@ public class QueueResource extends AbstractContextResource {
     @Path("subscriptions")
     public QueueSubscriptionResource getSubscriptions( @Context UriInfo ui ) throws Exception {
 
-        logger.info( "QueueResource.getSubscriptions" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.getSubscriptions");
+        }
 
         return getSubResource( QueueSubscriptionResource.class ).init( mq, queuePath );
     }
@@ -100,7 +106,9 @@ public class QueueResource extends AbstractContextResource {
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueResource.getProperties" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.getProperties");
+        }
 
         return mq.getQueue( queuePath );
     }
@@ -116,7 +124,9 @@ public class QueueResource extends AbstractContextResource {
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueResource.putProperties" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.putProperties");
+        }
 
         return mq.updateQueue( queuePath, json );
     }
@@ -132,14 +142,18 @@ public class QueueResource extends AbstractContextResource {
             throws Exception {
 
         if ( StringUtils.isNotBlank( queuePath ) ) {
-            logger.info( "QueueResource.executeGet: " + queuePath );
+            if (logger.isTraceEnabled()) {
+                logger.trace("QueueResource.executeGet: {}", queuePath);
+            }
 
             QueueQuery query = QueueQuery.fromQueryParams( ui.getQueryParameters() );
             QueueResults results = mq.getFromQueue( queuePath, query );
             return results;
         }
 
-        logger.info( "QueueResource.executeGet" );
+        if (logger.isTraceEnabled()) {
+            logger.trace( "QueueResource.executeGet" );
+        }
 
         return  mq.getQueues( firstQueuePath, limit );
     }
@@ -155,7 +169,9 @@ public class QueueResource extends AbstractContextResource {
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueResource.executePost: " + queuePath );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.executePost: {}", queuePath);
+        }
         Object json = body;
 
         if ( json instanceof Map ) {
@@ -178,7 +194,9 @@ public class QueueResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueResource.executePut: " + queuePath );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.executePut: {}", queuePath);
+        }
 
         Map<String, Object> results = new HashMap<String, Object>();
 
@@ -200,7 +218,9 @@ public class QueueResource extends AbstractContextResource {
     @Path("transactions")
     public QueueTransactionsResource getTransactions( @Context UriInfo ui ) throws Exception {
 
-        logger.info( "QueueResource.getSubscriptions" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.getSubscriptions");
+        }
 
         return getSubResource( QueueTransactionsResource.class ).init( mq, queuePath );
     }

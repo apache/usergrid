@@ -92,7 +92,7 @@ public class UsergridSystemMonitor {
      * are in debug mode.
      */
     public void maybeLogPayload( long duration, Object... objects ) {
-        if ( duration > timerLogThreshold || logger.isDebugEnabled() ) {
+        if ( duration > timerLogThreshold || logger.isInfoEnabled() ) {
             String message;
             if ( objects.length > 1 ) {
                 message = formatMessage( duration, MapUtils.map( objects ) );

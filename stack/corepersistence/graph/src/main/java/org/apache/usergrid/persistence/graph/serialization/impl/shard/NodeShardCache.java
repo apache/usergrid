@@ -38,7 +38,7 @@ public interface NodeShardCache {
      * @param timestamp The time to select the slice for.
      * @param directedEdgeMeta The directed edge meta data
      */
-    public ShardEntryGroup getWriteShardGroup( final ApplicationScope scope,
+    ShardEntryGroup getWriteShardGroup( final ApplicationScope scope,
                                                final long timestamp, final DirectedEdgeMeta directedEdgeMeta );
 
     /**
@@ -49,6 +49,9 @@ public interface NodeShardCache {
      * @param directedEdgeMeta The directed edge meta data
      * @return
      */
-    public Iterator<ShardEntryGroup> getReadShardGroup( final ApplicationScope scope, final long maxTimestamp, final DirectedEdgeMeta directedEdgeMeta  );
+    Iterator<ShardEntryGroup> getReadShardGroup( final ApplicationScope scope, final long maxTimestamp, final DirectedEdgeMeta directedEdgeMeta  );
+
+
+    void invalidate( final ApplicationScope scope, final DirectedEdgeMeta directedEdgeMeta );
 
 }

@@ -35,17 +35,17 @@ public interface ApplicationIdCache {
     /**
      * Evict the application by name
      */
-    public Optional<UUID> getApplicationId(final String applicationName);
+    UUID getApplicationId( final String applicationName );
 
 
     /**
      * Evict the app id by the name
      */
-    public void evictAppId(final String applicationName);
+    void evictAppId( final String applicationName );
 
 
     /**
      * Evict all caches
      */
-    public void evictAll();
+    void evictAll();
 }

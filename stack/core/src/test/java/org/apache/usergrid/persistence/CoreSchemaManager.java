@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence;
 
 
+import org.apache.usergrid.locking.LockManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,18 +38,21 @@ public class CoreSchemaManager implements SchemaManager {
 
     private final Setup setup;
     private final Cluster cluster;
+    private final LockManager lockManager;
 
 
-    public CoreSchemaManager( final Setup setup, final Cluster cluster ) {
+    public CoreSchemaManager( final Setup setup, final Cluster cluster, Injector injector ) {
         this.setup = setup;
         this.cluster = cluster;
+        this.lockManager = injector.getInstance( LockManager.class );
     }
 
 
     @Override
     public void create() {
         try {
-            setup.initSubsystems();
+            setup.initSchema();
+            lockManager.setup();
         }
         catch ( Exception ex ) {
             logger.error( "Could not setup usergrid core schema", ex );
@@ -58,18 +62,14 @@ public class CoreSchemaManager implements SchemaManager {
 
 
     @Override
-    public boolean exists() {
-        return setup.keyspacesExist();
-    }
-
-
-    @Override
     public void populateBaseData() {
         try {
 
-            setup.setupStaticKeyspace();
-            setup.setupSystemKeyspace();
-            setup.createDefaultApplications();
+            setup.initSchema();
+            lockManager.setup();
+
+            setup.runDataMigration();
+            setup.initMgmtApp();
         }
 
         catch ( Exception ex ) {

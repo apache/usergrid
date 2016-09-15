@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.usergrid.StressTest;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.index.*;
 import org.junit.After;
 import org.junit.Before;
@@ -123,6 +123,7 @@ public class IndexLoadTestsIT extends BaseIT {
     private EntityIndex entityIndex;
 
 
+    @Before
     public void before(){
         appId = new SimpleId(UUID.randomUUID(), "application" );
 

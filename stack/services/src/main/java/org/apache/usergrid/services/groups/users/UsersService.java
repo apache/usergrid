@@ -28,8 +28,8 @@ public class UsersService extends org.apache.usergrid.services.users.UsersServic
 
     public UsersService() {
         super();
-        if (logger.isDebugEnabled()) {
-            logger.debug("/groups/*/users");
+        if (logger.isTraceEnabled()) {
+            logger.trace("/groups/*/users");
         }
     }
 }

@@ -20,7 +20,9 @@
 package org.apache.usergrid.corepersistence.asyncevents;
 
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
@@ -54,7 +56,7 @@ import rx.Observable;
 @Singleton
 public class EventBuilderImpl implements EventBuilder {
 
-    private static final Logger log = LoggerFactory.getLogger( EventBuilderImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( EventBuilderImpl.class );
 
     private final IndexService indexService;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
@@ -73,27 +75,14 @@ public class EventBuilderImpl implements EventBuilder {
     }
 
 
-    @Override
-    public Observable<IndexOperationMessage> buildEntityIndexUpdate( final ApplicationScope applicationScope,
-                                                                     final Entity entity ) {
-        //process the entity immediately
-        //only process the same version, otherwise ignore
-
-        if (log.isDebugEnabled()) {
-            log.debug("Indexing  in app scope {} entity {}", entity, applicationScope);
-        }
-
-        return indexService.indexEntity( applicationScope, entity );
-    }
-
 
     @Override
     public Observable<IndexOperationMessage> buildNewEdge( final ApplicationScope applicationScope, final Entity entity,
                                                            final Edge newEdge ) {
 
-        if (log.isDebugEnabled()) {
-            log.debug("Indexing  in app scope {} with entity {} and new edge {}",
-                new Object[]{entity, applicationScope, newEdge});
+        if (logger.isDebugEnabled()) {
+            logger.debug("Indexing  in app scope {} with entity {} and new edge {}",
+                    applicationScope, entity, newEdge);
         }
 
         return indexService.indexEdge( applicationScope, entity, newEdge );
@@ -103,17 +92,13 @@ public class EventBuilderImpl implements EventBuilder {
     @Override
     public Observable<IndexOperationMessage> buildDeleteEdge( final ApplicationScope applicationScope, final Edge
         edge ) {
-        if (log.isDebugEnabled()) {
-            log.debug("Deleting in app scope {} with edge {} }", applicationScope, edge);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Deleting in app scope {} with edge {}", applicationScope, edge);
         }
 
-        final Observable<IndexOperationMessage> edgeObservable =
-            indexService.deleteIndexEdge( applicationScope, edge ).flatMap( batch -> {
-                final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
-                return gm.deleteEdge( edge ).map( deletedEdge -> batch );
-            } );
-
-        return edgeObservable;
+        final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
+        return gm.deleteEdge( edge )
+            .flatMap( deletedEdge -> indexService.deleteIndexEdge( applicationScope, deletedEdge ));
     }
 
 
@@ -121,9 +106,9 @@ public class EventBuilderImpl implements EventBuilder {
     //it'll need to be pushed up higher so we can do the marking that isn't async or does it not matter?
 
     @Override
-    public EntityDeleteResults buildEntityDelete( final ApplicationScope applicationScope, final Id entityId ) {
-        if (log.isDebugEnabled()) {
-            log.debug("Deleting entity id from index in app scope {} with entityId {} }", applicationScope, entityId);
+    public EntityDeleteResults buildEntityDelete(final ApplicationScope applicationScope, final Id entityId ) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Deleting entity id from index in app scope {} with entityId {}", applicationScope, entityId);
         }
 
         final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
@@ -131,22 +116,25 @@ public class EventBuilderImpl implements EventBuilder {
 
         //TODO USERGRID-1123: Implement so we don't iterate logs twice (latest DELETED version, then to get all DELETED)
 
-        MvccLogEntry mostRecentlyMarked = ecm.getVersions( entityId ).toBlocking()
+        MvccLogEntry mostRecentlyMarked = ecm.getVersionsFromMaxToMin( entityId, UUIDUtils.newTimeUUID() ).toBlocking()
             .firstOrDefault( null, mvccLogEntry -> mvccLogEntry.getState() == MvccLogEntry.State.DELETED );
 
-        // De-indexing and entity deletes don't check log entiries.  We must do that first. If no DELETED logs, then
+        // De-indexing and entity deletes don't check log entries.  We must do that first. If no DELETED logs, then
         // return an empty observable as our no-op.
         Observable<IndexOperationMessage> deIndexObservable = Observable.empty();
         Observable<List<MvccLogEntry>> ecmDeleteObservable = Observable.empty();
 
         if(mostRecentlyMarked != null){
+
+            // fetch entity versions to be de-index by looking in cassandra
             deIndexObservable =
-                indexService.deleteEntityIndexes( applicationScope, entityId, mostRecentlyMarked.getVersion() );
+                indexService.deIndexEntity(applicationScope, entityId, mostRecentlyMarked.getVersion(),
+                    getVersionsOlderThanMarked(ecm, entityId, mostRecentlyMarked.getVersion()));
 
             ecmDeleteObservable =
-                ecm.getVersions( entityId )
+                ecm.getVersionsFromMaxToMin( entityId, mostRecentlyMarked.getVersion() )
                     .filter( mvccLogEntry->
-                        UUIDUtils.compare(mvccLogEntry.getVersion(), mostRecentlyMarked.getVersion()) <= 0)
+                        mvccLogEntry.getVersion().timestamp() <= mostRecentlyMarked.getVersion().timestamp() )
                     .buffer( serializationFig.getBufferSize() )
                     .doOnNext( buffer -> ecm.delete( buffer ) );
         }
@@ -156,7 +144,6 @@ public class EventBuilderImpl implements EventBuilder {
 
         return new EntityDeleteResults( deIndexObservable, ecmDeleteObservable, graphCompactObservable );
     }
-
 
     @Override
     public Observable<IndexOperationMessage> buildEntityIndex( final EntityIndexOperation entityIndexOperation ) {
@@ -184,4 +171,43 @@ public class EventBuilderImpl implements EventBuilder {
             //perform indexing on the task scheduler and start it
             .flatMap( entity -> indexService.indexEntity( applicationScope, entity ) );
     }
+
+
+    @Override
+    public Observable<IndexOperationMessage> deIndexOldVersions( final ApplicationScope applicationScope,
+                                                                 final Id entityId, final UUID markedVersion ){
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Removing old versions of entity {} from index in app scope {}", entityId, applicationScope );
+        }
+
+        final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
+
+
+        return indexService.deIndexOldVersions( applicationScope, entityId,
+            getVersionsOlderThanMarked(ecm, entityId, markedVersion), markedVersion);
+
+    }
+
+
+    private List<UUID> getVersionsOlderThanMarked( final EntityCollectionManager ecm,
+                                                   final Id entityId, final UUID markedVersion ){
+
+        final List<UUID> versions = new ArrayList<>();
+
+        // only take last 5 versions to avoid eating memory. a tool can be built for massive cleanups for old usergrid
+        // clusters that do not have this in-line cleanup
+        ecm.getVersionsFromMaxToMin( entityId, markedVersion)
+            .take(5)
+            .forEach( mvccLogEntry -> {
+                if ( mvccLogEntry.getVersion().timestamp() < markedVersion.timestamp() ) {
+                    versions.add(mvccLogEntry.getVersion());
+                }
+
+            });
+
+
+        return versions;
+    }
+
 }

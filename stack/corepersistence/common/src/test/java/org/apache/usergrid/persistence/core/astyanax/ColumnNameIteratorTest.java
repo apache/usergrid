@@ -24,8 +24,9 @@ package org.apache.usergrid.persistence.core.astyanax;
 
 import java.util.HashMap;
 
+import org.apache.usergrid.persistence.core.CassandraConfig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -91,6 +92,22 @@ public class ColumnNameIteratorTest {
             @Override
             public ConsistencyLevel getWriteCL() {
                 return ConsistencyLevel.CL_QUORUM;
+            }
+
+            @Override
+            public com.datastax.driver.core.ConsistencyLevel getDataStaxReadCl() {
+                return com.datastax.driver.core.ConsistencyLevel.LOCAL_ONE;
+            }
+
+            @Override
+            public com.datastax.driver.core.ConsistencyLevel getDataStaxReadConsistentCl() {
+                return com.datastax.driver.core.ConsistencyLevel.ALL;
+            }
+
+
+            @Override
+            public com.datastax.driver.core.ConsistencyLevel getDataStaxWriteCl() {
+                return com.datastax.driver.core.ConsistencyLevel.QUORUM;
             }
 
 

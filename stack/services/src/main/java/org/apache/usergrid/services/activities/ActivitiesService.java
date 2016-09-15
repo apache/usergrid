@@ -29,8 +29,8 @@ public class ActivitiesService extends AbstractCollectionService {
 
     public ActivitiesService() {
         super();
-        if (logger.isDebugEnabled()) {
-            logger.debug("/activities");
+        if (logger.isTraceEnabled()) {
+            logger.trace("/activities");
         }
     }
 }

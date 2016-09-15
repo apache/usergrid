@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence;
 
 import java.util.*;
 
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -52,6 +53,7 @@ import static org.junit.Assert.fail;
 //@UseModules({ GuiceModule.class })
 
 
+@NotThreadSafe
 public class RebuildIndexTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( RebuildIndexTest.class );
 

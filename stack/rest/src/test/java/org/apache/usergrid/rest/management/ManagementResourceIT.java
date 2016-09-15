@@ -25,6 +25,7 @@ import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.apache.usergrid.rest.test.resource.model.Collection;
+import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -37,7 +38,9 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.*;
 
-import static org.apache.usergrid.rest.management.ManagementResource.USERGRID_CENTRAL_URL;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER_URL;
+import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
 
@@ -618,69 +621,47 @@ public class ManagementResourceIT extends AbstractRestIT {
         management().orgs().post(
             new Organization( username, username, username+"@example.com", username, "password", null ) );
 
-        refreshIndex();
+        Map<String, Object> loginInfo = new HashMap<String, Object>() {{
+            put("username", username );
+            put("password", "password" );
+            put("grant_type", "password");
+        }};
 
-        refreshIndex();
-        QueryParameters queryParams = new QueryParameters()
-            .addParam( "username", username )
-            .addParam( "password", "password" )
-            .addParam( "grant_type", "password" );
-        Token accessInfoNode = management.token().get(queryParams);
-        String accessToken = accessInfoNode.getAccessToken();
+        JsonNode accessInfoNode = management.token()
+            .post( JsonNode.class, loginInfo );
+        String accessToken = accessInfoNode.get( "access_token" ).asText();
 
         // set the Usergrid Central SSO URL because Tomcat port is dynamically assigned
 
         String suToken = clientSetup.getSuperuserToken().getAccessToken();
         Map<String, String> props = new HashMap<String, String>();
-        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm() );
+        props.put(USERGRID_EXTERNAL_SSO_PROVIDER_URL, getBaseURI().toURL().toExternalForm() );
         pathResource( "testproperties" ).post( props );
 
-        try {
 
-            // attempt to validate the token, must be valid
-            queryParams = new QueryParameters()
-                .addParam( "ext_access_token", accessToken )
-                .addParam( "ttl", "1000" );
+        // TODO: how do we unit test SSO now that we have no external token end-point?
 
-            Entity validatedNode = management.externaltoken().get( Entity.class, queryParams );
-            String validatedAccessToken = validatedNode.get( "access_token" ).toString();
-            assertEquals( accessToken, validatedAccessToken );
 
-            // attempt to validate an invalid token, must fail
+        JsonNode node = pathResource("/management/me").get( JsonNode.class,  new QueryParameters()
+            .addParam( "access_token", accessToken) );
 
-            try {
-                queryParams = new QueryParameters()
-                    .addParam( "access_token", suToken )
-                    .addParam( "ext_access_token", "rubbish_token" )
-                    .addParam( "ttl", "1000" );
 
-                validatedNode = management.externaltoken().get( Entity.class, queryParams );
+        logger.info( "node: {}", node );
+        String token = node.get( "access_token" ).asText();
 
-                fail( "Validation should have failed" );
+        assertNotNull( token );
 
-            } catch (ClientErrorException actual) {
-                assertEquals( 404, actual.getResponse().getStatus() );
-                String errorMsg = actual.getResponse().readEntity( JsonNode.class )
-                    .get( "error_description" ).toString();
-                logger.error( "ERROR: " + errorMsg );
-                assertTrue( errorMsg.contains( "Cannot find Admin User" ) );
-            }
+        // TODO: how do we test the create new user and organization case?
 
-            // TODO: how do we test the create new user and organization case?
+        // unset the Usergrid Central SSO URL so it does not interfere with other tests
 
-        } finally {
-
-            // unset the Usergrid Central SSO URL so it does not interfere with other tests
-
-            props.put( USERGRID_CENTRAL_URL, "" );
-            pathResource( "testproperties" ).post( props );
-        }
-
+        props.put(USERGRID_EXTERNAL_SSO_PROVIDER_URL, "" );
+        pathResource( "testproperties" ).post( props );
     }
 
 
     @Test
-    public void testSuperuserOnlyWhenValidateExternalTokensEnabled() throws Exception {
+    public void testSuperuserOnlyWhenValidateExternalTokensEnabledForUsergridProvider() throws Exception {
 
         // create an org and an admin user
 
@@ -693,7 +674,9 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         String suToken = clientSetup.getSuperuserToken().getAccessToken();
         Map<String, String> props = new HashMap<String, String>();
-        props.put( USERGRID_CENTRAL_URL, getBaseURI().toURL().toExternalForm() );
+        props.put(USERGRID_EXTERNAL_SSO_PROVIDER, "usergrid");
+        props.put(USERGRID_EXTERNAL_SSO_ENABLED, "true");
+        props.put(USERGRID_EXTERNAL_SSO_PROVIDER_URL, getBaseURI().toURL().toExternalForm() );
         pathResource( "testproperties" ).post( props );
 
         try {
@@ -707,14 +690,15 @@ public class ManagementResourceIT extends AbstractRestIT {
                     put( "grant_type", "password" );
                 }};
                 ApiResponse postResponse = pathResource( "management/token" ).post( false, ApiResponse.class, loginInfo );
-                fail( "Login as Admin User must fail when validate external tokens is enabled" );
+                fail( "External SSO integration is enabled, admin users must login via provider using configured property: "+
+                    TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER );
 
             } catch (ClientErrorException actual) {
                 assertEquals( 400, actual.getResponse().getStatus() );
                 String errorMsg = actual.getResponse().readEntity( JsonNode.class )
                     .get( "error_description" ).toString();
                 logger.error( "ERROR: " + errorMsg );
-                assertTrue( errorMsg.contains( "Admin Users must login via" ) );
+                assertTrue( errorMsg.contains( "admin users must login via" ) );
 
             } catch (Exception e) {
                 fail( "We expected a ClientErrorException" );
@@ -731,11 +715,31 @@ public class ManagementResourceIT extends AbstractRestIT {
             String accessToken = postResponse2.getAccessToken();
             assertNotNull( accessToken );
 
+            //Superuser : GET -> get tokenInfo with access_token
+            ApiResponse getResponse3 = pathResource("management/me").get(ApiResponse.class,new QueryParameters()
+                .addParam("grant_type", "password").addParam("password", "superpassword")
+                .addParam("username", "superuser"),false);
+
+            assertNotNull(getResponse3.getAccessToken());
+
+            //Superuser : POST -> Add org using super user credentials.
+            Map<String, Object> orgAdminUserInfo = new HashMap<String, Object>() {{
+                put( "username", username+"test" );
+                put("password","RandomPassword");
+                put("email",username+"@gmail.com");
+                put( "organization", username+"RandomOrgName" );
+            }};
+            ApiResponse postResponse4 = pathResource("management/orgs")
+                .post(false,orgAdminUserInfo,new QueryParameters().addParam("access_token",getResponse3.getAccessToken()));
+            assertNotNull(postResponse4.getData());
+
+
         } finally {
 
             // turn off validate external tokens by un-setting the usergrid.central.url
 
-            props.put( USERGRID_CENTRAL_URL, "" );
+            props.put(USERGRID_EXTERNAL_SSO_PROVIDER_URL, "" );
+            props.put(USERGRID_EXTERNAL_SSO_ENABLED, "");
             pathResource( "testproperties" ).post( props );
         }
     }

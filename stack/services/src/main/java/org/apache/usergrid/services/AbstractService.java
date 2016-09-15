@@ -17,36 +17,19 @@
 package org.apache.usergrid.services;
 
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 import com.codahale.metrics.Timer;
-import org.apache.usergrid.persistence.cache.CacheFactory;
-
-import org.apache.usergrid.corepersistence.rx.impl.ResponseImportTasks;
-import org.apache.usergrid.corepersistence.service.ServiceSchedulerFig;
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
-import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
-
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.shiro.subject.Subject;
-
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Schema;
+import org.apache.usergrid.corepersistence.rx.impl.ResponseImportTasks;
+import org.apache.usergrid.corepersistence.service.ServiceSchedulerFig;
+import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.cache.CacheFactory;
+import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
+import org.apache.usergrid.security.shiro.utils.LocalShiroCache;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.ServiceParameter.IdParameter;
 import org.apache.usergrid.services.ServiceParameter.NameParameter;
@@ -55,13 +38,14 @@ import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ServiceInvocationException;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationException;
-
-import com.google.inject.Injector;
-import com.google.inject.Key;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
+
+import java.util.*;
 
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
 import static org.apache.usergrid.services.ServiceParameter.filter;
@@ -112,6 +96,7 @@ public abstract class AbstractService implements Service {
     private Timer invokeTimer;
 
     protected CacheFactory cacheFactory;
+    protected LocalShiroCache localShiroCache;
 
     public AbstractService() {
 
@@ -122,7 +107,8 @@ public abstract class AbstractService implements Service {
         this.sm = sm;
         em = sm.getEntityManager();
         final Injector injector = sm.getApplicationContext().getBean( Injector.class );
-        rxScheduler = injector.getInstance( Key.get(RxTaskScheduler.class, ResponseImportTasks.class ) ).getAsyncIOScheduler();
+        rxScheduler = injector.getInstance( Key.get(RxTaskScheduler.class, ResponseImportTasks.class ) )
+            .getAsyncIOScheduler();
         rxSchedulerFig = injector.getInstance(ServiceSchedulerFig.class );
         metricsFactory = injector.getInstance(MetricsFactory.class);
         this.entityGetTimer = metricsFactory.getTimer(this.getClass(), "importEntity.get");
@@ -131,6 +117,7 @@ public abstract class AbstractService implements Service {
         this.invokeTimer = metricsFactory.getTimer( this.getClass(),"service.invoke" );
 
         this.cacheFactory = injector.getInstance( CacheFactory.class );
+        this.localShiroCache = injector.getInstance( LocalShiroCache.class );
     }
 
 
@@ -560,7 +547,7 @@ public abstract class AbstractService implements Service {
             entity.addProperties( payload.getProperties() );
             return entity;
         }
-        logger.error("Attempted update of entity reference rather than full entity, currently unsupport - MUSTFIX");
+        logger.error("Attempted update of entity reference rather than full entity, currently unsupported");
         throw new NotImplementedException();
     }
 
@@ -655,6 +642,7 @@ public abstract class AbstractService implements Service {
      * the queue. Remaining parameters are left for next service request to allow for request chaining.
      */
 
+    @Override
     public ServiceContext getContext( ServiceAction action, ServiceRequest request, ServiceResults previousResults,
                                       ServicePayload payload ) throws Exception {
 
@@ -886,6 +874,11 @@ public abstract class AbstractService implements Service {
     public ServiceResults postItemsByQuery( ServiceContext context, Query query ) throws Exception {
         return getItemsByQuery( context, query );
     }
+
+    public abstract ServiceResults postCollectionSettings( ServiceRequest serviceRequest ) throws Exception;
+
+
+    public abstract ServiceResults getCollectionSettings( ServiceRequest serviceRequest ) throws Exception;
 
 
     public ServiceResults postCollection( ServiceContext context ) throws Exception {
@@ -1359,13 +1352,13 @@ public abstract class AbstractService implements Service {
         if ( currentUser == null ) {
             return;
         }
-        String perm =
-                getPermissionFromPath( em.getApplicationRef().getUuid(), context.getAction().toString().toLowerCase(),
-                        path );
+
+        String perm = getPermissionFromPath(
+            em.getApplicationRef().getUuid(), context.getAction().toString().toLowerCase(), path );
         boolean permitted = currentUser.isPermitted( perm );
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( PATH_MSG, new Object[] { path, context.getAction(), perm, permitted } );
+            logger.debug( PATH_MSG, path, context.getAction(), perm, permitted );
         }
 
         SubjectUtils.checkPermission( perm );

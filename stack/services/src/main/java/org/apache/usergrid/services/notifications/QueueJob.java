@@ -63,7 +63,9 @@ public class QueueJob extends OnlyOnceJob {
 
 
     public QueueJob() {
-        logger.info( "QueueJob created: " + this );
+        if (logger.isTraceEnabled()) {
+            logger.trace( "QueueJob created" );
+        }
     }
 
 
@@ -80,7 +82,9 @@ public class QueueJob extends OnlyOnceJob {
     public void doJob( JobExecution jobExecution ) throws Exception {
         Timer.Context timer = execution.time();
         requests.mark();
-        logger.info( "execute QueueJob {}", jobExecution );
+        if (logger.isTraceEnabled()) {
+            logger.trace("execute QueueJob {}", jobExecution);
+        }
 
         JobData jobData = jobExecution.getJobData();
         UUID applicationId = ( UUID ) jobData.getProperty( "applicationId" );
@@ -97,7 +101,9 @@ public class QueueJob extends OnlyOnceJob {
             UUID notificationId = ( UUID ) jobData.getProperty( "notificationId" );
             Notification notification = em.get( notificationId, Notification.class );
             if ( notification == null ) {
-                logger.info( "notificationId {} no longer exists", notificationId );
+                if (logger.isDebugEnabled()) {
+                    logger.trace("notificationId {} no longer exists", notificationId);
+                }
                 return;
             }
 
@@ -118,7 +124,9 @@ public class QueueJob extends OnlyOnceJob {
             timer.stop();
         }
 
-        logger.info( "execute QueueJob completed normally" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("execute QueueJob completed normally");
+        }
     }
 
 

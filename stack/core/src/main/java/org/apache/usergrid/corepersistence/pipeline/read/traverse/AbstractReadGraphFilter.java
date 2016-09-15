@@ -44,7 +44,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.google.common.base.Optional;
 
 import rx.Observable;
-
+import rx.functions.Func1;
 
 
 /**
@@ -175,7 +175,8 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                 return !isDeleted && !isSourceNodeDeleted && !isTargetNodeDelete;
 
 
-            })
+            })  // any non-deleted edges should be de-duped here so the results are unique
+                .distinct( new EdgeDistinctKey() )
                 //set the edge state for cursors
                 .doOnNext( edge -> {
                     if (logger.isTraceEnabled()) {
@@ -197,7 +198,14 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
 
         //if it's our first pass, there's no cursor to generate
         if(cursorValue == null){
+            if(logger.isTraceEnabled()){
+                logger.trace("Cursor value is null, creating filter result with no cursor");
+            }
             return new FilterResult<>( emit, parent );
+        }
+
+        if(logger.isTraceEnabled()){
+            logger.trace("Cursor value is not null, creating filter result with cursor: {}", cursorValue.toString());
         }
 
         return super.createFilterResult( emit, cursorValue, parent );
@@ -252,6 +260,38 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
             .doOnNext(indexOperation -> {
                 asyncEventService.queueIndexOperationMessage(indexOperation);
             });
+
+    }
+
+    /**
+     *  Return a key that Rx can use for determining a distinct edge.  Build a string containing the UUID
+     *  of the source and target nodes, with the type to ensure uniqueness rather than the int sum of the hash codes.
+     *  Edge timestamp is specifically left out as edges with the same source,target,type but different timestamps
+     *  are considered duplicates.
+     */
+    private class EdgeDistinctKey implements Func1<Edge,String> {
+
+        @Override
+        public String call(Edge edge) {
+
+            return buildDistinctKey(edge.getSourceNode().getUuid().toString(), edge.getTargetNode().getUuid().toString(),
+                edge.getType().toLowerCase());
+        }
+    }
+
+    protected static String buildDistinctKey(final String sourceNode, final String targetNode, final String type){
+
+        final String DISTINCT_KEY_SEPARATOR = ":";
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder
+            .append(sourceNode)
+            .append(DISTINCT_KEY_SEPARATOR)
+            .append(targetNode)
+            .append(DISTINCT_KEY_SEPARATOR)
+            .append(type);
+
+        return stringBuilder.toString();
 
     }
 

@@ -25,7 +25,7 @@ import org.apache.usergrid.corepersistence.index.ReplicatedIndexLocationStrategy
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 
 /**
- * event to init app index
+ * Event to initialize the index for an application
  */
 
 public class InitializeApplicationIndexEvent extends AsyncEvent {

@@ -26,7 +26,6 @@ import org.apache.usergrid.management.OrganizationConfig;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.export.ExportService;
 import org.apache.usergrid.persistence.entities.Export;
-import org.apache.usergrid.persistence.queue.impl.UsergridAwsCredentials;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
@@ -74,16 +73,16 @@ public class OrganizationResource extends AbstractContextResource {
 
 
     public OrganizationResource() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("OrganizationResource created");
+        if (logger.isTraceEnabled()) {
+            logger.trace("OrganizationResource created");
         }
     }
 
 
     public OrganizationResource init( OrganizationInfo organization ) {
         this.organization = organization;
-        if (logger.isDebugEnabled()) {
-            logger.debug("OrganizationResource initialized for org {}", organization.getName());
+        if (logger.isTraceEnabled()) {
+            logger.trace("OrganizationResource initialized for org {}", organization.getName());
         }
         return this;
     }
@@ -115,7 +114,9 @@ public class OrganizationResource extends AbstractContextResource {
                                                    @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "Get details for organization: " + organization.getUuid() );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Get details for organization: {}", organization.getUuid());
+        }
 
         ApiResponse response = createApiResponse();
         response.setProperty( "organization", management.getOrganizationData( organization ) );
@@ -131,16 +132,16 @@ public class OrganizationResource extends AbstractContextResource {
 
         try {
             management.handleActivationTokenForOrganization( organization.getUuid(), token );
-            return handleViewable( "activate", this );
+            return handleViewable( "activate", this, organization.getName() );
         }
         catch ( TokenException e ) {
-            return handleViewable( "bad_activation_token", this );
+            return handleViewable( "bad_activation_token", this, organization.getName() );
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, organization.getName() );
         }
     }
 
@@ -153,18 +154,18 @@ public class OrganizationResource extends AbstractContextResource {
         try {
             ActivationState state = management.handleActivationTokenForOrganization( organization.getUuid(), token );
             if ( state == ActivationState.CONFIRMED_AWAITING_ACTIVATION ) {
-                return handleViewable( "confirm", this );
+                return handleViewable( "confirm", this, organization.getName() );
             }
-            return handleViewable( "activate", this );
+            return handleViewable( "activate", this, organization.getName() );
         }
         catch ( TokenException e ) {
-            return handleViewable( "bad_activation_token", this );
+            return handleViewable( "bad_activation_token", this, organization.getName() );
         }
         catch ( RedirectionException e ) {
             throw e;
         }
         catch ( Exception e ) {
-            return handleViewable( "error", e );
+            return handleViewable( "error", e, organization.getName() );
         }
     }
 
@@ -177,7 +178,7 @@ public class OrganizationResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "Send activation email for organization: " + organization.getUuid() );
+        logger.info("Send activation email for organization: {}", organization.getUuid());
 
         ApiResponse response = createApiResponse();
 
@@ -264,8 +265,8 @@ public class OrganizationResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("executePut");
+        if (logger.isTraceEnabled()) {
+            logger.trace("executePut");
         }
 
         ApiResponse response = createApiResponse();
@@ -288,30 +289,35 @@ public class OrganizationResource extends AbstractContextResource {
                                     @QueryParam("callback") @DefaultValue("") String callback )
             throws OAuthSystemException {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("executePostJson");
+        if (logger.isTraceEnabled()) {
+            logger.trace("executePostJson");
         }
 
-        UsergridAwsCredentials uac = new UsergridAwsCredentials();
-
-        UUID jobUUID = null;
-        Map<String, String> uuidRet = new HashMap<String, String>();
-
-        Map<String,Object> properties;
-        Map<String, Object> storage_info;
+        Map<String, String> uuidRet = new HashMap<>();
 
         try {
-            if((properties = ( Map<String, Object> )  json.get( "properties" )) == null){
+            Object propertiesObj = json.get("properties");
+            if (propertiesObj == null) {
                 throw new NullArgumentException("Could not find 'properties'");
             }
-            storage_info = ( Map<String, Object> ) properties.get( "storage_info" );
+            if (!(propertiesObj instanceof Map)) {
+                throw new IllegalArgumentException("'properties' not a map");
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String,Object> properties = (Map<String,Object>)propertiesObj;
+
             String storage_provider = ( String ) properties.get( "storage_provider" );
             if(storage_provider == null) {
                 throw new NullArgumentException( "Could not find field 'storage_provider'" );
             }
-            if(storage_info == null) {
+
+            Object storageInfoObj = properties.get("storage_info");
+            if(storageInfoObj == null) {
                 throw new NullArgumentException( "Could not find field 'storage_info'" );
             }
+            @SuppressWarnings("unchecked")
+            Map<String,Object> storage_info = (Map<String, Object>)storageInfoObj;
 
             String bucketName = ( String ) storage_info.get( "bucket_location" );
             String accessId = ( String ) storage_info.get( "s3_access_id" );
@@ -330,7 +336,7 @@ public class OrganizationResource extends AbstractContextResource {
 
             json.put( "organizationId",organization.getUuid());
 
-            jobUUID = exportService.schedule( json );
+            UUID jobUUID = exportService.schedule( json );
             uuidRet.put( "Export Entity", jobUUID.toString() );
         }
         catch ( NullArgumentException e ) {
@@ -400,7 +406,9 @@ public class OrganizationResource extends AbstractContextResource {
                                   @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "Get configuration for organization: " + organization.getUuid() );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Get configuration for organization: {}", organization.getUuid());
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "get organization configuration" );
@@ -432,8 +440,8 @@ public class OrganizationResource extends AbstractContextResource {
                                   @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Put configuration for organization: " + organization.getUuid());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Put configuration for organization: {}", organization.getUuid());
         }
 
         ApiResponse response = createApiResponse();

@@ -17,36 +17,28 @@
 package org.apache.usergrid.tools;
 
 
-import java.util.Properties;
-
+import com.google.inject.Injector;
+import me.prettyprint.hector.testutils.EmbeddedServerHelper;
+import org.apache.commons.cli.*;
+import org.apache.commons.lang.ClassUtils;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
+import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.cassandra.Setup;
+import org.apache.usergrid.services.ServiceManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.apache.usergrid.management.ManagementService;
-import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
-import org.apache.usergrid.persistence.cassandra.Setup;
-import org.apache.usergrid.services.ServiceManagerFactory;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang.ClassUtils;
+import java.util.Properties;
 
-import me.prettyprint.hector.testutils.EmbeddedServerHelper;
-
+import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.apache.usergrid.utils.JsonUtils.mapToFormattedJsonString;
 
 
 /**
@@ -78,6 +70,10 @@ public abstract class ToolBase {
 
     protected CassandraService cass;
 
+    protected Injector injector;
+
+
+
 
     public void startTool( String[] args ) {
         startTool( args, true );
@@ -97,11 +93,22 @@ public abstract class ToolBase {
             return;
         }
 
+        // notification queue listener not needed for tools
+        System.setProperty("usergrid.notifications.listener.run", "false");
+        System.setProperty("usergrid.push.worker_count", "0");
+
+        //job scheduler also not needed for tools
+        System.setProperty("usergrid.scheduler.enabled", "false");
+        System.setProperty("usergrid.cluster.enabled", "false");
+
+
+
+
         if ( line.hasOption( "host" ) ) {
             System.setProperty( "cassandra.url", line.getOptionValue( "host" ) );
             System.setProperty( "elasticsearch.hosts", line.getOptionValue( "eshost" ) );
             System.setProperty( "elasticsearch.cluster_name", line.getOptionValue( "escluster" ) );
-            System.setProperty( "usergrid.cluster_name", "usergrid" );
+            System.setProperty( "usergrid.cluster_name", line.getOptionValue( "ugcluster" )  );
         }
 
         try {
@@ -141,6 +148,9 @@ public abstract class ToolBase {
         Option esClusterOption = OptionBuilder.withArgName( "escluster" ).hasArg()
             .withDescription( "ElasticSearch cluster name" ).create( "escluster" );
 
+        Option ugClusterOption = OptionBuilder.withArgName( "ugcluster" ).hasArg()
+            .withDescription( "Usergrid cluster name" ).create( "ugcluster" );
+
         Option remoteOption = OptionBuilder
             .withDescription( "Use remote Cassandra instance" ).create( "remote" );
 
@@ -152,6 +162,7 @@ public abstract class ToolBase {
         options.addOption( hostOption );
         options.addOption( esHostOption );
         options.addOption( esClusterOption );
+        options.addOption( ugClusterOption );
         options.addOption( remoteOption );
         options.addOption( verbose );
 
@@ -183,6 +194,10 @@ public abstract class ToolBase {
         assertNotNull( emf );
         assertTrue( "EntityManagerFactory is instance of EntityManagerFactory",
                 emf instanceof EntityManagerFactory );
+
+        injector = ac.getBean( Injector.class );
+
+
     }
 
 
@@ -190,7 +205,8 @@ public abstract class ToolBase {
 
         Setup setup = ( (CpEntityManagerFactory) emf ).getSetup();
         logger.info( "Setting up Usergrid schema" );
-        setup.initSubsystems();
+        setup.initSchema();
+        setup.initMgmtApp();
         logger.info( "Usergrid schema setup" );
 
         logger.info( "Setting up Usergrid management services" );
@@ -248,8 +264,35 @@ public abstract class ToolBase {
 
 
     @Autowired
-    public void setProperties( Properties properties ) {
+    public void setProperties(Properties properties) {
         this.properties = properties;
+
+        logger.info( "Properties set: \n" +
+            "   cassandra.url: {}\n" +
+            "   cassandra.datacenter.local: {}\n" +
+            "   cassandra.username: {}\n" +
+            "   cassandra.password: {}\n" +
+            "   cassandra.keyspace.strategy: {}\n" +
+            "   cassandra.keyspace.application: {}\n" +
+            "   cassandra.lock.keyspace: {}\n" +
+            "   cassandra.keyspace.replication: {}\n" +
+            "   cassandra.connections: {}\n" +
+            "   usergrid.notifications.listener.run: {}\n" +
+            "   usergrid.push.worker_count: {}\n" +
+            "   usergrid.scheduler.enabled: {}\n",
+            properties.get("cassandra.url"),
+            properties.get("cassandra.datacenter.local"),
+            properties.get("cassandra.username"),
+            properties.get("cassandra.password"),
+            properties.get("cassandra.keyspace.strategy"),
+            properties.get("cassandra.keyspace.application"),
+            properties.get("cassandra.lock.keyspace"),
+            properties.get("cassandra.keyspace.replication"),
+            properties.get("cassandra.connections"),
+            properties.get("usergrid.notifications.listener.run"),
+            properties.get("usergrid.push.worker_count"),
+            properties.get("usergrid.scheduler.enabled")
+        );
     }
 
 

@@ -22,20 +22,20 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.services.AbstractPathBasedColllectionService;
+import org.apache.usergrid.services.AbstractPathBasedCollectionService;
 import org.apache.usergrid.services.ServiceContext;
 import org.apache.usergrid.services.ServiceResults;
 
 
-public class AssetsService extends AbstractPathBasedColllectionService {
+public class AssetsService extends AbstractPathBasedCollectionService {
 
     private static final Logger logger = LoggerFactory.getLogger( AssetsService.class );
 
 
     public AssetsService() {
         super();
-        if (logger.isDebugEnabled()) {
-            logger.debug("/assets");
+        if (logger.isTraceEnabled()) {
+            logger.trace("/assets");
         }
         declareServiceCommands( "data" );
     }
@@ -44,8 +44,8 @@ public class AssetsService extends AbstractPathBasedColllectionService {
     @Override
     public ServiceResults getEntityCommand( ServiceContext context, List<EntityRef> refs, String command )
             throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("handling command: {}", command);
+        if (logger.isTraceEnabled()) {
+            logger.trace("handling command: {}", command);
         }
 
         ServiceResults sr = ServiceResults.genericServiceResults();
@@ -56,8 +56,8 @@ public class AssetsService extends AbstractPathBasedColllectionService {
 
     @Override
     public ServiceResults getServiceCommand( ServiceContext context, String command ) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("in getServiceCommand with command: {}", command);
+        if (logger.isTraceEnabled()) {
+            logger.trace("in getServiceCommand with command: {}", command);
         }
         return ServiceResults.genericServiceResults();
     }

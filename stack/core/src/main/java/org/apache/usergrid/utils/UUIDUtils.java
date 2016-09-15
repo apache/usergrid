@@ -24,7 +24,6 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.clearspring.analytics.hash.MurmurHash;
 import com.fasterxml.uuid.EthernetAddress;
 import com.fasterxml.uuid.UUIDComparator;
 
@@ -353,16 +352,6 @@ public class UUIDUtils {
             return null;
         }
         return tryGetUUID( s.substring( offset, offset + 36 ) );
-    }
-
-    public static long getUUIDLong(UUID id){
-        long timestamp = 0;
-        if(UUIDUtils.isTimeBased(id)) {
-            timestamp = UUIDUtils.getTimestampInMicros(id);
-        }else{
-            timestamp = MurmurHash.hash64(id);
-        }
-        return timestamp;
     }
 
 

@@ -127,7 +127,7 @@ public abstract class ServiceParameter {
     public static List<ServiceParameter> addParameter( List<ServiceParameter> parameters, Query query ) {
 
         if ( parameters == null ) {
-            parameters = new ArrayList<ServiceParameter>();
+            parameters = new ArrayList<>();
         }
 
         if ( query == null ) {
@@ -135,7 +135,7 @@ public abstract class ServiceParameter {
         }
 
         if ( lastParameterIsQuery( parameters ) ) {
-            logger.error( "Adding two queries in a row" );
+            logger.info( "Adding two queries in a row" );
         }
 
         ServiceParameter p = new QueryParameter( query );
@@ -148,7 +148,7 @@ public abstract class ServiceParameter {
             throws Exception {
 
         if ( parameters == null ) {
-            parameters = new ArrayList<ServiceParameter>();
+            parameters = new ArrayList<>();
         }
 
         if ( params == null ) {
@@ -177,59 +177,37 @@ public abstract class ServiceParameter {
 
 
     public static boolean firstParameterIsName( List<ServiceParameter> parameters ) {
-        if ( !isEmpty( parameters ) ) {
-            return parameters.get( 0 ).isName();
-        }
-        return false;
+        return !isEmpty(parameters) && parameters.get( 0 ).isName();
     }
 
 
     public static boolean lastParameterIsName( List<ServiceParameter> parameters ) {
-        if ( !isEmpty( parameters ) ) {
-            return parameters.get( parameters.size() - 1 ).isName();
-        }
-        return false;
+        return !isEmpty(parameters) && parameters.get( parameters.size() - 1 ).isName();
     }
 
 
     public static boolean firstParameterIsQuery( List<ServiceParameter> parameters ) {
-        if ( !isEmpty( parameters ) ) {
-            return parameters.get( 0 ).isQuery();
-        }
-        return false;
+        return !isEmpty(parameters) && parameters.get( 0 ).isQuery();
     }
 
 
     public static boolean lastParameterIsQuery( List<ServiceParameter> parameters ) {
-        if ( !isEmpty( parameters ) ) {
-            return parameters.get( parameters.size() - 1 ).isQuery();
-        }
-        return false;
+        return !isEmpty(parameters) && parameters.get( parameters.size() - 1 ).isQuery();
     }
 
 
     public static boolean firstParameterIsId( List<ServiceParameter> parameters ) {
-        if ( !isEmpty( parameters ) ) {
-            return parameters.get( 0 ).isId();
-        }
-        return false;
+        return !isEmpty(parameters) && parameters.get(0).isId();
     }
 
 
     public static boolean lastParameterIsId( List<ServiceParameter> parameters ) {
-        if ( !isEmpty( parameters ) ) {
-            return parameters.get( parameters.size() - 1 ).isId();
-        }
-        return false;
+        return !isEmpty(parameters) && parameters.get( parameters.size() - 1 ).isId();
     }
 
 
     public static ServiceParameter firstParameter( List<ServiceParameter> parameters ) {
-        if ( !isEmpty( parameters ) ) {
-            return parameters.get( 0 );
-        }
-
-        return null;
+        return !isEmpty(parameters) ? parameters.get(0) : null;
     }
 
 
@@ -329,7 +307,7 @@ public abstract class ServiceParameter {
             if ( !found ) {
                 continue;
             }
-            ArrayList<ServiceParameter> p = new ArrayList<ServiceParameter>();
+            ArrayList<ServiceParameter> p = new ArrayList<>();
             for ( String name : replaceSet.getValue() ) {
                 if ( name.startsWith( "\\" ) ) {
                     int i = Integer.parseInt( name.substring( 1 ) );

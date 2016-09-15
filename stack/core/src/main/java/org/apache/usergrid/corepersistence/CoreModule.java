@@ -16,52 +16,19 @@
 package org.apache.usergrid.corepersistence;
 
 
-import org.apache.usergrid.locking.guice.LockModule;
-import org.apache.usergrid.persistence.cache.guice.CacheModule;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import org.safehaus.guicyfig.GuicyFigModule;
-
-import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.asyncevents.AsyncEventsSchedulerFig;
-import org.apache.usergrid.corepersistence.asyncevents.AsyncIndexProvider;
-import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
-import org.apache.usergrid.corepersistence.asyncevents.EventBuilderImpl;
-import org.apache.usergrid.corepersistence.asyncevents.EventExecutionScheduler;
-import org.apache.usergrid.corepersistence.index.ApplicationIndexBucketLocator;
-import org.apache.usergrid.corepersistence.index.CoreIndexFig;
-import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
-import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactoryImpl;
-import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
-import org.apache.usergrid.corepersistence.index.IndexService;
-import org.apache.usergrid.corepersistence.index.IndexServiceImpl;
-import org.apache.usergrid.corepersistence.index.ReIndexService;
-import org.apache.usergrid.corepersistence.index.ReIndexServiceImpl;
+import com.google.inject.*;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.multibindings.Multibinder;
+import org.apache.usergrid.corepersistence.asyncevents.*;
+import org.apache.usergrid.corepersistence.index.*;
 import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
 import org.apache.usergrid.corepersistence.migration.DeDupConnectionDataMigration;
-import org.apache.usergrid.corepersistence.migration.MigrationModuleVersionPlugin;
 import org.apache.usergrid.corepersistence.pipeline.PipelineModule;
-import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservable;
-import org.apache.usergrid.corepersistence.rx.impl.AllApplicationsObservableImpl;
-import org.apache.usergrid.corepersistence.rx.impl.AllEntitiesInSystemImpl;
-import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
-import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservableImpl;
-import org.apache.usergrid.corepersistence.rx.impl.AllNodesInGraphImpl;
-import org.apache.usergrid.corepersistence.rx.impl.AsyncRepair;
-import org.apache.usergrid.corepersistence.rx.impl.ResponseImportTasks;
-import org.apache.usergrid.corepersistence.service.AggregationService;
-import org.apache.usergrid.corepersistence.service.AggregationServiceFactory;
-import org.apache.usergrid.corepersistence.service.AggregationServiceImpl;
-import org.apache.usergrid.corepersistence.service.ApplicationService;
-import org.apache.usergrid.corepersistence.service.ApplicationServiceImpl;
-import org.apache.usergrid.corepersistence.service.CollectionService;
-import org.apache.usergrid.corepersistence.service.CollectionServiceImpl;
-import org.apache.usergrid.corepersistence.service.ConnectionService;
-import org.apache.usergrid.corepersistence.service.ConnectionServiceImpl;
-import org.apache.usergrid.corepersistence.service.ServiceSchedulerFig;
-import org.apache.usergrid.corepersistence.service.StatusService;
-import org.apache.usergrid.corepersistence.service.StatusServiceImpl;
+import org.apache.usergrid.corepersistence.rx.impl.*;
+import org.apache.usergrid.corepersistence.service.*;
+import org.apache.usergrid.locking.guice.LockModule;
+import org.apache.usergrid.persistence.cache.guice.CacheModule;
 import org.apache.usergrid.persistence.collection.guice.CollectionModule;
 import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
 import org.apache.usergrid.persistence.core.executor.TaskExecutorFactory;
@@ -75,14 +42,9 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
+import org.safehaus.guicyfig.GuicyFigModule;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.google.inject.multibindings.Multibinder;
+import java.util.concurrent.ThreadPoolExecutor;
 
 
 /**
@@ -129,6 +91,8 @@ public class CoreModule extends AbstractModule {
 
         bind( ManagerCache.class ).to( CpManagerCache.class );
         bind( ApplicationIdCacheFactory.class );
+        bind( CollectionSettingsFactory.class );
+        bind( CollectionSettingsCache.class );
 
 
         /**
@@ -144,7 +108,6 @@ public class CoreModule extends AbstractModule {
         //wire up the collection migration plugin
         final Multibinder<MigrationPlugin> plugins = Multibinder.newSetBinder( binder(), MigrationPlugin.class );
         plugins.addBinding().to( CoreMigrationPlugin.class );
-        plugins.addBinding().to( MigrationModuleVersionPlugin.class );
 
         bind( AllApplicationsObservable.class ).to( AllApplicationsObservableImpl.class );
         bind( AllEntityIdsObservable.class ).to( AllEntityIdsObservableImpl.class );
@@ -178,6 +141,8 @@ public class CoreModule extends AbstractModule {
 
 
         install( new GuicyFigModule( ApplicationIdCacheFig.class ) );
+
+        install( new GuicyFigModule( CollectionSettingsCacheFig.class ) );
 
         install( new GuicyFigModule( EntityManagerFig.class ) );
 

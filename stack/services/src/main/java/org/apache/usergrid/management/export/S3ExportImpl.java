@@ -17,7 +17,6 @@
 package org.apache.usergrid.management.export;
 
 
-import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
@@ -72,7 +71,7 @@ public class S3ExportImpl implements S3Export {
         try {
             BlobStore blobStore = context.getBlobStore();
             if ( blobStore.createContainerInLocation(null, bucketName) ) {
-                logger.info( "Created bucket " + bucketName );
+                logger.info( "Created bucket {}", bucketName );
             }
         }
         catch ( Exception ex ) {

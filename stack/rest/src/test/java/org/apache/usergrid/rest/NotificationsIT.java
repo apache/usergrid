@@ -78,6 +78,15 @@ public class NotificationsIT extends org.apache.usergrid.rest.test.resource.Abst
 
     @Test
     public void testPaging() throws Exception {
+
+        // this test should work even with indexing turned off for notificaitons collection
+        Entity payload = new Entity();
+        payload.put( "fields", "none");
+
+        String unIndexedCollectionName = "notifications";
+        app().collection( unIndexedCollectionName ).collection( "_settings" ).post( payload );
+        refreshIndex();
+
         // create notifier
         Entity notifier = new Entity().chainPut("name", "mynotifier").chainPut("provider", "noop");
 

@@ -17,14 +17,15 @@
 package org.apache.usergrid.tools.bean;
 
 
+import com.google.common.base.Preconditions;
+import org.apache.usergrid.persistence.*;
+import org.apache.usergrid.persistence.index.query.CounterResolution;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.*;
 
-import com.google.common.base.Preconditions;
-import org.apache.usergrid.persistence.index.query.CounterResolution;
 
 
 /** @author zznate */

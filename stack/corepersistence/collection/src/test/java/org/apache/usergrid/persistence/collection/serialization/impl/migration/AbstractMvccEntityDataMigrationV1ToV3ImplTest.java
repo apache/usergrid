@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.collection.serialization.impl.migration;
 
 import java.util.UUID;
 
+import com.datastax.driver.core.Session;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -87,6 +88,8 @@ public abstract class AbstractMvccEntityDataMigrationV1ToV3ImplTest
     @Inject
     public Keyspace keyspace;
     @Inject
+    public Session session;
+    @Inject
     public VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions;
     @Inject
     public MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3;
@@ -148,7 +151,7 @@ public abstract class AbstractMvccEntityDataMigrationV1ToV3ImplTest
         assertEquals( "Same instance for to", v3Impl.getClass(), tuple.to.getClass() );
 
 
-        MvccEntityDataMigrationImpl mvccEntityDataMigrationImpl = new MvccEntityDataMigrationImpl(keyspace, allVersions, mvccEntitySerializationStrategyV3, uniqueValueSerializationStrategy,  mvccLogEntrySerializationStrategy, migrationProvider);
+        MvccEntityDataMigrationImpl mvccEntityDataMigrationImpl = new MvccEntityDataMigrationImpl(keyspace, session, allVersions, mvccEntitySerializationStrategyV3, uniqueValueSerializationStrategy,  mvccLogEntrySerializationStrategy, migrationProvider);
 
 
         //now migration

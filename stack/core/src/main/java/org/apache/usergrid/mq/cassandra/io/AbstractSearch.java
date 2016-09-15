@@ -151,7 +151,7 @@ public abstract class AbstractSearch implements QueueSearch {
 
         if ( bounds == null ) {
             logger.error( "Necessary queue bounds not found" );
-            throw new QueueException( "Neccessary queue bounds not found" );
+            throw new QueueException( "Necessary queue bounds not found" );
         }
 
         UUID finish_uuid = params.reversed ? bounds.getOldest() : bounds.getNewest();
@@ -202,8 +202,10 @@ public abstract class AbstractSearch implements QueueSearch {
         while ( ( current_ts_shard >= start_ts_shard ) && ( current_ts_shard <= finish_ts_shard )
                 && comparator.compare( start, finish_uuid ) < 1 ) {
 
-            logger.info( "Starting search with start UUID {}, finish UUID {}, and reversed {}",
-                    new Object[] { lastValue, finish_uuid, params.reversed } );
+            if( logger.isDebugEnabled() ) {
+                logger.debug("Starting search with start UUID {}, finish UUID {}, and reversed {}",
+                    lastValue, finish_uuid, params.reversed);
+            }
 
 
             SliceQuery<ByteBuffer, UUID, ByteBuffer> q = createSliceQuery( ko, be, ue, be );
@@ -299,9 +301,8 @@ public abstract class AbstractSearch implements QueueSearch {
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Writing last client id pointer of '{}' for queue '{}' and consumer '{}' with timestamp '{}",
-                    new Object[] {
                             lastReturnedId, queueId, consumerId, colTimestamp
-                    } );
+                    );
         }
 
         mutator.addInsertion( consumerId, CONSUMERS.getColumnFamily(),

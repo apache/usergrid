@@ -64,7 +64,9 @@ public class ContentTypeFilter implements Filter {
      */
     @Override
     public void init( FilterConfig filterConfig ) throws ServletException {
-        logger.info( "Starting content type filter" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Starting content type filter");
+        }
     }
 
 
@@ -135,8 +137,8 @@ public class ContentTypeFilter implements Filter {
 
             String path = origRequest.getRequestURI();
             String method = origRequest.getMethod();
-            if (logger.isDebugEnabled()) {
-                logger.debug("Content path is '{}'", path);
+            if (logger.isTraceEnabled()) {
+                logger.trace("Content path is '{}'", path);
             }
 
 
@@ -155,9 +157,8 @@ public class ContentTypeFilter implements Filter {
                 // request has no body, set type to application/json
                 if ( ( HttpMethod.POST.equals( method ) || HttpMethod.PUT.equals( method ) )
                     && !MediaType.APPLICATION_FORM_URLENCODED.equals( getContentType() ) ) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Setting content type to application/json " +
-                            "for POST or PUT with no content at path '{}'", path);
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Setting content type to application/json for POST or PUT with no content at path '{}'", path);
                     }
 
                     setHeader( HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON );
@@ -172,9 +173,8 @@ public class ContentTypeFilter implements Filter {
                  && !MediaType.APPLICATION_JSON.equals( getContentType() )) {
 
                 // request appears to be JSON so set type to application/json
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Setting content type to application/json " +
-                        "for POST or PUT with json content at path '{}'", path);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Setting content type to application/json for POST or PUT with json content at path '{}'", path);
                 }
                 setHeader( HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON );
                 setHeader( HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON );

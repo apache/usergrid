@@ -33,7 +33,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * // TODO: Document this
  *
- * @author ApigeeCorporation
  * @since 4.0
  */
 public class OrderByTest extends QueryTestBase {

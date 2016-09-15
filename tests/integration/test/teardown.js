@@ -47,10 +47,50 @@ module.exports = {
                         body.count.should.equal(0);
                         cb(err);
                     })
+                },
+                function(cb) {
+                    entities.deleteAll('devices', function(err, body) {
+                        should(err).be.null;
+                        body.entities.should.be.an.instanceOf(Array).and.have.lengthOf(0);
+                        body.count.should.equal(0);
+                        cb(err);
+                    })
+                },
+                function(cb) {
+                    entities.deleteAll('groups', function(err, body) {
+                        should(err).be.null;
+                        body.entities.should.be.an.instanceOf(Array).and.have.lengthOf(0);
+                        body.count.should.equal(0);
+                        cb(err);
+                    })
+                },
+                function(cb) {
+                    entities.deleteAll('notifiers', function(err, body) {
+                        should(err).be.null;
+                        body.entities.should.be.an.instanceOf(Array).and.have.lengthOf(0);
+                        body.count.should.equal(0);
+                        cb(err);
+                    })
+                },
+                function(cb) {
+                    entities.deleteAll('notifications', function(err, body) {
+                        should(err).be.null;
+                        body.entities.should.be.an.instanceOf(Array).and.have.lengthOf(0);
+                        body.count.should.equal(0);
+                        cb(err);
+                    })
+                },
+                function(cb) {
+                    entities.deleteAll('receipts', function(err, body) {
+                        should(err).be.null;
+                        body.entities.should.be.an.instanceOf(Array).and.have.lengthOf(0);
+                        body.count.should.equal(0);
+                        cb(err);
+                    })
                 }
             ],
             function(err, data) {
                 cb(err);
             });
     }
-}
+};

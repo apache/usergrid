@@ -25,6 +25,7 @@ import net.tanesha.recaptcha.ReCaptcha;
 import net.tanesha.recaptcha.ReCaptchaFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.management.ManagementService;
+import org.apache.usergrid.management.OrganizationConfig;
 import org.apache.usergrid.mq.QueueManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
@@ -43,6 +44,7 @@ import javax.xml.ws.spi.http.HttpContext;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 
 public abstract class AbstractContextResource {
@@ -52,6 +54,9 @@ public abstract class AbstractContextResource {
     protected static final TypeReference<List<Object>> listTypeReference = new TypeReference<List<Object>>() {
     };
     protected static final ObjectMapper mapper = new ObjectMapper();
+
+    public final static String ROLE_SERVICE_ADMIN = "service-admin";
+    public static final String USERGRID_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
 
 
     protected AbstractContextResource parent;
@@ -116,8 +121,8 @@ public abstract class AbstractContextResource {
 
 
     public <T extends AbstractContextResource> T getSubResource(Class<T> t) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("getSubResource: " + t.getCanonicalName());
+        if (logger.isTraceEnabled()) {
+            logger.trace("getSubResource: {}", t.getCanonicalName());
         }
         T subResource = resourceContext.getResource(t);
         subResource.setParent(this);
@@ -163,6 +168,51 @@ public abstract class AbstractContextResource {
 
 
     public Viewable handleViewable(String template, Object model) {
+        return handleViewable(template, model, management.getOrganizationConfigDefaultsOnly());
+    }
+
+
+    public Viewable handleViewable(String template, Object model, String organizationName) {
+        OrganizationConfig orgConfig;
+        try {
+            if (!StringUtils.isBlank(organizationName)) {
+                orgConfig = management.getOrganizationConfigByName(organizationName);
+            } else {
+                orgConfig = management.getOrganizationConfigDefaultsOnly();
+            }
+        }
+        catch (Exception e) {
+            // fall back to non-org
+            if (logger.isInfoEnabled()) {
+                logger.info("handleViewable: unable to retrieve org config by org name: " + organizationName);
+            }
+            orgConfig = management.getOrganizationConfigDefaultsOnly();
+        }
+        return handleViewable(template, model, orgConfig);
+    }
+
+
+    public Viewable handleViewable(String template, Object model, UUID organizationId) {
+        OrganizationConfig orgConfig;
+        try {
+            if (organizationId != null) {
+                orgConfig = management.getOrganizationConfigByUuid(organizationId);
+            } else {
+                orgConfig = management.getOrganizationConfigDefaultsOnly();
+            }
+        }
+        catch (Exception e) {
+            // fall back to non-org
+            if (logger.isInfoEnabled() && organizationId != null) {
+                logger.info("handleViewable: unable to retrieve org config by org UUID: " + organizationId.toString());
+            }
+            orgConfig = management.getOrganizationConfigDefaultsOnly();
+        }
+        return handleViewable(template, model, orgConfig);
+    }
+
+
+    public Viewable handleViewable(String template, Object model, OrganizationConfig orgConfig) {
 
         String className = this.getClass().getName().toLowerCase();
         String packageName = AbstractContextResource.class.getPackage().getName();
@@ -171,31 +221,31 @@ public abstract class AbstractContextResource {
             StringUtils.removeEnd(className.toLowerCase(), "resource")
                 .substring(packageName.length()) + "." + template.toLowerCase();
 
-        String redirect_url = properties.getProperty(template_property);
+        String redirect_url = orgConfig.getProperty(template_property);
 
         if (StringUtils.isNotBlank(redirect_url)) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Redirecting to URL: ", redirect_url);
+                logger.debug("Redirecting to URL: {}", redirect_url);
             }
             sendRedirect(redirect_url);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Dispatching to viewable with template: {}", template, template_property);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Dispatching to viewable with template: {}  property: {}", template, template_property);
         }
 
-        Viewable viewable = new Viewable(template, model);
-        return viewable;
+        return new Viewable(template, model);
     }
 
 
     protected ApiResponse createApiResponse() {
-        return new ApiResponse(properties);
+        return new ApiResponse(properties, management);
     }
 
     protected EntityManagerFactory getEmf(){
         return emf;
     }
+
     /**
      * Next three new methods necessary to work around inexplicable problems with EntityHolder.
      * This problem happens consistently when you deploy "two-dot-o" to Tomcat:
@@ -211,5 +261,18 @@ public abstract class AbstractContextResource {
             jsonObject = mapper.readValue(content, mapTypeReference);
         }
         return jsonObject;
+    }
+
+
+    /**
+     * check if its a system admin
+     * @return
+     */
+    public Boolean userServiceAdmin(String username) {
+
+        if (sc.isUserInRole(ROLE_SERVICE_ADMIN) || (username != null && username.equals(properties.getProperty(USERGRID_SYSADMIN_LOGIN_NAME)))) {
+            return true;
+        }
+        return false;
     }
 }

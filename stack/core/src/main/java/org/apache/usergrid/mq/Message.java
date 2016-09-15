@@ -30,7 +30,6 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.clearspring.analytics.hash.MurmurHash;
 import org.apache.usergrid.utils.UUIDUtils;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -55,7 +54,6 @@ import static org.apache.usergrid.utils.ConversionUtils.getInt;
 import static org.apache.usergrid.utils.ConversionUtils.uuid;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.apache.usergrid.utils.UUIDUtils.getTimestampInMillis;
-import static org.apache.usergrid.utils.UUIDUtils.isTimeBased;
 import static org.apache.usergrid.utils.UUIDUtils.newTimeUUID;
 
 
@@ -486,7 +484,7 @@ public class Message {
 
     public void setUuid( UUID uuid ) {
         properties.put(MESSAGE_ID, uuid);
-        properties.put(MESSAGE_TIMESTAMP, UUIDUtils.getUUIDLong(uuid));
+        properties.put(MESSAGE_TIMESTAMP, UUIDUtils.getTimestampInMillis(uuid));
     }
 
 

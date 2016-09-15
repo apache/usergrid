@@ -45,7 +45,6 @@
     </bean>
 
     <bean id="setup" class="org.apache.usergrid.corepersistence.CpSetup">
-
         <constructor-arg ref="entityManagerFactory"/>
         <constructor-arg ref="cassandraService"/>
         <constructor-arg ref="injector"/>
@@ -55,6 +54,7 @@
     <bean id="coreManager" class="org.apache.usergrid.persistence.CoreSchemaManager">
         <constructor-arg ref="setup"/>
         <constructor-arg ref="cassandraCluster"/>
+        <constructor-arg ref="injector"/>
     </bean>
 
 </beans>

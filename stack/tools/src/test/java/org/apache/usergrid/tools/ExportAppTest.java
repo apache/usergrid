@@ -20,6 +20,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.ServiceITSetup;
 import org.apache.usergrid.ServiceITSetupImpl;
 import org.junit.ClassRule;
+import org.apache.usergrid.services.AbstractServiceIT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +35,7 @@ import org.apache.usergrid.StressTest;
 /**
  * TODO: better test, this is really just a smoke test.
  */
-public class ExportAppTest {
+public class ExportAppTest extends AbstractServiceIT {
     static final Logger logger = LoggerFactory.getLogger( ExportAppTest.class );
 
     int NUM_COLLECTIONS = 10;
@@ -43,6 +44,7 @@ public class ExportAppTest {
 
     @ClassRule
     public static ServiceITSetup setup = new ServiceITSetupImpl();
+
 
     @org.junit.Test
     public void testBasicOperation() throws Exception {
@@ -55,6 +57,7 @@ public class ExportAppTest {
         String appName = "app_" + rand;
         String userName = "user_" + rand;
 
+
         ExportDataCreator creator = new ExportDataCreator();
         creator.startTool( new String[] {
                 "-organization", orgName,
@@ -63,6 +66,7 @@ public class ExportAppTest {
                 "-host", "localhost:9160",
                 "-eshost", "localhost:9200",
                 "-escluster", "elasticsearch"
+
         }, false);
 
         long start = System.currentTimeMillis();
