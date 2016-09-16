@@ -20,17 +20,15 @@ package org.apache.usergrid.rest.management.organizations;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang.StringUtils;
-import org.apache.shiro.SecurityUtils;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.exceptions.ManagementException;
+import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
-import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
-import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +41,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 import java.util.*;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_PATH;
 
 
 @Component( "org.apache.usergrid.rest.management.organizations.OrganizationsResource" )
@@ -71,11 +70,44 @@ public class OrganizationsResource extends AbstractContextResource {
 
     @GET
     @RequireSystemAccess
-    public ApiResponse getAllOrganizations() throws Exception{
+    @Produces(MediaType.APPLICATION_JSON)
+    public ApiResponse getAllOrganizations(@Context UriInfo ui) throws Exception{
 
         ApiResponse response = createApiResponse();
-        //TODO this needs paging at some point
-        List<OrganizationInfo> orgs = management.getOrganizations(null, 10000);
+
+        String cursor = ui.getQueryParameters().getFirst("cursor");
+        String limitString = ui.getQueryParameters().getFirst("limit");
+        int limit = 10;
+        if( isNotEmpty(limitString)){
+            try {
+                limit = Integer.valueOf(limitString);
+            }catch (NumberFormatException e){
+                // do nothing let it be default
+            }
+        }
+        if (limit < 1) {
+            limit = 1;
+        } else if (limit > 1000) {
+            limit = 1000;
+        }
+
+
+
+        EntityManager em = emf.getManagementEntityManager();
+        Query query = new Query();
+        query.setCursor(cursor);
+        query.setLimit(limit);
+        Results results = em.searchCollection(em.getApplicationRef(), Schema.COLLECTION_GROUPS, query);
+
+        List<OrganizationInfo> orgs = new ArrayList<>( results.size() );
+        OrganizationInfo orgInfo;
+        for ( Entity entity : results.getEntities() ) {
+
+            String path = ( String ) entity.getProperty( PROPERTY_PATH );
+            orgInfo = new OrganizationInfo( entity.getUuid(), path );
+            orgs.add( orgInfo );
+        }
+
         List<Object> jsonOrgList = new ArrayList<>();
 
         for(OrganizationInfo org: orgs){
@@ -92,6 +124,8 @@ public class OrganizationsResource extends AbstractContextResource {
         }
 
         response.setProperty("organizations", jsonOrgList);
+        response.setCount(orgs.size());
+        response.setCursor(results.getCursor());
 
         return response;
     }
