@@ -33,7 +33,7 @@ public class TableDefinitionTest {
     public void testNullTableName(){
 
         try{
-            TableDefinitionImpl table1 = new TableDefinitionImpl(null, null, null, null, null, null);
+            TableDefinitionImpl table1 = new TableDefinitionImpl(null, null, null, null, null, null, null);
         } catch (NullPointerException npe){
             assertEquals("Table name cannot be null", npe.getMessage());
         }
@@ -45,7 +45,7 @@ public class TableDefinitionTest {
     public void testNullPrimaryKeys(){
 
         try{
-            TableDefinitionImpl table1 = new TableDefinitionImpl("table1", null, null, null, null, null);
+            TableDefinitionImpl table1 = new TableDefinitionImpl(null, "table1", null, null, null, null, null);
         } catch (NullPointerException npe){
             assertEquals("Primary Key(s) cannot be null", npe.getMessage());
         }
@@ -57,7 +57,7 @@ public class TableDefinitionTest {
     public void testNullColumns(){
 
         try{
-            TableDefinitionImpl table1 = new TableDefinitionImpl("table1",
+            TableDefinitionImpl table1 = new TableDefinitionImpl(null, "table1",
                 new ArrayList<>(), null, null, null, null);
         } catch (NullPointerException npe){
             assertEquals("Columns cannot be null", npe.getMessage());
@@ -70,7 +70,7 @@ public class TableDefinitionTest {
     public void testNullCacheOption(){
 
         try{
-            TableDefinitionImpl table1 = new TableDefinitionImpl("table1",
+            TableDefinitionImpl table1 = new TableDefinitionImpl(null, "table1",
                 new ArrayList<>(),
                 new ArrayList<>(), new HashMap<>(), null, null);
         } catch (NullPointerException npe){

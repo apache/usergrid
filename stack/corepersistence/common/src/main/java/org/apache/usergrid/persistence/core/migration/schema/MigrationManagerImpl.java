@@ -73,6 +73,8 @@ public class MigrationManagerImpl implements MigrationManager {
 
             dataStaxCluster.createApplicationKeyspace();
 
+            dataStaxCluster.createApplicationLocalKeyspace();
+
             for ( Migration migration : migrations ) {
 
                 final Collection<MultiTenantColumnFamilyDefinition> columnFamilies = migration.getColumnFamilies();
@@ -143,10 +145,10 @@ public class MigrationManagerImpl implements MigrationManager {
     private void createTable(TableDefinition tableDefinition ) throws Exception {
 
         KeyspaceMetadata keyspaceMetadata = dataStaxCluster.getClusterSession().getCluster().getMetadata()
-            .getKeyspace(CQLUtils.quote(cassandraFig.getApplicationKeyspace()));
+            .getKeyspace(CQLUtils.quote( tableDefinition.getKeyspace() ) );
 
         boolean exists =  keyspaceMetadata != null
-            && keyspaceMetadata.getTable(tableDefinition.getTableName()) != null;
+            && keyspaceMetadata.getTable( tableDefinition.getTableName() ) != null;
 
         if( exists ){
             return;
@@ -156,10 +158,15 @@ public class MigrationManagerImpl implements MigrationManager {
         if (logger.isDebugEnabled()) {
             logger.debug(CQL);
         }
-        dataStaxCluster.getApplicationSession()
-            .execute(CQL);
 
-        logger.info("Created table: {}", tableDefinition.getTableName());
+        if ( tableDefinition.getKeyspace().equals( cassandraFig.getApplicationKeyspace() )) {
+            dataStaxCluster.getApplicationSession().execute( CQL );
+        } else {
+            dataStaxCluster.getApplicationLocalSession().execute( CQL );
+        }
+
+        logger.info("Created table: {} in keyspace {}",
+            tableDefinition.getTableName(), tableDefinition.getKeyspace());
 
     }
 

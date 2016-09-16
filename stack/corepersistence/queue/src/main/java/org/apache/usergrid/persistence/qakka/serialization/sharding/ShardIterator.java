@@ -108,7 +108,7 @@ public class ShardIterator implements Iterator<Shard> {
                 .and(shardIdClause)
                 .limit(PAGE_SIZE);
 
-        List<Row> rows = cassandraClient.getSession().execute(query).all();
+        List<Row> rows = cassandraClient.getQueueMessageSession().execute(query).all();
 
 
         currentIterator = getIteratorFromRows(rows);

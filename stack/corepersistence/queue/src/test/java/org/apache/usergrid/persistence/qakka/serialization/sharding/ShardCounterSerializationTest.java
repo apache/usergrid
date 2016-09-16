@@ -32,32 +32,31 @@ import static org.junit.Assert.fail;
 
 public class ShardCounterSerializationTest extends AbstractTest {
 
-    
+
     @Test
     public void testBasicOperation() throws Exception {
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
 
-        ShardCounterSerialization scs = getInjector().getInstance( ShardCounterSerialization.class ); 
-       
+        ShardCounterSerialization scs = getInjector().getInstance( ShardCounterSerialization.class );
+
         String queueName = "scst_queue_" + RandomStringUtils.randomAlphanumeric( 20 );
         long shardId = 100L;
-       
+
         try {
             scs.getCounterValue( queueName, Shard.Type.DEFAULT, shardId );
             fail("Should have throw NotFoundException");
         } catch ( NotFoundException expected ) {
-            // pass 
+            // pass
         }
 
         scs.incrementCounter( queueName, Shard.Type.DEFAULT, shardId, 10 );
         Assert.assertEquals( 10, scs.getCounterValue( queueName, Shard.Type.DEFAULT, shardId ) );
-        
+
         scs.incrementCounter( queueName, Shard.Type.DEFAULT, shardId, 50 );
         Assert.assertEquals( 60, scs.getCounterValue( queueName, Shard.Type.DEFAULT, shardId ) );
-        
+
         scs.incrementCounter( queueName, Shard.Type.DEFAULT, shardId, 150 );
         Assert.assertEquals( 210, scs.getCounterValue( queueName, Shard.Type.DEFAULT, shardId ) );
     }

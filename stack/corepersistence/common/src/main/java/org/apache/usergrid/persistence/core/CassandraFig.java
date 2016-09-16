@@ -87,6 +87,10 @@ public interface CassandraFig extends GuicyFig {
     @Default( "Usergrid_Applications" )
     String getApplicationKeyspace();
 
+    @Key( "cassandra.keyspace.application_local" )
+    @Default( "Usergrid_Applications_Local" )
+    String getApplicationLocalKeyspace();
+
     @Key( "cassandra.port" )
     @Default( "9160" )
     int getThriftPort();

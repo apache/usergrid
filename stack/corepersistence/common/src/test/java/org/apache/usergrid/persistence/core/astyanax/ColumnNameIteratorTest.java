@@ -115,6 +115,17 @@ public class ColumnNameIteratorTest {
             public int[] getShardSettings() {
                 return new int[]{20};
             }
+
+            @Override
+            public String getApplicationKeyspace() {
+                return cassandraFig.getApplicationKeyspace();
+            }
+
+            @Override
+            public String getApplicationLocalKeyspace() {
+                return cassandraFig.getApplicationLocalKeyspace();
+            }
+
         };
 
 

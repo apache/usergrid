@@ -26,14 +26,13 @@ import com.google.inject.Injector;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
-import org.apache.usergrid.persistence.qakka.QakkaFig;
-import org.apache.usergrid.persistence.qakka.core.impl.InMemoryQueue;
-import org.apache.usergrid.persistence.qakka.serialization.Result;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.App;
-import org.apache.usergrid.persistence.qakka.QakkaModule;
+import org.apache.usergrid.persistence.qakka.QakkaFig;
+import org.apache.usergrid.persistence.qakka.core.impl.InMemoryQueue;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
+import org.apache.usergrid.persistence.qakka.serialization.Result;
 import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLog;
 import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLogSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
@@ -42,8 +41,8 @@ import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMe
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLog;
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLogSerialization;
 import org.apache.usergrid.persistence.queue.TestModule;
-import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +73,6 @@ public class QueueMessageManagerTest extends AbstractTest {
         Injector injector = getInjector();
 
         CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
         DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
         ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
@@ -136,12 +134,12 @@ public class QueueMessageManagerTest extends AbstractTest {
 
 
     @Test
+    @Ignore
     public void testQueueMessageTimeouts() throws Exception {
 
         Injector injector = getInjector();
 
         CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
         DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
         QakkaFig qakkaFig             = injector.getInstance( QakkaFig.class );
@@ -225,12 +223,12 @@ public class QueueMessageManagerTest extends AbstractTest {
 
 
     @Test
+    @Ignore
     public void testGetWithMissingData() throws InterruptedException {
 
         Injector injector = getInjector();
 
         CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
         injector.getInstance( App.class ); // init the INJECTOR
 

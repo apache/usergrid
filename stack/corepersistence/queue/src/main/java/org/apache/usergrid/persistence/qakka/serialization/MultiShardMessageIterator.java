@@ -143,7 +143,7 @@ public class MultiShardMessageIterator implements Iterator<DatabaseQueueMessage>
                     .limit(PAGE_SIZE);
         }
 
-        List<Row> rows = cassandraClient.getSession().execute(query).all();
+        List<Row> rows = cassandraClient.getQueueMessageSession().execute(query).all();
 
         if ( (rows == null || rows.size() == 0) && shardIterator.hasNext()) {
 

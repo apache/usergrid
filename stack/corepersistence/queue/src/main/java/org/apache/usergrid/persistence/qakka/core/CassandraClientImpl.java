@@ -31,19 +31,32 @@ import org.slf4j.LoggerFactory;
 public class CassandraClientImpl implements CassandraClient {
     private static final Logger logger = LoggerFactory.getLogger( CassandraClientImpl.class );
 
-    private final Session session;
+    private final DataStaxCluster dataStaxCluster;
+    private Session applicationSession = null;
+    private Session queueMessageSession = null;
+
 
     @Inject
     public CassandraClientImpl( DataStaxCluster dataStaxCluster) {
-
         logger.info("Constructing Cassandra client");
-
-        this.session = dataStaxCluster.getApplicationSession();
+        this.dataStaxCluster = dataStaxCluster;
     }
 
 
     @Override
-    public Session getSession() {
-        return session;
+    public Session getApplicationSession() {
+        if ( applicationSession == null ) {
+            applicationSession = dataStaxCluster.getApplicationSession();
+        }
+        return applicationSession;
+    }
+
+
+    @Override
+    public Session getQueueMessageSession() {
+        if ( queueMessageSession == null ) {
+            queueMessageSession = dataStaxCluster.getApplicationLocalSession();
+        }
+        return queueMessageSession;
     }
 }

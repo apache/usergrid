@@ -36,7 +36,6 @@ public class DatabaseQueueSerializationTest extends AbstractTest {
     public void writeQueue(){
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
         QueueSerialization queueSerialization = getInjector().getInstance( QueueSerialization.class );
 
         DatabaseQueue queue = new DatabaseQueue("test", "west", "west", 0L, 0, 0, "test_dlq");
@@ -51,7 +50,6 @@ public class DatabaseQueueSerializationTest extends AbstractTest {
     public void loadQueue(){
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
         QueueSerialization queueSerialization = getInjector().getInstance( QueueSerialization.class );
 
         DatabaseQueue queue = new DatabaseQueue("test1", "west", "west", 0L, 0, 0, "test_dlq");
@@ -68,7 +66,6 @@ public class DatabaseQueueSerializationTest extends AbstractTest {
     public void deleteQueue(){
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
         QueueSerialization queueSerialization = getInjector().getInstance( QueueSerialization.class );
 
         DatabaseQueue queue = new DatabaseQueue("test1", "west", "west", 0L, 0, 0, "test_dlq");

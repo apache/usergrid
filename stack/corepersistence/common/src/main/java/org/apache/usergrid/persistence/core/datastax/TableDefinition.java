@@ -28,6 +28,8 @@ public interface TableDefinition {
         CREATE, UPDATE
     }
 
+    String getKeyspace();
+
     String getTableName();
 
     String getTableCQL( CassandraFig cassandraFig, ACTION tableAction ) throws Exception;

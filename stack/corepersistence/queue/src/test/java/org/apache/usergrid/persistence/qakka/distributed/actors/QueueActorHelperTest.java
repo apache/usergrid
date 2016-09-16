@@ -21,26 +21,26 @@ package org.apache.usergrid.persistence.qakka.distributed.actors;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.App;
-import org.apache.usergrid.persistence.qakka.QakkaModule;
 import org.apache.usergrid.persistence.qakka.core.*;
+import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.serialization.Result;
 import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLog;
 import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLogSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
-import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
 import org.apache.usergrid.persistence.queue.TestModule;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.UUID;
 
 
+@NotThreadSafe
 public class QueueActorHelperTest extends AbstractTest {
 
 
@@ -54,7 +54,6 @@ public class QueueActorHelperTest extends AbstractTest {
 
         Injector injector = getInjector();
         CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
         injector.getInstance( App.class ); // init the INJECTOR
 
@@ -102,7 +101,6 @@ public class QueueActorHelperTest extends AbstractTest {
 
         Injector injector = getInjector();
         CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
 
         injector.getInstance( App.class ); // init the INJECTOR
@@ -136,7 +134,6 @@ public class QueueActorHelperTest extends AbstractTest {
 
         Injector injector = getInjector();
         CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
 
         injector.getInstance( App.class ); // init the INJECTOR
@@ -208,7 +205,6 @@ public class QueueActorHelperTest extends AbstractTest {
 
         Injector injector = getInjector();
         CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
 
         injector.getInstance( App.class ); // init the INJECTOR
@@ -272,7 +268,6 @@ public class QueueActorHelperTest extends AbstractTest {
 
         Injector injector = getInjector();
         CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
 
         injector.getInstance( App.class ); // init the INJECTOR

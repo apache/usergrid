@@ -29,6 +29,7 @@ import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -39,11 +40,13 @@ public class AbstractTest {
 
     protected static Injector sharedInjector;
 
+    AtomicBoolean migrated = new AtomicBoolean( false );
+
     static { new KeyspaceDropper(); }
 
 
     public AbstractTest() {
-        if ( getInjector() == null ) {
+        if ( !migrated.getAndSet( true ) ) {
             setInjector( Guice.createInjector( new TestModule() ) );
             MigrationManager migrationManager = getInjector().getInstance( MigrationManager.class );
             try {

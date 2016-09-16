@@ -30,13 +30,13 @@ import org.junit.Test;
  * Created by russo on 6/8/16.
  */
 public class CassandraClientTest extends AbstractTest {
-    
+
     @Test
     public void getClient(){
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
 
-        Session session = cassandraClient.getSession();
+        Session session = cassandraClient.getApplicationSession();
 
         session.getLoggedKeyspace();
 

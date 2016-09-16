@@ -40,6 +40,7 @@ public class TableDefinitionImpl implements TableDefinition {
         ALL, KEYS, ROWS, NONE
     }
 
+    private final String keyspace;
     private final String tableName;
     private final Collection<String> partitionKeys;
     private final Collection<String> columnKeys;
@@ -71,16 +72,21 @@ public class TableDefinitionImpl implements TableDefinition {
     static String COMPOSITE_TYPE = "'org.apache.cassandra.db.marshal.DynamicCompositeType(a=>org.apache.cassandra.db.marshal.AsciiType,A=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.AsciiType),b=>org.apache.cassandra.db.marshal.BytesType,B=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.BytesType),i=>org.apache.cassandra.db.marshal.IntegerType,I=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.IntegerType),l=>org.apache.cassandra.db.marshal.LongType,L=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.LongType),s=>org.apache.cassandra.db.marshal.UTF8Type,S=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.UTF8Type),t=>org.apache.cassandra.db.marshal.TimeUUIDType,T=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.TimeUUIDType),u=>org.apache.cassandra.db.marshal.UUIDType,U=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.UUIDType),x=>org.apache.cassandra.db.marshal.LexicalUUIDType,X=>org.apache.cassandra.db.marshal.ReversedType(org.apache.cassandra.db.marshal.LexicalUUIDType))'";
 
 
-    public TableDefinitionImpl(final String tableName, final Collection<String> partitionKeys,
-                               final Collection<String> columnKeys, final Map<String, DataType.Name> columns,
-                               final CacheOption cacheOption, final Map<String, String> clusteringOrder){
+    public TableDefinitionImpl(
+        final String keyspace,
+        final String tableName,
+        final Collection<String> partitionKeys,
+        final Collection<String> columnKeys,
+        final Map<String, DataType.Name> columns,
+        final CacheOption cacheOption,
+        final Map<String, String> clusteringOrder) {
 
         Preconditions.checkNotNull(tableName, "Table name cannot be null");
         Preconditions.checkNotNull(partitionKeys, "Primary Key(s) cannot be null");
         Preconditions.checkNotNull(columns, "Columns cannot be null");
         Preconditions.checkNotNull(cacheOption, "CacheOption cannot be null");
 
-
+        this.keyspace = keyspace;
         this.tableName = tableName;
         this.partitionKeys = partitionKeys;
         this.columnKeys = columnKeys;
@@ -97,9 +103,11 @@ public class TableDefinitionImpl implements TableDefinition {
         this.compression = new HashMap<>(1);
         compression.put("sstable_compression", "LZ4Compressor");
         this.gcGraceSeconds = "864000";
+    }
 
-
-
+    @Override
+    public String getKeyspace() {
+        return keyspace;
     }
 
     public String getTableName() {

@@ -309,15 +309,21 @@ public class MapSerializationImpl implements MapSerialization {
     @Override
     public Collection<TableDefinition> getTables() {
 
-        final TableDefinition mapEntries =
-            new TableDefinitionImpl( MAP_ENTRIES_TABLE, MAP_ENTRIES_PARTITION_KEYS, MAP_ENTRIES_COLUMN_KEYS,
-                MAP_ENTRIES_COLUMNS, TableDefinitionImpl.CacheOption.KEYS, MAP_ENTRIES_CLUSTERING_ORDER);
+        final TableDefinition mapEntries = new TableDefinitionImpl( cassandraConfig.getApplicationKeyspace(),
+            MAP_ENTRIES_TABLE,
+            MAP_ENTRIES_PARTITION_KEYS,
+            MAP_ENTRIES_COLUMN_KEYS,
+            MAP_ENTRIES_COLUMNS,
+            TableDefinitionImpl.CacheOption.KEYS,
+            MAP_ENTRIES_CLUSTERING_ORDER);
 
-        final TableDefinition mapKeys =
-            new TableDefinitionImpl( MAP_KEYS_TABLE, MAP_KEYS_PARTITION_KEYS, MAP_KEYS_COLUMN_KEYS,
-                MAP_KEYS_COLUMNS, TableDefinitionImpl.CacheOption.KEYS, MAP_KEYS_CLUSTERING_ORDER);
-
-
+        final TableDefinition mapKeys = new TableDefinitionImpl( cassandraConfig.getApplicationKeyspace(),
+            MAP_KEYS_TABLE,
+            MAP_KEYS_PARTITION_KEYS,
+            MAP_KEYS_COLUMN_KEYS,
+            MAP_KEYS_COLUMNS,
+            TableDefinitionImpl.CacheOption.KEYS,
+            MAP_KEYS_CLUSTERING_ORDER);
 
         return Arrays.asList( mapEntries, mapKeys );
 

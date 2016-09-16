@@ -19,6 +19,7 @@
 
 package org.apache.usergrid.persistence.qakka.serialization;
 
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.core.CassandraClient;
@@ -44,17 +45,17 @@ import static org.junit.Assert.assertEquals;
 public class MultiShardDatabaseQueueMessageIteratorTest extends AbstractTest {
     private static final Logger logger = LoggerFactory.getLogger( MultiShardDatabaseQueueMessageIteratorTest.class );
 
-    
+
     @Test
     public void testIterator() throws InterruptedException {
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
+        CassandraFig cassandraFig = getInjector().getInstance( CassandraFig.class );
+        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraFig, cassandraClient );
 
-        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraClient );
-        
         QueueMessageSerialization queueMessageSerialization =
                 getInjector().getInstance( QueueMessageSerialization.class );
-        
+
         Shard shard1 = new Shard("test", "region", Shard.Type.DEFAULT, 1L, null);
         Shard shard2 = new Shard("test", "region", Shard.Type.DEFAULT, 2L, null);
         Shard shard3 = new Shard("test", "region", Shard.Type.DEFAULT, 3L, null);
@@ -71,7 +72,7 @@ public class MultiShardDatabaseQueueMessageIteratorTest extends AbstractTest {
         for(int i=0; i < numMessagesPerShard; i++){
 
             queueMessageSerialization.writeMessage( new DatabaseQueueMessage(QakkaUtils.getTimeUuid(),
-                    DatabaseQueueMessage.Type.DEFAULT, "test", "region", shard1.getShardId(), 
+                    DatabaseQueueMessage.Type.DEFAULT, "test", "region", shard1.getShardId(),
                     System.currentTimeMillis(), null, null));
             Thread.sleep(3);
         }
@@ -79,7 +80,7 @@ public class MultiShardDatabaseQueueMessageIteratorTest extends AbstractTest {
         for(int i=0; i < numMessagesPerShard; i++){
 
             queueMessageSerialization.writeMessage( new DatabaseQueueMessage(QakkaUtils.getTimeUuid(),
-                    DatabaseQueueMessage.Type.DEFAULT, "test", "region", shard2.getShardId(), 
+                    DatabaseQueueMessage.Type.DEFAULT, "test", "region", shard2.getShardId(),
                     System.currentTimeMillis(), null, null));
             Thread.sleep(3);
         }
@@ -87,7 +88,7 @@ public class MultiShardDatabaseQueueMessageIteratorTest extends AbstractTest {
         for(int i=0; i < numMessagesPerShard; i++){
 
             queueMessageSerialization.writeMessage( new DatabaseQueueMessage(QakkaUtils.getTimeUuid(),
-                    DatabaseQueueMessage.Type.DEFAULT, "test", "region", shard3.getShardId(), 
+                    DatabaseQueueMessage.Type.DEFAULT, "test", "region", shard3.getShardId(),
                     System.currentTimeMillis(), null, null));
             Thread.sleep(3);
         }
@@ -95,7 +96,7 @@ public class MultiShardDatabaseQueueMessageIteratorTest extends AbstractTest {
         for(int i=0; i < numMessagesPerShard; i++){
 
             queueMessageSerialization.writeMessage( new DatabaseQueueMessage(QakkaUtils.getTimeUuid(),
-                    DatabaseQueueMessage.Type.DEFAULT, "test", "region", shard4.getShardId(), 
+                    DatabaseQueueMessage.Type.DEFAULT, "test", "region", shard4.getShardId(),
                     System.currentTimeMillis(), null, null));
             Thread.sleep(3);
         }
@@ -103,12 +104,12 @@ public class MultiShardDatabaseQueueMessageIteratorTest extends AbstractTest {
 
         ShardIterator shardIterator = new ShardIterator(
                 cassandraClient, "test", "region", Shard.Type.DEFAULT, Optional.empty());
-        MultiShardMessageIterator iterator = new MultiShardMessageIterator( 
+        MultiShardMessageIterator iterator = new MultiShardMessageIterator(
                 cassandraClient, "test", "region", DatabaseQueueMessage.Type.DEFAULT, shardIterator, null);
 
-        final AtomicInteger[] counts = { 
+        final AtomicInteger[] counts = {
                 new AtomicInteger(0), new AtomicInteger(0), new AtomicInteger(0), new AtomicInteger(0) };
-        
+
         iterator.forEachRemaining(message -> {
             //logger.info("Shard ID: {}, DatabaseQueueMessage ID: {}", message.getShardId(), message.getMessageId());
             counts[ (int)(message.getShardId() - 1) ] .incrementAndGet();

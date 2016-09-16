@@ -39,6 +39,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     private final CassandraFig cassandraFig;
     private Cluster cluster;
     private Session applicationSession;
+    private Session queueMessageSession;
     private Session clusterSession;
 
     @Inject
@@ -90,6 +91,17 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     }
 
 
+    @Override
+    public Session getApplicationLocalSession(){
+
+        // always grab cluster from getCluster() in case it was prematurely closed
+        if ( queueMessageSession == null || queueMessageSession.isClosed() ){
+            queueMessageSession = getCluster().connect( CQLUtils.quote(cassandraFig.getApplicationLocalKeyspace() ) );
+        }
+        return queueMessageSession;
+    }
+
+
     /**
      * Execute CQL that will create the keyspace if it doesn't exist and alter it if it does.
      * @throws Exception
@@ -116,6 +128,36 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         logger.info("Created keyspace: {}", cassandraFig.getApplicationKeyspace());
 
     }
+
+
+
+    /**
+     * Execute CQL that will create the keyspace if it doesn't exist and alter it if it does.
+     * @throws Exception
+     */
+    @Override
+    public void createApplicationLocalKeyspace() throws Exception {
+
+        boolean exists = getClusterSession().getCluster().getMetadata()
+            .getKeyspace(CQLUtils.quote(cassandraFig.getApplicationLocalKeyspace())) != null;
+
+        if (exists) {
+            return;
+        }
+
+        final String createQueueMessageKeyspace = String.format(
+            "CREATE KEYSPACE IF NOT EXISTS %s WITH replication = %s",
+            CQLUtils.quote(cassandraFig.getApplicationLocalKeyspace()),
+            CQLUtils.getFormattedReplication(cassandraFig.getStrategy(), cassandraFig.getStrategyOptions())
+
+        );
+
+        getClusterSession().execute(createQueueMessageKeyspace);
+
+        logger.info("Created keyspace: {}", cassandraFig.getApplicationLocalKeyspace());
+
+    }
+
 
     /**
      * Wait until all Cassandra nodes agree on the schema.  Sleeps 100ms between checks.

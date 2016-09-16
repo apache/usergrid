@@ -41,6 +41,9 @@ public class CassandraConfigImpl implements CassandraConfig {
     private int[] shardSettings;
     private ConsistencyLevel consistentCl;
 
+    private String applicationKeyspace;
+    private String applicationLocalKeyspace;
+
     // DataStax driver's CL
     private com.datastax.driver.core.ConsistencyLevel dataStaxReadCl;
     private com.datastax.driver.core.ConsistencyLevel dataStaxWriteCl;
@@ -64,6 +67,10 @@ public class CassandraConfigImpl implements CassandraConfig {
         this.dataStaxReadConsistentCl = com.datastax.driver.core.ConsistencyLevel.valueOf( cassandraFig.getReadClConsistent());
 
         this.dataStaxWriteCl = com.datastax.driver.core.ConsistencyLevel.valueOf( cassandraFig.getWriteCl() );
+
+        this.applicationKeyspace = cassandraFig.getApplicationKeyspace();
+
+        this.applicationLocalKeyspace = cassandraFig.getApplicationLocalKeyspace();
 
         //add the listeners to update the values
         cassandraFig.addPropertyChangeListener( new PropertyChangeListener() {
@@ -133,4 +140,15 @@ public class CassandraConfigImpl implements CassandraConfig {
 
       return settings;
     }
+
+    @Override
+    public String getApplicationKeyspace() {
+        return applicationKeyspace;
+    }
+
+    @Override
+    public String getApplicationLocalKeyspace() {
+        return applicationLocalKeyspace;
+    }
+
 }

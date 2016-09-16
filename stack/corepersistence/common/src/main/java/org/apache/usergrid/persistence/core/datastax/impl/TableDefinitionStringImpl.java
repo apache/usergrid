@@ -25,15 +25,22 @@ import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 
 public class TableDefinitionStringImpl implements TableDefinition {
 
+    private String keyspace;
     private String tableName;
     private String cql;
 
 
-    public TableDefinitionStringImpl( String tableName, String cql ) {
+    public TableDefinitionStringImpl( String keyspace, String tableName, String cql ) {
+        this.keyspace = keyspace;
         this.tableName = tableName;
         this.cql = cql;
     }
 
+
+    @Override
+    public String getKeyspace() {
+        return keyspace;
+    }
 
     @Override
     public String getTableName() {

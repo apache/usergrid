@@ -69,13 +69,9 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
     private static final Map<String, String> UNIQUE_VALUES_LOG_CLUSTERING_ORDER =
         new HashMap<String, String>(){{ put( "column1", "ASC" );}};
 
-    private final static TableDefinition uniqueValues =
-        new TableDefinitionImpl( UNIQUE_VALUES_TABLE, UNIQUE_VALUES_PARTITION_KEYS, UNIQUE_VALUES_COLUMN_KEYS,
-            UNIQUE_VALUES_COLUMNS, TableDefinitionImpl.CacheOption.KEYS, UNIQUE_VALUES_CLUSTERING_ORDER);
+    private static TableDefinition uniqueValues;
 
-    private final static TableDefinition uniqueValuesLog =
-        new TableDefinitionImpl( UNIQUE_VALUES_LOG_TABLE, UNIQUE_VALUES_LOG_PARTITION_KEYS, UNIQUE_VALUES_LOG_COLUMN_KEYS,
-            UNIQUE_VALUES_LOG_COLUMNS, TableDefinitionImpl.CacheOption.KEYS, UNIQUE_VALUES_LOG_CLUSTERING_ORDER);
+    private static TableDefinition uniqueValuesLog;
 
 
     /**
@@ -104,8 +100,8 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
     @Override
     public Collection<TableDefinition> getTables() {
 
-        final TableDefinition uniqueValues = getUniqueValuesTable();
-        final TableDefinition uniqueValuesLog = getEntityUniqueLogTable();
+        final TableDefinition uniqueValues = getUniqueValuesTable( cassandraFig );
+        final TableDefinition uniqueValuesLog = getEntityUniqueLogTable( cassandraFig );
 
         return Arrays.asList( uniqueValues, uniqueValuesLog );
 
@@ -113,13 +109,31 @@ public class UniqueValueSerializationStrategyV2Impl  extends UniqueValueSerializ
 
 
     @Override
-    protected TableDefinition getUniqueValuesTable(){
+    protected TableDefinition getUniqueValuesTable( CassandraFig cassandraFig ) {
+        if ( uniqueValues == null ) {
+            uniqueValues = new TableDefinitionImpl( cassandraFig.getApplicationKeyspace(),
+                UNIQUE_VALUES_TABLE,
+                UNIQUE_VALUES_PARTITION_KEYS,
+                UNIQUE_VALUES_COLUMN_KEYS,
+                UNIQUE_VALUES_COLUMNS,
+                TableDefinitionImpl.CacheOption.KEYS,
+                UNIQUE_VALUES_CLUSTERING_ORDER);
+        }
         return uniqueValues;
     }
 
 
     @Override
-    protected TableDefinition getEntityUniqueLogTable(){
+    protected TableDefinition getEntityUniqueLogTable( CassandraFig cassandraFig ){
+        if ( uniqueValuesLog == null ) {
+            uniqueValuesLog = new TableDefinitionImpl(  cassandraFig.getApplicationKeyspace(),
+                UNIQUE_VALUES_LOG_TABLE,
+                UNIQUE_VALUES_LOG_PARTITION_KEYS,
+                UNIQUE_VALUES_LOG_COLUMN_KEYS,
+                UNIQUE_VALUES_LOG_COLUMNS,
+                TableDefinitionImpl.CacheOption.KEYS,
+                UNIQUE_VALUES_LOG_CLUSTERING_ORDER);
+        }
         return uniqueValuesLog;
     }
 

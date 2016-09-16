@@ -31,8 +31,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 
-/**
- */
 @Singleton
 public class MigrationManagerRule extends ExternalResource {
     private static final Logger logger = LoggerFactory.getLogger( MigrationManagerRule.class );
@@ -47,11 +45,10 @@ public class MigrationManagerRule extends ExternalResource {
         this.migrationManager = migrationManager;
 
         try {
-                   this.migrationManager.migrate();
-               }
-               catch ( MigrationException e ) {
-                   throw new RuntimeException(e);
-               }
+            this.migrationManager.migrate();
+        } catch ( MigrationException e ) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Inject

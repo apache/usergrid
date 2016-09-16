@@ -24,6 +24,7 @@ import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionStringImpl;
@@ -50,6 +51,7 @@ public class MessageCounterSerializationImpl implements ShardCounterSerializatio
     private static final Logger logger = LoggerFactory.getLogger( MessageCounterSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
+    private final CassandraFig cassandraFig;
 
     final static String TABLE_SHARD_COUNTERS       = "counters";
     final static String COLUMN_QUEUE_NAME    = "queue_name";
@@ -93,7 +95,8 @@ public class MessageCounterSerializationImpl implements ShardCounterSerializatio
 
 
     @Inject
-    public MessageCounterSerializationImpl(QakkaFig qakkaFig, CassandraClient cassandraClient ) {
+    public MessageCounterSerializationImpl( CassandraFig cassandraFig, QakkaFig qakkaFig, CassandraClient cassandraClient ) {
+        this.cassandraFig = cassandraFig;
         this.maxInMemoryIncrement = qakkaFig.getMaxInMemoryShardCounter();
         this.cassandraClient = cassandraClient;
     }
@@ -166,7 +169,7 @@ public class MessageCounterSerializationImpl implements ShardCounterSerializatio
                 .and(   QueryBuilder.eq(   COLUMN_SHARD_TYPE, type.toString() ) )
                 .and(   QueryBuilder.eq(   COLUMN_SHARD_ID, shardId ) )
                 .with(  QueryBuilder.incr( COLUMN_COUNTER_VALUE, increment ) );
-        cassandraClient.getSession().execute( update );
+        cassandraClient.getQueueMessageSession().execute( update );
     }
 
 
@@ -177,7 +180,7 @@ public class MessageCounterSerializationImpl implements ShardCounterSerializatio
                 .and( QueryBuilder.eq( COLUMN_SHARD_TYPE, type.toString()) )
                 .and( QueryBuilder.eq( COLUMN_SHARD_ID, shardId ) );
 
-        ResultSet resultSet = cassandraClient.getSession().execute( query );
+        ResultSet resultSet = cassandraClient.getQueueMessageSession().execute( query );
         List<Row> all = resultSet.all();
 
         if ( all.size() > 1 ) {
@@ -198,7 +201,8 @@ public class MessageCounterSerializationImpl implements ShardCounterSerializatio
 
     @Override
     public Collection<TableDefinition> getTables() {
-        return Collections.singletonList( new TableDefinitionStringImpl( TABLE_SHARD_COUNTERS, CQL ) );
+        return Collections.singletonList(
+            new TableDefinitionStringImpl( cassandraFig.getApplicationLocalKeyspace(), TABLE_SHARD_COUNTERS, CQL ) );
     }
 
 }

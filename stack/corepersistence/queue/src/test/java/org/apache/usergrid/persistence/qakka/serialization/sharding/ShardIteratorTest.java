@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.qakka.serialization.sharding;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.impl.ShardSerializationImpl;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
@@ -46,7 +47,8 @@ public class ShardIteratorTest extends AbstractTest {
     public void getActiveShards(){
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraClient );
+        CassandraFig cassandraFig = getInjector().getInstance( CassandraFig.class );
+        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraFig, cassandraClient );
 
         Shard shard1 = new Shard("test", "region1", Shard.Type.DEFAULT, 100L, null);
         Shard shard2 = new Shard("test", "region1", Shard.Type.DEFAULT, 200L, null);
@@ -76,8 +78,9 @@ public class ShardIteratorTest extends AbstractTest {
     public void seekActiveShards(){
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraClient );
-        
+        CassandraFig cassandraFig = getInjector().getInstance( CassandraFig.class );
+        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraFig, cassandraClient );
+
         Shard shard1 = new Shard("test", "region1", Shard.Type.DEFAULT, 100L, null);
         Shard shard2 = new Shard("test", "region1", Shard.Type.DEFAULT, 200L, null);
         Shard shard3 = new Shard("test", "region1", Shard.Type.DEFAULT, 300L, null);
@@ -107,21 +110,22 @@ public class ShardIteratorTest extends AbstractTest {
     public void shardIteratorOrdering() throws Exception {
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraClient );
+        CassandraFig cassandraFig = getInjector().getInstance( CassandraFig.class );
+        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraFig, cassandraClient );
 
         int numShards = 10;
         String region = "default";
         String queueName = "sit_queue_" + RandomStringUtils.randomAlphanumeric(20);
-        
+
         for ( long i=0; i<numShards; i++) {
             UUID messageId = QakkaUtils.getTimeUuid();
             Shard shard = new Shard( queueName, region, Shard.Type.DEFAULT, i+1, messageId );
             shardSerialization.createShard( shard );
             try { Thread.sleep(10); } catch (Exception intentionallyIgnored) {}
         }
-        
+
         Iterator<Shard> shardIterator = new ShardIterator(
-                cassandraClient, queueName, region, Shard.Type.DEFAULT, Optional.empty()); 
+                cassandraClient, queueName, region, Shard.Type.DEFAULT, Optional.empty());
 
         int count = 0;
         Long prevTimestamp = null;
@@ -133,7 +137,7 @@ public class ShardIteratorTest extends AbstractTest {
             prevTimestamp = shard.getPointer().timestamp();
             count++;
         }
-        
+
         Assert.assertEquals( numShards, count );
     }
 }
