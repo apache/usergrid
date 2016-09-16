@@ -56,18 +56,11 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     public DistributedQueueServiceImpl(
             ActorSystemManager actorSystemManager,
             QueueManager queueManager,
-            QakkaFig qakkaFig,
-            QueueActorRouterProducer  queueActorRouterProducer,
-            QueueWriterRouterProducer queueWriterRouterProducer,
-            QueueSenderRouterProducer queueSenderRouterProducer ) {
+            QakkaFig qakkaFig ) {
 
         this.actorSystemManager = actorSystemManager;
         this.queueManager = queueManager;
         this.qakkaFig = qakkaFig;
-
-        actorSystemManager.registerRouterProducer( queueActorRouterProducer );
-        actorSystemManager.registerRouterProducer( queueWriterRouterProducer );
-        actorSystemManager.registerRouterProducer( queueSenderRouterProducer );
     }
 
 
