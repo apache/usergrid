@@ -44,9 +44,7 @@ public abstract class IndexModule extends AbstractModule {
 
         // install our configuration
         install(new GuicyFigModule(IndexFig.class));
-
         install(new MapModule());
-        install(new QueueModule());
 
         bind( EntityIndexFactory.class ).to( EsEntityIndexFactoryImpl.class );
         bind(IndexCache.class).to(EsIndexCacheImpl.class);

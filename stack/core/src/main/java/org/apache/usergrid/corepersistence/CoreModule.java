@@ -41,7 +41,11 @@ import org.apache.usergrid.persistence.core.rx.RxTaskSchedulerImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
+import org.apache.usergrid.persistence.index.IndexFig;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
+import org.apache.usergrid.persistence.map.guice.MapModule;
+import org.apache.usergrid.persistence.queue.guice.QueueModule;
+import org.apache.usergrid.system.UsergridFeatures;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import java.util.concurrent.ThreadPoolExecutor;
@@ -79,14 +83,59 @@ public class CoreModule extends AbstractModule {
                 bind( new TypeLiteral<MigrationDataProvider<GraphNode>>() {} ).to( AllNodesInGraphImpl.class );
             }
         } );
-        install( new IndexModule() {
-            @Override
-            public void configureMigrationProvider() {
-                bind( new TypeLiteral<MigrationDataProvider<ApplicationScope>>() {} )
-                    .to( AllApplicationsObservableImpl.class );
-            }
-        } );
-        //        install(new MapModule());   TODO, re-enable when index module doesn't depend on queue
+
+        // figs are just properties, load em always
+        install( new GuicyFigModule( EventServiceFig.class ) );
+        install( new GuicyFigModule( CoreIndexFig.class ) );
+
+        install(new QueueModule());
+
+
+        //bind the async queue provider
+        bind( AsyncEventService.class ).toProvider( AsyncIndexProvider.class );
+
+        //bind the event handlers
+        bind( EventBuilder.class ).to( EventBuilderImpl.class );
+
+        // requires indexing dependencies to be available
+        bind( ApplicationService.class ).to( ApplicationServiceImpl.class );
+
+        if(UsergridFeatures.isQueryFeatureEnabled()) {
+
+            install( new IndexModule() {
+                @Override
+                public void configureMigrationProvider() {
+                    bind( new TypeLiteral<MigrationDataProvider<ApplicationScope>>() {} )
+                        .to( AllApplicationsObservableImpl.class );
+                }
+            } );
+
+            /*****
+             * Indexing service
+             *****/
+
+            // This just uses figs to come up with named instances.  Doesn't require all of indexing, but used injected
+            // in places that may or may not need this.
+            bind( IndexLocationStrategyFactory.class ).to( IndexLocationStrategyFactoryImpl.class );
+
+
+            bind( IndexService.class ).to( IndexServiceImpl.class );
+
+            bind( ApplicationIndexBucketLocator.class );
+
+
+            bind( ReIndexService.class ).to( ReIndexServiceImpl.class );
+
+            install( new FactoryModuleBuilder().implement( AggregationService.class, AggregationServiceImpl.class )
+                .build( AggregationServiceFactory.class ) );
+
+
+        }
+
+
+
+
+        install(new MapModule());   //TODO, re-enable when index module doesn't depend on queue
         //        install(new QueueModule());
 
         bind( ManagerCache.class ).to( CpManagerCache.class );
@@ -113,31 +162,11 @@ public class CoreModule extends AbstractModule {
         bind( AllEntityIdsObservable.class ).to( AllEntityIdsObservableImpl.class );
 
 
-        /*****
-         * Indexing service
-         *****/
 
 
-        bind( IndexService.class ).to( IndexServiceImpl.class );
-
-        //bind the event handlers
-        bind( EventBuilder.class ).to( EventBuilderImpl.class );
-        bind( ApplicationIndexBucketLocator.class );
-
-        //bind the queue provider
-        bind( AsyncEventService.class ).toProvider( AsyncIndexProvider.class );
 
 
-        bind( ReIndexService.class ).to( ReIndexServiceImpl.class );
 
-        install( new FactoryModuleBuilder().implement( AggregationService.class, AggregationServiceImpl.class )
-                                           .build( AggregationServiceFactory.class ) );
-
-        bind( IndexLocationStrategyFactory.class ).to( IndexLocationStrategyFactoryImpl.class );
-
-        install( new GuicyFigModule( IndexProcessorFig.class ) );
-
-        install( new GuicyFigModule( CoreIndexFig.class ) );
 
 
         install( new GuicyFigModule( ApplicationIdCacheFig.class ) );
@@ -161,7 +190,7 @@ public class CoreModule extends AbstractModule {
 
         bind( ConnectionService.class ).to( ConnectionServiceImpl.class );
 
-        bind( ApplicationService.class ).to( ApplicationServiceImpl.class );
+
 
         bind( StatusService.class ).to( StatusServiceImpl.class );
     }

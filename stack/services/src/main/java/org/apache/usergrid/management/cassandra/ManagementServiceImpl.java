@@ -70,6 +70,7 @@ import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
 import org.apache.usergrid.services.*;
+import org.apache.usergrid.system.UsergridFeatures;
 import org.apache.usergrid.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,7 +167,7 @@ public class ManagementServiceImpl implements ManagementService {
 
     protected CacheFactory cacheFactory;
 
-    protected AggregationServiceFactory aggregationServiceFactory;
+    protected AggregationServiceFactory aggregationServiceFactory = null;
 
     protected ApplicationService service;
 
@@ -211,7 +212,13 @@ public class ManagementServiceImpl implements ManagementService {
         // Use the injector to get our guice dependencies
         this.lockManager = injector.getInstance(LockManager.class);
         this.cacheFactory = injector.getInstance( CacheFactory.class );
-        this.aggregationServiceFactory = injector.getInstance(AggregationServiceFactory.class);
+
+        if(UsergridFeatures.isQueryFeatureEnabled()) {
+
+            this.aggregationServiceFactory = injector.getInstance(AggregationServiceFactory.class);
+
+
+        }
         this.service = injector.getInstance(ApplicationService.class);
         this.localShiroCache = injector.getInstance(LocalShiroCache.class);
 

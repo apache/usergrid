@@ -67,12 +67,6 @@ public interface ManagerCache {
     MapManager getMapManager(MapScope mapScope);
 
     /**
-     * gets index producer
-     * @return
-     */
-    IndexProducer getIndexProducer();
-
-    /**
      * invalidate the cache
      */
     void invalidate();

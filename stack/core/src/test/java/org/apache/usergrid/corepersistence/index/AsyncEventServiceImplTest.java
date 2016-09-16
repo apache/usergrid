@@ -21,6 +21,7 @@ package org.apache.usergrid.corepersistence.index;
 
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.corepersistence.TestIndexModule;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
@@ -56,7 +57,7 @@ public class AsyncEventServiceImplTest extends AsyncIndexServiceTest {
     public QueueManagerFactory queueManagerFactory;
 
     @Inject
-    public IndexProcessorFig indexProcessorFig;
+    public EventServiceFig eventServiceFig;
 
     @Inject
     public QueueFig queueFig;
@@ -84,9 +85,14 @@ public class AsyncEventServiceImplTest extends AsyncIndexServiceTest {
     @Inject
     public EntityIndexFactory entityIndexFactory;
 
+    @Inject
+    public Injector injector;
+
     @Override
     protected AsyncEventService getAsyncEventService() {
-        return  new AsyncEventServiceImpl( queueManagerFactory, indexProcessorFig, indexProducer, metricsFactory,  entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory, eventBuilder, mapManagerFactory, queueFig,  rxTaskScheduler );
+        return  new AsyncEventServiceImpl( queueManagerFactory, eventServiceFig, metricsFactory,
+            entityCollectionManagerFactory, entityIndexFactory, eventBuilder,
+            mapManagerFactory, queueFig,  rxTaskScheduler, injector );
     }
 
 

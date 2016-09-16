@@ -41,6 +41,7 @@ import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.assets.AssetsResource;
 import org.apache.usergrid.rest.applications.events.EventsResource;
+import org.apache.usergrid.rest.applications.kvm.KvmResource;
 import org.apache.usergrid.rest.applications.queues.QueueResource;
 import org.apache.usergrid.rest.applications.users.UsersResource;
 import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
@@ -145,6 +146,12 @@ public class ApplicationResource extends CollectionResource {
     @Path("event")
     public EventsResource getEventResource( @Context UriInfo ui ) throws Exception {
         return getEventsResource( ui );
+    }
+
+    @RequireApplicationAccess
+    @Path("keyvaluemaps")
+    public KvmResource getKvmResource(@Context UriInfo ui ) throws Exception {
+        return getSubResource( KvmResource.class );
     }
 
 

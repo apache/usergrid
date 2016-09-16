@@ -78,7 +78,7 @@ public class ReIndexServiceImpl implements ReIndexService {
     private final AllApplicationsObservable allApplicationsObservable;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final AllEntityIdsObservable allEntityIdsObservable;
-    private final IndexProcessorFig indexProcessorFig;
+    private final EventServiceFig eventServiceFig;
     private final MapManager mapManager;
     private final MapManagerFactory mapManagerFactory;
     private final AsyncEventService indexService;
@@ -92,14 +92,14 @@ public class ReIndexServiceImpl implements ReIndexService {
                                final AllEntityIdsObservable allEntityIdsObservable,
                                final MapManagerFactory mapManagerFactory,
                                final AllApplicationsObservable allApplicationsObservable,
-                               final IndexProcessorFig indexProcessorFig,
+                               final EventServiceFig eventServiceFig,
                                final CollectionSettingsFactory collectionSettingsFactory,
                                final AsyncEventService indexService ) {
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.allEntityIdsObservable = allEntityIdsObservable;
         this.allApplicationsObservable = allApplicationsObservable;
-        this.indexProcessorFig = indexProcessorFig;
+        this.eventServiceFig = eventServiceFig;
         this.indexService = indexService;
         this.collectionSettingsFactory = collectionSettingsFactory;
         this.mapManagerFactory = mapManagerFactory;
@@ -164,14 +164,14 @@ public class ReIndexServiceImpl implements ReIndexService {
         Observable<List<EdgeScope>> runningReIndex = allEntityIdsObservable.getEdgesToEntities( applicationScopes,
             reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
 
-            .buffer( indexProcessorFig.getReindexBufferSize())
+            .buffer( eventServiceFig.getReindexBufferSize())
             .flatMap( edgeScopes -> Observable.just(edgeScopes)
                 .doOnNext(edges -> {
 
                     logger.info("Sending batch of {} to be indexed.", edges.size());
                     indexService.indexBatch(edges, modifiedSince);
                 })
-                .subscribeOn( Schedulers.io() ), indexProcessorFig.getReindexConcurrencyFactor());
+                .subscribeOn( Schedulers.io() ), eventServiceFig.getReindexConcurrencyFactor());
 
 
         // start our sampler and state persistence

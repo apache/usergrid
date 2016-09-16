@@ -185,7 +185,8 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             .withPoolingOptions(poolingOptions)
             .withQueryOptions(queryOptions)
             .withSocketOptions(socketOptions)
-            .withProtocolVersion(getProtocolVersion(cassandraFig.getVersion()));
+            .withProtocolVersion(getProtocolVersion(cassandraFig.getVersion()))
+            .withTimestampGenerator(new AtomicMonotonicTimestampGenerator());
 
         // only add auth credentials if they were provided
         if ( !cassandraFig.getUsername().isEmpty() && !cassandraFig.getPassword().isEmpty() ){

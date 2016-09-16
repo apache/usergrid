@@ -94,7 +94,6 @@ public class SystemResource extends AbstractContextResource {
         return getSubResource( MigrateResource.class );
     }
 
-
     @Path( "index" )
     public IndexResource index() { return getSubResource( IndexResource.class ); }
 

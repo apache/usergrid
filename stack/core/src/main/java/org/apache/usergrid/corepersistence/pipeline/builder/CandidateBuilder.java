@@ -23,6 +23,7 @@ package org.apache.usergrid.corepersistence.pipeline.builder;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterFactory;
 import org.apache.usergrid.corepersistence.pipeline.Pipeline;
 import org.apache.usergrid.corepersistence.pipeline.read.FilterResult;
+import org.apache.usergrid.corepersistence.pipeline.read.SearchFilterFactory;
 import org.apache.usergrid.corepersistence.pipeline.read.search.Candidate;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -31,14 +32,17 @@ import org.apache.usergrid.persistence.model.entity.Id;
 public class CandidateBuilder {
 
 
+    private final SearchFilterFactory searchFilterFactory;
     private final Pipeline<FilterResult<Candidate>> pipeline;
     private final FilterFactory filterFactory;
 
 
     public CandidateBuilder( final Pipeline<FilterResult<Candidate>> pipeline,
-                             final FilterFactory filterFactory ) {
+                             final FilterFactory filterFactory,
+                             final SearchFilterFactory searchFilterFactory ) {
         this.pipeline = pipeline;
         this.filterFactory = filterFactory;
+        this.searchFilterFactory = searchFilterFactory;
     }
 
 
@@ -50,7 +54,7 @@ public class CandidateBuilder {
 
         final Pipeline<FilterResult<Id>> newFilter = pipeline.withFilter( filterFactory.candidateResultsIdVerifyFilter() );
 
-        return new IdBuilder( newFilter, filterFactory );
+        return new IdBuilder( newFilter, filterFactory, searchFilterFactory );
     }
 
 

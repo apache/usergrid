@@ -67,7 +67,7 @@ public class MapSerializationImpl implements MapSerialization {
     private static final Map<String, DataType.Name> MAP_KEYS_COLUMNS =
         new HashMap<String, DataType.Name>() {{
             put( "key", DataType.Name.BLOB );
-            put( "column1", DataType.Name.BLOB );
+            put( "column1", DataType.Name.TEXT );
             put( "value", DataType.Name.BLOB ); }};
     private static final Map<String, String> MAP_KEYS_CLUSTERING_ORDER =
         new HashMap<String, String>(){{ put( "column1", "ASC" ); }};
@@ -169,7 +169,7 @@ public class MapSerializationImpl implements MapSerialization {
             mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
                 .using(timeToLive)
                 .value("key", getMapKeyPartitionKey(scope, bucket))
-                .value("column1", DataType.text().serialize(key, ProtocolVersion.NEWEST_SUPPORTED))
+                .value("column1", key)
                 .value("value", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED));
         }else{
 
@@ -183,7 +183,7 @@ public class MapSerializationImpl implements MapSerialization {
 
             mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
                 .value("key", getMapKeyPartitionKey(scope, bucket))
-                .value("column1", DataType.text().serialize(key, ProtocolVersion.NEWEST_SUPPORTED))
+                .value("column1", key)
                 .value("value", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED));
 
         }
@@ -223,7 +223,7 @@ public class MapSerializationImpl implements MapSerialization {
         Statement mapKey;
         mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
             .value("key", getMapKeyPartitionKey(scope, bucket))
-            .value("column1", DataType.text().serialize(key, ProtocolVersion.NEWEST_SUPPORTED))
+            .value("column1", key)
             .value("value", DataType.serializeValue(null, ProtocolVersion.NEWEST_SUPPORTED));
 
         session.execute(mapKey);
@@ -260,7 +260,7 @@ public class MapSerializationImpl implements MapSerialization {
         Statement mapKey;
         mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
             .value("key", getMapKeyPartitionKey(scope, bucket))
-            .value("column1", DataType.text().serialize(key, ProtocolVersion.NEWEST_SUPPORTED))
+            .value("column1", key)
             .value("value", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED));
 
         session.execute(mapKey);
@@ -357,7 +357,7 @@ public class MapSerializationImpl implements MapSerialization {
         while( resultIterator.hasNext() && size < limit){
 
             size++;
-            keys.add((String)DataType.text().deserialize(resultIterator.next().getBytes("column1"), ProtocolVersion.NEWEST_SUPPORTED));
+            keys.add(resultIterator.next().getString("column1"));
 
         }
 

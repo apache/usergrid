@@ -24,9 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.google.inject.Injector;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
+import org.apache.usergrid.system.UsergridFeatures;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,20 +54,26 @@ import rx.Observable;
 public class CandidateIdFilter extends AbstractFilter<FilterResult<Candidate>, FilterResult<Id>> {
 
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
-    private final EntityIndexFactory entityIndexFactory;
-    private final IndexLocationStrategyFactory indexLocationStrategyFactory;
-    private final IndexProducer indexProducer;
+    private EntityIndexFactory entityIndexFactory = null;
+    private IndexLocationStrategyFactory indexLocationStrategyFactory;
+    private IndexProducer indexProducer = null;
+    private final Injector injector;
 
 
     @Inject
     public CandidateIdFilter( final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                              final EntityIndexFactory entityIndexFactory,
-                              final IndexLocationStrategyFactory indexLocationStrategyFactory,
-                              final IndexProducer indexProducer) {
+                              final Injector injector ) {
+
+        this.injector = injector;
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
-        this.entityIndexFactory = entityIndexFactory;
-        this.indexLocationStrategyFactory = indexLocationStrategyFactory;
-        this.indexProducer = indexProducer;
+
+        if (UsergridFeatures.isQueryFeatureEnabled()) {
+
+            this.entityIndexFactory = this.injector.getInstance(EntityIndexFactory.class);
+            this.indexProducer = this.injector.getInstance(IndexProducer.class);
+            this.indexLocationStrategyFactory = this.injector.getInstance(IndexLocationStrategyFactory.class);
+
+        }
     }
 
 

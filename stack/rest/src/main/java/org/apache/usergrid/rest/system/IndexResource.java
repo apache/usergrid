@@ -35,6 +35,7 @@ import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
+import org.apache.usergrid.system.UsergridFeatures;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -357,5 +358,11 @@ public class IndexResource extends AbstractContextResource {
         response.setSuccess();
 
         return response;
+    }
+
+    @Override
+    public boolean isEnabled(){
+
+        return UsergridFeatures.isQueryFeatureEnabled();
     }
 }

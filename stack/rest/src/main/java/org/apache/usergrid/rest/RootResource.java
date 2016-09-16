@@ -34,6 +34,7 @@ import org.apache.usergrid.rest.applications.ApplicationResource;
 import org.apache.usergrid.rest.exceptions.NoOpException;
 import org.apache.usergrid.rest.organizations.OrganizationResource;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
+import org.apache.usergrid.system.UsergridFeatures;
 import org.apache.usergrid.system.UsergridSystemMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -197,8 +198,10 @@ public class RootResource extends AbstractContextResource implements MetricProce
         // Core Persistence Collections module status
         node.put( "cassandraStatus", emf.getEntityStoreHealth().toString() );
 
-        // Core Persistence Query Index module status for Management App Index
-        node.put( "managementAppIndexStatus", emf.getIndexHealth().toString() );
+        if(UsergridFeatures.isQueryFeatureEnabled()) {
+            // Core Persistence Query Index module status for Management App Index
+            node.put("managementAppIndexStatus", emf.getIndexHealth().toString());
+        }
 
 
         dumpMetrics(node);
