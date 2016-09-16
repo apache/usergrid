@@ -59,12 +59,12 @@ public class App implements MetricsService {
         this.actorSystemFig = actorSystemFig;
         this.actorSystemManager = actorSystemManager;
         this.distributedQueueService = distributedQueueService;
-
-        try {
-            migrationManager.migrate();
-        } catch (MigrationException e) {
-            throw new QakkaRuntimeException( "Error running migration", e );
-        }
+//
+//        try {
+//            migrationManager.migrate();
+//        } catch (MigrationException e) {
+//            throw new QakkaRuntimeException( "Error running migration", e );
+//        }
     }
 
     /**
