@@ -65,6 +65,10 @@ public class QakkaQueueManager implements LegacyQueueManager {
         this.qakkaFig = qakkaFig;
         this.queueMessageManager = queueMessageManager;
         this.regions = regions;
+    }
+
+
+    private synchronized void createQueueIfNecessary() {
 
         if ( queueManager.getQueueConfig(scope.getName()) == null ) {
 
@@ -79,6 +83,8 @@ public class QakkaQueueManager implements LegacyQueueManager {
 
     @Override
     public <T extends Serializable> void sendMessage(T body) throws IOException {
+
+        createQueueIfNecessary();
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(bos);
@@ -105,6 +111,8 @@ public class QakkaQueueManager implements LegacyQueueManager {
 
     @Override
     public List<LegacyQueueMessage> getMessages(int limit, Class klass) {
+
+        createQueueIfNecessary();
 
         List<LegacyQueueMessage> messages = new ArrayList<>();
         List<QueueMessage> qakkaMessages = queueMessageManager.getNextMessages( scope.getName(), limit );
@@ -146,6 +154,8 @@ public class QakkaQueueManager implements LegacyQueueManager {
 
     @Override
     public void commitMessage(LegacyQueueMessage queueMessage) {
+
+        createQueueIfNecessary();
 
         UUID queueMessageId  = UUID.fromString( queueMessage.getMessageId() );
         queueMessageManager.ackMessage( scope.getName(), queueMessageId );
