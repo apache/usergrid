@@ -48,6 +48,7 @@ import rx.Subscriber;
 import java.util.*;
 
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getPermissionFromPath;
+import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isServiceAdmin;
 import static org.apache.usergrid.services.ServiceParameter.filter;
 import static org.apache.usergrid.services.ServiceParameter.mergeQueries;
 import static org.apache.usergrid.utils.ClassUtils.cast;
@@ -1350,6 +1351,13 @@ public abstract class AbstractService implements Service {
     public void checkPermissionsForPath( ServiceContext context, String path ) {
         Subject currentUser = SubjectUtils.getSubject();
         if ( currentUser == null ) {
+            return;
+        }
+
+        if( isServiceAdmin() ){
+            if(logger.isDebugEnabled()){
+                logger.debug("Subject is the sysadmin, short-circuiting and allowing access");
+            }
             return;
         }
 
