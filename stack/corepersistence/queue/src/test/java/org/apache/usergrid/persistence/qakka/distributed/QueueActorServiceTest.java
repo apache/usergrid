@@ -66,7 +66,6 @@ public class QueueActorServiceTest extends AbstractTest {
         Injector injector = getInjector();
 
         CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
         ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
@@ -119,7 +118,6 @@ public class QueueActorServiceTest extends AbstractTest {
         Injector injector = getInjector();
 
         CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
         ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();

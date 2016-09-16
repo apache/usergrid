@@ -38,7 +38,7 @@ public interface QakkaFig extends GuicyFig, Serializable {
 
     String QUEUE_TIMEOUT_SECONDS                  = "queue.timeout.seconds";
 
-    String QUEUE_REFRESH_MILLISECONDS             = "queue.refresh.milliseconds";
+    String QUEUE_REFRESH_MILLISECONDS             = "queue.refresh.millis";
 
     String QUEUE_INMEMORY_SIZE                    = "queue.inmemory.size";
 

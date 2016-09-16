@@ -25,11 +25,9 @@ import com.google.inject.Injector;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.App;
-import org.apache.usergrid.persistence.qakka.QakkaModule;
 import org.apache.usergrid.persistence.qakka.core.CassandraClient;
 import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
-import org.apache.usergrid.persistence.queue.guice.QueueModule;
 import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -60,7 +58,6 @@ public class LegacyQueueManagerTest extends AbstractTest {
         Injector myInjector = getInjector();
 
         CassandraClient cassandraClient = myInjector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
         ActorSystemFig actorSystemFig = myInjector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
@@ -99,7 +96,6 @@ public class LegacyQueueManagerTest extends AbstractTest {
         Injector myInjector = getInjector();
 
         CassandraClient cassandraClient = myInjector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
         ActorSystemFig actorSystemFig = myInjector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
@@ -142,7 +138,6 @@ public class LegacyQueueManagerTest extends AbstractTest {
         Injector myInjector = getInjector();
 
         CassandraClient cassandraClient = myInjector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
         ActorSystemFig actorSystemFig = myInjector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();

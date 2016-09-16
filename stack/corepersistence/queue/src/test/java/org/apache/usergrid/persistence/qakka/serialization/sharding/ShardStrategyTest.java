@@ -41,7 +41,6 @@ public class ShardStrategyTest extends AbstractTest {
     public void testBasicOperation() {
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
 
         ShardSerialization shardSer   = getInjector().getInstance( ShardSerialization.class );
@@ -49,7 +48,7 @@ public class ShardStrategyTest extends AbstractTest {
 
         UUID messageIdToLocate = null;
         long selectedShardId = 4L;
-        
+
         int numShards = 10;
         String region = "default";
         String queueName = "sst_queue_" + RandomStringUtils.randomAlphanumeric(20);
@@ -66,6 +65,6 @@ public class ShardStrategyTest extends AbstractTest {
         Shard selectedShard = shardStrategy.selectShard( queueName, region, Shard.Type.DEFAULT, messageIdToLocate );
 
         Assert.assertEquals( selectedShardId, selectedShard.getShardId() );
-        
+
     }
 }

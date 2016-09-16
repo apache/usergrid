@@ -33,13 +33,13 @@ import java.util.Properties;
  * Created by Dave Johnson (snoopdave@apache.org) on 9/9/16.
  */
 public class KeyspaceDropper {
-    
-    private static final Logger logger = LoggerFactory.getLogger( AbstractTest.class );
-    
-    static { dropTestKeyspace(); }
 
-    
-    public static void dropTestKeyspace() {
+    private static final Logger logger = LoggerFactory.getLogger( AbstractTest.class );
+
+    static { dropTestKeyspaces(); }
+
+
+    public static void dropTestKeyspaces() {
 
         String propsFileName = "qakka.properties";
 
@@ -50,9 +50,16 @@ public class KeyspaceDropper {
             throw new RuntimeException( "Unable to load " + propsFileName + " file!" );
         }
 
-        String keyspace =     (String)props.get("cassandra.keyspace.application");
+        String keyspaceApp =     (String)props.get("cassandra.keyspace.application");
+        String keyspaceQueue =     (String)props.get("cassandra.keyspace.queue-message");
         String hosts[] =              props.getProperty( "cassandra.hosts", "127.0.0.1" ).split(",");
         int port = Integer.parseInt(  props.getProperty( "cassandra.port", "9042" ));
+
+        dropTestKeyspace( keyspaceApp, hosts, port );
+        dropTestKeyspace( keyspaceQueue, hosts, port );
+    }
+
+    public static void dropTestKeyspace( String keyspace, String[] hosts, int port ) {
 
         Cluster.Builder builder = Cluster.builder();
         for ( String host : hosts ) {
@@ -67,4 +74,5 @@ public class KeyspaceDropper {
         logger.info("Dropping test keyspace: {}", keyspace);
         session.execute( "DROP KEYSPACE IF EXISTS " + keyspace );
     }
+
 }

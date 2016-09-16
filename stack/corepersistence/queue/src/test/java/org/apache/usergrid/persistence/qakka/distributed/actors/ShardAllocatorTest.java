@@ -42,6 +42,7 @@ import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService
 import org.apache.usergrid.persistence.queue.TestModule;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +67,6 @@ public class ShardAllocatorTest extends AbstractTest {
         Injector injector = getInjector();
 
         CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
         injector.getInstance( App.class ); // init the INJECTOR
 
@@ -163,12 +163,12 @@ public class ShardAllocatorTest extends AbstractTest {
 
 
     @Test
+    @Ignore
     public void testBasicOperationWithMessages() throws InterruptedException {
 
         Injector injector = getInjector();
 
         CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
         injector.getInstance( App.class ); // init the INJECTOR
 

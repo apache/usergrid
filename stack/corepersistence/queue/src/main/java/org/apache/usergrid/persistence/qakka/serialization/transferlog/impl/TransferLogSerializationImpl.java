@@ -25,6 +25,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.inject.Inject;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionStringImpl;
@@ -44,6 +45,7 @@ public class TransferLogSerializationImpl implements TransferLogSerialization {
     private static final Logger logger = LoggerFactory.getLogger( TransferLogSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
+    private final CassandraFig cassandraFig;
 
     public final static String TABLE_TRANSFER_LOG   = "transfer_log";
 
@@ -65,7 +67,8 @@ public class TransferLogSerializationImpl implements TransferLogSerialization {
 
 
     @Inject
-    public TransferLogSerializationImpl( CassandraClient cassandraClient ) {
+    public TransferLogSerializationImpl( CassandraFig cassandraFig,  CassandraClient cassandraClient ) {
+        this.cassandraFig = cassandraFig;
         this.cassandraClient = cassandraClient;
     }
 
@@ -80,7 +83,7 @@ public class TransferLogSerializationImpl implements TransferLogSerialization {
                 .value(COLUMN_DEST_REGION, dest )
                 .value(COLUMN_MESSAGE_ID, messageId )
                 .value(COLUMN_TRANSFER_TIME, System.currentTimeMillis() );
-        cassandraClient.getSession().execute(insert);
+        cassandraClient.getApplicationSession().execute(insert);
 
 //        logger.debug("Recorded transfer log for queue {} dest {} messageId {}",
 //            queueName, dest, messageId);
@@ -95,7 +98,7 @@ public class TransferLogSerializationImpl implements TransferLogSerialization {
             .where(   QueryBuilder.eq( COLUMN_QUEUE_NAME, queueName ))
                 .and( QueryBuilder.eq( COLUMN_DEST_REGION, dest ))
                 .and( QueryBuilder.eq( COLUMN_MESSAGE_ID, messageId ));
-        ResultSet rs = cassandraClient.getSession().execute( query );
+        ResultSet rs = cassandraClient.getApplicationSession().execute( query );
 
         if ( rs.getAvailableWithoutFetching() == 0 ) {
             StringBuilder sb = new StringBuilder();
@@ -109,7 +112,7 @@ public class TransferLogSerializationImpl implements TransferLogSerialization {
                 .where(   QueryBuilder.eq( COLUMN_QUEUE_NAME, queueName ))
                     .and( QueryBuilder.eq( COLUMN_DEST_REGION, dest ))
                 .and( QueryBuilder.eq( COLUMN_MESSAGE_ID, messageId ));
-        cassandraClient.getSession().execute( deleteQuery );
+        cassandraClient.getApplicationSession().execute( deleteQuery );
     }
 
 
@@ -123,7 +126,7 @@ public class TransferLogSerializationImpl implements TransferLogSerialization {
             query.setPagingState( pagingState );
         }
 
-        ResultSet rs = cassandraClient.getSession().execute( query );
+        ResultSet rs = cassandraClient.getApplicationSession().execute( query );
         final PagingState newPagingState = rs.getExecutionInfo().getPagingState();
 
         final List<TransferLog> transferLogs = new ArrayList<>();
@@ -160,7 +163,8 @@ public class TransferLogSerializationImpl implements TransferLogSerialization {
 
     @Override
     public Collection<TableDefinition> getTables() {
-        return Collections.singletonList( new TableDefinitionStringImpl( TABLE_TRANSFER_LOG, CQL ) );
+        return Collections.singletonList(
+            new TableDefinitionStringImpl( cassandraFig.getApplicationKeyspace(), TABLE_TRANSFER_LOG, CQL ) );
     }
 
 

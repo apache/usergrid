@@ -74,4 +74,7 @@ public interface CassandraConfig {
     int[] getShardSettings();
 
 
+    String getApplicationKeyspace();
+
+    String getApplicationLocalKeyspace();
 }

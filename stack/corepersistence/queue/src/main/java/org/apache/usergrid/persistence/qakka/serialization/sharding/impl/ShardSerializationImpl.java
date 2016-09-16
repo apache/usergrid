@@ -26,6 +26,7 @@ import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionStringImpl;
@@ -45,6 +46,7 @@ public class ShardSerializationImpl implements ShardSerialization {
     private static final Logger logger = LoggerFactory.getLogger( ShardSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
+    private final CassandraFig cassandraFig;
 
     public final static String COLUMN_QUEUE_NAME = "queue_name";
     public final static String COLUMN_REGION = "region";
@@ -80,7 +82,8 @@ public class ShardSerializationImpl implements ShardSerialization {
 
 
     @Inject
-    public ShardSerializationImpl( CassandraClient cassandraClient ) {
+    public ShardSerializationImpl( CassandraFig cassandraFig,  CassandraClient cassandraClient ) {
+        this.cassandraFig = cassandraFig;
         this.cassandraClient = cassandraClient;
     }
 
@@ -93,7 +96,7 @@ public class ShardSerializationImpl implements ShardSerialization {
                 .value(COLUMN_ACTIVE, 1)
                 .value(COLUMN_POINTER, shard.getPointer());
 
-        cassandraClient.getSession().execute(insert);
+        cassandraClient.getQueueMessageSession().execute(insert);
 
     }
 
@@ -112,7 +115,7 @@ public class ShardSerializationImpl implements ShardSerialization {
                 .and(activeClause)
                 .and(shardIdClause);
 
-        Row row = cassandraClient.getSession().execute(select).one();
+        Row row = cassandraClient.getQueueMessageSession().execute(select).one();
 
         if (row == null){
             return null;
@@ -145,7 +148,7 @@ public class ShardSerializationImpl implements ShardSerialization {
                 .and(activeClause)
                 .and(shardIdClause);
 
-        cassandraClient.getSession().execute(delete);
+        cassandraClient.getQueueMessageSession().execute(delete);
 
     }
 
@@ -165,7 +168,7 @@ public class ShardSerializationImpl implements ShardSerialization {
                 .and(activeClause)
                 .and(shardIdClause);
 
-        cassandraClient.getSession().execute(update);
+        cassandraClient.getQueueMessageSession().execute(update);
 
     }
 
@@ -192,8 +195,10 @@ public class ShardSerializationImpl implements ShardSerialization {
     @Override
     public Collection<TableDefinition> getTables() {
         return Lists.newArrayList(
-                new TableDefinitionStringImpl( TABLE_SHARDS_MESSAGES_AVAILABLE, SHARDS_MESSAGES_AVAILABLE ),
-                new TableDefinitionStringImpl( TABLE_SHARDS_MESSAGES_INFLIGHT, SHARDS_MESSAGES_AVAILABLE_INFLIGHT )
+                new TableDefinitionStringImpl( cassandraFig.getApplicationLocalKeyspace(),
+                    TABLE_SHARDS_MESSAGES_AVAILABLE, SHARDS_MESSAGES_AVAILABLE ),
+                new TableDefinitionStringImpl( cassandraFig.getApplicationLocalKeyspace(),
+                    TABLE_SHARDS_MESSAGES_INFLIGHT, SHARDS_MESSAGES_AVAILABLE_INFLIGHT )
         );
     }
 

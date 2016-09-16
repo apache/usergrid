@@ -70,7 +70,7 @@ public class CQLUtilsTest {
 
 
 
-        TableDefinitionImpl table1 = new TableDefinitionImpl(
+        TableDefinitionImpl table1 = new TableDefinitionImpl( cassandraFig.getApplicationKeyspace(),
             CQLUtils.quote("table1"),
             partitionKeys,
             columnKeys,
@@ -122,7 +122,7 @@ public class CQLUtilsTest {
 
 
 
-        TableDefinitionImpl table1 = new TableDefinitionImpl(
+        TableDefinitionImpl table1 = new TableDefinitionImpl( cassandraFig.getApplicationKeyspace(),
             CQLUtils.quote("table1"),
             partitionKeys,
             columnKeys,
@@ -165,7 +165,7 @@ public class CQLUtilsTest {
 
 
 
-        TableDefinitionImpl table1 = new TableDefinitionImpl(
+        TableDefinitionImpl table1 = new TableDefinitionImpl( cassandraFig.getApplicationKeyspace(),
             CQLUtils.quote("table1"),
             partitionKeys,
             columnKeys,

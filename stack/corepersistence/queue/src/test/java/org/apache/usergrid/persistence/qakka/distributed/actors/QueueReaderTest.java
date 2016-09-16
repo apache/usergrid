@@ -53,7 +53,6 @@ public class QueueReaderTest extends AbstractTest {
     public void testBasicOperation() throws Exception {
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
 
         getInjector().getInstance( App.class ); // init the INJECTOR

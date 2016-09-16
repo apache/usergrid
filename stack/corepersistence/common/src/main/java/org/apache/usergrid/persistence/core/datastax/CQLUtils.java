@@ -45,7 +45,8 @@ public class CQLUtils {
     }
 
 
-    public static String getFormattedReplication(String strategy, String strategyOptions) throws JsonProcessingException {
+    public static String getFormattedReplication(
+        String strategy, String strategyOptions) throws JsonProcessingException {
 
         Map<String, String> replicationSettings = new HashMap<>();
         replicationSettings.put("class", strategy);
@@ -86,7 +87,8 @@ public class CQLUtils {
     }
 
 
-    public static String getCachingOptions(CassandraFig cassandraFig, TableDefinitionImpl.CacheOption cacheOption) throws JsonProcessingException {
+    public static String getCachingOptions(
+        CassandraFig cassandraFig, TableDefinitionImpl.CacheOption cacheOption) throws JsonProcessingException {
 
         // Cassandra 2.0 and below has a different CQL syntax for caching
         if( Double.parseDouble( cassandraFig.getVersion() ) <= 2.0 ){

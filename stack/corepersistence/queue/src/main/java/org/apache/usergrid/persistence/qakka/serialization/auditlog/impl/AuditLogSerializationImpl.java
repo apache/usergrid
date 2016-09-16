@@ -24,6 +24,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.inject.Inject;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionStringImpl;
@@ -46,6 +47,7 @@ public class AuditLogSerializationImpl implements AuditLogSerialization {
     private static final Logger logger = LoggerFactory.getLogger( AuditLogSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
+    private final CassandraFig cassandraFig;
 
     public final static String TABLE_AUDIT_LOG   = "audit_log";
 
@@ -75,7 +77,8 @@ public class AuditLogSerializationImpl implements AuditLogSerialization {
 
 
     @Inject
-    public AuditLogSerializationImpl( CassandraClient cassandraClient ) {
+    public AuditLogSerializationImpl( CassandraFig cassandraFig, CassandraClient cassandraClient ) {
+        this.cassandraFig = cassandraFig;
         this.cassandraClient = cassandraClient;
     }
 
@@ -97,7 +100,7 @@ public class AuditLogSerializationImpl implements AuditLogSerialization {
                 .value(COLUMN_MESSAGE_ID, messageId )
                 .value(COLUMN_QUEUE_MESSAGE_ID, queueMessageId )
                 .value(COLUMN_TRANSFER_TIME, System.currentTimeMillis() );
-        cassandraClient.getSession().execute(insert);
+        cassandraClient.getApplicationSession().execute(insert);
     }
 
 
@@ -107,7 +110,7 @@ public class AuditLogSerializationImpl implements AuditLogSerialization {
         Statement query = QueryBuilder.select().all().from(TABLE_AUDIT_LOG)
             .where( QueryBuilder.eq( COLUMN_MESSAGE_ID, messageId ) );
 
-        ResultSet rs = cassandraClient.getSession().execute( query );
+        ResultSet rs = cassandraClient.getApplicationSession().execute( query );
 
         final List<AuditLog> auditLogs = rs.all().stream().map( row ->
             new AuditLog(
@@ -143,6 +146,7 @@ public class AuditLogSerializationImpl implements AuditLogSerialization {
 
     @Override
     public Collection<TableDefinition> getTables() {
-        return Collections.singletonList( new TableDefinitionStringImpl( TABLE_AUDIT_LOG, CQL ) );
+        return Collections.singletonList(
+            new TableDefinitionStringImpl( cassandraFig.getApplicationKeyspace(), TABLE_AUDIT_LOG, CQL ) );
     }
 }

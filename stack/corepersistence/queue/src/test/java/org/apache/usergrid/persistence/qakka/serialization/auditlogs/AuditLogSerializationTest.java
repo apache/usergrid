@@ -39,7 +39,6 @@ public class AuditLogSerializationTest extends AbstractTest {
     public void testRecordAuditLog() throws Exception {
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
         AuditLogSerialization logSerialization = getInjector().getInstance( AuditLogSerialization.class );
 
@@ -48,10 +47,10 @@ public class AuditLogSerializationTest extends AbstractTest {
         String queueName = "alst_queue_" + RandomStringUtils.randomAlphanumeric( 15 );
         String source = RandomStringUtils.randomAlphanumeric( 15 );
         String dest = RandomStringUtils.randomAlphanumeric( 15 );
-        
-        logSerialization.recordAuditLog( AuditLog.Action.GET, AuditLog.Status.SUCCESS, 
+
+        logSerialization.recordAuditLog( AuditLog.Action.GET, AuditLog.Status.SUCCESS,
             queueName, dest, messageId, UUIDGen.getTimeUUID() );
-           
+
         // get audit logs for that message
         Result<AuditLog> result = logSerialization.getAuditLogs( messageId );
         Assert.assertEquals( 1, result.getEntities().size() );
@@ -61,8 +60,6 @@ public class AuditLogSerializationTest extends AbstractTest {
     public void testGetAuditLogs() throws Exception {
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
-
 
         AuditLogSerialization logSerialization = getInjector().getInstance( AuditLogSerialization.class );
 
@@ -73,14 +70,14 @@ public class AuditLogSerializationTest extends AbstractTest {
         String dest = RandomStringUtils.randomAlphanumeric( 15 );
 
         int numLogs = 10;
-        
+
         UUID queueMessageId1 = UUIDGen.getTimeUUID();
         for ( int i=0; i<numLogs; i++ ) {
             logSerialization.recordAuditLog( AuditLog.Action.GET, AuditLog.Status.SUCCESS,
                     queueName, dest, messageId, queueMessageId1 );
-            Thread.sleep(5); 
+            Thread.sleep(5);
         }
-        
+
         UUID queueMessageId2 = UUIDGen.getTimeUUID();
         for ( int i=0; i<numLogs; i++ ) {
             logSerialization.recordAuditLog( AuditLog.Action.GET, AuditLog.Status.SUCCESS,

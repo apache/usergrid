@@ -26,6 +26,7 @@ import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.inject.Inject;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionStringImpl;
@@ -46,6 +47,7 @@ public class QueueSerializationImpl implements QueueSerialization {
     private static final Logger logger = LoggerFactory.getLogger( QueueMessageSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
+    private final CassandraFig cassandraFig;
 
     public final static String COLUMN_QUEUE_NAME = "queue_name";
     public final static String COLUMN_REGIONS = "regions";
@@ -72,7 +74,8 @@ public class QueueSerializationImpl implements QueueSerialization {
 
 
     @Inject
-    public QueueSerializationImpl( CassandraClient cassandraClient ) {
+    public QueueSerializationImpl( CassandraFig cassandraFig,  CassandraClient cassandraClient ) {
+        this.cassandraFig = cassandraFig;
         this.cassandraClient = cassandraClient;
     }
 
@@ -90,7 +93,7 @@ public class QueueSerializationImpl implements QueueSerialization {
                 .value(COLUMN_DEAD_LETTER_QUEUE, queue.getDeadLetterQueue());
 
 
-        cassandraClient.getSession().execute(insert);
+        cassandraClient.getApplicationSession().execute(insert);
 
     }
 
@@ -102,7 +105,7 @@ public class QueueSerializationImpl implements QueueSerialization {
         Statement query = QueryBuilder.select().all().from(TABLE_QUEUES)
                 .where(queueNameClause);
 
-        Row row = cassandraClient.getSession().execute(query).one();
+        Row row = cassandraClient.getApplicationSession().execute(query).one();
 
         if(row == null){
             return null;
@@ -129,14 +132,14 @@ public class QueueSerializationImpl implements QueueSerialization {
         Statement delete = QueryBuilder.delete().from(TABLE_QUEUES)
                 .where(queueNameClause);
 
-        cassandraClient.getSession().execute(delete);
+        cassandraClient.getApplicationSession().execute(delete);
     }
 
     @Override
     public List<String> getListOfQueues() {
 
         Statement select = QueryBuilder.select().all().from( TABLE_QUEUES );
-        ResultSet rs = cassandraClient.getSession().execute( select );
+        ResultSet rs = cassandraClient.getApplicationSession().execute( select );
 
         return rs.all().stream()
                 .map( row -> row.getString( COLUMN_QUEUE_NAME ))
@@ -151,7 +154,8 @@ public class QueueSerializationImpl implements QueueSerialization {
 
     @Override
     public Collection<TableDefinition> getTables() {
-        return Collections.singletonList( new TableDefinitionStringImpl( "queues", CQL ) );
+        return Collections.singletonList(
+            new TableDefinitionStringImpl( cassandraFig.getApplicationKeyspace(), "queues", CQL ) );
     }
 
 }

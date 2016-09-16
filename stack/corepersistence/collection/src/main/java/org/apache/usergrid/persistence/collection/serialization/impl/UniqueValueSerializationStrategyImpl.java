@@ -68,7 +68,7 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
 
     private final SerializationFig serializationFig;
-    private final CassandraFig cassandraFig;
+    protected final CassandraFig cassandraFig;
 
     private final Session session;
     private final CassandraConfig cassandraConfig;
@@ -90,8 +90,8 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
         this.session = session;
         this.cassandraConfig = cassandraConfig;
 
-        TABLE_UNIQUE_VALUES = getUniqueValuesTable().getTableName();
-        TABLE_UNIQUE_VALUES_LOG = getEntityUniqueLogTable().getTableName();
+        TABLE_UNIQUE_VALUES = getUniqueValuesTable( cassandraFig ).getTableName();
+        TABLE_UNIQUE_VALUES_LOG = getEntityUniqueLogTable( cassandraFig ).getTableName();
     }
 
     @Override
@@ -272,9 +272,11 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
 
         for ( Field field : fields ) {
 
-            //log.info(Bytes.toHexString(getPartitionKey(applicationId, type, field.getTypeName().toString(), field.getName(), field.getValue())));
+            //log.info(Bytes.toHexString(getPartitionKey(applicationId, type,
+            // field.getTypeName().toString(), field.getName(), field.getValue())));
 
-            //partitionKeys.add(getPartitionKey(applicationId, type, field.getTypeName().toString(), field.getName(), field.getValue()));
+            //partitionKeys.add(getPartitionKey(applicationId, type,
+            // field.getTypeName().toString(), field.getName(), field.getValue()));
 
             final Clause inKey = QueryBuilder.in("key", getPartitionKey(applicationId, type,
                 field.getTypeName().toString(), field.getName(), field.getValue()) );
@@ -492,7 +494,7 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     /**
      * Get the CQL table definition for the unique values log table
      */
-    protected abstract TableDefinition getUniqueValuesTable();
+    protected abstract TableDefinition getUniqueValuesTable( CassandraFig cassandraFig );
 
 
     protected abstract List<Object> deserializePartitionKey(ByteBuffer bb);
@@ -514,7 +516,7 @@ public abstract class UniqueValueSerializationStrategyImpl<FieldKey, EntityKey>
     /**
      * Get the CQL table definition for the unique values log table
      */
-    protected abstract TableDefinition getEntityUniqueLogTable();
+    protected abstract TableDefinition getEntityUniqueLogTable( CassandraFig cassandraFig );
 
 
     public class AllUniqueFieldsIterator implements Iterable<UniqueValue>, Iterator<UniqueValue> {

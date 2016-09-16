@@ -42,16 +42,15 @@ public class TransferLogSerializationTest extends AbstractTest {
     public void recordTransferLog() throws Exception {
 
         TransferLogSerialization logSerialization = getInjector().getInstance( TransferLogSerialization.class );
-        
+
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession();
 
         String queueName = "tlst_queue_" + RandomStringUtils.randomAlphanumeric( 15 );
         String source = RandomStringUtils.randomAlphanumeric( 15 );
         String dest = RandomStringUtils.randomAlphanumeric( 15 );
-        
+
         int numLogs = 100;
-        
+
         for ( int i=0; i<numLogs; i++ ) {
             logSerialization.recordTransferLog( queueName, source, dest, UUIDGen.getTimeUUID());
         }
@@ -60,9 +59,9 @@ public class TransferLogSerializationTest extends AbstractTest {
         int fetchCount = 0;
         PagingState pagingState = null;
         while ( true ) {
-            
+
             Result<TransferLog> all = logSerialization.getAllTransferLogs( pagingState, 10 );
-                   
+
             // we only want entities for our queue
             List<TransferLog> logs = all.getEntities().stream()
                 .filter( log -> log.getQueueName().equals( queueName ) ).collect( Collectors.toList() );
@@ -71,7 +70,7 @@ public class TransferLogSerializationTest extends AbstractTest {
             fetchCount++;
             if ( all.getPagingState() == null ) {
                 break;
-            } 
+            }
             pagingState = all.getPagingState();
         }
 
@@ -84,8 +83,7 @@ public class TransferLogSerializationTest extends AbstractTest {
         TransferLogSerialization logSerialization = getInjector().getInstance( TransferLogSerialization.class );
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        cassandraClient.getSession(); 
-        
+
         String queueName = "tlst_queue_" + RandomStringUtils.randomAlphanumeric( 15 );
         String source = RandomStringUtils.randomAlphanumeric( 15 );
         String dest = RandomStringUtils.randomAlphanumeric( 15 );
@@ -101,16 +99,16 @@ public class TransferLogSerializationTest extends AbstractTest {
         Assert.assertEquals( 1, logs.size());
 
         logSerialization.removeTransferLog( queueName, source, dest, messageId );
-        
+
         List<TransferLog> all = getTransferLogs( logSerialization );
         logs = all.stream()
             .filter( log -> log.getQueueName().equals( queueName ) ).collect( Collectors.toList() );
         Assert.assertEquals( 0, logs.size());
-        
+
         try {
             logSerialization.removeTransferLog( queueName, source, dest, messageId );
             Assert.fail("Removing non-existent log should throw exception");
-            
+
         } catch ( QakkaException expected ) {
             // success!
         }

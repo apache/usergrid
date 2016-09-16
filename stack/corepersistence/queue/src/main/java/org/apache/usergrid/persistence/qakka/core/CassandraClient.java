@@ -25,5 +25,8 @@ import com.datastax.driver.core.Session;
  * Created by Dave Johnson (snoopdave@apache.org) on 9/9/16.
  */
 public interface CassandraClient {
-    Session getSession();
+
+    Session getApplicationSession();
+
+    Session getQueueMessageSession();
 }

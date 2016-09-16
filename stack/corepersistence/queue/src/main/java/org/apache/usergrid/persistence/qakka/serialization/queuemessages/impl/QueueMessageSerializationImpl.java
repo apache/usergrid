@@ -28,6 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionStringImpl;
@@ -52,6 +53,7 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
     private static final Logger logger = LoggerFactory.getLogger( QueueMessageSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
+    private final CassandraFig cassandraFig;
 
     private final ActorSystemFig            actorSystemFig;
     private final ShardStrategy             shardStrategy;
@@ -107,11 +109,13 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
 
     @Inject
     public QueueMessageSerializationImpl(
+            CassandraFig              cassandraFig,
             ActorSystemFig            actorSystemFig,
             ShardStrategy             shardStrategy,
             ShardCounterSerialization shardCounterSerialization,
             CassandraClient           cassandraClient
         ) {
+        this.cassandraFig              = cassandraFig;
         this.actorSystemFig            = actorSystemFig;
         this.shardStrategy             = shardStrategy;
         this.shardCounterSerialization = shardCounterSerialization;
@@ -149,7 +153,7 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
                 .value( COLUMN_INFLIGHT_AT,      inflightAt )
                 .value( COLUMN_QUEUED_AT,        queuedAt);
 
-        cassandraClient.getSession().execute(insert);
+        cassandraClient.getQueueMessageSession().execute(insert);
 
         shardCounterSerialization.incrementCounter( message.getQueueName(), shardType, message.getShardId(), 1 );
 
@@ -191,7 +195,7 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
                 .and(shardIdClause)
                 .and(queueMessageIdClause);
 
-        Row row = cassandraClient.getSession().execute(select).one();
+        Row row = cassandraClient.getQueueMessageSession().execute(select).one();
 
         if (row == null) {
             return null;
@@ -240,7 +244,7 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
                 .and(shardIdClause)
                 .and(queueMessageIdClause);
 
-        ResultSet resultSet = cassandraClient.getSession().execute( delete );
+        ResultSet resultSet = cassandraClient.getQueueMessageSession().execute( delete );
 
         String s = "s";
     }
@@ -253,7 +257,7 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
 
         Statement select = QueryBuilder.select().from( TABLE_MESSAGE_DATA).where(messageIdClause);
 
-        Row row = cassandraClient.getSession().execute(select).one();
+        Row row = cassandraClient.getApplicationSession().execute(select).one();
         if ( row == null ) {
             return null;
         }
@@ -273,7 +277,7 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
                 .value( COLUMN_MESSAGE_DATA, messageBody.getBlob())
                 .value( COLUMN_CONTENT_TYPE, messageBody.getContentType());
 
-        cassandraClient.getSession().execute(insert);
+        cassandraClient.getApplicationSession().execute(insert);
     }
 
 
@@ -285,7 +289,7 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
         Statement delete = QueryBuilder.delete().from(TABLE_MESSAGE_DATA)
                 .where(messageIdClause);
 
-        cassandraClient.getSession().execute(delete);
+        cassandraClient.getApplicationSession().execute(delete);
     }
 
 
@@ -311,9 +315,15 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
     @Override
     public Collection<TableDefinition> getTables() {
         return Lists.newArrayList(
-                new TableDefinitionStringImpl( TABLE_MESSAGES_AVAILABLE, MESSAGES_AVAILABLE ),
-                new TableDefinitionStringImpl( TABLE_MESSAGES_INFLIGHT, MESSAGES_INFLIGHT ),
-                new TableDefinitionStringImpl( TABLE_MESSAGE_DATA, MESSAGE_DATA )
+
+            new TableDefinitionStringImpl( cassandraFig.getApplicationLocalKeyspace(),
+                TABLE_MESSAGES_AVAILABLE, MESSAGES_AVAILABLE ),
+
+            new TableDefinitionStringImpl( cassandraFig.getApplicationLocalKeyspace(),
+                TABLE_MESSAGES_INFLIGHT, MESSAGES_INFLIGHT ),
+
+            new TableDefinitionStringImpl( cassandraFig.getApplicationKeyspace(),
+                TABLE_MESSAGE_DATA, MESSAGE_DATA )
         );
     }
 

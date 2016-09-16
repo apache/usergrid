@@ -280,8 +280,14 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
     public Collection<TableDefinition> getTables() {
 
         final TableDefinition scopedCache =
-            new TableDefinitionImpl( SCOPED_CACHE_TABLE, SCOPED_CACHE_PARTITION_KEYS, SCOPED_CACHE_COLUMN_KEYS,
-                SCOPED_CACHE_COLUMNS, TableDefinitionImpl.CacheOption.KEYS, SCOPED_CACHE_CLUSTERING_ORDER);
+            new TableDefinitionImpl(
+                cassandraConfig.getApplicationKeyspace(),
+                SCOPED_CACHE_TABLE,
+                SCOPED_CACHE_PARTITION_KEYS,
+                SCOPED_CACHE_COLUMN_KEYS,
+                SCOPED_CACHE_COLUMNS,
+                TableDefinitionImpl.CacheOption.KEYS,
+                SCOPED_CACHE_CLUSTERING_ORDER);
 
         return Collections.singletonList(scopedCache);
     }

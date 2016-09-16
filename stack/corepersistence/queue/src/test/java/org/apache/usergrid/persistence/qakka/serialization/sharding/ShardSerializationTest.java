@@ -19,6 +19,7 @@
 
 package org.apache.usergrid.persistence.qakka.serialization.sharding;
 
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.core.CassandraClient;
@@ -46,7 +47,8 @@ public class ShardSerializationTest extends AbstractTest {
     public void writeNewShard(){
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraClient );
+        CassandraFig cassandraFig = getInjector().getInstance( CassandraFig.class );
+        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraFig, cassandraClient );
 
         Shard shard1 = new Shard("test", "region1", Shard.Type.DEFAULT, 100L, null);
         shardSerialization.createShard(shard1);
@@ -56,7 +58,8 @@ public class ShardSerializationTest extends AbstractTest {
     public void deleteShard(){
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraClient );
+        CassandraFig cassandraFig = getInjector().getInstance( CassandraFig.class );
+        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraFig, cassandraClient );
 
         Shard shard1 = new Shard("test", "region1", Shard.Type.DEFAULT, 100L, null);
 
@@ -72,7 +75,8 @@ public class ShardSerializationTest extends AbstractTest {
     public void loadNullShard(){
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraClient );
+        CassandraFig cassandraFig = getInjector().getInstance( CassandraFig.class );
+        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraFig, cassandraClient );
 
         Shard shard1 = new Shard("junk", "region1", Shard.Type.DEFAULT, 100L, null);
 
@@ -86,8 +90,9 @@ public class ShardSerializationTest extends AbstractTest {
     public void updatePointer(){
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraClient );
-        
+        CassandraFig cassandraFig = getInjector().getInstance( CassandraFig.class );
+        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraFig, cassandraClient );
+
         Shard shard1 = new Shard("test", "region1", Shard.Type.DEFAULT, 100L, null);
         shardSerialization.createShard(shard1);
 

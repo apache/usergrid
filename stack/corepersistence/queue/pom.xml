@@ -66,6 +66,9 @@
                     <configuration>
                         <forkCount>0</forkCount>
                         <threadCount>0</threadCount>
+                        <argLine>
+                        -Xms2G -Xmx4G -Dlog4j.configuration=file:${basedir}/src/test/resources/log4j.properties
+                        </argLine>
                     </configuration>
                 </plugin>
 
