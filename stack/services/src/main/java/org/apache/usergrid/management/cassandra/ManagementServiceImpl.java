@@ -553,7 +553,7 @@ public class ManagementServiceImpl implements ManagementService {
             // associate to the requested organization
             if((password == null || password.isEmpty()) && SubjectUtils.isServiceAdmin()){
                 user = getAdminUserByEmail(email);
-                if(user == null ){
+                if(user == null && !tokens.isExternalSSOProviderEnabled() ){
                     throw new IllegalArgumentException("Password should be sent in the request or should be a valid admin user email.");
                 }
             }
@@ -783,8 +783,7 @@ public class ManagementServiceImpl implements ManagementService {
         List<OrganizationInfo> orgs = new ArrayList<>( results.size() );
         OrganizationInfo orgInfo;
         for ( Entity entity : results.getEntities() ) {
-            // TODO T.N. temporary hack to deal with duplicate orgs. Revert this
-            // commit after migration
+
             String path = ( String ) entity.getProperty( PROPERTY_PATH );
 
             if ( organizations.containsValue( path ) ) {
