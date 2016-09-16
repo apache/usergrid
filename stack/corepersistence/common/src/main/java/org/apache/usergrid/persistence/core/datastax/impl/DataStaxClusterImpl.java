@@ -148,7 +148,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         final String createQueueMessageKeyspace = String.format(
             "CREATE KEYSPACE IF NOT EXISTS %s WITH replication = %s",
             CQLUtils.quote(cassandraFig.getApplicationLocalKeyspace()),
-            CQLUtils.getFormattedReplication(cassandraFig.getStrategy(), cassandraFig.getStrategyOptions())
+            CQLUtils.getFormattedReplication(cassandraFig.getStrategyLocal(), cassandraFig.getStrategyOptionsLocal())
 
         );
 

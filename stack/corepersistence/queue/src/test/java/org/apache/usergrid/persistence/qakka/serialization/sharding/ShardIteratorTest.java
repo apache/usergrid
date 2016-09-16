@@ -50,14 +50,16 @@ public class ShardIteratorTest extends AbstractTest {
         CassandraFig cassandraFig = getInjector().getInstance( CassandraFig.class );
         ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraFig, cassandraClient );
 
-        Shard shard1 = new Shard("test", "region1", Shard.Type.DEFAULT, 100L, null);
-        Shard shard2 = new Shard("test", "region1", Shard.Type.DEFAULT, 200L, null);
+        String queueName = "queue_sit_" + RandomStringUtils.randomAlphanumeric( 10 );
+
+        Shard shard1 = new Shard(queueName, "region1", Shard.Type.DEFAULT, 100L, null);
+        Shard shard2 = new Shard(queueName, "region1", Shard.Type.DEFAULT, 200L, null);
 
         shardSerialization.createShard(shard1);
         shardSerialization.createShard(shard2);
 
         Iterator<Shard> shardIterator = new ShardIterator(
-                cassandraClient, "test", "region1", Shard.Type.DEFAULT, Optional.empty());
+                cassandraClient, queueName, "region1", Shard.Type.DEFAULT, Optional.empty());
 
         List<Shard> shards = new ArrayList<>(1);
 
@@ -81,9 +83,11 @@ public class ShardIteratorTest extends AbstractTest {
         CassandraFig cassandraFig = getInjector().getInstance( CassandraFig.class );
         ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraFig, cassandraClient );
 
-        Shard shard1 = new Shard("test", "region1", Shard.Type.DEFAULT, 100L, null);
-        Shard shard2 = new Shard("test", "region1", Shard.Type.DEFAULT, 200L, null);
-        Shard shard3 = new Shard("test", "region1", Shard.Type.DEFAULT, 300L, null);
+        String queueName = "queue_sit_" + RandomStringUtils.randomAlphanumeric( 10 );
+
+        Shard shard1 = new Shard(queueName, "region1", Shard.Type.DEFAULT, 100L, null);
+        Shard shard2 = new Shard(queueName, "region1", Shard.Type.DEFAULT, 200L, null);
+        Shard shard3 = new Shard(queueName, "region1", Shard.Type.DEFAULT, 300L, null);
 
         shardSerialization.createShard(shard1);
         shardSerialization.createShard(shard2);
@@ -91,7 +95,7 @@ public class ShardIteratorTest extends AbstractTest {
 
 
         Iterator<Shard> shardIterator = new ShardIterator(
-                cassandraClient, "test", "region1", Shard.Type.DEFAULT, Optional.of(200L));
+                cassandraClient, queueName, "region1", Shard.Type.DEFAULT, Optional.of(200L));
 
         List<Shard> shards = new ArrayList<>(1);
 

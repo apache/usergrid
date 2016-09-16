@@ -156,6 +156,7 @@ public class QueueActorServiceTest extends AbstractTest {
         int count = 0;
         while ( retries++ < maxRetries ) {
             Thread.sleep( 1000 );
+            distributedQueueService.refresh();
             if (inMemoryQueue.size( queueName ) == 100) {
                 count = 100;
                 break;

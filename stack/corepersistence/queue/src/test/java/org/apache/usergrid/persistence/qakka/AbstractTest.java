@@ -40,7 +40,7 @@ public class AbstractTest {
 
     protected static Injector sharedInjector;
 
-    AtomicBoolean migrated = new AtomicBoolean( false );
+    static AtomicBoolean migrated = new AtomicBoolean( false );
 
     static { new KeyspaceDropper(); }
 

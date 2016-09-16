@@ -54,7 +54,6 @@ public class QueueTimeouterTest extends AbstractTest {
 
 
     @Test
-    @Ignore
     public void testBasicOperation() throws Exception {
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );

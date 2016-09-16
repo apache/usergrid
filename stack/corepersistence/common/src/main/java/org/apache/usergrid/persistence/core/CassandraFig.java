@@ -35,8 +35,12 @@ public interface CassandraFig extends GuicyFig {
     String READ_CL = "cassandra.readcl";
     String READ_CL_CONSISTENT = "cassandra.readcl.consistent";
     String WRITE_CL = "cassandra.writecl";
+
     String STRATEGY = "cassandra.strategy";
     String STRATEGY_OPTIONS = "cassandra.strategy.options";
+
+    String STRATEGY_LOCAL = "cassandra.strategy.local";
+    String STRATEGY_OPTIONS_LOCAL = "cassandra.strategy.options.local";
 
     // main application cassandra properties
     String ASTYANAX_READ_CONSISTENT_CL = "usergrid.consistent.read.cl";
@@ -156,6 +160,14 @@ public interface CassandraFig extends GuicyFig {
     @Default("replication_factor:1")
     @Key( STRATEGY_OPTIONS )
     String getStrategyOptions();
+
+    @Default("SimpleStrategy")
+    @Key( STRATEGY_LOCAL )
+    String getStrategyLocal();
+
+    @Default("replication_factor:1")
+    @Key( STRATEGY_OPTIONS_LOCAL )
+    String getStrategyOptionsLocal();
 
     /**
      * Return the history of all shard values which are immutable.  For instance, if shard values
