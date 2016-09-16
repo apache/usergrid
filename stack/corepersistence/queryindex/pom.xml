@@ -124,6 +124,7 @@
             <artifactId>collection</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
