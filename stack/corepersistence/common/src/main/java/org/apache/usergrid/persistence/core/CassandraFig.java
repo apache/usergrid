@@ -91,7 +91,7 @@ public interface CassandraFig extends GuicyFig {
     @Default( "Usergrid_Applications" )
     String getApplicationKeyspace();
 
-    @Key( "cassandra.keyspace.application_local" )
+    @Key( "cassandra.keyspace.application.local" )
     @Default( "Usergrid_Applications_Local" )
     String getApplicationLocalKeyspace();
 

@@ -64,8 +64,8 @@ public class QakkaModule extends AbstractModule {
             // TODO: reconcile with usergrid props
             // load properties from one properties file using Netflix Archaius so that GuicyFig will see them
             ConfigurationManager.loadCascadedPropertiesFromResources( "qakka" );
-        } catch (IOException e) {
-            logger.warn("Unable to load qakka.properties");
+        } catch (Throwable t) {
+            logger.warn("Unable to load qakka.properties (can be ignored in Usergrid)");
         }
     }
 
@@ -105,11 +105,11 @@ public class QakkaModule extends AbstractModule {
         Multibinder<Migration> migrationBinder = Multibinder.newSetBinder( binder(), Migration.class );
 
         migrationBinder.addBinding().to( Key.get( AuditLogSerialization.class ) );
-        //migrationBinder.addBinding().to( Key.get( MessageCounterSerialization.class ) );
         migrationBinder.addBinding().to( Key.get( QueueMessageSerialization.class ) );
         migrationBinder.addBinding().to( Key.get( QueueSerialization.class ) );
         migrationBinder.addBinding().to( Key.get( ShardCounterSerialization.class ) );
         migrationBinder.addBinding().to( Key.get( ShardSerialization.class ) );
         migrationBinder.addBinding().to( Key.get( TransferLogSerialization.class ) );
+        //migrationBinder.addBinding().to( Key.get( MessageCounterSerialization.class ) );
     }
 }

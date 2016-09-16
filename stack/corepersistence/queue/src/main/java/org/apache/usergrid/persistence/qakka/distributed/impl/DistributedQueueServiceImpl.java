@@ -25,6 +25,7 @@ import akka.util.Timeout;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
+import org.apache.usergrid.persistence.actorsystem.ClientActor;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.QueueManager;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
@@ -185,23 +186,37 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
                 // ask ClientActor and wait (up to timeout) for response
 
                 Future<Object> fut = Patterns.ask( actorSystemManager.getClientActor(), request, t );
-                final QakkaMessage response = (QakkaMessage)Await.result( fut, t.duration() );
+                Object responseObject = Await.result( fut, t.duration() );
 
-                if ( response != null && response instanceof QueueGetResponse) {
-                    QueueGetResponse qprm = (QueueGetResponse)response;
-                    if ( qprm.isSuccess() ) {
-                        if (retries > 1) {
-                            logger.debug( "getNextMessage SUCCESS after {} retries", retries );
+                if ( responseObject instanceof QakkaMessage ) {
+
+                    final QakkaMessage response = (QakkaMessage)Await.result( fut, t.duration() );
+
+                    if ( response != null && response instanceof QueueGetResponse) {
+                        QueueGetResponse qprm = (QueueGetResponse)response;
+                        if ( qprm.isSuccess() ) {
+                            if (retries > 1) {
+                                logger.debug( "getNextMessage SUCCESS after {} retries", retries );
+                            }
                         }
+                        return qprm.getQueueMessages();
+
+
+                    } else if ( response != null  ) {
+                        logger.debug("ERROR RESPONSE (1) popping queue, retrying {}", retries );
+
+                    } else {
+                        logger.debug("TIMEOUT popping to queue, retrying {}", retries );
                     }
-                    return qprm.getQueueMessages();
 
+                } else if ( responseObject instanceof ClientActor.ErrorResponse ) {
 
-                } else if ( response != null  ) {
-                    logger.debug("ERROR RESPONSE popping queue, retrying {}", retries );
+                    final ClientActor.ErrorResponse errorResponse = (ClientActor.ErrorResponse)responseObject;
+                    logger.debug("ACTORSYSTEM ERROR popping queue: {}, retrying {}",
+                        errorResponse.getMessage(), retries );
 
                 } else {
-                    logger.debug("TIMEOUT popping to queue, retrying {}", retries );
+                    logger.debug("UNKNOWN RESPONSE popping queue, retrying {}", retries );
                 }
 
             } catch ( Exception e ) {

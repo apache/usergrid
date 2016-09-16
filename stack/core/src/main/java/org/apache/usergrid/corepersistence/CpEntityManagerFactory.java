@@ -60,6 +60,7 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.distributed.impl.QueueActorRouterProducer;
 import org.apache.usergrid.persistence.qakka.distributed.impl.QueueSenderRouterProducer;
 import org.apache.usergrid.persistence.qakka.distributed.impl.QueueWriterRouterProducer;
@@ -151,6 +152,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             try {
                 logger.info("Akka cluster starting...");
 
+                // TODO: fix this kludge
+                injector.getInstance( App.class );
                 this.actorSystemManager = injector.getInstance( ActorSystemManager.class );
 
                 actorSystemManager.registerRouterProducer( injector.getInstance( UniqueValuesService.class ) );
