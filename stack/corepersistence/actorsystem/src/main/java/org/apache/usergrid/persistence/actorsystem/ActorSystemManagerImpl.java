@@ -161,6 +161,11 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
     }
 
+    private String getClusterName(){
+        // better to not change this so rolling restarts of usergrid are unaffected
+        return "ClusterSystem";
+    }
+
 
     private void initAkka() {
         logger.info("Initializing Akka");
@@ -188,6 +193,10 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
         clusterSystem = createClusterSystem( config );
 
+        // register our cluster listener
+        clusterSystem.actorOf(Props.create(ClusterListener.class, getSeedsByRegion(), getCurrentRegion()),
+            "clusterListener");
+
         createClientActors( clusterSystem );
 
         mediator = DistributedPubSub.get( clusterSystem ).mediator();
@@ -213,7 +222,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
                     // we are testing, create seeds-by-region map for one region, one seed
 
-                    String seed = "akka.tcp://ClusterSystem" + "@" + hostname + ":" + port;
+                    String seed = "akka.tcp://"+getClusterName()+ "@" + hostname + ":" + port;
                     seedsByRegion.put( currentRegion, seed );
                     logger.info( "Akka testing, only starting one seed" );
 
@@ -237,7 +246,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                             regionPort = port; // unless we are testing
                         }
 
-                        String seed = "akka.tcp://ClusterSystem" + "@" + hostname + ":" + regionPort;
+                        String seed = "akka.tcp://"+getClusterName()+ "@" + hostname + ":" + regionPort;
 
                         logger.info( "Adding seed [{}] for region [{}]", seed, region );
 
@@ -327,7 +336,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     private ActorSystem createClusterSystem( Config config ) {
 
         // there is only 1 akka system for a Usergrid cluster
-        final String clusterName = "ClusterSystem";
+        final String clusterName = getClusterName();
 
         if ( clusterSystem == null) {
 

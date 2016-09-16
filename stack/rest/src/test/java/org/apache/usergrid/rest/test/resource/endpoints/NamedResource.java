@@ -343,6 +343,15 @@ public class NamedResource implements UrlResource {
             javax.ws.rs.client.Entity.entity(data, type), ApiResponse.class);
     }
 
+    public ApiResponse put(boolean useToken, org.apache.usergrid.rest.test.resource.model.Entity entity, QueryParameters queryParameters ) {
+        WebTarget resource = getTarget(useToken);
+        if( queryParameters != null ) {
+            resource = addParametersToResource(resource, queryParameters);
+        }
+        return resource.request().put(
+            javax.ws.rs.client.Entity.entity(entity, MediaType.APPLICATION_JSON_TYPE), ApiResponse.class);
+    }
+
     public ApiResponse put(boolean useToken, org.apache.usergrid.rest.test.resource.model.Entity entity ) {
         WebTarget resource = getTarget(useToken);
         return resource.request().put(
