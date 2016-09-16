@@ -163,7 +163,6 @@ public class ShardAllocatorTest extends AbstractTest {
 
 
     @Test
-    @Ignore
     public void testBasicOperationWithMessages() throws InterruptedException {
 
         Injector injector = getInjector();

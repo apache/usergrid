@@ -134,7 +134,6 @@ public class QueueMessageManagerTest extends AbstractTest {
 
 
     @Test
-    @Ignore
     public void testQueueMessageTimeouts() throws Exception {
 
         Injector injector = getInjector();
@@ -223,7 +222,6 @@ public class QueueMessageManagerTest extends AbstractTest {
 
 
     @Test
-    @Ignore
     public void testGetWithMissingData() throws InterruptedException {
 
         Injector injector = getInjector();
