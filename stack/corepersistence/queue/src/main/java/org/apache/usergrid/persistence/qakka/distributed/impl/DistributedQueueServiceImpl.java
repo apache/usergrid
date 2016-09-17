@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.qakka.distributed.impl;
 import akka.actor.ActorRef;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
+import com.datastax.driver.core.exceptions.InvalidQueryException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
@@ -67,14 +68,29 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
 
     @Override
     public void init() {
-        for ( String queueName : queueManager.getListOfQueues() ) {
-            initQueue( queueName );
+
+        try {
+            List<String> queues = queueManager.getListOfQueues();
+            for ( String queueName : queues ) {
+                initQueue( queueName );
+            }
+        }catch (InvalidQueryException e){
+
+            if (e.getMessage().contains("unconfigured columnfamily")){
+                logger.info("Unable to initialize queues since system is bootstrapping.  " +
+                    "Queues will be initialized when created");
+            }else{
+                throw e;
+            }
+
         }
+
     }
 
 
     @Override
     public void initQueue(String queueName) {
+        logger.info("Initializing queue: {}", queueName);
         QueueInitRequest request = new QueueInitRequest( queueName );
         ActorRef clientActor = actorSystemManager.getClientActor();
         clientActor.tell( request, null );
@@ -91,6 +107,7 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
 
     @Override
     public void refreshQueue(String queueName) {
+        logger.info("Refreshing queue: {}", queueName);
         QueueRefreshRequest request = new QueueRefreshRequest( queueName );
         ActorRef clientActor = actorSystemManager.getClientActor();
         clientActor.tell( request, null );
