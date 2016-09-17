@@ -42,6 +42,7 @@ public class QueueModule extends AbstractModule {
         install(new GuicyFigModule(LegacyQueueFig.class));
 
         bind(LegacyQueueManagerFactory.class).to(QueueManagerFactoryImpl.class);
+
         install( new FactoryModuleBuilder().implement(LegacyQueueManager.class, QakkaQueueManager.class)
             .build(LegacyQueueManagerInternalFactory.class));
 

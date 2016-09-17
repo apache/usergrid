@@ -85,6 +85,7 @@ public class QueueActor extends UntypedActor {
                     getContext().dispatcher(),
                     getSelf());
                 refreshSchedulersByQueueName.put( request.getQueueName(), scheduler );
+                logger.debug("Created refresher for queue {}", request.getQueueName() );
             }
 
             if ( timeoutSchedulersByQueueName.get( request.getQueueName() ) == null ) {
@@ -96,6 +97,7 @@ public class QueueActor extends UntypedActor {
                         getContext().dispatcher(),
                         getSelf());
                 timeoutSchedulersByQueueName.put( request.getQueueName(), scheduler );
+                logger.debug("Created scheduler for queue {}", request.getQueueName() );
             }
 
             if ( shardAllocationSchedulersByQueueName.get( request.getQueueName() ) == null ) {
@@ -107,6 +109,7 @@ public class QueueActor extends UntypedActor {
                         getContext().dispatcher(),
                         getSelf());
                 shardAllocationSchedulersByQueueName.put( request.getQueueName(), scheduler );
+                logger.debug("Created shard allocater for queue {}", request.getQueueName() );
             }
 
         } else if ( message instanceof QueueRefreshRequest ) {
@@ -164,8 +167,8 @@ public class QueueActor extends UntypedActor {
                             queueMessages.add( queueMessage );
                         }
                     } else {
-                        logger.debug("in-memory queue for {} is empty, object is: {}",
-                                queueGetRequest.getQueueName(), inMemoryQueue );
+//                        logger.debug("in-memory queue for {} is empty, object is: {}",
+//                                queueGetRequest.getQueueName(), inMemoryQueue );
                         break;
                     }
                 }

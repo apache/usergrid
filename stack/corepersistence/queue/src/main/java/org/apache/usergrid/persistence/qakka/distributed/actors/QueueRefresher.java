@@ -76,6 +76,8 @@ public class QueueRefresher extends UntypedActor {
 
             QueueRefreshRequest request = (QueueRefreshRequest) message;
 
+            logger.debug( "running for queue {}", queueName );
+
             if (!request.getQueueName().equals( queueName )) {
                 throw new QakkaRuntimeException(
                         "QueueWriter for " + queueName + ": Incorrect queueName " + request.getQueueName() );
@@ -108,7 +110,7 @@ public class QueueRefresher extends UntypedActor {
                     }
 
                     if ( count > 0 ) {
-                        logger.info( "Added {} in-memory for queue {}, new size = {}",
+                        logger.debug( "Added {} in-memory for queue {}, new size = {}",
                                 count, queueName, inMemoryQueue.size( queueName ) );
                     }
                 }

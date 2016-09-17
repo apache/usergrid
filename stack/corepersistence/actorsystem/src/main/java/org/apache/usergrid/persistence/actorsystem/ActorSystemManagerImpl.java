@@ -390,7 +390,6 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
             } else {
 
-                List<String> regionSeeds = getSeedsByRegion().get( region );
                 Set<ActorPath> seedPaths = new HashSet<>(20);
                 for ( String seed : getSeedsByRegion().get( region ) ) {
                     seedPaths.add( ActorPaths.fromString( seed + "/system/receptionist") );
