@@ -167,7 +167,7 @@ public class QueueSender extends UntypedActor {
                 }
             }
 
-            throw new QakkaRuntimeException( "Error adding to queue after " + retries );
+            throw new QakkaRuntimeException( "Error adding to queue after " + retries + " retries" );
 
         } finally {
             timer.stop();

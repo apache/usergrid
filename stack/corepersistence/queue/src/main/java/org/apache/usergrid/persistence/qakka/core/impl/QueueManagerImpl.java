@@ -57,9 +57,7 @@ public class QueueManagerImpl implements QueueManager {
     }
 
     @Override
-    public void createQueue(Queue queue) {
-
-        queueSerialization.writeQueue(queue.toDatabaseQueue());
+    public void  createQueue(Queue queue) {
 
         List<String> regions = new ArrayList<>();
 
@@ -85,6 +83,9 @@ public class QueueManagerImpl implements QueueManager {
             Shard inflight = new Shard( queue.getName(), region, Shard.Type.INFLIGHT, 1L, QakkaUtils.getTimeUuid());
             shardSerialization.createShard( inflight );
         }
+
+        // only write the existence of a queue to the database if its dependent initial shards have been written
+        queueSerialization.writeQueue(queue.toDatabaseQueue());
 
         distributedQueueService.initQueue( queue.getName() );
         distributedQueueService.refreshQueue( queue.getName() );

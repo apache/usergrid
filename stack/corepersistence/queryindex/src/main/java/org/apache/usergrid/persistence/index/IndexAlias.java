@@ -17,13 +17,13 @@
 package org.apache.usergrid.persistence.index;
 
 
-import org.apache.usergrid.persistence.index.IndexFig;
+import java.io.Serializable;
 
 
 /**
  * Abstraction for Index alias names
  */
-public interface IndexAlias{
+public interface IndexAlias extends Serializable{
 
 
 
