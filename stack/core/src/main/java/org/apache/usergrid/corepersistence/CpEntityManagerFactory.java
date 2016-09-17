@@ -61,6 +61,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.qakka.App;
+import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.distributed.impl.QueueActorRouterProducer;
 import org.apache.usergrid.persistence.qakka.distributed.impl.QueueSenderRouterProducer;
 import org.apache.usergrid.persistence.qakka.distributed.impl.QueueWriterRouterProducer;
@@ -160,9 +161,13 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
                 actorSystemManager.registerRouterProducer( injector.getInstance( QueueActorRouterProducer.class ) );
                 actorSystemManager.registerRouterProducer( injector.getInstance( QueueWriterRouterProducer.class ) );
                 actorSystemManager.registerRouterProducer( injector.getInstance( QueueSenderRouterProducer.class ) );
-
                 actorSystemManager.start();
                 actorSystemManager.waitForClientActor();
+
+                DistributedQueueService distributedQueueService =
+                    injector.getInstance( DistributedQueueService.class );
+
+                distributedQueueService.init();
 
             } catch (Throwable t) {
                 logger.error("Error starting Akka", t);
