@@ -22,11 +22,16 @@ package org.apache.usergrid.persistence.qakka;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
+import org.apache.usergrid.persistence.qakka.core.Queue;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
+import org.apache.usergrid.persistence.qakka.distributed.impl.QueueActorRouterProducer;
+import org.apache.usergrid.persistence.qakka.distributed.impl.QueueSenderRouterProducer;
+import org.apache.usergrid.persistence.qakka.distributed.impl.QueueWriterRouterProducer;
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +40,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Akka queueing application
  */
+@Singleton
 public class App implements MetricsService {
     private static final Logger logger = LoggerFactory.getLogger( App.class );
 
@@ -50,6 +56,7 @@ public class App implements MetricsService {
     @Inject
     public App(
             Injector                  injector,
+            QakkaFig                  qakkaFig,
             ActorSystemFig            actorSystemFig,
             ActorSystemManager        actorSystemManager,
             DistributedQueueService   distributedQueueService,
@@ -59,12 +66,18 @@ public class App implements MetricsService {
         this.actorSystemFig = actorSystemFig;
         this.actorSystemManager = actorSystemManager;
         this.distributedQueueService = distributedQueueService;
-//
-//        try {
-//            migrationManager.migrate();
-//        } catch (MigrationException e) {
-//            throw new QakkaRuntimeException( "Error running migration", e );
-//        }
+
+        if ( qakkaFig.getStandalone() ) {
+
+            try {
+                migrationManager.migrate();
+            } catch (MigrationException e) {
+                throw new QakkaRuntimeException( "Error running migration", e );
+            }
+            actorSystemManager.registerRouterProducer( injector.getInstance( QueueActorRouterProducer.class ) );
+            actorSystemManager.registerRouterProducer( injector.getInstance( QueueWriterRouterProducer.class ) );
+            actorSystemManager.registerRouterProducer( injector.getInstance( QueueSenderRouterProducer.class ) );
+        }
     }
 
     /**

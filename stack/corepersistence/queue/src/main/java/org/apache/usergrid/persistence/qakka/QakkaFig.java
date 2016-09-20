@@ -30,6 +30,8 @@ import java.io.Serializable;
 @FigSingleton
 public interface QakkaFig extends GuicyFig, Serializable {
 
+    String QUEUE_STANDALONE                       = "queue.standalone";
+
     String QUEUE_NUM_ACTORS                       = "queue.num.actors";
 
     String QUEUE_SENDER_NUM_ACTORS                = "queue.sender.num.actors";
@@ -58,6 +60,13 @@ public interface QakkaFig extends GuicyFig, Serializable {
 
     String QUEUE_SHARD_MAX_SIZE                   = "queue.shard.max.size";
 
+    String QUEUE_LONG_POLL_TIME_MILLIS            = "queue.long.polling.time.millis";
+
+
+    /** True if Qakka is running standlone */
+    @Key(QUEUE_STANDALONE)
+    @Default("false")
+    boolean getStandalone();
 
     /** Queue senders send to queue writers */
     @Key(QUEUE_SENDER_NUM_ACTORS)
@@ -128,4 +137,8 @@ public interface QakkaFig extends GuicyFig, Serializable {
     @Key(QUEUE_SHARD_MAX_SIZE)
     @Default("400000")
     long getMaxShardSize();
+
+    @Key(QUEUE_LONG_POLL_TIME_MILLIS)
+    @Default("5000")
+    long getLongPollTimeMillis();
 }

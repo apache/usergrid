@@ -65,8 +65,6 @@ public class QueueActorServiceTest extends AbstractTest {
 
         Injector injector = getInjector();
 
-        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-
         ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
 
@@ -117,8 +115,6 @@ public class QueueActorServiceTest extends AbstractTest {
 
         Injector injector = getInjector();
 
-        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-
         ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
 
@@ -151,16 +147,16 @@ public class QueueActorServiceTest extends AbstractTest {
                     queueName, region, region, messageId , null, null);
         }
 
-        int maxRetries = 15;
+        int maxRetries = 25;
         int retries = 0;
         int count = 0;
         while ( retries++ < maxRetries ) {
-            Thread.sleep( 1000 );
             distributedQueueService.refresh();
             if (inMemoryQueue.size( queueName ) == 100) {
                 count = 100;
                 break;
             }
+            Thread.sleep(1000);
         }
 
         Assert.assertEquals( 100, count );
