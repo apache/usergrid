@@ -26,7 +26,7 @@ import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionStringImpl;
@@ -46,7 +46,7 @@ public class ShardSerializationImpl implements ShardSerialization {
     private static final Logger logger = LoggerFactory.getLogger( ShardSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
-    private final CassandraFig cassandraFig;
+    private final CassandraConfig cassandraConfig;
 
     public final static String COLUMN_QUEUE_NAME = "queue_name";
     public final static String COLUMN_REGION = "region";
@@ -82,8 +82,8 @@ public class ShardSerializationImpl implements ShardSerialization {
 
 
     @Inject
-    public ShardSerializationImpl( CassandraFig cassandraFig,  CassandraClient cassandraClient ) {
-        this.cassandraFig = cassandraFig;
+    public ShardSerializationImpl( CassandraConfig cassandraConfig,  CassandraClient cassandraClient ) {
+        this.cassandraConfig = cassandraConfig;
         this.cassandraClient = cassandraClient;
     }
 
@@ -195,9 +195,9 @@ public class ShardSerializationImpl implements ShardSerialization {
     @Override
     public Collection<TableDefinition> getTables() {
         return Lists.newArrayList(
-                new TableDefinitionStringImpl( cassandraFig.getApplicationLocalKeyspace(),
+                new TableDefinitionStringImpl( cassandraConfig.getApplicationLocalKeyspace(),
                     TABLE_SHARDS_MESSAGES_AVAILABLE, SHARDS_MESSAGES_AVAILABLE ),
-                new TableDefinitionStringImpl( cassandraFig.getApplicationLocalKeyspace(),
+                new TableDefinitionStringImpl( cassandraConfig.getApplicationLocalKeyspace(),
                     TABLE_SHARDS_MESSAGES_INFLIGHT, SHARDS_MESSAGES_AVAILABLE_INFLIGHT )
         );
     }

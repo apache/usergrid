@@ -64,13 +64,16 @@ public class CassandraConfigImpl implements CassandraConfig {
 
         this.dataStaxReadCl = com.datastax.driver.core.ConsistencyLevel.valueOf( cassandraFig.getReadCl());
 
-        this.dataStaxReadConsistentCl = com.datastax.driver.core.ConsistencyLevel.valueOf( cassandraFig.getReadClConsistent());
+        this.dataStaxReadConsistentCl = com.datastax.driver.core.ConsistencyLevel.valueOf(
+            cassandraFig.getReadClConsistent());
 
         this.dataStaxWriteCl = com.datastax.driver.core.ConsistencyLevel.valueOf( cassandraFig.getWriteCl() );
 
         this.applicationKeyspace = cassandraFig.getApplicationKeyspace();
 
-        this.applicationLocalKeyspace = cassandraFig.getApplicationLocalKeyspace();
+        this.applicationLocalKeyspace =
+              cassandraFig.getApplicationLocalKeyspace() + "_"
+            + cassandraFig.getLocalDataCenter().replace("-", "_");
 
         //add the listeners to update the values
         cassandraFig.addPropertyChangeListener( new PropertyChangeListener() {

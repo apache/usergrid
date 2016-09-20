@@ -25,7 +25,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.inject.Inject;
-import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionStringImpl;
@@ -45,7 +45,7 @@ public class TransferLogSerializationImpl implements TransferLogSerialization {
     private static final Logger logger = LoggerFactory.getLogger( TransferLogSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
-    private final CassandraFig cassandraFig;
+    private final CassandraConfig cassandraConfig;
 
     public final static String TABLE_TRANSFER_LOG   = "transfer_log";
 
@@ -67,8 +67,8 @@ public class TransferLogSerializationImpl implements TransferLogSerialization {
 
 
     @Inject
-    public TransferLogSerializationImpl( CassandraFig cassandraFig,  CassandraClient cassandraClient ) {
-        this.cassandraFig = cassandraFig;
+    public TransferLogSerializationImpl( CassandraConfig cassandraConfig,  CassandraClient cassandraClient ) {
+        this.cassandraConfig = cassandraConfig;
         this.cassandraClient = cassandraClient;
     }
 
@@ -164,7 +164,7 @@ public class TransferLogSerializationImpl implements TransferLogSerialization {
     @Override
     public Collection<TableDefinition> getTables() {
         return Collections.singletonList(
-            new TableDefinitionStringImpl( cassandraFig.getApplicationKeyspace(), TABLE_TRANSFER_LOG, CQL ) );
+            new TableDefinitionStringImpl( cassandraConfig.getApplicationKeyspace(), TABLE_TRANSFER_LOG, CQL ) );
     }
 
 

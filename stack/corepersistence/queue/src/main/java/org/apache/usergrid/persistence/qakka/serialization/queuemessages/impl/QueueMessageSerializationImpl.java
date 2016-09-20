@@ -28,7 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
-import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionStringImpl;
@@ -53,7 +53,7 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
     private static final Logger logger = LoggerFactory.getLogger( QueueMessageSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
-    private final CassandraFig cassandraFig;
+    private final CassandraConfig cassandraConfig;
 
     private final ActorSystemFig            actorSystemFig;
     private final ShardStrategy             shardStrategy;
@@ -109,13 +109,13 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
 
     @Inject
     public QueueMessageSerializationImpl(
-            CassandraFig              cassandraFig,
+            CassandraConfig              cassandraConfig,
             ActorSystemFig            actorSystemFig,
             ShardStrategy             shardStrategy,
             ShardCounterSerialization shardCounterSerialization,
             CassandraClient           cassandraClient
         ) {
-        this.cassandraFig              = cassandraFig;
+        this.cassandraConfig              = cassandraConfig;
         this.actorSystemFig            = actorSystemFig;
         this.shardStrategy             = shardStrategy;
         this.shardCounterSerialization = shardCounterSerialization;
@@ -316,13 +316,13 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
     public Collection<TableDefinition> getTables() {
         return Lists.newArrayList(
 
-            new TableDefinitionStringImpl( cassandraFig.getApplicationLocalKeyspace(),
+            new TableDefinitionStringImpl( cassandraConfig.getApplicationLocalKeyspace(),
                 TABLE_MESSAGES_AVAILABLE, MESSAGES_AVAILABLE ),
 
-            new TableDefinitionStringImpl( cassandraFig.getApplicationLocalKeyspace(),
+            new TableDefinitionStringImpl( cassandraConfig.getApplicationLocalKeyspace(),
                 TABLE_MESSAGES_INFLIGHT, MESSAGES_INFLIGHT ),
 
-            new TableDefinitionStringImpl( cassandraFig.getApplicationKeyspace(),
+            new TableDefinitionStringImpl( cassandraConfig.getApplicationKeyspace(),
                 TABLE_MESSAGE_DATA, MESSAGE_DATA )
         );
     }

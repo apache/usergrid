@@ -26,7 +26,7 @@ import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.inject.Inject;
-import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionStringImpl;
@@ -47,7 +47,7 @@ public class QueueSerializationImpl implements QueueSerialization {
     private static final Logger logger = LoggerFactory.getLogger( QueueMessageSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
-    private final CassandraFig cassandraFig;
+    private final CassandraConfig cassandraConfig;
 
     public final static String COLUMN_QUEUE_NAME = "queue_name";
     public final static String COLUMN_REGIONS = "regions";
@@ -74,8 +74,8 @@ public class QueueSerializationImpl implements QueueSerialization {
 
 
     @Inject
-    public QueueSerializationImpl( CassandraFig cassandraFig,  CassandraClient cassandraClient ) {
-        this.cassandraFig = cassandraFig;
+    public QueueSerializationImpl( CassandraConfig cassandraConfig,  CassandraClient cassandraClient ) {
+        this.cassandraConfig = cassandraConfig;
         this.cassandraClient = cassandraClient;
     }
 
@@ -155,7 +155,7 @@ public class QueueSerializationImpl implements QueueSerialization {
     @Override
     public Collection<TableDefinition> getTables() {
         return Collections.singletonList(
-            new TableDefinitionStringImpl( cassandraFig.getApplicationKeyspace(), "queues", CQL ) );
+            new TableDefinitionStringImpl( cassandraConfig.getApplicationKeyspace(), "queues", CQL ) );
     }
 
 }

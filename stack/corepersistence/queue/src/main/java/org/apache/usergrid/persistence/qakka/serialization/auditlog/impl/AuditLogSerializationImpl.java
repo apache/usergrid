@@ -24,7 +24,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.inject.Inject;
-import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionStringImpl;
@@ -47,7 +47,7 @@ public class AuditLogSerializationImpl implements AuditLogSerialization {
     private static final Logger logger = LoggerFactory.getLogger( AuditLogSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
-    private final CassandraFig cassandraFig;
+    private final CassandraConfig cassandraConfig;
 
     public final static String TABLE_AUDIT_LOG   = "audit_log";
 
@@ -77,8 +77,8 @@ public class AuditLogSerializationImpl implements AuditLogSerialization {
 
 
     @Inject
-    public AuditLogSerializationImpl( CassandraFig cassandraFig, CassandraClient cassandraClient ) {
-        this.cassandraFig = cassandraFig;
+    public AuditLogSerializationImpl( CassandraConfig cassandraConfig, CassandraClient cassandraClient ) {
+        this.cassandraConfig = cassandraConfig;
         this.cassandraClient = cassandraClient;
     }
 
@@ -147,6 +147,6 @@ public class AuditLogSerializationImpl implements AuditLogSerialization {
     @Override
     public Collection<TableDefinition> getTables() {
         return Collections.singletonList(
-            new TableDefinitionStringImpl( cassandraFig.getApplicationKeyspace(), TABLE_AUDIT_LOG, CQL ) );
+            new TableDefinitionStringImpl( cassandraConfig.getApplicationKeyspace(), TABLE_AUDIT_LOG, CQL ) );
     }
 }
