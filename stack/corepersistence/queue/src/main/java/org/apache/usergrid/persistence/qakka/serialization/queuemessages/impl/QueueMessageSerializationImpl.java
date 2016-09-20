@@ -19,7 +19,6 @@
 
 package org.apache.usergrid.persistence.qakka.serialization.queuemessages.impl;
 
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.Clause;
@@ -32,6 +31,7 @@ import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionStringImpl;
+import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.CassandraClient;
 import org.apache.usergrid.persistence.qakka.core.QakkaUtils;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
@@ -49,11 +49,12 @@ import java.util.UUID;
 
 
 public class QueueMessageSerializationImpl implements QueueMessageSerialization {
-
     private static final Logger logger = LoggerFactory.getLogger( QueueMessageSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
     private final CassandraConfig cassandraConfig;
+
+    private final int maxTtl;
 
     private final ActorSystemFig            actorSystemFig;
     private final ShardStrategy             shardStrategy;
@@ -109,17 +110,20 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
 
     @Inject
     public QueueMessageSerializationImpl(
-            CassandraConfig              cassandraConfig,
+            CassandraConfig           cassandraConfig,
             ActorSystemFig            actorSystemFig,
             ShardStrategy             shardStrategy,
             ShardCounterSerialization shardCounterSerialization,
-            CassandraClient           cassandraClient
+            CassandraClient           cassandraClient,
+            QakkaFig                  qakkaFig
         ) {
         this.cassandraConfig              = cassandraConfig;
         this.actorSystemFig            = actorSystemFig;
         this.shardStrategy             = shardStrategy;
         this.shardCounterSerialization = shardCounterSerialization;
         this.cassandraClient = cassandraClient;
+
+        this.maxTtl = qakkaFig.getMaxTtlSeconds();
     }
 
 
@@ -151,7 +155,8 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
                 .value( COLUMN_MESSAGE_ID,       message.getMessageId())
                 .value( COLUMN_QUEUE_MESSAGE_ID, queueMessageId)
                 .value( COLUMN_INFLIGHT_AT,      inflightAt )
-                .value( COLUMN_QUEUED_AT,        queuedAt);
+                .value( COLUMN_QUEUED_AT,        queuedAt)
+            .using( QueryBuilder.ttl( maxTtl ) );
 
         cassandraClient.getQueueMessageSession().execute(insert);
 
@@ -244,9 +249,7 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
                 .and(shardIdClause)
                 .and(queueMessageIdClause);
 
-        ResultSet resultSet = cassandraClient.getQueueMessageSession().execute( delete );
-
-        String s = "s";
+        cassandraClient.getQueueMessageSession().execute( delete );
     }
 
 
@@ -275,7 +278,8 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
         Statement insert = QueryBuilder.insertInto(TABLE_MESSAGE_DATA)
                 .value( COLUMN_MESSAGE_ID, messageId)
                 .value( COLUMN_MESSAGE_DATA, messageBody.getBlob())
-                .value( COLUMN_CONTENT_TYPE, messageBody.getContentType());
+                .value( COLUMN_CONTENT_TYPE, messageBody.getContentType())
+            .using( QueryBuilder.ttl( maxTtl ) );
 
         cassandraClient.getApplicationSession().execute(insert);
     }

@@ -62,6 +62,8 @@ public interface QakkaFig extends GuicyFig, Serializable {
 
     String QUEUE_LONG_POLL_TIME_MILLIS            = "queue.long.polling.time.millis";
 
+    String QUEUE_MAX_TTL                          = "queue.max.ttl";
+
 
     /** True if Qakka is running standlone */
     @Key(QUEUE_STANDALONE)
@@ -141,4 +143,9 @@ public interface QakkaFig extends GuicyFig, Serializable {
     @Key(QUEUE_LONG_POLL_TIME_MILLIS)
     @Default("5000")
     long getLongPollTimeMillis();
+
+    /** Max time-to-live for queue message and payload data */
+    @Key(QUEUE_MAX_TTL)
+    @Default("1209600") // default is two weeks
+    int getMaxTtlSeconds();
 }
