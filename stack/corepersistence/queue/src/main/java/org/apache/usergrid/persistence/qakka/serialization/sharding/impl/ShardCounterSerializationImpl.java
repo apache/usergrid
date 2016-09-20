@@ -24,7 +24,7 @@ import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionStringImpl;
@@ -51,7 +51,7 @@ public class ShardCounterSerializationImpl implements ShardCounterSerialization 
     private static final Logger logger = LoggerFactory.getLogger( ShardCounterSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
-    private final CassandraFig cassandraFig;
+    private final CassandraConfig cassandraConfig;
 
     final static String TABLE_COUNTERS       = "shard_counters";
     final static String COLUMN_QUEUE_NAME    = "queue_name";
@@ -91,8 +91,8 @@ public class ShardCounterSerializationImpl implements ShardCounterSerialization 
 
 
     @Inject
-    public ShardCounterSerializationImpl( CassandraFig cassandraFig, QakkaFig qakkaFig, CassandraClient cassandraClient ) {
-        this.cassandraFig = cassandraFig;
+    public ShardCounterSerializationImpl( CassandraConfig cassandraConfig, QakkaFig qakkaFig, CassandraClient cassandraClient ) {
+        this.cassandraConfig = cassandraConfig;
         this.maxInMemoryIncrement = qakkaFig.getMaxInMemoryShardCounter();
         this.cassandraClient = cassandraClient;
     }
@@ -197,6 +197,6 @@ public class ShardCounterSerializationImpl implements ShardCounterSerialization 
     @Override
     public Collection<TableDefinition> getTables() {
         return Collections.singletonList(
-            new TableDefinitionStringImpl( cassandraFig.getApplicationLocalKeyspace(), "shard_counters", CQL ) );
+            new TableDefinitionStringImpl( cassandraConfig.getApplicationLocalKeyspace(), "shard_counters", CQL ) );
     }
 }

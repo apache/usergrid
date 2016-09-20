@@ -42,27 +42,21 @@ public class QakkaQueueManager implements LegacyQueueManager {
     private static final Logger logger = LoggerFactory.getLogger( QakkaQueueManager.class );
 
     private final LegacyQueueScope    scope;
-    private final LegacyQueueFig      fig;
     private final QueueManager        queueManager;
     private final QueueMessageManager queueMessageManager;
-    private final QakkaFig            qakkaFig;
     private final Regions             regions;
 
 
     @Inject
     public QakkaQueueManager(
         @Assisted LegacyQueueScope scope,
-        LegacyQueueFig      fig,
         QueueManager        queueManager,
         QueueMessageManager queueMessageManager,
-        QakkaFig            qakkaFig,
         Regions             regions
     ) {
 
         this.scope = scope;
-        this.fig = fig;
         this.queueManager = queueManager;
-        this.qakkaFig = qakkaFig;
         this.queueMessageManager = queueMessageManager;
         this.regions = regions;
     }

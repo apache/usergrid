@@ -20,7 +20,7 @@
 package org.apache.usergrid.persistence.qakka.serialization.sharding;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.impl.ShardSerializationImpl;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
@@ -47,8 +47,8 @@ public class ShardIteratorTest extends AbstractTest {
     public void getActiveShards(){
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        CassandraFig cassandraFig = getInjector().getInstance( CassandraFig.class );
-        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraFig, cassandraClient );
+        CassandraConfig cassandraConfig = getInjector().getInstance( CassandraConfig.class );
+        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraConfig, cassandraClient );
 
         String queueName = "queue_sit_" + RandomStringUtils.randomAlphanumeric( 10 );
 
@@ -80,8 +80,8 @@ public class ShardIteratorTest extends AbstractTest {
     public void seekActiveShards(){
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        CassandraFig cassandraFig = getInjector().getInstance( CassandraFig.class );
-        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraFig, cassandraClient );
+        CassandraConfig cassandraConfig = getInjector().getInstance( CassandraConfig.class );
+        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraConfig, cassandraClient );
 
         String queueName = "queue_sit_" + RandomStringUtils.randomAlphanumeric( 10 );
 
@@ -114,8 +114,8 @@ public class ShardIteratorTest extends AbstractTest {
     public void shardIteratorOrdering() throws Exception {
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        CassandraFig cassandraFig = getInjector().getInstance( CassandraFig.class );
-        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraFig, cassandraClient );
+        CassandraConfig cassandraConfig = getInjector().getInstance( CassandraConfig.class );
+        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraConfig, cassandraClient );
 
         int numShards = 10;
         String region = "default";

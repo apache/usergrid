@@ -20,7 +20,7 @@
 package org.apache.usergrid.persistence.qakka.serialization;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.core.CassandraClient;
@@ -51,8 +51,8 @@ public class MultiShardDatabaseQueueMessageIteratorTest extends AbstractTest {
     public void testIterator() throws InterruptedException {
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-        CassandraFig cassandraFig = getInjector().getInstance( CassandraFig.class );
-        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraFig, cassandraClient );
+        CassandraConfig cassandraConfig = getInjector().getInstance( CassandraConfig.class );
+        ShardSerialization shardSerialization = new ShardSerializationImpl( cassandraConfig, cassandraClient );
 
         QueueMessageSerialization queueMessageSerialization =
                 getInjector().getInstance( QueueMessageSerialization.class );

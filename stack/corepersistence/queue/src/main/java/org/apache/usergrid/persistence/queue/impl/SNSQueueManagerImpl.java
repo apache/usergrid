@@ -32,7 +32,7 @@ import com.amazonaws.ClientConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.executor.TaskExecutorFactory;
 import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.queue.LegacyQueue;
@@ -87,7 +87,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
     private final LegacyQueueScope scope;
     private final LegacyQueueFig fig;
     private final ClusterFig clusterFig;
-    private final CassandraFig cassandraFig;
+    private final CassandraConfig cassandraConfig;
     private final ClientConfiguration clientConfiguration;
     private final AmazonSQSClient sqs;
     private final AmazonSNSClient sns;
@@ -154,11 +154,11 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
 
     @Inject
     public SNSQueueManagerImpl(@Assisted LegacyQueueScope scope, LegacyQueueFig fig, ClusterFig clusterFig,
-                               CassandraFig cassandraFig, LegacyQueueFig queueFig ) {
+                               CassandraConfig cassandraConfig, LegacyQueueFig queueFig ) {
         this.scope = scope;
         this.fig = fig;
         this.clusterFig = clusterFig;
-        this.cassandraFig = cassandraFig;
+        this.cassandraConfig = cassandraConfig;
 
 
         // create our own executor which has a bounded queue w/ caller runs policy for rejected tasks
@@ -382,7 +382,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
 
     private String getName() {
         String name =
-            clusterFig.getClusterName() + "_" + cassandraFig.getApplicationKeyspace() + "_" + scope.getName() + "_"
+            clusterFig.getClusterName() + "_" + cassandraConfig.getApplicationKeyspace() + "_" + scope.getName() + "_"
                 + scope.getRegionImplementation();
         name = name.toLowerCase(); //user lower case values
         Preconditions.checkArgument( name.length() <= 80, "Your name must be < than 80 characters" );

@@ -91,6 +91,7 @@ public interface CassandraFig extends GuicyFig {
     @Default( "Usergrid_Applications" )
     String getApplicationKeyspace();
 
+    /** Prefix for local keyspace name. Name will be this prefix plus "_" plus local data center name. */
     @Key( "cassandra.keyspace.application.local" )
     @Default( "Usergrid_Applications_Local" )
     String getApplicationLocalKeyspace();
