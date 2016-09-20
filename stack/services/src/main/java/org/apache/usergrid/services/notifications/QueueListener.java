@@ -72,12 +72,14 @@ public class QueueListener  {
     private int consecutiveCallsToRemoveDevices;
 
     public QueueListener(ServiceManagerFactory smf, EntityManagerFactory emf, Properties props){
-        this.queueManagerFactory = smf.getApplicationContext().getBean( Injector.class ).getInstance(LegacyQueueManagerFactory.class);
+        this.queueManagerFactory =
+            smf.getApplicationContext().getBean( Injector.class ).getInstance(LegacyQueueManagerFactory.class);
         this.smf = smf;
         this.emf = emf;
         this.metricsService = smf.getApplicationContext().getBean( Injector.class ).getInstance(MetricsFactory.class);
         this.properties = props;
-        this.applicationQueueManagerCache = smf.getApplicationContext().getBean(Injector.class).getInstance(ApplicationQueueManagerCache.class);
+        this.applicationQueueManagerCache =
+            smf.getApplicationContext().getBean(Injector.class).getInstance(ApplicationQueueManagerCache.class);
 
     }
 
@@ -94,12 +96,15 @@ public class QueueListener  {
 
             try {
 
-                sleepBetweenRuns = new Long(properties.getProperty("usergrid.push.sleep", "" + DEFAULT_SLEEP));
-                sleepWhenNoneFound = new Long(properties.getProperty("usergrid.push.sleep", "" + DEFAULT_SLEEP));
-                consecutiveCallsToRemoveDevices = new Integer(properties.getProperty("usergrid.notifications.inactive.interval", ""+200));
+                sleepBetweenRuns = new Long(properties.getProperty("usergrid.push.worker.sleep", "" + DEFAULT_SLEEP));
+                sleepWhenNoneFound = new Long(properties.getProperty("usergrid.push.worker.sleep", "" + DEFAULT_SLEEP));
+
+                consecutiveCallsToRemoveDevices =
+                    new Integer(properties.getProperty("usergrid.notifications.inactive.interval", ""+200));
                 queueName = ApplicationQueueManagerImpl.getQueueNames(properties);
 
-                int maxThreads = new Integer(properties.getProperty("usergrid.push.worker_count", ""+PUSH_CONSUMER_MAX_THREADS));
+                int maxThreads =
+                    new Integer(properties.getProperty("usergrid.push.worker_count", ""+PUSH_CONSUMER_MAX_THREADS));
 
                 futures = new ArrayList<>(maxThreads);
 
@@ -166,6 +171,13 @@ public class QueueListener  {
 
         while ( true ) {
 
+                if(sleepBetweenRuns > 0) {
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("sleep between rounds...sleep...{}", sleepBetweenRuns);
+                    }
+                    try { Thread.sleep(sleepBetweenRuns); } catch (InterruptedException ignored) { }
+                }
+
                 Timer.Context timerContext = timer.time();
                 rx.Observable.from( legacyQueueManager.getMessages(MAX_TAKE, ApplicationQueueMessage.class))
                     .buffer(MAX_TAKE)
@@ -173,7 +185,7 @@ public class QueueListener  {
 
                         try {
                             if (logger.isTraceEnabled()) {
-                                logger.trace("retrieved batch of {} messages from queue {}", messages.size(), queueName);
+                                logger.trace("retrieved batch of {} messages from queue {}",messages.size(),queueName);
                             }
 
                             if (messages.size() > 0) {
@@ -185,12 +197,13 @@ public class QueueListener  {
                                     ApplicationQueueMessage queueMessage = (ApplicationQueueMessage) message.getBody();
                                     UUID applicationId = queueMessage.getApplicationId();
 
-                                    //Groups queue messages by application Id, ( they are all probably going to the same place )
+                                    // Groups queue messages by application Id,
+                                    // (they are all probably going to the same place)
                                     if (!messageMap.containsKey(applicationId)) {
                                         //For each app id it sends the set.
-                                        List<LegacyQueueMessage> applicationQueueMessages = new ArrayList<LegacyQueueMessage>();
-                                        applicationQueueMessages.add(message);
-                                        messageMap.put(applicationId, applicationQueueMessages);
+                                        List<LegacyQueueMessage> lqms = new ArrayList<LegacyQueueMessage>();
+                                        lqms.add(message);
+                                        messageMap.put(applicationId, lqms);
                                     } else {
                                         messageMap.get(applicationId).add(message);
                                     }
@@ -207,13 +220,15 @@ public class QueueListener  {
                                         .getApplicationQueueManager(
                                             emf.getEntityManager(applicationId),
                                             legacyQueueManager,
-                                            new JobScheduler(smf.getServiceManager(applicationId), emf.getEntityManager(applicationId)),
+                                            new JobScheduler(smf.getServiceManager(applicationId),
+                                                             emf.getEntityManager(applicationId)),
                                             metricsService,
                                             properties
                                         );
 
                                     if (logger.isTraceEnabled()) {
-                                        logger.trace("send batch for app {} of {} messages", entry.getKey(), entry.getValue().size());
+                                        logger.trace("send batch for app {} of {} messages",
+                                            entry.getKey(), entry.getValue().size());
                                     }
                                     Observable current = manager.sendBatchToProviders(entry.getValue(),queueName);
 
@@ -231,20 +246,15 @@ public class QueueListener  {
 
                                 meter.mark(messages.size());
                                 if (logger.isTraceEnabled()) {
-                                    logger.trace("sent batch {} messages duration {} ms", messages.size(), System.currentTimeMillis() - now);
+                                    logger.trace("sent batch {} messages duration {} ms",
+                                        messages.size(), System.currentTimeMillis() - now);
                                 }
 
-                                if(sleepBetweenRuns > 0) {
-                                    if (logger.isTraceEnabled()) {
-                                        logger.trace("sleep between rounds...sleep...{}", sleepBetweenRuns);
-                                    }
-                                    Thread.sleep(sleepBetweenRuns);
-                                }
 
                                 if(runCount.incrementAndGet() % consecutiveCallsToRemoveDevices == 0){
-                                    for(ApplicationQueueManager applicationQueueManager : applicationQueueManagerCache.asMap().values()){
+                                    for(ApplicationQueueManager aqm : applicationQueueManagerCache.asMap().values()){
                                         try {
-                                            applicationQueueManager.asyncCheckForInactiveDevices();
+                                            aqm.asyncCheckForInactiveDevices();
                                         }catch (Exception inactiveDeviceException){
                                             logger.error("Inactive Device Get failed",inactiveDeviceException);
                                         }

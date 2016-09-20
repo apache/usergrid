@@ -333,7 +333,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     /**
      * Create cluster system for this the current region
      */
-    private ActorSystem createClusterSystem( Config config ) {
+    private synchronized ActorSystem createClusterSystem( Config config ) {
 
         // there is only 1 akka system for a Usergrid cluster
         final String clusterName = getClusterName();

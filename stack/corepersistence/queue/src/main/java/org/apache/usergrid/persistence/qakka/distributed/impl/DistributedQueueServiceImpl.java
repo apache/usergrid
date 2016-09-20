@@ -25,6 +25,7 @@ import akka.util.Timeout;
 import com.datastax.driver.core.exceptions.InvalidQueryException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.log4j.net.SyslogAppender;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.actorsystem.ClientActor;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
@@ -38,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -107,7 +109,7 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
 
     @Override
     public void refreshQueue(String queueName) {
-        logger.info("Refreshing queue: {}", queueName);
+        logger.info("{} Requesting refresh for queue: {}", this, queueName);
         QueueRefreshRequest request = new QueueRefreshRequest( queueName );
         ActorRef clientActor = actorSystemManager.getClientActor();
         clientActor.tell( request, null );
@@ -186,6 +188,25 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
 
     @Override
     public Collection<DatabaseQueueMessage> getNextMessages( String queueName, int count ) {
+        List<DatabaseQueueMessage> ret = new ArrayList<>();
+
+        long startTime = System.currentTimeMillis();
+
+        while ( ret.size() < count
+            && System.currentTimeMillis() - startTime < qakkaFig.getLongPollTimeMillis()) {
+
+            ret.addAll( getNextMessagesInternal( queueName, count ));
+
+            if ( ret.size() < count ) {
+                try { Thread.sleep( qakkaFig.getLongPollTimeMillis() / 5 ); } catch (Exception ignored) {}
+            }
+        }
+
+        return ret;
+    }
+
+
+    public Collection<DatabaseQueueMessage> getNextMessagesInternal( String queueName, int count ) {
 
         List<String> queueNames = queueManager.getListOfQueues();
         if ( !queueNames.contains( queueName ) ) {

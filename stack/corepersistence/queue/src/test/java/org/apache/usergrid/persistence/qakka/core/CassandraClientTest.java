@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.usergrid.persistence.qakka.common;
+package org.apache.usergrid.persistence.qakka.core;
 
 import com.datastax.driver.core.Session;
 import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
