@@ -52,7 +52,9 @@ public interface QakkaFig extends GuicyFig, Serializable {
 
     String QUEUE_GET_TIMEOUT                      = "queue.get.timeout.seconds";
 
-    String QUEUE_MAX_SHARD_COUNTER                = "queue.max.inmemory.shard.counter";
+    String QUEUE_MAX_SHARD_COUNTER                = "queue.max.inmemory.max.shard.counter";
+
+    String QUEUE_MAX_MESSAGE_CHANGES              = "queue.max.inmemory.max.message.changes";
 
     String QUEUE_SHARD_ALLOCATION_CHECK_FREQUENCY = "queue.shard.allocation.check.frequency.millis";
 
@@ -124,6 +126,11 @@ public interface QakkaFig extends GuicyFig, Serializable {
     @Key(QUEUE_MAX_SHARD_COUNTER)
     @Default("100")
     long getMaxInMemoryShardCounter();
+
+    /** Once counter reaches this value, write it to permanent storage */
+    @Key(QUEUE_MAX_MESSAGE_CHANGES)
+    @Default("100")
+    long getMaxInMemoryMessageCounter();
 
     /** How often to check whether new shard is needed for each queue */
     @Key(QUEUE_SHARD_ALLOCATION_CHECK_FREQUENCY)

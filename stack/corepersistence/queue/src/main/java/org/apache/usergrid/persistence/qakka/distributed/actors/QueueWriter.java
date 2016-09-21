@@ -30,6 +30,7 @@ import org.apache.usergrid.persistence.qakka.distributed.messages.QueueWriteResp
 import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLog;
 import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLogSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
+import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLogSerialization;
 import org.slf4j.Logger;
@@ -48,6 +49,8 @@ public class QueueWriter extends UntypedActor {
     private final AuditLogSerialization     auditLogSerialization;
     private final MetricsService            metricsService;
 
+    private final MessageCounterSerialization messageCounterSerialization;
+
 
     public QueueWriter() {
 
@@ -57,95 +60,100 @@ public class QueueWriter extends UntypedActor {
         transferLogSerialization = injector.getInstance( TransferLogSerialization.class );
         auditLogSerialization    = injector.getInstance( AuditLogSerialization.class );
         metricsService           = injector.getInstance( MetricsService.class );
+
+        messageCounterSerialization = injector.getInstance( MessageCounterSerialization.class );
     }
 
     @Override
     public void onReceive(Object message) {
 
-            if (message instanceof QueueWriteRequest) {
+        if (message instanceof QueueWriteRequest) {
 
-                Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.SEND_TIME_WRITE ).time();
+            Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.SEND_TIME_WRITE ).time();
+
+            try {
+                QueueWriteRequest qa = (QueueWriteRequest) message;
+
+                UUID queueMessageId = QakkaUtils.getTimeUuid();
+
+                // TODO: implement deliveryTime and expirationTime
+
+                DatabaseQueueMessage dbqm = null;
+                long currentTime = System.currentTimeMillis();
 
                 try {
-                    QueueWriteRequest qa = (QueueWriteRequest) message;
+                    dbqm = new DatabaseQueueMessage(
+                            qa.getMessageId(),
+                            DatabaseQueueMessage.Type.DEFAULT,
+                            qa.getQueueName(),
+                            qa.getDestRegion(),
+                            null,
+                            currentTime,
+                            currentTime,
+                            queueMessageId );
 
-                    UUID queueMessageId = QakkaUtils.getTimeUuid();
+                    messageSerialization.writeMessage( dbqm );
 
-                    // TODO: implement deliveryTime and expirationTime
+                    messageCounterSerialization.incrementCounter(
+                        qa.getQueueName(), DatabaseQueueMessage.Type.DEFAULT, 1);
 
-                    DatabaseQueueMessage dbqm = null;
-                    long currentTime = System.currentTimeMillis();
+                    //logger.debug("Wrote queue message id {} to queue name {}",
+                    //        dbqm.getQueueMessageId(), dbqm.getQueueName());
 
-                    try {
-                        dbqm = new DatabaseQueueMessage(
-                                qa.getMessageId(),
-                                DatabaseQueueMessage.Type.DEFAULT,
-                                qa.getQueueName(),
-                                qa.getDestRegion(),
-                                null,
-                                currentTime,
-                                currentTime,
-                                queueMessageId );
-
-                        messageSerialization.writeMessage( dbqm );
-
-                        //logger.debug("Wrote queue message id {} to queue name {}",
-                        //        dbqm.getQueueMessageId(), dbqm.getQueueName());
-
-                    } catch (Throwable t) {
-                        logger.debug("Error creating database queue message", t);
-
-                        auditLogSerialization.recordAuditLog(
-                                AuditLog.Action.SEND,
-                                AuditLog.Status.ERROR,
-                                qa.getQueueName(),
-                                qa.getDestRegion(),
-                                qa.getMessageId(),
-                                dbqm.getMessageId() );
-
-                        getSender().tell( new QueueWriteResponse(
-                                QueueWriter.WriteStatus.ERROR ), getSender() );
-
-                        return;
-                    }
+                } catch (Throwable t) {
+                    logger.debug("Error creating database queue message", t);
 
                     auditLogSerialization.recordAuditLog(
                             AuditLog.Action.SEND,
-                            AuditLog.Status.SUCCESS,
+                            AuditLog.Status.ERROR,
                             qa.getQueueName(),
                             qa.getDestRegion(),
                             qa.getMessageId(),
-                            dbqm.getQueueMessageId() );
+                            dbqm.getMessageId() );
 
-                    try {
-                        transferLogSerialization.removeTransferLog(
-                                qa.getQueueName(),
-                                qa.getSourceRegion(),
-                                qa.getDestRegion(),
-                                qa.getMessageId() );
+                    getSender().tell( new QueueWriteResponse(
+                            QueueWriter.WriteStatus.ERROR ), getSender() );
 
-                        getSender().tell( new QueueWriteResponse(
-                                QueueWriter.WriteStatus.SUCCESS_XFERLOG_DELETED ), getSender() );
-
-                    } catch (Throwable e) {
-                        logger.debug( "Unable to delete transfer log for {} {} {} {}",
-                                qa.getQueueName(),
-                                qa.getSourceRegion(),
-                                qa.getDestRegion(),
-                                qa.getMessageId() );
-                        logger.debug("Error deleting transferlog", e);
-
-                        getSender().tell( new QueueWriteResponse(
-                                QueueWriter.WriteStatus.SUCCESS_XFERLOG_NOTDELETED ), getSender() );
-                    }
-
-                } finally {
-                    timer.close();
+                    return;
                 }
 
-            } else {
-                unhandled( message );
+                auditLogSerialization.recordAuditLog(
+                        AuditLog.Action.SEND,
+                        AuditLog.Status.SUCCESS,
+                        qa.getQueueName(),
+                        qa.getDestRegion(),
+                        qa.getMessageId(),
+                        dbqm.getQueueMessageId() );
+
+                try {
+                    transferLogSerialization.removeTransferLog(
+                            qa.getQueueName(),
+                            qa.getSourceRegion(),
+                            qa.getDestRegion(),
+                            qa.getMessageId() );
+
+                    getSender().tell( new QueueWriteResponse(
+                            QueueWriter.WriteStatus.SUCCESS_XFERLOG_DELETED ), getSender() );
+
+                } catch (Throwable e) {
+                    logger.debug( "Unable to delete transfer log for {} {} {} {}",
+                            qa.getQueueName(),
+                            qa.getSourceRegion(),
+                            qa.getDestRegion(),
+                            qa.getMessageId() );
+                    logger.debug("Error deleting transferlog", e);
+
+                    getSender().tell( new QueueWriteResponse(
+                            QueueWriter.WriteStatus.SUCCESS_XFERLOG_NOTDELETED ), getSender() );
+                }
+
+            } finally {
+                timer.close();
             }
+
+        } else {
+            unhandled( message );
+        }
 
     }
 

@@ -19,6 +19,8 @@
 
 package org.apache.usergrid.persistence.qakka.core;
 
+import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
+
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.UUID;
@@ -80,4 +82,6 @@ public interface QueueMessageManager {
      * Get message from messages available or messages inflight storage.
      */
     QueueMessage getMessage(String queueName, UUID queueMessageId);
+
+    long getQueueDepth(String queueName);
 }

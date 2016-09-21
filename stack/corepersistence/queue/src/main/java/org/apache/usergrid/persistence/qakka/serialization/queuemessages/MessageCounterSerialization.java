@@ -21,11 +21,11 @@ package org.apache.usergrid.persistence.qakka.serialization.queuemessages;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 
 
-public interface MessageCounterSerialization  extends Migration {
+public interface MessageCounterSerialization extends Migration {
 
     void incrementCounter(String queueName, DatabaseQueueMessage.Type type, long increment);
 
-    void decrementCounter(String queueName, DatabaseQueueMessage.Type type, long increment);
+    void decrementCounter(String queueName, DatabaseQueueMessage.Type type, long decrement);
 
     long getCounterValue(String name, DatabaseQueueMessage.Type type);
 }

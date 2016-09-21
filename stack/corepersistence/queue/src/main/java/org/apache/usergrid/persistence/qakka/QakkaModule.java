@@ -37,7 +37,9 @@ import org.apache.usergrid.persistence.qakka.distributed.impl.QueueSenderRouterP
 import org.apache.usergrid.persistence.qakka.distributed.impl.QueueWriterRouterProducer;
 import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLogSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.auditlog.impl.AuditLogSerializationImpl;
+import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
+import org.apache.usergrid.persistence.qakka.serialization.queuemessages.impl.MessageCounterSerializationImpl;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.impl.QueueMessageSerializationImpl;
 import org.apache.usergrid.persistence.qakka.serialization.queues.QueueSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queues.impl.QueueSerializationImpl;
@@ -76,23 +78,24 @@ public class QakkaModule extends AbstractModule {
 
         bind( App.class );
 
-        bind( CassandraClient.class ).to(           CassandraClientImpl.class );
-        bind( MetricsService.class ).to(            App.class );
+        bind( CassandraClient.class ).to(             CassandraClientImpl.class );
+        bind( MetricsService.class ).to(              App.class );
 
-        bind( QueueManager.class ).to(              QueueManagerImpl.class );
-        bind( QueueSerialization.class ).to(        QueueSerializationImpl.class );
+        bind( QueueManager.class ).to(                QueueManagerImpl.class );
+        bind( QueueSerialization.class ).to(          QueueSerializationImpl.class );
 
-        bind( QueueMessageManager.class ).to(       QueueMessageManagerImpl.class );
-        bind( QueueMessageSerialization.class ).to( QueueMessageSerializationImpl.class );
+        bind( QueueMessageManager.class ).to(         QueueMessageManagerImpl.class );
+        bind( QueueMessageSerialization.class ).to(   QueueMessageSerializationImpl.class );
 
-        bind( ShardSerialization.class ).to(        ShardSerializationImpl.class );
-        bind( ShardStrategy.class ).to(             ShardStrategyImpl.class );
+        bind( ShardSerialization.class ).to(          ShardSerializationImpl.class );
+        bind( ShardStrategy.class ).to(               ShardStrategyImpl.class );
 
-        bind( ShardCounterSerialization.class ).to( ShardCounterSerializationImpl.class );
+        bind( ShardCounterSerialization.class ).to(   ShardCounterSerializationImpl.class );
+        bind( MessageCounterSerialization.class ).to( MessageCounterSerializationImpl.class );
 
-        bind( TransferLogSerialization.class ).to(  TransferLogSerializationImpl.class );
-        bind( AuditLogSerialization.class ).to(     AuditLogSerializationImpl.class );
-        bind( DistributedQueueService.class ).to(   DistributedQueueServiceImpl.class );
+        bind( TransferLogSerialization.class ).to(    TransferLogSerializationImpl.class );
+        bind( AuditLogSerialization.class ).to(       AuditLogSerializationImpl.class );
+        bind( DistributedQueueService.class ).to(     DistributedQueueServiceImpl.class );
 
         bind( QueueActorRouterProducer.class );
         bind( QueueWriterRouterProducer.class );
@@ -110,6 +113,6 @@ public class QakkaModule extends AbstractModule {
         migrationBinder.addBinding().to( Key.get( ShardCounterSerialization.class ) );
         migrationBinder.addBinding().to( Key.get( ShardSerialization.class ) );
         migrationBinder.addBinding().to( Key.get( TransferLogSerialization.class ) );
-        //migrationBinder.addBinding().to( Key.get( MessageCounterSerialization.class ) );
+        migrationBinder.addBinding().to( Key.get( MessageCounterSerialization.class ) );
     }
 }
