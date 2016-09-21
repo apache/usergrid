@@ -78,6 +78,10 @@ public class InMemoryQueue {
         return getQueue( queueName ).poll();
     }
 
+    public DatabaseQueueMessage peek( String queueName ) {
+        return getQueue( queueName ).peek();
+    }
+
     public int size( String queueName ) {
         return getQueue( queueName ).size();
     }

@@ -175,6 +175,7 @@ public class QueueMessageManagerTest extends AbstractTest {
             if (inMemoryQueue.size( queueName ) == 40) {
                 break;
             }
+            Thread.sleep( 500 );
         }
 
         Assert.assertEquals( numMessages, qmm.getQueueDepth( queueName ) );

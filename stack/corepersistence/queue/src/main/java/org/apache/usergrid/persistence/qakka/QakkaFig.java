@@ -94,7 +94,7 @@ public interface QakkaFig extends GuicyFig, Serializable {
 
     /** How often to refresh each queue's in-memory data */
     @Key(QUEUE_REFRESH_MILLISECONDS)
-    @Default("500")
+    @Default("1000")
     int getQueueRefreshMilliseconds();
 
     /** How many queue messages to keep in-memory */

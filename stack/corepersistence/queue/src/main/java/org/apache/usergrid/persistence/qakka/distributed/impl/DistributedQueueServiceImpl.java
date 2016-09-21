@@ -25,7 +25,6 @@ import akka.util.Timeout;
 import com.datastax.driver.core.exceptions.InvalidQueryException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import org.apache.log4j.net.SyslogAppender;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.actorsystem.ClientActor;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
@@ -114,7 +113,7 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     @Override
     public void refreshQueue(String queueName) {
         logger.info("{} Requesting refresh for queue: {}", this, queueName);
-        QueueRefreshRequest request = new QueueRefreshRequest( queueName );
+        QueueRefreshRequest request = new QueueRefreshRequest( queueName, false );
         ActorRef clientActor = actorSystemManager.getClientActor();
         clientActor.tell( request, null );
     }
@@ -168,6 +167,11 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
                         if ( retries > 1 ) {
                             logger.debug("SUCCESS after {} retries", retries );
                         }
+
+                        logger.debug("{} Requesting refresh if empty for queue: {}", this, queueName);
+                        QueueRefreshRequest qrr = new QueueRefreshRequest( queueName, false );
+                        clientActor.tell( qrr, null );
+
                         return qarm.getSendStatus();
 
                     } else {

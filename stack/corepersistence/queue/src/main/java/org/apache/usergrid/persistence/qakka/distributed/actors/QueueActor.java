@@ -86,7 +86,7 @@ public class QueueActor extends UntypedActor {
                     Duration.create( 0, TimeUnit.MILLISECONDS),
                     Duration.create( qakkaFig.getQueueRefreshMilliseconds(), TimeUnit.MILLISECONDS),
                     self(),
-                    new QueueRefreshRequest( request.getQueueName() ),
+                    new QueueRefreshRequest( request.getQueueName(), false ),
                     getContext().dispatcher(),
                     getSelf());
                 refreshSchedulersByQueueName.put( request.getQueueName(), scheduler );
@@ -121,9 +121,12 @@ public class QueueActor extends UntypedActor {
             QueueRefreshRequest request = (QueueRefreshRequest)message;
 
             if ( queueReadersByQueueName.get( request.getQueueName() ) == null ) {
-                ActorRef readerRef = getContext().actorOf( Props.create(
-                    QueueRefresher.class, request.getQueueName()), request.getQueueName() + "_reader");
-                queueReadersByQueueName.put( request.getQueueName(), readerRef );
+
+                if ( !request.isOnlyIfEmpty() || inMemoryQueue.peek( request.getQueueName()) == null ) {
+                    ActorRef readerRef = getContext().actorOf( Props.create(
+                        QueueRefresher.class, request.getQueueName()), request.getQueueName() + "_reader");
+                    queueReadersByQueueName.put( request.getQueueName(), readerRef );
+                }
             }
 
             // hand-off to queue's reader

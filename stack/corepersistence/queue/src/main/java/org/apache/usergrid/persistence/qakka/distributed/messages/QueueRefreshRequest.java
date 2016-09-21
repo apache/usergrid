@@ -24,10 +24,16 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class QueueRefreshRequest implements QakkaMessage {
     private final String queueName;
+    private final boolean onlyIfEmpty;
 
 
-    public QueueRefreshRequest(String queueName ) {
+    public QueueRefreshRequest( String queueName, boolean onlyIfEmpty ) {
         this.queueName = queueName;
+        this.onlyIfEmpty = onlyIfEmpty;
+    }
+
+    public boolean isOnlyIfEmpty() {
+        return onlyIfEmpty;
     }
 
     public String getQueueName() {
