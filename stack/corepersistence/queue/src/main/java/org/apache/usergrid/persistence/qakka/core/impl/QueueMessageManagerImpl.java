@@ -33,6 +33,7 @@ import org.apache.usergrid.persistence.qakka.exceptions.NotFoundException;
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessageBody;
+import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLogSerialization;
 import org.slf4j.Logger;
@@ -58,6 +59,7 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
     private final DistributedQueueService   distributedQueueService;
     private final TransferLogSerialization  transferLogSerialization;
     private final URIStrategy uriStrategy;
+    private final MessageCounterSerialization messageCounterSerialization;
 
 
     @Inject
@@ -67,8 +69,8 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
             QueueMessageSerialization queueMessageSerialization,
             DistributedQueueService   distributedQueueService,
             TransferLogSerialization  transferLogSerialization,
-            URIStrategy               uriStrategy
-            ) {
+            URIStrategy               uriStrategy,
+            MessageCounterSerialization messageCounterSerialization ) {
 
         this.actorSystemFig            = actorSystemFig;
         this.queueManager              = queueManager;
@@ -76,6 +78,7 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
         this.distributedQueueService   = distributedQueueService;
         this.transferLogSerialization  = transferLogSerialization;
         this.uriStrategy               = uriStrategy;
+        this.messageCounterSerialization = messageCounterSerialization;
     }
 
 
@@ -294,6 +297,12 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
         }
 
         return queueMessage;
+    }
+
+
+    @Override
+    public long getQueueDepth(String queueName) {
+        return messageCounterSerialization.getCounterValue( queueName, DatabaseQueueMessage.Type.DEFAULT );
     }
 
 }

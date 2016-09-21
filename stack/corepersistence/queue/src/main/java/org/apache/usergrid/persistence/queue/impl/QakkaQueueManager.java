@@ -24,6 +24,7 @@ import com.google.inject.assistedinject.Assisted;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.*;
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
+import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.apache.usergrid.persistence.queue.LegacyQueueFig;
 import org.apache.usergrid.persistence.queue.LegacyQueueManager;
 import org.apache.usergrid.persistence.queue.LegacyQueueMessage;
@@ -139,10 +140,9 @@ public class QakkaQueueManager implements LegacyQueueManager {
         return messages;
     }
 
-
     @Override
     public long getQueueDepth() {
-        return 0;
+        return queueMessageManager.getQueueDepth( scope.getName() );
     }
 
 

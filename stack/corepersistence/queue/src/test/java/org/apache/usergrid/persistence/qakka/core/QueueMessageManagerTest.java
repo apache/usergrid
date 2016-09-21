@@ -177,6 +177,8 @@ public class QueueMessageManagerTest extends AbstractTest {
             }
         }
 
+        Assert.assertEquals( numMessages, qmm.getQueueDepth( queueName ) );
+
         // get all messages from queue
 
         List<QueueMessage> messages = qmm.getNextMessages( queueName, numMessages );

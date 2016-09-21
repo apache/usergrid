@@ -33,6 +33,7 @@ import org.apache.usergrid.persistence.qakka.distributed.messages.QueueTimeoutRe
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
 import org.apache.usergrid.persistence.qakka.serialization.MultiShardMessageIterator;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
+import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardIterator;
@@ -54,6 +55,8 @@ public class QueueTimeouter extends UntypedActor {
     private final QakkaFig qakkaFig;
     private final CassandraClient           cassandraClient;
 
+    private final MessageCounterSerialization messageCounterSerialization;
+
 
     public QueueTimeouter(String queueName ) {
         this.queueName = queueName;
@@ -65,6 +68,8 @@ public class QueueTimeouter extends UntypedActor {
         qakkaFig             = injector.getInstance( QakkaFig.class );
         metricsService       = injector.getInstance( MetricsService.class );
         cassandraClient      = injector.getInstance( CassandraClientImpl.class );
+
+        messageCounterSerialization = injector.getInstance( MessageCounterSerialization.class );
     }
 
 
@@ -134,6 +139,9 @@ public class QueueTimeouter extends UntypedActor {
 
                 if (count > 0) {
                     logger.debug( "Timed out {} messages for queue {}", count, queueName );
+
+                    messageCounterSerialization.decrementCounter(
+                        queueName, DatabaseQueueMessage.Type.DEFAULT, count);
                 }
 
             } finally {

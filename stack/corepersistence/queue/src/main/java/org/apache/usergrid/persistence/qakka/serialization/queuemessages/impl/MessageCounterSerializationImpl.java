@@ -32,8 +32,8 @@ import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.CassandraClient;
 import org.apache.usergrid.persistence.qakka.exceptions.NotFoundException;
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
-import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
-import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardCounterSerialization;
+import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
+import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,48 +43,55 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 
 @Singleton
-public class MessageCounterSerializationImpl implements ShardCounterSerialization {
+public class MessageCounterSerializationImpl implements MessageCounterSerialization {
     private static final Logger logger = LoggerFactory.getLogger( MessageCounterSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
     private final CassandraConfig cassandraConfig;
 
-    final static String TABLE_SHARD_COUNTERS       = "counters";
-    final static String COLUMN_QUEUE_NAME    = "queue_name";
-    final static String COLUMN_SHARD_ID      = "shard_id";
-    final static String COLUMN_COUNTER_VALUE = "counter_value";
-    final static String COLUMN_SHARD_TYPE    = "shard_type";
+    final static String TABLE_MESSAGE_COUNTERS = "message_counters";
+    final static String COLUMN_QUEUE_NAME      = "queue_name";
+    final static String COLUMN_COUNTER_VALUE   = "counter_value";
+    final static String COLUMN_MESSAGE_TYPE    = "message_type";
 
     // design note: counters based on DataStax example here:
     // https://docs.datastax.com/en/cql/3.1/cql/cql_using/use_counter_t.html
 
     static final String CQL =
-        "CREATE TABLE IF NOT EXISTS shard_counters ( " +
+        "CREATE TABLE IF NOT EXISTS message_counters ( " +
                 "counter_value counter, " +
                 "queue_name    varchar, " +
-                "shard_type    varchar, " +
-                "shard_id      bigint, " +
-                "PRIMARY KEY (queue_name, shard_type, shard_id) " +
+                "message_type  varchar, " +
+                "PRIMARY KEY (queue_name, message_type) " +
         ");";
 
 
-    final long maxInMemoryIncrement;
+    /** number of changes since last save to database */
+    final AtomicInteger numChanges = new AtomicInteger( 0 );
+
+    final long maxChangesBeforeSave;
 
     class InMemoryCount {
         long baseCount;
         final AtomicLong increment = new AtomicLong( 0L );
+        final AtomicLong decrement = new AtomicLong( 0L );
+
         InMemoryCount( long baseCount ) {
             this.baseCount = baseCount;
         }
-        public long value() {
-            return baseCount + increment.get();
-        }
         public AtomicLong getIncrement() {
             return increment;
+        }
+        public AtomicLong getDecrement() {
+            return decrement;
+        }
+        public long value() {
+            return baseCount + increment.get() - decrement.get();
         }
         void setBaseCount( long baseCount ) {
             this.baseCount = baseCount;
@@ -95,64 +102,89 @@ public class MessageCounterSerializationImpl implements ShardCounterSerializatio
 
 
     @Inject
-    public MessageCounterSerializationImpl( CassandraConfig cassandraConfig, QakkaFig qakkaFig, CassandraClient cassandraClient ) {
+    public MessageCounterSerializationImpl(
+        CassandraConfig cassandraConfig, QakkaFig qakkaFig, CassandraClient cassandraClient ) {
+
         this.cassandraConfig = cassandraConfig;
-        this.maxInMemoryIncrement = qakkaFig.getMaxInMemoryShardCounter();
+        this.maxChangesBeforeSave = qakkaFig.getMaxInMemoryMessageCounter();
         this.cassandraClient = cassandraClient;
     }
 
 
-    @Override
-    public void incrementCounter(String queueName, Shard.Type type, long shardId, long increment ) {
-
-        String key = queueName + type + shardId;
-        synchronized ( inMemoryCounters ) {
-
-            if ( inMemoryCounters.get( key ) == null ) {
-
-                Long value = retrieveCounterFromStorage( queueName, type, shardId );
-
-                if ( value == null ) {
-                    incrementCounterInStorage( queueName, type, shardId, 0L );
-                    inMemoryCounters.put( key, new InMemoryCount( 0L ));
-                } else {
-                    inMemoryCounters.put( key, new InMemoryCount( value ));
-                }
-                inMemoryCounters.get( key ).getIncrement().addAndGet( increment );
-                return;
-            }
-        }
-
-        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
-
-        synchronized ( inMemoryCount ) {
-            long totalIncrement = inMemoryCount.getIncrement().addAndGet( increment );
-
-            if (totalIncrement > maxInMemoryIncrement) {
-                incrementCounterInStorage( queueName, type, shardId, totalIncrement );
-                inMemoryCount.setBaseCount( retrieveCounterFromStorage( queueName, type, shardId ) );
-                inMemoryCount.getIncrement().set( 0L );
-            }
-        }
-
+    private String buildKey( String queueName, DatabaseQueueMessage.Type type ) {
+        return queueName + "_" + type;
     }
 
 
     @Override
-    public long getCounterValue( String queueName, Shard.Type type, long shardId ) {
+    public void incrementCounter(String queueName, DatabaseQueueMessage.Type type, long increment ) {
 
-        String key = queueName + type + shardId;
+        String key = buildKey( queueName, type );
 
         synchronized ( inMemoryCounters ) {
 
             if ( inMemoryCounters.get( key ) == null ) {
 
-                Long value = retrieveCounterFromStorage( queueName, type, shardId );
+                Long value = retrieveCounterFromStorage( queueName, type );
+
+                if ( value == null ) {
+                    incrementCounterInStorage( queueName, type, 0L );
+                    inMemoryCounters.put( key, new InMemoryCount( 0L ));
+                } else {
+                    inMemoryCounters.put( key, new InMemoryCount( value ));
+                }
+            }
+        }
+
+        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+        inMemoryCount.getIncrement().addAndGet( increment );
+
+        saveIfNeeded( queueName, type );
+    }
+
+
+    @Override
+    public void decrementCounter(String queueName, DatabaseQueueMessage.Type type, long decrement) {
+
+        String key = buildKey( queueName, type );
+
+        synchronized ( inMemoryCounters ) {
+
+            if ( inMemoryCounters.get( key ) == null ) {
+
+                Long value = retrieveCounterFromStorage( queueName, type );
+
+                if ( value == null ) {
+                    decrementCounterInStorage( queueName, type, 0L );
+                    inMemoryCounters.put( key, new InMemoryCount( 0L ));
+                } else {
+                    inMemoryCounters.put( key, new InMemoryCount( value ));
+                }
+            }
+        }
+
+        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+        inMemoryCount.getDecrement().addAndGet( decrement );
+
+        saveIfNeeded( queueName, type );
+    }
+
+
+    @Override
+    public long getCounterValue( String queueName, DatabaseQueueMessage.Type type ) {
+
+        String key = buildKey( queueName, type );
+
+        synchronized ( inMemoryCounters ) {
+
+            if ( inMemoryCounters.get( key ) == null ) {
+
+                Long value = retrieveCounterFromStorage( queueName, type );
 
                 if ( value == null ) {
                     throw new NotFoundException(
-                            MessageFormat.format( "No counter found for queue {0} type {1} shardId {2}",
-                                    queueName, type, shardId ));
+                            MessageFormat.format( "No counter found for queue {0} type {1}",
+                                    queueName, type ));
                 } else {
                     inMemoryCounters.put( key, new InMemoryCount( value ));
                 }
@@ -162,35 +194,70 @@ public class MessageCounterSerializationImpl implements ShardCounterSerializatio
         return inMemoryCounters.get( key ).value();
     }
 
-    void incrementCounterInStorage( String queueName, Shard.Type type, long shardId, long increment ) {
 
-        Statement update = QueryBuilder.update( TABLE_SHARD_COUNTERS )
+    void incrementCounterInStorage( String queueName, DatabaseQueueMessage.Type type, long increment ) {
+
+        Statement update = QueryBuilder.update( TABLE_MESSAGE_COUNTERS )
                 .where( QueryBuilder.eq(   COLUMN_QUEUE_NAME, queueName ) )
-                .and(   QueryBuilder.eq(   COLUMN_SHARD_TYPE, type.toString() ) )
-                .and(   QueryBuilder.eq(   COLUMN_SHARD_ID, shardId ) )
+                .and(   QueryBuilder.eq(   COLUMN_MESSAGE_TYPE, type.toString() ) )
                 .with(  QueryBuilder.incr( COLUMN_COUNTER_VALUE, increment ) );
         cassandraClient.getQueueMessageSession().execute( update );
     }
 
 
-    Long retrieveCounterFromStorage( String queueName, Shard.Type type, long shardId ) {
+    void decrementCounterInStorage( String queueName, DatabaseQueueMessage.Type type, long decrement ) {
 
-        Statement query = QueryBuilder.select().from( TABLE_SHARD_COUNTERS )
+        Statement update = QueryBuilder.update( TABLE_MESSAGE_COUNTERS )
+            .where( QueryBuilder.eq(   COLUMN_QUEUE_NAME, queueName ) )
+            .and(   QueryBuilder.eq(   COLUMN_MESSAGE_TYPE, type.toString() ) )
+            .with(  QueryBuilder.decr( COLUMN_COUNTER_VALUE, decrement ) );
+        cassandraClient.getQueueMessageSession().execute( update );
+    }
+
+
+    Long retrieveCounterFromStorage( String queueName, DatabaseQueueMessage.Type type ) {
+
+        Statement query = QueryBuilder.select().from( TABLE_MESSAGE_COUNTERS )
                 .where( QueryBuilder.eq( COLUMN_QUEUE_NAME, queueName ) )
-                .and( QueryBuilder.eq( COLUMN_SHARD_TYPE, type.toString()) )
-                .and( QueryBuilder.eq( COLUMN_SHARD_ID, shardId ) );
+                .and( QueryBuilder.eq( COLUMN_MESSAGE_TYPE, type.toString()) );
 
         ResultSet resultSet = cassandraClient.getQueueMessageSession().execute( query );
         List<Row> all = resultSet.all();
 
         if ( all.size() > 1 ) {
             throw new QakkaRuntimeException(
-                    "Multiple rows for counter " + queueName + " type " + type + " shardId " + shardId );
+                    "Multiple rows for counter " + queueName + " type " + type );
         }
         if ( all.isEmpty() ) {
             return null;
         }
         return all.get(0).getLong( COLUMN_COUNTER_VALUE );
+    }
+
+
+    private void saveIfNeeded( String queueName, DatabaseQueueMessage.Type type ) {
+
+        String key = buildKey( queueName, type );
+
+        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+
+        synchronized ( inMemoryCount ) {
+
+            if ( numChanges.incrementAndGet() > maxChangesBeforeSave ) {
+
+                long totalIncrement = inMemoryCount.getIncrement().get();
+                incrementCounterInStorage( queueName, type, totalIncrement );
+
+                long totalDecrement = inMemoryCount.getDecrement().get();
+                decrementCounterInStorage( queueName, type, totalDecrement );
+
+                inMemoryCount.setBaseCount( retrieveCounterFromStorage( queueName, type ) );
+                inMemoryCount.getIncrement().set( 0L );
+                inMemoryCount.getDecrement().set( 0L );
+
+                numChanges.set( 0 );
+            }
+        }
     }
 
 
@@ -201,8 +268,8 @@ public class MessageCounterSerializationImpl implements ShardCounterSerializatio
 
     @Override
     public Collection<TableDefinition> getTables() {
-        return Collections.singletonList(
-            new TableDefinitionStringImpl( cassandraConfig.getApplicationLocalKeyspace(), TABLE_SHARD_COUNTERS, CQL ) );
+        return Collections.singletonList( new TableDefinitionStringImpl(
+            cassandraConfig.getApplicationLocalKeyspace(), TABLE_MESSAGE_COUNTERS, CQL ) );
     }
 
 }

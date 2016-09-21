@@ -36,9 +36,6 @@ public class ShardCounterSerializationTest extends AbstractTest {
     @Test
     public void testBasicOperation() throws Exception {
 
-        CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-
-
         ShardCounterSerialization scs = getInjector().getInstance( ShardCounterSerialization.class );
 
         String queueName = "scst_queue_" + RandomStringUtils.randomAlphanumeric( 20 );

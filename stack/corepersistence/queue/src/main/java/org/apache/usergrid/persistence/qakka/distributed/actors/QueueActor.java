@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.qakka.core.impl.InMemoryQueue;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.distributed.messages.*;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
+import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.duration.Duration;
@@ -46,10 +47,12 @@ import java.util.concurrent.TimeUnit;
 public class QueueActor extends UntypedActor {
     private static final Logger logger = LoggerFactory.getLogger( QueueActor.class );
 
-    private final QakkaFig qakkaFig;
-    private final InMemoryQueue inMemoryQueue;
+    private final QakkaFig         qakkaFig;
+    private final InMemoryQueue    inMemoryQueue;
     private final QueueActorHelper queueActorHelper;
     private final MetricsService   metricsService;
+
+    private final MessageCounterSerialization messageCounterSerialization;
 
     private final Map<String, Cancellable> refreshSchedulersByQueueName = new HashMap<>();
     private final Map<String, Cancellable> timeoutSchedulersByQueueName = new HashMap<>();
@@ -68,6 +71,8 @@ public class QueueActor extends UntypedActor {
         inMemoryQueue    = injector.getInstance( InMemoryQueue.class );
         queueActorHelper = injector.getInstance( QueueActorHelper.class );
         metricsService   = injector.getInstance( MetricsService.class );
+
+        messageCounterSerialization = injector.getInstance( MessageCounterSerialization.class );
     }
 
     @Override
@@ -172,6 +177,11 @@ public class QueueActor extends UntypedActor {
                         break;
                     }
                 }
+
+                messageCounterSerialization.decrementCounter(
+                    queueGetRequest.getQueueName(),
+                    DatabaseQueueMessage.Type.DEFAULT,
+                    queueMessages.size());
 
                 getSender().tell( new QueueGetResponse(
                         DistributedQueueService.Status.SUCCESS, queueMessages ), getSender() );
