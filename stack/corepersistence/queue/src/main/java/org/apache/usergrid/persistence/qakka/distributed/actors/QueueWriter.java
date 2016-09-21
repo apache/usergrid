@@ -25,6 +25,7 @@ import com.google.inject.Injector;
 import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.MetricsService;
 import org.apache.usergrid.persistence.qakka.core.QakkaUtils;
+import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.distributed.messages.QueueWriteRequest;
 import org.apache.usergrid.persistence.qakka.distributed.messages.QueueWriteResponse;
 import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLog;
@@ -44,6 +45,7 @@ public class QueueWriter extends UntypedActor {
 
     public enum WriteStatus { SUCCESS_XFERLOG_DELETED, SUCCESS_XFERLOG_NOTDELETED, ERROR };
 
+    private final DistributedQueueService   distributedQueueService;
     private final QueueMessageSerialization messageSerialization;
     private final TransferLogSerialization  transferLogSerialization;
     private final AuditLogSerialization     auditLogSerialization;
@@ -61,6 +63,7 @@ public class QueueWriter extends UntypedActor {
         auditLogSerialization    = injector.getInstance( AuditLogSerialization.class );
         metricsService           = injector.getInstance( MetricsService.class );
 
+        distributedQueueService     = injector.getInstance( DistributedQueueService.class );
         messageCounterSerialization = injector.getInstance( MessageCounterSerialization.class );
     }
 
