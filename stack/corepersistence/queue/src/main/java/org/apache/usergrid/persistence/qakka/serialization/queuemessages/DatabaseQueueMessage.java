@@ -19,10 +19,11 @@
 
 package org.apache.usergrid.persistence.qakka.serialization.queuemessages;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 
-public class DatabaseQueueMessage {
+public class DatabaseQueueMessage implements Serializable {
 
     public enum Type {
         DEFAULT, INFLIGHT
