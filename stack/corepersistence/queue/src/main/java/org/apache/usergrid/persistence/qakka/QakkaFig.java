@@ -89,7 +89,7 @@ public interface QakkaFig extends GuicyFig, Serializable {
 
     /** Time for queue messages to timeout, if not set per queue */
     @Key(QUEUE_TIMEOUT_SECONDS)
-    @Default("10")
+    @Default("30")
     int getQueueTimeoutSeconds();
 
     /** How often to refresh each queue's in-memory data */
