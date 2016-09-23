@@ -344,8 +344,8 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
                 put( "use-role", "io" );
                 put( "max-nr-of-instances-per-node", numInstancesPerNode );
                 put( "failure-detector", new HashMap<String, Object>() {{
-                    put( "threshold", "10" );
-                    put( "acceptable-heartbeat-pause", "3 s" );
+                    put( "threshold", "20" );
+                    put( "acceptable-heartbeat-pause", "6 s" );
                     put( "heartbeat-interval", "1 s" );
                     put( "heartbeat-request", new HashMap<String, Object>() {{
                         put( "expected-response-after", "3 s" );
