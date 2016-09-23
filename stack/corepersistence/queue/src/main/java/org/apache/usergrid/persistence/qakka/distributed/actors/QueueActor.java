@@ -37,11 +37,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.duration.Duration;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.text.DecimalFormat;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 public class QueueActor extends UntypedActor {
@@ -62,6 +61,10 @@ public class QueueActor extends UntypedActor {
     private final Map<String, ActorRef> queueTimeoutersByQueueName = new HashMap<>();
     private final Map<String, ActorRef> shardAllocatorsByQueueName = new HashMap<>();
 
+    private final AtomicLong runCount = new AtomicLong(0);
+    private final AtomicLong messageCount = new AtomicLong(0);
+    private final Set<String> queuesSeen = new HashSet<>();
+
 
     public QueueActor() {
 
@@ -80,6 +83,8 @@ public class QueueActor extends UntypedActor {
 
         if ( message instanceof QueueInitRequest) {
             QueueInitRequest request = (QueueInitRequest)message;
+
+            queuesSeen.add( request.getQueueName() );
 
             if ( refreshSchedulersByQueueName.get( request.getQueueName() ) == null ) {
                 Cancellable scheduler = getContext().system().scheduler().schedule(
@@ -120,6 +125,8 @@ public class QueueActor extends UntypedActor {
         } else if ( message instanceof QueueRefreshRequest ) {
             QueueRefreshRequest request = (QueueRefreshRequest)message;
 
+            queuesSeen.add( request.getQueueName() );
+
             if ( queueReadersByQueueName.get( request.getQueueName() ) == null ) {
 
                 if ( !request.isOnlyIfEmpty() || inMemoryQueue.peek( request.getQueueName()) == null ) {
@@ -135,6 +142,8 @@ public class QueueActor extends UntypedActor {
         } else if ( message instanceof QueueTimeoutRequest ) {
             QueueTimeoutRequest request = (QueueTimeoutRequest)message;
 
+            queuesSeen.add( request.getQueueName() );
+
             if ( queueTimeoutersByQueueName.get( request.getQueueName() ) == null ) {
                 ActorRef readerRef = getContext().actorOf( Props.create(
                     QueueTimeouter.class, request.getQueueName()), request.getQueueName() + "_timeouter");
@@ -147,6 +156,8 @@ public class QueueActor extends UntypedActor {
 
         } else if ( message instanceof ShardCheckRequest ) {
             ShardCheckRequest request = (ShardCheckRequest)message;
+
+            queuesSeen.add( request.getQueueName() );
 
             if ( shardAllocatorsByQueueName.get( request.getQueueName() ) == null ) {
                 ActorRef readerRef = getContext().actorOf( Props.create(
@@ -163,6 +174,8 @@ public class QueueActor extends UntypedActor {
             Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.GET_TIME_GET ).time();
             try {
                 QueueGetRequest queueGetRequest = (QueueGetRequest) message;
+
+                queuesSeen.add( queueGetRequest.getQueueName() );
 
                 Collection<DatabaseQueueMessage> queueMessages = new ArrayList<>();
 
@@ -189,6 +202,36 @@ public class QueueActor extends UntypedActor {
                 getSender().tell( new QueueGetResponse(
                         DistributedQueueService.Status.SUCCESS, queueMessages ), getSender() );
 
+                long runs = runCount.incrementAndGet();
+                long messagesReturned = messageCount.addAndGet( queueMessages.size() );
+
+                if ( logger.isDebugEnabled() && runs % 100 == 0 ) {
+
+                    final DecimalFormat format = new DecimalFormat("##.###");
+                    final long nano = 1000000000;
+                    Timer t = metricsService.getMetricRegistry().timer(MetricsService.GET_TIME_GET );
+
+                    logger.debug("QueueActor get stats (queues {}):\n" +
+                            "   Num runs={}\n" +
+                            "   Messages={}\n" +
+                            "   Mean={}\n" +
+                            "   One min rate={}\n" +
+                            "   Five min rate={}\n" +
+                            "   Snapshot mean={}\n" +
+                            "   Snapshot min={}\n" +
+                            "   Snapshot max={}",
+                        queuesSeen.toArray(),
+                        t.getCount(),
+                        messagesReturned,
+                        format.format( t.getMeanRate() ),
+                        format.format( t.getOneMinuteRate() ),
+                        format.format( t.getFiveMinuteRate() ),
+                        format.format( t.getSnapshot().getMean() / nano ),
+                        format.format( (double) t.getSnapshot().getMin() / nano ),
+                        format.format( (double) t.getSnapshot().getMax() / nano ) );
+                }
+
+
             } finally {
                 timer.close();
             }
@@ -200,6 +243,8 @@ public class QueueActor extends UntypedActor {
             try {
 
                 QueueAckRequest queueAckRequest = (QueueAckRequest) message;
+
+                queuesSeen.add( queueAckRequest.getQueueName() );
 
                 DistributedQueueService.Status status = queueActorHelper.ackQueueMessage(
                         queueAckRequest.getQueueName(),

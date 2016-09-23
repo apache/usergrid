@@ -40,8 +40,10 @@ import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardIterato
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.DecimalFormat;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 public class QueueTimeouter extends UntypedActor {
@@ -54,8 +56,10 @@ public class QueueTimeouter extends UntypedActor {
     private final ActorSystemFig            actorSystemFig;
     private final QakkaFig qakkaFig;
     private final CassandraClient           cassandraClient;
-
     private final MessageCounterSerialization messageCounterSerialization;
+
+    private final AtomicLong runCount = new AtomicLong(0);
+    private final AtomicLong totalTimedout = new AtomicLong(0);
 
 
     public QueueTimeouter(String queueName ) {
@@ -137,12 +141,42 @@ public class QueueTimeouter extends UntypedActor {
                     }
                 }
 
-                if (count > 0) {
-                    logger.debug( "Timed out {} messages for queue {}", count, queueName );
 
-                    messageCounterSerialization.decrementCounter(
-                        queueName, DatabaseQueueMessage.Type.DEFAULT, count);
+                long runs = runCount.incrementAndGet();
+                long timeoutCount = totalTimedout.addAndGet( count );
+
+                if ( logger.isDebugEnabled() && runs % 100 == 0 ) {
+
+                    final DecimalFormat format = new DecimalFormat("##.###");
+                    final long nano = 1000000000;
+                    Timer t = metricsService.getMetricRegistry().timer(MetricsService.TIMEOUT_TIME );
+
+                    logger.debug("QueueTimeouter for queue '{}' stats:\n" +
+                            "   Num runs={}\n" +
+                            "   Timeout count={}\n" +
+                            "   Mean={}\n" +
+                            "   One min rate={}\n" +
+                            "   Five min rate={}\n" +
+                            "   Snapshot mean={}\n" +
+                            "   Snapshot min={}\n" +
+                            "   Snapshot max={}",
+                        queueName,
+                        t.getCount(),
+                        timeoutCount,
+                        format.format( t.getMeanRate() ),
+                        format.format( t.getOneMinuteRate() ),
+                        format.format( t.getFiveMinuteRate() ),
+                        format.format( t.getSnapshot().getMean() / nano ),
+                        format.format( (double) t.getSnapshot().getMin() / nano ),
+                        format.format( (double) t.getSnapshot().getMax() / nano ) );
                 }
+
+//                if (count > 0) {
+//                    logger.debug( "Timed out {} messages for queue {}", count, queueName );
+//
+//                    messageCounterSerialization.decrementCounter(
+//                        queueName, DatabaseQueueMessage.Type.DEFAULT, count);
+//                }
 
             } finally {
                 timer.close();
