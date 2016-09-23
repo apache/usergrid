@@ -53,15 +53,18 @@ public class QueueManagerFactoryImpl implements LegacyQueueManagerFactory {
                     if ( queueFig.overrideQueueForDefault() ){
 
                         LegacyQueueManager manager = defaultManager.get( scope.getName() );
-                        logger.info("Using Queue Implemention: {}", manager.getClass().getSimpleName());
                         if ( manager == null ) {
+                            logger.info("Using LocalQueueManager for scope {}", scope.getName() );
                             manager = new LocalQueueManager();
                             defaultManager.put( scope.getName(), manager );
                         }
                         return manager;
 
                     } else {
-                        return queuemanagerInternalFactory.getQueueManager(scope);
+                        LegacyQueueManager queueManager = queuemanagerInternalFactory.getQueueManager( scope );
+                        logger.info("Using queue manager {} for scope {}",
+                            queueManager.getClass().getSimpleName(), scope.getName() );
+                        return queueManager;
                     }
 
                 }

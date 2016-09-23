@@ -39,10 +39,7 @@ import org.slf4j.LoggerFactory;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
@@ -168,7 +165,7 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
                             logger.debug("SUCCESS after {} retries", retries );
                         }
 
-                        logger.debug("{} Requesting refresh if empty for queue: {}", this, queueName);
+                        // send refresh-queue-if-empty message
                         QueueRefreshRequest qrr = new QueueRefreshRequest( queueName, false );
                         clientActor.tell( qrr, null );
 
@@ -219,6 +216,11 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
         List<String> queueNames = queueManager.getListOfQueues();
         if ( !queueNames.contains( queueName ) ) {
             throw new QakkaRuntimeException( "Queue name: " + queueName + " does not exist");
+        }
+
+        if ( actorSystemManager.getClientActor() == null || !actorSystemManager.isReady() ) {
+            logger.error("Akka Actor System is not ready yet for requests.");
+            return Collections.EMPTY_LIST;
         }
 
         int maxRetries = qakkaFig.getMaxGetRetries();

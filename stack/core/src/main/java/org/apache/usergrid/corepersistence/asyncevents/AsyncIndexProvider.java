@@ -103,16 +103,44 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
         final Implementations impl = Implementations.valueOf(value);
 
         switch (impl) {
+
             case LOCAL:
-                AsyncEventServiceImpl eventService = new AsyncEventServiceImpl(scope -> new LocalQueueManager(), indexProcessorFig, indexProducer, metricsFactory,
-                    entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory, eventBuilder,mapManagerFactory, queueFig,rxTaskScheduler);
+                AsyncEventServiceImpl eventService =
+                    new AsyncEventServiceImpl(scope -> new LocalQueueManager(),
+                        indexProcessorFig,
+                        indexProducer,
+                        metricsFactory,
+                        entityCollectionManagerFactory,
+                        indexLocationStrategyFactory,
+                        entityIndexFactory,
+                        eventBuilder,
+                        mapManagerFactory,
+                        queueFig,rxTaskScheduler);
                 eventService.MAX_TAKE = 1000;
                 return eventService;
+
             case SQS:
-                throw new IllegalArgumentException("Configuration value of SQS is no longer allowed. Use SNS instead with only a single region");
+                throw new IllegalArgumentException(
+                    "Configuration value of SQS is no longer allowed. Use SNS instead with only a single region.");
+
             case SNS:
-                return new AsyncEventServiceImpl(queueManagerFactory, indexProcessorFig, indexProducer, metricsFactory,
-                    entityCollectionManagerFactory, indexLocationStrategyFactory,entityIndexFactory, eventBuilder, mapManagerFactory, queueFig, rxTaskScheduler );
+                throw new IllegalArgumentException(
+                    "Configuration value of SNS is no longer allowed. Use MULTIREGION instead. ");
+
+            case MULTIREGION:
+                return new AsyncEventServiceImpl(
+                    queueManagerFactory,
+                    indexProcessorFig,
+                    indexProducer,
+                    metricsFactory,
+                    entityCollectionManagerFactory,
+                    indexLocationStrategyFactory,
+                    entityIndexFactory,
+                    eventBuilder,
+                    mapManagerFactory,
+                    queueFig,
+                    rxTaskScheduler );
+
             default:
                 throw new IllegalArgumentException("Configuration value of " + getErrorValues() + " are allowed");
         }
@@ -135,12 +163,12 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     /**
      * Different implementations
      */
-    public static enum Implementations { //TODO see about removing SNS and SQS and use AMZN? - michaelarusso
+    public static enum Implementations {
         TEST,
         LOCAL,
-        SQS,
-        SNS;
-
+        SQS,         // deprecated
+        SNS,         // deprecated
+        MULTIREGION; // built-in Akka-based queue
 
         public String asString() {
             return toString();
