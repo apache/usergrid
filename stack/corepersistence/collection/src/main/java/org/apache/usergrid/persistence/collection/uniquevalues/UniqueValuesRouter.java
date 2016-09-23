@@ -42,7 +42,9 @@ public class UniqueValuesRouter extends UntypedActor {
     public UniqueValuesRouter(Injector injector ) {
 
         router = getContext().actorOf(
-            FromConfig.getInstance().props(Props.create(UniqueValueActor.class)), "router");
+            FromConfig.getInstance()
+                .props(Props.create(UniqueValueActor.class)
+                    .withDispatcher("blocking-io-dispatcher")), "router");
 
         // TODO: is there some way to pass the injector here without getting this exception:
         // NotSerializableException: No configured serialization-bindings for class [InjectorImpl]

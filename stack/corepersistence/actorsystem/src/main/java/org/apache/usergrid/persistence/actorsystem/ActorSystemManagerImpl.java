@@ -293,6 +293,16 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
                 put( "akka", new HashMap<String, Object>() {{
 
+                    put( "blocking-io-dispatcher", new HashMap<String, Object>() {{
+                        put( "type", "Dispatcher" );
+                        put( "executor", actorSystemFig.getClusterIoExecutorType() );
+                        put( actorSystemFig.getClusterIoExecutorType() , new HashMap<String, Object>() {{
+                            put( "fixed-pool-size", actorSystemFig.getClusterIoExecutorThreadPoolSize() );
+                            put( "rejection-policy",actorSystemFig.getClusterIoExecutorRejectionPolicy() );
+                        }} );
+                    }} );
+
+
                     put( "remote", new HashMap<String, Object>() {{
                         put( "netty.tcp", new HashMap<String, Object>() {{
                             put( "hostname", hostname );
