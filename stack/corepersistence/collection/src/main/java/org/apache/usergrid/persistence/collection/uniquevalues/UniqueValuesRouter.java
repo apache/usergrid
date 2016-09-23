@@ -44,7 +44,7 @@ public class UniqueValuesRouter extends UntypedActor {
         router = getContext().actorOf(
             FromConfig.getInstance()
                 .props(Props.create(UniqueValueActor.class)
-                    .withDispatcher("blocking-io-dispatcher")), "router");
+                    .withDispatcher("akka.blocking-io-dispatcher")), "router");
 
         // TODO: is there some way to pass the injector here without getting this exception:
         // NotSerializableException: No configured serialization-bindings for class [InjectorImpl]
