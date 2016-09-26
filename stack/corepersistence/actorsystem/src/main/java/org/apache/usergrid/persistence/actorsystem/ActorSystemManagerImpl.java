@@ -376,13 +376,13 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                 }
             }
 
-            // add a shutdown hook to clean all actor systems if the JVM exits without the servlet container knowing
-//            Runtime.getRuntime().addShutdownHook(new Thread() {
-//                @Override
-//                public void run() {
-//                    shutdownAll();
-//                }
-//            });
+            //add a shutdown hook to clean all actor systems if the JVM exits without the servlet container knowing
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    leaveCluster();
+                }
+            });
 
         }
 
@@ -466,10 +466,11 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     }
 
     @Override
-    public void shutdownAll(){
+    public void leaveCluster(){
 
-        logger.info("Shutting down Akka cluster: {}", clusterSystem.name());
-        clusterSystem.shutdown();
+        Cluster cluster = Cluster.get(clusterSystem);
+        logger.info("Downing self: {} from cluster: {}", cluster.selfAddress(), clusterSystem.name());
+        cluster.leave(cluster.selfAddress());
     }
 
 }
