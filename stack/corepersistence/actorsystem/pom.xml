@@ -35,37 +35,37 @@
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-actor_2.11</artifactId>
-            <version>2.4.0</version>
+            <version>2.4.10</version>
         </dependency>
 
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-remote_2.11</artifactId>
-            <version>2.4.0</version>
+            <version>2.4.10</version>
         </dependency>
 
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-cluster_2.11</artifactId>
-            <version>2.4.0</version>
+            <version>2.4.10</version>
         </dependency>
 
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-cluster-tools_2.11</artifactId>
-            <version>2.4.0</version>
+            <version>2.4.10</version>
         </dependency>
 
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-cluster-metrics_2.11</artifactId>
-            <version>2.4.0</version>
+            <version>2.4.10</version>
         </dependency>
 
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-slf4j_2.11</artifactId>
-            <version>2.4.0</version>
+            <version>2.4.10</version>
         </dependency>
 
         <dependency>
