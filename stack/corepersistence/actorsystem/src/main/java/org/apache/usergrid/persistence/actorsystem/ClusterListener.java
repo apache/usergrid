@@ -81,13 +81,13 @@ public class ClusterListener extends UntypedActor {
                 logger.info("Unreachable member {} is accessible on the network.", event.member());
 
 //                logger.info("Unreachable member {} is accessible on the network, " +
-//                    "application must have died. Marking member down", event.member());
+//                    "application must have died. Removing member ", event.member());
 //
-//                cluster.down(event.member().address());
+//                cluster.leave(event.member().address());
             }else{
 
                 logger.warn("Unreachable member {} is not accessible on the network, " +
-                    "there must be a network issue. Not marking member down", event.member());
+                    "there must be a network issue. Not removing member", event.member());
 
             }
 
