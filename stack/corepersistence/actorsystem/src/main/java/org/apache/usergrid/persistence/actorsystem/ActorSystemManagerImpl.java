@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.actorsystem;
 
 
 import akka.actor.*;
+import akka.cluster.Cluster;
 import akka.cluster.client.ClusterClient;
 import akka.cluster.client.ClusterClientReceptionist;
 import akka.cluster.client.ClusterClientSettings;
@@ -312,12 +313,20 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                     }} );
 
                     put( "cluster", new HashMap<String, Object>() {{
-                        put( "max-nr-of-instances-per-node", numInstancesPerNode);
+                        put( "max-nr-of-instances-per-node", numInstancesPerNode); // this sets default if router does not set
                         put( "roles", Collections.singletonList("io") );
                         put( "seed-nodes", new ArrayList<String>() {{
                             for (String seed : seeds) {
                                 add( seed );
                             }
+                        }} );
+                        put( "failure-detector", new HashMap<String, Object>() {{
+                            put( "threshold", "20" );
+                            put( "acceptable-heartbeat-pause", "6 s" );
+                            put( "heartbeat-interval", "1 s" );
+                            put( "heartbeat-request", new HashMap<String, Object>() {{
+                                put( "expected-response-after", "3 s" );
+                            }} );
                         }} );
                     }} );
 

@@ -78,10 +78,12 @@ public class ClusterListener extends UntypedActor {
                 java.lang.Runtime.getRuntime().exec("ping -c 1 "+hostname).waitFor() == 0;
             if(networkReachable){
 
-                logger.info("Unreachable member {} is accessible on the network, " +
-                    "application must have died. Marking member down", event.member());
+                logger.info("Unreachable member {} is accessible on the network.", event.member());
 
-                cluster.down(event.member().address());
+//                logger.info("Unreachable member {} is accessible on the network, " +
+//                    "application must have died. Marking member down", event.member());
+//
+//                cluster.down(event.member().address());
             }else{
 
                 logger.warn("Unreachable member {} is not accessible on the network, " +
@@ -95,9 +97,16 @@ public class ClusterListener extends UntypedActor {
 
         } else if (message instanceof ClusterEvent.MemberEvent) {
             ClusterEvent.MemberEvent event = (ClusterEvent.MemberEvent) message;
-            if(logger.isTraceEnabled()){
-                logger.trace("MemberEvent occurred for member: {}, Event: {}", event.member(), event.toString());
-            }
+            logger.info("MemberEvent occurred for member: {}, Event: {}", event.member(), event.toString());
+
+        } else if (message instanceof ClusterEvent.LeaderChanged) {
+            ClusterEvent.LeaderChanged event = (ClusterEvent.LeaderChanged) message;
+            logger.info("LeaderChanged occurred for leader: {}, getLeader: {}, Event: {}",
+                event.leader(), event.getLeader(), event.toString());
+
+        } else if (message instanceof ClusterEvent.MemberExited) {
+            ClusterEvent.MemberExited event = (ClusterEvent.MemberExited) message;
+            logger.info("MemberExited occurred for member: {}, Event: {}", event.member(), event.toString());
 
         } else {
             unhandled(message);
