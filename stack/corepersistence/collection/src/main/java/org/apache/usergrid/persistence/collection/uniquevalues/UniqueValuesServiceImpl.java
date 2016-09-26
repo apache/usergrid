@@ -342,15 +342,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
                 put( "enabled", "on" );
                 put( "allow-local-routees", "on" );
                 put( "use-role", "io" );
-                put( "max-nr-of-instances-per-node", numInstancesPerNode );
-                put( "failure-detector", new HashMap<String, Object>() {{
-                    put( "threshold", "20" );
-                    put( "acceptable-heartbeat-pause", "6 s" );
-                    put( "heartbeat-interval", "1 s" );
-                    put( "heartbeat-request", new HashMap<String, Object>() {{
-                        put( "expected-response-after", "3 s" );
-                    }} );
-                }} );
+                put( "max-nr-of-instances-per-node", numInstancesPerNode ); // this sets value specific to this router
             }} );
         }} );
 
