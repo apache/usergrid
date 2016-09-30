@@ -24,6 +24,9 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.routing.ConsistentHashingRouter;
 import akka.routing.FromConfig;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
 import org.apache.usergrid.persistence.qakka.distributed.messages.*;
 
 
@@ -35,9 +38,11 @@ public class QueueActorRouter extends UntypedActor {
     private final ActorRef routerRef;
 
 
-    public QueueActorRouter() {
-        routerRef = getContext().actorOf(
-                FromConfig.getInstance().props( Props.create(QueueActor.class)), "router");
+    @Inject
+    public QueueActorRouter( Injector injector ) {
+
+        this.routerRef = getContext().actorOf( FromConfig.getInstance().props(
+            Props.create(GuiceActorProducer.class, injector, QueueActor.class)), "router");
     }
 
     @Override

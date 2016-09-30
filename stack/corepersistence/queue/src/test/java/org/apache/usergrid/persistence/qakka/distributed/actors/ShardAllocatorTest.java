@@ -28,6 +28,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.QakkaModule;
@@ -111,7 +112,8 @@ public class ShardAllocatorTest extends AbstractTest {
         // Run shard allocator actor by sending message to it
 
         ActorSystem system = ActorSystem.create("Test-" + queueName);
-        ActorRef shardAllocRef = system.actorOf( Props.create( ShardAllocator.class, queueName ), "shardallocator");
+        ActorRef shardAllocRef = system.actorOf( Props.create(
+            GuiceActorProducer.class, injector, ShardAllocator.class), "shardallocator");
 
         ShardCheckRequest checkRequest = new ShardCheckRequest( queueName );
         shardAllocRef.tell( checkRequest, null ); // tell sends message, returns immediately
@@ -187,26 +189,32 @@ public class ShardAllocatorTest extends AbstractTest {
 
         queueManager.createQueue( new Queue( queueName ));
 
-        // Create 4000 messages
+        try {
 
-        int numMessages = 4000;
+            // Create 4000 messages
 
-        for ( int i=0; i<numMessages; i++ ) {
-            queueMessageManager.sendMessages(
+            int numMessages = 4000;
+
+            for (int i = 0; i < numMessages; i++) {
+                queueMessageManager.sendMessages(
                     queueName,
                     Collections.singletonList( region ),
                     null, // delay
                     null, // expiration
                     "application/json",
                     DataType.serializeValue( "{}", ProtocolVersion.NEWEST_SUPPORTED ) );
+            }
+
+            distributedQueueService.refresh();
+            Thread.sleep( 3000 );
+
+            // Test that 8 shards were created
+
+            Assert.assertTrue( "num shards >= 7",
+                countShards( cassandraClient, shardCounterSer, queueName, region, Shard.Type.DEFAULT ) >= 7 );
+
+        } finally {
+            queueManager.deleteQueue( queueName );
         }
-
-        distributedQueueService.refresh();
-        Thread.sleep(3000);
-
-        // Test that 8 shards were created
-
-        Assert.assertTrue("num shards >= 7",
-            countShards( cassandraClient, shardCounterSer, queueName, region, Shard.Type.DEFAULT ) >= 7 );
     }
 }

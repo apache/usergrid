@@ -78,35 +78,42 @@ public class QueueActorServiceTest extends AbstractTest {
         QueueManager queueManager = injector.getInstance( QueueManager.class );
         queueManager.createQueue( new Queue( queueName, "test-type", region, region, 0L, 5, 10, null ));
 
-        // send 1 queue message, get back one queue message
-        UUID messageId = UUIDGen.getTimeUUID();
+        try {
 
-        final String data = "my test data";
-        final DatabaseQueueMessageBody messageBody = new DatabaseQueueMessageBody(
+            // send 1 queue message, get back one queue message
+            UUID messageId = UUIDGen.getTimeUUID();
+
+            final String data = "my test data";
+            final DatabaseQueueMessageBody messageBody = new DatabaseQueueMessageBody(
                 DataType.serializeValue( data, ProtocolVersion.NEWEST_SUPPORTED ), "text/plain" );
-        serialization.writeMessageData( messageId, messageBody );
+            serialization.writeMessageData( messageId, messageBody );
 
-        distributedQueueService.sendMessageToRegion(
-                queueName, region, region, messageId, null, null);
+            distributedQueueService.sendMessageToRegion(
+                queueName, region, region, messageId, null, null );
 
-        distributedQueueService.refresh();
-        Thread.sleep(1000);
+            distributedQueueService.refresh();
+            Thread.sleep( 1000 );
 
-        Collection<DatabaseQueueMessage> qmReturned = distributedQueueService.getNextMessages( queueName, 1 );
-        Assert.assertEquals( 1, qmReturned.size() );
+            Collection<DatabaseQueueMessage> qmReturned = distributedQueueService.getNextMessages( queueName, 1 );
+            Assert.assertEquals( 1, qmReturned.size() );
 
-        DatabaseQueueMessage dqm = qmReturned.iterator().next();
-        DatabaseQueueMessageBody dqmb = serialization.loadMessageData( dqm.getMessageId() );
-        ByteBuffer blob = dqmb.getBlob();
+            DatabaseQueueMessage dqm = qmReturned.iterator().next();
+            DatabaseQueueMessageBody dqmb = serialization.loadMessageData( dqm.getMessageId() );
+            ByteBuffer blob = dqmb.getBlob();
 
-        String returnedData = new String( blob.array(), "UTF-8");
+            String returnedData = new String( blob.array(), "UTF-8" );
 //        ByteArrayInputStream bais = new ByteArrayInputStream( blob.array() );
 //        ObjectInputStream ios = new ObjectInputStream( bais );
 //        String returnedData = (String)ios.readObject();
 
-        Assert.assertEquals( data, returnedData );
+            Assert.assertEquals( data, returnedData );
 
-        distributedQueueService.shutdown();
+            distributedQueueService.shutdown();
+
+        } finally {
+            queueManager.deleteQueue( queueName );
+        }
+
     }
 
 
@@ -128,51 +135,58 @@ public class QueueActorServiceTest extends AbstractTest {
 
         String queueName = "queue_testGetMultipleQueueMessages_" + UUID.randomUUID();
         QueueManager queueManager = injector.getInstance( QueueManager.class );
-        queueManager.createQueue(
-                new Queue( queueName, "test-type", region, region, 0L, 5, 10, null ));
 
-        for ( int i=0; i<100; i++ ) {
+        try {
 
-            UUID messageId = UUIDGen.getTimeUUID();
+            queueManager.createQueue(
+                new Queue( queueName, "test-type", region, region, 0L, 5, 10, null ) );
 
-            final String data = "my test data";
-            final DatabaseQueueMessageBody messageBody = new DatabaseQueueMessageBody(
+            for (int i = 0; i < 100; i++) {
+
+                UUID messageId = UUIDGen.getTimeUUID();
+
+                final String data = "my test data";
+                final DatabaseQueueMessageBody messageBody = new DatabaseQueueMessageBody(
                     DataType.serializeValue( data, ProtocolVersion.NEWEST_SUPPORTED ), "text/plain" );
-            serialization.writeMessageData( messageId, messageBody );
+                serialization.writeMessageData( messageId, messageBody );
 
-            xferLogSerialization.recordTransferLog(
-                queueName, actorSystemFig.getRegionLocal(), region, messageId );
+                xferLogSerialization.recordTransferLog(
+                    queueName, actorSystemFig.getRegionLocal(), region, messageId );
 
-            distributedQueueService.sendMessageToRegion(
-                    queueName, region, region, messageId , null, null);
-        }
-
-        int maxRetries = 25;
-        int retries = 0;
-        int count = 0;
-        while ( retries++ < maxRetries ) {
-            distributedQueueService.refresh();
-            if (inMemoryQueue.size( queueName ) == 100) {
-                count = 100;
-                break;
+                distributedQueueService.sendMessageToRegion(
+                    queueName, region, region, messageId, null, null );
             }
-            Thread.sleep(1000);
+
+            int maxRetries = 25;
+            int retries = 0;
+            int count = 0;
+            while (retries++ < maxRetries) {
+                distributedQueueService.refresh();
+                if (inMemoryQueue.size( queueName ) == 100) {
+                    count = 100;
+                    break;
+                }
+                Thread.sleep( 1000 );
+            }
+
+            Assert.assertEquals( 100, count );
+
+            Assert.assertEquals( 25, distributedQueueService.getNextMessages( queueName, 25 ).size() );
+            Assert.assertEquals( 75, inMemoryQueue.size( queueName ) );
+
+            Assert.assertEquals( 25, distributedQueueService.getNextMessages( queueName, 25 ).size() );
+            Assert.assertEquals( 50, inMemoryQueue.size( queueName ) );
+
+            Assert.assertEquals( 25, distributedQueueService.getNextMessages( queueName, 25 ).size() );
+            Assert.assertEquals( 25, inMemoryQueue.size( queueName ) );
+
+            Assert.assertEquals( 25, distributedQueueService.getNextMessages( queueName, 25 ).size() );
+            Assert.assertEquals( 0, inMemoryQueue.size( queueName ) );
+
+            distributedQueueService.shutdown();
+
+        } finally {
+            queueManager.deleteQueue( queueName );
         }
-
-        Assert.assertEquals( 100, count );
-
-        Assert.assertEquals( 25, distributedQueueService.getNextMessages( queueName, 25 ).size() );
-        Assert.assertEquals( 75, inMemoryQueue.size( queueName ) );
-
-        Assert.assertEquals( 25, distributedQueueService.getNextMessages( queueName, 25 ).size() );
-        Assert.assertEquals( 50, inMemoryQueue.size( queueName ) );
-
-        Assert.assertEquals( 25, distributedQueueService.getNextMessages( queueName, 25 ).size() );
-        Assert.assertEquals( 25, inMemoryQueue.size( queueName ) );
-
-        Assert.assertEquals( 25, distributedQueueService.getNextMessages( queueName, 25 ).size() );
-        Assert.assertEquals( 0, inMemoryQueue.size( queueName ) );
-
-        distributedQueueService.shutdown();
     }
 }

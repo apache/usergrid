@@ -23,6 +23,7 @@ package org.apache.usergrid.persistence.qakka.distributed.actors;
 import akka.actor.UntypedActor;
 import com.codahale.metrics.Timer;
 import com.datastax.driver.core.utils.UUIDs;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.qakka.App;
@@ -49,8 +50,6 @@ import java.util.UUID;
 public class ShardAllocator extends UntypedActor {
     private static final Logger logger = LoggerFactory.getLogger( ShardAllocator.class );
 
-    private final String queueName;
-
     private final QakkaFig qakkaFig;
     private final ActorSystemFig            actorSystemFig;
     private final ShardSerialization        shardSerialization;
@@ -59,10 +58,8 @@ public class ShardAllocator extends UntypedActor {
     private final CassandraClient           cassandraClient;
 
 
-    public ShardAllocator( String queueName ) {
-        this.queueName = queueName;
-
-        Injector injector = App.INJECTOR;
+    @Inject
+    public ShardAllocator( Injector injector ) {
 
         this.qakkaFig                  = injector.getInstance( QakkaFig.class );
         this.shardCounterSerialization = injector.getInstance( ShardCounterSerializationImpl.class );
@@ -70,8 +67,6 @@ public class ShardAllocator extends UntypedActor {
         this.actorSystemFig            = injector.getInstance( ActorSystemFig.class );
         this.metricsService            = injector.getInstance( MetricsService.class );
         this.cassandraClient           = injector.getInstance( CassandraClientImpl.class );
-
-        logger.debug( "Created shard allocator for queue {}", queueName );
     }
 
 
@@ -82,14 +77,9 @@ public class ShardAllocator extends UntypedActor {
 
             ShardCheckRequest request = (ShardCheckRequest) message;
 
-            if (!request.getQueueName().equals( queueName )) {
-                throw new QakkaRuntimeException(
-                        "ShardAllocator for " + queueName + ": Incorrect queueName " + request.getQueueName() );
-            }
-
             // check both types of shard
-            checkLatestShard( Shard.Type.DEFAULT );
-            checkLatestShard( Shard.Type.INFLIGHT );
+            checkLatestShard( request.getQueueName(), Shard.Type.DEFAULT );
+            checkLatestShard( request.getQueueName(), Shard.Type.INFLIGHT );
 
         } else {
             unhandled( message );
@@ -97,7 +87,7 @@ public class ShardAllocator extends UntypedActor {
 
     }
 
-    private void checkLatestShard( Shard.Type type ) {
+    private void checkLatestShard( String queueName, Shard.Type type ) {
 
         Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.ALLOCATE_TIME).time();
 

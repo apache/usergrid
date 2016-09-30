@@ -22,8 +22,11 @@ package org.apache.usergrid.persistence.qakka.distributed.actors;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
@@ -52,10 +55,7 @@ public class QueueReaderTest extends AbstractTest {
     @Test
     public void testBasicOperation() throws Exception {
 
-        CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-
-
-        getInjector().getInstance( App.class ); // init the INJECTOR
+        Injector injector = getInjector();
 
         QakkaFig qakkaFig = getInjector().getInstance( QakkaFig.class );
         ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
@@ -94,7 +94,8 @@ public class QueueReaderTest extends AbstractTest {
         // run the QueueRefresher to fill up the in-memory queue
 
         ActorSystem system = ActorSystem.create("Test-" + queueName);
-        ActorRef queueReaderRef = system.actorOf( Props.create( QueueRefresher.class, queueName ), "queueReader");
+        ActorRef queueReaderRef = system.actorOf(
+            Props.create( GuiceActorProducer.class, injector, QueueRefresher.class ), "queueReader");
         QueueRefreshRequest refreshRequest = new QueueRefreshRequest( queueName, false );
 
         // need to wait for refresh to complete

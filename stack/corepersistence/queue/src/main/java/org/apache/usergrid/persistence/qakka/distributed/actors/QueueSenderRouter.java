@@ -23,6 +23,9 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.routing.FromConfig;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
 import org.apache.usergrid.persistence.qakka.distributed.messages.QueueSendRequest;
 
 
@@ -34,10 +37,11 @@ public class QueueSenderRouter extends UntypedActor {
     private final ActorRef router;
 
 
-    public QueueSenderRouter() {
+    @Inject
+    public QueueSenderRouter( Injector injector ) {
 
-        router = getContext().actorOf(
-                FromConfig.getInstance().props(Props.create(QueueSender.class )), "router");
+        this.router = getContext().actorOf( FromConfig.getInstance().props(
+            Props.create( GuiceActorProducer.class, injector, QueueSender.class )), "router");
     }
 
     @Override

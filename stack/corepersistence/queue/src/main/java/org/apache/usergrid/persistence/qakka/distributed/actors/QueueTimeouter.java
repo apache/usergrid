@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.qakka.distributed.actors;
 
 import akka.actor.UntypedActor;
 import com.codahale.metrics.Timer;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.qakka.App;
@@ -49,8 +50,6 @@ import java.util.concurrent.atomic.AtomicLong;
 public class QueueTimeouter extends UntypedActor {
     private static final Logger logger = LoggerFactory.getLogger( QueueTimeouter.class );
 
-    private final String                    queueName;
-
     private final QueueMessageSerialization messageSerialization;
     private final MetricsService            metricsService;
     private final ActorSystemFig            actorSystemFig;
@@ -62,10 +61,8 @@ public class QueueTimeouter extends UntypedActor {
     private final AtomicLong totalTimedout = new AtomicLong(0);
 
 
-    public QueueTimeouter(String queueName ) {
-        this.queueName = queueName;
-
-        Injector injector = App.INJECTOR;
+    @Inject
+    public QueueTimeouter( Injector injector) {
 
         messageSerialization = injector.getInstance( QueueMessageSerialization.class );
         actorSystemFig       = injector.getInstance( ActorSystemFig.class );
@@ -88,10 +85,7 @@ public class QueueTimeouter extends UntypedActor {
 
                 QueueTimeoutRequest request = (QueueTimeoutRequest) message;
 
-                if (!request.getQueueName().equals( queueName )) {
-                    throw new QakkaRuntimeException(
-                            "QueueTimeouter for " + queueName + ": Incorrect queueName " + request.getQueueName() );
-                }
+                String queueName = request.getQueueName();
 
                 //logger.debug("Processing timeouts for queue {} ", queueName );
 
@@ -171,12 +165,12 @@ public class QueueTimeouter extends UntypedActor {
                         format.format( (double) t.getSnapshot().getMax() / nano ) );
                 }
 
-//                if (count > 0) {
-//                    logger.debug( "Timed out {} messages for queue {}", count, queueName );
-//
-//                    messageCounterSerialization.decrementCounter(
-//                        queueName, DatabaseQueueMessage.Type.DEFAULT, count);
-//                }
+                if (count > 0) {
+                    logger.debug( "Timed out {} messages for queue {}", count, queueName );
+
+                    messageCounterSerialization.decrementCounter(
+                        queueName, DatabaseQueueMessage.Type.DEFAULT, count);
+                }
 
             } finally {
                 timer.close();

@@ -19,17 +19,28 @@
 
 package org.apache.usergrid.persistence.qakka.distributed.actors;
 
+import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.qakka.MetricsService;
+import org.apache.usergrid.persistence.qakka.QakkaFig;
+import org.apache.usergrid.persistence.qakka.core.CassandraClient;
+import org.apache.usergrid.persistence.qakka.core.impl.InMemoryQueue;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
+import org.apache.usergrid.persistence.qakka.serialization.MultiShardMessageIterator;
 import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLog;
 import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLogSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
+import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
+import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.DecimalFormat;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 public class QueueActorHelper {
@@ -38,18 +49,33 @@ public class QueueActorHelper {
     private final ActorSystemFig            actorSystemFig;
     private final QueueMessageSerialization messageSerialization;
     private final AuditLogSerialization     auditLogSerialization;
+    private final InMemoryQueue             inMemoryQueue;
+    private final QakkaFig                  qakkaFig;
+    private final MetricsService            metricsService;
+    private final CassandraClient           cassandraClient;
+
+    private final AtomicLong runCount = new AtomicLong(0);
+    private final AtomicLong totalRead = new AtomicLong(0);
 
 
     @Inject
     public QueueActorHelper(
-            ActorSystemFig actorSystemFig,
+            QakkaFig                  qakkaFig,
+            ActorSystemFig            actorSystemFig,
             QueueMessageSerialization messageSerialization,
-            AuditLogSerialization auditLogSerialization
+            AuditLogSerialization     auditLogSerialization,
+            InMemoryQueue             inMemoryQueue,
+            MetricsService            metricsService,
+            CassandraClient           cassandraClient
             ) {
 
-        this.actorSystemFig = actorSystemFig;
-        this.messageSerialization = messageSerialization;
+        this.actorSystemFig        = actorSystemFig;
+        this.messageSerialization  = messageSerialization;
         this.auditLogSerialization = auditLogSerialization;
+        this.inMemoryQueue         = inMemoryQueue;
+        this.qakkaFig              = qakkaFig;
+        this.metricsService        = metricsService;
+        this.cassandraClient       = cassandraClient;
     }
 
 
@@ -78,7 +104,7 @@ public class QueueActorHelper {
                 queueName, queueMessageId, DatabaseQueueMessage.Type.INFLIGHT );
 
         if ( queueMessage == null ) {
-            return DistributedQueueService.Status.BAD_REQUEST;
+            return DistributedQueueService.Status.NOT_INFLIGHT;
         }
 
         boolean error = false;
@@ -163,5 +189,74 @@ public class QueueActorHelper {
                 qmid);
 
         return true;
+    }
+
+    void queueRefresh( String queueName ) {
+
+        Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.REFRESH_TIME).time();
+
+        try {
+
+            if (inMemoryQueue.size( queueName ) < qakkaFig.getQueueInMemorySize()) {
+
+                ShardIterator shardIterator = new ShardIterator(
+                    cassandraClient, queueName, actorSystemFig.getRegionLocal(),
+                    Shard.Type.DEFAULT, Optional.empty() );
+
+                UUID since = inMemoryQueue.getNewest( queueName );
+
+                String region = actorSystemFig.getRegionLocal();
+                MultiShardMessageIterator multiShardIterator = new MultiShardMessageIterator(
+                    cassandraClient, queueName, region, DatabaseQueueMessage.Type.DEFAULT,
+                    shardIterator, since);
+
+                int need = qakkaFig.getQueueInMemorySize() - inMemoryQueue.size( queueName );
+                int count = 0;
+
+                while ( multiShardIterator.hasNext() && count < need ) {
+                    DatabaseQueueMessage queueMessage = multiShardIterator.next();
+                    inMemoryQueue.add( queueName, queueMessage );
+                    count++;
+                }
+
+                long runs = runCount.incrementAndGet();
+                long readCount = totalRead.addAndGet( count );
+
+                if ( logger.isDebugEnabled() && runs % 100 == 0 ) {
+
+                    final DecimalFormat format = new DecimalFormat("##.###");
+                    final long nano = 1000000000;
+                    Timer t = metricsService.getMetricRegistry().timer( MetricsService.REFRESH_TIME );
+
+                    logger.debug("QueueRefresher for queue '{}' stats:\n" +
+                            "   Num runs={}\n" +
+                            "   Read count={}\n" +
+                            "   Mean={}\n" +
+                            "   One min rate={}\n" +
+                            "   Five min rate={}\n" +
+                            "   Snapshot mean={}\n" +
+                            "   Snapshot min={}\n" +
+                            "   Snapshot max={}",
+                        queueName,
+                        t.getCount(),
+                        readCount,
+                        format.format( t.getMeanRate() ),
+                        format.format( t.getOneMinuteRate() ),
+                        format.format( t.getFiveMinuteRate() ),
+                        format.format( t.getSnapshot().getMean() / nano ),
+                        format.format( (double) t.getSnapshot().getMin() / nano ),
+                        format.format( (double) t.getSnapshot().getMax() / nano ) );
+                }
+
+                if ( count > 0 ) {
+                    logger.debug( "Added {} in-memory for queue {}, new size = {}",
+                        count, queueName, inMemoryQueue.size( queueName ) );
+                }
+            }
+
+        } finally {
+            timer.close();
+        }
+
     }
 }

@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.QueueManager;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.distributed.messages.*;
+import org.apache.usergrid.persistence.qakka.exceptions.NotFoundException;
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
@@ -134,9 +135,8 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
             String queueName, String sourceRegion, String destRegion, UUID messageId,
             Long deliveryTime, Long expirationTime ) {
 
-        List<String> queueNames = queueManager.getListOfQueues();
-        if ( !queueNames.contains( queueName ) ) {
-            throw new QakkaRuntimeException( "Queue name: " + queueName + " does not exist");
+        if ( queueManager.getQueueConfig( queueName ) == null ) {
+            throw new NotFoundException( "Queue not found: " + queueName );
         }
 
         int maxRetries = qakkaFig.getMaxSendRetries();
@@ -213,9 +213,8 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
 
     public Collection<DatabaseQueueMessage> getNextMessagesInternal( String queueName, int count ) {
 
-        List<String> queueNames = queueManager.getListOfQueues();
-        if ( !queueNames.contains( queueName ) ) {
-            throw new QakkaRuntimeException( "Queue name: " + queueName + " does not exist");
+        if ( queueManager.getQueueConfig( queueName ) == null ) {
+            throw new NotFoundException( "Queue not found: " + queueName );
         }
 
         if ( actorSystemManager.getClientActor() == null || !actorSystemManager.isReady() ) {
@@ -280,9 +279,8 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     @Override
     public Status ackMessage(String queueName, UUID queueMessageId ) {
 
-        List<String> queueNames = queueManager.getListOfQueues();
-        if ( !queueNames.contains( queueName ) ) {
-            return Status.BAD_REQUEST;
+        if ( queueManager.getQueueConfig( queueName ) == null ) {
+            throw new NotFoundException( "Queue not found: " + queueName );
         }
 
         QueueAckRequest message = new QueueAckRequest( queueName, queueMessageId );
@@ -293,9 +291,8 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     @Override
     public Status requeueMessage(String queueName, UUID messageId) {
 
-        List<String> queueNames = queueManager.getListOfQueues();
-        if ( !queueNames.contains( queueName ) ) {
-            throw new QakkaRuntimeException( "Queue name: " + queueName + " does not exist");
+        if ( queueManager.getQueueConfig( queueName ) == null ) {
+            throw new NotFoundException( "Queue not found: " + queueName );
         }
 
         QueueAckRequest message = new QueueAckRequest( queueName, messageId );
@@ -306,9 +303,8 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     @Override
     public Status clearMessages(String queueName) {
 
-        List<String> queueNames = queueManager.getListOfQueues();
-        if ( !queueNames.contains( queueName ) ) {
-            throw new QakkaRuntimeException( "Queue name: " + queueName + " does not exist");
+        if ( queueManager.getQueueConfig( queueName ) == null ) {
+            throw new NotFoundException( "Queue not found: " + queueName );
         }
 
         // TODO: implement clear queue
