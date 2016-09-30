@@ -138,10 +138,6 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
     @Override
     public List<QueueMessage> getNextMessages(String queueName, int count) {
 
-        if ( queueManager.getQueueConfig( queueName ) == null ) {
-            throw new NotFoundException( "Queue not found: " + queueName );
-        }
-
         Collection<DatabaseQueueMessage> dbMessages = distributedQueueService.getNextMessages( queueName, count );
 
         List<QueueMessage> queueMessages = joinMessages( queueName, dbMessages );
@@ -210,14 +206,13 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
     @Override
     public void ackMessage(String queueName, UUID queueMessageId) {
 
-        if ( queueManager.getQueueConfig( queueName ) == null ) {
-            throw new NotFoundException( "Queue not found: " + queueName );
-        }
-
         DistributedQueueService.Status status = distributedQueueService.ackMessage( queueName, queueMessageId );
 
-        if ( DistributedQueueService.Status.BAD_REQUEST.equals( status )) {
+        if ( DistributedQueueService.Status.NOT_INFLIGHT.equals( status )) {
             throw new BadRequestException( "Message not inflight" );
+
+        } else if ( DistributedQueueService.Status.BAD_REQUEST.equals( status )) {
+            throw new BadRequestException( "Bad request" );
 
         } else if ( DistributedQueueService.Status.ERROR.equals( status )) {
             throw new QakkaRuntimeException( "Unable to ack message due to error" );
@@ -227,10 +222,6 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
 
     @Override
     public void requeueMessage(String queueName, UUID messageId, Long delayMs) {
-
-        if ( queueManager.getQueueConfig( queueName ) == null ) {
-            throw new NotFoundException( "Queue not found: " + queueName );
-        }
 
         // TODO: implement requeueMessage
 
@@ -267,7 +258,6 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
         QueueMessage queueMessage = null;
 
         // first look in INFLIGHT storage
-
 
         DatabaseQueueMessage dbMessage = queueMessageSerialization.loadMessage(
                 queueName, actorSystemFig.getRegionLocal(), null,

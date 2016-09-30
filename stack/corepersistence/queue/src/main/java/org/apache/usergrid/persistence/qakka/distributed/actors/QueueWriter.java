@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.qakka.distributed.actors;
 
 import akka.actor.UntypedActor;
 import com.codahale.metrics.Timer;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.MetricsService;
@@ -54,9 +55,8 @@ public class QueueWriter extends UntypedActor {
     private final MessageCounterSerialization messageCounterSerialization;
 
 
-    public QueueWriter() {
-
-        Injector injector = App.INJECTOR;
+    @Inject
+    public QueueWriter( Injector injector ) {
 
         messageSerialization     = injector.getInstance( QueueMessageSerialization.class );
         transferLogSerialization = injector.getInstance( TransferLogSerialization.class );

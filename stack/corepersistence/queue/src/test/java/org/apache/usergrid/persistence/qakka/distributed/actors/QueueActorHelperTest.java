@@ -53,7 +53,6 @@ public class QueueActorHelperTest extends AbstractTest {
     public void loadDatabaseQueueMessage() throws Exception {
 
         Injector injector = getInjector();
-        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
 
         injector.getInstance( App.class ); // init the INJECTOR
 
@@ -66,33 +65,39 @@ public class QueueActorHelperTest extends AbstractTest {
         app.start( "localhost", getNextAkkaPort(), region );
 
         String queueName = "qat_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
-        queueManager.createQueue( new Queue( queueName ) );
 
-        UUID queueMessageId = QakkaUtils.getTimeUuid();
+        try {
+            queueManager.createQueue( new Queue( queueName ) );
 
-        // write message
+            UUID queueMessageId = QakkaUtils.getTimeUuid();
 
-        DatabaseQueueMessage message = new DatabaseQueueMessage(
-                QakkaUtils.getTimeUuid(),
-                DatabaseQueueMessage.Type.DEFAULT,
-                queueName,
-                actorSystemFig.getRegionLocal(),
-                null,
-                System.currentTimeMillis(),
-                null,
-                queueMessageId);
-        qms.writeMessage( message );
+            // write message
 
-        // load message
+            DatabaseQueueMessage message = new DatabaseQueueMessage(
+                    QakkaUtils.getTimeUuid(),
+                    DatabaseQueueMessage.Type.DEFAULT,
+                    queueName,
+                    actorSystemFig.getRegionLocal(),
+                    null,
+                    System.currentTimeMillis(),
+                    null,
+                    queueMessageId);
+            qms.writeMessage( message );
 
-        QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
-        DatabaseQueueMessage queueMessage = helper.loadDatabaseQueueMessage(
-                queueName, message.getQueueMessageId(), message.getType() );
+            // load message
 
-        Assert.assertNotNull( queueMessage );
+            QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
+            DatabaseQueueMessage queueMessage = helper.loadDatabaseQueueMessage(
+                    queueName, message.getQueueMessageId(), message.getType() );
 
-        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
-        distributedQueueService.shutdown();
+            Assert.assertNotNull( queueMessage );
+
+            DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+            distributedQueueService.shutdown();
+
+        } finally {
+            queueManager.deleteQueue( queueName );
+        }
     }
 
 
@@ -100,8 +105,6 @@ public class QueueActorHelperTest extends AbstractTest {
     public void loadDatabaseQueueMessageNotFound() throws Exception {
 
         Injector injector = getInjector();
-        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-
 
         injector.getInstance( App.class ); // init the INJECTOR
         QueueManager queueManager = injector.getInstance( QueueManager.class );
@@ -112,20 +115,27 @@ public class QueueActorHelperTest extends AbstractTest {
         app.start( "localhost", getNextAkkaPort(), region );
 
         String queueName = "qat_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
+
         queueManager.createQueue( new Queue( queueName ) );
 
-        // don't write any message
+        try {
 
-        // load message
+            // don't write any message
 
-        QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
-        DatabaseQueueMessage queueMessage = helper.loadDatabaseQueueMessage(
+            // load message
+
+            QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
+            DatabaseQueueMessage queueMessage = helper.loadDatabaseQueueMessage(
                 queueName, QakkaUtils.getTimeUuid(), DatabaseQueueMessage.Type.DEFAULT );
 
-        Assert.assertNull( queueMessage );
+            Assert.assertNull( queueMessage );
 
-        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
-        distributedQueueService.shutdown();
+            DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+            distributedQueueService.shutdown();
+
+        } finally {
+            queueManager.deleteQueue( queueName );
+        }
     }
 
 
@@ -133,8 +143,6 @@ public class QueueActorHelperTest extends AbstractTest {
     public void putInflight() throws Exception {
 
         Injector injector = getInjector();
-        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-
 
         injector.getInstance( App.class ); // init the INJECTOR
 
@@ -153,7 +161,9 @@ public class QueueActorHelperTest extends AbstractTest {
         String queueName = "qat_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
         queueManager.createQueue( new Queue( queueName ) );
 
-        DatabaseQueueMessage message = new DatabaseQueueMessage(
+        try {
+
+            DatabaseQueueMessage message = new DatabaseQueueMessage(
                 QakkaUtils.getTimeUuid(),
                 DatabaseQueueMessage.Type.DEFAULT,
                 queueName,
@@ -161,42 +171,46 @@ public class QueueActorHelperTest extends AbstractTest {
                 null,
                 System.currentTimeMillis(),
                 null,
-                queueMessageId);
-        qms.writeMessage( message );
+                queueMessageId );
+            qms.writeMessage( message );
 
-        // put message inflight
+            // put message inflight
 
-        QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
-        helper.putInflight( queueName, message );
+            QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
+            helper.putInflight( queueName, message );
 
-        // message must be gone from messages_available table
+            // message must be gone from messages_available table
 
-        Assert.assertNull( qms.loadMessage(
+            Assert.assertNull( qms.loadMessage(
                 queueName,
                 actorSystemFig.getRegionLocal(),
                 null,
                 DatabaseQueueMessage.Type.DEFAULT,
                 message.getQueueMessageId() ) );
 
-        // message must be present in messages_inflight table
+            // message must be present in messages_inflight table
 
-        Assert.assertNotNull( qms.loadMessage(
+            Assert.assertNotNull( qms.loadMessage(
                 queueName,
                 actorSystemFig.getRegionLocal(),
                 null,
                 DatabaseQueueMessage.Type.INFLIGHT,
                 message.getQueueMessageId() ) );
 
-        // there must be an audit log record of the successful get operation
+            // there must be an audit log record of the successful get operation
 
-        AuditLogSerialization auditLogSerialization = injector.getInstance( AuditLogSerialization.class );
-        Result<AuditLog> auditLogs = auditLogSerialization.getAuditLogs( message.getMessageId() );
-        Assert.assertEquals( 1, auditLogs.getEntities().size() );
-        Assert.assertEquals( AuditLog.Status.SUCCESS, auditLogs.getEntities().get(0).getStatus()  );
-        Assert.assertEquals( AuditLog.Action.GET,     auditLogs.getEntities().get(0).getAction()  );
+            AuditLogSerialization auditLogSerialization = injector.getInstance( AuditLogSerialization.class );
+            Result<AuditLog> auditLogs = auditLogSerialization.getAuditLogs( message.getMessageId() );
+            Assert.assertEquals( 1, auditLogs.getEntities().size() );
+            Assert.assertEquals( AuditLog.Status.SUCCESS, auditLogs.getEntities().get( 0 ).getStatus() );
+            Assert.assertEquals( AuditLog.Action.GET, auditLogs.getEntities().get( 0 ).getAction() );
 
-        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
-        distributedQueueService.shutdown();
+            DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+            distributedQueueService.shutdown();
+
+        } finally {
+            queueManager.deleteQueue( queueName );
+        }
     }
 
 
@@ -222,9 +236,11 @@ public class QueueActorHelperTest extends AbstractTest {
         String queueName = "qat_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
         queueManager.createQueue( new Queue( queueName ) );
 
-        // write message to messages_inflight table
+        try {
 
-        DatabaseQueueMessage message = new DatabaseQueueMessage(
+            // write message to messages_inflight table
+
+            DatabaseQueueMessage message = new DatabaseQueueMessage(
                 QakkaUtils.getTimeUuid(),
                 DatabaseQueueMessage.Type.INFLIGHT,
                 queueName,
@@ -232,34 +248,38 @@ public class QueueActorHelperTest extends AbstractTest {
                 null,
                 System.currentTimeMillis(),
                 null,
-                queueMessageId);
-        qms.writeMessage( message );
+                queueMessageId );
+            qms.writeMessage( message );
 
-        // ack message
+            // ack message
 
-        QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
-        helper.ackQueueMessage( queueName, message.getQueueMessageId() );
+            QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
+            helper.ackQueueMessage( queueName, message.getQueueMessageId() );
 
-        // message must be gone from messages_available table
+            // message must be gone from messages_available table
 
-        Assert.assertNull( helper.loadDatabaseQueueMessage(
-                queueName, QakkaUtils.getTimeUuid(), DatabaseQueueMessage.Type.INFLIGHT ));
+            Assert.assertNull( helper.loadDatabaseQueueMessage(
+                queueName, QakkaUtils.getTimeUuid(), DatabaseQueueMessage.Type.INFLIGHT ) );
 
-        // message must be gone from messages_inflight table
+            // message must be gone from messages_inflight table
 
-        Assert.assertNull( helper.loadDatabaseQueueMessage(
-                queueName, QakkaUtils.getTimeUuid(), DatabaseQueueMessage.Type.DEFAULT ));
+            Assert.assertNull( helper.loadDatabaseQueueMessage(
+                queueName, QakkaUtils.getTimeUuid(), DatabaseQueueMessage.Type.DEFAULT ) );
 
-        // there should be an audit log record of the successful ack operation
+            // there should be an audit log record of the successful ack operation
 
-        AuditLogSerialization auditLogSerialization = injector.getInstance( AuditLogSerialization.class );
-        Result<AuditLog> auditLogs = auditLogSerialization.getAuditLogs( message.getMessageId() );
-        Assert.assertEquals( 1, auditLogs.getEntities().size() );
-        Assert.assertEquals( AuditLog.Status.SUCCESS, auditLogs.getEntities().get(0).getStatus()  );
-        Assert.assertEquals( AuditLog.Action.ACK,     auditLogs.getEntities().get(0).getAction()  );
+            AuditLogSerialization auditLogSerialization = injector.getInstance( AuditLogSerialization.class );
+            Result<AuditLog> auditLogs = auditLogSerialization.getAuditLogs( message.getMessageId() );
+            Assert.assertEquals( 1, auditLogs.getEntities().size() );
+            Assert.assertEquals( AuditLog.Status.SUCCESS, auditLogs.getEntities().get( 0 ).getStatus() );
+            Assert.assertEquals( AuditLog.Action.ACK, auditLogs.getEntities().get( 0 ).getAction() );
 
-        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
-        distributedQueueService.shutdown();
+            DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+            distributedQueueService.shutdown();
+
+        } finally {
+            queueManager.deleteQueue( queueName );
+        }
     }
 
 
@@ -267,8 +287,6 @@ public class QueueActorHelperTest extends AbstractTest {
     public void ackQueueMessageNotFound() throws Exception {
 
         Injector injector = getInjector();
-        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
-
 
         injector.getInstance( App.class ); // init the INJECTOR
         QueueManager queueManager     = injector.getInstance( QueueManager.class );
@@ -281,17 +299,23 @@ public class QueueActorHelperTest extends AbstractTest {
         String queueName = "qat_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
         queueManager.createQueue( new Queue( queueName ) );
 
-        // don't write message, just make up some bogus IDs
+        try {
 
-        UUID queueMessageId = QakkaUtils.getTimeUuid();
+            // don't write message, just make up some bogus IDs
 
-        // ack message must fail
+            UUID queueMessageId = QakkaUtils.getTimeUuid();
 
-        QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
-        Assert.assertEquals( DistributedQueueService.Status.BAD_REQUEST,
-            helper.ackQueueMessage( queueName, queueMessageId ));
+            // ack message must fail
 
-        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
-        distributedQueueService.shutdown();
+            QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
+            Assert.assertEquals( DistributedQueueService.Status.NOT_INFLIGHT,
+                helper.ackQueueMessage( queueName, queueMessageId ) );
+
+            DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+            distributedQueueService.shutdown();
+
+        } finally {
+            queueManager.deleteQueue( queueName );
+        }
     }
 }

@@ -70,9 +70,9 @@ public class QueueMessageManagerTest extends AbstractTest {
     @Test
     public void testBasicOperation() throws Exception {
 
-        Injector injector = getInjector();
+        String queueName = "qmmt_queue_" + RandomStringUtils.randomAlphanumeric(15);
 
-        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
+        Injector injector = getInjector();
 
         DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
         ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
@@ -82,54 +82,60 @@ public class QueueMessageManagerTest extends AbstractTest {
         app.start( "localhost", getNextAkkaPort(), region );
 
         // create queue and send one message to it
-        String queueName = "qmmt_queue_" + RandomStringUtils.randomAlphanumeric(15);
         QueueManager queueManager = injector.getInstance( QueueManager.class );
-        QueueMessageManager qmm = injector.getInstance( QueueMessageManager.class );
-        queueManager.createQueue( new Queue( queueName, "test-type", region, region, 0L, 5, 10, null ));
-        String jsonData = "{}";
-        qmm.sendMessages( queueName, Collections.singletonList(region), null, null,
-                "application/json", DataType.serializeValue( jsonData, ProtocolVersion.NEWEST_SUPPORTED) );
 
-        distributedQueueService.refresh();
-        Thread.sleep(1000);
+        try {
 
-        // get message from the queue
-        List<QueueMessage> messages = qmm.getNextMessages( queueName, 1 );
-        Assert.assertEquals( 1, messages.size() );
-        QueueMessage message = messages.get(0);
+            QueueMessageManager qmm = injector.getInstance( QueueMessageManager.class );
+            queueManager.createQueue( new Queue( queueName, "test-type", region, region, 0L, 5, 10, null ) );
+            String jsonData = "{}";
+            qmm.sendMessages( queueName, Collections.singletonList( region ), null, null,
+                "application/json", DataType.serializeValue( jsonData, ProtocolVersion.NEWEST_SUPPORTED ) );
 
-        // test that queue message data is present and correct
-        QueueMessageSerialization qms = injector.getInstance( QueueMessageSerialization.class );
-        DatabaseQueueMessageBody data = qms.loadMessageData( message.getMessageId() );
-        Assert.assertNotNull( data );
-        Assert.assertEquals( "application/json", data.getContentType() );
-        String jsonDataReturned = new String( data.getBlob().array(), Charset.forName("UTF-8") );
-        Assert.assertEquals( jsonData, jsonDataReturned );
+            distributedQueueService.refresh();
+            Thread.sleep( 1000 );
 
-        // test that transfer log is empty for our queue
-        TransferLogSerialization tlogs = injector.getInstance( TransferLogSerialization.class );
-        Result<TransferLog> all = tlogs.getAllTransferLogs( null, 1000 );
-        List<TransferLog> logs = all.getEntities().stream()
+            // get message from the queue
+            List<QueueMessage> messages = qmm.getNextMessages( queueName, 1 );
+            Assert.assertEquals( 1, messages.size() );
+            QueueMessage message = messages.get( 0 );
+
+            // test that queue message data is present and correct
+            QueueMessageSerialization qms = injector.getInstance( QueueMessageSerialization.class );
+            DatabaseQueueMessageBody data = qms.loadMessageData( message.getMessageId() );
+            Assert.assertNotNull( data );
+            Assert.assertEquals( "application/json", data.getContentType() );
+            String jsonDataReturned = new String( data.getBlob().array(), Charset.forName( "UTF-8" ) );
+            Assert.assertEquals( jsonData, jsonDataReturned );
+
+            // test that transfer log is empty for our queue
+            TransferLogSerialization tlogs = injector.getInstance( TransferLogSerialization.class );
+            Result<TransferLog> all = tlogs.getAllTransferLogs( null, 1000 );
+            List<TransferLog> logs = all.getEntities().stream()
                 .filter( log -> log.getQueueName().equals( queueName ) ).collect( Collectors.toList() );
-        Assert.assertTrue( logs.isEmpty() );
+            Assert.assertTrue( logs.isEmpty() );
 
-        // ack the message
-        qmm.ackMessage( queueName, message.getQueueMessageId() );
+            // ack the message
+            qmm.ackMessage( queueName, message.getQueueMessageId() );
 
-        // test that message is no longer stored in non-replicated keyspace
+            // test that message is no longer stored in non-replicated keyspace
 
-        Assert.assertNull( qms.loadMessage( queueName, region, null,
-                DatabaseQueueMessage.Type.DEFAULT, message.getQueueMessageId() ));
+            Assert.assertNull( qms.loadMessage( queueName, region, null,
+                DatabaseQueueMessage.Type.DEFAULT, message.getQueueMessageId() ) );
 
-        Assert.assertNull( qms.loadMessage( queueName, region, null,
-                DatabaseQueueMessage.Type.INFLIGHT, message.getQueueMessageId() ));
+            Assert.assertNull( qms.loadMessage( queueName, region, null,
+                DatabaseQueueMessage.Type.INFLIGHT, message.getQueueMessageId() ) );
 
-        // test that audit log entry was written
-        AuditLogSerialization auditLogSerialization = injector.getInstance( AuditLogSerialization.class );
-        Result<AuditLog> auditLogs = auditLogSerialization.getAuditLogs( message.getMessageId() );
-        Assert.assertEquals( 3, auditLogs.getEntities().size() );
+            // test that audit log entry was written
+            AuditLogSerialization auditLogSerialization = injector.getInstance( AuditLogSerialization.class );
+            Result<AuditLog> auditLogs = auditLogSerialization.getAuditLogs( message.getMessageId() );
+            Assert.assertEquals( 3, auditLogs.getEntities().size() );
 
-        distributedQueueService.shutdown();
+            distributedQueueService.shutdown();
+
+        } finally {
+            queueManager.deleteQueue( queueName );
+        }
     }
 
 
@@ -137,8 +143,6 @@ public class QueueMessageManagerTest extends AbstractTest {
     public void testQueueMessageTimeouts() throws Exception {
 
         Injector injector = getInjector();
-
-        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
 
         DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
         QakkaFig qakkaFig             = injector.getInstance( QakkaFig.class );
@@ -152,74 +156,82 @@ public class QueueMessageManagerTest extends AbstractTest {
         // create some number of queue messages
 
         QueueManager queueManager = injector.getInstance( QueueManager.class );
-        QueueMessageManager qmm   = injector.getInstance( QueueMessageManager.class );
-        String queueName = "queue_testQueueMessageTimeouts_" + RandomStringUtils.randomAlphanumeric(15);
-        queueManager.createQueue( new Queue( queueName, "test-type", region, region, 0L, 5, 10, null ));
 
-        int numMessages = 40;
+        String queueName = "queue_testQueueMessageTimeouts_" + RandomStringUtils.randomAlphanumeric( 15 );
 
-        for ( int i=0; i<numMessages; i++ ) {
-            qmm.sendMessages(
+        try {
+
+            QueueMessageManager qmm = injector.getInstance( QueueMessageManager.class );
+            queueManager.createQueue( new Queue( queueName, "test-type", region, region, 0L, 5, 10, null ) );
+
+            int numMessages = 40;
+
+            for (int i = 0; i < numMessages; i++) {
+                qmm.sendMessages(
                     queueName,
                     Collections.singletonList( region ),
                     null, // delay
                     null, // expiration
                     "application/json",
                     DataType.serializeValue( "{}", ProtocolVersion.NEWEST_SUPPORTED ) );
-        }
-
-        int maxRetries = 15;
-        int retries = 0;
-        while ( retries++ < maxRetries ) {
-            distributedQueueService.refresh();
-            if (inMemoryQueue.size( queueName ) == 40) {
-                break;
             }
-            Thread.sleep( 500 );
-        }
 
-        Assert.assertEquals( numMessages, qmm.getQueueDepth( queueName ) );
-
-        // get all messages from queue
-
-        List<QueueMessage> messages = qmm.getNextMessages( queueName, numMessages );
-        Assert.assertEquals( numMessages, messages.size() );
-
-        // ack half of the messages
-
-        List<QueueMessage> remove = new ArrayList<>();
-
-        for ( int i=0; i<numMessages/2; i++ ) {
-            QueueMessage queueMessage = messages.get( i );
-            qmm.ackMessage( queueName, queueMessage.getQueueMessageId() );
-            remove.add( queueMessage );
-        }
-
-        for ( QueueMessage message : remove ) {
-            messages.remove( message );
-        }
-
-        // wait for twice timeout period
-
-        Thread.sleep( 2 * qakkaFig.getQueueTimeoutSeconds()*1000 );
-
-        distributedQueueService.processTimeouts();
-
-        Thread.sleep( qakkaFig.getQueueTimeoutSeconds()*1000 );
-
-        // attempt to ack other half of messages
-
-        for ( QueueMessage message : messages ) {
-            try {
-                qmm.ackMessage( queueName, message.getQueueMessageId() );
-                Assert.fail("Message should have timed out by now");
-
-            } catch ( QakkaRuntimeException expected ) {
-                // keep on going...
+            int maxRetries = 15;
+            int retries = 0;
+            while (retries++ < maxRetries) {
+                distributedQueueService.refresh();
+                if (inMemoryQueue.size( queueName ) == 40) {
+                    break;
+                }
+                Thread.sleep( 500 );
             }
-        }
 
-        distributedQueueService.shutdown();
+            Assert.assertEquals( numMessages, qmm.getQueueDepth( queueName ) );
+
+            // get all messages from queue
+
+            List<QueueMessage> messages = qmm.getNextMessages( queueName, numMessages );
+            Assert.assertEquals( numMessages, messages.size() );
+
+            // ack half of the messages
+
+            List<QueueMessage> remove = new ArrayList<>();
+
+            for (int i = 0; i < numMessages / 2; i++) {
+                QueueMessage queueMessage = messages.get( i );
+                qmm.ackMessage( queueName, queueMessage.getQueueMessageId() );
+                remove.add( queueMessage );
+            }
+
+            for (QueueMessage message : remove) {
+                messages.remove( message );
+            }
+
+            // wait for twice timeout period
+
+            Thread.sleep( 2 * qakkaFig.getQueueTimeoutSeconds() * 1000 );
+
+            distributedQueueService.processTimeouts();
+
+            Thread.sleep( qakkaFig.getQueueTimeoutSeconds() * 1000 );
+
+            // attempt to ack other half of messages
+
+            for (QueueMessage message : messages) {
+                try {
+                    qmm.ackMessage( queueName, message.getQueueMessageId() );
+                    Assert.fail( "Message should have timed out by now" );
+
+                } catch (QakkaRuntimeException expected) {
+                    // keep on going...
+                }
+            }
+
+            distributedQueueService.shutdown();
+
+        } finally {
+            queueManager.deleteQueue( queueName );
+        }
     }
 
 

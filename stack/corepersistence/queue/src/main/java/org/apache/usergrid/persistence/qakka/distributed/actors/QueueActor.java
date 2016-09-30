@@ -24,7 +24,9 @@ import akka.actor.Cancellable;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import com.codahale.metrics.Timer;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
+import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
 import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.MetricsService;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
@@ -65,10 +67,13 @@ public class QueueActor extends UntypedActor {
     private final AtomicLong messageCount = new AtomicLong(0);
     private final Set<String> queuesSeen = new HashSet<>();
 
+    private final Injector injector;
 
-    public QueueActor() {
 
-        Injector injector = App.INJECTOR;
+    @Inject
+    public QueueActor( Injector injector ) {
+
+        this.injector = injector;
 
         qakkaFig         = injector.getInstance( QakkaFig.class );
         inMemoryQueue    = injector.getInstance( InMemoryQueue.class );
@@ -107,7 +112,7 @@ public class QueueActor extends UntypedActor {
                         getContext().dispatcher(),
                         getSelf());
                 timeoutSchedulersByQueueName.put( request.getQueueName(), scheduler );
-                logger.debug("Created scheduler for queue {}", request.getQueueName() );
+                logger.debug("Created timeouter for queue {}", request.getQueueName() );
             }
 
             if ( shardAllocationSchedulersByQueueName.get( request.getQueueName() ) == null ) {
@@ -126,18 +131,20 @@ public class QueueActor extends UntypedActor {
             QueueRefreshRequest request = (QueueRefreshRequest)message;
 
             queuesSeen.add( request.getQueueName() );
+            queueActorHelper.queueRefresh( request.getQueueName() );
 
-            if ( queueReadersByQueueName.get( request.getQueueName() ) == null ) {
-
-                if ( !request.isOnlyIfEmpty() || inMemoryQueue.peek( request.getQueueName()) == null ) {
-                    ActorRef readerRef = getContext().actorOf( Props.create(
-                        QueueRefresher.class, request.getQueueName()), request.getQueueName() + "_reader");
-                    queueReadersByQueueName.put( request.getQueueName(), readerRef );
-                }
-            }
-
-            // hand-off to queue's reader
-            queueReadersByQueueName.get( request.getQueueName() ).tell( request, self() );
+//            if ( queueReadersByQueueName.get( request.getQueueName() ) == null ) {
+//
+//                if ( !request.isOnlyIfEmpty() || inMemoryQueue.peek( request.getQueueName()) == null ) {
+//                    ActorRef readerRef = getContext().actorOf(
+//                        Props.create( GuiceActorProducer.class, injector, QueueRefresher.class ),
+//                        request.getQueueName() + "_reader");
+//                    queueReadersByQueueName.put( request.getQueueName(), readerRef );
+//                }
+//            }
+//
+//            // hand-off to queue's reader
+//            queueReadersByQueueName.get( request.getQueueName() ).tell( request, self() );
 
         } else if ( message instanceof QueueTimeoutRequest ) {
             QueueTimeoutRequest request = (QueueTimeoutRequest)message;
@@ -145,8 +152,9 @@ public class QueueActor extends UntypedActor {
             queuesSeen.add( request.getQueueName() );
 
             if ( queueTimeoutersByQueueName.get( request.getQueueName() ) == null ) {
-                ActorRef readerRef = getContext().actorOf( Props.create(
-                    QueueTimeouter.class, request.getQueueName()), request.getQueueName() + "_timeouter");
+                ActorRef readerRef = getContext().actorOf(
+                    Props.create( GuiceActorProducer.class, injector, QueueTimeouter.class),
+                    request.getQueueName() + "_timeouter");
                 queueTimeoutersByQueueName.put( request.getQueueName(), readerRef );
             }
 
@@ -160,8 +168,9 @@ public class QueueActor extends UntypedActor {
             queuesSeen.add( request.getQueueName() );
 
             if ( shardAllocatorsByQueueName.get( request.getQueueName() ) == null ) {
-                ActorRef readerRef = getContext().actorOf( Props.create(
-                        ShardAllocator.class, request.getQueueName()), request.getQueueName() + "_shard_allocator");
+                ActorRef readerRef = getContext().actorOf(
+                    Props.create( GuiceActorProducer.class, injector, ShardAllocator.class),
+                    request.getQueueName() + "_shard_allocator");
                 shardAllocatorsByQueueName.put( request.getQueueName(), readerRef );
             }
 
@@ -181,15 +190,15 @@ public class QueueActor extends UntypedActor {
 
                 while (queueMessages.size() < queueGetRequest.getNumRequested()) {
 
-                    DatabaseQueueMessage queueMessage = inMemoryQueue.poll( queueGetRequest.getQueueName() );
+                    DatabaseQueueMessage queueMessage = inMemoryQueue.peek( queueGetRequest.getQueueName() );
 
                     if (queueMessage != null) {
                         if (queueActorHelper.putInflight( queueGetRequest.getQueueName(), queueMessage )) {
                             queueMessages.add( queueMessage );
                         }
                     } else {
-//                        logger.debug("in-memory queue for {} is empty, object is: {}",
-//                                queueGetRequest.getQueueName(), inMemoryQueue );
+                        logger.debug("in-memory queue for {} is empty, object is: {}",
+                                queueGetRequest.getQueueName(), inMemoryQueue );
                         break;
                     }
                 }
@@ -198,6 +207,9 @@ public class QueueActor extends UntypedActor {
                     queueGetRequest.getQueueName(),
                     DatabaseQueueMessage.Type.DEFAULT,
                     queueMessages.size());
+
+                logger.debug("{} returning {} for queue {}",
+                    this, queueMessages.size(), queueGetRequest.getQueueName());
 
                 getSender().tell( new QueueGetResponse(
                         DistributedQueueService.Status.SUCCESS, queueMessages ), getSender() );

@@ -25,6 +25,7 @@ import akka.cluster.client.ClusterClient;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.codahale.metrics.Timer;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
@@ -63,9 +64,9 @@ public class QueueSender extends UntypedActor {
     private final QakkaFig qakkaFig;
     private final MetricsService            metricsService;
 
-    public QueueSender() {
 
-        Injector injector = App.INJECTOR;
+    @Inject
+    public QueueSender( Injector injector ) {
 
         actorSystemManager       = injector.getInstance( ActorSystemManager.class );
         transferLogSerialization = injector.getInstance( TransferLogSerialization.class );

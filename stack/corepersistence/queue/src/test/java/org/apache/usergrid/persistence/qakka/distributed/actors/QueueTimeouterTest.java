@@ -22,8 +22,10 @@ package org.apache.usergrid.persistence.qakka.distributed.actors;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import com.google.inject.Injector;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
@@ -58,7 +60,7 @@ public class QueueTimeouterTest extends AbstractTest {
 
         CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
 
-        getInjector().getInstance( App.class ); // init the INJECTOR
+        Injector injector = getInjector();
 
         QakkaFig qakkaFig             = getInjector().getInstance( QakkaFig.class );
         ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
@@ -110,7 +112,8 @@ public class QueueTimeouterTest extends AbstractTest {
         // run timeouter actor
 
         ActorSystem system = ActorSystem.create("Test-" + queueName);
-        ActorRef timeouterRef = system.actorOf( Props.create( QueueTimeouter.class, queueName ), "timeouter");
+        ActorRef timeouterRef = system.actorOf( Props.create(
+            GuiceActorProducer.class, injector, QueueTimeouter.class), "timeouter");
         QueueTimeoutRequest qtr = new QueueTimeoutRequest( queueName );
         timeouterRef.tell( qtr, null ); // tell sends message, returns immediately
 

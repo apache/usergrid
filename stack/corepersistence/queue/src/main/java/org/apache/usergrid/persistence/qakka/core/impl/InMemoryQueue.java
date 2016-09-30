@@ -19,8 +19,10 @@
 
 package org.apache.usergrid.persistence.qakka.core.impl;
 
+import com.datastax.driver.core.utils.UUIDs;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.distributed.actors.QueueRefresher;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
@@ -71,7 +73,14 @@ public class InMemoryQueue {
     }
 
     public UUID getNewest( String queueName ) {
-        return newestByQueueName.get( queueName );
+        UUID newest = newestByQueueName.get( queueName );
+//        if ( newest == null ) {
+//            // Create oldest UUID from a UNIX timestamp via DataStax utility
+//            // https://docs.datastax.com/en/drivers/java/2.0/com/datastax/driver/core/utils/UUIDs.html
+//            newest = UUIDs.startOf( 0L );
+//            newestByQueueName.put( queueName, newest );
+//        }
+        return newest;
     }
 
     public DatabaseQueueMessage poll( String queueName ) {

@@ -44,9 +44,6 @@ import org.slf4j.LoggerFactory;
 public class App implements MetricsService {
     private static final Logger logger = LoggerFactory.getLogger( App.class );
 
-    // TODO: can we avoid this kludge with better Akka-Guice integration?
-    static public Injector INJECTOR;
-
     private final ActorSystemFig          actorSystemFig;
     private final ActorSystemManager      actorSystemManager;
     private final DistributedQueueService distributedQueueService;
@@ -55,14 +52,16 @@ public class App implements MetricsService {
 
     @Inject
     public App(
-            Injector                  injector,
             QakkaFig                  qakkaFig,
             ActorSystemFig            actorSystemFig,
             ActorSystemManager        actorSystemManager,
             DistributedQueueService   distributedQueueService,
-            MigrationManager          migrationManager) {
+            MigrationManager          migrationManager,
+            QueueActorRouterProducer  queueActorRouterProducer,
+            QueueWriterRouterProducer queueWriterRouterProducer,
+            QueueSenderRouterProducer queueSenderRouterProducer
+            ) {
 
-        this.INJECTOR = injector;
         this.actorSystemFig = actorSystemFig;
         this.actorSystemManager = actorSystemManager;
         this.distributedQueueService = distributedQueueService;
@@ -74,9 +73,9 @@ public class App implements MetricsService {
             } catch (MigrationException e) {
                 throw new QakkaRuntimeException( "Error running migration", e );
             }
-            actorSystemManager.registerRouterProducer( injector.getInstance( QueueActorRouterProducer.class ) );
-            actorSystemManager.registerRouterProducer( injector.getInstance( QueueWriterRouterProducer.class ) );
-            actorSystemManager.registerRouterProducer( injector.getInstance( QueueSenderRouterProducer.class ) );
+            actorSystemManager.registerRouterProducer( queueActorRouterProducer );
+            actorSystemManager.registerRouterProducer( queueWriterRouterProducer );
+            actorSystemManager.registerRouterProducer( queueSenderRouterProducer );
         }
     }
 

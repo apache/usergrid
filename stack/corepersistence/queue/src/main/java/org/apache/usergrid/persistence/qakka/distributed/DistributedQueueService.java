@@ -30,7 +30,7 @@ import java.util.UUID;
  */
 public interface DistributedQueueService {
 
-    enum Status { SUCCESS, ERROR, BAD_REQUEST };
+    enum Status { SUCCESS, ERROR, BAD_REQUEST, NOT_INFLIGHT };
 
     void init();
 
