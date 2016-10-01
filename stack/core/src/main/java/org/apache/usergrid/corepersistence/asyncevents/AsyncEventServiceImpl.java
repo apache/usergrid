@@ -876,23 +876,15 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     public void indexBatch(final List<EdgeScope> edges, final long updatedSince) {
 
-        IndexOperationMessage batch = new IndexOperationMessage();
+        final List<EntityIndexEvent> batch = new ArrayList<>();
+        edges.forEach(e -> {
 
-        for ( EdgeScope e : edges){
+            //change to id scope to avoid serialization issues
+            batch.add(new EntityIndexEvent(queueFig.getPrimaryRegion(), new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode()), updatedSince));
 
-            EntityIndexOperation entityIndexOperation =
-                new EntityIndexOperation( e.getApplicationScope(), e.getEdge().getTargetNode(), updatedSince);
+        });
 
-            IndexOperationMessage indexOperationMessage =
-                eventBuilder.buildEntityIndex( entityIndexOperation ).toBlocking().lastOrDefault(null);
-
-            if (indexOperationMessage != null){
-                batch.ingest(indexOperationMessage);
-            }
-
-        }
-
-        queueIndexOperationMessage(batch);
+        offerBatch( batch );
     }
 
 
