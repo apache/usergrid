@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -113,6 +114,8 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         //load our last emitted Scope if a cursor is present
 
+        final AtomicInteger count = new AtomicInteger();
+
         final Optional<EdgeScope> cursor = parseCursor( reIndexRequestBuilder.getCursor() );
 
 
@@ -161,29 +164,21 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         }
 
-        Observable<List<EdgeScope>> runningReIndex = allEntityIdsObservable.getEdgesToEntities( applicationScopes,
+        allEntityIdsObservable.getEdgesToEntities( applicationScopes,
             reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
-
             .buffer( indexProcessorFig.getReindexBufferSize())
-            .flatMap( edgeScopes -> Observable.just(edgeScopes)
-                .doOnNext(edges -> {
+            .doOnNext( edgeScopes -> {
+                logger.info("Sending batch of {} to be indexed.", edgeScopes.size());
+                indexService.indexBatch(edgeScopes, modifiedSince);
+                count.addAndGet(edgeScopes.size() );
+                if( edgeScopes.size() > 0 ) {
+                    writeCursorState(jobId, edgeScopes.get(edgeScopes.size() - 1));
+                }
+                writeStateMeta( jobId, Status.INPROGRESS, count.get(), System.currentTimeMillis() ); })
+            .doOnCompleted(() -> writeStateMeta( jobId, Status.COMPLETE, count.get(), System.currentTimeMillis() ))
+            .subscribeOn( Schedulers.io() ).subscribe();
 
-                    logger.info("Sending batch of {} to be indexed.", edges.size());
-                    indexService.indexBatch(edges, modifiedSince);
-                })
-                .subscribeOn( Schedulers.io() ), indexProcessorFig.getReindexConcurrencyFactor());
-
-
-        // start our sampler and state persistence
-        // take a sample every sample interval to allow us to resume state with minimal loss
-        // create our flushing collector and flush the edge scopes to it
-        runningReIndex.collect(() -> new FlushingCollector(jobId),
-            ((flushingCollector, edgeScopes) -> flushingCollector.flushBuffer(edgeScopes)))
-                .doOnNext( flushingCollector-> flushingCollector.complete() )
-                //subscribe on our I/O scheduler and run the task
-                .subscribeOn( Schedulers.io() ).subscribe(); //want reindex to continually run so leave subscribe.
-
-
+        
         return new ReIndexStatus( jobId, Status.STARTED, 0, 0 );
     }
 
