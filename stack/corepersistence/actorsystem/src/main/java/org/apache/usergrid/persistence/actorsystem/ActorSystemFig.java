@@ -40,6 +40,15 @@ public interface ActorSystemFig extends GuicyFig, Serializable {
 
     String CLUSTER_PORT = "usergrid.cluster.port";
 
+    String CLUSTER_IO_EXECUTOR_TYPE = "usergrid.cluster.io.executor";
+
+    String CLUSTER_IO_EXECUTOR_THREAD_POOL_SIZE = "usergrid.cluster.io.thread-pool-size";
+
+    String CLUSTER_IO_EXECUTOR_REJECTION_POLICY = "usergrid.cluster.io.rejection-policy";
+
+
+
+
 
     /**
      * Use Cluster or nah
@@ -76,8 +85,38 @@ public interface ActorSystemFig extends GuicyFig, Serializable {
     @Default("2551")
     String getPort();
 
-
+    /**
+     *  Hostname used for advertising to the cluster what itself should be reference as
+     */
     @Key("usergrid.cluster.hostname")
     @Default("")
     String getHostname();
+
+    /**
+     *  Possible executor types for any blocking IO actors in the actor system.
+     */
+    @Key(CLUSTER_IO_EXECUTOR_TYPE)
+    @Default("thread-pool-executor")
+    String getClusterIoExecutorType();
+
+    /**
+     *  Number of threads to be used when using the fixed thread pool size in the blocking IO executor
+     *  Not relevant if anything other than "thread-pool-executor" is configured.
+     */
+    @Key(CLUSTER_IO_EXECUTOR_THREAD_POOL_SIZE)
+    @Default("25")
+    int getClusterIoExecutorThreadPoolSize();
+
+    /** Only used with "thread-pool-executor" and the following values are valid:
+     *
+     *  abort-policy
+     *  caller-runs-policy
+     *  discard-oldest-policy
+     *  discard-policy
+     *
+     *  Not relevant if anything other than "thread-pool-executor" is configured.
+     */
+    @Key(CLUSTER_IO_EXECUTOR_REJECTION_POLICY)
+    @Default("caller-runs-policy")
+    String getClusterIoExecutorRejectionPolicy();
 }
