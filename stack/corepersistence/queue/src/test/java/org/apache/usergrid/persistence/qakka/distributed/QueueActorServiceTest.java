@@ -166,6 +166,7 @@ public class QueueActorServiceTest extends AbstractTest {
                     count = 100;
                     break;
                 }
+                count = inMemoryQueue.size( queueName );
                 Thread.sleep( 1000 );
             }
 

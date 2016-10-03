@@ -57,8 +57,6 @@ public class LegacyQueueManagerTest extends AbstractTest {
 
         Injector myInjector = getInjector();
 
-        CassandraClient cassandraClient = myInjector.getInstance( CassandraClientImpl.class );
-
         ActorSystemFig actorSystemFig = myInjector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
 
@@ -83,7 +81,7 @@ public class LegacyQueueManagerTest extends AbstractTest {
         }
 
         messageList = qm.getMessages(1, String.class);
-        assertTrue(messageList.size() <= 0);
+        assertEquals( 0, messageList.size() );
 
         DistributedQueueService distributedQueueService = myInjector.getInstance( DistributedQueueService.class );
         distributedQueueService.shutdown();
@@ -125,19 +123,16 @@ public class LegacyQueueManagerTest extends AbstractTest {
         qm.commitMessages(messageList);
 
         messageList = qm.getMessages(1, values.getClass());
-        assertTrue(messageList.size() <= 0);
+        assertEquals( 0, messageList.size());
 
         DistributedQueueService distributedQueueService = myInjector.getInstance( DistributedQueueService.class );
         distributedQueueService.shutdown();
     }
 
     @Test
-    @Ignore("Not implemented yet")
     public void queueSize() throws Exception{
 
         Injector myInjector = getInjector();
-
-        CassandraClient cassandraClient = myInjector.getInstance( CassandraClientImpl.class );
 
         ActorSystemFig actorSystemFig = myInjector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
