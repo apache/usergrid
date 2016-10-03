@@ -56,7 +56,7 @@ public class QueueResourceTest extends AbstractRestTest {
 
         // create a queue
 
-        String queueName = "qrt_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
+        String queueName = "qrt_create_" + RandomStringUtils.randomAlphanumeric( 10 );
         Map<String, Object> queueMap = new HashMap<String, Object>() {{
             put("name", queueName);
         }};
@@ -87,7 +87,7 @@ public class QueueResourceTest extends AbstractRestTest {
 
         // create a queue
 
-        String queueName = "qrt_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
+        String queueName = "qrt_delete_" + RandomStringUtils.randomAlphanumeric( 10 );
         Map<String, Object> queueMap = new HashMap<String, Object>() {{ put("name", queueName); }};
         Response response = target("queues").request()
                 .post( Entity.entity( queueMap, MediaType.APPLICATION_JSON_TYPE));
@@ -149,7 +149,7 @@ public class QueueResourceTest extends AbstractRestTest {
 
         // create a queue
 
-        String queueName = "qrt_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
+        String queueName = "qrt_json_" + RandomStringUtils.randomAlphanumeric( 10 );
         Map<String, Object> queueMap = new HashMap<String, Object>() {{
             put( "name", queueName );
         }};
@@ -238,7 +238,7 @@ public class QueueResourceTest extends AbstractRestTest {
 
         // create a queue
 
-        String queueName = "qrt_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
+        String queueName = "qrt_binarty_" + RandomStringUtils.randomAlphanumeric( 10 );
         Map<String, Object> queueMap = new HashMap<String, Object>() {{
             put( "name", queueName );
         }};
@@ -316,7 +316,7 @@ public class QueueResourceTest extends AbstractRestTest {
 
         // create a queue
 
-        String queueName = "qrt_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
+        String queueName = "qrt_timeout_" + RandomStringUtils.randomAlphanumeric( 10 );
         Map<String, Object> queueMap = new HashMap<String, Object>() {{ put("name", queueName); }};
         target("queues").request().post( Entity.entity( queueMap, MediaType.APPLICATION_JSON_TYPE));
 

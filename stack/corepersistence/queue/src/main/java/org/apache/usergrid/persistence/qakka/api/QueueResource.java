@@ -44,12 +44,11 @@ import java.util.UUID;
 public class QueueResource {
     private static final Logger logger = LoggerFactory.getLogger( QueueResource.class );
 
-    private final QueueManager queueManager;
+    private final QueueManager        queueManager;
     private final QueueMessageManager queueMessageManager;
-    private final MetricsService            metricsService;
-    private final URIStrategy               uriStrategy;
-    private final Regions regions;
-    private final ShardCounterSerialization shardCounterSerialization;
+    private final MetricsService      metricsService;
+    private final URIStrategy         uriStrategy;
+    private final Regions             regions;
 
 
     @Inject
@@ -58,15 +57,13 @@ public class QueueResource {
             QueueMessageManager       queueMessageManager,
             MetricsService            metricsService,
             URIStrategy               uriStrategy,
-            Regions                   regions,
-            ShardCounterSerialization shardCounterSerialization ) {
+            Regions                   regions ) {
 
         this.queueManager              = queueManager;
         this.queueMessageManager       = queueMessageManager;
         this.metricsService            = metricsService;
         this.uriStrategy               = uriStrategy;
         this.regions                   = regions;
-        this.shardCounterSerialization = shardCounterSerialization;
     }
 
 
