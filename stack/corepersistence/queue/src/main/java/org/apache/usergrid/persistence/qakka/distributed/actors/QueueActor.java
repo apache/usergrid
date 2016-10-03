@@ -190,7 +190,7 @@ public class QueueActor extends UntypedActor {
 
                 while (queueMessages.size() < queueGetRequest.getNumRequested()) {
 
-                    DatabaseQueueMessage queueMessage = inMemoryQueue.peek( queueGetRequest.getQueueName() );
+                    DatabaseQueueMessage queueMessage = inMemoryQueue.poll( queueGetRequest.getQueueName() );
 
                     if (queueMessage != null) {
                         if (queueActorHelper.putInflight( queueGetRequest.getQueueName(), queueMessage )) {

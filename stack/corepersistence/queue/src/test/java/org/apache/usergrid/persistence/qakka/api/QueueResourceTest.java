@@ -76,6 +76,9 @@ public class QueueResourceTest extends AbstractRestTest {
         Assert.assertFalse( apiResponse.getQueues().isEmpty() );
         Assert.assertEquals( 1, apiResponse.getQueues().size() );
         Assert.assertEquals( queueName, apiResponse.getQueues().iterator().next().getName() );
+
+        response = target("queues").path( queueName ).queryParam( "confirm", true ).request().delete();
+        Assert.assertEquals( 200, response.getStatus() );
     }
 
 
@@ -182,6 +185,9 @@ public class QueueResourceTest extends AbstractRestTest {
         // get all messages, checking for dups
 
         checkJsonMessages( queueName, numMessages );
+
+        Response response = target( "queues" ).path( queueName ).queryParam( "confirm", true ).request().delete();
+        Assert.assertEquals( 200, response.getStatus() );
     }
 
 
@@ -257,6 +263,9 @@ public class QueueResourceTest extends AbstractRestTest {
         // get all messages, checking for dups
 
         checkBinaryMessages( queueName, numMessages );
+
+        Response response = target( "queues" ).path( queueName ).queryParam( "confirm", true ).request().delete();
+        Assert.assertEquals( 200, response.getStatus() );
     }
 
 
@@ -373,6 +382,9 @@ public class QueueResourceTest extends AbstractRestTest {
         // and, those same messages should be available again in the queue
 
         checkJsonMessages( queueName, numMessages/2 );
+
+        response = target( "queues" ).path( queueName ).queryParam( "confirm", true ).request().delete();
+        Assert.assertEquals( 200, response.getStatus() );
     }
 
 

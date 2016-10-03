@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.qakka.core.impl;
 
 import com.google.inject.Inject;
+import com.google.inject.spi.Message;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.qakka.core.QakkaUtils;
@@ -27,6 +28,8 @@ import org.apache.usergrid.persistence.qakka.core.Queue;
 import org.apache.usergrid.persistence.qakka.core.QueueManager;
 import org.apache.usergrid.persistence.qakka.core.Regions;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
+import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
+import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queues.DatabaseQueue;
 import org.apache.usergrid.persistence.qakka.serialization.queues.QueueSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
@@ -37,23 +40,26 @@ import java.util.List;
 
 
 public class QueueManagerImpl implements QueueManager {
-    private final ActorSystemFig          actorSystemFig;
-    private final QueueSerialization queueSerialization;
-    private final DistributedQueueService distributedQueueService;
-    private final ShardSerialization      shardSerialization;
+    private final ActorSystemFig              actorSystemFig;
+    private final QueueSerialization          queueSerialization;
+    private final DistributedQueueService     distributedQueueService;
+    private final ShardSerialization          shardSerialization;
+    private final MessageCounterSerialization messageCounterSerialization;
 
 
     @Inject
     public QueueManagerImpl(
-            ActorSystemFig          actorSystemFig,
-            QueueSerialization      queueSerialization,
-            DistributedQueueService distributedQueueService,
-            ShardSerialization      shardSerialization ) {
+        ActorSystemFig              actorSystemFig,
+        QueueSerialization          queueSerialization,
+        DistributedQueueService     distributedQueueService,
+        ShardSerialization          shardSerialization,
+        MessageCounterSerialization messageCounterSerialization) {
 
-        this.actorSystemFig          = actorSystemFig;
-        this.queueSerialization      = queueSerialization;
-        this.distributedQueueService = distributedQueueService;
-        this.shardSerialization      = shardSerialization;
+        this.actorSystemFig              = actorSystemFig;
+        this.queueSerialization          = queueSerialization;
+        this.distributedQueueService     = distributedQueueService;
+        this.shardSerialization          = shardSerialization;
+        this.messageCounterSerialization = messageCounterSerialization;
     }
 
     @Override
@@ -86,6 +92,10 @@ public class QueueManagerImpl implements QueueManager {
 
         // only write the existence of a queue to the database if its dependent initial shards have been written
         queueSerialization.writeQueue(queue.toDatabaseQueue());
+
+        // init counters
+        messageCounterSerialization.incrementCounter( queue.getName(), DatabaseQueueMessage.Type.DEFAULT, 0L );
+        messageCounterSerialization.incrementCounter( queue.getName(), DatabaseQueueMessage.Type.INFLIGHT, 0L );
 
         distributedQueueService.initQueue( queue.getName() );
         distributedQueueService.refreshQueue( queue.getName() );

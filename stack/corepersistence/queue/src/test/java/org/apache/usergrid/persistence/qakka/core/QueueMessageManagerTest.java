@@ -180,7 +180,7 @@ public class QueueMessageManagerTest extends AbstractTest {
             int retries = 0;
             while (retries++ < maxRetries) {
                 distributedQueueService.refresh();
-                if (inMemoryQueue.size( queueName ) == 40) {
+                if (qmm.getQueueDepth( queueName ) == 40) {
                     break;
                 }
                 Thread.sleep( 500 );

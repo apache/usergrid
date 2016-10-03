@@ -203,10 +203,10 @@ public class ShardAllocatorTest extends AbstractTest {
                     null, // expiration
                     "application/json",
                     DataType.serializeValue( "{}", ProtocolVersion.NEWEST_SUPPORTED ) );
+                Thread.sleep( 10 );
             }
 
             distributedQueueService.refresh();
-            Thread.sleep( 3000 );
 
             // Test that 8 shards were created
 
