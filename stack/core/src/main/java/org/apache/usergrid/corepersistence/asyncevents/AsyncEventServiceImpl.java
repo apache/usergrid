@@ -864,7 +864,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                                      List<IndexEventResult> indexEventResults = callEventHandlers( messages );
 
                                                      // submit the processed messages to index producer
-                                                     List<QueueMessage> messagesToAck = submitToIndex( indexEventResults );
+                                                     List<QueueMessage> messagesToAck = submitToIndex( indexEventResults, isUtilityQueue );
 
                                                      if ( messagesToAck.size() < messages.size() ) {
                                                          logger.warn( "Missing {} message(s) from index processing",
@@ -904,7 +904,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      * Submit results to index and return the queue messages to be ack'd
      *
      */
-    private List<QueueMessage> submitToIndex(List<IndexEventResult> indexEventResults) {
+    private List<QueueMessage> submitToIndex(List<IndexEventResult> indexEventResults, boolean forUtilityQueue) {
 
         // if nothing came back then return empty list
         if(indexEventResults==null){
@@ -931,7 +931,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             // collect into a list of QueueMessages that can be ack'd later
             .collect(Collectors.toList());
 
-       queueIndexOperationMessage(combined, false);
+       queueIndexOperationMessage(combined, forUtilityQueue);
 
         return queueMessages;
     }
