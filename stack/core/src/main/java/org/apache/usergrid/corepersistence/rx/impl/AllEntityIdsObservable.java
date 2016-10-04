@@ -46,12 +46,8 @@ public interface AllEntityIdsObservable {
      * @param appScopes
      * @param edgeType The edge type to use (if specified)
      * @param lastEdge The edge to resume processing from
-     * @param startTimestamp An optional unix timestamp to start the seek ( it will be converted to an Edge )
      * @return
      */
-    Observable<EdgeScope> getEdgesToEntities( final Observable<ApplicationScope> appScopes,
-                                              final Optional<String> edgeType,
-                                              Optional<Edge> lastEdge,
-                                              final long startTimestamp );
+    Observable<EdgeScope> getEdgesToEntities(final Observable<ApplicationScope> appScopes, final Optional<String> edgeType, final Optional<Edge> lastEdge);
 
 }
