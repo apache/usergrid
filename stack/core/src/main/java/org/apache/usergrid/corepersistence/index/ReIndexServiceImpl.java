@@ -135,7 +135,17 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         final String jobId = StringUtils.sanitizeUUID( UUIDGenerator.newTimeUUID() );
 
-        final long modifiedSince = reIndexRequestBuilder.getUpdateTimestamp().or( Long.MIN_VALUE );
+        final long startTimestamp;
+        if ( reIndexRequestBuilder.getUpdateTimestamp().isPresent() && reIndexRequestBuilder.getUpdateTimestamp().get() > 0 ){
+
+            // edge timestamps are UUID timestamps, we need to convert from UNIX epoch to a UUID timestamp
+            long uuidEpochNanos = 0x01b21dd213814000L; // num 100 nano seconds since uuid epoch
+            startTimestamp = reIndexRequestBuilder.getUpdateTimestamp().get()*10000 + uuidEpochNanos;
+            logger.info("Reindex provided with from timestamp, converted to an Edge timestamp is: {}", startTimestamp);
+        }else{
+            startTimestamp = 0;
+        }
+
 
         // create an observable that loads a batch to be indexed
 
@@ -165,11 +175,11 @@ public class ReIndexServiceImpl implements ReIndexService {
         }
 
         allEntityIdsObservable.getEdgesToEntities( applicationScopes,
-            reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue() )
+            reIndexRequestBuilder.getCollectionName(), cursorSeek.getSeekValue(), startTimestamp )
             .buffer( indexProcessorFig.getReindexBufferSize())
             .doOnNext( edgeScopes -> {
                 logger.info("Sending batch of {} to be indexed.", edgeScopes.size());
-                indexService.indexBatch(edgeScopes, modifiedSince);
+                indexService.indexBatch(edgeScopes, startTimestamp);
                 count.addAndGet(edgeScopes.size() );
                 if( edgeScopes.size() > 0 ) {
                     writeCursorState(jobId, edgeScopes.get(edgeScopes.size() - 1));
@@ -178,7 +188,7 @@ public class ReIndexServiceImpl implements ReIndexService {
             .doOnCompleted(() -> writeStateMeta( jobId, Status.COMPLETE, count.get(), System.currentTimeMillis() ))
             .subscribeOn( Schedulers.io() ).subscribe();
 
-        
+
         return new ReIndexStatus( jobId, Status.STARTED, 0, 0 );
     }
 

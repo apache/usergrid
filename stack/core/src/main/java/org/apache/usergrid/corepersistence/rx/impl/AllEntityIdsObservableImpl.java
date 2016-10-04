@@ -82,12 +82,15 @@ public class AllEntityIdsObservableImpl implements AllEntityIdsObservable {
 
 
     @Override
-    public Observable<EdgeScope> getEdgesToEntities( final Observable<ApplicationScope> appScopes, final Optional<String> edgeType, final Optional<Edge> lastEdge) {
+    public Observable<EdgeScope> getEdgesToEntities( final Observable<ApplicationScope> appScopes,
+                                                     final Optional<String> edgeType,
+                                                     final Optional<Edge> lastEdge,
+                                                     final long startTimestamp ) {
 
         return appScopes.flatMap( applicationScope -> {
             final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
 
-            return edgesObservable.edgesFromSourceDescending( gm, applicationScope.getApplication(), edgeType, lastEdge )
+            return edgesObservable.edgesFromSourceDescending( gm, applicationScope.getApplication(), edgeType, lastEdge, startTimestamp )
                                   .map( edge -> new EdgeScope(applicationScope, edge ));
         } );
     }
