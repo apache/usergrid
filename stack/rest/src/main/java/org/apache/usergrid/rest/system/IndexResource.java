@@ -61,7 +61,7 @@ import java.util.UUID;
 public class IndexResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( IndexResource.class );
-    private static final String UPDATED_FIELD = "updated";
+    private static final String SINCE_FIELD = "since";
 
 
 
@@ -321,17 +321,17 @@ public class IndexResource extends AbstractContextResource {
                                                             final String callback ) {
 
         Map<String,Object> newPayload = payload;
-        if(newPayload == null ||  !payload.containsKey( UPDATED_FIELD )){
+        if(newPayload == null ||  !payload.containsKey(SINCE_FIELD)){
             newPayload = new HashMap<>(1);
-            newPayload.put(UPDATED_FIELD,0);
+            newPayload.put(SINCE_FIELD,0);
         }
 
-        Preconditions.checkArgument(newPayload.get(UPDATED_FIELD) instanceof Number,
+        Preconditions.checkArgument(newPayload.get(SINCE_FIELD) instanceof Number,
                 "You must specified the field \"updated\" in the payload and it must be a timestamp" );
 
         //add our updated timestamp to the request
-        if ( newPayload.containsKey( UPDATED_FIELD ) ) {
-            final long timestamp = ConversionUtils.getLong(newPayload.get(UPDATED_FIELD));
+        if ( newPayload.containsKey(SINCE_FIELD) ) {
+            final long timestamp = ConversionUtils.getLong(newPayload.get(SINCE_FIELD));
             request.withStartTimestamp( timestamp );
         }
 

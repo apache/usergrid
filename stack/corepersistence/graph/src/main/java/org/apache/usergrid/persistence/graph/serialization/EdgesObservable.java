@@ -64,8 +64,10 @@ public interface EdgesObservable {
      * @param sourceNode
      * @param edgeType The edge type if specified.  Otherwise all types will be used
      * @param resume The edge to start seeking after.  Otherwise starts at the most recent
+     * @param startTimestamp A unix timestamp to start seeking from if you don't have the edge cursor
      * @return
      */
     Observable<Edge> edgesFromSourceDescending( final GraphManager gm, final Id sourceNode,
-                                                final Optional<String> edgeType, final Optional<Edge> resume );
+                                                final Optional<String> edgeType, final Optional<Edge> resume,
+                                                final long startTimestamp );
 }

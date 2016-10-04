@@ -20,6 +20,7 @@
 package org.apache.usergrid.persistence.graph.serialization.impl;
 
 
+import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,8 +75,8 @@ public class EdgesObservableImpl implements EdgesObservable {
 
     @Override
     public Observable<Edge> edgesFromSourceDescending( final GraphManager gm, final Id sourceNode,
-                                                       final Optional<String> edgeTypeInput, final Optional<Edge> resume  ) {
-
+                                                       final Optional<String> edgeTypeInput, final Optional<Edge> resume,
+                                                       final long startTimestamp ) {
 
 
         final Observable<String> edgeTypes = edgeTypeInput.isPresent()? Observable.just( edgeTypeInput.get() ):
@@ -84,13 +85,22 @@ public class EdgesObservableImpl implements EdgesObservable {
 
         return edgeTypes.flatMap(  edgeType -> {
 
+            final Optional<Edge> start;
+
+            if( !resume.isPresent() && startTimestamp > 0 ){
+                // the target node doesn't matter here, the search only looks at the timestamp
+                start = Optional.of(new SimpleEdge(sourceNode, edgeType, sourceNode, startTimestamp));
+            }else{
+                start = resume;
+            }
+
                 if (logger.isTraceEnabled()) {
                     logger.trace("Loading edges of edgeType {} from {}", edgeType, sourceNode);
                 }
 
                 return gm.loadEdgesFromSource(
                     new SimpleSearchByEdgeType( sourceNode, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-                       resume ) );
+                       start ) );
         } );
     }
 
