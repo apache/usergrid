@@ -20,6 +20,8 @@ package org.apache.usergrid.persistence.core;
 
 
 import com.netflix.astyanax.model.ConsistencyLevel;
+import org.apache.cassandra.db.marshal.AbstractCompositeType;
+import org.apache.log4j.lf5.viewer.categoryexplorer.CategoryPath;
 
 
 /**
@@ -77,4 +79,30 @@ public interface CassandraConfig {
     String getApplicationKeyspace();
 
     String getApplicationLocalKeyspace();
+
+    String getLocalDataCenter();
+
+    int getConnections();
+
+    int getTimeout();
+
+    int getPoolTimeout();
+
+    String getClusterName();
+
+    String getHosts();
+
+    String getVersion();
+
+    String getUsername();
+
+    String getPassword();
+
+    String getStrategy();
+
+    String getStrategyOptions();
+
+    String getStrategyLocal();
+
+    String getStrategyOptionsLocal();
 }
