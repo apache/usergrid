@@ -46,25 +46,28 @@ public class QueueWriter extends UntypedActor {
 
     public enum WriteStatus { SUCCESS_XFERLOG_DELETED, SUCCESS_XFERLOG_NOTDELETED, ERROR };
 
-    private final DistributedQueueService   distributedQueueService;
     private final QueueMessageSerialization messageSerialization;
     private final TransferLogSerialization  transferLogSerialization;
     private final AuditLogSerialization     auditLogSerialization;
     private final MetricsService            metricsService;
 
-    private final MessageCounterSerialization messageCounterSerialization;
-
 
     @Inject
-    public QueueWriter( Injector injector ) {
+    public QueueWriter(
+        QueueMessageSerialization messageSerialization,
+        TransferLogSerialization  transferLogSerialization,
+        AuditLogSerialization     auditLogSerialization,
+        MetricsService            metricsService
+    ) {
+        this.messageSerialization = messageSerialization;
+        this.transferLogSerialization = transferLogSerialization;
+        this.auditLogSerialization = auditLogSerialization;
+        this.metricsService = metricsService;
 
-        messageSerialization     = injector.getInstance( QueueMessageSerialization.class );
-        transferLogSerialization = injector.getInstance( TransferLogSerialization.class );
-        auditLogSerialization    = injector.getInstance( AuditLogSerialization.class );
-        metricsService           = injector.getInstance( MetricsService.class );
-
-        distributedQueueService     = injector.getInstance( DistributedQueueService.class );
-        messageCounterSerialization = injector.getInstance( MessageCounterSerialization.class );
+//        messageSerialization     = injector.getInstance( QueueMessageSerialization.class );
+//        transferLogSerialization = injector.getInstance( TransferLogSerialization.class );
+//        auditLogSerialization    = injector.getInstance( AuditLogSerialization.class );
+//        metricsService           = injector.getInstance( MetricsService.class );
     }
 
     @Override
@@ -96,9 +99,6 @@ public class QueueWriter extends UntypedActor {
                             queueMessageId );
 
                     messageSerialization.writeMessage( dbqm );
-
-                    messageCounterSerialization.incrementCounter(
-                        qa.getQueueName(), DatabaseQueueMessage.Type.DEFAULT, 1);
 
                     //logger.debug("Wrote queue message id {} to queue name {}",
                     //        dbqm.getQueueMessageId(), dbqm.getQueueName());

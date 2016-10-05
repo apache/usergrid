@@ -36,6 +36,7 @@ import org.apache.usergrid.persistence.qakka.core.CassandraClient;
 import org.apache.usergrid.persistence.qakka.core.QakkaUtils;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessageBody;
+import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardCounterSerialization;
@@ -59,6 +60,7 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
     private final ActorSystemFig            actorSystemFig;
     private final ShardStrategy             shardStrategy;
     private final ShardCounterSerialization shardCounterSerialization;
+    private final MessageCounterSerialization messageCounterSerialization;
 
     public final static String COLUMN_QUEUE_NAME       = "queue_name";
     public final static String COLUMN_REGION           = "region";
@@ -114,14 +116,16 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
             ActorSystemFig            actorSystemFig,
             ShardStrategy             shardStrategy,
             ShardCounterSerialization shardCounterSerialization,
+            MessageCounterSerialization messageCounterSerialization,
             CassandraClient           cassandraClient,
             QakkaFig                  qakkaFig
         ) {
-        this.cassandraConfig              = cassandraConfig;
-        this.actorSystemFig            = actorSystemFig;
-        this.shardStrategy             = shardStrategy;
-        this.shardCounterSerialization = shardCounterSerialization;
-        this.cassandraClient = cassandraClient;
+        this.cassandraConfig             = cassandraConfig;
+        this.actorSystemFig              = actorSystemFig;
+        this.shardStrategy               = shardStrategy;
+        this.shardCounterSerialization   = shardCounterSerialization;
+        this.messageCounterSerialization = messageCounterSerialization;
+        this.cassandraClient             = cassandraClient;
 
         this.maxTtl = qakkaFig.getMaxTtlSeconds();
     }
@@ -161,6 +165,8 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
         cassandraClient.getQueueMessageSession().execute(insert);
 
         shardCounterSerialization.incrementCounter( message.getQueueName(), shardType, message.getShardId(), 1 );
+
+        messageCounterSerialization.incrementCounter( message.getQueueName(), message.getType(), 1L );
 
         return queueMessageId;
     }
@@ -250,6 +256,8 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
                 .and(queueMessageIdClause);
 
         cassandraClient.getQueueMessageSession().execute( delete );
+
+        messageCounterSerialization.decrementCounter( queueName, type, 1L );
     }
 
 

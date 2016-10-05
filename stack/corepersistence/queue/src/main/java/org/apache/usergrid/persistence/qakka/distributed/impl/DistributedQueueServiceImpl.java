@@ -23,10 +23,13 @@ import akka.actor.ActorRef;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.datastax.driver.core.exceptions.InvalidQueryException;
+import com.google.inject.Guice;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.actorsystem.ClientActor;
+import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.QueueManager;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
@@ -53,23 +56,21 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     private final ActorSystemManager actorSystemManager;
     private final QueueManager queueManager;
     private final QakkaFig qakkaFig;
-    private final MessageCounterSerialization messageCounterSerialization;
 
 
     @Inject
     public DistributedQueueServiceImpl(
+            Injector injector,
             ActorSystemManager actorSystemManager,
             QueueManager queueManager,
-            QakkaFig qakkaFig,
-            MessageCounterSerialization messageCounterSerialization ) {
+            QakkaFig qakkaFig
+            ) {
 
         this.actorSystemManager = actorSystemManager;
         this.queueManager = queueManager;
         this.qakkaFig = qakkaFig;
-        this.messageCounterSerialization = messageCounterSerialization;
 
-
-
+        GuiceActorProducer.INJECTOR = injector;
     }
 
 

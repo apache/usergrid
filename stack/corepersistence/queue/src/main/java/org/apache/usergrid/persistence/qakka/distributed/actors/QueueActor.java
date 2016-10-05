@@ -52,7 +52,6 @@ public class QueueActor extends UntypedActor {
     private final InMemoryQueue    inMemoryQueue;
     private final QueueActorHelper queueActorHelper;
     private final MetricsService   metricsService;
-
     private final MessageCounterSerialization messageCounterSerialization;
 
     private final Map<String, Cancellable> refreshSchedulersByQueueName = new HashMap<>();
@@ -63,24 +62,32 @@ public class QueueActor extends UntypedActor {
     private final Map<String, ActorRef> queueTimeoutersByQueueName = new HashMap<>();
     private final Map<String, ActorRef> shardAllocatorsByQueueName = new HashMap<>();
 
-    private final AtomicLong runCount = new AtomicLong(0);
-    private final AtomicLong messageCount = new AtomicLong(0);
     private final Set<String> queuesSeen = new HashSet<>();
 
-    private final Injector injector;
+    //private final Injector injector;
 
 
     @Inject
-    public QueueActor( Injector injector ) {
+    public QueueActor(
+        //Injector         injector,
+        QakkaFig         qakkaFig,
+        InMemoryQueue    inMemoryQueue,
+        QueueActorHelper queueActorHelper,
+        MetricsService   metricsService,
+        MessageCounterSerialization messageCounterSerialization
+    ) {
+        //this.injector = injector;
+        this.qakkaFig = qakkaFig;
+        this.inMemoryQueue = inMemoryQueue;
+        this.queueActorHelper = queueActorHelper;
+        this.metricsService = metricsService;
+        this.messageCounterSerialization = messageCounterSerialization;
 
-        this.injector = injector;
-
-        qakkaFig         = injector.getInstance( QakkaFig.class );
-        inMemoryQueue    = injector.getInstance( InMemoryQueue.class );
-        queueActorHelper = injector.getInstance( QueueActorHelper.class );
-        metricsService   = injector.getInstance( MetricsService.class );
-
-        messageCounterSerialization = injector.getInstance( MessageCounterSerialization.class );
+//        qakkaFig         = injector.getInstance( QakkaFig.class );
+//        inMemoryQueue    = injector.getInstance( InMemoryQueue.class );
+//        queueActorHelper = injector.getInstance( QueueActorHelper.class );
+//        metricsService   = injector.getInstance( MetricsService.class );
+//        messageCounterSerialization = injector.getInstance( MessageCounterSerialization.class );
     }
 
     @Override
@@ -138,7 +145,7 @@ public class QueueActor extends UntypedActor {
 
                 if ( !request.isOnlyIfEmpty() || inMemoryQueue.peek( request.getQueueName()) == null ) {
                     ActorRef readerRef = getContext().actorOf(
-                        Props.create( GuiceActorProducer.class, injector, QueueRefresher.class ),
+                        Props.create( GuiceActorProducer.class, QueueRefresher.class ),
                         request.getQueueName() + "_reader");
                     queueReadersByQueueName.put( request.getQueueName(), readerRef );
                 }
@@ -154,7 +161,7 @@ public class QueueActor extends UntypedActor {
 
             if ( queueTimeoutersByQueueName.get( request.getQueueName() ) == null ) {
                 ActorRef readerRef = getContext().actorOf(
-                    Props.create( GuiceActorProducer.class, injector, QueueTimeouter.class),
+                    Props.create( GuiceActorProducer.class, QueueTimeouter.class),
                     request.getQueueName() + "_timeouter");
                 queueTimeoutersByQueueName.put( request.getQueueName(), readerRef );
             }
@@ -169,7 +176,7 @@ public class QueueActor extends UntypedActor {
 
             if ( shardAllocatorsByQueueName.get( request.getQueueName() ) == null ) {
                 ActorRef readerRef = getContext().actorOf(
-                    Props.create( GuiceActorProducer.class, injector, ShardAllocator.class),
+                    Props.create( GuiceActorProducer.class, ShardAllocator.class),
                     request.getQueueName() + "_shard_allocator");
                 shardAllocatorsByQueueName.put( request.getQueueName(), readerRef );
             }
@@ -191,42 +198,8 @@ public class QueueActor extends UntypedActor {
 
                 Collection<DatabaseQueueMessage> messages = queueActorHelper.getMessages( queueName, numRequested);
 
-                messageCounterSerialization.decrementCounter(
-                    queueName,
-                    DatabaseQueueMessage.Type.DEFAULT,
-                    messages.size());
-
                 getSender().tell( new QueueGetResponse(
                         DistributedQueueService.Status.SUCCESS, messages ), getSender() );
-
-//                long runs = runCount.incrementAndGet();
-//                long messagesReturned = messageCount.addAndGet( queueMessages.size() );
-//
-//                if ( logger.isDebugEnabled() && runs % 100 == 0 ) {
-//
-//                    final DecimalFormat format = new DecimalFormat("##.###");
-//                    final long nano = 1000000000;
-//                    Timer t = metricsService.getMetricRegistry().timer(MetricsService.GET_TIME_GET );
-//
-//                    logger.debug("QueueActor get stats (queues {}):\n" +
-//                            "   Num runs={}\n" +
-//                            "   Messages={}\n" +
-//                            "   Mean={}\n" +
-//                            "   One min rate={}\n" +
-//                            "   Five min rate={}\n" +
-//                            "   Snapshot mean={}\n" +
-//                            "   Snapshot min={}\n" +
-//                            "   Snapshot max={}",
-//                        queuesSeen.toArray(),
-//                        t.getCount(),
-//                        messagesReturned,
-//                        format.format( t.getMeanRate() ),
-//                        format.format( t.getOneMinuteRate() ),
-//                        format.format( t.getFiveMinuteRate() ),
-//                        format.format( t.getSnapshot().getMean() / nano ),
-//                        format.format( (double) t.getSnapshot().getMin() / nano ),
-//                        format.format( (double) t.getSnapshot().getMax() / nano ) );
-//                }
 
             } finally {
                 timer.close();

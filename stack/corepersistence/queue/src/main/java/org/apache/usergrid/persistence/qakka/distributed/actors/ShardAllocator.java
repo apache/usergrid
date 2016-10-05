@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.qakka.MetricsService;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.CassandraClient;
 import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
+import org.apache.usergrid.persistence.qakka.core.QakkaUtils;
 import org.apache.usergrid.persistence.qakka.distributed.messages.ShardCheckRequest;
 import org.apache.usergrid.persistence.qakka.exceptions.NotFoundException;
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
@@ -59,14 +60,27 @@ public class ShardAllocator extends UntypedActor {
 
 
     @Inject
-    public ShardAllocator( Injector injector ) {
+    public ShardAllocator(
+        QakkaFig qakkaFig,
+        ActorSystemFig            actorSystemFig,
+        ShardSerialization        shardSerialization,
+        ShardCounterSerialization shardCounterSerialization,
+        MetricsService            metricsService,
+        CassandraClient           cassandraClient
+    ) {
+        this.qakkaFig = qakkaFig;
+        this.actorSystemFig = actorSystemFig;
+        this.shardSerialization = shardSerialization;
+        this.shardCounterSerialization = shardCounterSerialization;
+        this.metricsService = metricsService;
+        this.cassandraClient = cassandraClient;
 
-        this.qakkaFig                  = injector.getInstance( QakkaFig.class );
-        this.shardCounterSerialization = injector.getInstance( ShardCounterSerializationImpl.class );
-        this.shardSerialization        = injector.getInstance( ShardSerializationImpl.class );
-        this.actorSystemFig            = injector.getInstance( ActorSystemFig.class );
-        this.metricsService            = injector.getInstance( MetricsService.class );
-        this.cassandraClient           = injector.getInstance( CassandraClientImpl.class );
+//        this.qakkaFig                  = injector.getInstance( QakkaFig.class );
+//        this.shardCounterSerialization = injector.getInstance( ShardCounterSerializationImpl.class );
+//        this.shardSerialization        = injector.getInstance( ShardSerializationImpl.class );
+//        this.actorSystemFig            = injector.getInstance( ActorSystemFig.class );
+//        this.metricsService            = injector.getInstance( MetricsService.class );
+//        this.cassandraClient           = injector.getInstance( CassandraClientImpl.class );
     }
 
 
@@ -106,7 +120,10 @@ public class ShardAllocator extends UntypedActor {
             }
 
             if (shard == null) {
-                logger.warn( "No shard found for {}, {}, {}", queueName, region, type );
+                shard = new Shard( queueName, actorSystemFig.getRegionLocal(),
+                    type, 1L, QakkaUtils.getTimeUuid());
+                shardSerialization.createShard( shard );
+
                 return;
             }
 
