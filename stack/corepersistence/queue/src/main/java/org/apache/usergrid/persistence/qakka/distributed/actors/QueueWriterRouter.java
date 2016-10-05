@@ -40,7 +40,7 @@ public class QueueWriterRouter extends UntypedActor {
     public QueueWriterRouter( Injector injector ) {
 
         this.router = getContext().actorOf( FromConfig.getInstance().props(
-            Props.create( GuiceActorProducer.class, injector, QueueWriter.class )), "router");
+            Props.create( GuiceActorProducer.class, QueueWriter.class )), "router");
     }
 
     @Override

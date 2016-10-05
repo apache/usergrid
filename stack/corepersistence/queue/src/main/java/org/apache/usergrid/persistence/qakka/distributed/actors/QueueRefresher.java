@@ -43,7 +43,6 @@ public class QueueRefresher extends UntypedActor {
         if ( message instanceof QueueRefreshRequest ) {
 
             QueueRefreshRequest request = (QueueRefreshRequest) message;
-            logger.debug( "running for queue {}", request.getQueueName() );
             String queueName = request.getQueueName();
             helper.queueRefresh( queueName );
 

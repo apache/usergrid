@@ -61,19 +61,32 @@ public class QueueSender extends UntypedActor {
     private final TransferLogSerialization  transferLogSerialization;
     private final AuditLogSerialization     auditLogSerialization;
     private final ActorSystemFig            actorSystemFig;
-    private final QakkaFig qakkaFig;
+    private final QakkaFig                  qakkaFig;
     private final MetricsService            metricsService;
 
 
     @Inject
-    public QueueSender( Injector injector ) {
+    public QueueSender(
+        ActorSystemManager        actorSystemManager,
+        TransferLogSerialization  transferLogSerialization,
+        AuditLogSerialization     auditLogSerialization,
+        ActorSystemFig            actorSystemFig,
+        QakkaFig                  qakkaFig,
+        MetricsService            metricsService
+    ) {
+        this.actorSystemManager = actorSystemManager;
+        this.transferLogSerialization = transferLogSerialization;
+        this.auditLogSerialization = auditLogSerialization;
+        this.actorSystemFig = actorSystemFig;
+        this.qakkaFig = qakkaFig;
+        this.metricsService = metricsService;
 
-        actorSystemManager       = injector.getInstance( ActorSystemManager.class );
-        transferLogSerialization = injector.getInstance( TransferLogSerialization.class );
-        auditLogSerialization    = injector.getInstance( AuditLogSerialization.class );
-        actorSystemFig           = injector.getInstance( ActorSystemFig.class );
-        qakkaFig                 = injector.getInstance( QakkaFig.class );
-        metricsService           = injector.getInstance( MetricsService.class );
+//        actorSystemManager       = injector.getInstance( ActorSystemManager.class );
+//        transferLogSerialization = injector.getInstance( TransferLogSerialization.class );
+//        auditLogSerialization    = injector.getInstance( AuditLogSerialization.class );
+//        actorSystemFig           = injector.getInstance( ActorSystemFig.class );
+//        qakkaFig                 = injector.getInstance( QakkaFig.class );
+//        metricsService           = injector.getInstance( MetricsService.class );
     }
 
     @Override
@@ -194,9 +207,6 @@ public class QueueSender extends UntypedActor {
 
         } else if ( writeStatus != null
                 && writeStatus.equals( QueueWriter.WriteStatus.SUCCESS_XFERLOG_NOTDELETED ) ) {
-
-            //logger.debug( "Delivery Success, now removing transfer log: {}, {}, {}, {}",
-            //        new Object[]{queueName, actorSystemFig.getRegionLocal(), region, messageId} );
 
             // queue actor failed to clean up transfer log
             try {

@@ -73,7 +73,7 @@ public class QueueWriterRouterProducer implements RouterProducer {
                 ClusterSingletonManagerSettings.create( system ).withRole( "io" );
 
         system.actorOf( ClusterSingletonManager.props(
-                Props.create( GuiceActorProducer.class, injector, QueueWriterRouter.class ),
+                Props.create( GuiceActorProducer.class, QueueWriterRouter.class ),
                 PoisonPill.getInstance(), settings ), "queueWriterRouter" );
 
         ClusterSingletonProxySettings proxySettings =
