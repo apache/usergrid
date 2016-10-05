@@ -24,16 +24,16 @@ import com.codahale.metrics.MetricRegistry;
 
 public interface MetricsService {
 
-    String SEND_TIME_TOTAL  = "org.apache.usergrid.persistence.qakka.send.time.total";
-    String SEND_TIME_SEND   = "org.apache.usergrid.persistence.qakka.send.time.send";
-    String SEND_TIME_WRITE  = "org.apache.usergrid.persistence.qakka.send.time.write";
-    String GET_TIME_TOTAL   = "org.apache.usergrid.persistence.qakka.get.time.total";
-    String GET_TIME_GET     = "org.apache.usergrid.persistence.qakka.get.time.get";
-    String ACK_TIME_TOTAL   = "org.apache.usergrid.persistence.qakka.ack.time.total";
-    String ACK_TIME_ACK     = "org.apache.usergrid.persistence.qakka.ack.time.ack";
-    String TIMEOUT_TIME     = "org.apache.usergrid.persistence.qakka.timeout.time";
-    String REFRESH_TIME     = "org.apache.usergrid.persistence.qakka.timeout.time";
-    String ALLOCATE_TIME    = "org.apache.usergrid.persistence.qakka.allocate.time";
+    String SEND_TIME_TOTAL  = "qakka.send.time.total";
+    String SEND_TIME_SEND   = "qakka.send.time.send";
+    String SEND_TIME_WRITE  = "qakka.send.time.write";
+    String GET_TIME_TOTAL   = "qakka.get.time.total";
+    String GET_TIME_GET     = "qakka.get.time.get";
+    String ACK_TIME_TOTAL   = "qakka.ack.time.total";
+    String ACK_TIME_ACK     = "qakka.ack.time.ack";
+    String TIMEOUT_TIME     = "qakka.timeout.time";
+    String REFRESH_TIME     = "qakka.refresh.time";
+    String ALLOCATE_TIME    = "qakka.allocate.time";
 
     MetricRegistry getMetricRegistry();
 }

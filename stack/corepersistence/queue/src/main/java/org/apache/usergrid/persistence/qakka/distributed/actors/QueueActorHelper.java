@@ -119,7 +119,7 @@ public class QueueActorHelper {
             }
         }
 
-        //logger.debug("{} returning {} for queue {}", this, queueMessages.size(), queueName);
+        logger.debug("{} returning {} for queue {}", this, queueMessages.size(), queueName);
         return queueMessages;
 
     }
@@ -251,12 +251,6 @@ public class QueueActorHelper {
 
                 UUID since = inMemoryQueue.getNewest( queueName );
 
-//                if ( since != null ) {
-//                    logger.debug( "Loading queue {} messages newer than {}", queueName, since.timestamp() );
-//                } else {
-//                    logger.debug( "Loading queue {} messages newer than [null]", queueName );
-//                }
-
                 String region = actorSystemFig.getRegionLocal();
                 MultiShardMessageIterator multiShardIterator = new MultiShardMessageIterator(
                     cassandraClient, queueName, region, DatabaseQueueMessage.Type.DEFAULT,
@@ -270,35 +264,6 @@ public class QueueActorHelper {
                     inMemoryQueue.add( queueName, queueMessage );
                     count++;
                 }
-
-//                long runs = runCount.incrementAndGet();
-//                long readCount = totalRead.addAndGet( count );
-//
-//                if ( logger.isDebugEnabled() && runs % 100 == 0 ) {
-//
-//                    final DecimalFormat format = new DecimalFormat("##.###");
-//                    final long nano = 1000000000;
-//                    Timer t = metricsService.getMetricRegistry().timer( MetricsService.REFRESH_TIME );
-//
-//                    logger.debug("QueueRefresher for queue '{}' stats:\n" +
-//                            "   Num runs={}\n" +
-//                            "   Read count={}\n" +
-//                            "   Mean={}\n" +
-//                            "   One min rate={}\n" +
-//                            "   Five min rate={}\n" +
-//                            "   Snapshot mean={}\n" +
-//                            "   Snapshot min={}\n" +
-//                            "   Snapshot max={}",
-//                        queueName,
-//                        t.getCount(),
-//                        readCount,
-//                        format.format( t.getMeanRate() ),
-//                        format.format( t.getOneMinuteRate() ),
-//                        format.format( t.getFiveMinuteRate() ),
-//                        format.format( t.getSnapshot().getMean() / nano ),
-//                        format.format( (double) t.getSnapshot().getMin() / nano ),
-//                        format.format( (double) t.getSnapshot().getMax() / nano ) );
-//                }
 
                 if ( count > 0 ) {
                     logger.debug( "Added {} in-memory for queue {}, new size = {}",
