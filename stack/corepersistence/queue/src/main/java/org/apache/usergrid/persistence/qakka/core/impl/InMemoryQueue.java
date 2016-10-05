@@ -65,7 +65,7 @@ public class InMemoryQueue {
         } else {
             if ( databaseQueueMessage.getQueueMessageId().timestamp() > newest.timestamp() ) {
                 newest = databaseQueueMessage.getQueueMessageId();
-                logger.debug("New newest for queue {} is {}", queueName, newest.timestamp());
+                //logger.debug("New newest for queue {} is {}", queueName, newest.timestamp());
             }
         }
 

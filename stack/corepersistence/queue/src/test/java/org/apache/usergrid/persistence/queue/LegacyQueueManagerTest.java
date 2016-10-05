@@ -29,7 +29,6 @@ import org.apache.usergrid.persistence.qakka.core.CassandraClient;
 import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -143,41 +142,41 @@ public class LegacyQueueManagerTest extends AbstractTest {
         final LegacyQueueScopeImpl scope =
             new LegacyQueueScopeImpl( "testQueue" + queueSeed++, LegacyQueueScope.RegionImplementation.LOCAL );
         LegacyQueueManagerFactory qmf = myInjector.getInstance( LegacyQueueManagerFactory.class );
-        LegacyQueueManager qm = qmf.getQueueManager(scope);
+        LegacyQueueManager qm = qmf.getQueueManager( scope );
 
-        HashMap<String,String> values = new HashMap<>();
-        values.put("test", "Test");
+        HashMap<String, String> values = new HashMap<>();
+        values.put( "test", "Test" );
 
-        List<Map<String,String>> bodies = new ArrayList<>();
-        bodies.add(values);
+        List<Map<String, String>> bodies = new ArrayList<>();
+        bodies.add( values );
         long initialDepth = qm.getQueueDepth();
-        qm.sendMessages(bodies);
+        qm.sendMessages( bodies );
         long depth = 0;
-        for(int i=0; i<10;i++){
-             depth = qm.getQueueDepth();
-            if(depth>0){
-                break;
-            }
-            Thread.sleep(1000);
-        }
-        assertTrue(depth>0);
-
-        List<LegacyQueueMessage> messageList = qm.getMessages(10, values.getClass());
-        assertTrue(messageList.size() <= 500);
-        for(LegacyQueueMessage message : messageList){
-            assertTrue(message.getBody().equals(values));
-        }
-        if(messageList.size()>0) {
-            qm.commitMessages(messageList);
-        }
-        for(int i=0; i<10;i++){
+        for (int i = 0; i < 10; i++) {
             depth = qm.getQueueDepth();
-            if(depth==initialDepth){
+            if (depth > 0) {
                 break;
             }
-            Thread.sleep(1000);
+            Thread.sleep( 1000 );
         }
-        assertEquals(initialDepth, depth);
+        assertTrue( depth > 0 );
+
+        List<LegacyQueueMessage> messageList = qm.getMessages( 10, values.getClass() );
+        assertTrue( messageList.size() <= 500 );
+        for (LegacyQueueMessage message : messageList) {
+            assertTrue( message.getBody().equals( values ) );
+        }
+        if (messageList.size() > 0) {
+            qm.commitMessages( messageList );
+        }
+        for (int i = 0; i < 10; i++) {
+            depth = qm.getQueueDepth();
+            if (depth == initialDepth) {
+                break;
+            }
+            Thread.sleep( 1000 );
+        }
+        assertEquals( initialDepth, depth );
 
         DistributedQueueService distributedQueueService = myInjector.getInstance( DistributedQueueService.class );
         distributedQueueService.shutdown();
