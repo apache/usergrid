@@ -155,39 +155,43 @@ public class QueueResourceTest extends AbstractRestTest {
         }};
         target( "queues" ).request().post( Entity.entity( queueMap, MediaType.APPLICATION_JSON_TYPE ) );
 
-        // send some messages
+        try {
 
-        ObjectMapper mapper = new ObjectMapper();
+            // send some messages
 
-        int numMessages = 100;
-        for (int i = 0; i < numMessages; i++) {
+            ObjectMapper mapper = new ObjectMapper();
 
-            final int number = i;
-            Map<String, Object> messageMap = new HashMap<String, Object>() {{
-                put( "message", "this is message #" + number );
-                put( "valid", true );
-            }};
-            String body = mapper.writeValueAsString( messageMap );
+            int numMessages = 100;
+            for (int i = 0; i < numMessages; i++) {
 
-            Response response;
-            if ( asJson ) {
-                response = target( "queues" ).path( queueName ).path( "messages" )
+                final int number = i;
+                Map<String, Object> messageMap = new HashMap<String, Object>() {{
+                    put( "message", "this is message #" + number );
+                    put( "valid", true );
+                }};
+                String body = mapper.writeValueAsString( messageMap );
+
+                Response response;
+                if (asJson) {
+                    response = target( "queues" ).path( queueName ).path( "messages" )
                         .request().post( Entity.entity( body, MediaType.APPLICATION_JSON ) );
-            } else {
-                response = target( "queues" ).path( queueName ).path( "messages" )
+                } else {
+                    response = target( "queues" ).path( queueName ).path( "messages" )
                         .queryParam( "contentType", MediaType.APPLICATION_JSON )
                         .request().post( Entity.entity( body, MediaType.APPLICATION_OCTET_STREAM ) );
+                }
+
+                Assert.assertEquals( 200, response.getStatus() );
             }
 
+            // get all messages, checking for dups
+
+            checkJsonMessages( queueName, numMessages );
+
+        } finally {
+            Response response = target( "queues" ).path( queueName ).queryParam( "confirm", true ).request().delete();
             Assert.assertEquals( 200, response.getStatus() );
         }
-
-        // get all messages, checking for dups
-
-        checkJsonMessages( queueName, numMessages );
-
-        Response response = target( "queues" ).path( queueName ).queryParam( "confirm", true ).request().delete();
-        Assert.assertEquals( 200, response.getStatus() );
     }
 
 
@@ -244,28 +248,32 @@ public class QueueResourceTest extends AbstractRestTest {
         }};
         target( "queues" ).request().post( Entity.entity( queueMap, MediaType.APPLICATION_JSON_TYPE ) );
 
-        // send messages each with image/jpg payload
+        try {
 
-        InputStream is = getClass().getResourceAsStream("/qakka-duck.jpg");
-        byte[] bytes = ByteStreams.toByteArray( is );
+            // send messages each with image/jpg payload
 
-        int numMessages = 100;
-        for (int i = 0; i < numMessages; i++) {
+            InputStream is = getClass().getResourceAsStream( "/qakka-duck.jpg" );
+            byte[] bytes = ByteStreams.toByteArray( is );
 
-            Response response = target( "queues" ).path( queueName ).path( "messages" )
+            int numMessages = 100;
+            for (int i = 0; i < numMessages; i++) {
+
+                Response response = target( "queues" ).path( queueName ).path( "messages" )
                     .queryParam( "contentType", "image/jpg" )
                     .request()
-                    .post( Entity.entity( bytes, MediaType.APPLICATION_OCTET_STREAM ));
+                    .post( Entity.entity( bytes, MediaType.APPLICATION_OCTET_STREAM ) );
 
+                Assert.assertEquals( 200, response.getStatus() );
+            }
+
+            // get all messages, checking for dups
+
+            checkBinaryMessages( queueName, numMessages );
+
+        } finally {
+            Response response = target( "queues" ).path( queueName ).queryParam( "confirm", true ).request().delete();
             Assert.assertEquals( 200, response.getStatus() );
         }
-
-        // get all messages, checking for dups
-
-        checkBinaryMessages( queueName, numMessages );
-
-        Response response = target( "queues" ).path( queueName ).queryParam( "confirm", true ).request().delete();
-        Assert.assertEquals( 200, response.getStatus() );
     }
 
 
@@ -320,71 +328,75 @@ public class QueueResourceTest extends AbstractRestTest {
         Map<String, Object> queueMap = new HashMap<String, Object>() {{ put("name", queueName); }};
         target("queues").request().post( Entity.entity( queueMap, MediaType.APPLICATION_JSON_TYPE));
 
-        // send some messages
+        try {
 
-        ObjectMapper mapper = new ObjectMapper();
+            // send some messages
 
-        int numMessages = 100;
-        for ( int i=0; i<numMessages; i++ ) {
+            ObjectMapper mapper = new ObjectMapper();
 
-            final int number = i;
-            Map<String, Object> messageMap = new HashMap<String, Object>() {{
-                put("message", "this is message #" + number);
-                put("valid", true );
-            }};
-            String body = mapper.writeValueAsString( messageMap );
+            int numMessages = 100;
+            for (int i = 0; i < numMessages; i++) {
 
-            Response response = target("queues").path( queueName ).path( "messages" )
-                    .request().post( Entity.entity( body, MediaType.APPLICATION_JSON ));
+                final int number = i;
+                Map<String, Object> messageMap = new HashMap<String, Object>() {{
+                    put( "message", "this is message #" + number );
+                    put( "valid", true );
+                }};
+                String body = mapper.writeValueAsString( messageMap );
 
-            Assert.assertEquals( 200, response.getStatus() );
-        }
+                Response response = target( "queues" ).path( queueName ).path( "messages" )
+                    .request().post( Entity.entity( body, MediaType.APPLICATION_JSON ) );
 
-        // get all messages, checking for dups
-
-        Set<UUID> messageIds = checkJsonMessages( queueName, numMessages );
-
-        // there should be no more messages available
-
-        Response response = target( "queues" ).path( queueName ).path( "messages" ).request().get();
-        ApiResponse apiResponse = response.readEntity( ApiResponse.class );
-        Assert.assertNotNull( apiResponse.getQueueMessages() );
-        Assert.assertTrue( apiResponse.getQueueMessages().isEmpty() );
-
-        // ack half of the messages
-
-        int count = 0;
-        Set<UUID> ackedIds = new HashSet<>();
-        for ( UUID queueMessageId : messageIds ) {
-            response = target( "queues" )
-                    .path( queueName ).path( "messages" ).path( queueMessageId.toString() ).request().delete();
-            Assert.assertEquals( 200, response.getStatus() );
-            ackedIds.add( queueMessageId );
-            if ( ++count >= numMessages/2 ) {
-                break;
+                Assert.assertEquals( 200, response.getStatus() );
             }
-        }
-        messageIds.removeAll( ackedIds );
 
-        // wait for remaining of the messages to timeout
+            // get all messages, checking for dups
 
-        QakkaFig qakkaFig = StartupListener.INJECTOR.getInstance( QakkaFig.class );
-        Thread.sleep( 2*qakkaFig.getQueueTimeoutSeconds() * 1000 );
+            Set<UUID> messageIds = checkJsonMessages( queueName, numMessages );
 
-        // now, the remaining messages cannot be acked because they timed out
+            // there should be no more messages available
 
-        for ( UUID queueMessageId : messageIds ) {
-            response = target( "queues" )
+            Response response = target( "queues" ).path( queueName ).path( "messages" ).request().get();
+            ApiResponse apiResponse = response.readEntity( ApiResponse.class );
+            Assert.assertNotNull( apiResponse.getQueueMessages() );
+            Assert.assertTrue( apiResponse.getQueueMessages().isEmpty() );
+
+            // ack half of the messages
+
+            int count = 0;
+            Set<UUID> ackedIds = new HashSet<>();
+            for (UUID queueMessageId : messageIds) {
+                response = target( "queues" )
                     .path( queueName ).path( "messages" ).path( queueMessageId.toString() ).request().delete();
-            Assert.assertEquals( 400, response.getStatus() );
+                Assert.assertEquals( 200, response.getStatus() );
+                ackedIds.add( queueMessageId );
+                if (++count >= numMessages / 2) {
+                    break;
+                }
+            }
+            messageIds.removeAll( ackedIds );
+
+            // wait for remaining of the messages to timeout
+
+            QakkaFig qakkaFig = StartupListener.INJECTOR.getInstance( QakkaFig.class );
+            Thread.sleep( 2 * qakkaFig.getQueueTimeoutSeconds() * 1000 );
+
+            // now, the remaining messages cannot be acked because they timed out
+
+            for (UUID queueMessageId : messageIds) {
+                response = target( "queues" )
+                    .path( queueName ).path( "messages" ).path( queueMessageId.toString() ).request().delete();
+                Assert.assertEquals( 400, response.getStatus() );
+            }
+
+            // and, those same messages should be available again in the queue
+
+            checkJsonMessages( queueName, numMessages / 2 );
+
+        } finally {
+            Response response = target( "queues" ).path( queueName ).queryParam( "confirm", true ).request().delete();
+            Assert.assertEquals( 200, response.getStatus() );
         }
-
-        // and, those same messages should be available again in the queue
-
-        checkJsonMessages( queueName, numMessages/2 );
-
-        response = target( "queues" ).path( queueName ).queryParam( "confirm", true ).request().delete();
-        Assert.assertEquals( 200, response.getStatus() );
     }
 
 

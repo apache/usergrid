@@ -81,14 +81,13 @@ public class QueueManagerImpl implements QueueManager {
             }
         }
 
-        for ( String region : regions ) {
+        Shard available = new Shard( queue.getName(), actorSystemFig.getRegionLocal(),
+            Shard.Type.DEFAULT, 1L, QakkaUtils.getTimeUuid());
+        shardSerialization.createShard( available );
 
-            Shard available = new Shard( queue.getName(), region, Shard.Type.DEFAULT, 1L, QakkaUtils.getTimeUuid());
-            shardSerialization.createShard( available );
-
-            Shard inflight = new Shard( queue.getName(), region, Shard.Type.INFLIGHT, 1L, QakkaUtils.getTimeUuid());
-            shardSerialization.createShard( inflight );
-        }
+        Shard inflight = new Shard( queue.getName(), actorSystemFig.getRegionLocal(),
+            Shard.Type.INFLIGHT, 1L, QakkaUtils.getTimeUuid());
+        shardSerialization.createShard( inflight );
 
         // only write the existence of a queue to the database if its dependent initial shards have been written
         queueSerialization.writeQueue(queue.toDatabaseQueue());
