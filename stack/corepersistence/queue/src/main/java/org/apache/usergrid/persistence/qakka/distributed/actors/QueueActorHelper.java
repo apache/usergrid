@@ -37,7 +37,8 @@ import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardIterato
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -98,12 +99,39 @@ public class QueueActorHelper {
     }
 
 
+    Collection<DatabaseQueueMessage> getMessages(String queueName, int numRequested ) {
+
+        Collection<DatabaseQueueMessage> queueMessages = new ArrayList<>();
+
+        while (queueMessages.size() < numRequested) {
+
+            DatabaseQueueMessage queueMessage = inMemoryQueue.poll( queueName );
+
+            if (queueMessage != null) {
+
+                if (putInflight( queueName, queueMessage )) {
+                    queueMessages.add( queueMessage );
+                }
+
+            } else {
+                //logger.debug("in-memory queue for {} is empty, object is: {}", queueName, inMemoryQueue );
+                break;
+            }
+        }
+
+        //logger.debug("{} returning {} for queue {}", this, queueMessages.size(), queueName);
+        return queueMessages;
+
+    }
+
+
     DistributedQueueService.Status ackQueueMessage(String queueName, UUID queueMessageId ) {
 
         DatabaseQueueMessage queueMessage = loadDatabaseQueueMessage(
                 queueName, queueMessageId, DatabaseQueueMessage.Type.INFLIGHT );
 
         if ( queueMessage == null ) {
+            logger.error("Queue {} queue message id {} not found in inflight table", queueName, queueMessageId);
             return DistributedQueueService.Status.NOT_INFLIGHT;
         }
 
@@ -152,10 +180,25 @@ public class QueueActorHelper {
 
         UUID qmid = queueMessage.getQueueMessageId();
         try {
-            queueMessage.setType( DatabaseQueueMessage.Type.INFLIGHT );
-            queueMessage.setShardId( null );
-            queueMessage.setInflightAt( System.currentTimeMillis() );
-            messageSerialization.writeMessage( queueMessage );
+
+            DatabaseQueueMessage inflightMessage = new DatabaseQueueMessage(
+                queueMessage.getMessageId(),
+                DatabaseQueueMessage.Type.INFLIGHT,
+                queueName,
+                actorSystemFig.getRegionLocal(),
+                null,                         // let serialization select the shard
+                queueMessage.getQueuedAt(),
+                System.currentTimeMillis(),
+                qmid);
+
+            messageSerialization.writeMessage( inflightMessage );
+
+            DatabaseQueueMessage retrieved = loadDatabaseQueueMessage(
+                queueName, qmid, DatabaseQueueMessage.Type.INFLIGHT );
+            if ( retrieved == null ) {
+                logger.error("Failed ot write queue message id {} to inflight table", qmid);
+                return false;
+            }
 
             messageSerialization.deleteMessage(
                     queueName,
@@ -191,6 +234,7 @@ public class QueueActorHelper {
         return true;
     }
 
+
     void queueRefresh( String queueName ) {
 
         Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.REFRESH_TIME).time();
@@ -199,11 +243,19 @@ public class QueueActorHelper {
 
             if (inMemoryQueue.size( queueName ) < qakkaFig.getQueueInMemorySize()) {
 
+                // TODO: need to track the starting shard
+
                 ShardIterator shardIterator = new ShardIterator(
                     cassandraClient, queueName, actorSystemFig.getRegionLocal(),
                     Shard.Type.DEFAULT, Optional.empty() );
 
                 UUID since = inMemoryQueue.getNewest( queueName );
+
+//                if ( since != null ) {
+//                    logger.debug( "Loading queue {} messages newer than {}", queueName, since.timestamp() );
+//                } else {
+//                    logger.debug( "Loading queue {} messages newer than [null]", queueName );
+//                }
 
                 String region = actorSystemFig.getRegionLocal();
                 MultiShardMessageIterator multiShardIterator = new MultiShardMessageIterator(
@@ -219,34 +271,34 @@ public class QueueActorHelper {
                     count++;
                 }
 
-                long runs = runCount.incrementAndGet();
-                long readCount = totalRead.addAndGet( count );
-
-                if ( logger.isDebugEnabled() && runs % 100 == 0 ) {
-
-                    final DecimalFormat format = new DecimalFormat("##.###");
-                    final long nano = 1000000000;
-                    Timer t = metricsService.getMetricRegistry().timer( MetricsService.REFRESH_TIME );
-
-                    logger.debug("QueueRefresher for queue '{}' stats:\n" +
-                            "   Num runs={}\n" +
-                            "   Read count={}\n" +
-                            "   Mean={}\n" +
-                            "   One min rate={}\n" +
-                            "   Five min rate={}\n" +
-                            "   Snapshot mean={}\n" +
-                            "   Snapshot min={}\n" +
-                            "   Snapshot max={}",
-                        queueName,
-                        t.getCount(),
-                        readCount,
-                        format.format( t.getMeanRate() ),
-                        format.format( t.getOneMinuteRate() ),
-                        format.format( t.getFiveMinuteRate() ),
-                        format.format( t.getSnapshot().getMean() / nano ),
-                        format.format( (double) t.getSnapshot().getMin() / nano ),
-                        format.format( (double) t.getSnapshot().getMax() / nano ) );
-                }
+//                long runs = runCount.incrementAndGet();
+//                long readCount = totalRead.addAndGet( count );
+//
+//                if ( logger.isDebugEnabled() && runs % 100 == 0 ) {
+//
+//                    final DecimalFormat format = new DecimalFormat("##.###");
+//                    final long nano = 1000000000;
+//                    Timer t = metricsService.getMetricRegistry().timer( MetricsService.REFRESH_TIME );
+//
+//                    logger.debug("QueueRefresher for queue '{}' stats:\n" +
+//                            "   Num runs={}\n" +
+//                            "   Read count={}\n" +
+//                            "   Mean={}\n" +
+//                            "   One min rate={}\n" +
+//                            "   Five min rate={}\n" +
+//                            "   Snapshot mean={}\n" +
+//                            "   Snapshot min={}\n" +
+//                            "   Snapshot max={}",
+//                        queueName,
+//                        t.getCount(),
+//                        readCount,
+//                        format.format( t.getMeanRate() ),
+//                        format.format( t.getOneMinuteRate() ),
+//                        format.format( t.getFiveMinuteRate() ),
+//                        format.format( t.getSnapshot().getMean() / nano ),
+//                        format.format( (double) t.getSnapshot().getMin() / nano ),
+//                        format.format( (double) t.getSnapshot().getMax() / nano ) );
+//                }
 
                 if ( count > 0 ) {
                     logger.debug( "Added {} in-memory for queue {}, new size = {}",

@@ -42,7 +42,6 @@ import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferL
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLogSerialization;
 import org.apache.usergrid.persistence.queue.TestModule;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -239,8 +238,6 @@ public class QueueMessageManagerTest extends AbstractTest {
     public void testGetWithMissingData() throws InterruptedException {
 
         Injector injector = getInjector();
-
-        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
 
         injector.getInstance( App.class ); // init the INJECTOR
 

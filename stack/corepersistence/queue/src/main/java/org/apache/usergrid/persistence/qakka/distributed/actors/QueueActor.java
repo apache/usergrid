@@ -129,22 +129,23 @@ public class QueueActor extends UntypedActor {
 
         } else if ( message instanceof QueueRefreshRequest ) {
             QueueRefreshRequest request = (QueueRefreshRequest)message;
-
             queuesSeen.add( request.getQueueName() );
-            queueActorHelper.queueRefresh( request.getQueueName() );
 
-//            if ( queueReadersByQueueName.get( request.getQueueName() ) == null ) {
-//
-//                if ( !request.isOnlyIfEmpty() || inMemoryQueue.peek( request.getQueueName()) == null ) {
-//                    ActorRef readerRef = getContext().actorOf(
-//                        Props.create( GuiceActorProducer.class, injector, QueueRefresher.class ),
-//                        request.getQueueName() + "_reader");
-//                    queueReadersByQueueName.put( request.getQueueName(), readerRef );
-//                }
-//            }
-//
-//            // hand-off to queue's reader
-//            queueReadersByQueueName.get( request.getQueueName() ).tell( request, self() );
+//            // NOT asynchronous
+//            queueActorHelper.queueRefresh( request.getQueueName() );
+
+            if ( queueReadersByQueueName.get( request.getQueueName() ) == null ) {
+
+                if ( !request.isOnlyIfEmpty() || inMemoryQueue.peek( request.getQueueName()) == null ) {
+                    ActorRef readerRef = getContext().actorOf(
+                        Props.create( GuiceActorProducer.class, injector, QueueRefresher.class ),
+                        request.getQueueName() + "_reader");
+                    queueReadersByQueueName.put( request.getQueueName(), readerRef );
+                }
+            }
+
+            // hand-off to queue's reader
+            queueReadersByQueueName.get( request.getQueueName() ).tell( request, self() );
 
         } else if ( message instanceof QueueTimeoutRequest ) {
             QueueTimeoutRequest request = (QueueTimeoutRequest)message;
@@ -158,9 +159,8 @@ public class QueueActor extends UntypedActor {
                 queueTimeoutersByQueueName.put( request.getQueueName(), readerRef );
             }
 
-            // hand-off to queue's timeouter
+            // ASYNCHRONOUS -> hand-off to queue's timeouter
             queueTimeoutersByQueueName.get( request.getQueueName() ).tell( request, self() );
-
 
         } else if ( message instanceof ShardCheckRequest ) {
             ShardCheckRequest request = (ShardCheckRequest)message;
@@ -174,75 +174,59 @@ public class QueueActor extends UntypedActor {
                 shardAllocatorsByQueueName.put( request.getQueueName(), readerRef );
             }
 
-            // hand-off to queue's shard allocator
+            // ASYNCHRONOUS -> hand-off to queue's shard allocator
             shardAllocatorsByQueueName.get( request.getQueueName() ).tell( request, self() );
-
 
         } else if ( message instanceof QueueGetRequest) {
 
+            QueueGetRequest queueGetRequest = (QueueGetRequest) message;
+
+            String queueName = queueGetRequest.getQueueName();
+            int numRequested = queueGetRequest.getNumRequested();
+
+            queuesSeen.add( queueName );
+
             Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.GET_TIME_GET ).time();
             try {
-                QueueGetRequest queueGetRequest = (QueueGetRequest) message;
 
-                queuesSeen.add( queueGetRequest.getQueueName() );
-
-                Collection<DatabaseQueueMessage> queueMessages = new ArrayList<>();
-
-                while (queueMessages.size() < queueGetRequest.getNumRequested()) {
-
-                    DatabaseQueueMessage queueMessage = inMemoryQueue.poll( queueGetRequest.getQueueName() );
-
-                    if (queueMessage != null) {
-                        if (queueActorHelper.putInflight( queueGetRequest.getQueueName(), queueMessage )) {
-                            queueMessages.add( queueMessage );
-                        }
-                    } else {
-                        logger.debug("in-memory queue for {} is empty, object is: {}",
-                                queueGetRequest.getQueueName(), inMemoryQueue );
-                        break;
-                    }
-                }
+                Collection<DatabaseQueueMessage> messages = queueActorHelper.getMessages( queueName, numRequested);
 
                 messageCounterSerialization.decrementCounter(
-                    queueGetRequest.getQueueName(),
+                    queueName,
                     DatabaseQueueMessage.Type.DEFAULT,
-                    queueMessages.size());
-
-                logger.debug("{} returning {} for queue {}",
-                    this, queueMessages.size(), queueGetRequest.getQueueName());
+                    messages.size());
 
                 getSender().tell( new QueueGetResponse(
-                        DistributedQueueService.Status.SUCCESS, queueMessages ), getSender() );
+                        DistributedQueueService.Status.SUCCESS, messages ), getSender() );
 
-                long runs = runCount.incrementAndGet();
-                long messagesReturned = messageCount.addAndGet( queueMessages.size() );
-
-                if ( logger.isDebugEnabled() && runs % 100 == 0 ) {
-
-                    final DecimalFormat format = new DecimalFormat("##.###");
-                    final long nano = 1000000000;
-                    Timer t = metricsService.getMetricRegistry().timer(MetricsService.GET_TIME_GET );
-
-                    logger.debug("QueueActor get stats (queues {}):\n" +
-                            "   Num runs={}\n" +
-                            "   Messages={}\n" +
-                            "   Mean={}\n" +
-                            "   One min rate={}\n" +
-                            "   Five min rate={}\n" +
-                            "   Snapshot mean={}\n" +
-                            "   Snapshot min={}\n" +
-                            "   Snapshot max={}",
-                        queuesSeen.toArray(),
-                        t.getCount(),
-                        messagesReturned,
-                        format.format( t.getMeanRate() ),
-                        format.format( t.getOneMinuteRate() ),
-                        format.format( t.getFiveMinuteRate() ),
-                        format.format( t.getSnapshot().getMean() / nano ),
-                        format.format( (double) t.getSnapshot().getMin() / nano ),
-                        format.format( (double) t.getSnapshot().getMax() / nano ) );
-                }
-
+//                long runs = runCount.incrementAndGet();
+//                long messagesReturned = messageCount.addAndGet( queueMessages.size() );
+//
+//                if ( logger.isDebugEnabled() && runs % 100 == 0 ) {
+//
+//                    final DecimalFormat format = new DecimalFormat("##.###");
+//                    final long nano = 1000000000;
+//                    Timer t = metricsService.getMetricRegistry().timer(MetricsService.GET_TIME_GET );
+//
+//                    logger.debug("QueueActor get stats (queues {}):\n" +
+//                            "   Num runs={}\n" +
+//                            "   Messages={}\n" +
+//                            "   Mean={}\n" +
+//                            "   One min rate={}\n" +
+//                            "   Five min rate={}\n" +
+//                            "   Snapshot mean={}\n" +
+//                            "   Snapshot min={}\n" +
+//                            "   Snapshot max={}",
+//                        queuesSeen.toArray(),
+//                        t.getCount(),
+//                        messagesReturned,
+//                        format.format( t.getMeanRate() ),
+//                        format.format( t.getOneMinuteRate() ),
+//                        format.format( t.getFiveMinuteRate() ),
+//                        format.format( t.getSnapshot().getMean() / nano ),
+//                        format.format( (double) t.getSnapshot().getMin() / nano ),
+//                        format.format( (double) t.getSnapshot().getMax() / nano ) );
+//                }
 
             } finally {
                 timer.close();
