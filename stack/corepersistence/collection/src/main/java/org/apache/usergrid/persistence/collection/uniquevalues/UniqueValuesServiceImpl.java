@@ -292,7 +292,7 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
             ClusterSingletonManagerSettings.create( system ).withRole("io");
 
         system.actorOf( ClusterSingletonManager.props(
-            Props.create( GuiceActorProducer.class, injector, UniqueValuesRouter.class ),
+            Props.create( GuiceActorProducer.class, UniqueValuesRouter.class ),
             PoisonPill.getInstance(), settings ), "uvRouter" );
 
         ClusterSingletonProxySettings proxySettings =

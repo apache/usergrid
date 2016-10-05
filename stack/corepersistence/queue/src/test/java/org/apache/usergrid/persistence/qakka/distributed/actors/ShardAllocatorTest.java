@@ -69,7 +69,7 @@ public class ShardAllocatorTest extends AbstractTest {
 
         CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
 
-        injector.getInstance( App.class ); // init the INJECTOR
+        injector.getInstance( DistributedQueueService.class ); // init the INJECTOR
 
         ShardSerialization shardSer = injector.getInstance( ShardSerialization.class );
         QakkaFig qakkaFig           = injector.getInstance( QakkaFig.class );
@@ -113,7 +113,7 @@ public class ShardAllocatorTest extends AbstractTest {
 
         ActorSystem system = ActorSystem.create("Test-" + queueName);
         ActorRef shardAllocRef = system.actorOf( Props.create(
-            GuiceActorProducer.class, injector, ShardAllocator.class), "shardallocator");
+            GuiceActorProducer.class, ShardAllocator.class), "shardallocator");
 
         ShardCheckRequest checkRequest = new ShardCheckRequest( queueName );
         shardAllocRef.tell( checkRequest, null ); // tell sends message, returns immediately

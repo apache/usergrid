@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.CassandraClient;
 import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
+import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.distributed.messages.QueueTimeoutRequest;
 import org.apache.usergrid.persistence.qakka.serialization.MultiShardMessageIterator;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
@@ -58,14 +59,15 @@ public class QueueTimeouterTest extends AbstractTest {
     @Test
     public void testBasicOperation() throws Exception {
 
-        CassandraClient cassandraClient = getInjector().getInstance( CassandraClientImpl.class );
-
         Injector injector = getInjector();
 
-        QakkaFig qakkaFig             = getInjector().getInstance( QakkaFig.class );
-        ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
-        QueueMessageSerialization qms = getInjector().getInstance( QueueMessageSerialization.class );
-        ShardSerialization shardSerialization = getInjector().getInstance( ShardSerialization.class );
+        injector.getInstance( DistributedQueueService.class ); // init the INJECTOR
+
+        CassandraClient cassandraClient = injector.getInstance( CassandraClientImpl.class );
+        QakkaFig qakkaFig             = injector.getInstance( QakkaFig.class );
+        ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
+        QueueMessageSerialization qms = injector.getInstance( QueueMessageSerialization.class );
+        ShardSerialization shardSerialization = injector.getInstance( ShardSerialization.class );
 
         // create records in inflight table, with some being old enough to time out
 
@@ -113,7 +115,7 @@ public class QueueTimeouterTest extends AbstractTest {
 
         ActorSystem system = ActorSystem.create("Test-" + queueName);
         ActorRef timeouterRef = system.actorOf( Props.create(
-            GuiceActorProducer.class, injector, QueueTimeouter.class), "timeouter");
+            GuiceActorProducer.class, QueueTimeouter.class), "timeouter");
         QueueTimeoutRequest qtr = new QueueTimeoutRequest( queueName );
         timeouterRef.tell( qtr, null ); // tell sends message, returns immediately
 
