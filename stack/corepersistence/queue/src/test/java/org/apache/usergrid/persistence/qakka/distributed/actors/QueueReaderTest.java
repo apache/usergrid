@@ -22,22 +22,18 @@ package org.apache.usergrid.persistence.qakka.distributed.actors;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
-import org.apache.usergrid.persistence.qakka.QakkaFig;
-import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
-import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
-import org.apache.usergrid.persistence.qakka.App;
-import org.apache.usergrid.persistence.qakka.core.CassandraClient;
+import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.QakkaUtils;
 import org.apache.usergrid.persistence.qakka.core.impl.InMemoryQueue;
 import org.apache.usergrid.persistence.qakka.distributed.messages.QueueRefreshRequest;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
+import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardSerialization;
 import org.junit.Assert;
 import org.junit.Test;
@@ -57,14 +53,14 @@ public class QueueReaderTest extends AbstractTest {
 
         Injector injector = getInjector();
 
-        QakkaFig qakkaFig = getInjector().getInstance( QakkaFig.class );
-        ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
-        ShardSerialization shardSerialization = getInjector().getInstance( ShardSerialization.class );
+        QakkaFig qakkaFig = injector.getInstance( QakkaFig.class );
+        ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
+        ShardSerialization shardSerialization = injector.getInstance( ShardSerialization.class );
 
         int numMessages = 200;
         // create queue messages, only first lot get queue message data
 
-        QueueMessageSerialization serialization = getInjector().getInstance( QueueMessageSerialization.class );
+        QueueMessageSerialization serialization = injector.getInstance( QueueMessageSerialization.class );
         String queueName = "qrt_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
 
         Shard newShard = new Shard( queueName, actorSystemFig.getRegionLocal(),
@@ -88,21 +84,18 @@ public class QueueReaderTest extends AbstractTest {
             serialization.writeMessage( message );
         }
 
-        InMemoryQueue inMemoryQueue = getInjector().getInstance( InMemoryQueue.class );
+        InMemoryQueue inMemoryQueue = injector.getInstance( InMemoryQueue.class );
         Assert.assertEquals( 0, inMemoryQueue.size( queueName ) );
 
         // run the QueueRefresher to fill up the in-memory queue
 
-        ActorSystem system = ActorSystem.create("Test-" + queueName);
-        ActorRef queueReaderRef = system.actorOf(
-            Props.create( GuiceActorProducer.class, injector, QueueRefresher.class ), "queueReader");
-        QueueRefreshRequest refreshRequest = new QueueRefreshRequest( queueName, false );
+        QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
 
         // need to wait for refresh to complete
         int maxRetries = 10;
         int retries = 0;
         while ( inMemoryQueue.size( queueName ) < qakkaFig.getQueueInMemorySize() && retries++ < maxRetries ) {
-            queueReaderRef.tell( refreshRequest, null ); // tell sends message, returns immediately
+            helper.queueRefresh( queueName );
             Thread.sleep(1000);
         }
 
