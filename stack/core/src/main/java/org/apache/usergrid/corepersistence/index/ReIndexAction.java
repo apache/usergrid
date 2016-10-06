@@ -39,9 +39,10 @@ public interface ReIndexAction {
     void index( final ApplicationScope applicationScope, final Id id, final long updatedSince );
 
     /**
-     * Index a batch list of entities.
+     * Index a batch list of entities.  Goes to the utility queue.
      * @param edges
      * @param updatedSince
+     * @param forUtilityQueue
      */
-    void indexBatch ( final List<EdgeScope> edges, final long updatedSince);
+    void indexBatch(final List<EdgeScope> edges, final long updatedSince, boolean forUtilityQueue);
 }
