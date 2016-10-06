@@ -75,5 +75,5 @@ public interface ActorSystemManager {
      */
     void publishToAllRegions( String topic, Object message, ActorRef sender );
 
-    void shutdownAll();
+    void leaveCluster();
 }

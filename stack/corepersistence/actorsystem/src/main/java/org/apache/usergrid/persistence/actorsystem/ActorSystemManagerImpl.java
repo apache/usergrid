@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.actorsystem;
 
 
 import akka.actor.*;
+import akka.cluster.Cluster;
 import akka.cluster.client.ClusterClient;
 import akka.cluster.client.ClusterClientReceptionist;
 import akka.cluster.client.ClusterClientSettings;
@@ -293,6 +294,16 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
                 put( "akka", new HashMap<String, Object>() {{
 
+                    put( "blocking-io-dispatcher", new HashMap<String, Object>() {{
+                        put( "type", "Dispatcher" );
+                        put( "executor", actorSystemFig.getClusterIoExecutorType() );
+                        put( actorSystemFig.getClusterIoExecutorType() , new HashMap<String, Object>() {{
+                            put( "fixed-pool-size", actorSystemFig.getClusterIoExecutorThreadPoolSize() );
+                            put( "rejection-policy",actorSystemFig.getClusterIoExecutorRejectionPolicy() );
+                        }} );
+                    }} );
+
+
                     put( "remote", new HashMap<String, Object>() {{
                         put( "netty.tcp", new HashMap<String, Object>() {{
                             put( "hostname", hostname );
@@ -302,12 +313,20 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                     }} );
 
                     put( "cluster", new HashMap<String, Object>() {{
-                        put( "max-nr-of-instances-per-node", numInstancesPerNode);
+                        put( "max-nr-of-instances-per-node", numInstancesPerNode); // this sets default if router does not set
                         put( "roles", Collections.singletonList("io") );
                         put( "seed-nodes", new ArrayList<String>() {{
                             for (String seed : seeds) {
                                 add( seed );
                             }
+                        }} );
+                        put( "failure-detector", new HashMap<String, Object>() {{
+                            put( "threshold", "20" );
+                            put( "acceptable-heartbeat-pause", "6 s" );
+                            put( "heartbeat-interval", "1 s" );
+                            put( "heartbeat-request", new HashMap<String, Object>() {{
+                                put( "expected-response-after", "3 s" );
+                            }} );
                         }} );
                     }} );
 
@@ -357,13 +376,13 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                 }
             }
 
-            // add a shutdown hook to clean all actor systems if the JVM exits without the servlet container knowing
-//            Runtime.getRuntime().addShutdownHook(new Thread() {
-//                @Override
-//                public void run() {
-//                    shutdownAll();
-//                }
-//            });
+            //add a shutdown hook to clean all actor systems if the JVM exits without the servlet container knowing
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    leaveCluster();
+                }
+            });
 
         }
 
@@ -446,10 +465,11 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     }
 
     @Override
-    public void shutdownAll(){
+    public void leaveCluster(){
 
-        logger.info("Shutting down Akka cluster: {}", clusterSystem.name());
-        clusterSystem.shutdown();
+        Cluster cluster = Cluster.get(clusterSystem);
+        logger.info("Downing self: {} from cluster: {}", cluster.selfAddress(), clusterSystem.name());
+        cluster.leave(cluster.selfAddress());
     }
 
 }
