@@ -36,6 +36,8 @@ public interface IndexProcessorFig extends GuicyFig {
 
     String ELASTICSEARCH_WORKER_COUNT = "elasticsearch.worker_count";
 
+    String ELASTICSEARCH_WORKER_COUNT_UTILITY = "elasticsearch.worker_count_utility";
+
     String EVENT_CONCURRENCY_FACTOR = "event.concurrency.factor";
 
     String ELASTICSEARCH_QUEUE_IMPL = "elasticsearch.queue_impl";
@@ -80,6 +82,13 @@ public interface IndexProcessorFig extends GuicyFig {
     @Default("8")
     @Key(ELASTICSEARCH_WORKER_COUNT)
     int getWorkerCount();
+
+    /**
+     * The number of worker threads used to read utility requests from the queue ( mostly re-index ).
+     */
+    @Default("2")
+    @Key(ELASTICSEARCH_WORKER_COUNT_UTILITY)
+    int getWorkerCountUtility();
 
     /**
      * Set the implementation to use for queuing.

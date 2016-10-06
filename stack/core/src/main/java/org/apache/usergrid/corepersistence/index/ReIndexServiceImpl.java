@@ -169,7 +169,7 @@ public class ReIndexServiceImpl implements ReIndexService {
             .buffer( indexProcessorFig.getReindexBufferSize())
             .doOnNext( edgeScopes -> {
                 logger.info("Sending batch of {} to be indexed.", edgeScopes.size());
-                indexService.indexBatch(edgeScopes, modifiedSince);
+                indexService.indexBatch(edgeScopes, modifiedSince, true);
                 count.addAndGet(edgeScopes.size() );
                 if( edgeScopes.size() > 0 ) {
                     writeCursorState(jobId, edgeScopes.get(edgeScopes.size() - 1));
@@ -178,7 +178,7 @@ public class ReIndexServiceImpl implements ReIndexService {
             .doOnCompleted(() -> writeStateMeta( jobId, Status.COMPLETE, count.get(), System.currentTimeMillis() ))
             .subscribeOn( Schedulers.io() ).subscribe();
 
-        
+
         return new ReIndexStatus( jobId, Status.STARTED, 0, 0 );
     }
 
