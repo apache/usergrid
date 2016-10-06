@@ -48,15 +48,13 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         this.cassandraConfig = cassandraFig;
         this.cluster = buildCluster();
 
-        // always initialize the keyspaces
-        this.createApplicationKeyspace();
-
         logger.info("Initialized datastax cluster client. Hosts={}, Idle Timeout={}s,  Pool Timeout={}s",
             cluster.getMetadata().getAllHosts().toString(),
             cluster.getConfiguration().getPoolingOptions().getIdleTimeoutSeconds(),
             cluster.getConfiguration().getPoolingOptions().getPoolTimeoutMillis() / 1000);
 
-
+        // always initialize the keyspaces
+        this.createApplicationKeyspace();
     }
 
     @Override
@@ -149,7 +147,8 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         final String createQueueMessageKeyspace = String.format(
             "CREATE KEYSPACE IF NOT EXISTS %s WITH replication = %s",
             CQLUtils.quote( cassandraConfig.getApplicationLocalKeyspace()),
-            CQLUtils.getFormattedReplication( cassandraConfig.getStrategyLocal(), cassandraConfig.getStrategyOptionsLocal())
+            CQLUtils.getFormattedReplication(
+                cassandraConfig.getStrategyLocal(), cassandraConfig.getStrategyOptionsLocal())
 
         );
 

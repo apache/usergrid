@@ -205,7 +205,7 @@ public class CassandraConfigImpl implements CassandraConfig {
 
     @Override
     public String getStrategy() {
-        return cassandraFig.getStrategyLocal();
+        return cassandraFig.getStrategy();
     }
 
     @Override
