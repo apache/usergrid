@@ -20,8 +20,6 @@ package org.apache.usergrid.persistence.core;
 
 
 import com.netflix.astyanax.model.ConsistencyLevel;
-import org.apache.cassandra.db.marshal.AbstractCompositeType;
-import org.apache.log4j.lf5.viewer.categoryexplorer.CategoryPath;
 
 
 /**
