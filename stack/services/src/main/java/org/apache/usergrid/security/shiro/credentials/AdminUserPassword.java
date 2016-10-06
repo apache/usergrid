@@ -19,6 +19,8 @@ package org.apache.usergrid.security.shiro.credentials;
 
 public class AdminUserPassword extends AbstractPasswordCredentials implements AdminUserCredentials {
 
+    public AdminUserPassword(){} //do not remove, needed for Jackson
+
     public AdminUserPassword( String password ) {
         super( password );
     }

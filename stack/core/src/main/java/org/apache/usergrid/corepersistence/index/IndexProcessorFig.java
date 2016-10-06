@@ -90,7 +90,7 @@ public interface IndexProcessorFig extends GuicyFig {
     @Key(ELASTICSEARCH_QUEUE_IMPL)
     String getQueueImplementation();
 
-    @Default("100")
+    @Default("500")
     @Key(REINDEX_BUFFER_SIZE)
     int getReindexBufferSize();
 
