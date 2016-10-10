@@ -38,16 +38,17 @@ public class QueueSenderRouter extends UntypedActor {
 
 
     @Inject
-    public QueueSenderRouter( Injector injector ) {
+    public QueueSenderRouter() {
 
         this.router = getContext().actorOf( FromConfig.getInstance().props(
-            Props.create( GuiceActorProducer.class, QueueSender.class )), "router");
+            Props.create( GuiceActorProducer.class, QueueSender.class )
+                .withDispatcher("akka.blocking-io-dispatcher")), "router");
     }
 
     @Override
     public void onReceive(Object message) {
 
-        if ( message instanceof QueueSendRequest) {
+        if ( message instanceof QueueSendRequest ) {
             router.tell( message, getSender() );
 
         } else {

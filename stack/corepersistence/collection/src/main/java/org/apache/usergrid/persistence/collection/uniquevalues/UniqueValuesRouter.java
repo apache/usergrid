@@ -34,25 +34,16 @@ import org.slf4j.LoggerFactory;
 public class UniqueValuesRouter extends UntypedActor {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValueActor.class );
 
-    private final String name = RandomStringUtils.randomAlphanumeric( 4 );
-
     private final ActorRef router;
 
+
     @Inject
-    public UniqueValuesRouter(Injector injector ) {
+    public UniqueValuesRouter() {
 
         router = getContext().actorOf(
-            FromConfig.getInstance()
-                .props(Props.create(UniqueValueActor.class)
+            FromConfig.getInstance().props(
+                Props.create( UniqueValueActor.class)
                     .withDispatcher("akka.blocking-io-dispatcher")), "router");
-
-        // TODO: is there some way to pass the injector here without getting this exception:
-        // NotSerializableException: No configured serialization-bindings for class [InjectorImpl]
-        //router = getContext().actorOf(
-            //FromConfig.getInstance().props( Props.create( GuiceActorProducer.class, injector, UniqueValueActor.class)),
-            //"router" );
-
-        //logger.info("UniqueValuesRouter {} is live with injector {}", name, injector);
     }
 
     @Override

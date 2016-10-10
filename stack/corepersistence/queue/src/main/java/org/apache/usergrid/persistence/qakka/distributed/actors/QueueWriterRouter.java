@@ -36,18 +36,19 @@ public class QueueWriterRouter extends UntypedActor {
 
     private final ActorRef router;
 
+
     @Inject
     public QueueWriterRouter() {
 
         this.router = getContext().actorOf( FromConfig.getInstance().props(
-            Props.create( GuiceActorProducer.class, QueueWriter.class )), "router");
+            Props.create( GuiceActorProducer.class, QueueWriter.class )
+                .withDispatcher("akka.blocking-io-dispatcher")), "router");
     }
 
     @Override
     public void onReceive(Object message) {
 
-        if (   message instanceof QueueWriteRequest || message instanceof QueueAckRequest ) {
-
+        if ( message instanceof QueueWriteRequest || message instanceof QueueAckRequest ) {
             router.tell( message, getSender() );
 
         } else {
