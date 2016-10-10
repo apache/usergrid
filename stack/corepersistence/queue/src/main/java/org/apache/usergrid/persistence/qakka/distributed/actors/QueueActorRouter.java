@@ -46,7 +46,8 @@ public class QueueActorRouter extends UntypedActor {
         this.queueActorRouterProducer = queueActorRouterProducer;
 
         this.routerRef = getContext().actorOf( FromConfig.getInstance().props(
-            Props.create(GuiceActorProducer.class, QueueActor.class)), "router");
+            Props.create( GuiceActorProducer.class, QueueActor.class)
+                .withDispatcher("akka.blocking-io-dispatcher")), "router");
     }
 
     @Override
