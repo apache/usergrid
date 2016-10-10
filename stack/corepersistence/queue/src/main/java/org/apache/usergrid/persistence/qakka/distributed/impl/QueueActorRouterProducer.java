@@ -28,6 +28,7 @@ import akka.cluster.singleton.ClusterSingletonProxy;
 import akka.cluster.singleton.ClusterSingletonProxySettings;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
 import org.apache.usergrid.persistence.actorsystem.RouterProducer;
@@ -41,6 +42,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
+@Singleton
 public class QueueActorRouterProducer implements RouterProducer {
 
     static Injector injector;
@@ -131,7 +133,6 @@ public class QueueActorRouterProducer implements RouterProducer {
     public Collection<Class> getMessageTypes() {
         return new ArrayList() {{
             add( QueueGetRequest.class );
-            add( QueueAckRequest.class );
             add( QueueInitRequest.class );
             add( QueueRefreshRequest.class );
             add( QueueTimeoutRequest.class );

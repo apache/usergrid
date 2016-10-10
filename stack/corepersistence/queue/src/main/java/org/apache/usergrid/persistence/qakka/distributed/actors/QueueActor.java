@@ -64,31 +64,22 @@ public class QueueActor extends UntypedActor {
 
     private final Set<String> queuesSeen = new HashSet<>();
 
-    //private final Injector injector;
-
 
     @Inject
     public QueueActor(
-        //Injector         injector,
         QakkaFig         qakkaFig,
         InMemoryQueue    inMemoryQueue,
         QueueActorHelper queueActorHelper,
         MetricsService   metricsService,
         MessageCounterSerialization messageCounterSerialization
     ) {
-        //this.injector = injector;
         this.qakkaFig = qakkaFig;
         this.inMemoryQueue = inMemoryQueue;
         this.queueActorHelper = queueActorHelper;
         this.metricsService = metricsService;
         this.messageCounterSerialization = messageCounterSerialization;
-
-//        qakkaFig         = injector.getInstance( QakkaFig.class );
-//        inMemoryQueue    = injector.getInstance( InMemoryQueue.class );
-//        queueActorHelper = injector.getInstance( QueueActorHelper.class );
-//        metricsService   = injector.getInstance( MetricsService.class );
-//        messageCounterSerialization = injector.getInstance( MessageCounterSerialization.class );
     }
+
 
     @Override
     public void onReceive(Object message) {
@@ -134,6 +125,7 @@ public class QueueActor extends UntypedActor {
                 logger.debug("Created shard allocater for queue {}", request.getQueueName() );
             }
 
+
         } else if ( message instanceof QueueRefreshRequest ) {
             QueueRefreshRequest request = (QueueRefreshRequest)message;
             queuesSeen.add( request.getQueueName() );
@@ -154,6 +146,7 @@ public class QueueActor extends UntypedActor {
             // hand-off to queue's reader
             queueReadersByQueueName.get( request.getQueueName() ).tell( request, self() );
 
+
         } else if ( message instanceof QueueTimeoutRequest ) {
             QueueTimeoutRequest request = (QueueTimeoutRequest)message;
 
@@ -168,6 +161,7 @@ public class QueueActor extends UntypedActor {
 
             // ASYNCHRONOUS -> hand-off to queue's timeouter
             queueTimeoutersByQueueName.get( request.getQueueName() ).tell( request, self() );
+
 
         } else if ( message instanceof ShardCheckRequest ) {
             ShardCheckRequest request = (ShardCheckRequest)message;
@@ -184,6 +178,7 @@ public class QueueActor extends UntypedActor {
             // ASYNCHRONOUS -> hand-off to queue's shard allocator
             shardAllocatorsByQueueName.get( request.getQueueName() ).tell( request, self() );
 
+
         } else if ( message instanceof QueueGetRequest) {
 
             QueueGetRequest queueGetRequest = (QueueGetRequest) message;
@@ -199,30 +194,7 @@ public class QueueActor extends UntypedActor {
                 Collection<DatabaseQueueMessage> messages = queueActorHelper.getMessages( queueName, numRequested);
 
                 getSender().tell( new QueueGetResponse(
-                        DistributedQueueService.Status.SUCCESS, messages ), getSender() );
-
-            } finally {
-                timer.close();
-            }
-
-
-        } else if ( message instanceof QueueAckRequest) {
-
-            Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.ACK_TIME_ACK ).time();
-            try {
-
-                QueueAckRequest queueAckRequest = (QueueAckRequest) message;
-
-                queuesSeen.add( queueAckRequest.getQueueName() );
-
-                DistributedQueueService.Status status = queueActorHelper.ackQueueMessage(
-                        queueAckRequest.getQueueName(),
-                        queueAckRequest.getQueueMessageId() );
-
-                getSender().tell( new QueueAckResponse(
-                        queueAckRequest.getQueueName(),
-                        queueAckRequest.getQueueMessageId(),
-                        status ), getSender() );
+                        DistributedQueueService.Status.SUCCESS, messages, queueName ), getSender() );
 
             } finally {
                 timer.close();

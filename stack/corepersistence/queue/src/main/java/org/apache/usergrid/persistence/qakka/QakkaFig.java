@@ -109,7 +109,7 @@ public interface QakkaFig extends GuicyFig, Serializable {
 
     /** How long to wait for response from queue actor before timing out and trying again */
     @Key(QUEUE_GET_TIMEOUT)
-    @Default("4")
+    @Default("1")
     int getGetTimeoutSeconds();
 
     /** Max number of times to retry call to queue writer for queue send operation */

@@ -19,13 +19,10 @@
 
 package org.apache.usergrid.persistence.qakka.api;
 
-import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
-import org.apache.usergrid.persistence.qakka.MetricsService;
 import org.apache.usergrid.persistence.qakka.core.*;
-import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardCounterSerialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +43,6 @@ public class QueueResource {
 
     private final QueueManager        queueManager;
     private final QueueMessageManager queueMessageManager;
-    private final MetricsService      metricsService;
     private final URIStrategy         uriStrategy;
     private final Regions             regions;
 
@@ -55,13 +51,11 @@ public class QueueResource {
     public QueueResource(
             QueueManager              queueManager,
             QueueMessageManager       queueMessageManager,
-            MetricsService            metricsService,
             URIStrategy               uriStrategy,
             Regions                   regions ) {
 
         this.queueManager              = queueManager;
         this.queueMessageManager       = queueMessageManager;
-        this.metricsService            = metricsService;
         this.uriStrategy               = uriStrategy;
         this.regions                   = regions;
     }
@@ -262,8 +256,6 @@ public class QueueResource {
                                    String contentType,
                                    ByteBuffer byteBuffer) {
 
-        Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.SEND_TIME_TOTAL ).time();
-        try {
 
             Preconditions.checkArgument( !QakkaUtils.isNullOrEmpty( queueName ), "Queue name is required" );
 
@@ -285,9 +277,6 @@ public class QueueResource {
             apiResponse.setCount( 1 );
             return Response.ok().entity( apiResponse ).build();
 
-        } finally {
-            timer.close();
-        }
     }
 
 
@@ -297,38 +286,31 @@ public class QueueResource {
     public Response getNextMessages( @PathParam("queueName") String queueName,
                                      @QueryParam("count") @DefaultValue("1") String countParam) throws Exception {
 
-        Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.GET_TIME_TOTAL ).time();
+        Preconditions.checkArgument( !QakkaUtils.isNullOrEmpty( queueName ), "Queue name is required" );
+
+        int count = 1;
         try {
-
-            Preconditions.checkArgument( !QakkaUtils.isNullOrEmpty( queueName ), "Queue name is required" );
-
-            int count = 1;
-            try {
-                count = Integer.parseInt( countParam );
-            } catch (Exception e) {
-                throw new IllegalArgumentException( "Invalid count parameter" );
-            }
-            if (count <= 0) {
-                // invalid count
-                throw new IllegalArgumentException( "Count must be >= 1" );
-            }
-
-            List<QueueMessage> messages = queueMessageManager.getNextMessages( queueName, count );
-
-            ApiResponse apiResponse = new ApiResponse();
-
-            if (messages != null && !messages.isEmpty()) {
-                apiResponse.setQueueMessages( messages );
-
-            } else { // always return queueMessages field
-                apiResponse.setQueueMessages( Collections.EMPTY_LIST );
-            }
-            apiResponse.setCount( apiResponse.getQueueMessages().size() );
-            return Response.ok().entity( apiResponse ).build();
-
-        } finally {
-            timer.close();
+            count = Integer.parseInt( countParam );
+        } catch (Exception e) {
+            throw new IllegalArgumentException( "Invalid count parameter" );
         }
+        if (count <= 0) {
+            // invalid count
+            throw new IllegalArgumentException( "Count must be >= 1" );
+        }
+
+        List<QueueMessage> messages = queueMessageManager.getNextMessages( queueName, count );
+
+        ApiResponse apiResponse = new ApiResponse();
+
+        if (messages != null && !messages.isEmpty()) {
+            apiResponse.setQueueMessages( messages );
+
+        } else { // always return queueMessages field
+            apiResponse.setQueueMessages( Collections.EMPTY_LIST );
+        }
+        apiResponse.setCount( apiResponse.getQueueMessages().size() );
+        return Response.ok().entity( apiResponse ).build();
     }
 
 
@@ -338,25 +320,18 @@ public class QueueResource {
     public Response ackMessage( @PathParam("queueName") String queueName,
                                 @PathParam("queueMessageId") String queueMessageId) throws Exception {
 
-        Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.ACK_TIME_TOTAL ).time();
+        Preconditions.checkArgument( !QakkaUtils.isNullOrEmpty( queueName ), "Queue name is required" );
+
+        UUID messageUuid;
         try {
-
-            Preconditions.checkArgument( !QakkaUtils.isNullOrEmpty( queueName ), "Queue name is required" );
-
-            UUID messageUuid;
-            try {
-                messageUuid = UUID.fromString( queueMessageId );
-            } catch (Exception e) {
-                throw new IllegalArgumentException( "Invalid queue message UUID" );
-            }
-            queueMessageManager.ackMessage( queueName, messageUuid );
-
-            ApiResponse apiResponse = new ApiResponse();
-            return Response.ok().entity( apiResponse ).build();
-
-        } finally {
-            timer.close();
+            messageUuid = UUID.fromString( queueMessageId );
+        } catch (Exception e) {
+            throw new IllegalArgumentException( "Invalid queue message UUID" );
         }
+        queueMessageManager.ackMessage( queueName, messageUuid );
+
+        ApiResponse apiResponse = new ApiResponse();
+        return Response.ok().entity( apiResponse ).build();
     }
 
 

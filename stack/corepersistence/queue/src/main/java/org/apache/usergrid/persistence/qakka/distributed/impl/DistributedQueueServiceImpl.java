@@ -22,14 +22,16 @@ package org.apache.usergrid.persistence.qakka.distributed.impl;
 import akka.actor.ActorRef;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
+import com.codahale.metrics.*;
+import com.codahale.metrics.Timer;
 import com.datastax.driver.core.exceptions.InvalidQueryException;
-import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.actorsystem.ClientActor;
 import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
+import org.apache.usergrid.persistence.qakka.MetricsService;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.QueueManager;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
@@ -37,7 +39,6 @@ import org.apache.usergrid.persistence.qakka.distributed.messages.*;
 import org.apache.usergrid.persistence.qakka.exceptions.NotFoundException;
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
-import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.Await;
@@ -56,19 +57,21 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     private final ActorSystemManager actorSystemManager;
     private final QueueManager queueManager;
     private final QakkaFig qakkaFig;
-
+    private final MetricsService metricsService;
 
     @Inject
     public DistributedQueueServiceImpl(
             Injector injector,
             ActorSystemManager actorSystemManager,
             QueueManager queueManager,
-            QakkaFig qakkaFig
+            QakkaFig qakkaFig,
+            MetricsService metricsService
             ) {
 
         this.actorSystemManager = actorSystemManager;
         this.queueManager = queueManager;
         this.qakkaFig = qakkaFig;
+        this.metricsService = metricsService;
 
         GuiceActorProducer.INJECTOR = injector;
     }
@@ -154,59 +157,66 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
             String queueName, String sourceRegion, String destRegion, UUID messageId,
             Long deliveryTime, Long expirationTime ) {
 
-        if ( queueManager.getQueueConfig( queueName ) == null ) {
-            throw new NotFoundException( "Queue not found: " + queueName );
-        }
+        Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.SEND_TIME_TOTAL ).time();
+        try {
 
-        int maxRetries = qakkaFig.getMaxSendRetries();
-        int retries = 0;
+            if ( queueManager.getQueueConfig( queueName ) == null ) {
+                throw new NotFoundException( "Queue not found: " + queueName );
+            }
 
-        QueueSendRequest request = new QueueSendRequest(
-                queueName, sourceRegion, destRegion, messageId, deliveryTime, expirationTime );
+            int maxRetries = qakkaFig.getMaxSendRetries();
+            int retries = 0;
 
-        while ( retries++ < maxRetries ) {
-            try {
-                Timeout t = new Timeout( qakkaFig.getSendTimeoutSeconds(), TimeUnit.SECONDS );
+            QueueSendRequest request = new QueueSendRequest(
+                    queueName, sourceRegion, destRegion, messageId, deliveryTime, expirationTime );
 
-                // send to current region via local clientActor
-                ActorRef clientActor = actorSystemManager.getClientActor();
-                Future<Object> fut = Patterns.ask( clientActor, request, t );
+            while ( retries++ < maxRetries ) {
+                try {
+                    Timeout t = new Timeout( qakkaFig.getSendTimeoutSeconds(), TimeUnit.SECONDS );
 
-                // wait for response...
-                final Object response = Await.result( fut, t.duration() );
+                    // send to current region via local clientActor
+                    ActorRef clientActor = actorSystemManager.getClientActor();
+                    Future<Object> fut = Patterns.ask( clientActor, request, t );
 
-                if ( response != null && response instanceof QueueSendResponse) {
-                    QueueSendResponse qarm = (QueueSendResponse)response;
+                    // wait for response...
+                    final Object response = Await.result( fut, t.duration() );
 
-                    if ( !DistributedQueueService.Status.ERROR.equals( qarm.getSendStatus() )) {
+                    if ( response != null && response instanceof QueueSendResponse) {
+                        QueueSendResponse qarm = (QueueSendResponse)response;
 
-                        if ( retries > 1 ) {
-                            logger.debug("SUCCESS after {} retries", retries );
+                        if ( !DistributedQueueService.Status.ERROR.equals( qarm.getSendStatus() )) {
+
+                            if ( retries > 1 ) {
+                                logger.debug("SUCCESS after {} retries", retries );
+                            }
+
+                            // send refresh-queue-if-empty message
+                            QueueRefreshRequest qrr = new QueueRefreshRequest( queueName, false );
+                            clientActor.tell( qrr, null );
+
+                            return qarm.getSendStatus();
+
+                        } else {
+                            logger.debug("ERROR STATUS sending to queue, retrying {}", retries );
                         }
 
-                        // send refresh-queue-if-empty message
-                        QueueRefreshRequest qrr = new QueueRefreshRequest( queueName, false );
-                        clientActor.tell( qrr, null );
-
-                        return qarm.getSendStatus();
+                    } else if ( response != null  ) {
+                        logger.debug("NULL RESPONSE sending to queue, retrying {}", retries );
 
                     } else {
-                        logger.debug("ERROR STATUS sending to queue, retrying {}", retries );
+                        logger.debug("TIMEOUT sending to queue, retrying {}", retries );
                     }
 
-                } else if ( response != null  ) {
-                    logger.debug("NULL RESPONSE sending to queue, retrying {}", retries );
-
-                } else {
-                    logger.debug("TIMEOUT sending to queue, retrying {}", retries );
+                } catch ( Exception e ) {
+                    logger.debug("ERROR sending to queue, retrying " + retries, e );
                 }
-
-            } catch ( Exception e ) {
-                logger.debug("ERROR sending to queue, retrying " + retries, e );
             }
-        }
 
-        throw new QakkaRuntimeException( "Error sending to queue after " + retries );
+            throw new QakkaRuntimeException( "Error sending to queue after " + retries );
+
+        } finally {
+            timer.close();
+        }
     }
 
 
@@ -214,19 +224,32 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     public Collection<DatabaseQueueMessage> getNextMessages( String queueName, int count ) {
         List<DatabaseQueueMessage> ret = new ArrayList<>();
 
-        long startTime = System.currentTimeMillis();
+        com.codahale.metrics.Timer.Context timer =
+            metricsService.getMetricRegistry().timer( MetricsService.GET_TIME_TOTAL ).time();
 
-        while ( ret.size() < count
-            && System.currentTimeMillis() - startTime < qakkaFig.getLongPollTimeMillis()) {
+        try {
 
-            ret.addAll( getNextMessagesInternal( queueName, count ));
+            long startTime = System.currentTimeMillis();
 
-            if ( ret.size() < count ) {
-                try { Thread.sleep( qakkaFig.getLongPollTimeMillis() / 2 ); } catch (Exception ignored) {}
+            while ( ret.size() < count
+                && System.currentTimeMillis() - startTime < qakkaFig.getLongPollTimeMillis()) {
+
+                ret.addAll( getNextMessagesInternal( queueName, count ));
+
+                if ( ret.size() < count ) {
+                    try { Thread.sleep( qakkaFig.getLongPollTimeMillis() / 2 ); } catch (Exception ignored) {}
+                }
             }
+
+            if ( ret.isEmpty() ) {
+                logger.info( "Requested {} but queue '{}' is empty", count, queueName);
+            }
+            return ret;
+
+        } finally {
+            timer.close();
         }
 
-        return ret;
     }
 
 
@@ -242,10 +265,10 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
         }
 
         int maxRetries = qakkaFig.getMaxGetRetries();
-        int retries = 0;
+        int tries = 0;
 
         QueueGetRequest request = new QueueGetRequest( queueName, count );
-        while ( ++retries < maxRetries ) {
+        while ( ++tries < maxRetries ) {
             try {
                 Timeout t = new Timeout( qakkaFig.getGetTimeoutSeconds(), TimeUnit.SECONDS );
 
@@ -261,8 +284,8 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
                     if ( response != null && response instanceof QueueGetResponse) {
                         QueueGetResponse qprm = (QueueGetResponse)response;
                         if ( qprm.isSuccess() ) {
-                            if (retries > 1) {
-                                logger.debug( "getNextMessage {} SUCCESS after {} retries", queueName, retries );
+                            if (tries > 1) {
+                                logger.warn( "getNextMessage {} SUCCESS after {} tries", queueName, tries );
                             }
                         }
                         logger.debug("Returning queue {} messages {}", queueName, qprm.getQueueMessages().size());
@@ -270,41 +293,49 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
 
 
                     } else if ( response != null  ) {
-                        logger.debug("ERROR RESPONSE (1) popping queue {}, retrying {}", queueName, retries );
+                        logger.debug("ERROR RESPONSE (1) popping queue {}, retrying {}", queueName, tries );
 
                     } else {
-                        logger.debug("TIMEOUT popping from queue {}, retrying {}", queueName, retries );
+                        logger.debug("TIMEOUT popping from queue {}, retrying {}", queueName, tries );
                     }
 
                 } else if ( responseObject instanceof ClientActor.ErrorResponse ) {
 
                     final ClientActor.ErrorResponse errorResponse = (ClientActor.ErrorResponse)responseObject;
                     logger.debug("ACTORSYSTEM ERROR popping queue: {}, retrying {}",
-                        errorResponse.getMessage(), retries );
+                        errorResponse.getMessage(), tries );
 
                 } else {
-                    logger.debug("UNKNOWN RESPONSE popping queue {}, retrying {}", queueName, retries );
+                    logger.debug("UNKNOWN RESPONSE popping queue {}, retrying {}", queueName, tries );
                 }
 
             } catch ( Exception e ) {
-                logger.debug("ERROR popping to queue " + queueName + " retrying " + retries, e );
+                logger.error("ERROR popping to queue " + queueName + " retrying " + tries, e );
             }
         }
 
         throw new QakkaRuntimeException(
-                "Error getting from queue " + queueName + " after " + retries + " tries");
+                "Error getting from queue " + queueName + " after " + tries + " tries");
     }
 
 
     @Override
     public Status ackMessage(String queueName, UUID queueMessageId ) {
 
-        if ( queueManager.getQueueConfig( queueName ) == null ) {
-            throw new NotFoundException( "Queue not found: " + queueName );
-        }
+        Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.ACK_TIME_TOTAL ).time();
+        try {
 
-        QueueAckRequest message = new QueueAckRequest( queueName, queueMessageId );
-        return sendMessageToLocalQueueActors( message );
+            if ( queueManager.getQueueConfig( queueName ) == null ) {
+                throw new NotFoundException( "Queue not found: " + queueName );
+            }
+
+            QueueAckRequest message = new QueueAckRequest( queueName, queueMessageId );
+            return sendMessageToLocalRouters( message );
+
+
+        } finally {
+            timer.close();
+        }
     }
 
 
@@ -316,7 +347,7 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
         }
 
         QueueAckRequest message = new QueueAckRequest( queueName, messageId );
-        return sendMessageToLocalQueueActors( message );
+        return sendMessageToLocalRouters( message );
     }
 
 
@@ -332,7 +363,7 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     }
 
 
-    private Status sendMessageToLocalQueueActors( QakkaMessage message ) {
+    private Status sendMessageToLocalRouters( QakkaMessage message ) {
 
         int maxRetries = 5;
         int retries = 0;
@@ -367,6 +398,6 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     }
 
     public void shutdown() {
-        actorSystemManager.shutdownAll();
+        // no op
     }
 }

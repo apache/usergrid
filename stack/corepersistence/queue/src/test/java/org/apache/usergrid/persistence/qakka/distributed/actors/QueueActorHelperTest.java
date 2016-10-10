@@ -177,7 +177,7 @@ public class QueueActorHelperTest extends AbstractTest {
             // put message inflight
 
             QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
-            helper.putInflight( queueName, message );
+            helper.putInflight( message );
 
             // message must be gone from messages_available table
 

@@ -25,9 +25,11 @@ import org.apache.usergrid.persistence.qakka.distributed.actors.QueueWriter;
 
 public class QueueWriteResponse implements QakkaMessage {
     private final QueueWriter.WriteStatus status;
+    private String queueName;
 
-    public QueueWriteResponse(QueueWriter.WriteStatus status) {
+    public QueueWriteResponse(QueueWriter.WriteStatus status, String queueName ) {
         this.status = status;
+        this.queueName = queueName;
     }
 
     public QueueWriter.WriteStatus getSendStatus() {
@@ -40,4 +42,8 @@ public class QueueWriteResponse implements QakkaMessage {
                 .toString();
     }
 
+    @Override
+    public String getQueueName() {
+        return queueName;
+    }
 }

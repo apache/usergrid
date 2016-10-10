@@ -19,6 +19,7 @@
 
 package org.apache.usergrid.persistence.qakka.serialization.queuemessages.impl;
 
+import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.Clause;
@@ -137,12 +138,6 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
         final UUID queueMessageId =  message.getQueueMessageId() == null ?
                 QakkaUtils.getTimeUuid() : message.getQueueMessageId();
 
-        long queuedAt = message.getQueuedAt() == null ?
-                System.currentTimeMillis() : message.getQueuedAt();
-
-        long inflightAt = message.getInflightAt() == null ?
-                message.getQueuedAt() : message.getInflightAt();
-
         Shard.Type shardType = DatabaseQueueMessage.Type.DEFAULT.equals( message.getType() ) ?
                 Shard.Type.DEFAULT : Shard.Type.INFLIGHT;
 
@@ -152,16 +147,7 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
             message.setShardId( shard.getShardId() );
         }
 
-        Statement insert = QueryBuilder.insertInto(getTableName(message.getType()))
-                .value( COLUMN_QUEUE_NAME,       message.getQueueName())
-                .value( COLUMN_REGION,           message.getRegion())
-                .value( COLUMN_SHARD_ID,         message.getShardId())
-                .value( COLUMN_MESSAGE_ID,       message.getMessageId())
-                .value( COLUMN_QUEUE_MESSAGE_ID, queueMessageId)
-                .value( COLUMN_INFLIGHT_AT,      inflightAt )
-                .value( COLUMN_QUEUED_AT,        queuedAt)
-            .using( QueryBuilder.ttl( maxTtl ) );
-
+        Statement insert = createWriteMessageStatement( message );
         cassandraClient.getQueueMessageSession().execute(insert);
 
         shardCounterSerialization.incrementCounter( message.getQueueName(), shardType, message.getShardId(), 1 );
@@ -233,28 +219,7 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
             final DatabaseQueueMessage.Type type,
             final UUID queueMessageId ) {
 
-        final long shardId;
-        if ( shardIdOrNull == null ) {
-            Shard.Type shardType = DatabaseQueueMessage.Type.DEFAULT.equals( type ) ?
-                    Shard.Type.DEFAULT : Shard.Type.INFLIGHT;
-            Shard shard = shardStrategy.selectShard(
-                    queueName, actorSystemFig.getRegionLocal(), shardType, queueMessageId );
-            shardId = shard.getShardId();
-        } else {
-            shardId = shardIdOrNull;
-        }
-
-        Clause queueNameClause = QueryBuilder.eq(      COLUMN_QUEUE_NAME, queueName );
-        Clause regionClause = QueryBuilder.eq(         COLUMN_REGION, region );
-        Clause shardIdClause = QueryBuilder.eq(        COLUMN_SHARD_ID, shardId );
-        Clause queueMessageIdClause = QueryBuilder.eq( COLUMN_QUEUE_MESSAGE_ID, queueMessageId);
-
-        Statement delete = QueryBuilder.delete().from(getTableName( type ))
-                .where(queueNameClause)
-                .and(regionClause)
-                .and(shardIdClause)
-                .and(queueMessageIdClause);
-
+        Statement delete = createDeleteMessageStatement( queueName, region, null, type,queueMessageId);
         cassandraClient.getQueueMessageSession().execute( delete );
 
         messageCounterSerialization.decrementCounter( queueName, type, 1L );
@@ -297,11 +262,115 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
     public void deleteMessageData( final UUID messageId ) {
 
         Clause messageIdClause = QueryBuilder.eq(COLUMN_MESSAGE_ID, messageId);
-
-        Statement delete = QueryBuilder.delete().from(TABLE_MESSAGE_DATA)
-                .where(messageIdClause);
+        Statement delete = QueryBuilder.delete().from(TABLE_MESSAGE_DATA).where(messageIdClause);
 
         cassandraClient.getApplicationSession().execute(delete);
+    }
+
+
+    @Override
+    public void putInflight( DatabaseQueueMessage message ) {
+
+        // create statement to write new queue message to inflight table
+
+        Shard.Type shardType = Shard.Type.INFLIGHT;
+        Shard shard = shardStrategy.selectShard(
+            message.getQueueName(), message.getRegion(), shardType, message.getQueueMessageId() );
+
+        DatabaseQueueMessage inflightMessage = new DatabaseQueueMessage(
+            message.getMessageId(),
+            DatabaseQueueMessage.Type.INFLIGHT,
+            message.getQueueName(),
+            message.getRegion(),
+            shard.getShardId(),
+            message.getQueuedAt(),
+            System.currentTimeMillis(),
+            message.getQueueMessageId() );
+
+        Statement insert = createWriteMessageStatement( inflightMessage );
+
+        // create statement to delete queue message from available table
+
+        Statement delete = createDeleteMessageStatement(
+            message.getQueueName(),
+            message.getRegion(),
+            null,
+            DatabaseQueueMessage.Type.DEFAULT,
+            message.getQueueMessageId());
+
+        // execute statements as a batch
+
+        BatchStatement batchStatement = new BatchStatement();
+        batchStatement.add( insert );
+        batchStatement.add( delete );
+        cassandraClient.getQueueMessageSession().execute( batchStatement );
+
+        // bump counters
+
+        shardCounterSerialization.incrementCounter(
+            message.getQueueName(), Shard.Type.INFLIGHT, message.getShardId(), 1 );
+
+        messageCounterSerialization.incrementCounter(
+            message.getQueueName(), DatabaseQueueMessage.Type.INFLIGHT, 1L );
+
+        messageCounterSerialization.decrementCounter(
+            message.getQueueName(), DatabaseQueueMessage.Type.DEFAULT, 1L );
+    }
+
+
+    private Statement createDeleteMessageStatement( final String queueName,
+                                                    final String region,
+                                                    final Long shardIdOrNull,
+                                                    final DatabaseQueueMessage.Type type,
+                                                    final UUID queueMessageId ) {
+        final long shardId;
+        if ( shardIdOrNull == null ) {
+            Shard.Type shardType = DatabaseQueueMessage.Type.DEFAULT.equals( type ) ?
+                Shard.Type.DEFAULT : Shard.Type.INFLIGHT;
+            Shard shard = shardStrategy.selectShard(
+                queueName, region, shardType, queueMessageId );
+            shardId = shard.getShardId();
+        } else {
+            shardId = shardIdOrNull;
+        }
+
+        Clause queueNameClause = QueryBuilder.eq(      COLUMN_QUEUE_NAME, queueName );
+        Clause regionClause = QueryBuilder.eq(         COLUMN_REGION, region );
+        Clause shardIdClause = QueryBuilder.eq(        COLUMN_SHARD_ID, shardId );
+        Clause queueMessageIdClause = QueryBuilder.eq( COLUMN_QUEUE_MESSAGE_ID, queueMessageId);
+
+        Statement delete = QueryBuilder.delete().from(getTableName( type ))
+            .where(queueNameClause)
+            .and(regionClause)
+            .and(shardIdClause)
+            .and(queueMessageIdClause);
+
+        return delete;
+    }
+
+
+    private Statement createWriteMessageStatement( DatabaseQueueMessage message ) {
+
+        final UUID queueMessageId =  message.getQueueMessageId() == null ?
+            QakkaUtils.getTimeUuid() : message.getQueueMessageId();
+
+        long queuedAt = message.getQueuedAt() == null ?
+            System.currentTimeMillis() : message.getQueuedAt();
+
+        long inflightAt = message.getInflightAt() == null ?
+            message.getQueuedAt() : message.getInflightAt();
+
+        Statement insert = QueryBuilder.insertInto(getTableName(message.getType()))
+            .value( COLUMN_QUEUE_NAME,       message.getQueueName())
+            .value( COLUMN_REGION,           message.getRegion())
+            .value( COLUMN_SHARD_ID,         message.getShardId())
+            .value( COLUMN_MESSAGE_ID,       message.getMessageId())
+            .value( COLUMN_QUEUE_MESSAGE_ID, queueMessageId)
+            .value( COLUMN_INFLIGHT_AT,      inflightAt )
+            .value( COLUMN_QUEUED_AT,        queuedAt)
+            .using( QueryBuilder.ttl( maxTtl ) );
+
+        return insert;
     }
 
 

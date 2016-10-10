@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
 
 public class QueueActorHelper {
@@ -54,9 +53,6 @@ public class QueueActorHelper {
     private final QakkaFig                  qakkaFig;
     private final MetricsService            metricsService;
     private final CassandraClient           cassandraClient;
-
-    private final AtomicLong runCount = new AtomicLong(0);
-    private final AtomicLong totalRead = new AtomicLong(0);
 
 
     @Inject
@@ -109,7 +105,7 @@ public class QueueActorHelper {
 
             if (queueMessage != null) {
 
-                if (putInflight( queueName, queueMessage )) {
+                if (putInflight( queueMessage )) {
                     queueMessages.add( queueMessage );
                 }
 
@@ -125,10 +121,48 @@ public class QueueActorHelper {
     }
 
 
+    boolean putInflight( DatabaseQueueMessage queueMessage ) {
+
+        UUID qmid = queueMessage.getQueueMessageId();
+        try {
+
+            messageSerialization.putInflight( queueMessage );
+
+        } catch ( Throwable t ) {
+            logger.error("Error putting inflight queue message "
+                + qmid + " queue name: " + queueMessage.getQueueName(), t);
+
+            auditLogSerialization.recordAuditLog(
+                AuditLog.Action.GET,
+                AuditLog.Status.ERROR,
+                queueMessage.getQueueName(),
+                actorSystemFig.getRegionLocal(),
+                queueMessage.getMessageId(),
+                qmid);
+
+            return false;
+        }
+
+        auditLogSerialization.recordAuditLog(
+            AuditLog.Action.GET,
+            AuditLog.Status.SUCCESS,
+            queueMessage.getQueueName(),
+            actorSystemFig.getRegionLocal(),
+            queueMessage.getMessageId(),
+            qmid);
+
+        return true;
+    }
+
+
     DistributedQueueService.Status ackQueueMessage(String queueName, UUID queueMessageId ) {
 
-        DatabaseQueueMessage queueMessage = loadDatabaseQueueMessage(
-                queueName, queueMessageId, DatabaseQueueMessage.Type.INFLIGHT );
+        DatabaseQueueMessage queueMessage = messageSerialization.loadMessage(
+            queueName,
+            actorSystemFig.getRegionLocal(),
+            null,
+            DatabaseQueueMessage.Type.INFLIGHT,
+            queueMessageId );
 
         if ( queueMessage == null ) {
             logger.error("Queue {} queue message id {} not found in inflight table", queueName, queueMessageId);
@@ -173,107 +207,5 @@ public class QueueActorHelper {
 
             return DistributedQueueService.Status.ERROR;
         }
-    }
-
-
-    boolean putInflight( String queueName, DatabaseQueueMessage queueMessage ) {
-
-        UUID qmid = queueMessage.getQueueMessageId();
-        try {
-
-            DatabaseQueueMessage inflightMessage = new DatabaseQueueMessage(
-                queueMessage.getMessageId(),
-                DatabaseQueueMessage.Type.INFLIGHT,
-                queueName,
-                actorSystemFig.getRegionLocal(),
-                null,                         // let serialization select the shard
-                queueMessage.getQueuedAt(),
-                System.currentTimeMillis(),
-                qmid);
-
-            messageSerialization.writeMessage( inflightMessage );
-
-            DatabaseQueueMessage retrieved = loadDatabaseQueueMessage(
-                queueName, qmid, DatabaseQueueMessage.Type.INFLIGHT );
-            if ( retrieved == null ) {
-                logger.error("Failed ot write queue message id {} to inflight table", qmid);
-                return false;
-            }
-
-            messageSerialization.deleteMessage(
-                    queueName,
-                    actorSystemFig.getRegionLocal(),
-                    null,
-                    DatabaseQueueMessage.Type.DEFAULT,
-                    qmid);
-
-            //logger.debug("Put message {} inflight for queue name {}", qmid, queueName);
-
-        } catch ( Throwable t ) {
-            logger.error("Error putting inflight queue message " + qmid + " queue name: " + queueName, t);
-
-            auditLogSerialization.recordAuditLog(
-                    AuditLog.Action.GET,
-                    AuditLog.Status.ERROR,
-                    queueName,
-                    actorSystemFig.getRegionLocal(),
-                    queueMessage.getMessageId(),
-                    qmid);
-
-            return false;
-        }
-
-        auditLogSerialization.recordAuditLog(
-                AuditLog.Action.GET,
-                AuditLog.Status.SUCCESS,
-                queueName,
-                actorSystemFig.getRegionLocal(),
-                queueMessage.getMessageId(),
-                qmid);
-
-        return true;
-    }
-
-
-    void queueRefresh( String queueName ) {
-
-        Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.REFRESH_TIME).time();
-
-        try {
-
-            if (inMemoryQueue.size( queueName ) < qakkaFig.getQueueInMemorySize()) {
-
-                // TODO: need to track the starting shard
-
-                ShardIterator shardIterator = new ShardIterator(
-                    cassandraClient, queueName, actorSystemFig.getRegionLocal(),
-                    Shard.Type.DEFAULT, Optional.empty() );
-
-                UUID since = inMemoryQueue.getNewest( queueName );
-
-                String region = actorSystemFig.getRegionLocal();
-                MultiShardMessageIterator multiShardIterator = new MultiShardMessageIterator(
-                    cassandraClient, queueName, region, DatabaseQueueMessage.Type.DEFAULT,
-                    shardIterator, since);
-
-                int need = qakkaFig.getQueueInMemorySize() - inMemoryQueue.size( queueName );
-                int count = 0;
-
-                while ( multiShardIterator.hasNext() && count < need ) {
-                    DatabaseQueueMessage queueMessage = multiShardIterator.next();
-                    inMemoryQueue.add( queueName, queueMessage );
-                    count++;
-                }
-
-                if ( count > 0 ) {
-                    logger.debug( "Added {} in-memory for queue {}, new size = {}",
-                        count, queueName, inMemoryQueue.size( queueName ) );
-                }
-            }
-
-        } finally {
-            timer.close();
-        }
-
     }
 }
