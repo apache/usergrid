@@ -107,14 +107,16 @@ public class QueueRefresher extends UntypedActor {
 
                 ShardIterator shardIterator = new ShardIterator(
                     cassandraClient, queueName, actorSystemFig.getRegionLocal(),
-                    Shard.Type.DEFAULT, Optional.empty() );
+                    Shard.Type.DEFAULT, shardIdOptional );
 
                 UUID since = inMemoryQueue.getNewest( queueName );
 
                 String region = actorSystemFig.getRegionLocal();
+
                 MultiShardMessageIterator multiShardIterator = new MultiShardMessageIterator(
                     cassandraClient, queueName, region, DatabaseQueueMessage.Type.DEFAULT,
                     shardIterator, since);
+
 
                 int need = qakkaFig.getQueueInMemorySize() - inMemoryQueue.size( queueName );
                 int count = 0;
@@ -125,14 +127,10 @@ public class QueueRefresher extends UntypedActor {
                     count++;
                 }
 
-                if ( multiShardIterator.getCurrentShard() != null ) {
-                    startingShards.put( shardKey, multiShardIterator.getCurrentShard().getShardId() );
-                }
+                startingShards.put( shardKey, shardId );
 
-                if ( count > 0 ) {
-                    logger.debug( "Added {} in-memory for queue {}, new size = {}",
-                        count, queueName, inMemoryQueue.size( queueName ) );
-                }
+//                logger.debug("Refreshed queue {} region {} shard {} since {} found {}",
+//                    queueName, region, shardId, since, count );
             }
 
         } finally {

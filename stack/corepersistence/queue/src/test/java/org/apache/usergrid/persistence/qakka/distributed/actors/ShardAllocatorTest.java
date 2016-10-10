@@ -173,12 +173,14 @@ public class ShardAllocatorTest extends AbstractTest {
 
         injector.getInstance( App.class ); // init the INJECTOR
 
+        QakkaFig            qakkaFig              = injector.getInstance( QakkaFig.class );
         ActorSystemFig      actorSystemFig        = injector.getInstance( ActorSystemFig.class );
         QueueManager        queueManager          = injector.getInstance( QueueManager.class );
         QueueMessageManager queueMessageManager   = injector.getInstance( QueueMessageManager.class );
         DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
         ShardCounterSerialization shardCounterSer = injector.getInstance( ShardCounterSerialization.class );
 
+        Assert.assertEquals( "test assumes 'queue.shard.max.size' is 15 ", 15, qakkaFig.getMaxShardSize() );
 
         String region = actorSystemFig.getRegionLocal();
         App app = injector.getInstance( App.class );
@@ -191,9 +193,9 @@ public class ShardAllocatorTest extends AbstractTest {
 
         try {
 
-            // Create 4000 messages
+            // Create number of messages
 
-            int numMessages = 4000;
+            int numMessages = 400;
 
             for (int i = 0; i < numMessages; i++) {
                 queueMessageManager.sendMessages(
@@ -208,10 +210,10 @@ public class ShardAllocatorTest extends AbstractTest {
 
             distributedQueueService.refresh();
 
-            // Test that 8 shards were created
-
-            Assert.assertTrue( "num shards >= 7",
-                countShards( cassandraClient, shardCounterSer, queueName, region, Shard.Type.DEFAULT ) >= 7 );
+            // Test that right number of shards created
+            int shardCount = countShards( cassandraClient, shardCounterSer, queueName, region, Shard.Type.DEFAULT );
+            Assert.assertTrue( "shards > 10", shardCount > 10 );
+            Assert.assertTrue( "shards < 20", shardCount < 20 );
 
         } finally {
             queueManager.deleteQueue( queueName );

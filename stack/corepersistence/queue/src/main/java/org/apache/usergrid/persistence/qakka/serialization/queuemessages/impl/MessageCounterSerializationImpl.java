@@ -134,11 +134,13 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
                     inMemoryCounters.put( key, new InMemoryCount( value ));
                 }
             }
+
+            InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+            inMemoryCount.getIncrement().addAndGet( increment );
+
+//            logger.info("Incremented Count for queue {} type {} = {}",
+//                queueName, type, getCounterValue( queueName, type ));
         }
-
-        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
-        inMemoryCount.getIncrement().addAndGet( increment );
-
         saveIfNeeded( queueName, type );
     }
 
@@ -161,11 +163,13 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
                     inMemoryCounters.put( key, new InMemoryCount( value ));
                 }
             }
+
+            InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+            inMemoryCount.getDecrement().addAndGet( decrement );
+
+//            logger.info("Decremented Count for queue {} type {} = {}",
+//                queueName, type, getCounterValue( queueName, type ));
         }
-
-        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
-        inMemoryCount.getDecrement().addAndGet( decrement );
-
         saveIfNeeded( queueName, type );
     }
 
