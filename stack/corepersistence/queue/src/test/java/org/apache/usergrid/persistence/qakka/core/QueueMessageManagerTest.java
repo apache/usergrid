@@ -212,8 +212,6 @@ public class QueueMessageManagerTest extends AbstractTest {
 
             distributedQueueService.processTimeouts();
 
-            Thread.sleep( qakkaFig.getQueueTimeoutSeconds() * 1000 );
-
             // attempt to ack other half of messages
 
             for (QueueMessage message : messages) {

@@ -180,7 +180,7 @@ public class ShardAllocatorTest extends AbstractTest {
         DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
         ShardCounterSerialization shardCounterSer = injector.getInstance( ShardCounterSerialization.class );
 
-        Assert.assertEquals( "test assumes 'queue.shard.max.size' is 15 ", 15, qakkaFig.getMaxShardSize() );
+        Assert.assertEquals( "test assumes 'queue.shard.max.size' is 10 ", 10, qakkaFig.getMaxShardSize() );
 
         String region = actorSystemFig.getRegionLocal();
         App app = injector.getInstance( App.class );
@@ -210,10 +210,10 @@ public class ShardAllocatorTest extends AbstractTest {
 
             distributedQueueService.refresh();
 
-            // Test that right number of shards created
+            // Test that approximately right number of shards created
             int shardCount = countShards( cassandraClient, shardCounterSer, queueName, region, Shard.Type.DEFAULT );
-            Assert.assertTrue( "shards > 10", shardCount > 10 );
-            Assert.assertTrue( "shards < 20", shardCount < 20 );
+            Assert.assertTrue( "shards > 7", shardCount > 7 );
+            Assert.assertTrue( "shards < 17", shardCount < 17 );
 
         } finally {
             queueManager.deleteQueue( queueName );

@@ -29,10 +29,7 @@ import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.QakkaModule;
-import org.apache.usergrid.persistence.qakka.core.CassandraClient;
-import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
-import org.apache.usergrid.persistence.qakka.core.Queue;
-import org.apache.usergrid.persistence.qakka.core.QueueManager;
+import org.apache.usergrid.persistence.qakka.core.*;
 import org.apache.usergrid.persistence.qakka.core.impl.InMemoryQueue;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessageBody;
@@ -129,6 +126,7 @@ public class QueueActorServiceTest extends AbstractTest {
         QueueMessageSerialization serialization         = injector.getInstance( QueueMessageSerialization.class );
         TransferLogSerialization xferLogSerialization   = injector.getInstance( TransferLogSerialization.class );
         InMemoryQueue inMemoryQueue                     = injector.getInstance( InMemoryQueue.class );
+        QueueMessageManager queueMessageManager         = injector.getInstance( QueueMessageManager.class );
 
         String queueName = "queue_testGetMultipleQueueMessages_" + UUID.randomUUID();
         QueueManager queueManager = injector.getInstance( QueueManager.class );
@@ -159,7 +157,7 @@ public class QueueActorServiceTest extends AbstractTest {
             int count = 0;
             while (retries++ < maxRetries) {
                 distributedQueueService.refresh();
-                if (inMemoryQueue.size( queueName ) == 100) {
+                if ( queueMessageManager.getQueueDepth(  queueName ) == 100 ) {
                     count = 100;
                     break;
                 }
