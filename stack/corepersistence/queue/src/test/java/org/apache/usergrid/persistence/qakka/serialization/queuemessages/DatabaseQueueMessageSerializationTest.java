@@ -21,11 +21,13 @@ package org.apache.usergrid.persistence.qakka.serialization.queuemessages;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
+import com.google.inject.Injector;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
 import org.apache.usergrid.persistence.qakka.core.QakkaUtils;
+import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardSerialization;
 import org.junit.Test;
 
 import java.io.*;
@@ -64,19 +66,27 @@ public class DatabaseQueueMessageSerializationTest extends AbstractTest {
     @Test
     public void deleteMessage(){
 
-        QueueMessageSerialization queueMessageSerialization =
-                getInjector().getInstance( QueueMessageSerialization.class );
+        Injector injector = getInjector();
 
-        Shard shard1 = new Shard("test", "region1", Shard.Type.DEFAULT, 100L, null);
+        QueueMessageSerialization queueMessageSerialization =
+            injector.getInstance( QueueMessageSerialization.class );
+
+        ShardSerialization shardSerialization =
+            injector.getInstance( ShardSerialization.class );
+
+        String queueName = "dqmst_queue_" + RandomStringUtils.randomAlphanumeric( 20 );
+        String region = "dummy_region";
+
+        Shard shard1 = new Shard(queueName, region, Shard.Type.DEFAULT, 1L, null);
+        shardSerialization.createShard( shard1 );
 
         UUID messageId = QakkaUtils.getTimeUuid();
-        String queueName = "dqmst_queue_" + RandomStringUtils.randomAlphanumeric( 20 );
 
         DatabaseQueueMessage message = new DatabaseQueueMessage(
                 messageId,
                 DatabaseQueueMessage.Type.DEFAULT,
                 queueName,
-                "dummy_region",
+                region,
                 shard1.getShardId(),
                 System.currentTimeMillis(),
                 null, null );
@@ -85,14 +95,14 @@ public class DatabaseQueueMessageSerializationTest extends AbstractTest {
 
         queueMessageSerialization.deleteMessage(
             queueName,
-            "dummy_region",
+            region,
             shard1.getShardId(),
             DatabaseQueueMessage.Type.DEFAULT,
             queueMessageId );
 
         assertNull( queueMessageSerialization.loadMessage(
             queueName,
-            "dummy_region",
+            region,
             shard1.getShardId(),
             DatabaseQueueMessage.Type.DEFAULT,
             queueMessageId

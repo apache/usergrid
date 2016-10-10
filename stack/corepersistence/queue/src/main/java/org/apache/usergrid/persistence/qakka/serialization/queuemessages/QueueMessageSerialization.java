@@ -51,4 +51,9 @@ public interface QueueMessageSerialization extends Migration {
     DatabaseQueueMessageBody loadMessageData(final UUID messageId);
 
     void deleteMessageData(final UUID messageId);
+
+    /**
+     * Write message to inflight table and remove from available table
+     */
+    void putInflight( DatabaseQueueMessage queueMessage );
 }

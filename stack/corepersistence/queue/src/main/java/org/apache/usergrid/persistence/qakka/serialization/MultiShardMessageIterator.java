@@ -49,6 +49,7 @@ public class MultiShardMessageIterator implements Iterator<DatabaseQueueMessage>
     private final Iterator<Shard> shardIterator;
 
     private Iterator<DatabaseQueueMessage> currentIterator;
+
     private Shard currentShard;
     private UUID nextStart;
 
@@ -182,6 +183,11 @@ public class MultiShardMessageIterator implements Iterator<DatabaseQueueMessage>
 
         return messages.iterator();
 
+    }
+
+
+    public Shard getCurrentShard() {
+        return currentShard;
     }
 
 }

@@ -30,16 +30,19 @@ import java.util.Collections;
 public class QueueGetResponse implements QakkaMessage {
     private final Collection<DatabaseQueueMessage> queueMessages;
     private final DistributedQueueService.Status status;
+    private final String queueName;
 
-
-    public QueueGetResponse(DistributedQueueService.Status status ) {
+    public QueueGetResponse(DistributedQueueService.Status status, String queueName ) {
         this.status = status;
         this.queueMessages = Collections.emptyList();
+        this.queueName = queueName;
     }
 
-    public QueueGetResponse(DistributedQueueService.Status status, Collection<DatabaseQueueMessage> queueMessages) {
+    public QueueGetResponse(
+        DistributedQueueService.Status status, Collection<DatabaseQueueMessage> queueMessages, String queueName) {
         this.status = status;
         this.queueMessages = queueMessages;
+        this.queueName = queueName;
     }
 
     public DistributedQueueService.Status getStatus() {
@@ -59,5 +62,10 @@ public class QueueGetResponse implements QakkaMessage {
                 .append( "messageCount", queueMessages.size() )
                 .append( "status", status )
                 .toString();
+    }
+
+    @Override
+    public String getQueueName() {
+        return queueName;
     }
 }

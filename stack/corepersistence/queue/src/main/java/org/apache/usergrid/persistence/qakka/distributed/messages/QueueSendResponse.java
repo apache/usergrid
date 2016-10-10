@@ -25,9 +25,12 @@ import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService
 
 public class QueueSendResponse implements QakkaMessage {
     private final DistributedQueueService.Status status;
+    private final String queueName;
 
-    public QueueSendResponse(DistributedQueueService.Status status) {
+
+    public QueueSendResponse( DistributedQueueService.Status status, String queueName ) {
         this.status = status;
+        this.queueName = queueName;
     }
 
     public DistributedQueueService.Status getSendStatus() {
@@ -40,4 +43,8 @@ public class QueueSendResponse implements QakkaMessage {
                 .toString();
     }
 
+    @Override
+    public String getQueueName() {
+        return queueName;
+    }
 }

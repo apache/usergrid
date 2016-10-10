@@ -30,6 +30,7 @@ import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.QakkaUtils;
 import org.apache.usergrid.persistence.qakka.core.impl.InMemoryQueue;
+import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.distributed.messages.QueueRefreshRequest;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
@@ -52,6 +53,8 @@ public class QueueReaderTest extends AbstractTest {
     public void testBasicOperation() throws Exception {
 
         Injector injector = getInjector();
+
+        injector.getInstance( DistributedQueueService.class ); // init the INJECTOR
 
         QakkaFig qakkaFig = injector.getInstance( QakkaFig.class );
         ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
@@ -89,13 +92,16 @@ public class QueueReaderTest extends AbstractTest {
 
         // run the QueueRefresher to fill up the in-memory queue
 
-        QueueActorHelper helper = injector.getInstance( QueueActorHelper.class );
+        ActorSystem system = ActorSystem.create("Test-" + queueName);
+        ActorRef queueReaderRef = system.actorOf(
+            Props.create( GuiceActorProducer.class, QueueRefresher.class ), "queueReader");
+        QueueRefreshRequest refreshRequest = new QueueRefreshRequest( queueName, false );
 
         // need to wait for refresh to complete
         int maxRetries = 10;
         int retries = 0;
         while ( inMemoryQueue.size( queueName ) < qakkaFig.getQueueInMemorySize() && retries++ < maxRetries ) {
-            helper.queueRefresh( queueName );
+            queueReaderRef.tell( refreshRequest, null ); // tell sends message, returns immediately
             Thread.sleep(1000);
         }
 

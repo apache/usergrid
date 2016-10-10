@@ -24,8 +24,8 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.routing.FromConfig;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
+import org.apache.usergrid.persistence.qakka.distributed.messages.QueueAckRequest;
 import org.apache.usergrid.persistence.qakka.distributed.messages.QueueWriteRequest;
 
 
@@ -37,7 +37,7 @@ public class QueueWriterRouter extends UntypedActor {
     private final ActorRef router;
 
     @Inject
-    public QueueWriterRouter( Injector injector ) {
+    public QueueWriterRouter() {
 
         this.router = getContext().actorOf( FromConfig.getInstance().props(
             Props.create( GuiceActorProducer.class, QueueWriter.class )), "router");
@@ -46,7 +46,8 @@ public class QueueWriterRouter extends UntypedActor {
     @Override
     public void onReceive(Object message) {
 
-        if ( message instanceof QueueWriteRequest) {
+        if (   message instanceof QueueWriteRequest || message instanceof QueueAckRequest ) {
+
             router.tell( message, getSender() );
 
         } else {

@@ -28,19 +28,22 @@ import akka.cluster.singleton.ClusterSingletonProxy;
 import akka.cluster.singleton.ClusterSingletonProxySettings;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
 import org.apache.usergrid.persistence.actorsystem.RouterProducer;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.distributed.actors.QueueWriterRouter;
+import org.apache.usergrid.persistence.qakka.distributed.messages.QueueAckRequest;
 import org.apache.usergrid.persistence.qakka.distributed.messages.QueueWriteRequest;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 
+@Singleton
 public class QueueWriterRouterProducer implements RouterProducer {
 
     static Injector injector;
@@ -128,7 +131,11 @@ public class QueueWriterRouterProducer implements RouterProducer {
 
     @Override
     public Collection<Class> getMessageTypes() {
-        return Collections.singletonList( QueueWriteRequest.class );
+        return new ArrayList() {{
+            add( QueueAckRequest.class );
+            add( QueueWriteRequest.class );
+        }};
+
     }
 
 }

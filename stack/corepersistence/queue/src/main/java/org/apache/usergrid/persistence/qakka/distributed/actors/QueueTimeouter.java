@@ -22,29 +22,22 @@ package org.apache.usergrid.persistence.qakka.distributed.actors;
 import akka.actor.UntypedActor;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
-import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.MetricsService;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.CassandraClient;
-import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
 import org.apache.usergrid.persistence.qakka.core.QakkaUtils;
 import org.apache.usergrid.persistence.qakka.distributed.messages.QueueTimeoutRequest;
-import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
 import org.apache.usergrid.persistence.qakka.serialization.MultiShardMessageIterator;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
-import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.DecimalFormat;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
 
 public class QueueTimeouter extends UntypedActor {
@@ -70,12 +63,6 @@ public class QueueTimeouter extends UntypedActor {
         this.actorSystemFig = actorSystemFig;
         this.qakkaFig = qakkaFig;
         this.cassandraClient = cassandraClient;
-
-//        messageSerialization = injector.getInstance( QueueMessageSerialization.class );
-//        actorSystemFig       = injector.getInstance( ActorSystemFig.class );
-//        qakkaFig             = injector.getInstance( QakkaFig.class );
-//        metricsService       = injector.getInstance( MetricsService.class );
-//        cassandraClient      = injector.getInstance( CassandraClientImpl.class );
     }
 
 

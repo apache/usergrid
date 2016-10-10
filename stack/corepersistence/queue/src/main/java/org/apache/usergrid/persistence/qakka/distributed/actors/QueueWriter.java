@@ -22,17 +22,16 @@ package org.apache.usergrid.persistence.qakka.distributed.actors;
 import akka.actor.UntypedActor;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
-import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.MetricsService;
 import org.apache.usergrid.persistence.qakka.core.QakkaUtils;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
+import org.apache.usergrid.persistence.qakka.distributed.messages.QueueAckRequest;
+import org.apache.usergrid.persistence.qakka.distributed.messages.QueueAckResponse;
 import org.apache.usergrid.persistence.qakka.distributed.messages.QueueWriteRequest;
 import org.apache.usergrid.persistence.qakka.distributed.messages.QueueWriteResponse;
 import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLog;
 import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLogSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
-import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLogSerialization;
 import org.slf4j.Logger;
@@ -50,24 +49,21 @@ public class QueueWriter extends UntypedActor {
     private final TransferLogSerialization  transferLogSerialization;
     private final AuditLogSerialization     auditLogSerialization;
     private final MetricsService            metricsService;
-
+    private final QueueActorHelper          queueActorHelper;
 
     @Inject
     public QueueWriter(
         QueueMessageSerialization messageSerialization,
         TransferLogSerialization  transferLogSerialization,
         AuditLogSerialization     auditLogSerialization,
-        MetricsService            metricsService
+        MetricsService            metricsService,
+        QueueActorHelper          queueActorHelper
     ) {
-        this.messageSerialization = messageSerialization;
+        this.messageSerialization     = messageSerialization;
         this.transferLogSerialization = transferLogSerialization;
-        this.auditLogSerialization = auditLogSerialization;
-        this.metricsService = metricsService;
-
-//        messageSerialization     = injector.getInstance( QueueMessageSerialization.class );
-//        transferLogSerialization = injector.getInstance( TransferLogSerialization.class );
-//        auditLogSerialization    = injector.getInstance( AuditLogSerialization.class );
-//        metricsService           = injector.getInstance( MetricsService.class );
+        this.auditLogSerialization    = auditLogSerialization;
+        this.metricsService           = metricsService;
+        this.queueActorHelper         = queueActorHelper;
     }
 
     @Override
@@ -86,6 +82,7 @@ public class QueueWriter extends UntypedActor {
 
                 DatabaseQueueMessage dbqm = null;
                 long currentTime = System.currentTimeMillis();
+                String queueName = qa.getQueueName();
 
                 try {
                     dbqm = new DatabaseQueueMessage(
@@ -115,7 +112,7 @@ public class QueueWriter extends UntypedActor {
                             dbqm.getMessageId() );
 
                     getSender().tell( new QueueWriteResponse(
-                            QueueWriter.WriteStatus.ERROR ), getSender() );
+                            QueueWriter.WriteStatus.ERROR, queueName ), getSender() );
 
                     return;
                 }
@@ -136,7 +133,7 @@ public class QueueWriter extends UntypedActor {
                             qa.getMessageId() );
 
                     getSender().tell( new QueueWriteResponse(
-                            QueueWriter.WriteStatus.SUCCESS_XFERLOG_DELETED ), getSender() );
+                            QueueWriter.WriteStatus.SUCCESS_XFERLOG_DELETED, queueName ), getSender() );
 
                 } catch (Throwable e) {
                     logger.debug( "Unable to delete transfer log for {} {} {} {}",
@@ -147,8 +144,28 @@ public class QueueWriter extends UntypedActor {
                     logger.debug("Error deleting transferlog", e);
 
                     getSender().tell( new QueueWriteResponse(
-                            QueueWriter.WriteStatus.SUCCESS_XFERLOG_NOTDELETED ), getSender() );
+                            QueueWriter.WriteStatus.SUCCESS_XFERLOG_NOTDELETED, queueName ), getSender() );
                 }
+
+            } finally {
+                timer.close();
+            }
+
+        } else if ( message instanceof QueueAckRequest ){
+
+            Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.ACK_TIME_ACK ).time();
+            try {
+
+                QueueAckRequest queueAckRequest = (QueueAckRequest) message;
+
+                DistributedQueueService.Status status = queueActorHelper.ackQueueMessage(
+                    queueAckRequest.getQueueName(),
+                    queueAckRequest.getQueueMessageId() );
+
+                getSender().tell( new QueueAckResponse(
+                    queueAckRequest.getQueueName(),
+                    queueAckRequest.getQueueMessageId(),
+                    status ), getSender() );
 
             } finally {
                 timer.close();

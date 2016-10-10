@@ -21,8 +21,8 @@ package org.apache.usergrid.persistence.qakka.distributed.messages;
 
 import java.io.Serializable;
 
-/**
- * Marker interface
- */
+
 public interface QakkaMessage extends Serializable {
+
+    String getQueueName();
 }

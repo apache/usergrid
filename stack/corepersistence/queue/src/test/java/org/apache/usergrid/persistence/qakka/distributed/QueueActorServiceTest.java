@@ -102,9 +102,6 @@ public class QueueActorServiceTest extends AbstractTest {
             ByteBuffer blob = dqmb.getBlob();
 
             String returnedData = new String( blob.array(), "UTF-8" );
-//        ByteArrayInputStream bais = new ByteArrayInputStream( blob.array() );
-//        ObjectInputStream ios = new ObjectInputStream( bais );
-//        String returnedData = (String)ios.readObject();
 
             Assert.assertEquals( data, returnedData );
 

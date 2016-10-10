@@ -26,18 +26,13 @@ import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
-import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.MetricsService;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
-import org.apache.usergrid.persistence.qakka.distributed.messages.QueueSendRequest;
-import org.apache.usergrid.persistence.qakka.distributed.messages.QueueSendResponse;
-import org.apache.usergrid.persistence.qakka.distributed.messages.QueueWriteRequest;
-import org.apache.usergrid.persistence.qakka.distributed.messages.QueueWriteResponse;
+import org.apache.usergrid.persistence.qakka.distributed.messages.*;
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaException;
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
 import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLog;
@@ -80,13 +75,6 @@ public class QueueSender extends UntypedActor {
         this.actorSystemFig = actorSystemFig;
         this.qakkaFig = qakkaFig;
         this.metricsService = metricsService;
-
-//        actorSystemManager       = injector.getInstance( ActorSystemManager.class );
-//        transferLogSerialization = injector.getInstance( TransferLogSerialization.class );
-//        auditLogSerialization    = injector.getInstance( AuditLogSerialization.class );
-//        actorSystemFig           = injector.getInstance( ActorSystemFig.class );
-//        qakkaFig                 = injector.getInstance( QakkaFig.class );
-//        metricsService           = injector.getInstance( MetricsService.class );
     }
 
     @Override
@@ -97,7 +85,7 @@ public class QueueSender extends UntypedActor {
 
             // as far as caller is concerned, we are done.
             getSender().tell( new QueueSendResponse(
-                    DistributedQueueService.Status.SUCCESS ), getSender() );
+                    DistributedQueueService.Status.SUCCESS, qa.getQueueName() ), getSender() );
 
             final QueueWriter.WriteStatus writeStatus = sendMessageToRegion(
                     qa.getQueueName(),

@@ -27,6 +27,7 @@ import akka.routing.FromConfig;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
+import org.apache.usergrid.persistence.qakka.distributed.impl.QueueActorRouterProducer;
 import org.apache.usergrid.persistence.qakka.distributed.messages.*;
 
 
@@ -36,10 +37,13 @@ import org.apache.usergrid.persistence.qakka.distributed.messages.*;
 public class QueueActorRouter extends UntypedActor {
 
     private final ActorRef routerRef;
+    private final QueueActorRouterProducer queueActorRouterProducer;
 
 
     @Inject
-    public QueueActorRouter( Injector injector ) {
+    public QueueActorRouter( QueueActorRouterProducer queueActorRouterProducer ) {
+
+        this.queueActorRouterProducer = queueActorRouterProducer;
 
         this.routerRef = getContext().actorOf( FromConfig.getInstance().props(
             Props.create(GuiceActorProducer.class, QueueActor.class)), "router");
@@ -48,50 +52,12 @@ public class QueueActorRouter extends UntypedActor {
     @Override
     public void onReceive(Object message) {
 
-        // TODO: can we do something smarter than this if-then-else structure
-        // e.g. if message is recognized as one of ours, then we just pass it on?
-
-        if ( message instanceof QueueGetRequest) {
-            QueueGetRequest qgr = (QueueGetRequest) message;
+        if ( queueActorRouterProducer.getMessageTypes().contains( message.getClass() ) ) {
+            QakkaMessage qakkaMessage = (QakkaMessage) message;
 
             ConsistentHashingRouter.ConsistentHashableEnvelope envelope =
-                    new ConsistentHashingRouter.ConsistentHashableEnvelope( message, qgr.getQueueName() );
+                    new ConsistentHashingRouter.ConsistentHashableEnvelope( message, qakkaMessage.getQueueName() );
             routerRef.tell( envelope, getSender() );
-
-        } else if ( message instanceof QueueAckRequest) {
-            QueueAckRequest qar = (QueueAckRequest)message;
-
-            ConsistentHashingRouter.ConsistentHashableEnvelope envelope =
-                    new ConsistentHashingRouter.ConsistentHashableEnvelope( message, qar.getQueueName() );
-            routerRef.tell( envelope, getSender());
-
-        } else if ( message instanceof QueueInitRequest) {
-            QueueInitRequest qar = (QueueInitRequest)message;
-
-            ConsistentHashingRouter.ConsistentHashableEnvelope envelope =
-                    new ConsistentHashingRouter.ConsistentHashableEnvelope( message, qar.getQueueName() );
-            routerRef.tell( envelope, getSender());
-
-        } else if ( message instanceof QueueRefreshRequest) {
-            QueueRefreshRequest qar = (QueueRefreshRequest)message;
-
-            ConsistentHashingRouter.ConsistentHashableEnvelope envelope =
-                    new ConsistentHashingRouter.ConsistentHashableEnvelope( message, qar.getQueueName() );
-            routerRef.tell( envelope, getSender());
-
-        } else if ( message instanceof QueueTimeoutRequest) {
-            QueueTimeoutRequest qar = (QueueTimeoutRequest)message;
-
-            ConsistentHashingRouter.ConsistentHashableEnvelope envelope =
-                    new ConsistentHashingRouter.ConsistentHashableEnvelope( message, qar.getQueueName() );
-            routerRef.tell( envelope, getSender());
-
-        } else if ( message instanceof ShardCheckRequest) {
-            ShardCheckRequest qar = (ShardCheckRequest)message;
-
-            ConsistentHashingRouter.ConsistentHashableEnvelope envelope =
-                    new ConsistentHashingRouter.ConsistentHashableEnvelope( message, qar.getQueueName() );
-            routerRef.tell( envelope, getSender());
 
         } else {
             unhandled(message);
