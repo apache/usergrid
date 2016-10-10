@@ -40,9 +40,10 @@ public class ShardIterator implements Iterator<Shard> {
     private final String queueName;
     private final String region;
     private final Shard.Type shardType;
-    private final Optional<Long> shardId;
+    private final Optional<Long> lastShardId;
 
     private Iterator<Shard> currentIterator;
+    private long currentShardId = 0L;
 
     private long nextStart = 0L;
 
@@ -57,8 +58,10 @@ public class ShardIterator implements Iterator<Shard> {
         this.queueName = queueName;
         this.region = region;
         this.shardType = shardtype;
-        this.shardId = lastShardId.isPresent() ? lastShardId : Optional.of(0L);
+        this.lastShardId = lastShardId.isPresent() ? lastShardId : Optional.of(0L);
         this.cassandraClient = cassandraClient;
+
+        this.currentShardId = this.lastShardId.get();
     }
 
     @Override
@@ -79,7 +82,9 @@ public class ShardIterator implements Iterator<Shard> {
             throw new NoSuchElementException( "No next shard exists" );
         }
 
-        return currentIterator.next();
+        Shard next = currentIterator.next();
+        currentShardId = next.getShardId();
+        return next;
 
     }
 
@@ -90,13 +95,15 @@ public class ShardIterator implements Iterator<Shard> {
         Clause regionClause = QueryBuilder.eq( ShardSerializationImpl.COLUMN_REGION, region);
         Clause activeClause = QueryBuilder.eq( ShardSerializationImpl.COLUMN_ACTIVE, 1);
         Clause shardIdClause;
-        if(nextStart == 0L && shardId.isPresent()){
-            shardIdClause = QueryBuilder.gt( ShardSerializationImpl.COLUMN_SHARD_ID, shardId.get());
-        }else if( nextStart == 0L && !shardId.isPresent()){
-            shardIdClause = QueryBuilder.gte( ShardSerializationImpl.COLUMN_SHARD_ID, 0L);
 
-        }else{
-            shardIdClause = QueryBuilder.gt( ShardSerializationImpl.COLUMN_SHARD_ID, nextStart);
+        if (nextStart == 0L && lastShardId.isPresent()) {
+            shardIdClause = QueryBuilder.gt( ShardSerializationImpl.COLUMN_SHARD_ID, lastShardId.get() );
+
+        } else if (nextStart == 0L && !lastShardId.isPresent()) {
+            shardIdClause = QueryBuilder.gte( ShardSerializationImpl.COLUMN_SHARD_ID, 0L );
+
+        } else {
+            shardIdClause = QueryBuilder.gt( ShardSerializationImpl.COLUMN_SHARD_ID, nextStart );
         }
 
 
