@@ -92,8 +92,6 @@ public class LegacyQueueManagerTest extends AbstractTest {
 
         Injector myInjector = getInjector();
 
-        CassandraClient cassandraClient = myInjector.getInstance( CassandraClientImpl.class );
-
         ActorSystemFig actorSystemFig = myInjector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
 

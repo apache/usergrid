@@ -133,6 +133,7 @@ public class MultiShardMessageIterator implements Iterator<DatabaseQueueMessage>
                     .and(regionClause)
                     .and(shardIdClause)
                     .limit(PAGE_SIZE);
+
         } else {
 
             Clause messageIdClause = QueryBuilder.gt( COLUMN_QUEUE_MESSAGE_ID, nextStart);
@@ -144,7 +145,10 @@ public class MultiShardMessageIterator implements Iterator<DatabaseQueueMessage>
                     .limit(PAGE_SIZE);
         }
 
+
         List<Row> rows = cassandraClient.getQueueMessageSession().execute(query).all();
+
+        //logger.debug("Query got {}: {}", rows.size(), query);
 
         if ( (rows == null || rows.size() == 0) && shardIterator.hasNext()) {
 

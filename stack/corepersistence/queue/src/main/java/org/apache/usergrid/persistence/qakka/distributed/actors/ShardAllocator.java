@@ -74,13 +74,6 @@ public class ShardAllocator extends UntypedActor {
         this.shardCounterSerialization = shardCounterSerialization;
         this.metricsService = metricsService;
         this.cassandraClient = cassandraClient;
-
-//        this.qakkaFig                  = injector.getInstance( QakkaFig.class );
-//        this.shardCounterSerialization = injector.getInstance( ShardCounterSerializationImpl.class );
-//        this.shardSerialization        = injector.getInstance( ShardSerializationImpl.class );
-//        this.actorSystemFig            = injector.getInstance( ActorSystemFig.class );
-//        this.metricsService            = injector.getInstance( MetricsService.class );
-//        this.cassandraClient           = injector.getInstance( CassandraClientImpl.class );
     }
 
 
