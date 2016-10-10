@@ -115,7 +115,7 @@ public class QueueActorHelper {
             }
         }
 
-        logger.debug("{} returning {} for queue {}", this, queueMessages.size(), queueName);
+        //logger.debug("{} returning {} for queue {}", this, queueMessages.size(), queueName);
         return queueMessages;
 
     }

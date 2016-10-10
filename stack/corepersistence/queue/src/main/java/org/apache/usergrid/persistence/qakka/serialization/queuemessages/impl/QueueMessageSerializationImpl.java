@@ -150,6 +150,9 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
         Statement insert = createWriteMessageStatement( message );
         cassandraClient.getQueueMessageSession().execute(insert);
 
+//        logger.debug("Wrote queue {} queue message {} shardId {}",
+//            message.getQueueName(), message.getQueueMessageId(), message.getShardId() );
+
         shardCounterSerialization.incrementCounter( message.getQueueName(), shardType, message.getShardId(), 1 );
 
         messageCounterSerialization.incrementCounter( message.getQueueName(), message.getType(), 1L );
