@@ -152,32 +152,31 @@ public class QueueActorServiceTest extends AbstractTest {
                     queueName, region, region, messageId, null, null );
             }
 
-            int maxRetries = 25;
+            int maxRetries = 10;
             int retries = 0;
-            int count = 0;
+            long count = 0;
             while (retries++ < maxRetries) {
                 distributedQueueService.refresh();
-                if ( queueMessageManager.getQueueDepth(  queueName ) == 100 ) {
-                    count = 100;
+                count = queueMessageManager.getQueueDepth(  queueName );
+                if ( count == 100 ) {
                     break;
                 }
-                count = inMemoryQueue.size( queueName );
                 Thread.sleep( 1000 );
             }
 
             Assert.assertEquals( 100, count );
 
             Assert.assertEquals( 25, distributedQueueService.getNextMessages( queueName, 25 ).size() );
-            Assert.assertEquals( 75, inMemoryQueue.size( queueName ) );
+            Assert.assertEquals( 75, queueMessageManager.getQueueDepth(  queueName ) );
 
             Assert.assertEquals( 25, distributedQueueService.getNextMessages( queueName, 25 ).size() );
-            Assert.assertEquals( 50, inMemoryQueue.size( queueName ) );
+            Assert.assertEquals( 50, queueMessageManager.getQueueDepth(  queueName ) );
 
             Assert.assertEquals( 25, distributedQueueService.getNextMessages( queueName, 25 ).size() );
-            Assert.assertEquals( 25, inMemoryQueue.size( queueName ) );
+            Assert.assertEquals( 25, queueMessageManager.getQueueDepth(  queueName ) );
 
             Assert.assertEquals( 25, distributedQueueService.getNextMessages( queueName, 25 ).size() );
-            Assert.assertEquals( 0, inMemoryQueue.size( queueName ) );
+            Assert.assertEquals( 0,  queueMessageManager.getQueueDepth(  queueName ) );
 
             distributedQueueService.shutdown();
 

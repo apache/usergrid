@@ -123,25 +123,29 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
 
         synchronized ( inMemoryCounters ) {
 
-            if ( inMemoryCounters.get( key ) == null ) {
+            if (inMemoryCounters.get( key ) == null) {
 
                 Long value = retrieveCounterFromStorage( queueName, type );
 
-                if ( value == null ) {
+                if (value == null) {
                     incrementCounterInStorage( queueName, type, 0L );
-                    inMemoryCounters.put( key, new InMemoryCount( 0L ));
+                    inMemoryCounters.put( key, new InMemoryCount( 0L ) );
                 } else {
-                    inMemoryCounters.put( key, new InMemoryCount( value ));
+                    inMemoryCounters.put( key, new InMemoryCount( value ) );
                 }
             }
+        }
 
-            InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+
+        synchronized ( inMemoryCount ) {
             inMemoryCount.getIncrement().addAndGet( increment );
 
-//            logger.info("Incremented Count for queue {} type {} = {}",
-//                queueName, type, getCounterValue( queueName, type ));
+            //logger.info("Incremented Count for queue {} type {} = {}",
+            //queueName, type, getCounterValue( queueName, type ));
+
+            saveIfNeeded( queueName, type );
         }
-        saveIfNeeded( queueName, type );
     }
 
 
@@ -152,25 +156,30 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
 
         synchronized ( inMemoryCounters ) {
 
-            if ( inMemoryCounters.get( key ) == null ) {
+            if (inMemoryCounters.get( key ) == null) {
 
                 Long value = retrieveCounterFromStorage( queueName, type );
 
-                if ( value == null ) {
+                if (value == null) {
                     decrementCounterInStorage( queueName, type, 0L );
-                    inMemoryCounters.put( key, new InMemoryCount( 0L ));
+                    inMemoryCounters.put( key, new InMemoryCount( 0L ) );
                 } else {
-                    inMemoryCounters.put( key, new InMemoryCount( value ));
+                    inMemoryCounters.put( key, new InMemoryCount( value ) );
                 }
             }
+        }
 
-            InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+
+        synchronized ( inMemoryCount ) {
+
             inMemoryCount.getDecrement().addAndGet( decrement );
 
-//            logger.info("Decremented Count for queue {} type {} = {}",
-//                queueName, type, getCounterValue( queueName, type ));
+            //logger.info("Decremented Count for queue {} type {} = {}",
+                //queueName, type, getCounterValue( queueName, type ));
+
+            saveIfNeeded( queueName, type );
         }
-        saveIfNeeded( queueName, type );
     }
 
 
@@ -179,19 +188,16 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
 
         String key = buildKey( queueName, type );
 
-        synchronized ( inMemoryCounters ) {
+        if ( inMemoryCounters.get( key ) == null ) {
 
-            if ( inMemoryCounters.get( key ) == null ) {
+            Long value = retrieveCounterFromStorage( queueName, type );
 
-                Long value = retrieveCounterFromStorage( queueName, type );
-
-                if ( value == null ) {
-                    throw new NotFoundException(
-                            MessageFormat.format( "No counter found for queue {0} type {1}",
-                                    queueName, type ));
-                } else {
-                    inMemoryCounters.put( key, new InMemoryCount( value ));
-                }
+            if ( value == null ) {
+                throw new NotFoundException(
+                        MessageFormat.format( "No counter found for queue {0} type {1}",
+                                queueName, type ));
+            } else {
+                inMemoryCounters.put( key, new InMemoryCount( value ));
             }
         }
 
@@ -245,22 +251,19 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
 
         InMemoryCount inMemoryCount = inMemoryCounters.get( key );
 
-        synchronized ( inMemoryCount ) {
+        if ( numChanges.incrementAndGet() > maxChangesBeforeSave ) {
 
-            if ( numChanges.incrementAndGet() > maxChangesBeforeSave ) {
+            long totalIncrement = inMemoryCount.getIncrement().get();
+            incrementCounterInStorage( queueName, type, totalIncrement );
 
-                long totalIncrement = inMemoryCount.getIncrement().get();
-                incrementCounterInStorage( queueName, type, totalIncrement );
+            long totalDecrement = inMemoryCount.getDecrement().get();
+            decrementCounterInStorage( queueName, type, totalDecrement );
 
-                long totalDecrement = inMemoryCount.getDecrement().get();
-                decrementCounterInStorage( queueName, type, totalDecrement );
+            inMemoryCount.setBaseCount( retrieveCounterFromStorage( queueName, type ) );
+            inMemoryCount.getIncrement().set( 0L );
+            inMemoryCount.getDecrement().set( 0L );
 
-                inMemoryCount.setBaseCount( retrieveCounterFromStorage( queueName, type ) );
-                inMemoryCount.getIncrement().set( 0L );
-                inMemoryCount.getDecrement().set( 0L );
-
-                numChanges.set( 0 );
-            }
+            numChanges.set( 0 );
         }
     }
 
