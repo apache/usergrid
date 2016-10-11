@@ -24,6 +24,7 @@ import akka.routing.FromConfig;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,10 +41,9 @@ public class UniqueValuesRouter extends UntypedActor {
     @Inject
     public UniqueValuesRouter() {
 
-        router = getContext().actorOf(
-            FromConfig.getInstance().props(
-                Props.create( UniqueValueActor.class)
-                    .withDispatcher("akka.blocking-io-dispatcher")), "router");
+        router = getContext().actorOf( FromConfig.getInstance().props(
+            Props.create( GuiceActorProducer.class, UniqueValueActor.class)
+                .withDispatcher("akka.blocking-io-dispatcher")), "router");
     }
 
     @Override

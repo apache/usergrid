@@ -52,7 +52,6 @@ import java.util.concurrent.TimeUnit;
 public class UniqueValuesServiceImpl implements UniqueValuesService {
     private static final Logger logger = LoggerFactory.getLogger( UniqueValuesServiceImpl.class );
 
-    static Injector          injector;
     UniqueValuesFig          uniqueValuesFig;
     ActorSystemManager       actorSystemManager;
     UniqueValuesTable        table;
@@ -66,13 +65,14 @@ public class UniqueValuesServiceImpl implements UniqueValuesService {
         ActorSystemManager actorSystemManager,
         UniqueValuesTable table ) {
 
-        injector = inj;
         this.actorSystemManager = actorSystemManager;
         this.uniqueValuesFig = uniqueValuesFig;
         this.table = table;
 
         ReservationCache.init( uniqueValuesFig.getUniqueValueCacheTtl() );
         this.reservationCache = ReservationCache.getInstance();
+
+        GuiceActorProducer.INJECTOR = inj;
     }
 
 
