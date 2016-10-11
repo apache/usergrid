@@ -99,30 +99,7 @@ public class QueueTimeouter extends UntypedActor {
                     if ((currentTime - queueMessage.getInflightAt()) > qakkaFig.getQueueTimeoutSeconds() * 1000) {
 
                         // put message back in messages_available table as new queue message with new UUID
-
-                        UUID newQueueMessageId = QakkaUtils.getTimeUuid();
-
-                        DatabaseQueueMessage newMessage = new DatabaseQueueMessage(
-                                queueMessage.getMessageId(),
-                                DatabaseQueueMessage.Type.DEFAULT,
-                                queueMessage.getQueueName(),
-                                queueMessage.getRegion(),
-                                null,
-                                queueMessage.getQueuedAt(),
-                                queueMessage.getInflightAt(),
-                                newQueueMessageId );
-
-                        messageSerialization.writeMessage( newMessage );
-
-                        // remove message from inflight table
-
-                        messageSerialization.deleteMessage(
-                                queueName,
-                                actorSystemFig.getRegionLocal(),
-                                null,
-                                DatabaseQueueMessage.Type.INFLIGHT,
-                                queueMessage.getQueueMessageId() );
-
+                        messageSerialization.timeoutInflight( queueMessage );
                         count++;
                     }
                 }

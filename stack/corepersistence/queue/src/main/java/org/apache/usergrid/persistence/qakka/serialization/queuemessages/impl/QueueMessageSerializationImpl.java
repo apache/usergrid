@@ -44,6 +44,7 @@ import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardCounter
 import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.concurrent.java8.FuturesConvertersImpl;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -274,18 +275,14 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
     @Override
     public void putInflight( DatabaseQueueMessage message ) {
 
-        // create statement to write new queue message to inflight table
-
-        Shard.Type shardType = Shard.Type.INFLIGHT;
-        Shard shard = shardStrategy.selectShard(
-            message.getQueueName(), message.getRegion(), shardType, message.getQueueMessageId() );
+        // create statement to write queue message to inflight table
 
         DatabaseQueueMessage inflightMessage = new DatabaseQueueMessage(
             message.getMessageId(),
             DatabaseQueueMessage.Type.INFLIGHT,
             message.getQueueName(),
             message.getRegion(),
-            shard.getShardId(),
+            null,
             message.getQueuedAt(),
             System.currentTimeMillis(),
             message.getQueueMessageId() );
@@ -318,6 +315,54 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
 
         messageCounterSerialization.decrementCounter(
             message.getQueueName(), DatabaseQueueMessage.Type.DEFAULT, 1L );
+    }
+
+
+    @Override
+    public void timeoutInflight( DatabaseQueueMessage message ) {
+
+        // create statement to write queue message back to available table, with new UUID
+
+        UUID newQueueMessageId = QakkaUtils.getTimeUuid();
+
+        DatabaseQueueMessage newMessage = new DatabaseQueueMessage(
+            message.getMessageId(),
+            DatabaseQueueMessage.Type.DEFAULT,
+            message.getQueueName(),
+            message.getRegion(),
+            null,
+            System.currentTimeMillis(),
+            -1L,
+            newQueueMessageId );
+
+        Statement write = createWriteMessageStatement( newMessage );
+
+        // create statement to remove message from inflight table
+
+        Statement delete = createDeleteMessageStatement(
+            message.getQueueName(),
+            message.getRegion(),
+            message.getShardId(),
+            message.getType(),
+            message.getQueueMessageId());
+
+        // execute statements as a batch
+
+        BatchStatement batchStatement = new BatchStatement();
+        batchStatement.add( write );
+        batchStatement.add( delete );
+        cassandraClient.getQueueMessageSession().execute( batchStatement );
+
+        // bump counters
+
+        shardCounterSerialization.incrementCounter(
+            message.getQueueName(), Shard.Type.DEFAULT, message.getShardId(), 1 );
+
+        messageCounterSerialization.incrementCounter(
+            message.getQueueName(), DatabaseQueueMessage.Type.DEFAULT, 1L );
+
+        messageCounterSerialization.decrementCounter(
+            message.getQueueName(), DatabaseQueueMessage.Type.INFLIGHT, 1L );
     }
 
 
@@ -357,20 +402,30 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
         final UUID queueMessageId =  message.getQueueMessageId() == null ?
             QakkaUtils.getTimeUuid() : message.getQueueMessageId();
 
-        long queuedAt = message.getQueuedAt() == null ?
-            System.currentTimeMillis() : message.getQueuedAt();
+        final long shardId;
 
-        long inflightAt = message.getInflightAt() == null ?
-            message.getQueuedAt() : message.getInflightAt();
+        if ( message.getShardId() != null ) {
+            shardId = message.getShardId();
+
+        } else if ( DatabaseQueueMessage.Type.DEFAULT.equals( message.getType() )) {
+            Shard shard = shardStrategy.selectShard(
+                message.getQueueName(), message.getRegion(), Shard.Type.DEFAULT, message.getQueueMessageId() );
+            shardId = shard.getShardId();
+
+        } else {
+            Shard shard = shardStrategy.selectShard(
+                message.getQueueName(), message.getRegion(), Shard.Type.INFLIGHT, message.getQueueMessageId() );
+            shardId = shard.getShardId();
+        }
 
         Statement insert = QueryBuilder.insertInto(getTableName(message.getType()))
             .value( COLUMN_QUEUE_NAME,       message.getQueueName())
             .value( COLUMN_REGION,           message.getRegion())
-            .value( COLUMN_SHARD_ID,         message.getShardId())
+            .value( COLUMN_SHARD_ID,         shardId)
             .value( COLUMN_MESSAGE_ID,       message.getMessageId())
             .value( COLUMN_QUEUE_MESSAGE_ID, queueMessageId)
-            .value( COLUMN_INFLIGHT_AT,      inflightAt )
-            .value( COLUMN_QUEUED_AT,        queuedAt)
+            .value( COLUMN_INFLIGHT_AT,      message.getInflightAt())
+            .value( COLUMN_QUEUED_AT,        message.getQueuedAt())
             .using( QueryBuilder.ttl( maxTtl ) );
 
         return insert;
