@@ -92,7 +92,7 @@ public class QueueWriter extends UntypedActor {
                             qa.getDestRegion(),
                             null,
                             currentTime,
-                            currentTime,
+                            -1L,
                             queueMessageId );
 
                     messageSerialization.writeMessage( dbqm );

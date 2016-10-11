@@ -56,4 +56,9 @@ public interface QueueMessageSerialization extends Migration {
      * Write message to inflight table and remove from available table
      */
     void putInflight( DatabaseQueueMessage queueMessage );
+
+    /**
+     * Remove message from inflight table, write message to available table.
+     */
+    void timeoutInflight( DatabaseQueueMessage queueMessage );
 }
