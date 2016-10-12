@@ -28,6 +28,11 @@ import org.apache.usergrid.persistence.qakka.serialization.queuemessages.Message
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 import static org.junit.Assert.fail;
 
 
@@ -85,6 +90,51 @@ public class MessageCounterSerializationTest extends AbstractTest {
 
         mcs.decrementCounter( queueName, DatabaseQueueMessage.Type.DEFAULT, 10 );
         Assert.assertEquals( 70, mcs.getCounterValue( queueName, DatabaseQueueMessage.Type.DEFAULT ) );
+    }
+
+
+    @Test
+    public void testConcurrentOperation() {
+
+        // create multiple threads, each will increment and decrement counter by same number
+
+        Injector injector = getInjector();
+        MessageCounterSerialization mcs = injector.getInstance( MessageCounterSerialization.class );
+        String queueName = "mtco_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
+
+        int poolSize = 20;
+        int numThreads = 20;
+        int numCounts = 3000;
+        ExecutorService execService = Executors.newFixedThreadPool( poolSize );
+
+        for (int i = 0; i < numThreads; i++) {
+
+            execService.submit( () -> {
+
+                for ( int j = 0; j < numCounts; j++ ) {
+                    mcs.incrementCounter( queueName, DatabaseQueueMessage.Type.DEFAULT, 1 );
+                }
+
+                for ( int k = 0; k < numCounts; k++ ) {
+                    mcs.decrementCounter( queueName, DatabaseQueueMessage.Type.DEFAULT, 1 );
+                }
+            });
+        }
+
+        execService.shutdown();
+
+        try {
+            while (!execService.awaitTermination( 3, TimeUnit.SECONDS )) {
+                System.out.println( "Waiting... " +
+                    mcs.getCounterValue( queueName, DatabaseQueueMessage.Type.DEFAULT )  );
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // at end counter should be zero
+
+        Assert.assertEquals( 0, mcs.getCounterValue( queueName, DatabaseQueueMessage.Type.DEFAULT ) );
     }
 
 }
