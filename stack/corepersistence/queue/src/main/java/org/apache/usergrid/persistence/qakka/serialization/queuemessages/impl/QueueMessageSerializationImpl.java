@@ -179,7 +179,7 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
             Shard.Type shardType = DatabaseQueueMessage.Type.DEFAULT.equals( type ) ?
                     Shard.Type.DEFAULT : Shard.Type.INFLIGHT;
             Shard shard = shardStrategy.selectShard(
-                    queueName, actorSystemFig.getRegionLocal(), shardType, queueMessageId );
+                    queueName, region, shardType, queueMessageId );
             shardId = shard.getShardId();
         } else {
             shardId = shardIdOrNull;

@@ -125,6 +125,7 @@ public class ShardAllocator extends UntypedActor {
             long counterValue = 0;
             try {
                 counterValue = shardCounterSerialization.getCounterValue( queueName, type, shard.getShardId() );
+
             } catch ( NotFoundException ignored ) {}
 
             if (counterValue > (0.9 * qakkaFig.getMaxShardSize())) {
@@ -140,6 +141,10 @@ public class ShardAllocator extends UntypedActor {
 
                 logger.info("{} Created new shard for queue {} shardId {} timestamp {} counterValue {}",
                         this.hashCode(), queueName, shard.getShardId(), futureUUID.timestamp(), counterValue );
+
+            } else {
+//                logger.debug("No new shard for queue {} counterValue {} of max {}",
+//                    queueName, counterValue, qakkaFig.getMaxShardSize() );
             }
 
         } catch ( Throwable t ) {

@@ -94,7 +94,7 @@ public class ShardCounterSerializationImpl implements ShardCounterSerialization 
     public ShardCounterSerializationImpl(
         CassandraConfig cassandraConfig, QakkaFig qakkaFig, CassandraClient cassandraClient ) {
         this.cassandraConfig = cassandraConfig;
-        this.maxInMemoryIncrement = qakkaFig.getMaxInMemoryShardCounter();
+        this.maxInMemoryIncrement = qakkaFig.getShardCounterMaxInMemory();
         this.cassandraClient = cassandraClient;
     }
 

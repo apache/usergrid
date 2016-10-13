@@ -78,19 +78,35 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
 
     class InMemoryCount {
         long baseCount;
+        final AtomicLong totalInMemoryCount = new AtomicLong( 0L ); // for testing using only in-memory counter
         final AtomicLong increment = new AtomicLong( 0L );
         final AtomicLong decrement = new AtomicLong( 0L );
 
         InMemoryCount( long baseCount ) {
             this.baseCount = baseCount;
         }
-        public AtomicLong getIncrement() {
-            return increment;
+        public void increment( long inc ) {
+            increment.addAndGet( inc );
+            totalInMemoryCount.addAndGet( inc );
         }
-        public AtomicLong getDecrement() {
-            return decrement;
+        public void decrement( long dec ) {
+            decrement.addAndGet( dec );
+            totalInMemoryCount.addAndGet( -dec );
+        }
+        public long getIncrement() {
+            return increment.get();
+        }
+        public long getDecrement() {
+            return decrement.get();
+        }
+        public void clearDeltas() {
+            increment.set( 0L );
+            decrement.set( 0L );
         }
         public long value() {
+
+            // return totalInMemoryCount.get(); // for testing using just in-memory counter:
+
             return baseCount + increment.get() - decrement.get();
         }
         void setBaseCount( long baseCount ) {
@@ -106,7 +122,7 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
         CassandraConfig cassandraConfig, QakkaFig qakkaFig, CassandraClient cassandraClient ) {
 
         this.cassandraConfig = cassandraConfig;
-        this.maxChangesBeforeSave = qakkaFig.getMaxInMemoryMessageCounter();
+        this.maxChangesBeforeSave = qakkaFig.getMessageCounterMaxInMemory();
         this.cassandraClient = cassandraClient;
     }
 
@@ -139,12 +155,15 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
         InMemoryCount inMemoryCount = inMemoryCounters.get( key );
 
         synchronized ( inMemoryCount ) {
-            inMemoryCount.getIncrement().addAndGet( increment );
-
-            //logger.info("Incremented Count for queue {} type {} = {}",
-            //queueName, type, getCounterValue( queueName, type ));
-
+            inMemoryCount.increment( increment );
             saveIfNeeded( queueName, type );
+        }
+
+        if ( logger.isDebugEnabled() ) {
+            long value = inMemoryCounters.get( key ).value();
+            if (value <= 0) {
+                logger.debug( "Queue {} type {} decremented count = {}", queueName, type, value );
+            }
         }
     }
 
@@ -172,13 +191,15 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
         InMemoryCount inMemoryCount = inMemoryCounters.get( key );
 
         synchronized ( inMemoryCount ) {
-
-            inMemoryCount.getDecrement().addAndGet( decrement );
-
-            //logger.info("Decremented Count for queue {} type {} = {}",
-                //queueName, type, getCounterValue( queueName, type ));
-
+            inMemoryCount.decrement( decrement );
             saveIfNeeded( queueName, type );
+        }
+
+        if ( logger.isDebugEnabled() ) {
+            long value = inMemoryCounters.get( key ).value();
+            if (value <= 0) {
+                logger.debug( "Queue {} type {} incremented count = {}", queueName, type, value );
+            }
         }
     }
 
@@ -194,14 +215,14 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
 
             if ( value == null ) {
                 throw new NotFoundException(
-                        MessageFormat.format( "No counter found for queue {0} type {1}",
-                                queueName, type ));
+                        MessageFormat.format( "No counter found for queue {0} type {1}", queueName, type ));
             } else {
                 inMemoryCounters.put( key, new InMemoryCount( value ));
             }
         }
 
-        return inMemoryCounters.get( key ).value();
+        long value = inMemoryCounters.get( key ).value();
+        return value;
     }
 
 
@@ -253,15 +274,18 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
 
         if ( numChanges.incrementAndGet() > maxChangesBeforeSave ) {
 
-            long totalIncrement = inMemoryCount.getIncrement().get();
+            long totalIncrement = inMemoryCount.getIncrement();
             incrementCounterInStorage( queueName, type, totalIncrement );
 
-            long totalDecrement = inMemoryCount.getDecrement().get();
+            long totalDecrement = inMemoryCount.getDecrement();
             decrementCounterInStorage( queueName, type, totalDecrement );
 
-            inMemoryCount.setBaseCount( retrieveCounterFromStorage( queueName, type ) );
-            inMemoryCount.getIncrement().set( 0L );
-            inMemoryCount.getDecrement().set( 0L );
+            long baseCount = retrieveCounterFromStorage( queueName, type );
+
+            logger.debug("Writing queue counter {} type {} to storage count = {}", queueName, type, baseCount );
+
+            inMemoryCount.setBaseCount( baseCount );
+            inMemoryCount.clearDeltas();
 
             numChanges.set( 0 );
         }
