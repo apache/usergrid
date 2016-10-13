@@ -241,9 +241,9 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
                 }
             }
 
-            if ( ret.isEmpty() ) {
-                logger.info( "Requested {} but queue '{}' is empty", count, queueName);
-            }
+//            if ( ret.isEmpty() ) {
+//                logger.info( "Requested {} but queue '{}' is empty", count, queueName);
+//            }
             return ret;
 
         } finally {
