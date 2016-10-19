@@ -81,7 +81,7 @@ public class ManagementResourceIT extends AbstractRestIT {
             .users()
             .post( ApiResponse.class, new User( "test" + uuid, "test" + uuid, "test" + uuid + "@email.com", "test" ) );
         Map<String, Object> data = new HashMap<>();
-        data.put( "newpassword", "foo" );
+        data.put( "newpassword", "foofoo" );
         data.put( "oldpassword", "test" );
         management.users()
             .user( "test" + uuid )
@@ -90,7 +90,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         Token token = management.token().post(Token.class, new Token( "test"+uuid, "foo" ) );
         management.token().setToken( token );
         data.clear();
-        data.put( "oldpassword", "foo" );
+        data.put( "oldpassword", "foofoo" );
         data.put( "newpassword", "test" );
         management.users().user("test"+uuid).password().post(Entity.class, data);
     }
