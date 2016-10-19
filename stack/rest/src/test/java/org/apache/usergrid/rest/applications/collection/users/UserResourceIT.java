@@ -47,6 +47,7 @@ import java.io.IOException;
 
 import javax.ws.rs.core.MediaType;
 
+import static org.apache.usergrid.security.PasswordPolicy.ERROR_POLICY_VIOLIATION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -776,6 +777,7 @@ public class UserResourceIT extends AbstractRestIT {
     }
 
 
+
     @Test
     public void test_PUT_password_ok() {
         Entity entity = usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
@@ -798,7 +800,7 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void setUserPasswordAsAdmin() throws IOException {
         usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
-        String newPassword = "foo";
+        String newPassword = "foofoo";
         refreshIndex();
 
         // change the password as admin. The old password isn't required
@@ -816,8 +818,8 @@ public class UserResourceIT extends AbstractRestIT {
     public void passwordMismatchErrorUser() {
         usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
 
-        String origPassword = "foo";
-        String newPassword = "bar";
+        String origPassword = "foofoo";
+        String newPassword = "barbar";
 
         ChangePasswordEntity data = new ChangePasswordEntity(origPassword, newPassword);
 
@@ -829,6 +831,36 @@ public class UserResourceIT extends AbstractRestIT {
         }
 
         assertEquals(0, responseStatus);
+    }
+
+
+    @Test
+    public void createAppUserWithInvalidPassword() {
+
+        try {
+            Entity entity = usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "foo"));
+            fail("Invalid password should have caused error");
+
+        } catch( ClientErrorException uie ) {
+            errorParse( 400, ERROR_POLICY_VIOLIATION, uie );
+        }
+    }
+
+
+    @Test
+    public void testChangePassordToInvalidValue() {
+
+        Entity entity = usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
+        refreshIndex();
+
+        try {
+            usersResource.entity(entity).collection("password").post(new ChangePasswordEntity("sesame", "abc"));
+            fail("Invalid password should have caused error");
+
+        } catch( ClientErrorException uie ) {
+            errorParse( 400, ERROR_POLICY_VIOLIATION, uie );
+        }
+
     }
 
 

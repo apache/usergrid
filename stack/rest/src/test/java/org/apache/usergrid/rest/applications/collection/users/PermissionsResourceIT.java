@@ -638,12 +638,12 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         // cannot create app user named me
         try {
-            app().collection( "users" ).post( new User( "me", "it's me", "me@example.com", "me!" ) );
+            app().collection( "users" ).post( new User( "me", "it's me", "me@example.com", "me!me!" ) );
             fail("Must not be able to create app user named me");
         } catch ( BadRequestException expected ) {}
 
         // cannot use update to rename app user to me
-        Entity user = app().collection( "users" ).post( new User( "dave", "Sneaky Me", "me@example.com", "me!" ) );
+        Entity user = app().collection( "users" ).post( new User( "dave", "Sneaky Me", "me@example.com", "me!me!" ) );
         try {
             app().collection( "users" ).entity( user ).put( new Entity().chainPut( "username", "me" ));
             fail("Must not be able to update app user to name me");
