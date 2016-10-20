@@ -1768,9 +1768,7 @@ public class ManagementServiceImpl implements ManagementService {
         invalidateManagementAppAuthCache();
 
         if ( email ) {
-            if(!tokens.isExternalSSOProviderEnabled()) {
-                sendAdminUserInvitedEmail(user, organization);
-            }
+            sendAdminUserInvitedEmail(user, organization);
         }
     }
 
