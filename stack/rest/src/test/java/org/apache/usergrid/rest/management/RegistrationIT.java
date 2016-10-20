@@ -145,6 +145,7 @@ public class RegistrationIT extends AbstractRestIT {
 
     /**
      * Test checking that we should be able to add a admin with no password attached to them.
+     *
      * @throws Exception
      */
 
@@ -163,7 +164,10 @@ public class RegistrationIT extends AbstractRestIT {
             // this should send resetpwd  link in email to newly added org admin user(that did not exist
             ///in usergrid) and "User Invited To Organization" email
             String adminToken = getAdminToken().getAccessToken();
-            Entity node = postAddAdminToOrg(this.clientSetup.getOrganizationName(), this.clientSetup.getUsername()+"@servertest.com", "");
+            Entity node = postAddAdminToOrg(
+                this.clientSetup.getOrganizationName(),
+                this.clientSetup.getUsername()+"@servertest.com",
+                "changeme");
             UUID userId = node.getUuid();
 
             refreshIndex();

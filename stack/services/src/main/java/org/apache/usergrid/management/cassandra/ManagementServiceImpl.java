@@ -54,6 +54,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
+import org.apache.usergrid.security.PasswordPolicy;
 import org.apache.usergrid.security.crypto.EncryptionService;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
@@ -70,6 +71,7 @@ import org.apache.usergrid.security.tokens.TokenInfo;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
 import org.apache.usergrid.services.*;
+import org.apache.usergrid.services.exceptions.PasswordPolicyViolationException;
 import org.apache.usergrid.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -172,6 +174,8 @@ public class ManagementServiceImpl implements ManagementService {
 
     protected LocalShiroCache localShiroCache;
 
+    protected PasswordPolicy passwordPolicy;
+
 
     private LoadingCache<UUID, OrganizationConfig> orgConfigByAppCache = CacheBuilder.newBuilder().maximumSize( 1000 )
         .expireAfterWrite( Long.valueOf( System.getProperty(ORG_CONFIG_CACHE_PROP, "30000") ) , TimeUnit.MILLISECONDS)
@@ -214,6 +218,8 @@ public class ManagementServiceImpl implements ManagementService {
         this.aggregationServiceFactory = injector.getInstance(AggregationServiceFactory.class);
         this.service = injector.getInstance(ApplicationService.class);
         this.localShiroCache = injector.getInstance(LocalShiroCache.class);
+
+        this.passwordPolicy = injector.getInstance( PasswordPolicy.class );
 
     }
 
@@ -929,7 +935,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public UserInfo createAdminFromPrexistingPassword( UUID organizationId, User user, CredentialsInfo ci ) throws Exception {
+    public UserInfo createAdminFromPrexistingPassword( UUID organizationId, User user, CredentialsInfo ci )
+        throws Exception {
 
         return doCreateAdmin( organizationId, user, ci,
                 // we can't actually set the mongo password. We never have the plain text in
@@ -941,6 +948,12 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public UserInfo createAdminFrom( UUID organizationId, User user, String password ) throws Exception {
+
+        Collection<String> policyVioliations = passwordPolicy.policyCheck( password, false );
+        if ( !policyVioliations.isEmpty() ) {
+            throw new PasswordPolicyViolationException( passwordPolicy.getDescription( true ), policyVioliations );
+        }
+
         return doCreateAdmin(organizationId, user,
             encryptionService.defaultEncryptedCredentials(password, user.getUuid(), smf.getManagementAppId()),
             encryptionService.plainTextCredentials(mongoPassword(user.getUsername(), password), user.getUuid(),
@@ -949,20 +962,23 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public UserInfo createAdminUser( UUID organizationId, String username, String name, String email, String password, boolean activated,
+    public UserInfo createAdminUser( UUID organizationId, String username, String name, String email,
+                                     String password, boolean activated,
                                      boolean disabled ) throws Exception {
         return createAdminUser(organizationId, username, name, email, password, activated, disabled, null);
     }
 
 
     @Override
-    public UserInfo createAdminUser( UUID organizationId, String username, String name, String email, String password, boolean activated,
-                                     boolean disabled, Map<String, Object> userProperties ) throws Exception {
+    public UserInfo createAdminUser( UUID organizationId, String username, String name, String email, String password,
+                                     boolean activated, boolean disabled, Map<String, Object> userProperties )
+        throws Exception {
 
         if ( !validateAdminInfo(username, name, email, password) ) {
             return null;
         }
-        return createAdminUserInternal( organizationId, username, name, email, password, activated, disabled, userProperties );
+        return createAdminUserInternal(
+            organizationId, username, name, email, password, activated, disabled, userProperties );
     }
 
 
@@ -976,25 +992,32 @@ public class ManagementServiceImpl implements ManagementService {
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
 
-        if ( !( tokens.isExternalSSOProviderEnabled() && SubjectUtils.isServiceAdmin()) && !em.isPropertyValueUniqueForEntity( "user", "username", username ) ) {
+        if ( !( tokens.isExternalSSOProviderEnabled() && SubjectUtils.isServiceAdmin())
+            && !em.isPropertyValueUniqueForEntity( "user", "username", username ) ) {
             throw new DuplicateUniquePropertyExistsException( "user", "username", username );
         }
 
-        if ( !(tokens.isExternalSSOProviderEnabled()&& SubjectUtils.isServiceAdmin())  && !em.isPropertyValueUniqueForEntity( "user", "email", email ) ) {
+        if ( !(tokens.isExternalSSOProviderEnabled()&& SubjectUtils.isServiceAdmin())
+            && !em.isPropertyValueUniqueForEntity( "user", "email", email ) ) {
             throw new DuplicateUniquePropertyExistsException( "user", "email", email );
         }
         return true;
     }
 
 
-    protected UserInfo createAdminUserInternal( UUID organizationId, String username, String name, String email, String password,
-                                              boolean activated, boolean disabled, Map<String, Object> userProperties )
+    protected UserInfo createAdminUserInternal( UUID organizationId, String username, String name, String email,
+                                                String password, boolean activated, boolean disabled,
+                                                Map<String, Object> userProperties )
             throws Exception {
+
+
         logger.info( "createAdminUserInternal: {}", username );
 
-        if ( isBlank( password ) ) {
-            password = encodeBase64URLSafeString( bytes( UUID.randomUUID() ) );
+        Collection<String> policyVioliations = passwordPolicy.policyCheck( password, true );
+        if ( !policyVioliations.isEmpty() ) {
+            throw new PasswordPolicyViolationException( passwordPolicy.getDescription( true ), policyVioliations );
         }
+
         if ( username == null ) {
             username = email;
         }
@@ -1263,6 +1286,11 @@ public class ManagementServiceImpl implements ManagementService {
 
         if ( ( userId == null ) || ( newPassword == null ) ) {
             return;
+        }
+
+        Collection<String> policyVioliations = passwordPolicy.policyCheck( newPassword, true );
+        if ( !policyVioliations.isEmpty() ) {
+            throw new PasswordPolicyViolationException( passwordPolicy.getDescription( true ), policyVioliations );
         }
 
         EntityManager em = emf.getEntityManager( smf.getManagementAppId() );
@@ -1646,7 +1674,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public Map<String, Object> getAdminUserOrganizationData(UserInfo user, boolean includeApps, boolean includeOrgUsers) throws Exception {
+    public Map<String, Object> getAdminUserOrganizationData(UserInfo user, boolean includeApps, boolean includeOrgUsers)
+        throws Exception {
 
         Map<String, Object> json = new HashMap<>();
 
@@ -1739,9 +1768,7 @@ public class ManagementServiceImpl implements ManagementService {
         invalidateManagementAppAuthCache();
 
         if ( email ) {
-            if(!tokens.isExternalSSOProviderEnabled()) {
-                sendAdminUserInvitedEmail(user, organization);
-            }
+            sendAdminUserInvitedEmail(user, organization);
         }
     }
 
@@ -2654,8 +2681,8 @@ public class ManagementServiceImpl implements ManagementService {
             String token = getConfirmationTokenForAdminUser(user.getUuid(), 0, organizationId);
             OrganizationConfig orgConfig = organizationId != null ?
                 getOrganizationConfigByUuid(organizationId) : getOrganizationConfigForUserInfo(user);
-            String confirmation_url = orgConfig.getFullUrl(WorkflowUrl.ADMIN_CONFIRMATION_URL, user.getUuid().toString()) +
-                "?token=" + token;
+            String confirmation_url = orgConfig.getFullUrl(WorkflowUrl.ADMIN_CONFIRMATION_URL,
+                user.getUuid().toString()) + "?token=" + token;
             sendAdminUserEmail(user, "User Account Confirmation: " + user.getEmail(),
                 emailMsg(hashMap("confirm_email", user.getEmail()).map("confirmation_url", confirmation_url),
                     PROPERTIES_EMAIL_ADMIN_CONFIRMATION));
@@ -2779,7 +2806,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     @Override
-    public boolean checkPasswordResetTokenForAppUser( UUID applicationId, UUID userId, String token ) throws Exception {
+    public boolean checkPasswordResetTokenForAppUser( UUID applicationId, UUID userId, String token )
+        throws Exception {
         AuthPrincipalInfo principal = null;
         try {
             principal = getPrincipalFromAccessToken( token, TOKEN_TYPE_PASSWORD_RESET, APPLICATION_USER );
@@ -3036,8 +3064,14 @@ public class ManagementServiceImpl implements ManagementService {
 
     @Override
     public void setAppUserPassword( UUID applicationId, UUID userId, String newPassword ) throws Exception {
+
         if ( ( userId == null ) || ( newPassword == null ) ) {
             return;
+        }
+
+        Collection<String> policyVioliations = passwordPolicy.policyCheck( newPassword, false );
+        if ( !policyVioliations.isEmpty() ) {
+            throw new PasswordPolicyViolationException( passwordPolicy.getDescription( false ), policyVioliations );
         }
 
         EntityManager em = emf.getEntityManager( applicationId );
@@ -3051,6 +3085,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public void setAppUserPassword( UUID applicationId, UUID userId, String oldPassword, String newPassword )
             throws Exception {
+
         if ( ( userId == null ) ) {
             throw new IllegalArgumentException( "userId is required" );
         }
@@ -3097,7 +3132,8 @@ public class ManagementServiceImpl implements ManagementService {
         final CredentialsInfo ci = readUserPasswordCredentials( applicationId, userId, User.ENTITY_TYPE );
 
         if ( ci == null ) {
-            throw new EntityNotFoundException("Could not find credentials for user with id " + userId + " in application" + applicationId );
+            throw new EntityNotFoundException("Could not find credentials for user with id " + userId
+                + " in application" + applicationId );
         }
 
         return ci;
@@ -3242,7 +3278,8 @@ public class ManagementServiceImpl implements ManagementService {
 
 
     /** read the user password credential's info */
-    protected CredentialsInfo readUserPasswordCredentials( UUID appId, UUID ownerId, String ownerType ) throws Exception {
+    protected CredentialsInfo readUserPasswordCredentials( UUID appId, UUID ownerId, String ownerType )
+        throws Exception {
         return readCreds( appId, ownerId, ownerType, USER_PASSWORD );
     }
 
