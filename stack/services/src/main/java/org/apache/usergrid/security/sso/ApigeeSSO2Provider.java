@@ -37,9 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.HashMap;
 import java.util.Map;
@@ -146,37 +144,42 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
         return properties.getProperty(USERGRID_EXTERNAL_PUBLICKEY_URL);
     }
 
-    public Jws<Claims> getClaimsForKeyUrl(String token, PublicKey ssoPublicKey) throws NoSuchAlgorithmException, InvalidKeySpecException, BadTokenException, ExpiredTokenException {
+    public Jws<Claims> getClaimsForKeyUrl(String token, PublicKey ssoPublicKey) throws BadTokenException {
+
         Jws<Claims> claims = null;
 
-        if(ssoPublicKey == null){
-            throw new IllegalArgumentException("Public key must be provided with Apigee " +
-                "token in order to verify signature.");
+        if (ssoPublicKey == null) {
+            throw new IllegalArgumentException( "Public key must be provided with Apigee JWT " +
+                "token in order to verify signature." );
         }
 
-        try {
-            claims = Jwts.parser().setSigningKey(ssoPublicKey).parseClaimsJws(token);
-        } catch (SignatureException se) {
-            if(logger.isDebugEnabled()) {
-                logger.debug("Signature was invalid for Apigee JWT: {} and key: {}", token, ssoPublicKey);
-            }
-            throw new BadTokenException("Invalid Apigee SSO token signature");
-        } catch (MalformedJwtException me){
-            if(logger.isDebugEnabled()) {
-                logger.debug("Beginning JSON object section of Apigee JWT invalid for token: {}", token);
-            }
-            throw new BadTokenException("Malformed Apigee JWT");
-        } catch (ArrayIndexOutOfBoundsException aio){
-            if(logger.isDebugEnabled()) {
-                logger.debug("Signature section of Apigee JWT invalid for token: {}", token);
-            }
-            throw new BadTokenException("Malformed Apigee JWT");
-        } catch ( ExpiredJwtException e ){
-            final long expiry = Long.valueOf(e.getClaims().get("exp").toString());
-            final long expirationDelta = ((System.currentTimeMillis()/1000) - expiry)*1000;
-            throw new ExpiredTokenException(String.format("Token expired %d milliseconds ago.", expirationDelta ));
-        }
+        int tries = 0;
+        int maxTries = 2;
+        while ( claims == null && tries++ < maxTries ) {
+            try {
+                claims = Jwts.parser().setSigningKey( ssoPublicKey ).parseClaimsJws( token );
 
+            } catch (SignatureException se) {
+                logger.warn( "Signature was invalid for Apigee JWT token: {} and key: {}", token, ssoPublicKey );
+
+            } catch (ExpiredJwtException e) {
+                final long expiry = Long.valueOf( e.getClaims().get( "exp" ).toString() );
+                final long expirationDelta = ((System.currentTimeMillis() / 1000) - expiry) * 1000;
+                logger.info(String.format("Apigee JWT Token expired %d milliseconds ago.", expirationDelta));
+
+            } catch (MalformedJwtException me) {
+                logger.error("Malformed JWT token", me);
+                throw new BadTokenException( "Malformed Apigee JWT token", me );
+
+            } catch (ArrayIndexOutOfBoundsException aio) {
+                logger.error("Error parsing JWT token", aio);
+                throw new BadTokenException( "Error parsing Apigee JWT token", aio );
+            }
+
+            if ( claims == null ) {
+                this.publicKey =  getPublicKey( getExternalSSOUrl() );
+            }
+        }
 
         return claims;
     }
