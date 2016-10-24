@@ -105,22 +105,31 @@
 <li class="toctree-l3"><a class="reference internal" href="#example-request-response">Example Request/Response</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#collection-settings">Collection Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-selective-indexing-via-collection-settings">Setting up Selective Indexing via Collection Settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#specifying-a-schema-for-a-collection">Specifying a Schema for a Collection</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#example-turn-off-indexing-for-a-collection">Example: Turn off Indexing for a Collection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example-index-only-one-field-of-a-collection">Example: Index only one field of a Collection</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#retrieving-collections">Retrieving Collections</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#retrieving-sets-of-entities-from-a-collection">Retrieving sets of entities from a collection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id1">Request Syntax</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id2">Example Request/Response</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Request Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Example Request/Response</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#updating-collections">Updating Collections</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#batch-updating-entities-in-a-collection">Batch updating entities in a collection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id3">Request Syntax</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">Example Request/Response</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Request Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Example Request/Response</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#deleting-collections">Deleting Collections</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#batch-deleting-entities-in-a-collection">Batch deleting entities in a collection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id5">Request Syntax</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id6">Example Request/Response</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Request Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Example Request/Response</a></li>
 </ul>
 </li>
 </ul>
@@ -334,6 +343,170 @@ providing &#8216;items&#8217; will not create &#8216;itemses&#8217;.</p>
 </div>
 </div>
 </div>
+<div class="section" id="collection-settings">
+<h2>Collection Settings<a class="headerlink" href="#collection-settings" title="Permalink to this headline">¶</a></h2>
+<p>Usergrid allows you to specify settings for each of your Collections.
+Collections may have a *_settings* resource with the following URI
+pattern:</p>
+<div class="highlight-python"><div class="highlight"><pre>/{org-identifier}/{app-identifier}/{collection-name}/_settings
+</pre></div>
+</div>
+<p>If a Collection does not have a <a href="#id1"><span class="problematic" id="id2">*</span></a>settings resource, then doing an HTTP
+GET on that URI will yield the normal Collection resource. For example
+here a request and respinse for settings for the Collection &#8220;battles&#8221;,
+which does not yet have <a href="#id3"><span class="problematic" id="id4">*</span></a>settigs:</p>
+<div class="highlight-python"><div class="highlight"><pre>curl &quot;https//api.usergrid.com/test-organization/settingstest/battles/_settings?access_token=YWM...&quot;
+{
+  &quot;action&quot; : &quot;get&quot;,
+  &quot;application&quot; : &quot;7fd6c414-2cb6-11e6-8b07-0a669fe1d66e&quot;,
+  &quot;params&quot; : { },
+  &quot;path&quot; : &quot;/battles&quot;,
+  &quot;uri&quot; : &quot;https//api.usergrid.com/test-organization/settingstest/battles&quot;,
+  &quot;entities&quot; : [ ],
+  &quot;timestamp&quot; : 1465308535753,
+  &quot;duration&quot; : 175,
+  &quot;organization&quot; : &quot;test-organization&quot;,
+  &quot;applicationName&quot; : &quot;settingstest&quot;
+}
+</pre></div>
+</div>
+<p>Once a Collection has a _settings resource, here&#8217;s what it might look
+like:</p>
+<div class="highlight-python"><div class="highlight"><pre>curl &quot;0:8080/test-organization/settingstest/battles/_settings?access_token=YWM...&quot;
+{
+  &quot;action&quot; : &quot;get&quot;,
+  &quot;application&quot; : &quot;7fd6c414-2cb6-11e6-8b07-0a669fe1d66e&quot;,
+  &quot;params&quot; : { },
+  &quot;path&quot; : &quot;/battles&quot;,
+  &quot;uri&quot; : &quot;https//api.usergrid.com/test-organization/settingstest/battles&quot;,
+  &quot;entities&quot; : [ ],
+  &quot;data&quot; : {
+    &quot;lastUpdated&quot; : 1465311161543,
+    &quot;lastReindexed&quot; : 0,
+    &quot;fields&quot; : &quot;all&quot;,
+    &quot;region&quot; : &quot;us-east-1&quot;,
+    &quot;lastUpdateBy&quot; : &quot;super@usergrid.com&quot;
+  },
+  &quot;timestamp&quot; : 1465311177535,
+  &quot;duration&quot; : 6,
+  &quot;organization&quot; : &quot;test-organization&quot;,
+  &quot;applicationName&quot; : &quot;settingstest&quot;
+}
+</pre></div>
+</div>
+<p>Collection settings are useful for setting up Selective Indexing. Let&#8217;s
+discuss that next.</p>
+</div>
+<div class="section" id="setting-up-selective-indexing-via-collection-settings">
+<h2>Setting up Selective Indexing via Collection Settings<a class="headerlink" href="#setting-up-selective-indexing-via-collection-settings" title="Permalink to this headline">¶</a></h2>
+<p>Indexing is expensive and now it can be done selectively.</p>
+<p>In the beginning, Usergrid indexed each and every field of an Entity. If
+a field was an object, the the fields of that object would also be
+indexed. Indexing everything is very convenient because it means you can
+query on any field, but indexing everything is expensive in terms of
+performance; it slows down Entity creation and update. Indexing
+everything is also expensive in terms of storage, it takes up space and
+makes puts strain on the system.</p>
+<p>Staring with Usegrid 2.1.1, you can specify a &#8220;schema&#8221; for each
+Collection. You can tell Usergrid which fields should be indexed or you
+can tell Usergrid to completely skip indexing for a collection.</p>
+<div class="section" id="specifying-a-schema-for-a-collection">
+<h3>Specifying a Schema for a Collection<a class="headerlink" href="#specifying-a-schema-for-a-collection" title="Permalink to this headline">¶</a></h3>
+<p>There are three ways to specify a schema for a Collection. You can
+specify that all fields are to be index, you can specify none or you can
+specify a list of the fields that should be indexed. You do this by
+POSTing or PUTing a _settings resource for the Collection with one
+field named &#8220;fields&#8221;.</p>
+<p>There are three possible values for &#8220;fields&#8221;:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="9%" />
+<col width="61%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Fields Setting</th>
+<th class="head">Type</th>
+<th class="head">Meaning</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>&#8220;fields&#8221;:&#8221;all&#8221;</td>
+<td>String</td>
+<td>Index all Entity fields</td>
+</tr>
+<tr class="row-odd"><td>&#8220;fields&#8221;:&#8221;none&#8221;</td>
+<td>String</td>
+<td>Index no fields; completely skip indexing for this collection.</td>
+</tr>
+<tr class="row-even"><td>&#8220;fields&#8221;:[&#8220;field1&#8221;, &#8220;field2&#8221;]</td>
+<td>Array</td>
+<td>Index all fields whose names are listed in the array value.</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="example-turn-off-indexing-for-a-collection">
+<h4>Example: Turn off Indexing for a Collection<a class="headerlink" href="#example-turn-off-indexing-for-a-collection" title="Permalink to this headline">¶</a></h4>
+<p>This example shows how you would use curl to set the schema if you want
+to turn off indexing for a collection:</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X PUT &quot;0:8080/test-organization/settingstest/_settings?access_token=YWM...&quot; -d &#39;{&quot;fields&quot;:&quot;none&quot;}&#39;
+{
+  &quot;action&quot; : &quot;put&quot;,
+  &quot;application&quot; : &quot;7fd6c414-2cb6-11e6-8b07-0a669fe1d66e&quot;,
+  &quot;params&quot; : { },
+  &quot;path&quot; : &quot;/_settings&quot;,
+  &quot;uri&quot; : &quot;http://localhost:8080/test-organization/settingstest/_settings&quot;,
+  &quot;entities&quot; : [ {
+    &quot;uuid&quot; : &quot;6fc783c6-2cc3-11e6-8fce-0a669fe1d66e&quot;,
+    &quot;type&quot; : &quot;_setting&quot;,
+    &quot;created&quot; : 1465312858697,
+    &quot;modified&quot; : 1465312858697,
+    &quot;fields&quot; : &quot;none&quot;,
+    &quot;metadata&quot; : {
+      &quot;path&quot; : &quot;/_settings/6fc783c6-2cc3-11e6-8fce-0a669fe1d66e&quot;,
+      &quot;size&quot; : 347
+    }
+  } ],
+  &quot;timestamp&quot; : 1465312858688,
+  &quot;duration&quot; : 63,
+  &quot;organization&quot; : &quot;test-organization&quot;,
+  &quot;applicationName&quot; : &quot;settingstest&quot;
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="example-index-only-one-field-of-a-collection">
+<h4>Example: Index only one field of a Collection<a class="headerlink" href="#example-index-only-one-field-of-a-collection" title="Permalink to this headline">¶</a></h4>
+<p>This example shows how you would use curl to set the schema if you only
+want the &#8220;year&#8221; field to be indexed:</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X PUT &quot;0:8080/test-organization/settingstest/_settings?access_token=YWM...&quot; -d &#39;{&quot;fields&quot;:[&quot;year&quot;]}&#39;
+{
+  &quot;action&quot; : &quot;put&quot;,
+  &quot;application&quot; : &quot;7fd6c414-2cb6-11e6-8b07-0a669fe1d66e&quot;,
+  &quot;params&quot; : { },
+  &quot;path&quot; : &quot;/_settings&quot;,
+  &quot;uri&quot; : &quot;http://localhost:8080/test-organization/settingstest/_settings&quot;,
+  &quot;entities&quot; : [ {
+    &quot;uuid&quot; : &quot;6fc783c6-2cc3-11e6-8fce-0a669fe1d66e&quot;,
+    &quot;type&quot; : &quot;_setting&quot;,
+    &quot;created&quot; : 1465312858697,
+    &quot;modified&quot; : 1465312858697,
+    &quot;fields&quot; : [ &quot;year&quot; ],
+    &quot;metadata&quot; : {
+      &quot;path&quot; : &quot;/_settings/6fc783c6-2cc3-11e6-8fce-0a669fe1d66e&quot;,
+      &quot;size&quot; : 347
+    }
+  } ],
+  &quot;timestamp&quot; : 1465312858688,
+  &quot;duration&quot; : 63,
+  &quot;organization&quot; : &quot;test-organization&quot;,
+  &quot;applicationName&quot; : &quot;settingstest&quot;
+}
+</pre></div>
+</div>
+</div>
+</div>
+</div>
 <div class="section" id="retrieving-collections">
 <h2>Retrieving Collections<a class="headerlink" href="#retrieving-collections" title="Permalink to this headline">¶</a></h2>
 <p>This article describes how to retrieve all of the entities in a
@@ -353,8 +526,8 @@ for details.</p>
 <div class="section" id="retrieving-sets-of-entities-from-a-collection">
 <h3>Retrieving sets of entities from a collection<a class="headerlink" href="#retrieving-sets-of-entities-from-a-collection" title="Permalink to this headline">¶</a></h3>
 </div>
-<div class="section" id="id1">
-<h3>Request Syntax<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id5">
+<h3>Request Syntax<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python"><div class="highlight"><pre>curl -X GET https://api.usergrid.com/&lt;org&gt;/&lt;app&gt;/&lt;collection&gt;
 </pre></div>
 </div>
@@ -382,8 +555,8 @@ for details.</p>
 </tbody>
 </table>
 </div>
-<div class="section" id="id2">
-<h3>Example Request/Response<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Example Request/Response<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <p>Request:</p>
 <div class="highlight-python"><div class="highlight"><pre>curl -X GET &quot;https://api.usergrid.com/your-org/your-app/items&quot;
 </pre></div>
@@ -443,8 +616,8 @@ for details.</p>
 <div class="section" id="batch-updating-entities-in-a-collection">
 <h3>Batch updating entities in a collection<a class="headerlink" href="#batch-updating-entities-in-a-collection" title="Permalink to this headline">¶</a></h3>
 </div>
-<div class="section" id="id3">
-<h3>Request Syntax<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h3>Request Syntax<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python"><div class="highlight"><pre>curl -X PUT https://api.usergrid.com/&lt;org&gt;/&lt;app&gt;/&lt;collection&gt;/?ql= -d {&lt;property&gt;}
 </pre></div>
 </div>
@@ -478,8 +651,8 @@ example:</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="id4">
-<h3>Example Request/Response<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id8">
+<h3>Example Request/Response<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
 <p>Request:</p>
 <div class="highlight-python"><div class="highlight"><pre>curl -X PUT https://api.usergrid.com/your-org/your-app/items/?ql= -d &#39;{&quot;availability&quot;:&quot;in-stock&quot;}&#39;
 </pre></div>
@@ -538,8 +711,8 @@ for details.</p>
 <div class="section" id="batch-deleting-entities-in-a-collection">
 <h3>Batch deleting entities in a collection<a class="headerlink" href="#batch-deleting-entities-in-a-collection" title="Permalink to this headline">¶</a></h3>
 </div>
-<div class="section" id="id5">
-<h3>Request Syntax<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id9">
+<h3>Request Syntax<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python"><div class="highlight"><pre>curl -X DELETE https://api.usergrid.com/&lt;org&gt;/&lt;app&gt;/&lt;collection&gt;/?ql=&lt;query&gt;
 </pre></div>
 </div>
@@ -571,8 +744,8 @@ for details.</p>
 </table>
 <p>(for more information on queries, see Querying your data)</p>
 </div>
-<div class="section" id="id6">
-<h3>Example Request/Response<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id10">
+<h3>Example Request/Response<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
 <p>The following example will delete the first 5 entities in a collection.</p>
 <p>Request:</p>
 <div class="highlight-python"><div class="highlight"><pre>curl -X DELETE https://api.usergrid.com/your-org/your-app/items/?ql=&quot;limit=5&quot;
