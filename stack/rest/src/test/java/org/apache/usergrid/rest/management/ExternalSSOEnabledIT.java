@@ -50,7 +50,7 @@ public class ExternalSSOEnabledIT extends AbstractRestIT {
     PrivateKey privateKey;
     String compactJws;
     String username = "SSOadminuser" + UUIDUtils.newTimeUUID();
-    ApigeeSSO2Provider apigeeSSO2ProviderTest;
+
     //SSO2 implementation
     public static final String USERGRID_EXTERNAL_SSO_ENABLED = "usergrid.external.sso.enabled";
     public static final String USERGRID_EXTERNAL_PROVIDER =    "usergrid.external.sso.provider";
