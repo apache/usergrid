@@ -61,7 +61,7 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
 
     public static final String USERGRID_EXTERNAL_PUBLICKEY_URL = "usergrid.external.sso.url";
 
-    public static final String USERGRID_EXTERMAL_PUBLICKEY_FRESHNESS = "usergrid.external.sso.public-key-freshness";
+    public static final String USERGRID_EXTERNAL_PUBLICKEY_FRESHNESS = "usergrid.external.sso.public-key-freshness";
 
 
     public ApigeeSSO2Provider() {
@@ -241,11 +241,11 @@ public class ApigeeSSO2Provider implements ExternalSSOProvider {
 
         lastPublicKeyFetch = System.currentTimeMillis();
 
-        String freshnessString = (String)properties.get( USERGRID_EXTERMAL_PUBLICKEY_FRESHNESS );
+        String freshnessString = (String)properties.get( USERGRID_EXTERNAL_PUBLICKEY_FRESHNESS );
         try {
             freshnessTime = Long.parseLong( freshnessString );
         } catch ( Exception e ) {
-            logger.error("Ignoring invalid setting for " + USERGRID_EXTERMAL_PUBLICKEY_FRESHNESS );
+            logger.error("Ignoring invalid setting for " + USERGRID_EXTERNAL_PUBLICKEY_FRESHNESS );
         }
     }
 }
