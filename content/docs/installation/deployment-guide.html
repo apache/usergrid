@@ -280,10 +280,11 @@ for deployment you can deploy them separately using clustering.</p>
 haven&#8217;t tried it)</li>
 <li><a class="reference external" href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Java SE 8
 JDK</a></li>
-<li><a class="reference external" href="https://tomcat.apache.org/download-70.cgi">Apache Tomcat 7+</a></li>
-<li><a class="reference external" href="http://cassandra.apache.org/download/">Apache Cassandra 1.2.1+</a></li>
-<li><a class="reference external" href="https://www.elastic.co/downloads/elasticsearch">ElasticSearch
-1.4+</a></li>
+<li><a class="reference external" href="https://tomcat.apache.org/download-70.cgi">Apache Tomcat 7</a></li>
+<li><a class="reference external" href="http://cassandra.apache.org/download/">Apache Cassandra 1.2.x or
+2.x</a></li>
+<li><a class="reference external" href="https://www.elastic.co/downloads/elasticsearch">ElasticSearch 1.4.x or
+1.7.x</a></li>
 </ul>
 <p>Optional but helpful:</p>
 <ul class="simple">
@@ -345,6 +346,13 @@ recommended.</p>
 <p><strong>Use the right Java.</strong> Cassandra requires Java and we recommend that
 you use the same version of Java for Cassandra as you use to run Tomcat
 and ElasticSearch.</p>
+<p>Usergrid uses Cassandra&#8217;s Thrift protocol and on Cassandra 2.x releases
+you MUST enable Thrift by setting <code class="docutils literal"><span class="pre">start_rpc</span></code> in your
+<code class="docutils literal"><span class="pre">cassandra.yaml</span></code> file:</p>
+<div class="highlight-python"><div class="highlight"><pre># Whether to start the thrift rpc server.
+start_rpc: true
+</pre></div>
+</div>
 <p><strong>Refer to the</strong> <a class="reference external" href="http://wiki.apache.org/cassandra/GettingStarted">Apache Cassandra
 documentation</a> <strong>for
 instructions on how to install Cassandra</strong>. The <a class="reference external" href="http://docs.datastax.com/en/cassandra/1.2/cassandra/features/featuresTOC.html">Datastax documentation

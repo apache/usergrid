@@ -258,7 +258,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
             .collect(() -> new IndexOperationMessage(), (collector, single) -> collector.ingest(single))
             .filter(msg -> !msg.isEmpty())
             .doOnNext(indexOperation -> {
-                asyncEventService.queueIndexOperationMessage(indexOperation);
+                asyncEventService.queueIndexOperationMessage(indexOperation, false);
             });
 
     }

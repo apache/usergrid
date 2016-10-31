@@ -19,6 +19,7 @@ package org.apache.usergrid.rest.management;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 import net.jcip.annotations.NotThreadSafe;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.management.MockImapClient;
 import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
@@ -42,6 +43,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.apache.usergrid.management.AccountCreationProps.*;
+import static org.apache.usergrid.security.PasswordPolicy.ERROR_POLICY_VIOLIATION;
 import static org.junit.Assert.*;
 
 
@@ -87,6 +89,55 @@ public class AdminUsersIT extends AbstractRestIT {
             fail( "We shouldn't be able to get a token using the old password" );
         }catch(ClientErrorException uie) {
             errorParse( 400,"invalid_grant",uie );
+        }
+    }
+
+
+    /**
+     * Test that creating user with password that violates policy results in informative error message.
+     */
+    @Test
+    public void createUserWithInvalidPassword() throws IOException {
+
+        String rando = RandomStringUtils.randomAlphanumeric(10);
+        Form userForm = new Form();
+        userForm.param( "username", "user_" + rando );
+        userForm.param( "name", rando);
+        userForm.param( "email", "user_" + rando + "@example.com" );
+        userForm.param( "password", "abc" );
+
+        try {
+            management().users().post( User.class, userForm );
+            fail("Invalid password should have caused error");
+
+        } catch( ClientErrorException uie ) {
+            errorParse( 400, ERROR_POLICY_VIOLIATION, uie );
+        }
+
+    }
+
+
+    /**
+     * Test that setting a password that violates policy results in informative error message.
+     */
+    @Test
+    public void resetPasswordWithInvalidNewPassword() throws IOException {
+
+        String username = clientSetup.getUsername();
+        String password = clientSetup.getPassword();
+
+        Map<String, Object> passwordPayload = new HashMap<String, Object>();
+
+        // Default password policy is lenient, only requires length of 4
+        passwordPayload.put( "newpassword", "abc" );
+        passwordPayload.put( "oldpassword", password );
+
+        try {
+            management.users().user( username ).password().post( Entity.class, passwordPayload );
+            fail("Invalid password should have caused error");
+
+        } catch( ClientErrorException uie ) {
+            errorParse( 400, ERROR_POLICY_VIOLIATION, uie );
         }
     }
 

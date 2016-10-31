@@ -1,37 +1,28 @@
 # Usergrid 2.1.0 Deployment Guide
 
-This document explains how to deploy the Usergrid v2.1.0 Backend-as-a-Service (BaaS), 
-which comprises the Usergrid Stack, a Java web application, and the Usergrid Portal,
-which is an HTML5/JavaScript application. 
+This document explains how to deploy the Usergrid v2.1.0 Backend-as-a-Service (BaaS), which comprises the Usergrid Stack, a Java web application, and the Usergrid Portal, which is an HTML5/JavaScript application. 
 
 
 ## Intended audience
 
-You should be able to follow this guide if you are a developer, system admin or 
-operations person with some knowledge of Java application deployment and good 
-knowledge of Linux and the bash shell.
+You should be able to follow this guide if you are a developer, system admin or operations person with some knowledge of Java application deployment and good knowledge of Linux and the bash shell.
 
-This guide is a starting point and does NOT explain everything you need to know to 
-run Usergrid at-scale and in production. To do that you will need some additional 
-skills and knowledge around running, monitoring and trouble-shooting Tomcat 
-applications, multi-node Cassandra & ElasticSearch clusters and more.
+This guide is a starting point and does NOT explain everything you need to know to run Usergrid at-scale and in production. To do that you will need some additional skills and knowledge around running, monitoring and trouble-shooting Tomcat applications, multi-node Cassandra & ElasticSearch clusters and more.
 
 
 ## Prerequsites
 
-Below are the software requirements for Usergrid 2.1.0 Stack and Portal. 
-You can install them all on one computer for development purposes, and for 
-deployment you can deploy them separately using clustering.
+Below are the software requirements for Usergrid 2.1.0 Stack and Portal. You can install them all on one computer for development purposes, and for deployment you can deploy them separately using clustering.
 
    * Linux or a UNIX-like system (Usergrid may run on Windows, but we haven't tried it)
    
    * [Java SE 8 JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
    
-   * [Apache Tomcat 7+](https://tomcat.apache.org/download-70.cgi)
+   * [Apache Tomcat 7](https://tomcat.apache.org/download-70.cgi)
    
-   * [Apache Cassandra 1.2.1+](http://cassandra.apache.org/download/)
+   * [Apache Cassandra 1.2.x or 2.x](http://cassandra.apache.org/download/)
    
-   * [ElasticSearch 1.4+](https://www.elastic.co/downloads/elasticsearch)  
+   * [ElasticSearch 1.4.x or 1.7.x](https://www.elastic.co/downloads/elasticsearch)  
    
 Optional but helpful:
 
@@ -76,26 +67,24 @@ The files that you need for deploying Usergrid Stack and Portal are `ROOT.war` a
 
 ## Deploying the Usergrid Stack
 
-The Usergrid Stack is a Java EE web application that runs on Tomcat, 
-uses the Cassandra database for storage and the ElasticSearch search-engine for queries.
+The Usergrid Stack is a Java EE web application that runs on Tomcat, uses the Cassandra database for storage and the ElasticSearch search-engine for queries.
  
-Before installing the Usegrid Stack into Tomcat, you'll start by setting up the 
-required database and search engine nodes. 
+Before installing the Usegrid Stack into Tomcat, you'll start by setting up the required database and search engine nodes. 
  
    
 ### Stack STEP #1: Setup Cassandra 
 
-Usergrid needs access to at least one Apache Cassandra node. You can setup a single node of
-Cassandra on your computer for development and testing. For production deployment, 
-a three or more node cluster is recommended.
+Usergrid needs access to at least one Apache Cassandra node. You can setup a single node of Cassandra on your computer for development and testing. For production deployment, a three or more node cluster is recommended.
 
-__Use the right Java.__ Cassandra requires Java and we recommend that you use the same version of Java 
-for Cassandra as you use to run Tomcat and ElasticSearch.
+__Use the right Java.__ Cassandra requires Java and we recommend that you use the same version of Java for Cassandra as you use to run Tomcat and ElasticSearch.
 
-__Refer to the__ [Apache Cassandra documentation](http://wiki.apache.org/cassandra/GettingStarted) 
-__for instructions on how to install Cassandra__. The [Datastax documentation for Cassandra 1.2](http://docs.datastax.com/en/cassandra/1.2/cassandra/features/featuresTOC.html) is also helpful. 
-Once you are up and running make a note of these things:
+Usergrid uses Cassandra's Thrift protocol and on Cassandra 2.x releases you MUST enable Thrift by setting `start_rpc` in your `cassandra.yaml` file:
 
+    # Whether to start the thrift rpc server.
+    start_rpc: true
+
+__Refer to the__ [Apache Cassandra documentation](http://wiki.apache.org/cassandra/GettingStarted) __for instructions on how to install Cassandra__. The [Datastax documentation for Cassandra 1.2](http://docs.datastax.com/en/cassandra/1.2/cassandra/features/featuresTOC.html) is also helpful. Once you are up and running make a note of these things:
+ 
    * The name of the Cassandra cluster
    * Hostname or IP address of each Cassandra node
    * Port number used for Cassandra RPC (the default is 9160)
@@ -104,23 +93,18 @@ Once you are up and running make a note of these things:
 
 ### Stack STEP #2: Setup ElasticSearch
 
-Usergrid also needs access to at least one ElasticSearch node. As with Cassandra, 
-you can setup single ElasticSearch node on your computer, and you should run 
-a cluster in production.
+Usergrid also needs access to at least one ElasticSearch node. As with Cassandra, you can setup single ElasticSearch node on your computer, and you should run a cluster in production.
 
-__Use the right Java__. ElasticSearch requires Java and you *must* ensure that you use the 
-same version of Java for ElasticSearch as you do for running Tomcat.
+__Use the right Java__. ElasticSearch requires Java and you *must* ensure that you use the same version of Java for ElasticSearch as you do for running Tomcat.
 
 __Refer to the__ 
-[ElasticSearch 1.4 documentation](https://www.elastic.co/guide/en/elasticsearch/reference/1.4/index.html) 
-__for instructions on how to install__. Once you are up and running make a note of these things:
+[ElasticSearch 1.4 documentation](https://www.elastic.co/guide/en/elasticsearch/reference/1.4/index.html) __for instructions on how to install__. Once you are up and running make a note of these things:
 
    * The name of the ElasticSearch cluster
    * Hostname or IP address of each ElasticSearch node
    * Port number used for ElasticSearch protocol (the default is 9200)
 
-__Running a single-node?__ If you are running a single-node ElasticSearch cluster then 
-you should set the number of replicas to zero, otherwise the cluster will report status YELLOW. 
+__Running a single-node?__ If you are running a single-node ElasticSearch cluster then you should set the number of replicas to zero, otherwise the cluster will report status YELLOW. 
   
     curl -XPUT 'localhost:9200/_settings' -d '{"index" : { "number_of_replicas" : 0}}'
     
@@ -136,13 +120,9 @@ __Refer to the__ [Apache Tomcat 7](https://tomcat.apache.org/tomcat-7.0-doc/setu
 
 ### Stack STEP #4: Configure Usergrid Stack & Logging
 
-You must create a Usergrid properties file called `usergrid-deployment.properties`. 
-The properties in this file tell Usergrid how to communicate with Cassandra and
-ElasticSearch, and how to form URLs using the hostname you wish to use for Usegrid.
-There are many properties that you can set to configure Usergrid. 
+You must create a Usergrid properties file called `usergrid-deployment.properties`. The properties in this file tell Usergrid how to communicate with Cassandra and ElasticSearch, and how to form URLs using the hostname you wish to use for Usegrid. There are many properties that you can set to configure Usergrid. 
 
-Once you have created your Usergrid properties file, place it in the Tomcat lib directory.
-On a Linux system, that directory is probably located at `/usr/share/tomcat7/lib`.
+Once you have created your Usergrid properties file, place it in the Tomcat lib directory. On a Linux system, that directory is probably located at `/usr/share/tomcat7/lib`.
 
 __What goes in a properties file?__
 
@@ -155,8 +135,7 @@ You should review the defaults in the above file. To get you started, let's look
 
 #### Example Usergrid Stack Properties File
 
-Below is an minimal example Usergrid properties file with the parts you need to change indicated like 
-shell variables, e.g. `${USERGRID_CLUSTER_NAME}`.  
+Below is an minimal example Usergrid properties file with the parts you need to change indicated like shell variables, e.g. `${USERGRID_CLUSTER_NAME}`.  
    
 Example 1: usergrid-deployment.properties file
 
@@ -279,8 +258,7 @@ Make sure you set all of the above properties when you edit this example for you
 
 #### Configure Logging
 
-Usegrid includes the Apache Log4j logging system and you can control the levels of logs for each
-Usergrid package and even down to the class level by providing your own `log4j.properties` file.
+Usegrid includes the Apache Log4j logging system and you can control the levels of logs for each Usergrid package and even down to the class level by providing your own `log4j.properties` file.
 
 To configure logging you need to:
 
@@ -290,9 +268,7 @@ To configure logging you need to:
 
 ##### Example Logging Configuration
 
-The Log4j properties file below is a good starting point for Usergrid. It configures `ERROR` level
-logging for the 3rd party libraries that Usergrid depends on, and INFO level logging for Usergrid.
-Plus, it configures some noisy parts of Usergrid to be quiet.
+The Log4j properties file below is a good starting point for Usergrid. It configures `ERROR` level logging for the 3rd party libraries that Usergrid depends on, and INFO level logging for Usergrid. Plus, it configures some noisy parts of Usergrid to be quiet.
 
 Example 2: log4.properties file
 
@@ -313,26 +289,18 @@ Example 2: log4.properties file
     
 ##### Add Logging Configuration to Tomcat
 
-You can configure Tomcat to use your Log4j properties file but adding a system property to Tomcat
-named `log4j.configuration` which must be set to a `file:/` URL that points to your
-properties file. One way to add the above property to the Tomcat start-up is to add a line to a 
-Tomcat `setenv.sh` script in Tomcat's bin directory. If that file does not exist, then create it.
+You can configure Tomcat to use your Log4j properties file but adding a system property to Tomcat named `log4j.configuration` which must be set to a `file:/` URL that points to your properties file. One way to add the above property to the Tomcat start-up is to add a line to a Tomcat `setenv.sh` script in Tomcat's bin directory. If that file does not exist, then create it.
 
-For example, if your property file is in `/usr/share/tomcat7/lib/log4j.properties`, then you 
-would add the following line to `setenv.sh`:
+For example, if your property file is in `/usr/share/tomcat7/lib/log4j.properties`, then you would add the following line to `setenv.sh`:
 
     export JAVA_OPTS="-Dlog4j.configuration=file:///usr/share/tomcat7/lib/log4j.properties"
     
-If the file already exists and already sets the JAVA_OPTS variable, then you'll have to 
-add your `-D` option to ones already there. Also note, you might want set other `-D` and `-X` 
-options in that setenv file, e.g. Java heap size.
+If the file already exists and already sets the JAVA_OPTS variable, then you'll have to add your `-D` option to ones already there. Also note, you might want set other `-D` and `-X` options in that setenv file, e.g. Java heap size.
 
 
 ### Stack STEP #5: Deploy ROOT.war to Tomcat
 
-The next step is to deploy the Usergrid Stack software to Tomcat. There are a variey of ways 
-of doing this and the simplest is probably to place the Usergrid Stack `ROOT.war` file into
-the Tomcat `webapps` directory, then restart Tomcat.
+The next step is to deploy the Usergrid Stack software to Tomcat. There are a variey of ways of doing this and the simplest is probably to place the Usergrid Stack `ROOT.war` file into the Tomcat `webapps` directory, then restart Tomcat.
 
 
 __For example, on Linux...__
@@ -360,17 +328,13 @@ You can watch the Tomcat log in `/var/log/tomcat7/catalina.out` for errors:
     
 __Does it work?__
 
-Check to see if Usergrid is up and running by calling the status end-point. 
-If your web browser is running on the same computer as Tomcat (and Tomcat is on port 8080), 
-then you can browse to [http://localhost:8080/status](http://localhost:8080/status) 
-to view the Usergrid status page. 
+Check to see if Usergrid is up and running by calling the status end-point. If your web browser is running on the same computer as Tomcat (and Tomcat is on port 8080), then you can browse to [http://localhost:8080/status](http://localhost:8080/status) to view the Usergrid status page. 
 
 Or you can use curl:
 
     curl http://localhost:8080/status
     
-If you get a JSON file of status data, then you're ready to move to the next step.
-You should see a response that begins like this:
+If you get a JSON file of status data, then you're ready to move to the next step. You should see a response that begins like this:
 
     {
       "timestamp" : 1454090178953,
@@ -395,14 +359,9 @@ You should see a response that begins like this:
 
 Next, you must initialize the Usergrid database, index and query systems.
 
-To do this you must issue a series of HTTP operations using the superuser credentials.
-You can only do this if Usergrid is configured to allow superused login via
-this property `usergrid.sysadmin.login.allowed=true` and if you used the 
-above example properties file, it is allowed.
+To do this you must issue a series of HTTP operations using the superuser credentials. You can only do this if Usergrid is configured to allow superused login via this property `usergrid.sysadmin.login.allowed=true` and if you used the above example properties file, it is allowed.
 
-The three operation you must perform are expressed by the curl commands below and,
-of course, you will have ot change the password 'test' to match the superuser password 
-that you set in your Usergrid properties file.
+The three operation you must perform are expressed by the curl commands below and, of course, you will have ot change the password 'test' to match the superuser password that you set in your Usergrid properties file.
 
     curl -X PUT http://localhost:8080/system/database/setup     -u superuser:test
     curl -X PUT http://localhost:8080/system/database/bootstrap -u superuser:test
@@ -417,19 +376,16 @@ When you issue each of those curl commands, you should see a success message lik
         "duration" : 374
     }    
 
-If you don't see a success message, then refer to the Tomcat logs for error message and
-seek help from the [Usergrid community](http://usergrid.apache.org/community).
+If you don't see a success message, then refer to the Tomcat logs for error message and seek help from the [Usergrid community](http://usergrid.apache.org/community).
 
 Now that you've gotten Usergrid up and running, you're ready to deploy the Usergrid Portal.
 
 
 ## Deploying the Usergrid Portal
 
-The Usergrid Portal is an HTML5/JavaScript application, a bunch of static files that 
-can be deployed to any web server, e.g. Apache HTTPD or Tomcat.
+The Usergrid Portal is an HTML5/JavaScript application, a bunch of static files that can be deployed to any web server, e.g. Apache HTTPD or Tomcat.
 
-To deploy the Portal to a web server, you will un-tar the `usergrid-portal.tar` file into 
-directory that serves as the root directory of your web pages. 
+To deploy the Portal to a web server, you will un-tar the `usergrid-portal.tar` file into directory that serves as the root directory of your web pages. 
 
 For example, with Tomcat on Linux you might do something like this:
 
@@ -437,14 +393,11 @@ For example, with Tomcat on Linux you might do something like this:
     cd /usr/share/tomcat7/webapps
     tar xf usergrid-portal.tar
     
-Then you will probably want to rename the Portal directory to something that will work
-well in a URL. For example, if you want your Portal to exist at the path `/portal` then:
+Then you will probably want to rename the Portal directory to something that will work well in a URL. For example, if you want your Portal to exist at the path `/portal` then:
 
     mv usergrid-portal.2.0.18 portal
     
-Once you have done that there is one more step. You need to configure the portal so that 
-it can find the Usergrid stack. You do that by editing the `portal/config.js` and changing
-this line:
+Once you have done that there is one more step. You need to configure the portal so that it can find the Usergrid stack. You do that by editing the `portal/config.js` and changing this line:
 
     Usergrid.overrideUrl = 'http://localhost:8080/';
 

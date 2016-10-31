@@ -102,7 +102,7 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
     }
 
 
-    private Response toResponse( int status, String jsonResponse ) {
+    protected Response toResponse( int status, String jsonResponse ) {
         if ( status >= 500 ) {
             // only log real errors as errors
             logger.error( "Server Error ({}):\n{}", status, jsonResponse );
