@@ -73,6 +73,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+
 
 /**
  * TODO, this whole class is becoming a nightmare.
@@ -99,8 +101,11 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     // SQS maximum receive messages is 10
     public int MAX_TAKE = 10;
     public static final String QUEUE_NAME = "index"; //keep this short as AWS limits queue name size to 80 chars
+    public static final String QUEUE_NAME_UTILITY = "utility"; //keep this short as AWS limits queue name size to 80 chars
+
 
     private final LegacyQueueManager queue;
+    private final LegacyQueueManager utilityQueue;
     private final IndexProcessorFig indexProcessorFig;
     private final LegacyQueueFig queueFig;
     private final IndexProducer indexProducer;
@@ -121,6 +126,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     private final Counter indexErrorCounter;
     private final AtomicLong counter = new AtomicLong();
+    private final AtomicLong counterUtility = new AtomicLong();
     private final AtomicLong inFlight = new AtomicLong();
     private final Histogram messageCycle;
     private final MapManager esMapPersistence;
@@ -155,8 +161,14 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         this.rxTaskScheduler = rxTaskScheduler;
 
-        LegacyQueueScope queueScope = new LegacyQueueScopeImpl(QUEUE_NAME, LegacyQueueScope.RegionImplementation.ALL);
+        LegacyQueueScope queueScope =
+            new LegacyQueueScopeImpl(QUEUE_NAME, LegacyQueueScope.RegionImplementation.ALL);
+
+        LegacyQueueScope utilityQueueScope =
+            new LegacyQueueScopeImpl(QUEUE_NAME_UTILITY, LegacyQueueScope.RegionImplementation.ALL);
+
         this.queue = queueManagerFactory.getQueueManager(queueScope);
+        this.utilityQueue = queueManagerFactory.getQueueManager(utilityQueueScope);
 
         this.indexProcessorFig = indexProcessorFig;
         this.queueFig = queueFig;
@@ -197,12 +209,16 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     }
 
 
-    private void offerTopic( final Serializable operation ) {
+    private void offerTopic(final Serializable operation, boolean forUtilityQueue) {
         final Timer.Context timer = this.writeTimer.time();
 
         try {
             //signal to SQS
-            this.queue.sendMessageToTopic( operation );
+            if (forUtilityQueue) {
+                this.utilityQueue.sendMessageToTopic(operation);
+            } else {
+                this.queue.sendMessageToTopic(operation);
+            }
         }
         catch ( IOException e ) {
             throw new RuntimeException( "Unable to queue message", e );
@@ -212,16 +228,29 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         }
     }
 
-    private void offerBatch(final List operations){
-        final Timer.Context timer = this.writeTimer.time();
 
+    private void offerBatch(final List operations, boolean forUtilityQueue){
+        final Timer.Context timer = this.writeTimer.time();
         try {
             //signal to SQS
-            this.queue.sendMessages(operations);
+            if( forUtilityQueue ){
+                this.utilityQueue.sendMessages(operations);
+            }else{
+                this.queue.sendMessages(operations);
+            }
         } catch (IOException e) {
             throw new RuntimeException("Unable to queue message", e);
         } finally {
             timer.stop();
+        }
+    }
+
+    private void offerBatchToUtilityQueue(final List operations){
+        try {
+            //signal to SQS
+            this.utilityQueue.sendMessages(operations);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to queue message", e);
         }
     }
 
@@ -235,6 +264,22 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         try {
             return queue.getMessages(MAX_TAKE, AsyncEvent.class);
+        }
+        finally {
+            //stop our timer
+            timer.stop();
+        }
+    }
+
+    /**
+     * Take message from SQS utility queue
+     */
+    private List<LegacyQueueMessage> takeFromUtilityQueue() {
+
+        final Timer.Context timer = this.readTimer.time();
+
+        try {
+            return utilityQueue.getMessages(MAX_TAKE, AsyncEvent.class);
         }
         finally {
             //stop our timer
@@ -270,6 +315,19 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         }
     }
 
+
+    /**
+     * calls the event handlers and returns a result with information on whether
+     * it needs to be ack'd and whether it needs to be indexed
+     * Ack message in SQS
+     */
+    public void ackUtilityQueue(final List<LegacyQueueMessage> messages) {
+        try{
+            utilityQueue.commitMessages( messages );
+        }catch(Exception e){
+            throw new RuntimeException("Unable to ack messages", e);
+        }
+    }
 
     /**
      * calls the event handlers and returns a result with information on whether
@@ -404,7 +462,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(
             applicationScope);
         offerTopic( new InitializeApplicationIndexEvent( queueFig.getPrimaryRegion(),
-            new ReplicatedIndexLocationStrategy( indexLocationStrategy ) ) );
+            new ReplicatedIndexLocationStrategy( indexLocationStrategy ) ), false);
     }
 
 
@@ -421,7 +479,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         final IndexOperationMessage indexMessage =
             eventBuilder.buildEntityIndex( entityIndexOperation ).toBlocking().lastOrDefault(null);
 
-        queueIndexOperationMessage( indexMessage );
+        queueIndexOperationMessage( indexMessage, false);
 
     }
 
@@ -526,8 +584,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     /**
      * Queue up an indexOperationMessage for multi region execution
      * @param indexOperationMessage
+     * @param forUtilityQueue
      */
-    public void queueIndexOperationMessage( final IndexOperationMessage indexOperationMessage ) {
+    public void queueIndexOperationMessage(final IndexOperationMessage indexOperationMessage, boolean forUtilityQueue) {
 
         // don't try to produce something with nothing
         if(indexOperationMessage == null || indexOperationMessage.isEmpty()){
@@ -544,8 +603,6 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         //write to the map in ES
         esMapPersistence.putString( newMessageId.toString(), jsonValue, expirationTimeInSeconds );
 
-
-
         //now queue up the index message
 
         final ElasticsearchIndexEvent elasticsearchIndexEvent =
@@ -553,7 +610,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         //send to the topic so all regions index the batch
 
-        offerTopic( elasticsearchIndexEvent );
+        offerTopic( elasticsearchIndexEvent, forUtilityQueue );
     }
 
     private void handleIndexOperation(final ElasticsearchIndexEvent elasticsearchIndexEvent)
@@ -622,7 +679,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         // queue the de-index of old versions to the topic so cleanup happens in all regions
         offerTopic( new DeIndexOldVersionsEvent( queueFig.getPrimaryRegion(),
-            new EntityIdScope( applicationScope, entityId), markedVersion) );
+            new EntityIdScope( applicationScope, entityId), markedVersion), false);
 
     }
 
@@ -734,9 +791,14 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      */
     public void start() {
         final int count = indexProcessorFig.getWorkerCount();
+        final int utilityCount = indexProcessorFig.getWorkerCountUtility();
 
         for (int i = 0; i < count; i++) {
-            startWorker();
+            startWorker(QUEUE_NAME);
+        }
+
+        for (int i = 0; i < utilityCount; i++) {
+            startWorker(QUEUE_NAME_UTILITY);
         }
     }
 
@@ -755,8 +817,11 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     }
 
 
-    private void startWorker() {
+    private void startWorker(final String type) {
+        Preconditions.checkNotNull(type, "Worker type required");
         synchronized (mutex) {
+
+            boolean isUtilityQueue = isNotEmpty(type) && type.toLowerCase().contains(QUEUE_NAME_UTILITY.toLowerCase());
 
             Observable<List<LegacyQueueMessage>> consumer =
                     Observable.create( new Observable.OnSubscribe<List<LegacyQueueMessage>>() {
@@ -764,13 +829,20 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                         public void call( final Subscriber<? super List<LegacyQueueMessage>> subscriber ) {
 
                             //name our thread so it's easy to see
-                            Thread.currentThread().setName( "QueueConsumer_" + counter.incrementAndGet() );
+                            long threadNum = isUtilityQueue ?
+                                counterUtility.incrementAndGet() : counter.incrementAndGet();
+                            Thread.currentThread().setName( "QueueConsumer_" + type+ "_" + threadNum );
 
                             List<LegacyQueueMessage> drainList = null;
 
                             do {
                                 try {
-                                    drainList = take();
+                                    if ( isUtilityQueue ){
+                                        drainList = takeFromUtilityQueue();
+                                    }else{
+                                        drainList = take();
+
+                                    }
                                     //emit our list in it's entity to hand off to a worker pool
                                         subscriber.onNext(drainList);
 
@@ -806,38 +878,44 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                             // with flatmap for faster processing
                             return Observable.just( sqsMessages )
 
-                                 .map( messages -> {
-                                     if ( messages == null || messages.size() == 0 ) {
-                                         // no messages came from the queue, move on
-                                         return null;
-                                     }
+                                             .map( messages -> {
+                                                 if ( messages == null || messages.size() == 0 ) {
+                                                     // no messages came from the queue, move on
+                                                     return null;
+                                                 }
 
-                                     try {
-                                         // process the messages
-                                         List<IndexEventResult> indexEventResults = callEventHandlers( messages );
+                                                 try {
+                                                     // process the messages
+                                                     List<IndexEventResult> indexEventResults =
+                                                         callEventHandlers( messages );
 
-                                         // submit the processed messages to index producer
-                                         List<LegacyQueueMessage> messagesToAck = submitToIndex( indexEventResults );
+                                                     // submit the processed messages to index producer
+                                                     List<LegacyQueueMessage> messagesToAck =
+                                                         submitToIndex( indexEventResults, isUtilityQueue );
 
-                                         if ( messagesToAck.size() < messages.size() ) {
-                                             logger.warn( "Missing {} message(s) from index processing",
-                                                messages.size() - messagesToAck.size() );
-                                         }
+                                                     if ( messagesToAck.size() < messages.size() ) {
+                                                         logger.warn( "Missing {} message(s) from index processing",
+                                                            messages.size() - messagesToAck.size() );
+                                                     }
 
-                                         // ack each message if making it to this point
-                                         if( messagesToAck.size() > 0 ){
-                                             ack( messagesToAck );
-                                         }
+                                                     // ack each message if making it to this point
+                                                     if( messagesToAck.size() > 0 ){
 
-                                         return messagesToAck;
-                                     }
-                                     catch ( Exception e ) {
-                                         logger.error( "Failed to ack messages", e );
-                                         return null;
-                                         //do not rethrow so we can process all of them
-                                     }
-                                 } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
+                                                         if ( isUtilityQueue ){
+                                                             ackUtilityQueue( messagesToAck );
+                                                         }else{
+                                                             ack( messagesToAck );
+                                                         }
+                                                     }
 
+                                                     return messagesToAck;
+                                                 }
+                                                 catch ( Exception e ) {
+                                                     logger.error( "Failed to ack messages", e );
+                                                     return null;
+                                                     //do not rethrow so we can process all of them
+                                                 }
+                                             } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
                             //end flatMap
                         }, indexProcessorFig.getEventConcurrencyFactor() );
 
@@ -853,7 +931,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      * Submit results to index and return the queue messages to be ack'd
      *
      */
-    private List<LegacyQueueMessage> submitToIndex(List<IndexEventResult> indexEventResults) {
+    private List<LegacyQueueMessage> submitToIndex(List<IndexEventResult> indexEventResults, boolean forUtilityQueue) {
 
         // if nothing came back then return empty list
         if(indexEventResults==null){
@@ -880,7 +958,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             // collect into a list of QueueMessages that can be ack'd later
             .collect(Collectors.toList());
 
-       queueIndexOperationMessage(combined);
+       queueIndexOperationMessage(combined, forUtilityQueue);
 
         return queueMessages;
     }
@@ -891,20 +969,21 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             new EntityIndexOperation( applicationScope, id, updatedSince);
 
         queueIndexOperationMessage(
-            eventBuilder.buildEntityIndex( entityIndexOperation ).toBlocking().lastOrDefault(null));
+            eventBuilder.buildEntityIndex( entityIndexOperation ).toBlocking().lastOrDefault(null), false);
     }
 
-    public void indexBatch(final List<EdgeScope> edges, final long updatedSince) {
+    public void indexBatch(final List<EdgeScope> edges, final long updatedSince, boolean forUtilityQueue) {
 
         final List<EntityIndexEvent> batch = new ArrayList<>();
         edges.forEach(e -> {
 
             //change to id scope to avoid serialization issues
-            batch.add(new EntityIndexEvent(queueFig.getPrimaryRegion(), new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode()), updatedSince));
+            batch.add(new EntityIndexEvent(queueFig.getPrimaryRegion(),
+                new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode()), updatedSince));
 
         });
 
-        offerBatch( batch );
+        offerBatch( batch, forUtilityQueue );
     }
 
 

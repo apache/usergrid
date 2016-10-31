@@ -81,8 +81,9 @@ public interface AsyncEventService extends ReIndexAction {
     /**
      *
      * @param indexOperationMessage
+     * @param forUtilityQueue
      */
-    void queueIndexOperationMessage( final IndexOperationMessage indexOperationMessage );
+    void queueIndexOperationMessage(final IndexOperationMessage indexOperationMessage, boolean forUtilityQueue);
 
     /**
      * @param applicationScope

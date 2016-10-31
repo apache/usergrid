@@ -24,6 +24,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.usergrid.corepersistence.ServiceModule;
+import org.apache.usergrid.corepersistence.index.CoreIndexFig;
 import org.apache.usergrid.locking.guice.LockModule;
 import org.apache.usergrid.management.AppInfoMigrationPlugin;
 import org.apache.usergrid.persistence.cache.CacheFactory;
@@ -31,8 +32,12 @@ import org.apache.usergrid.persistence.cache.impl.CacheFactoryImpl;
 import org.apache.usergrid.persistence.cache.impl.ScopedCacheSerialization;
 import org.apache.usergrid.persistence.cache.impl.ScopedCacheSerializationImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
+import org.apache.usergrid.security.PasswordPolicy;
+import org.apache.usergrid.security.PasswordPolicyFig;
+import org.apache.usergrid.security.PasswordPolicyImpl;
 import org.apache.usergrid.security.shiro.UsergridAuthenticationInfo;
 import org.apache.usergrid.security.shiro.UsergridAuthorizationInfo;
+import org.safehaus.guicyfig.GuicyFigModule;
 
 
 // <bean id="notificationsQueueListener" class="org.apache.usergrid.services.notifications.QueueListener"
@@ -70,5 +75,8 @@ public class ServiceModuleImpl extends AbstractModule implements ServiceModule {
         bind(    new TypeLiteral<ScopedCacheSerialization<String, UsergridAuthenticationInfo>>() {})
             .to( new TypeLiteral<ScopedCacheSerializationImpl<String, UsergridAuthenticationInfo>>() {});
 
+        bind( PasswordPolicy.class ).to( PasswordPolicyImpl.class );
+
+        install( new GuicyFigModule( PasswordPolicyFig.class ) );
     }
 }
