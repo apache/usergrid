@@ -23,10 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.qakka.api.URIStrategy;
-import org.apache.usergrid.persistence.qakka.core.QakkaUtils;
-import org.apache.usergrid.persistence.qakka.core.QueueManager;
-import org.apache.usergrid.persistence.qakka.core.QueueMessage;
-import org.apache.usergrid.persistence.qakka.core.QueueMessageManager;
+import org.apache.usergrid.persistence.qakka.core.*;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.exceptions.BadRequestException;
 import org.apache.usergrid.persistence.qakka.exceptions.NotFoundException;
@@ -35,6 +32,9 @@ import org.apache.usergrid.persistence.qakka.serialization.queuemessages.Databas
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessageBody;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
+import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
+import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardIterator;
+import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLogSerialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,10 +42,7 @@ import org.slf4j.LoggerFactory;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 
 @Singleton
@@ -53,32 +50,37 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
 
     private static final Logger logger = LoggerFactory.getLogger( QueueMessageManagerImpl.class );
 
-    private final ActorSystemFig            actorSystemFig;
-    private final QueueManager              queueManager;
-    private final QueueMessageSerialization queueMessageSerialization;
-    private final DistributedQueueService   distributedQueueService;
-    private final TransferLogSerialization  transferLogSerialization;
-    private final URIStrategy uriStrategy;
+    private final ActorSystemFig              actorSystemFig;
+    private final QueueManager                queueManager;
+    private final QueueMessageSerialization   queueMessageSerialization;
+    private final DistributedQueueService     distributedQueueService;
+    private final TransferLogSerialization    transferLogSerialization;
+    private final URIStrategy                 uriStrategy;
     private final MessageCounterSerialization messageCounterSerialization;
-
+    private final ShardSerialization          shardSerialization;
+    private final CassandraClient             cassandraClient;
 
     @Inject
     public QueueMessageManagerImpl(
-            ActorSystemFig            actorSystemFig,
-            QueueManager              queueManager,
-            QueueMessageSerialization queueMessageSerialization,
-            DistributedQueueService   distributedQueueService,
-            TransferLogSerialization  transferLogSerialization,
-            URIStrategy               uriStrategy,
-            MessageCounterSerialization messageCounterSerialization ) {
+        ActorSystemFig              actorSystemFig,
+        QueueManager                queueManager,
+        QueueMessageSerialization   queueMessageSerialization,
+        DistributedQueueService     distributedQueueService,
+        TransferLogSerialization    transferLogSerialization,
+        URIStrategy                 uriStrategy,
+        MessageCounterSerialization messageCounterSerialization,
+        ShardSerialization          shardSerialization,
+        CassandraClient             cassandraClient ) {
 
-        this.actorSystemFig            = actorSystemFig;
-        this.queueManager              = queueManager;
-        this.queueMessageSerialization = queueMessageSerialization;
-        this.distributedQueueService   = distributedQueueService;
-        this.transferLogSerialization  = transferLogSerialization;
-        this.uriStrategy               = uriStrategy;
+        this.actorSystemFig              = actorSystemFig;
+        this.queueManager                = queueManager;
+        this.queueMessageSerialization   = queueMessageSerialization;
+        this.distributedQueueService     = distributedQueueService;
+        this.transferLogSerialization    = transferLogSerialization;
+        this.uriStrategy                 = uriStrategy;
         this.messageCounterSerialization = messageCounterSerialization;
+        this.shardSerialization          = shardSerialization;
+        this.cassandraClient             = cassandraClient;
     }
 
 
@@ -86,16 +88,16 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
     public void sendMessages(String queueName, List<String> destinationRegions,
             Long delayMs, Long expirationSecs, String contentType, ByteBuffer messageData) {
 
+        if ( queueManager.getQueueConfig( queueName ) == null ) {
+            throw new NotFoundException( "Queue " + queueName + " not found" );
+        }
+
         // TODO: implement delay and expiration
 
 //        Preconditions.checkArgument(delayMs == null || delayMs > 0L,
 //                "Delay milliseconds must be greater than zero");
 //        Preconditions.checkArgument(expirationSecs == null || expirationSecs > 0L,
 //                "Expiration seconds must be greater than zero");
-
-        if ( queueManager.getQueueConfig( queueName ) == null ) {
-            throw new NotFoundException( "Queue not found: " + queueName );
-        }
 
         // get current time
         Long currentTimeMs = System.currentTimeMillis();
@@ -229,16 +231,16 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
     }
 
 
+    // TODO: implement delete of message data too
+//    @Override
+//    public void clearMessageData( queueName ) {
+//    }
+
+
     @Override
-    public void clearMessages(String queueName) {
-
-        if ( queueManager.getQueueConfig( queueName ) == null ) {
-            throw new NotFoundException( "Queue not found: " + queueName );
-        }
-
-        // TODO: implement clearMessages
-
-        throw new UnsupportedOperationException( "clearMessages not yet implemented" );
+    public void clearMessages( String queueName ) {
+        queueMessageSerialization.deleteAllMessages( queueName );
+        shardSerialization.deleteAllShards( queueName, actorSystemFig.getRegionLocal() );
     }
 
 
@@ -291,8 +293,8 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
 
 
     @Override
-    public long getQueueDepth(String queueName) {
-        return messageCounterSerialization.getCounterValue( queueName, DatabaseQueueMessage.Type.DEFAULT );
+    public long getQueueDepth( String queueName, DatabaseQueueMessage.Type type ) {
+        return messageCounterSerialization.getCounterValue( queueName, type );
     }
 
 }

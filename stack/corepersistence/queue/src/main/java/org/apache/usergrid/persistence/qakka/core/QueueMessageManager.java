@@ -83,5 +83,8 @@ public interface QueueMessageManager {
      */
     QueueMessage getMessage(String queueName, UUID queueMessageId);
 
-    long getQueueDepth(String queueName);
+    /**
+     * Get queue depth for specified type, messages 'default' (available) or 'inflight'
+     */
+    long getQueueDepth( String queueName, DatabaseQueueMessage.Type type );
 }

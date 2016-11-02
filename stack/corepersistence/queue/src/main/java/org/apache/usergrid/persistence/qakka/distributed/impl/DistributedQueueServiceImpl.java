@@ -160,10 +160,6 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
         Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.SEND_TIME_TOTAL ).time();
         try {
 
-            if ( queueManager.getQueueConfig( queueName ) == null ) {
-                throw new NotFoundException( "Queue not found: " + queueName );
-            }
-
             int maxRetries = qakkaFig.getMaxSendRetries();
             int retries = 0;
 
@@ -255,10 +251,6 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
 
     public Collection<DatabaseQueueMessage> getNextMessagesInternal( String queueName, int count ) {
 
-        if ( queueManager.getQueueConfig( queueName ) == null ) {
-            throw new NotFoundException( "Queue not found: " + queueName );
-        }
-
         if ( actorSystemManager.getClientActor() == null || !actorSystemManager.isReady() ) {
             logger.error("Akka Actor System is not ready yet for requests.");
             return Collections.EMPTY_LIST;
@@ -288,7 +280,7 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
                                 logger.warn( "getNextMessage {} SUCCESS after {} tries", queueName, tries );
                             }
                         }
-                        logger.debug("Returning queue {} messages {}", queueName, qprm.getQueueMessages().size());
+                        logger.trace("Returning queue {} messages {}", queueName, qprm.getQueueMessages().size());
                         return qprm.getQueueMessages();
 
 
@@ -325,10 +317,6 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
         Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.ACK_TIME_TOTAL ).time();
         try {
 
-            if ( queueManager.getQueueConfig( queueName ) == null ) {
-                throw new NotFoundException( "Queue not found: " + queueName );
-            }
-
             QueueAckRequest message = new QueueAckRequest( queueName, queueMessageId );
             return sendMessageToLocalRouters( message );
 
@@ -342,10 +330,6 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     @Override
     public Status requeueMessage(String queueName, UUID messageId) {
 
-        if ( queueManager.getQueueConfig( queueName ) == null ) {
-            throw new NotFoundException( "Queue not found: " + queueName );
-        }
-
         QueueAckRequest message = new QueueAckRequest( queueName, messageId );
         return sendMessageToLocalRouters( message );
     }
@@ -353,10 +337,6 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
 
     @Override
     public Status clearMessages(String queueName) {
-
-        if ( queueManager.getQueueConfig( queueName ) == null ) {
-            throw new NotFoundException( "Queue not found: " + queueName );
-        }
 
         // TODO: implement clear queue
         throw new UnsupportedOperationException();

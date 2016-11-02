@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 
 public class QueueSerializationImpl implements QueueSerialization {
 
-    private static final Logger logger = LoggerFactory.getLogger( QueueMessageSerializationImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( QueueSerializationImpl.class );
 
     private final CassandraClient cassandraClient;
     private final CassandraConfig cassandraConfig;
@@ -83,6 +83,8 @@ public class QueueSerializationImpl implements QueueSerialization {
     @Override
     public void writeQueue(DatabaseQueue queue) {
 
+        logger.trace( "writeQueue " + queue.getName() );
+
         Statement insert = QueryBuilder.insertInto(TABLE_QUEUES)
                 .value(COLUMN_QUEUE_NAME, queue.getName())
                 .value(COLUMN_REGIONS, queue.getRegions())
@@ -99,6 +101,8 @@ public class QueueSerializationImpl implements QueueSerialization {
 
     @Override
     public DatabaseQueue getQueue(String name) {
+
+        logger.trace( "getQueue " + name );
 
         Clause queueNameClause = QueryBuilder.eq(COLUMN_QUEUE_NAME, name);
 
@@ -127,6 +131,8 @@ public class QueueSerializationImpl implements QueueSerialization {
     @Override
     public void deleteQueue(String name) {
 
+        logger.trace( "deleteQueue " + name );
+
         Clause queueNameClause = QueryBuilder.eq(COLUMN_QUEUE_NAME, name);
 
         Statement delete = QueryBuilder.delete().from(TABLE_QUEUES)
@@ -137,6 +143,8 @@ public class QueueSerializationImpl implements QueueSerialization {
 
     @Override
     public List<String> getListOfQueues() {
+
+        logger.trace( "getListOfQueues " );
 
         Statement select = QueryBuilder.select().all().from( TABLE_QUEUES );
         ResultSet rs = cassandraClient.getApplicationSession().execute( select );

@@ -34,6 +34,7 @@ import org.apache.usergrid.persistence.qakka.exceptions.NotFoundException;
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
+import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,6 +103,11 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
         public void clearDeltas() {
             increment.set( 0L );
             decrement.set( 0L );
+        }
+        void reset() {
+            this.baseCount = 0;
+            this.increment.set( 0L );
+            this.decrement.set( 0L );
         }
         public long value() {
 
@@ -223,6 +229,42 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
 
         long value = inMemoryCounters.get( key ).value();
         return value;
+    }
+
+
+    @Override
+    public void resetCounter(String queueName, DatabaseQueueMessage.Type type) {
+
+        // this sucks: "You cannot index, delete, or re-add a counter column"
+        // https://docs.datastax.com/en/cql/3.1/cql/cql_using/use_counter_t.html
+        // so instead we decrement or increment the counter to zero
+
+        // get value first, before resetting in memory counter
+        long value = getCounterValue( queueName, type );
+
+        String key = buildKey( queueName, type );
+        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+        if ( inMemoryCount != null ) {
+            inMemoryCount.reset();
+        }
+
+        if ( value < 0 ) {
+
+            Statement update = QueryBuilder.update( TABLE_MESSAGE_COUNTERS )
+                .where( QueryBuilder.eq(   COLUMN_QUEUE_NAME, queueName ) )
+                .and(   QueryBuilder.eq(   COLUMN_MESSAGE_TYPE, type.toString() ) )
+                .with(  QueryBuilder.incr( COLUMN_COUNTER_VALUE, -1 * value ) ); // incr must be positive
+            cassandraClient.getQueueMessageSession().execute( update );
+
+        } else {
+
+            Statement update = QueryBuilder.update( TABLE_MESSAGE_COUNTERS )
+                .where( QueryBuilder.eq(   COLUMN_QUEUE_NAME, queueName ) )
+                .and(   QueryBuilder.eq(   COLUMN_MESSAGE_TYPE, type.toString() ) )
+                .with(  QueryBuilder.decr( COLUMN_COUNTER_VALUE, value ) );
+            cassandraClient.getQueueMessageSession().execute( update );
+        }
+
     }
 
 

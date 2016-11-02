@@ -23,7 +23,9 @@ import org.apache.usergrid.persistence.core.migration.schema.Migration;
 
 public interface ShardCounterSerialization extends Migration {
 
-    void incrementCounter(String queueName, Shard.Type type, long shardId, long increment);
+    void incrementCounter( String queueName, Shard.Type type, long shardId, long increment);
 
-    long getCounterValue(String name, Shard.Type type, long shardId);
+    long getCounterValue( String name, Shard.Type type, long shardId);
+
+    void resetCounter( Shard shard );
 }

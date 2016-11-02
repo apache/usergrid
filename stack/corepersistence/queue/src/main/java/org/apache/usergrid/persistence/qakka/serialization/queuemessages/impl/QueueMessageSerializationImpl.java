@@ -41,14 +41,13 @@ import org.apache.usergrid.persistence.qakka.serialization.queuemessages.Message
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardCounterSerialization;
+import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardIterator;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.java8.FuturesConvertersImpl;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.UUID;
+import java.util.*;
 
 
 public class QueueMessageSerializationImpl implements QueueMessageSerialization {
@@ -136,6 +135,8 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
     @Override
     public UUID writeMessage(final DatabaseQueueMessage message) {
 
+        logger.trace("write message {}", message.getQueueMessageId());
+
         final UUID queueMessageId =  message.getQueueMessageId() == null ?
                 QakkaUtils.getTimeUuid() : message.getQueueMessageId();
 
@@ -151,8 +152,8 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
         Statement insert = createWriteMessageStatement( message );
         cassandraClient.getQueueMessageSession().execute(insert);
 
-//        logger.debug("Wrote queue {} queue message {} shardId {}",
-//            message.getQueueName(), message.getQueueMessageId(), message.getShardId() );
+        logger.trace("Wrote queue {} queue message {} shardId {}",
+            message.getQueueName(), message.getQueueMessageId(), message.getShardId() );
 
         shardCounterSerialization.incrementCounter( message.getQueueName(), shardType, message.getShardId(), 1 );
 
@@ -173,6 +174,8 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
         if ( queueMessageId == null ) {
             return null;
         }
+
+        logger.trace("loadMessage {}", queueMessageId);
 
         final long shardId;
         if ( shardIdOrNull == null ) {
@@ -223,6 +226,9 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
             final DatabaseQueueMessage.Type type,
             final UUID queueMessageId ) {
 
+
+        logger.trace("deleteMessage {}", queueMessageId);
+
         Statement delete = createDeleteMessageStatement( queueName, region, null, type,queueMessageId);
         cassandraClient.getQueueMessageSession().execute( delete );
 
@@ -232,6 +238,8 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
 
     @Override
     public DatabaseQueueMessageBody loadMessageData(final UUID messageId ){
+
+        logger.trace("loadMessageData {}", messageId);
 
         Clause messageIdClause = QueryBuilder.eq( COLUMN_MESSAGE_ID, messageId );
 
@@ -252,6 +260,8 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
     public void writeMessageData( final UUID messageId, final DatabaseQueueMessageBody messageBody ) {
         Preconditions.checkArgument(QakkaUtils.isTimeUuid(messageId), "MessageId is not a type 1 UUID");
 
+        logger.trace("writeMessageData {}", messageId);
+
         Statement insert = QueryBuilder.insertInto(TABLE_MESSAGE_DATA)
                 .value( COLUMN_MESSAGE_ID, messageId)
                 .value( COLUMN_MESSAGE_DATA, messageBody.getBlob())
@@ -265,6 +275,8 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
     @Override
     public void deleteMessageData( final UUID messageId ) {
 
+        logger.trace("deleteMessageData {}", messageId);
+
         Clause messageIdClause = QueryBuilder.eq(COLUMN_MESSAGE_ID, messageId);
         Statement delete = QueryBuilder.delete().from(TABLE_MESSAGE_DATA).where(messageIdClause);
 
@@ -274,6 +286,8 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
 
     @Override
     public void putInflight( DatabaseQueueMessage message ) {
+
+        logger.trace("putInflight {}", message.getQueueMessageId());
 
         // create statement to write queue message to inflight table
 
@@ -319,7 +333,76 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
 
 
     @Override
+    public void deleteAllMessages( String queueName ) {
+
+        logger.trace("deleteAllMessages " + queueName);
+
+        Shard.Type[] shardTypes = new Shard.Type[] {Shard.Type.DEFAULT, Shard.Type.INFLIGHT};
+
+        // batch up and then execute delete statements
+        BatchStatement deleteAllBatch = new BatchStatement();
+        for ( Shard.Type shardType : shardTypes ) {
+            ShardIterator defaultShardIterator = new ShardIterator( cassandraClient,
+                queueName, actorSystemFig.getRegionLocal(), shardType, Optional.empty() );
+
+            while (defaultShardIterator.hasNext()) {
+                Shard shard = defaultShardIterator.next();
+                deleteAllBatch.add( createDeleteAllMessagesStatement( shard ) );
+
+                logger.trace("added queueName {} type {} shard {}",
+                    queueName, shardType, shard.getShardId() );
+            }
+        }
+
+        cassandraClient.getQueueMessageSession().execute( deleteAllBatch );
+        logger.trace("deleted messages in queue: " + queueName);
+
+        // clear counters, we only want to this to happen after successful deletion
+        for ( Shard.Type shardType : shardTypes ) {
+
+            ShardIterator defaultShardIterator = new ShardIterator( cassandraClient,
+                queueName, actorSystemFig.getRegionLocal(), shardType, Optional.empty() );
+
+            while (defaultShardIterator.hasNext()) {
+                Shard shard = defaultShardIterator.next();
+
+                shardCounterSerialization.resetCounter( shard );
+
+                DatabaseQueueMessage.Type type = Shard.Type.DEFAULT.equals( shardType )
+                    ? DatabaseQueueMessage.Type.DEFAULT : DatabaseQueueMessage.Type.INFLIGHT;
+                messageCounterSerialization.resetCounter( queueName, type );
+
+                logger.trace("reset counters for queueName {} type {} shard {}",
+                    queueName, shardType, shard.getShardId() );
+            }
+        }
+
+        // TODO: delete message data (separate method)
+    }
+
+
+    private Statement createDeleteAllMessagesStatement( Shard shard ) {
+
+        Clause queueNameClause = QueryBuilder.eq(      COLUMN_QUEUE_NAME, shard.getQueueName() );
+        Clause regionClause = QueryBuilder.eq(         COLUMN_REGION, shard.getRegion() );
+        Clause shardIdClause = QueryBuilder.eq(        COLUMN_SHARD_ID, shard.getShardId() );
+
+        DatabaseQueueMessage.Type dbqmType = Shard.Type.DEFAULT.equals( shard.getType() )
+            ? DatabaseQueueMessage.Type.DEFAULT : DatabaseQueueMessage.Type.INFLIGHT;
+
+        Statement deleteAll = QueryBuilder.delete().from( getTableName( dbqmType ))
+            .where(queueNameClause)
+            .and(regionClause)
+            .and(shardIdClause);
+
+        return deleteAll;
+    }
+
+
+    @Override
     public void timeoutInflight( DatabaseQueueMessage message ) {
+
+        logger.trace("timeoutInflight {}", message.getQueueMessageId() );
 
         // create statement to write queue message back to available table, with new UUID
 

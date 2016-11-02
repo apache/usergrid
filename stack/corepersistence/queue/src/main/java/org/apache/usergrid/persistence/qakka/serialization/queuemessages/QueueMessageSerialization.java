@@ -27,7 +27,7 @@ import java.util.UUID;
 public interface QueueMessageSerialization extends Migration {
 
     /**
-     * Write message to storage..
+     * Write message to storage.
      * If queueMessageId or createdTime are null, then values will be generated.
      */
     UUID writeMessage(final DatabaseQueueMessage message);
@@ -56,6 +56,13 @@ public interface QueueMessageSerialization extends Migration {
      * Write message to inflight table and remove from available table
      */
     void putInflight( DatabaseQueueMessage queueMessage );
+
+    /**
+     * Delete all queue messages in the specified queue and in the current "local" region.
+     * Impacts messages available and messages inflight.
+     * @param queueName Name of queue to clear.
+     */
+    void deleteAllMessages( String queueName );
 
     /**
      * Remove message from inflight table, write message to available table.
