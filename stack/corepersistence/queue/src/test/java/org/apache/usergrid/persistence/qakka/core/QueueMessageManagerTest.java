@@ -38,6 +38,10 @@ import org.apache.usergrid.persistence.qakka.serialization.auditlog.AuditLogSeri
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessageBody;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
+import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
+import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardCounterSerialization;
+import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardIterator;
+import org.apache.usergrid.persistence.qakka.serialization.sharding.impl.ShardCounterSerializationImpl;
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLog;
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLogSerialization;
 import org.apache.usergrid.persistence.queue.TestModule;
@@ -47,10 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -175,17 +176,19 @@ public class QueueMessageManagerTest extends AbstractTest {
                     DataType.serializeValue( "{}", ProtocolVersion.NEWEST_SUPPORTED ) );
             }
 
+            DatabaseQueueMessage.Type type = DatabaseQueueMessage.Type.DEFAULT;
+
             int maxRetries = 15;
             int retries = 0;
             while (retries++ < maxRetries) {
                 distributedQueueService.refresh();
-                if (qmm.getQueueDepth( queueName ) == 40) {
+                if (qmm.getQueueDepth( queueName, type ) == numMessages) {
                     break;
                 }
                 Thread.sleep( 500 );
             }
 
-            Assert.assertEquals( numMessages, qmm.getQueueDepth( queueName ) );
+            Assert.assertEquals( numMessages, qmm.getQueueDepth( queueName, type ) );
 
             // get all messages from queue
 
@@ -295,4 +298,87 @@ public class QueueMessageManagerTest extends AbstractTest {
         distributedQueueService.shutdown();
     }
 
+
+    @Test
+    public void testClearQueue() throws Exception {
+
+        Injector injector = getInjector();
+
+        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+        ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
+
+        String region = actorSystemFig.getRegionLocal();
+        App app = injector.getInstance( App.class );
+        app.start( "localhost", getNextAkkaPort(), region );
+
+        // create some number of queue messages
+
+        QueueManager queueManager = injector.getInstance( QueueManager.class );
+
+        String queueName = "queue_testClearQueue" + RandomStringUtils.randomAlphanumeric( 15 );
+
+        try {
+            QueueMessageManager qmm = injector.getInstance( QueueMessageManager.class );
+            queueManager.createQueue( new Queue( queueName, "test-type", region, region, 0L, 5, 10, null ) );
+
+            int numMessages = 40;
+
+            for (int i = 0; i < numMessages; i++) {
+                qmm.sendMessages(
+                    queueName,
+                    Collections.singletonList( region ),
+                    null, // delay
+                    null, // expiration
+                    "application/json",
+                    DataType.serializeValue( "{}", ProtocolVersion.NEWEST_SUPPORTED ) );
+            }
+
+            DatabaseQueueMessage.Type available = DatabaseQueueMessage.Type.DEFAULT;
+            DatabaseQueueMessage.Type inflight = DatabaseQueueMessage.Type.INFLIGHT;
+
+            int maxRetries = 15;
+            int retries = 0;
+            while (retries++ < maxRetries) {
+                distributedQueueService.refresh();
+                if (qmm.getQueueDepth( queueName, available ) == numMessages) {
+                    break;
+                }
+                Thread.sleep( 500 );
+            }
+
+            Assert.assertEquals( numMessages, qmm.getQueueDepth( queueName, available ) );
+            Assert.assertEquals( 0, qmm.getQueueDepth( queueName, inflight ) );
+
+            // get half of the messages from the queue
+            List<QueueMessage> messages = qmm.getNextMessages( queueName, numMessages/2 );
+            Assert.assertEquals( numMessages/2, messages.size() );
+
+            Thread.sleep(500);
+
+            // now half messages should be available and half in flight
+            Assert.assertEquals( numMessages/2, qmm.getQueueDepth( queueName, available ) );
+            Assert.assertEquals( numMessages/2, qmm.getQueueDepth( queueName, inflight ) );
+
+            qmm.clearMessages( queueName );
+
+            // counters should show zero in queue
+            Assert.assertEquals( 0, qmm.getQueueDepth( queueName, available ) );
+            Assert.assertEquals( 0, qmm.getQueueDepth( queueName, inflight ) );
+
+            // TODO: check that all shards are gone
+
+            CassandraClient cassandraClient = injector.getInstance( CassandraClient.class );
+
+            ShardIterator defaultShardIterator = new ShardIterator( cassandraClient,
+                queueName, actorSystemFig.getRegionLocal(), Shard.Type.DEFAULT, Optional.empty() );
+            Assert.assertTrue( !defaultShardIterator.hasNext() );
+
+            ShardIterator inflightShardIterator = new ShardIterator( cassandraClient,
+                queueName, actorSystemFig.getRegionLocal(), Shard.Type.INFLIGHT, Optional.empty() );
+            Assert.assertTrue( !inflightShardIterator.hasNext() );
+
+        } finally {
+            queueManager.deleteQueue( queueName );
+        }
+    }
 }

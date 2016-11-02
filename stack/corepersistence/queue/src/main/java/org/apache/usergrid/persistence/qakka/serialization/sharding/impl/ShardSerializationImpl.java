@@ -19,6 +19,7 @@
 
 package org.apache.usergrid.persistence.qakka.serialization.sharding.impl;
 
+import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.Assignment;
@@ -140,8 +141,6 @@ public class ShardSerializationImpl implements ShardSerialization {
         Clause activeClause = QueryBuilder.eq(COLUMN_ACTIVE, 1);
         Clause shardIdClause = QueryBuilder.eq(COLUMN_SHARD_ID, shard.getShardId());
 
-
-
         Statement delete = QueryBuilder.delete().from(getTableName(shard.getType()))
                 .where(queueNameClause)
                 .and(regionClause)
@@ -149,8 +148,28 @@ public class ShardSerializationImpl implements ShardSerialization {
                 .and(shardIdClause);
 
         cassandraClient.getQueueMessageSession().execute(delete);
-
     }
+
+
+    @Override
+    public void deleteAllShards(String queueName, String region) {
+
+        BatchStatement batch = new BatchStatement();
+
+        Shard.Type[] shardTypes = new Shard.Type[]{Shard.Type.DEFAULT, Shard.Type.INFLIGHT};
+
+        for (Shard.Type shardType : shardTypes) {
+
+            Statement delete = QueryBuilder.delete().from( getTableName( shardType ) )
+                .where( QueryBuilder.eq(COLUMN_QUEUE_NAME, queueName) )
+                .and( QueryBuilder.eq(COLUMN_REGION, region) );
+
+            batch.add( delete );
+        }
+
+        cassandraClient.getQueueMessageSession().execute( batch );
+    }
+
 
     public void updateShardPointer(final Shard shard){
 

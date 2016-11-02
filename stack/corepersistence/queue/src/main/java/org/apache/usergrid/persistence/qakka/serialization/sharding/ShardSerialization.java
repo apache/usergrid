@@ -30,6 +30,8 @@ public interface ShardSerialization extends Migration {
 
     void deleteShard(final Shard shard);
 
+    void deleteAllShards(String queueName, String region);
+
     void updateShardPointer(final Shard shard);
 
 }

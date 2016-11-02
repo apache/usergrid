@@ -55,16 +55,16 @@ public class ShardCounterSerializationImpl implements ShardCounterSerialization 
 
     final static String TABLE_COUNTERS       = "shard_counters";
     final static String COLUMN_QUEUE_NAME    = "queue_name";
+    final static String COLUMN_SHARD_TYPE    = "shard_type";
     final static String COLUMN_SHARD_ID      = "shard_id";
     final static String COLUMN_COUNTER_VALUE = "counter_value";
-    final static String COLUMN_SHARD_TYPE    = "shard_type";
 
     static final String CQL =
         "CREATE TABLE IF NOT EXISTS shard_counters ( " +
-            "counter_value counter, " +
             "queue_name    varchar, " +
             "shard_type    varchar, " +
-            "shard_id      bigint, " +
+            "shard_id      bigint, "  +
+            "counter_value counter, " +
             "PRIMARY KEY (queue_name, shard_type, shard_id) " +
     ");  ";
 
@@ -84,6 +84,10 @@ public class ShardCounterSerializationImpl implements ShardCounterSerialization 
         }
         void setBaseCount( long baseCount ) {
             this.baseCount = baseCount;
+        }
+        void reset() {
+            this.baseCount = 0;
+            this.increment.set( 0L );
         }
     }
 
@@ -158,6 +162,49 @@ public class ShardCounterSerializationImpl implements ShardCounterSerialization 
 
         return inMemoryCounters.get( key ).value();
     }
+
+
+    @Override
+    public void resetCounter( Shard shard ) {
+
+        // this sucks: "You cannot index, delete, or re-add a counter column"
+        // https://docs.datastax.com/en/cql/3.1/cql/cql_using/use_counter_t.html
+        // so instead we decrement or increment the counter to zero
+
+        String queueName = shard.getQueueName();
+        Shard.Type type = shard.getType();
+        long shardId = shard.getShardId();
+
+        // get value first, before resetting in memory counter
+        long value = getCounterValue( shard.getQueueName(), shard.getType(), shard.getShardId() );
+
+        String key = queueName + type + shardId;
+        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+        if ( inMemoryCount != null ) {
+            inMemoryCount.reset();
+        }
+
+        if ( value < 0 ) {
+
+            Statement update = QueryBuilder.update( TABLE_COUNTERS )
+                .where( QueryBuilder.eq(   COLUMN_QUEUE_NAME, queueName ) )
+                .and(   QueryBuilder.eq(   COLUMN_SHARD_TYPE, type.toString() ) )
+                .and(   QueryBuilder.eq(   COLUMN_SHARD_ID, shardId ) )
+                .with(  QueryBuilder.incr( COLUMN_COUNTER_VALUE, -1 * value ) ); // incr must be positive
+            cassandraClient.getQueueMessageSession().execute( update );
+
+        } else {
+
+            Statement update = QueryBuilder.update( TABLE_COUNTERS )
+                .where( QueryBuilder.eq(   COLUMN_QUEUE_NAME, queueName ) )
+                .and(   QueryBuilder.eq(   COLUMN_SHARD_TYPE, type.toString() ) )
+                .and(   QueryBuilder.eq(   COLUMN_SHARD_ID, shardId ) )
+                .with(  QueryBuilder.decr( COLUMN_COUNTER_VALUE, value ) );
+            cassandraClient.getQueueMessageSession().execute( update );
+        }
+
+    }
+
 
     void incrementCounterInStorage( String queueName, Shard.Type type, long shardId, long increment ) {
 

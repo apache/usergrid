@@ -129,8 +129,8 @@ public class QueueRefresher extends UntypedActor {
 
                 startingShards.put( shardKey, shardId );
 
-//                logger.debug("Refreshed queue {} region {} shard {} since {} found {}",
-//                    queueName, region, shardId, since, count );
+                logger.debug("Refreshed queue {} region {} shard {} since {} found {}",
+                    queueName, region, shardId, since, count );
             }
 
         } finally {

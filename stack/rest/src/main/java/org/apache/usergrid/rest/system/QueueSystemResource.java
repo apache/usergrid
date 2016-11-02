@@ -20,6 +20,7 @@
 package org.apache.usergrid.rest.system;
 
 import com.codahale.metrics.Timer;
+import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
@@ -31,6 +32,7 @@ import org.apache.usergrid.persistence.qakka.core.QueueMessageManager;
 import org.apache.usergrid.persistence.qakka.core.impl.InMemoryQueue;
 import org.apache.usergrid.persistence.qakka.core.impl.QueueManagerImpl;
 import org.apache.usergrid.persistence.qakka.core.impl.QueueMessageManagerImpl;
+import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
@@ -91,12 +93,11 @@ public class QueueSystemResource extends AbstractContextResource {
 
     @GET
     @RequireSystemAccess
-    @Path("info")
-    public ApiResponse getQueueInfo(
-        @QueryParam("callback") @DefaultValue("callback") String callback ) {
+    @Path("metrics")
+    public ApiResponse getQueueMetrics() {
 
         ApiResponse response = createApiResponse();
-        response.setAction( "get queue info" );
+        response.setAction( "get queue metrics" );
 
         MetricsService metricsService = injector.getInstance( MetricsService.class );
 
@@ -104,7 +105,7 @@ public class QueueSystemResource extends AbstractContextResource {
         final long nano = 1000000000;
 
         Map<String, Object> info = new HashMap<String, Object>() {{
-            put( "name", "Queue Info" );
+            put( "name", "Queue Metrics" );
             try {
                 put( "host", InetAddress.getLocalHost().getHostName() );
             } catch (UnknownHostException e) {
@@ -125,6 +126,25 @@ public class QueueSystemResource extends AbstractContextResource {
             }
         }};
 
+        response.setProperty( "data", info );
+
+        return response;
+
+    }
+
+    @GET
+    @RequireSystemAccess
+    @Path("info")
+    public ApiResponse getQueueInfo(
+        @QueryParam("callback") @DefaultValue("callback") String callback ) {
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "get queue info" );
+
+        Map<String, Object> info = new HashMap<String, Object>() {{
+            put( "name", "Queue Info" );
+        }};
+
         QueueManager queueManager               = injector.getInstance( QueueManagerImpl.class );
         QueueMessageManager queueMessageManager = injector.getInstance( QueueMessageManagerImpl.class );
         InMemoryQueue inMemoryQueue             = injector.getInstance( InMemoryQueue.class );
@@ -133,22 +153,59 @@ public class QueueSystemResource extends AbstractContextResource {
         final List<String> listOfQueues = queueManager.getListOfQueues();
         for ( String queueName : listOfQueues ) {
 
-            Map<String, Object> queueInfo = new HashMap<>();
+            try {
+                Map<String, Object> queueInfo = new HashMap<>();
 
-            queueInfo.put("name", queueName );
-            queueInfo.put("depth", queueMessageManager.getQueueDepth( queueName ));
-            queueInfo.put("inmemory", inMemoryQueue.size( queueName ));
+                queueInfo.put( "name", queueName );
+                queueInfo.put( "depth",
+                    queueMessageManager.getQueueDepth( queueName, DatabaseQueueMessage.Type.DEFAULT ) );
+                queueInfo.put( "inflight",
+                    queueMessageManager.getQueueDepth( queueName, DatabaseQueueMessage.Type.INFLIGHT ) );
+                queueInfo.put( "inmemory", inMemoryQueue.size( queueName ) );
 
-            UUID newest = inMemoryQueue.getNewest( queueName );
-            queueInfo.put("since", newest == null ? "null" : newest.timestamp());
+                UUID newest = inMemoryQueue.getNewest( queueName );
+                queueInfo.put( "since", newest == null ? "null" : newest.timestamp() );
 
-            queues.add( queueInfo );
+                queues.add( queueInfo );
+            } catch ( Exception e ) {
+                logger.error("Error getting queue info for queue: " + queueName, e);
+            }
         }
 
         info.put("queues", queues);
 
         response.setProperty( "data", info );
 
+        return response;
+    }
+
+
+    @POST
+    @RequireSystemAccess
+    @Path("clear/{queueName}")
+    public ApiResponse clearQueue(
+        @PathParam("queueName") String queueName,
+        @QueryParam("callback") @DefaultValue("callback") String callback ) {
+
+        logger.debug("DMJ_TEMP clearQueue");
+
+        QueueManager queueManager = injector.getInstance( QueueManager.class );
+        QueueMessageManager queueMessageManager = injector.getInstance( QueueMessageManagerImpl.class );
+
+        if ( queueName == null ) {
+            throw new IllegalArgumentException( "queueName net specified in path" );
+        }
+
+        if ( queueManager.getQueueConfig( queueName ) == null ) {
+            throw new NotFoundException( "Queue not found: " + queueName );
+        }
+
+        ApiResponse response = createApiResponse();
+        response.setAction( "clear queue: " + queueName );
+
+        queueMessageManager.clearMessages( queueName );
+
+        response.setProperty( "cleared", Boolean.TRUE );
         return response;
     }
 

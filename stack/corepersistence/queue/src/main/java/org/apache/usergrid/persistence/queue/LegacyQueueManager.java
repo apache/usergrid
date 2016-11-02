@@ -36,7 +36,6 @@ public interface LegacyQueueManager {
 
     /**
      * get the queue depth
-     * @return
      */
     long getQueueDepth();
 

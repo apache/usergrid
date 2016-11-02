@@ -28,4 +28,6 @@ public interface MessageCounterSerialization extends Migration {
     void decrementCounter(String queueName, DatabaseQueueMessage.Type type, long decrement);
 
     long getCounterValue(String name, DatabaseQueueMessage.Type type);
+
+    void resetCounter(String queueName, DatabaseQueueMessage.Type type);
 }

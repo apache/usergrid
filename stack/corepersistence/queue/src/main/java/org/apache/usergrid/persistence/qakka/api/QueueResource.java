@@ -23,11 +23,13 @@ import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import org.apache.usergrid.persistence.qakka.core.*;
+import org.apache.usergrid.persistence.qakka.exceptions.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -256,6 +258,9 @@ public class QueueResource {
                                    String contentType,
                                    ByteBuffer byteBuffer) {
 
+            if ( queueManager.getQueueConfig( queueName ) == null ) {
+                throw new NotFoundException( "Queue " + queueName + " not found" ) ;
+            }
 
             Preconditions.checkArgument( !QakkaUtils.isNullOrEmpty( queueName ), "Queue name is required" );
 

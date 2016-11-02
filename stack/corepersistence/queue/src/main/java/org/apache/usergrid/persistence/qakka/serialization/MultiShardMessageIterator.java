@@ -148,7 +148,7 @@ public class MultiShardMessageIterator implements Iterator<DatabaseQueueMessage>
 
         List<Row> rows = cassandraClient.getQueueMessageSession().execute(query).all();
 
-        //logger.debug("Query got {}: {}", rows.size(), query);
+        logger.trace("results {} from query {}", rows.size(), query.toString());
 
         if ( (rows == null || rows.size() == 0) && shardIterator.hasNext()) {
 
