@@ -80,22 +80,6 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     @Override
     public void init() {
 
-        try {
-            List<String> queues = queueManager.getListOfQueues();
-            for (String queueName : queues) {
-                initQueue( queueName );
-            }
-        } catch (InvalidQueryException e) {
-
-            if (e.getMessage().contains( "unconfigured columnfamily" )) {
-                logger.info( "Unable to initialize queues since system is bootstrapping.  " +
-                    "Queues will be initialized when created" );
-            } else {
-                throw e;
-            }
-
-        }
-
         StringBuilder logMessage = new StringBuilder();
         logMessage.append( "DistributedQueueServiceImpl initialized with config:\n" );
         Method[] methods = qakkaFig.getClass().getMethods();
@@ -114,15 +98,6 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
 
 
     @Override
-    public void initQueue(String queueName) {
-        logger.info("Initializing queue: {}", queueName);
-        QueueInitRequest request = new QueueInitRequest( queueName );
-        ActorRef clientActor = actorSystemManager.getClientActor();
-        clientActor.tell( request, null );
-    }
-
-
-    @Override
     public void refresh() {
         for ( String queueName : queueManager.getListOfQueues() ) {
             refreshQueue( queueName );
@@ -132,10 +107,13 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
 
     @Override
     public void refreshQueue(String queueName) {
-        logger.info("{} Requesting refresh for queue: {}", this, queueName);
-        QueueRefreshRequest request = new QueueRefreshRequest( queueName, false );
-        ActorRef clientActor = actorSystemManager.getClientActor();
-        clientActor.tell( request, null );
+        if ( qakkaFig.getInMemoryCache() ) {
+            logger.trace( "{} Requesting refresh for queue: {}", this, queueName );
+            QueueRefreshRequest request = new QueueRefreshRequest( queueName, false );
+            ActorRef clientActor = actorSystemManager.getClientActor();
+            clientActor.tell( request, null );
+        }
+
     }
 
 
@@ -156,6 +134,8 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     public DistributedQueueService.Status sendMessageToRegion(
             String queueName, String sourceRegion, String destRegion, UUID messageId,
             Long deliveryTime, Long expirationTime ) {
+
+        logger.trace("Sending message to queue {} region {}", queueName, destRegion);
 
         Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.SEND_TIME_TOTAL ).time();
         try {
@@ -186,9 +166,11 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
                                 logger.debug("SUCCESS after {} retries", retries );
                             }
 
-                            // send refresh-queue-if-empty message
-                            QueueRefreshRequest qrr = new QueueRefreshRequest( queueName, false );
-                            clientActor.tell( qrr, null );
+                            if ( qakkaFig.getInMemoryCache() ) {
+                                // send refresh-queue-if-empty message
+                                QueueRefreshRequest qrr = new QueueRefreshRequest( queueName, false );
+                                clientActor.tell( qrr, null );
+                            }
 
                             return qarm.getSendStatus();
 
@@ -280,7 +262,6 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
                                 logger.warn( "getNextMessage {} SUCCESS after {} tries", queueName, tries );
                             }
                         }
-                        logger.trace("Returning queue {} messages {}", queueName, qprm.getQueueMessages().size());
                         return qprm.getQueueMessages();
 
 
@@ -332,14 +313,6 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
 
         QueueAckRequest message = new QueueAckRequest( queueName, messageId );
         return sendMessageToLocalRouters( message );
-    }
-
-
-    @Override
-    public Status clearMessages(String queueName) {
-
-        // TODO: implement clear queue
-        throw new UnsupportedOperationException();
     }
 
 
