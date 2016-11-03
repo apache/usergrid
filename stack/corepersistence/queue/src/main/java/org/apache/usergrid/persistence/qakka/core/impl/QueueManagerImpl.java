@@ -96,7 +96,7 @@ public class QueueManagerImpl implements QueueManager {
         messageCounterSerialization.incrementCounter( queue.getName(), DatabaseQueueMessage.Type.DEFAULT, 0L );
         messageCounterSerialization.incrementCounter( queue.getName(), DatabaseQueueMessage.Type.INFLIGHT, 0L );
 
-        distributedQueueService.initQueue( queue.getName() );
+        //distributedQueueService.initQueue( queue.getName() );
         distributedQueueService.refreshQueue( queue.getName() );
     }
 
@@ -105,7 +105,7 @@ public class QueueManagerImpl implements QueueManager {
 
         queueSerialization.writeQueue(queue.toDatabaseQueue());
 
-        distributedQueueService.initQueue( queue.getName() );
+        //distributedQueueService.initQueue( queue.getName() );
         distributedQueueService.refreshQueue( queue.getName() );
     }
 

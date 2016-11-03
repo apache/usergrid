@@ -20,121 +20,52 @@
 package org.apache.usergrid.persistence.qakka.distributed.actors;
 
 import akka.actor.ActorRef;
-import akka.actor.Cancellable;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
-import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.MetricsService;
-import org.apache.usergrid.persistence.qakka.QakkaFig;
-import org.apache.usergrid.persistence.qakka.core.impl.InMemoryQueue;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.distributed.messages.*;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
-import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.concurrent.duration.Duration;
 
-import java.text.DecimalFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 
 public class QueueActor extends UntypedActor {
     private static final Logger logger = LoggerFactory.getLogger( QueueActor.class );
 
-    private final QakkaFig         qakkaFig;
-    private final InMemoryQueue    inMemoryQueue;
     private final QueueActorHelper queueActorHelper;
     private final MetricsService   metricsService;
-    private final MessageCounterSerialization messageCounterSerialization;
 
-    private final Map<String, Cancellable> refreshSchedulersByQueueName = new HashMap<>();
-    private final Map<String, Cancellable> timeoutSchedulersByQueueName = new HashMap<>();
-    private final Map<String, Cancellable> shardAllocationSchedulersByQueueName = new HashMap<>();
-
-    private final Map<String, ActorRef> queueReadersByQueueName    = new HashMap<>();
+    //private final Map<String, ActorRef> queueReadersByQueueName    = new HashMap<>();
     private final Map<String, ActorRef> queueTimeoutersByQueueName = new HashMap<>();
     private final Map<String, ActorRef> shardAllocatorsByQueueName = new HashMap<>();
-
-    private final Set<String> queuesSeen = new HashSet<>();
 
 
     @Inject
     public QueueActor(
-        QakkaFig         qakkaFig,
-        InMemoryQueue    inMemoryQueue,
         QueueActorHelper queueActorHelper,
-        MetricsService   metricsService,
-        MessageCounterSerialization messageCounterSerialization
+        MetricsService   metricsService
     ) {
-        this.qakkaFig = qakkaFig;
-        this.inMemoryQueue = inMemoryQueue;
         this.queueActorHelper = queueActorHelper;
         this.metricsService = metricsService;
-        this.messageCounterSerialization = messageCounterSerialization;
     }
 
 
     @Override
     public void onReceive(Object message) {
 
-        if ( message instanceof QueueInitRequest) {
-            QueueInitRequest request = (QueueInitRequest)message;
-
-            queuesSeen.add( request.getQueueName() );
-
-            if ( refreshSchedulersByQueueName.get( request.getQueueName() ) == null ) {
-                Cancellable scheduler = getContext().system().scheduler().schedule(
-                    Duration.create( 0, TimeUnit.MILLISECONDS),
-                    Duration.create( qakkaFig.getQueueRefreshMilliseconds(), TimeUnit.MILLISECONDS),
-                    self(),
-                    new QueueRefreshRequest( request.getQueueName(), false ),
-                    getContext().dispatcher(),
-                    getSelf());
-                refreshSchedulersByQueueName.put( request.getQueueName(), scheduler );
-                logger.debug("Created refresher for queue {}", request.getQueueName() );
-            }
-
-            if ( timeoutSchedulersByQueueName.get( request.getQueueName() ) == null ) {
-                Cancellable scheduler = getContext().system().scheduler().schedule(
-                        Duration.create( 0, TimeUnit.MILLISECONDS),
-                        Duration.create( qakkaFig.getQueueTimeoutSeconds()/2, TimeUnit.SECONDS),
-                        self(),
-                        new QueueTimeoutRequest( request.getQueueName() ),
-                        getContext().dispatcher(),
-                        getSelf());
-                timeoutSchedulersByQueueName.put( request.getQueueName(), scheduler );
-                logger.debug("Created timeouter for queue {}", request.getQueueName() );
-            }
-
-            if ( shardAllocationSchedulersByQueueName.get( request.getQueueName() ) == null ) {
-                Cancellable scheduler = getContext().system().scheduler().schedule(
-                        Duration.create( 0, TimeUnit.MILLISECONDS),
-                        Duration.create( qakkaFig.getShardAllocationCheckFrequencyMillis(), TimeUnit.MILLISECONDS),
-                        self(),
-                        new ShardCheckRequest( request.getQueueName() ),
-                        getContext().dispatcher(),
-                        getSelf());
-                shardAllocationSchedulersByQueueName.put( request.getQueueName(), scheduler );
-                logger.debug("Created shard allocater for queue {}", request.getQueueName() );
-            }
-
-
-        } else if ( message instanceof QueueRefreshRequest ) {
+        if ( message instanceof QueueRefreshRequest ) {
             QueueRefreshRequest request = (QueueRefreshRequest)message;
-            queuesSeen.add( request.getQueueName() );
 
-//            // NOT asynchronous
-//            queueActorHelper.queueRefresh( request.getQueueName() );
+            // NOT asynchronous because we want this to happen locally in this JVM
+            queueActorHelper.queueRefresh( request.getQueueName() );
 
-            if ( queueReadersByQueueName.get( request.getQueueName() ) == null ) {
-
+            /* if ( queueReadersByQueueName.get( request.getQueueName() ) == null ) {
                 if ( !request.isOnlyIfEmpty() || inMemoryQueue.peek( request.getQueueName()) == null ) {
                     ActorRef readerRef = getContext().actorOf(
                         Props.create( GuiceActorProducer.class, QueueRefresher.class ),
@@ -142,15 +73,12 @@ public class QueueActor extends UntypedActor {
                     queueReadersByQueueName.put( request.getQueueName(), readerRef );
                 }
             }
-
             // hand-off to queue's reader
-            queueReadersByQueueName.get( request.getQueueName() ).tell( request, self() );
+            queueReadersByQueueName.get( request.getQueueName() ).tell( request, self() ); */
 
 
         } else if ( message instanceof QueueTimeoutRequest ) {
             QueueTimeoutRequest request = (QueueTimeoutRequest)message;
-
-            queuesSeen.add( request.getQueueName() );
 
             if ( queueTimeoutersByQueueName.get( request.getQueueName() ) == null ) {
                 ActorRef readerRef = getContext().actorOf(
@@ -165,8 +93,6 @@ public class QueueActor extends UntypedActor {
 
         } else if ( message instanceof ShardCheckRequest ) {
             ShardCheckRequest request = (ShardCheckRequest)message;
-
-            queuesSeen.add( request.getQueueName() );
 
             if ( shardAllocatorsByQueueName.get( request.getQueueName() ) == null ) {
                 ActorRef readerRef = getContext().actorOf(
@@ -186,12 +112,11 @@ public class QueueActor extends UntypedActor {
             String queueName = queueGetRequest.getQueueName();
             int numRequested = queueGetRequest.getNumRequested();
 
-            queuesSeen.add( queueName );
-
             Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.GET_TIME_GET ).time();
             try {
 
                 Collection<DatabaseQueueMessage> messages = queueActorHelper.getMessages( queueName, numRequested);
+                logger.trace("Returning queue {} messages {}", queueName, messages.size() );
 
                 getSender().tell( new QueueGetResponse(
                         DistributedQueueService.Status.SUCCESS, messages, queueName ), getSender() );
@@ -205,5 +130,7 @@ public class QueueActor extends UntypedActor {
         }
 
     }
+
+
 
 }

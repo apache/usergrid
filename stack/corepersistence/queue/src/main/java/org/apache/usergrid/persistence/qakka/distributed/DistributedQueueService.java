@@ -34,8 +34,6 @@ public interface DistributedQueueService {
 
     void init();
 
-    void initQueue(String queueName);
-
     void refresh();
 
     void shutdown();
@@ -57,6 +55,4 @@ public interface DistributedQueueService {
     Status ackMessage(String queueName, UUID messageId);
 
     Status requeueMessage(String queueName, UUID messageId);
-
-    Status clearMessages(String queueName);
 }
