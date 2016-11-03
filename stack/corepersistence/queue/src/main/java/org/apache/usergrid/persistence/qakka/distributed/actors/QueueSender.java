@@ -129,11 +129,15 @@ public class QueueSender extends UntypedActor {
 
                     if (actorSystemManager.getCurrentRegion().equals( destRegion )) {
 
+                        logger.trace("Sending queue {} message to local region {}", queueName, destRegion );
+
                         // send to current region via local clientActor
                         ActorRef clientActor = actorSystemManager.getClientActor();
                         fut = Patterns.ask( clientActor, request, t );
 
                     } else {
+
+                        logger.trace("Sending queue {} message to remote region {}", queueName, destRegion );
 
                         // send to remote region via cluster client for that region
                         ActorRef clusterClient = actorSystemManager.getClusterClient( destRegion );
