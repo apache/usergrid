@@ -53,8 +53,10 @@ public interface QakkaFig extends GuicyFig, Serializable {
     String QUEUE_GET_TIMEOUT                      = "queue.get.timeout.seconds";
 
     String QUEUE_SHARD_COUNTER_MAX_IN_MEMORY      = "queue.shard.counter.max-in-memory";
+    String QUEUE_SHARD_COUNTER_WRITE_TIMEOUT      = "queue.shard.counter.write-timeout";
 
     String QUEUE_MESSAGE_COUNTER_MAX_IN_MEMORY    = "queue.message.counter.max-in-memory";
+    String QUEUE_MESSAGE_COUNTER_WRITE_TIMEOUT    = "queue.message.counter.write-timeout";
 
     String QUEUE_SHARD_ALLOCATION_CHECK_FREQUENCY = "queue.shard.allocation.check.frequency.millis";
 
@@ -65,6 +67,9 @@ public interface QakkaFig extends GuicyFig, Serializable {
     String QUEUE_LONG_POLL_TIME_MILLIS            = "queue.long.polling.time.millis";
 
     String QUEUE_MAX_TTL                          = "queue.max.ttl";
+
+    String QUEUE_IN_MEMORY                        = "queue.in-memory.cache";
+
 
 
     /** True if Qakka is running standlone */
@@ -127,10 +132,18 @@ public interface QakkaFig extends GuicyFig, Serializable {
     @Default("100")
     long getShardCounterMaxInMemory();
 
+    @Key(QUEUE_SHARD_COUNTER_WRITE_TIMEOUT)
+    @Default("5000")
+    long getShardCounterWriteTimeoutMillis();
+
     /** Once counter reaches this value, write it to permanent storage */
     @Key(QUEUE_MESSAGE_COUNTER_MAX_IN_MEMORY)
     @Default("100")
     long getMessageCounterMaxInMemory();
+
+    @Key(QUEUE_MESSAGE_COUNTER_WRITE_TIMEOUT)
+    @Default("5000")
+    long getMessageCounterWriteTimeoutMillis();
 
     /** How often to check whether new shard is needed for each queue */
     @Key(QUEUE_SHARD_ALLOCATION_CHECK_FREQUENCY)
@@ -155,4 +168,8 @@ public interface QakkaFig extends GuicyFig, Serializable {
     @Key(QUEUE_MAX_TTL)
     @Default("1209600") // default is two weeks
     int getMaxTtlSeconds();
+
+    @Key(QUEUE_IN_MEMORY)
+    @Default("false")
+    boolean getInMemoryCache();
 }

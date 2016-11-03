@@ -52,6 +52,7 @@ public class ShardCounterSerializationImpl implements ShardCounterSerialization 
 
     private final CassandraClient cassandraClient;
     private final CassandraConfig cassandraConfig;
+    private final long writeTimeout;
 
     final static String TABLE_COUNTERS       = "shard_counters";
     final static String COLUMN_QUEUE_NAME    = "queue_name";
@@ -72,7 +73,9 @@ public class ShardCounterSerializationImpl implements ShardCounterSerialization 
 
     class InMemoryCount {
         long baseCount;
+        long lastWritten = 0L;
         final AtomicLong increment = new AtomicLong( 0L );
+
         InMemoryCount( long baseCount ) {
             this.baseCount = baseCount;
         }
@@ -84,10 +87,15 @@ public class ShardCounterSerializationImpl implements ShardCounterSerialization 
         }
         void setBaseCount( long baseCount ) {
             this.baseCount = baseCount;
+            this.lastWritten = System.currentTimeMillis();
+        }
+        boolean needsUpdate() {
+            return System.currentTimeMillis() - lastWritten > writeTimeout;
         }
         void reset() {
             this.baseCount = 0;
             this.increment.set( 0L );
+            this.lastWritten = System.currentTimeMillis();
         }
     }
 
@@ -97,9 +105,11 @@ public class ShardCounterSerializationImpl implements ShardCounterSerialization 
     @Inject
     public ShardCounterSerializationImpl(
         CassandraConfig cassandraConfig, QakkaFig qakkaFig, CassandraClient cassandraClient ) {
+
         this.cassandraConfig = cassandraConfig;
         this.maxInMemoryIncrement = qakkaFig.getShardCounterMaxInMemory();
         this.cassandraClient = cassandraClient;
+        this.writeTimeout = qakkaFig.getShardCounterWriteTimeoutMillis();
     }
 
 
@@ -157,6 +167,18 @@ public class ShardCounterSerializationImpl implements ShardCounterSerialization 
                 } else {
                     inMemoryCounters.put( key, new InMemoryCount( value ));
                 }
+            }
+        }
+
+        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+
+        synchronized ( inMemoryCount ) {
+
+            if ( inMemoryCount.needsUpdate() ) {
+                long totalIncrement = inMemoryCount.getIncrement().get();
+                incrementCounterInStorage( queueName, type, shardId, totalIncrement );
+                inMemoryCount.setBaseCount( retrieveCounterFromStorage( queueName, type, shardId ) );
+                inMemoryCount.getIncrement().set( 0L );
             }
         }
 
