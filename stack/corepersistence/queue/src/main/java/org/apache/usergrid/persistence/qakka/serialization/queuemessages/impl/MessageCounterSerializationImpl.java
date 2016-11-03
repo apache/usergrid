@@ -35,6 +35,7 @@ import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
+import org.apache.usergrid.persistence.qakka.serialization.sharding.impl.ShardCounterSerializationImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +55,7 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
 
     private final CassandraClient cassandraClient;
     private final CassandraConfig cassandraConfig;
+    private final long writeTimeout;
 
     final static String TABLE_MESSAGE_COUNTERS = "message_counters";
     final static String COLUMN_QUEUE_NAME      = "queue_name";
@@ -82,17 +84,18 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
         final AtomicLong totalInMemoryCount = new AtomicLong( 0L ); // for testing using only in-memory counter
         final AtomicLong increment = new AtomicLong( 0L );
         final AtomicLong decrement = new AtomicLong( 0L );
+        long lastWritten = 0L;
 
         InMemoryCount( long baseCount ) {
             this.baseCount = baseCount;
         }
         public void increment( long inc ) {
-            increment.addAndGet( inc );
-            totalInMemoryCount.addAndGet( inc );
+            this.increment.addAndGet( inc );
+            this.totalInMemoryCount.addAndGet( inc );
         }
         public void decrement( long dec ) {
-            decrement.addAndGet( dec );
-            totalInMemoryCount.addAndGet( -dec );
+            this.decrement.addAndGet( dec );
+            this.totalInMemoryCount.addAndGet( -dec );
         }
         public long getIncrement() {
             return increment.get();
@@ -101,8 +104,11 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
             return decrement.get();
         }
         public void clearDeltas() {
-            increment.set( 0L );
-            decrement.set( 0L );
+            this.increment.set( 0L );
+            this.decrement.set( 0L );
+        }
+        boolean needsUpdate() {
+            return System.currentTimeMillis() - lastWritten > writeTimeout;
         }
         void reset() {
             this.baseCount = 0;
@@ -110,13 +116,12 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
             this.decrement.set( 0L );
         }
         public long value() {
-
             // return totalInMemoryCount.get(); // for testing using just in-memory counter:
-
             return baseCount + increment.get() - decrement.get();
         }
         void setBaseCount( long baseCount ) {
             this.baseCount = baseCount;
+            this.lastWritten = System.currentTimeMillis();
         }
     }
 
@@ -130,6 +135,7 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
         this.cassandraConfig = cassandraConfig;
         this.maxChangesBeforeSave = qakkaFig.getMessageCounterMaxInMemory();
         this.cassandraClient = cassandraClient;
+        this.writeTimeout = qakkaFig.getShardCounterWriteTimeoutMillis();
     }
 
 
@@ -227,8 +233,19 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
             }
         }
 
-        long value = inMemoryCounters.get( key ).value();
-        return value;
+        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+
+        synchronized ( inMemoryCount ) {
+
+            if ( inMemoryCount.needsUpdate() ) {
+                long totalIncrement = inMemoryCount.getIncrement();
+                incrementCounterInStorage( queueName, type, totalIncrement );
+                inMemoryCount.setBaseCount( retrieveCounterFromStorage( queueName, type ) );
+                inMemoryCount.clearDeltas();
+            }
+        }
+
+        return inMemoryCounters.get( key ).value();
     }
 
 
