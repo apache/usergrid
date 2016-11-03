@@ -153,23 +153,27 @@ public class QueueSystemResource extends AbstractContextResource {
         final List<String> listOfQueues = queueManager.getListOfQueues();
         for ( String queueName : listOfQueues ) {
 
+            Map<String, Object> queueInfo = new HashMap<>();
             try {
-                Map<String, Object> queueInfo = new HashMap<>();
 
                 queueInfo.put( "name", queueName );
-                queueInfo.put( "depth",
-                    queueMessageManager.getQueueDepth( queueName, DatabaseQueueMessage.Type.DEFAULT ) );
-                queueInfo.put( "inflight",
-                    queueMessageManager.getQueueDepth( queueName, DatabaseQueueMessage.Type.INFLIGHT ) );
+
                 queueInfo.put( "inmemory", inMemoryQueue.size( queueName ) );
 
                 UUID newest = inMemoryQueue.getNewest( queueName );
                 queueInfo.put( "since", newest == null ? "null" : newest.timestamp() );
 
-                queues.add( queueInfo );
+                queueInfo.put( "depth",
+                    queueMessageManager.getQueueDepth( queueName, DatabaseQueueMessage.Type.DEFAULT ) );
+                queueInfo.put( "inflight",
+                    queueMessageManager.getQueueDepth( queueName, DatabaseQueueMessage.Type.INFLIGHT ) );
+
+
             } catch ( Exception e ) {
                 logger.error("Error getting queue info for queue: " + queueName, e);
             }
+
+            queues.add( queueInfo );
         }
 
         info.put("queues", queues);

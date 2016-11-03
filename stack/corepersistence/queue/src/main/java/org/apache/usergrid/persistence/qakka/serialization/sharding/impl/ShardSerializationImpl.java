@@ -164,8 +164,12 @@ public class ShardSerializationImpl implements ShardSerialization {
                 .where( QueryBuilder.eq(COLUMN_QUEUE_NAME, queueName) )
                 .and( QueryBuilder.eq(COLUMN_REGION, region) );
 
+            logger.trace("Removing shards for queue {} region {} shardType {} query {}",
+                queueName, region, shardType, batch.toString());
+
             batch.add( delete );
         }
+
 
         cassandraClient.getQueueMessageSession().execute( batch );
     }

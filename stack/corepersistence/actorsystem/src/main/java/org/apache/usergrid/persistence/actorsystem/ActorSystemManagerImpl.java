@@ -313,7 +313,10 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                     }} );
 
                     put( "cluster", new HashMap<String, Object>() {{
-                        put( "max-nr-of-instances-per-node", numInstancesPerNode); // this sets default if router does not set
+
+                        // this sets default if router does not set
+                        put( "max-nr-of-instances-per-node", numInstancesPerNode);
+
                         put( "roles", Collections.singletonList("io") );
                         put( "seed-nodes", new ArrayList<String>() {{
                             for (String seed : seeds) {
@@ -336,6 +339,8 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
             for ( RouterProducer routerProducer : routerProducers ) {
                 routerProducer.addConfiguration( configMap );
             }
+
+            logger.debug("Actor system configMap: " + configMap );
 
             config = ConfigFactory.parseMap( configMap )
                 .withFallback( ConfigFactory.load( "application.conf" ) );
@@ -408,6 +413,8 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                 ClusterClientReceptionist.get(system).registerService( clientActor );
 
             } else {
+
+                logger.info( "Creating clusterClient for region [{}]", region );
 
                 Set<ActorPath> seedPaths = new HashSet<>(20);
                 for ( String seed : getSeedsByRegion().get( region ) ) {

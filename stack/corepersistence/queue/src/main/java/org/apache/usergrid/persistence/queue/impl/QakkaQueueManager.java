@@ -80,6 +80,8 @@ public class QakkaQueueManager implements LegacyQueueManager {
     @Override
     public <T extends Serializable> void sendMessage(T body) throws IOException {
 
+        logger.debug( "Sending message to queue {} region {}", this.scope.getRegionImplementation().name() );
+
         createQueueIfNecessary();
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();

@@ -32,8 +32,6 @@ import org.apache.usergrid.persistence.qakka.serialization.queuemessages.Databas
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessageBody;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
-import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
-import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardIterator;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLogSerialization;
 import org.slf4j.Logger;
@@ -42,7 +40,10 @@ import org.slf4j.LoggerFactory;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 
 
 @Singleton
@@ -91,6 +92,8 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
         if ( queueManager.getQueueConfig( queueName ) == null ) {
             throw new NotFoundException( "Queue " + queueName + " not found" );
         }
+
+        logger.trace("Sending message to queue {} regions {}", queueName, destinationRegions);
 
         // TODO: implement delay and expiration
 

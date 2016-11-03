@@ -347,15 +347,15 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
 
             while (defaultShardIterator.hasNext()) {
                 Shard shard = defaultShardIterator.next();
-                deleteAllBatch.add( createDeleteAllMessagesStatement( shard ) );
+                Statement deleteAll = createDeleteAllMessagesStatement( shard );
+                deleteAllBatch.add( deleteAll );
 
-                logger.trace("added queueName {} type {} shard {}",
-                    queueName, shardType, shard.getShardId() );
+                logger.trace("Deleting messages for queue {} shardType {} shard {} query {}",
+                    queueName, shardType, shard.getShardId(), deleteAll.toString() );
             }
         }
 
         cassandraClient.getQueueMessageSession().execute( deleteAllBatch );
-        logger.trace("deleted messages in queue: " + queueName);
 
         // clear counters, we only want to this to happen after successful deletion
         for ( Shard.Type shardType : shardTypes ) {
