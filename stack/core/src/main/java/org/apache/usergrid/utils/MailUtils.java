@@ -121,7 +121,13 @@ public class MailUtils {
 
             Transport transport = session.getTransport();
 
-            transport.connect( host, username, password );
+            // make sure empty strings aren't mistakenly passed in for the user and password to prevent SMTP auth
+            if ( StringUtils.isEmpty(username) || StringUtils.isEmpty(password)){
+                transport.connect( host, null, null );
+            }else{
+                transport.connect( host, username, password );
+            }
+
 
             transport.sendMessage( msg, msg.getAllRecipients() );
             transport.close();
