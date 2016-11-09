@@ -24,8 +24,11 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
 import org.apache.usergrid.persistence.qakka.MetricsService;
+import org.apache.usergrid.persistence.qakka.QakkaFig;
+import org.apache.usergrid.persistence.qakka.core.impl.InMemoryQueue;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.distributed.messages.*;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
@@ -38,10 +41,14 @@ import java.util.*;
 public class QueueActor extends UntypedActor {
     private static final Logger logger = LoggerFactory.getLogger( QueueActor.class );
 
+    private final String name = RandomStringUtils.randomAlphanumeric( 4 );
+
+    private final QakkaFig         qakkaFig;
+    private final InMemoryQueue    inMemoryQueue;
     private final QueueActorHelper queueActorHelper;
     private final MetricsService   metricsService;
 
-    //private final Map<String, ActorRef> queueReadersByQueueName    = new HashMap<>();
+    private final Map<String, ActorRef> queueReadersByQueueName    = new HashMap<>();
     private final Map<String, ActorRef> queueTimeoutersByQueueName = new HashMap<>();
     private final Map<String, ActorRef> shardAllocatorsByQueueName = new HashMap<>();
 
@@ -49,10 +56,14 @@ public class QueueActor extends UntypedActor {
     @Inject
     public QueueActor(
         QueueActorHelper queueActorHelper,
-        MetricsService   metricsService
+        MetricsService   metricsService,
+        QakkaFig         qakkaFig,
+        InMemoryQueue    inMemoryQueue
     ) {
         this.queueActorHelper = queueActorHelper;
         this.metricsService = metricsService;
+        this.qakkaFig = qakkaFig;
+        this.inMemoryQueue = inMemoryQueue;
     }
 
 
@@ -60,21 +71,26 @@ public class QueueActor extends UntypedActor {
     public void onReceive(Object message) {
 
         if ( message instanceof QueueRefreshRequest ) {
-            QueueRefreshRequest request = (QueueRefreshRequest)message;
+            QueueRefreshRequest request = (QueueRefreshRequest) message;
 
             // NOT asynchronous because we want this to happen locally in this JVM
-            queueActorHelper.queueRefresh( request.getQueueName() );
 
-            /* if ( queueReadersByQueueName.get( request.getQueueName() ) == null ) {
-                if ( !request.isOnlyIfEmpty() || inMemoryQueue.peek( request.getQueueName()) == null ) {
-                    ActorRef readerRef = getContext().actorOf(
-                        Props.create( GuiceActorProducer.class, QueueRefresher.class ),
-                        request.getQueueName() + "_reader");
-                    queueReadersByQueueName.put( request.getQueueName(), readerRef );
+
+            if ( qakkaFig.getInMemoryCache() && qakkaFig.getInMemoryRefreshAsync()) {
+                 if ( queueReadersByQueueName.get( request.getQueueName() ) == null ) {
+                    if ( !request.isOnlyIfEmpty() || inMemoryQueue.peek( request.getQueueName()) == null ) {
+                        ActorRef readerRef = getContext().actorOf(
+                            Props.create( GuiceActorProducer.class, QueueRefresher.class ),
+                            request.getQueueName() + "_reader");
+                        queueReadersByQueueName.put( request.getQueueName(), readerRef );
+                    }
                 }
+                // hand-off to queue's reader
+                queueReadersByQueueName.get( request.getQueueName() ).tell( request, self() );
+
+            } else {
+                queueActorHelper.queueRefresh( request.getQueueName() );
             }
-            // hand-off to queue's reader
-            queueReadersByQueueName.get( request.getQueueName() ).tell( request, self() ); */
 
 
         } else if ( message instanceof QueueTimeoutRequest ) {
@@ -116,7 +132,10 @@ public class QueueActor extends UntypedActor {
             try {
 
                 Collection<DatabaseQueueMessage> messages = queueActorHelper.getMessages( queueName, numRequested);
-                logger.trace("Returning queue {} messages {}", queueName, messages.size() );
+
+                if ( !messages.isEmpty() ) {
+                    logger.trace("{}: Returning queue {} messages {}", name, queueName, messages.size() );
+                }
 
                 getSender().tell( new QueueGetResponse(
                         DistributedQueueService.Status.SUCCESS, messages, queueName ), getSender() );

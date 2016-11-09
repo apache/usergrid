@@ -94,4 +94,8 @@ public class InMemoryQueue {
     public int size( String queueName ) {
         return getQueue( queueName ).size();
     }
+
+    public void clear( String queueName ) {
+        getQueue( queueName ).clear();
+    }
 }
