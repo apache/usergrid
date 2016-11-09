@@ -124,8 +124,18 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
                     "Configuration value of SQS is no longer allowed. Use SNS instead with only a single region.");
 
             case SNS:
-                throw new IllegalArgumentException(
-                    "Configuration value of SNS is no longer allowed. Use MULTIREGION instead. ");
+                return new AsyncEventServiceImpl(
+                    queueManagerFactory,
+                    indexProcessorFig,
+                    indexProducer,
+                    metricsFactory,
+                    entityCollectionManagerFactory,
+                    indexLocationStrategyFactory,
+                    entityIndexFactory,
+                    eventBuilder,
+                    mapManagerFactory,
+                    queueFig,
+                    rxTaskScheduler );
 
             case MULTIREGION:
                 return new AsyncEventServiceImpl(
