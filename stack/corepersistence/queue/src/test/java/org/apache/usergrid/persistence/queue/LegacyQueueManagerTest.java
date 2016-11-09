@@ -25,8 +25,6 @@ import com.google.inject.Injector;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.App;
-import org.apache.usergrid.persistence.qakka.core.CassandraClient;
-import org.apache.usergrid.persistence.qakka.core.CassandraClientImpl;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
 import org.junit.Test;
@@ -68,7 +66,7 @@ public class LegacyQueueManagerTest extends AbstractTest {
         LegacyQueueManager qm = qmf.getQueueManager(scope);
 
         String value = "bodytest";
-        qm.sendMessage(value);
+        qm.sendMessageToLocalRegion(value);
 
         Thread.sleep(5000);
 

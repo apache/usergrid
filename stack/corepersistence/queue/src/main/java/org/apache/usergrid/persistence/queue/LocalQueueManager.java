@@ -85,7 +85,7 @@ public class LocalQueueManager implements LegacyQueueManager {
 
 
     @Override
-    public <T extends Serializable> void sendMessage( final T body ) throws IOException {
+    public <T extends Serializable> void sendMessageToLocalRegion(final T body ) throws IOException {
         String uuid = UUID.randomUUID().toString();
         try {
             queue.offer(new LegacyQueueMessage(uuid, "handle_" + uuid, body, "put type here"),5000,TimeUnit.MILLISECONDS);
@@ -97,8 +97,8 @@ public class LocalQueueManager implements LegacyQueueManager {
 
 
     @Override
-    public <T extends Serializable> void sendMessageToTopic( final T body ) throws IOException {
-       sendMessage( body );
+    public <T extends Serializable> void sendMessageToAllRegions(final T body ) throws IOException {
+       sendMessageToLocalRegion( body );
     }
 
 

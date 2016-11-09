@@ -40,9 +40,13 @@ public interface QakkaFig extends GuicyFig, Serializable {
 
     String QUEUE_TIMEOUT_SECONDS                  = "queue.timeout.seconds";
 
-    String QUEUE_REFRESH_MILLISECONDS             = "queue.refresh.millis";
+    String QUEUE_REFRESH_MILLISECONDS             = "queue.inmemory.refresh.millis";
 
-    String QUEUE_INMEMORY_SIZE                    = "queue.inmemory.size";
+    String QUEUE_IN_MEMORY                        = "queue.inmemory.cache";
+
+    String QUEUE_INMEMORY_SIZE                    = "queue.inmemory.cache.size";
+
+    String QUEUE_IN_MEMORY_REFRESH_ASYNC          = "queue.inmemory.cache.async";
 
     String QUEUE_SEND_MAX_RETRIES                 = "queue.send.max.retries";
 
@@ -53,9 +57,11 @@ public interface QakkaFig extends GuicyFig, Serializable {
     String QUEUE_GET_TIMEOUT                      = "queue.get.timeout.seconds";
 
     String QUEUE_SHARD_COUNTER_MAX_IN_MEMORY      = "queue.shard.counter.max-in-memory";
+
     String QUEUE_SHARD_COUNTER_WRITE_TIMEOUT      = "queue.shard.counter.write-timeout";
 
     String QUEUE_MESSAGE_COUNTER_MAX_IN_MEMORY    = "queue.message.counter.max-in-memory";
+
     String QUEUE_MESSAGE_COUNTER_WRITE_TIMEOUT    = "queue.message.counter.write-timeout";
 
     String QUEUE_SHARD_ALLOCATION_CHECK_FREQUENCY = "queue.shard.allocation.check.frequency.millis";
@@ -67,8 +73,6 @@ public interface QakkaFig extends GuicyFig, Serializable {
     String QUEUE_LONG_POLL_TIME_MILLIS            = "queue.long.polling.time.millis";
 
     String QUEUE_MAX_TTL                          = "queue.max.ttl";
-
-    String QUEUE_IN_MEMORY                        = "queue.in-memory.cache";
 
 
 
@@ -172,4 +176,8 @@ public interface QakkaFig extends GuicyFig, Serializable {
     @Key(QUEUE_IN_MEMORY)
     @Default("false")
     boolean getInMemoryCache();
+
+    @Key(QUEUE_IN_MEMORY_REFRESH_ASYNC)
+    @Default("true")
+    boolean getInMemoryRefreshAsync();
 }

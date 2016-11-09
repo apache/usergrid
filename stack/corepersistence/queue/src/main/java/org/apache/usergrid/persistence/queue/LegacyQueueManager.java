@@ -63,13 +63,13 @@ public interface LegacyQueueManager {
      * @param body
      * @throws IOException
      */
-    <T extends Serializable> void sendMessage(T body)throws IOException;
+    <T extends Serializable> void sendMessageToLocalRegion(T body)throws IOException;
 
     /**
      * Send a messae to the topic to be sent to other queues
      * @param body
      */
-    <T extends Serializable> void sendMessageToTopic(T body) throws IOException;
+    <T extends Serializable> void sendMessageToAllRegions(T body) throws IOException;
 
     /**
      * purge messages

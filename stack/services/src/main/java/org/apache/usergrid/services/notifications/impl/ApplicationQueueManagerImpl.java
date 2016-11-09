@@ -356,7 +356,7 @@ public class ApplicationQueueManagerImpl implements ApplicationQueueManager {
                             if(logger.isTraceEnabled()) {
                                 logger.trace("Queueing notification message for device: {}", message.get().getDeviceId());
                             }
-                            qm.sendMessage( message.get() );
+                            qm.sendMessageToLocalRegion( message.get() );
                             queueMeter.mark();
                         }
 
