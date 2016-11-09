@@ -57,15 +57,15 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
     private final CassandraConfig cassandraConfig;
     private final long writeTimeout;
 
-    final static String TABLE_MESSAGE_COUNTERS = "message_counters";
-    final static String COLUMN_QUEUE_NAME      = "queue_name";
-    final static String COLUMN_COUNTER_VALUE   = "counter_value";
-    final static String COLUMN_MESSAGE_TYPE    = "message_type";
+    private final static String TABLE_MESSAGE_COUNTERS = "message_counters";
+    private final static String COLUMN_QUEUE_NAME      = "queue_name";
+    private final static String COLUMN_COUNTER_VALUE   = "counter_value";
+    private final static String COLUMN_MESSAGE_TYPE    = "message_type";
 
     // design note: counters based on DataStax example here:
     // https://docs.datastax.com/en/cql/3.1/cql/cql_using/use_counter_t.html
 
-    static final String CQL =
+    private static final String CQL =
         "CREATE TABLE IF NOT EXISTS message_counters ( " +
                 "counter_value counter, " +
                 "queue_name    varchar, " +
@@ -75,11 +75,11 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
 
 
     /** number of changes since last save to database */
-    final AtomicInteger numChanges = new AtomicInteger( 0 );
+    private final AtomicInteger numChanges = new AtomicInteger( 0 );
 
-    final long maxChangesBeforeSave;
+    private final long maxChangesBeforeSave;
 
-    class InMemoryCount {
+    private class InMemoryCount {
         long baseCount;
         final AtomicLong totalInMemoryCount = new AtomicLong( 0L ); // for testing using only in-memory counter
         final AtomicLong increment = new AtomicLong( 0L );
@@ -103,7 +103,7 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
         public long getDecrement() {
             return decrement.get();
         }
-        public void clearDeltas() {
+        private void clearDeltas() {
             this.increment.set( 0L );
             this.decrement.set( 0L );
         }
@@ -125,7 +125,7 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
         }
     }
 
-    private Map<String, InMemoryCount> inMemoryCounters = new ConcurrentHashMap<>(200);
+    private final Map<String, InMemoryCount> inMemoryCounters = new ConcurrentHashMap<>(200);
 
 
     @Inject
@@ -174,7 +174,7 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
         if ( logger.isDebugEnabled() ) {
             long value = inMemoryCounters.get( key ).value();
             if (value <= 0) {
-                logger.debug( "Queue {} type {} decremented count = {}", queueName, type, value );
+                logger.debug( "Queue {} type {} incremented {} count = {}", queueName, type, increment, value );
             }
         }
     }
@@ -200,7 +200,7 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
             }
         }
 
-        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+        final InMemoryCount inMemoryCount = inMemoryCounters.get( key );
 
         synchronized ( inMemoryCount ) {
             inMemoryCount.decrement( decrement );
@@ -285,7 +285,7 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
     }
 
 
-    void incrementCounterInStorage( String queueName, DatabaseQueueMessage.Type type, long increment ) {
+    private void incrementCounterInStorage( String queueName, DatabaseQueueMessage.Type type, long increment ) {
 
         Statement update = QueryBuilder.update( TABLE_MESSAGE_COUNTERS )
                 .where( QueryBuilder.eq(   COLUMN_QUEUE_NAME, queueName ) )
@@ -295,7 +295,7 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
     }
 
 
-    void decrementCounterInStorage( String queueName, DatabaseQueueMessage.Type type, long decrement ) {
+    private void decrementCounterInStorage( String queueName, DatabaseQueueMessage.Type type, long decrement ) {
 
         Statement update = QueryBuilder.update( TABLE_MESSAGE_COUNTERS )
             .where( QueryBuilder.eq(   COLUMN_QUEUE_NAME, queueName ) )
@@ -305,7 +305,7 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
     }
 
 
-    Long retrieveCounterFromStorage( String queueName, DatabaseQueueMessage.Type type ) {
+    private Long retrieveCounterFromStorage( String queueName, DatabaseQueueMessage.Type type ) {
 
         Statement query = QueryBuilder.select().from( TABLE_MESSAGE_COUNTERS )
                 .where( QueryBuilder.eq( COLUMN_QUEUE_NAME, queueName ) )

@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.qakka.distributed.actors;
 import akka.actor.UntypedActor;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.qakka.MetricsService;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
@@ -42,6 +43,8 @@ import java.util.UUID;
 
 public class QueueTimeouter extends UntypedActor {
     private static final Logger logger = LoggerFactory.getLogger( QueueTimeouter.class );
+
+    private final String name = RandomStringUtils.randomAlphanumeric( 4 );
 
     private final QueueMessageSerialization messageSerialization;
     private final MetricsService            metricsService;
@@ -105,7 +108,7 @@ public class QueueTimeouter extends UntypedActor {
                 }
 
                 if (count > 0) {
-                    logger.debug( "Timed out {} messages for queue {}", count, queueName );
+                    logger.debug( "{}: Timed out {} messages for queue {}", name, count, queueName );
                 }
 
             } finally {

@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.qakka.distributed.actors;
 import akka.actor.UntypedActor;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.persistence.qakka.MetricsService;
 import org.apache.usergrid.persistence.qakka.core.QakkaUtils;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
@@ -44,6 +45,8 @@ public class QueueWriter extends UntypedActor {
     private static final Logger logger = LoggerFactory.getLogger( QueueWriter.class );
 
     public enum WriteStatus { SUCCESS_XFERLOG_DELETED, SUCCESS_XFERLOG_NOTDELETED, ERROR };
+
+    private final String name = RandomStringUtils.randomAlphanumeric( 4 );
 
     private final QueueMessageSerialization messageSerialization;
     private final TransferLogSerialization  transferLogSerialization;
@@ -97,8 +100,8 @@ public class QueueWriter extends UntypedActor {
 
                     messageSerialization.writeMessage( dbqm );
 
-                    //logger.debug("Wrote queue message id {} to queue name {}",
-                    //        dbqm.getQueueMessageId(), dbqm.getQueueName());
+                    logger.trace("{}: Wrote queue message id {} to queue name {}",
+                            name, dbqm.getQueueMessageId(), dbqm.getQueueName());
 
                 } catch (Throwable t) {
                     logger.debug("Error creating database queue message", t);

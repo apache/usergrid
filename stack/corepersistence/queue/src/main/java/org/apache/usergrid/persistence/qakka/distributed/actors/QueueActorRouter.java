@@ -114,7 +114,7 @@ public class QueueActorRouter extends UntypedActor {
 
             if ( timeoutSchedulersByQueueName.get( queueName ) == null) {
                 Cancellable scheduler = getContext().system().scheduler().schedule(
-                    Duration.create( 0, TimeUnit.MILLISECONDS ),
+                    Duration.create( 0, TimeUnit.SECONDS ),
                     Duration.create( qakkaFig.getQueueTimeoutSeconds() / 2, TimeUnit.SECONDS ),
                     self(),
                     new QueueTimeoutRequest( queueName ),
