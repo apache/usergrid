@@ -65,13 +65,13 @@ public class ImportQueueManager implements LegacyQueueManager {
 
 
     @Override
-    public <T extends Serializable> void sendMessage( final T body ) throws IOException {
+    public <T extends Serializable> void sendMessageToLocalRegion(final T body ) throws IOException {
 
     }
 
 
     @Override
-    public <T extends Serializable> void sendMessageToTopic( final T body ) throws IOException {
+    public <T extends Serializable> void sendMessageToAllRegions(final T body ) throws IOException {
 
     }
 

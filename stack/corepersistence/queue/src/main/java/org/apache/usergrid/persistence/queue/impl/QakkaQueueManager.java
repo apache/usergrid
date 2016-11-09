@@ -21,12 +21,9 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.*;
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
-import org.apache.usergrid.persistence.qakka.serialization.queuemessages.MessageCounterSerialization;
-import org.apache.usergrid.persistence.queue.LegacyQueueFig;
 import org.apache.usergrid.persistence.queue.LegacyQueueManager;
 import org.apache.usergrid.persistence.queue.LegacyQueueMessage;
 import org.apache.usergrid.persistence.queue.LegacyQueueScope;
@@ -77,10 +74,7 @@ public class QakkaQueueManager implements LegacyQueueManager {
     }
 
 
-    @Override
-    public <T extends Serializable> void sendMessage(T body) throws IOException {
-
-        logger.debug( "Sending message to queue {} region {}", this.scope.getRegionImplementation().name() );
+    private <T extends Serializable> void doSendMessage( T body, List<String> regions ) throws IOException {
 
         createQueueIfNecessary();
 
@@ -93,7 +87,7 @@ public class QakkaQueueManager implements LegacyQueueManager {
 
         queueMessageManager.sendMessages(
             scope.getName(),
-            regions.getRegions( scope.getRegionImplementation().name() ),
+            regions,
             null, // delay millis
             null, // expiration seconds
             "application/octet-stream",
@@ -102,8 +96,18 @@ public class QakkaQueueManager implements LegacyQueueManager {
 
 
     @Override
-    public <T extends Serializable> void sendMessageToTopic(T body) throws IOException {
-        sendMessage( body );
+    public <T extends Serializable> void sendMessageToLocalRegion(T body) throws IOException {
+        List<String> regionsList = regions.getRegions( Regions.LOCAL );
+        logger.trace( "Sending message to queue {} local region {}", scope.getName(), regionsList );
+        doSendMessage( body, regionsList );
+    }
+
+
+    @Override
+    public <T extends Serializable> void sendMessageToAllRegions(T body) throws IOException {
+        List<String> regionsList = regions.getRegions( Regions.ALL );
+        logger.trace( "Sending message to queue {} all regions {}", scope.getName(), regionsList );
+        doSendMessage( body, regionsList );
     }
 
 
@@ -175,7 +179,7 @@ public class QakkaQueueManager implements LegacyQueueManager {
     public void sendMessages( List bodies ) throws IOException {
 
         for ( Object body : bodies ) {
-            sendMessage( (Serializable)body );
+            sendMessageToLocalRegion( (Serializable)body );
         }
 
     }

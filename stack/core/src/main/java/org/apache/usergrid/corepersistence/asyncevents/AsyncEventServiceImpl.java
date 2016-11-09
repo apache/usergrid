@@ -200,7 +200,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         try {
             //signal to SQS
-            this.queue.sendMessage( operation );
+            this.queue.sendMessageToLocalRegion( operation );
         } catch (IOException e) {
             throw new RuntimeException("Unable to queue message", e);
         } finally {
@@ -215,9 +215,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         try {
             //signal to SQS
             if (forUtilityQueue) {
-                this.utilityQueue.sendMessageToTopic(operation);
+                this.utilityQueue.sendMessageToAllRegions(operation);
             } else {
-                this.queue.sendMessageToTopic(operation);
+                this.queue.sendMessageToAllRegions(operation);
             }
         }
         catch ( IOException e ) {
@@ -461,6 +461,11 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     public void queueInitializeApplicationIndex( final ApplicationScope applicationScope) {
         IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(
             applicationScope);
+
+
+        logger.trace("Offering InitializeApplicationIndexEvent for {}:{}",
+            applicationScope.getApplication().getUuid(), applicationScope.getApplication().getType());
+
         offerTopic( new InitializeApplicationIndexEvent( queueFig.getPrimaryRegion(),
             new ReplicatedIndexLocationStrategy( indexLocationStrategy ) ), false);
     }
@@ -471,7 +476,11 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                        final Entity entity, long updatedAfter) {
 
 
-        offer(new EntityIndexEvent(queueFig.getPrimaryRegion(),new EntityIdScope(applicationScope, entity.getId()), 0));
+        logger.trace("Offering EntityIndexEvent for {}:{}",
+            entity.getId().getUuid(), entity.getId().getType());
+
+        offer(new EntityIndexEvent(queueFig.getPrimaryRegion(),
+            new EntityIdScope(applicationScope, entity.getId()), 0));
 
         final EntityIndexOperation entityIndexOperation =
             new EntityIndexOperation( applicationScope, entity.getId(), updatedAfter);
@@ -517,6 +526,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                              final Entity entity,
                              final Edge newEdge) {
 
+        logger.trace("Offering EdgeIndexEvent for edge type {} entity {}:{}",
+            newEdge.getType(), entity.getId().getUuid(), entity.getId().getType());
+
         offer( new EdgeIndexEvent( queueFig.getPrimaryRegion(), applicationScope, entity.getId(), newEdge ));
 
     }
@@ -548,6 +560,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     @Override
     public void queueDeleteEdge(final ApplicationScope applicationScope,
                                 final Edge edge) {
+
+        logger.trace("Offering EdgeDeleteEvent for type {} to target {}:{}",
+            edge.getType(), edge.getTargetNode().getUuid(), edge.getTargetNode().getType());
 
         // sent in region (not offerTopic) as the delete IO happens in-region, then queues a multi-region de-index op
         offer( new EdgeDeleteEvent( queueFig.getPrimaryRegion(), applicationScope, edge ) );
@@ -609,6 +624,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             new ElasticsearchIndexEvent(queueFig.getPrimaryRegion(), newMessageId );
 
         //send to the topic so all regions index the batch
+
+        logger.trace("Offering ElasticsearchIndexEvent for message {}", newMessageId );
 
         offerTopic( elasticsearchIndexEvent, forUtilityQueue );
     }
@@ -678,6 +695,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     public void queueDeIndexOldVersion(final ApplicationScope applicationScope, final Id entityId, UUID markedVersion) {
 
         // queue the de-index of old versions to the topic so cleanup happens in all regions
+
+        logger.trace("Offering DeIndexOldVersionsEvent for app {} {}:{}",
+            applicationScope.getApplication().getUuid(), entityId.getUuid(), entityId.getType());
+
         offerTopic( new DeIndexOldVersionsEvent( queueFig.getPrimaryRegion(),
             new EntityIdScope( applicationScope, entityId), markedVersion), false);
 
@@ -735,6 +756,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     @Override
     public void queueEntityDelete(final ApplicationScope applicationScope, final Id entityId) {
+
+        logger.trace("Offering EntityDeleteEvent for {}:{}", entityId.getUuid(), entityId.getType());
 
         // sent in region (not offerTopic) as the delete IO happens in-region, then queues a multi-region de-index op
         offer( new EntityDeleteEvent(queueFig.getPrimaryRegion(), new EntityIdScope( applicationScope, entityId ) ) );
@@ -894,7 +917,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                                          submitToIndex( indexEventResults, isUtilityQueue );
 
                                                      if ( messagesToAck.size() < messages.size() ) {
-                                                         logger.warn( "Missing {} message(s) from index processing",
+                                                         logger.warn(
+                                                             "Missing {} message(s) from index processing",
                                                             messages.size() - messagesToAck.size() );
                                                      }
 
@@ -916,6 +940,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                                      //do not rethrow so we can process all of them
                                                  }
                                              } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
+
                             //end flatMap
                         }, indexProcessorFig.getEventConcurrencyFactor() );
 
@@ -982,6 +1007,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                 new EntityIdScope(e.getApplicationScope(), e.getEdge().getTargetNode()), updatedSince));
 
         });
+
+        logger.trace("Offering batch of EntityIndexEvent of size {}", batch.size());
 
         offerBatch( batch, forUtilityQueue );
     }

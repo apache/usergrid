@@ -539,7 +539,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
 
 
     @Override
-    public <T extends Serializable> void sendMessageToTopic( final T body ) throws IOException {
+    public <T extends Serializable> void sendMessageToAllRegions(final T body ) throws IOException {
         if ( snsAsync == null ) {
             logger.error( "SNS client is null, perhaps it failed to initialize successfully" );
             return;
@@ -582,13 +582,13 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
         }
 
         for ( Object body : bodies ) {
-            sendMessage( ( Serializable ) body );
+            sendMessageToLocalRegion( ( Serializable ) body );
         }
     }
 
 
     @Override
-    public <T extends Serializable> void sendMessage( final T body ) throws IOException {
+    public <T extends Serializable> void sendMessageToLocalRegion(final T body ) throws IOException {
 
         if ( sqsAsync == null ) {
             logger.error( "SQS client is null, perhaps it failed to initialize successfully" );
