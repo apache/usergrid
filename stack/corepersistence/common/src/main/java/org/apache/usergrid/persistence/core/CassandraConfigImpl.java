@@ -27,6 +27,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.model.ConsistencyLevel;
 import org.apache.log4j.lf5.viewer.categoryexplorer.CategoryPath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -35,6 +37,7 @@ import org.apache.log4j.lf5.viewer.categoryexplorer.CategoryPath;
  */
 @Singleton
 public class CassandraConfigImpl implements CassandraConfig {
+    private static final Logger logger = LoggerFactory.getLogger( CassandraConfigImpl.class );
 
     private CassandraFig cassandraFig;
 
@@ -78,6 +81,9 @@ public class CassandraConfigImpl implements CassandraConfig {
         this.applicationLocalKeyspace =
               cassandraFig.getApplicationLocalKeyspace() + "_"
             + cassandraFig.getLocalDataCenter().replace("-", "_");
+
+        logger.info("Application Keyspace: {}", applicationKeyspace);
+        logger.info("Application Local Keyspace: {}", applicationLocalKeyspace);
 
         //add the listeners to update the values
         cassandraFig.addPropertyChangeListener( new PropertyChangeListener() {

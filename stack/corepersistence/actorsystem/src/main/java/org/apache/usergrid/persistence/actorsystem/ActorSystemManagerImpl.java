@@ -396,7 +396,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
 
     /**
-     * Create RequestActor for each region.
+     * Create ClientActor for each region.
      */
     private void createClientActors( ActorSystem system ) {
 
@@ -438,7 +438,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
     private void waitForClientActor( ActorRef ra ) {
 
-        logger.info( "Waiting on RequestActor [{}]...", ra.path() );
+        logger.info( "Waiting on ClientActor [{}]...", ra.path() );
 
         started = false;
 
@@ -455,19 +455,19 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                     started = true;
                     break;
                 }
-                logger.info( "Waiting for RequestActor [{}] region [{}] for [{}s]", ra.path(), currentRegion, retries );
+                logger.info( "Waiting for ClientActor [{}] region [{}] for [{}s]", ra.path(), currentRegion, retries );
                 Thread.sleep( 1000 );
 
             } catch (Exception e) {
-                logger.error( "Error: Timeout waiting for RequestActor [{}]", ra.path() );
+                logger.error( "Error: Timeout waiting for ClientActor [{}]", ra.path() );
             }
             retries++;
         }
 
         if (started) {
-            logger.info( "RequestActor [{}] has started", ra.path() );
+            logger.info( "ClientActor [{}] has started", ra.path() );
         } else {
-            throw new RuntimeException( "RequestActor ["+ra.path()+"] did not start in time" );
+            throw new RuntimeException( "ClientActor ["+ra.path()+"] did not start in time" );
         }
     }
 

@@ -82,7 +82,7 @@ public class ClientActor extends UntypedActor {
             ActorSelection service = getContext().actorSelection( address + routerPath );
             service.tell( message, getSender() );
 
-        } else if ( routerPath != null && !ready ) {
+        } else if ( routerPath != null ) {
 
             logger.debug("{} responding with status unknown", name);
             getSender().tell( new ErrorResponse("ClientActor not ready"), getSender() );

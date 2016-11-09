@@ -47,6 +47,7 @@ import scala.concurrent.Future;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 
 @Singleton
@@ -269,7 +270,7 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
                         logger.debug("ERROR RESPONSE (1) popping queue {}, retrying {}", queueName, tries );
 
                     } else {
-                        logger.debug("TIMEOUT popping from queue {}, retrying {}", queueName, tries );
+                        logger.trace("TIMEOUT popping from queue {}, retrying {}", queueName, tries );
                     }
 
                 } else if ( responseObject instanceof ClientActor.ErrorResponse ) {
@@ -282,8 +283,11 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
                     logger.debug("UNKNOWN RESPONSE popping queue {}, retrying {}", queueName, tries );
                 }
 
+            } catch ( TimeoutException e ) {
+                logger.trace("TIMEOUT popping to queue " + queueName + " retrying " + tries, e );
+
             } catch ( Exception e ) {
-                logger.error("ERROR popping to queue " + queueName + " retrying " + tries, e );
+                logger.debug("ERROR popping to queue " + queueName + " retrying " + tries, e );
             }
         }
 
@@ -335,11 +339,14 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
                     return qprm.getStatus();
 
                 } else if ( response != null  ) {
-                    logger.debug("ERROR RESPONSE sending message, retrying {}", retries );
+                    logger.debug("UNKNOWN RESPONSE sending message, retrying {}", retries );
 
                 } else {
-                    logger.debug("TIMEOUT sending message, retrying {}", retries );
+                    logger.trace("TIMEOUT sending message, retrying {}", retries );
                 }
+
+            } catch ( TimeoutException e ) {
+                logger.trace( "TIMEOUT sending message, retrying " + retries, e );
 
             } catch ( Exception e ) {
                 logger.debug("ERROR sending message, retrying " + retries, e );
