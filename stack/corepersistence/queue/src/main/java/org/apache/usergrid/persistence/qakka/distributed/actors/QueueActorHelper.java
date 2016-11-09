@@ -22,7 +22,9 @@ package org.apache.usergrid.persistence.qakka.distributed.actors;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.qakka.MetricsService;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.core.CassandraClient;
@@ -45,6 +47,8 @@ import java.util.*;
 public class QueueActorHelper {
     private static final Logger logger = LoggerFactory.getLogger( QueueActorHelper.class );
 
+    private final String name = RandomStringUtils.randomAlphanumeric( 4 );
+
     private final ActorSystemFig            actorSystemFig;
     private final QueueMessageSerialization messageSerialization;
     private final AuditLogSerialization     auditLogSerialization;
@@ -53,7 +57,9 @@ public class QueueActorHelper {
     private final MetricsService            metricsService;
     private final CassandraClient           cassandraClient;
 
-    Map<String, Long> startingShards = new HashMap<>();
+    private Map<String, Long> startingShards = new HashMap<>();
+    private Map<String, Long> lastRefreshTimeMillis = new HashMap<>();
+    private Map<String, UUID> newestFetchedUuid = new HashMap<>();
 
 
     @Inject
@@ -106,7 +112,7 @@ public class QueueActorHelper {
     }
 
 
-    Collection<DatabaseQueueMessage> getMessagesFromMemory(String queueName, int numRequested ) {
+    private Collection<DatabaseQueueMessage> getMessagesFromMemory(String queueName, int numRequested ) {
 
         Collection<DatabaseQueueMessage> queueMessages = new ArrayList<>();
 
@@ -131,28 +137,30 @@ public class QueueActorHelper {
     }
 
 
-    Collection<DatabaseQueueMessage> getMessagesFromStorage(String queueName, int numRequested ) {
+    private Collection<DatabaseQueueMessage> getMessagesFromStorage(String queueName, int numRequested ) {
 
         Collection<DatabaseQueueMessage> queueMessages = new ArrayList<>();
 
-        final Optional shardIdOptional;
-        final String shardKey =
-            createShardKey( queueName, Shard.Type.DEFAULT, actorSystemFig.getRegionLocal() );
+//        final Optional shardIdOptional;
+//        final String shardKey =
+//            createShardKey( queueName, Shard.Type.DEFAULT, actorSystemFig.getRegionLocal() );
+//
+//        Long shardId = startingShards.get( shardKey );
+//        if ( shardId != null ) {
+//            shardIdOptional = Optional.of( shardId );
+//        } else {
+//            shardIdOptional = Optional.empty();
+//        }
 
-        Long shardId = startingShards.get( shardKey );
-        if ( shardId != null ) {
-            shardIdOptional = Optional.of( shardId );
-        } else {
-            shardIdOptional = Optional.empty();
-        }
+        UUID since = newestFetchedUuid.get( queueName );
 
         String region = actorSystemFig.getRegionLocal();
 
         ShardIterator shardIterator = new ShardIterator(
-            cassandraClient, queueName, region, Shard.Type.DEFAULT, shardIdOptional );
+            cassandraClient, queueName, region, Shard.Type.DEFAULT, Optional.empty() );
 
         MultiShardMessageIterator multiShardIterator = new MultiShardMessageIterator(
-            cassandraClient, queueName, region, DatabaseQueueMessage.Type.DEFAULT, shardIterator, null);
+            cassandraClient, queueName, region, DatabaseQueueMessage.Type.DEFAULT, shardIterator, since);
 
         int count = 0;
 
@@ -160,16 +168,22 @@ public class QueueActorHelper {
             DatabaseQueueMessage queueMessage = multiShardIterator.next();
 
             if ( queueMessage != null && putInflight( queueMessage ) ) {
+                long timestamp = queueMessage.getQueueMessageId().timestamp();
+                if ( since != null && timestamp > since.timestamp() ) {
+                    since = queueMessage.getQueueMessageId();
+                }
                 queueMessages.add( queueMessage );
                 count++;
             }
         }
 
-        Shard currentShard = multiShardIterator.getCurrentShard();
-        if ( currentShard != null ) {
-            shardId = currentShard.getShardId();
-            startingShards.put( shardKey, shardId );
-        }
+        newestFetchedUuid.put( queueName, since );
+
+//        Shard currentShard = multiShardIterator.getCurrentShard();
+//        if ( currentShard != null ) {
+//            shardId = currentShard.getShardId();
+//            startingShards.put( shardKey, shardId );
+//        }
 
         //logger.debug("{} returning {} for queue {}", this, queueMessages.size(), queueName);
         return queueMessages;
@@ -273,6 +287,13 @@ public class QueueActorHelper {
 
             if (inMemoryQueue.size( queueName ) < qakkaFig.getQueueInMemorySize()) {
 
+                // if queue has not been refreshed in 5 x queue refresh time, then consider it stale
+                long now = System.currentTimeMillis();
+                Long lastRefreshed = lastRefreshTimeMillis.get( queueName );
+                if ( lastRefreshed != null && now - lastRefreshed > qakkaFig.getQueueRefreshMilliseconds() * 5 ) {
+                    inMemoryQueue.clear( queueName );
+                }
+
                 final Optional shardIdOptional;
                 final String shardKey =
                     createShardKey( queueName, Shard.Type.DEFAULT, actorSystemFig.getRegionLocal() );
@@ -289,13 +310,11 @@ public class QueueActorHelper {
                     Shard.Type.DEFAULT, shardIdOptional );
 
                 UUID since = inMemoryQueue.getNewest( queueName );
-
                 String region = actorSystemFig.getRegionLocal();
 
                 MultiShardMessageIterator multiShardIterator = new MultiShardMessageIterator(
                     cassandraClient, queueName, region, DatabaseQueueMessage.Type.DEFAULT,
                     shardIterator, since);
-
 
                 int need = qakkaFig.getQueueInMemorySize() - inMemoryQueue.size( queueName );
                 int count = 0;
@@ -306,14 +325,15 @@ public class QueueActorHelper {
                     count++;
                 }
 
-                Shard currentShard = multiShardIterator.getCurrentShard();
-                if ( currentShard != null ) {
-                    shardId = currentShard.getShardId();
-                    startingShards.put( shardKey, shardId );
-                }
+                startingShards.put( shardKey, shardId );
 
-                logger.trace("Refreshed queue {} region {} shard {} since {} found {}",
-                    queueName, region, shardId, since, count );
+                lastRefreshTimeMillis.put( queueName, System.currentTimeMillis() );
+
+                if ( count > 0 ) {
+                    Object shard = shardIdOptional.isPresent() ? shardIdOptional.get() : "null";
+                    logger.trace( "Refreshed queue {} region {} shard {} since {} found {} inmemory {}",
+                        queueName, region, shard, since, count, inMemoryQueue.size( queueName ) );
+                }
             }
 
         } finally {
