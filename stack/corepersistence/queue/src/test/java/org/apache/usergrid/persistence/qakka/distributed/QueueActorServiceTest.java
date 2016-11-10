@@ -125,7 +125,6 @@ public class QueueActorServiceTest extends AbstractTest {
         DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
         QueueMessageSerialization serialization         = injector.getInstance( QueueMessageSerialization.class );
         TransferLogSerialization xferLogSerialization   = injector.getInstance( TransferLogSerialization.class );
-        InMemoryQueue inMemoryQueue                     = injector.getInstance( InMemoryQueue.class );
         QueueMessageManager queueMessageManager         = injector.getInstance( QueueMessageManager.class );
 
         String queueName = "queue_testGetMultipleQueueMessages_" + UUID.randomUUID();
@@ -186,4 +185,70 @@ public class QueueActorServiceTest extends AbstractTest {
             queueManager.deleteQueue( queueName );
         }
     }
+
+
+    @Test
+    public void testQueueMessageCounter() throws InterruptedException {
+
+        Injector injector = getInjector();
+
+        ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
+        String region = actorSystemFig.getRegionLocal();
+
+        App app = injector.getInstance( App.class );
+        app.start("localhost", getNextAkkaPort(), region);
+
+        DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
+        QueueMessageSerialization serialization         = injector.getInstance( QueueMessageSerialization.class );
+        TransferLogSerialization xferLogSerialization   = injector.getInstance( TransferLogSerialization.class );
+        QueueMessageManager queueMessageManager         = injector.getInstance( QueueMessageManager.class );
+
+        String queueName = "queue_testGetMultipleQueueMessages_" + UUID.randomUUID();
+        QueueManager queueManager = injector.getInstance( QueueManager.class );
+
+        try {
+
+            queueManager.createQueue(
+                new Queue( queueName, "test-type", region, region, 0L, 5, 10, null ) );
+
+            UUID messageId = UUIDGen.getTimeUUID();
+
+            final String data = "my test data";
+            final DatabaseQueueMessageBody messageBody = new DatabaseQueueMessageBody(
+                DataType.serializeValue( data, ProtocolVersion.NEWEST_SUPPORTED ), "text/plain" );
+            serialization.writeMessageData( messageId, messageBody );
+
+            xferLogSerialization.recordTransferLog(
+                queueName, actorSystemFig.getRegionLocal(), region, messageId );
+
+            distributedQueueService.sendMessageToRegion(
+                queueName, region, region, messageId, null, null );
+
+            DatabaseQueueMessage.Type type = DatabaseQueueMessage.Type.DEFAULT;
+
+            Thread.sleep(5000);
+
+            int maxRetries = 10;
+            int retries = 0;
+            long count = 0;
+            while (retries++ < maxRetries) {
+                distributedQueueService.refresh();
+                count = queueMessageManager.getQueueDepth(  queueName, type );
+                if ( count > 0 ) {
+                    break;
+                }
+                Thread.sleep( 1000 );
+            }
+
+            Thread.sleep( 1000 );
+
+            Assert.assertEquals( 1, queueMessageManager.getQueueDepth( queueName, type ) );
+
+            distributedQueueService.shutdown();
+
+        } finally {
+            queueManager.deleteQueue( queueName );
+        }
+    }
+
 }
