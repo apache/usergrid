@@ -191,7 +191,7 @@ public class QueueSystemResource extends AbstractContextResource {
         @PathParam("queueName") String queueName,
         @QueryParam("callback") @DefaultValue("callback") String callback ) {
 
-        logger.debug("DMJ_TEMP clearQueue");
+        logger.debug("clearQueue");
 
         QueueManager queueManager = injector.getInstance( QueueManager.class );
         QueueMessageManager queueMessageManager = injector.getInstance( QueueMessageManagerImpl.class );

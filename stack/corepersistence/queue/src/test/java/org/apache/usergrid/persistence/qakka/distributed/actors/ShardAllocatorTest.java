@@ -212,8 +212,8 @@ public class ShardAllocatorTest extends AbstractTest {
 
             // Test that approximately right number of shards created
             int shardCount = countShards( cassandraClient, shardCounterSer, queueName, region, Shard.Type.DEFAULT );
-            Assert.assertTrue( "shards > 7", shardCount > 7 );
-            Assert.assertTrue( "shards < 17", shardCount < 17 );
+            Assert.assertTrue( shardCount + " is too few shards", shardCount > 7 );
+            Assert.assertTrue( shardCount + " is too many shards", shardCount < 17 );
 
         } finally {
             queueManager.deleteQueue( queueName );
