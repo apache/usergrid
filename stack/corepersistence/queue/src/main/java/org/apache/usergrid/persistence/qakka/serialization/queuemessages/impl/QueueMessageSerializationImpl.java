@@ -89,7 +89,14 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
                 "queued_at        bigint, " +
                 "inflight_at      bigint, " +
                 "PRIMARY KEY ((queue_name, region, shard_id), queue_message_id ) " +
-                ") WITH CLUSTERING ORDER BY (queue_message_id ASC); ";
+                ") WITH CLUSTERING ORDER BY (queue_message_id ASC) AND " +
+                    "gc_grace_seconds = 60 AND " +
+                    "compaction = {'class': " + "'LeveledCompactionStrategy', " +
+                        "'sstable_size_in_mb': 5, " +
+                        "'tombstone_compaction_interval': 60, " +
+                        "'tombstone_threshold': 0.05, " +
+                        "'unchecked_tombstone_compaction': true" +
+                    "};";
 
     static final String MESSAGES_INFLIGHT =
         "CREATE TABLE IF NOT EXISTS messages_inflight ( " +
@@ -101,7 +108,14 @@ public class QueueMessageSerializationImpl implements QueueMessageSerialization 
                 "queued_at        bigint, " +
                 "inflight_at      bigint, " +
                 "PRIMARY KEY ((queue_name, region, shard_id), queue_message_id ) " +
-                ") WITH CLUSTERING ORDER BY (queue_message_id ASC); ";
+                ") WITH CLUSTERING ORDER BY (queue_message_id ASC) AND " +
+                    "gc_grace_seconds = 60 AND " +
+                        "compaction = {'class': " + "'LeveledCompactionStrategy', " +
+                        "'sstable_size_in_mb': 5, " +
+                        "'tombstone_compaction_interval': 60, " +
+                        "'tombstone_threshold': 0.05, " +
+                        "'unchecked_tombstone_compaction': true" +
+                    "};";
 
     static final String MESSAGE_DATA =
         "CREATE TABLE IF NOT EXISTS message_data ( " +
