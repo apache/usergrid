@@ -126,7 +126,7 @@ public class MultiKeyColumnNameIteratorTest {
 
             @Override
             public String getApplicationLocalKeyspace() {
-                return cassandraFig.getApplicationLocalKeyspace();
+                return cassandraFig.getApplicationKeyspace() + "us_east";
             }
 
 
