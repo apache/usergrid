@@ -123,7 +123,7 @@ public class ColumnNameIteratorTest {
 
             @Override
             public String getApplicationLocalKeyspace() {
-                return cassandraFig.getApplicationLocalKeyspace();
+                return cassandraFig.getApplicationKeyspace() + "us_east";
             }
 
             @Override

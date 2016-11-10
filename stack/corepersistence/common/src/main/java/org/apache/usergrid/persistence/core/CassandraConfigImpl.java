@@ -79,7 +79,7 @@ public class CassandraConfigImpl implements CassandraConfig {
         this.applicationKeyspace = cassandraFig.getApplicationKeyspace();
 
         this.applicationLocalKeyspace =
-              cassandraFig.getApplicationLocalKeyspace() + "_"
+              cassandraFig.getApplicationKeyspace() + "_"
             + cassandraFig.getLocalDataCenter().replace("-", "_");
 
         logger.info("Application Keyspace: {}", applicationKeyspace);
