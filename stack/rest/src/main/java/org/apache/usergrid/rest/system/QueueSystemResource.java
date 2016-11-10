@@ -113,16 +113,24 @@ public class QueueSystemResource extends AbstractContextResource {
             }
             SortedSet<String> names = metricsService.getMetricRegistry().getNames();
             for (String name : names) {
-                Timer t = metricsService.getMetricRegistry().timer( name );
-                put( name, new HashMap<String, Object>() {{
-                    put( "count", ""            + t.getCount() );
-                    put( "mean_rate", ""        + format.format( t.getMeanRate() ) );
-                    put( "one_minute_rate", ""  + format.format( t.getOneMinuteRate() ) );
-                    put( "five_minute_rate", "" + format.format( t.getFiveMinuteRate() ) );
-                    put( "mean (s)", ""         + format.format( t.getSnapshot().getMean() / nano ) );
-                    put( "min (s)", ""          + format.format( (double) t.getSnapshot().getMin() / nano ) );
-                    put( "max (s)", ""          + format.format( (double) t.getSnapshot().getMax() / nano ) );
-                }} );
+                Timer timer = null;
+                try { timer = metricsService.getMetricRegistry().timer( name ); } catch ( Exception e ) {}
+                if ( timer == null ) {
+                    put( name, new HashMap<String, Object>() {{
+                        put( name, "missing" );
+                    }} );
+                } else {
+                    final Timer t = timer;
+                    put( name, new HashMap<String, Object>() {{
+                        put( "count", "" + t.getCount() );
+                        put( "mean_rate", "" + format.format( t.getMeanRate() ) );
+                        put( "one_minute_rate", "" + format.format( t.getOneMinuteRate() ) );
+                        put( "five_minute_rate", "" + format.format( t.getFiveMinuteRate() ) );
+                        put( "mean (s)", "" + format.format( t.getSnapshot().getMean() / nano ) );
+                        put( "min (s)", "" + format.format( (double) t.getSnapshot().getMin() / nano ) );
+                        put( "max (s)", "" + format.format( (double) t.getSnapshot().getMax() / nano ) );
+                    }} );
+                }
             }
         }};
 
@@ -163,11 +171,15 @@ public class QueueSystemResource extends AbstractContextResource {
                 UUID newest = inMemoryQueue.getNewest( queueName );
                 queueInfo.put( "since", newest == null ? "null" : newest.timestamp() );
 
-                queueInfo.put( "depth",
-                    queueMessageManager.getQueueDepth( queueName, DatabaseQueueMessage.Type.DEFAULT ) );
-                queueInfo.put( "inflight",
-                    queueMessageManager.getQueueDepth( queueName, DatabaseQueueMessage.Type.INFLIGHT ) );
+                try {
+                    queueInfo.put( "depth",
+                        queueMessageManager.getQueueDepth( queueName, DatabaseQueueMessage.Type.DEFAULT ) );
+                } catch ( Exception intentionallyIgnored ) {}
 
+                try {
+                    queueInfo.put( "inflight",
+                        queueMessageManager.getQueueDepth( queueName, DatabaseQueueMessage.Type.INFLIGHT ) );
+                } catch ( Exception intentionallyIgnored ) {}
 
             } catch ( Exception e ) {
                 logger.error("Error getting queue info for queue: " + queueName, e);
