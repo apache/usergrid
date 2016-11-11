@@ -18,7 +18,7 @@ public interface LegacyQueueFig extends GuicyFig {
     /**
      * Primary region to use for Amazon queues.
      */
-    @Key( "usergrid.queue.region" )
+    @Key( "usergrid.cluster.region.local" )
     @Default("us-east-1")
     String getPrimaryRegion();
 
@@ -34,7 +34,7 @@ public interface LegacyQueueFig extends GuicyFig {
      * Comma-separated list of one or more Amazon regions to use if multiregion
      * is set to true.
      */
-    @Key( "usergrid.queue.regionList" )
+    @Key( "usergrid.cluster.region.list" )
     @Default("us-east-1")
     String getRegionList();
 
