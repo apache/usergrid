@@ -34,8 +34,8 @@ import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.impl.EsRunner;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
-import org.apache.usergrid.persistence.queue.QueueFig;
-import org.apache.usergrid.persistence.queue.QueueManagerFactory;
+import org.apache.usergrid.persistence.queue.LegacyQueueFig;
+import org.apache.usergrid.persistence.queue.LegacyQueueManagerFactory;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
 
@@ -53,13 +53,13 @@ public class AsyncEventServiceImplTest extends AsyncIndexServiceTest {
 
 
     @Inject
-    public QueueManagerFactory queueManagerFactory;
+    public LegacyQueueManagerFactory queueManagerFactory;
 
     @Inject
     public IndexProcessorFig indexProcessorFig;
 
     @Inject
-    public QueueFig queueFig;
+    public LegacyQueueFig queueFig;
 
 
     @Inject

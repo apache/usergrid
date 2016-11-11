@@ -19,25 +19,23 @@
 package org.apache.usergrid.persistence.core.migration.schema;
 
 
-import java.util.Collection;
-import java.util.Set;
-
 import com.datastax.driver.core.KeyspaceMetadata;
-import org.apache.usergrid.persistence.core.CassandraFig;
-import org.apache.usergrid.persistence.core.datastax.CQLUtils;
-import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
-import org.apache.usergrid.persistence.core.datastax.TableDefinition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
 import com.netflix.astyanax.ddl.KeyspaceDefinition;
+import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.datastax.CQLUtils;
+import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.Set;
 
 
 /**
@@ -75,6 +73,8 @@ public class MigrationManagerImpl implements MigrationManager {
 
             dataStaxCluster.createApplicationKeyspace();
 
+            dataStaxCluster.createApplicationLocalKeyspace();
+
             for ( Migration migration : migrations ) {
 
                 final Collection<MultiTenantColumnFamilyDefinition> columnFamilies = migration.getColumnFamilies();
@@ -85,7 +85,9 @@ public class MigrationManagerImpl implements MigrationManager {
                 if ((columnFamilies == null || columnFamilies.size() == 0) &&
                     (tables == null || tables.size() == 0)) {
                     logger.warn(
-                        "Class {} implements {} but returns null for getColumnFamilies and getTables for migration.  Either implement this method or remove the interface from the class",
+                        "Class {} implements {} but returns null for getColumnFamilies and " +
+                            "getTables for migration.  Either implement this method or remove " +
+                            "the interface from the class",
                         migration.getClass().getSimpleName(), Migration.class.getSimpleName());
                     continue;
                 }
@@ -143,22 +145,28 @@ public class MigrationManagerImpl implements MigrationManager {
     private void createTable(TableDefinition tableDefinition ) throws Exception {
 
         KeyspaceMetadata keyspaceMetadata = dataStaxCluster.getClusterSession().getCluster().getMetadata()
-            .getKeyspace(CQLUtils.quote(cassandraFig.getApplicationKeyspace()));
+            .getKeyspace(CQLUtils.quote( tableDefinition.getKeyspace() ) );
 
-        boolean exists =  keyspaceMetadata != null && keyspaceMetadata.getTable(tableDefinition.getTableName()) != null;
+        boolean exists =  keyspaceMetadata != null
+            && keyspaceMetadata.getTable( tableDefinition.getTableName() ) != null;
 
         if( exists ){
             return;
         }
 
-        String CQL = CQLUtils.getTableCQL(cassandraFig, tableDefinition, CQLUtils.ACTION.CREATE);
+        String CQL = tableDefinition.getTableCQL(cassandraFig, TableDefinition.ACTION.CREATE);
         if (logger.isDebugEnabled()) {
             logger.debug(CQL);
         }
-        dataStaxCluster.getApplicationSession()
-            .execute(CQL);
 
-        logger.info("Created table: {}", tableDefinition.getTableName());
+        if ( tableDefinition.getKeyspace().equals( cassandraFig.getApplicationKeyspace() )) {
+            dataStaxCluster.getApplicationSession().execute( CQL );
+        } else {
+            dataStaxCluster.getApplicationLocalSession().execute( CQL );
+        }
+
+        logger.info("Created table: {} in keyspace {}",
+            tableDefinition.getTableName(), tableDefinition.getKeyspace());
 
     }
 

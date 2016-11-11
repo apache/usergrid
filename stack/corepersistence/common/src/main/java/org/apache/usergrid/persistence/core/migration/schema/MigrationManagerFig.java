@@ -38,4 +38,8 @@ public interface MigrationManagerFig extends GuicyFig {
     @Default("replication_factor:1")
     String getStrategyOptions();
 
+    @Key( "collections.keyspace.strategy.options" )
+    @Default("replication_factor:1")
+    String getLocalStrategyOptions();
+
 }

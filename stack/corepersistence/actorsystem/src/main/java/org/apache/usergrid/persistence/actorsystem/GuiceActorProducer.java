@@ -25,11 +25,11 @@ import com.google.inject.Injector;
 
 public class GuiceActorProducer implements IndirectActorProducer {
 
-    final Injector injector;
+    public static Injector INJECTOR = null;
+
     final Class<? extends Actor> actorClass;
 
-    public GuiceActorProducer(Injector injector, Class<? extends Actor> actorClass) {
-        this.injector = injector;
+    public GuiceActorProducer(Class<? extends Actor> actorClass) {
         this.actorClass = actorClass;
     }
 
@@ -40,7 +40,7 @@ public class GuiceActorProducer implements IndirectActorProducer {
 
     @Override
     public Actor produce() {
-        return injector.getInstance( actorClass );
+        return INJECTOR.getInstance( actorClass );
     }
 }
 

@@ -313,7 +313,10 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                     }} );
 
                     put( "cluster", new HashMap<String, Object>() {{
-                        put( "max-nr-of-instances-per-node", numInstancesPerNode); // this sets default if router does not set
+
+                        // this sets default if router does not set
+                        put( "max-nr-of-instances-per-node", numInstancesPerNode);
+
                         put( "roles", Collections.singletonList("io") );
                         put( "seed-nodes", new ArrayList<String>() {{
                             for (String seed : seeds) {
@@ -337,6 +340,8 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                 routerProducer.addConfiguration( configMap );
             }
 
+            logger.debug("Actor system configMap: " + configMap );
+
             config = ConfigFactory.parseMap( configMap )
                 .withFallback( ConfigFactory.load( "application.conf" ) );
 
@@ -352,7 +357,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     /**
      * Create cluster system for this the current region
      */
-    private ActorSystem createClusterSystem( Config config ) {
+    private synchronized ActorSystem createClusterSystem( Config config ) {
 
         // there is only 1 akka system for a Usergrid cluster
         final String clusterName = getClusterName();
@@ -391,7 +396,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
 
     /**
-     * Create RequestActor for each region.
+     * Create ClientActor for each region.
      */
     private void createClientActors( ActorSystem system ) {
 
@@ -409,7 +414,8 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
             } else {
 
-                List<String> regionSeeds = getSeedsByRegion().get( region );
+                logger.info( "Creating clusterClient for region [{}]", region );
+
                 Set<ActorPath> seedPaths = new HashSet<>(20);
                 for ( String seed : getSeedsByRegion().get( region ) ) {
                     seedPaths.add( ActorPaths.fromString( seed + "/system/receptionist") );
@@ -432,7 +438,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
     private void waitForClientActor( ActorRef ra ) {
 
-        logger.info( "Waiting on RequestActor [{}]...", ra.path() );
+        logger.info( "Waiting on ClientActor [{}]...", ra.path() );
 
         started = false;
 
@@ -449,19 +455,19 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                     started = true;
                     break;
                 }
-                logger.info( "Waiting for RequestActor [{}] region [{}] for [{}s]", ra.path(), currentRegion, retries );
+                logger.info( "Waiting for ClientActor [{}] region [{}] for [{}s]", ra.path(), currentRegion, retries );
                 Thread.sleep( 1000 );
 
             } catch (Exception e) {
-                logger.error( "Error: Timeout waiting for RequestActor [{}]", ra.path() );
+                logger.error( "Error: Timeout waiting for ClientActor [{}]", ra.path() );
             }
             retries++;
         }
 
         if (started) {
-            logger.info( "RequestActor [{}] has started", ra.path() );
+            logger.info( "ClientActor [{}] has started", ra.path() );
         } else {
-            throw new RuntimeException( "RequestActor ["+ra.path()+"] did not start in time" );
+            throw new RuntimeException( "ClientActor ["+ra.path()+"] did not start in time" );
         }
     }
 

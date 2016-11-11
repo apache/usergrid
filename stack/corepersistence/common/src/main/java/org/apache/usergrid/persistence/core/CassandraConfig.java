@@ -74,4 +74,33 @@ public interface CassandraConfig {
     int[] getShardSettings();
 
 
+    String getApplicationKeyspace();
+
+    String getApplicationLocalKeyspace();
+
+    String getLocalDataCenter();
+
+    int getConnections();
+
+    int getTimeout();
+
+    int getPoolTimeout();
+
+    String getClusterName();
+
+    String getHosts();
+
+    String getVersion();
+
+    String getUsername();
+
+    String getPassword();
+
+    String getStrategy();
+
+    String getStrategyOptions();
+
+    String getStrategyLocal();
+
+    String getStrategyOptionsLocal();
 }

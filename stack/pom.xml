@@ -100,9 +100,9 @@
         <amber-version>0.22-incubating</amber-version>
         <astyanax.version>3.9.0</astyanax.version>
         <aws.version>1.10.20</aws.version>
-        <cassandra-version>1.2.18</cassandra-version>
+        <cassandra-version>2.1.14</cassandra-version>
         <guava.version>18.0</guava.version>
-        <guice.version>4.0-beta5</guice.version>
+        <guice.version>4.0</guice.version>
         <hector-om-version>3.0-03</hector-om-version>
         <hector-version>1.1-4</hector-version>
         <hector-test-version>1.1-4</hector-test-version>

@@ -24,12 +24,8 @@ import org.safehaus.guicyfig.GuicyFig;
 import org.safehaus.guicyfig.Key;
 
 
-/**
- *
- */
 @FigSingleton
 public interface AsyncEventsSchedulerFig extends GuicyFig {
-
 
     /**
      * Amount of threads to use in async processing
@@ -42,12 +38,10 @@ public interface AsyncEventsSchedulerFig extends GuicyFig {
      */
     String IO_SCHEDULER_NAME = "scheduler.io.poolName";
 
-
     /**
      * Amount of threads to use in async processing
      */
     String REPAIR_SCHEDULER_THREADS = "repair.io.threads";
-
 
     /**
      * Name of pool to use when performing scheduling
@@ -55,12 +49,11 @@ public interface AsyncEventsSchedulerFig extends GuicyFig {
     String REPAIR_SCHEDULER_NAME = "repair.io.poolName";
 
 
-
     @Default( "40" )
     @Key( IO_SCHEDULER_THREADS )
     int getMaxIoThreads();
 
-    @Default( "Usergrid-SQS-Pool" )
+    @Default( "Usergrid-Queue-Worker-Pool" )
     @Key( IO_SCHEDULER_NAME )
     String getIoSchedulerName();
 

@@ -19,10 +19,11 @@
 package org.apache.usergrid.persistence.core.migration.schema;
 
 
-import java.util.Collection;
-
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+
+import java.util.Collection;
 
 
 /**

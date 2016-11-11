@@ -19,7 +19,6 @@ package org.apache.usergrid.services.notifications;
 
 import java.util.*;
 
-import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.services.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,10 +35,10 @@ import org.apache.usergrid.persistence.entities.Receipt;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.queue.QueueManager;
-import org.apache.usergrid.persistence.queue.QueueManagerFactory;
-import org.apache.usergrid.persistence.queue.QueueScope;
-import org.apache.usergrid.persistence.queue.impl.QueueScopeImpl;
+import org.apache.usergrid.persistence.queue.LegacyQueueManager;
+import org.apache.usergrid.persistence.queue.LegacyQueueManagerFactory;
+import org.apache.usergrid.persistence.queue.LegacyQueueScope;
+import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
 import org.apache.usergrid.services.exceptions.ForbiddenServiceOperationException;
 import org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl;
 
@@ -76,7 +75,7 @@ public class NotificationsService extends AbstractCollectionService {
     private long gracePeriod;
     private ServiceManagerFactory smf;
     private EntityManagerFactory emf;
-    private QueueManagerFactory queueManagerFactory;
+    private LegacyQueueManagerFactory queueManagerFactory;
     private ApplicationQueueManagerCache applicationQueueManagerCache;
 
     public NotificationsService() {
@@ -97,12 +96,12 @@ public class NotificationsService extends AbstractCollectionService {
         postTimer = metricsService.getTimer(this.getClass(), "collection.post_requests");
         JobScheduler jobScheduler = new JobScheduler(sm,em);
         String name = ApplicationQueueManagerImpl.getQueueNames( props );
-        QueueScope queueScope = new QueueScopeImpl( name, QueueScope.RegionImplementation.LOCAL);
-        queueManagerFactory = getApplicationContext().getBean( Injector.class ).getInstance(QueueManagerFactory.class);
-        QueueManager queueManager = queueManagerFactory.getQueueManager(queueScope);
+        LegacyQueueScope queueScope = new LegacyQueueScopeImpl( name, LegacyQueueScope.RegionImplementation.LOCAL);
+        queueManagerFactory = getApplicationContext().getBean( Injector.class ).getInstance(LegacyQueueManagerFactory.class);
+        LegacyQueueManager legacyQueueManager = queueManagerFactory.getQueueManager(queueScope);
         applicationQueueManagerCache = getApplicationContext().getBean(Injector.class).getInstance(ApplicationQueueManagerCache.class);
         notificationQueueManager = applicationQueueManagerCache
-            .getApplicationQueueManager(em,queueManager, jobScheduler, metricsService ,props);
+            .getApplicationQueueManager(em, legacyQueueManager, jobScheduler, metricsService ,props);
 
         gracePeriod = JobScheduler.SCHEDULER_GRACE_PERIOD;
     }
