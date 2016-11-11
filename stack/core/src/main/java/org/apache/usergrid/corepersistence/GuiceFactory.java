@@ -115,6 +115,9 @@ public class GuiceFactory implements FactoryBean<Injector> {
             cpProps
                 .put( "collections.keyspace.strategy.class", getAndValidateProperty( "cassandra.keyspace.strategy" ) );
 
+            cpProps.put( "collections.keyspace.local.strategy.options",
+                getAndValidateProperty( "cassandra.keyspace.local.replication" ) );
+
             cpProps.put( "collections.keyspace.strategy.options",
                 getAndValidateProperty( "cassandra.keyspace.replication" ) );
 

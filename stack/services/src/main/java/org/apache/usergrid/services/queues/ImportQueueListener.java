@@ -20,16 +20,14 @@ package org.apache.usergrid.services.queues;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.apache.usergrid.management.importer.ImportService;
-import org.apache.usergrid.management.importer.ImportServiceImpl;
 
 import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.queue.QueueMessage;
+import org.apache.usergrid.persistence.queue.LegacyQueueMessage;
 import org.apache.usergrid.services.ServiceManagerFactory;
 
 import com.google.inject.Inject;
@@ -65,7 +63,7 @@ public class ImportQueueListener extends QueueListener {
      * @param messages
      */
     @Override
-    public void onMessage( final List<QueueMessage> messages ) throws Exception {
+    public void onMessage( final List<LegacyQueueMessage> messages ) throws Exception {
         /**
          * Much like in the original queueListener , we need to translate the Messages that we get
          * back from the QueueMessage into something like an Import message. The way that a
@@ -76,7 +74,7 @@ public class ImportQueueListener extends QueueListener {
         if (logger.isTraceEnabled()) {
             logger.trace("Doing work in onMessage in ImportQueueListener");
         }
-        for (QueueMessage message : messages) {
+        for (LegacyQueueMessage message : messages) {
             ImportQueueMessage queueMessage = ( ImportQueueMessage ) message.getBody();
 
 //        TODO   We still need to hide this queue behind the scheduler importService.downloadAndImportFile( queueMessage );

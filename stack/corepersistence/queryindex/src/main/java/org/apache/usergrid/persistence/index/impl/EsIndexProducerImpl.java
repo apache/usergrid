@@ -57,7 +57,6 @@ public class EsIndexProducerImpl implements IndexProducer {
     private final IndexFig config;
     private final FailureMonitorImpl failureMonitor;
     private final Client client;
-    private final Timer flushTimer;
     private final IndexFig indexFig;
     private final Counter indexSizeCounter;
     private final Histogram roundtripTimer;
@@ -70,7 +69,6 @@ public class EsIndexProducerImpl implements IndexProducer {
     @Inject
     public EsIndexProducerImpl(final IndexFig config, final EsProvider provider,
                                final MetricsFactory metricsFactory, final IndexFig indexFig) {
-        this.flushTimer = metricsFactory.getTimer(EsIndexProducerImpl.class, "index_buffer.flush");
         this.indexSizeCounter = metricsFactory.getCounter(EsIndexProducerImpl.class, "index_buffer.size");
         this.roundtripTimer = metricsFactory.getHistogram(EsIndexProducerImpl.class, "index_buffer.message_cycle");
 

@@ -32,6 +32,7 @@ import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
 import org.apache.usergrid.persistence.core.shard.ExpandingShardLocator;
 import org.apache.usergrid.persistence.core.shard.StringHashUtils;
 import org.apache.usergrid.persistence.map.MapKeyResults;
@@ -308,15 +309,21 @@ public class MapSerializationImpl implements MapSerialization {
     @Override
     public Collection<TableDefinition> getTables() {
 
-        final TableDefinition mapEntries =
-            new TableDefinition( MAP_ENTRIES_TABLE, MAP_ENTRIES_PARTITION_KEYS, MAP_ENTRIES_COLUMN_KEYS,
-                MAP_ENTRIES_COLUMNS, TableDefinition.CacheOption.KEYS, MAP_ENTRIES_CLUSTERING_ORDER);
+        final TableDefinition mapEntries = new TableDefinitionImpl( cassandraConfig.getApplicationKeyspace(),
+            MAP_ENTRIES_TABLE,
+            MAP_ENTRIES_PARTITION_KEYS,
+            MAP_ENTRIES_COLUMN_KEYS,
+            MAP_ENTRIES_COLUMNS,
+            TableDefinitionImpl.CacheOption.KEYS,
+            MAP_ENTRIES_CLUSTERING_ORDER);
 
-        final TableDefinition mapKeys =
-            new TableDefinition( MAP_KEYS_TABLE, MAP_KEYS_PARTITION_KEYS, MAP_KEYS_COLUMN_KEYS,
-                MAP_KEYS_COLUMNS, TableDefinition.CacheOption.KEYS, MAP_KEYS_CLUSTERING_ORDER);
-
-
+        final TableDefinition mapKeys = new TableDefinitionImpl( cassandraConfig.getApplicationKeyspace(),
+            MAP_KEYS_TABLE,
+            MAP_KEYS_PARTITION_KEYS,
+            MAP_KEYS_COLUMN_KEYS,
+            MAP_KEYS_COLUMNS,
+            TableDefinitionImpl.CacheOption.KEYS,
+            MAP_KEYS_CLUSTERING_ORDER);
 
         return Arrays.asList( mapEntries, mapKeys );
 
@@ -381,7 +388,8 @@ public class MapSerializationImpl implements MapSerialization {
 
 
 
-    private <T> T getValuesCQL( final MapScope scope, final Collection<String> keys, final ResultsBuilderCQL<T> builder ) {
+    private <T> T getValuesCQL(
+        final MapScope scope, final Collection<String> keys, final ResultsBuilderCQL<T> builder ) {
 
         final List<ByteBuffer> serializedKeys = new ArrayList<>();
 

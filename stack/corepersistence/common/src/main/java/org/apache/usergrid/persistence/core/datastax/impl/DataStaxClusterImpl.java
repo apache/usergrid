@@ -23,6 +23,7 @@ import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
 import com.datastax.driver.core.policies.LoadBalancingPolicy;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
@@ -36,25 +37,24 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     private static final Logger logger = LoggerFactory.getLogger( DataStaxClusterImpl.class );
 
 
-    private final CassandraFig cassandraFig;
+    private final CassandraConfig cassandraConfig;
     private Cluster cluster;
     private Session applicationSession;
+    private Session queueMessageSession;
     private Session clusterSession;
 
     @Inject
-    public DataStaxClusterImpl(final CassandraFig cassandraFig ) throws Exception {
-        this.cassandraFig = cassandraFig;
+    public DataStaxClusterImpl(final CassandraConfig cassandraFig ) throws Exception {
+        this.cassandraConfig = cassandraFig;
         this.cluster = buildCluster();
-
-        // always initialize the keyspaces
-        this.createApplicationKeyspace();
 
         logger.info("Initialized datastax cluster client. Hosts={}, Idle Timeout={}s,  Pool Timeout={}s",
             cluster.getMetadata().getAllHosts().toString(),
             cluster.getConfiguration().getPoolingOptions().getIdleTimeoutSeconds(),
             cluster.getConfiguration().getPoolingOptions().getPoolTimeoutMillis() / 1000);
 
-
+        // always initialize the keyspaces
+        this.createApplicationKeyspace();
     }
 
     @Override
@@ -84,9 +84,20 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
         // always grab cluster from getCluster() in case it was prematurely closed
         if ( applicationSession == null || applicationSession.isClosed() ){
-            applicationSession = getCluster().connect( CQLUtils.quote(cassandraFig.getApplicationKeyspace() ) );
+            applicationSession = getCluster().connect( CQLUtils.quote( cassandraConfig.getApplicationKeyspace() ) );
         }
         return applicationSession;
+    }
+
+
+    @Override
+    public Session getApplicationLocalSession(){
+
+        // always grab cluster from getCluster() in case it was prematurely closed
+        if ( queueMessageSession == null || queueMessageSession.isClosed() ){
+            queueMessageSession = getCluster().connect( CQLUtils.quote( cassandraConfig.getApplicationLocalKeyspace() ) );
+        }
+        return queueMessageSession;
     }
 
 
@@ -98,7 +109,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     public void createApplicationKeyspace() throws Exception {
 
         boolean exists = getClusterSession().getCluster().getMetadata()
-            .getKeyspace(CQLUtils.quote(cassandraFig.getApplicationKeyspace())) != null;
+            .getKeyspace(CQLUtils.quote( cassandraConfig.getApplicationKeyspace())) != null;
 
         if(exists){
             return;
@@ -106,16 +117,47 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
         final String createApplicationKeyspace = String.format(
             "CREATE KEYSPACE IF NOT EXISTS %s WITH replication = %s",
-            CQLUtils.quote(cassandraFig.getApplicationKeyspace()),
-            CQLUtils.getFormattedReplication(cassandraFig.getStrategy(), cassandraFig.getStrategyOptions())
+            CQLUtils.quote( cassandraConfig.getApplicationKeyspace()),
+            CQLUtils.getFormattedReplication( cassandraConfig.getStrategy(), cassandraConfig.getStrategyOptions())
 
         );
 
         getClusterSession().execute(createApplicationKeyspace);
 
-        logger.info("Created keyspace: {}", cassandraFig.getApplicationKeyspace());
+        logger.info("Created keyspace: {}", cassandraConfig.getApplicationKeyspace());
 
     }
+
+
+
+    /**
+     * Execute CQL that will create the keyspace if it doesn't exist and alter it if it does.
+     * @throws Exception
+     */
+    @Override
+    public void createApplicationLocalKeyspace() throws Exception {
+
+        boolean exists = getClusterSession().getCluster().getMetadata()
+            .getKeyspace(CQLUtils.quote( cassandraConfig.getApplicationLocalKeyspace())) != null;
+
+        if (exists) {
+            return;
+        }
+
+        final String createQueueMessageKeyspace = String.format(
+            "CREATE KEYSPACE IF NOT EXISTS %s WITH replication = %s",
+            CQLUtils.quote( cassandraConfig.getApplicationLocalKeyspace()),
+            CQLUtils.getFormattedReplication(
+                cassandraConfig.getStrategyLocal(), cassandraConfig.getStrategyOptionsLocal())
+
+        );
+
+        getClusterSession().execute(createQueueMessageKeyspace);
+
+        logger.info("Created keyspace: {}", cassandraConfig.getApplicationLocalKeyspace());
+
+    }
+
 
     /**
      * Wait until all Cassandra nodes agree on the schema.  Sleeps 100ms between checks.
@@ -142,7 +184,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
         ConsistencyLevel defaultConsistencyLevel;
         try {
-            defaultConsistencyLevel = ConsistencyLevel.valueOf(cassandraFig.getReadCl());
+            defaultConsistencyLevel = cassandraConfig.getDataStaxReadCl();
         } catch (IllegalArgumentException e){
 
             logger.error("Unable to parse provided consistency level in property: {}, defaulting to: {}",
@@ -154,44 +196,44 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
 
         LoadBalancingPolicy loadBalancingPolicy;
-        if( !cassandraFig.getLocalDataCenter().isEmpty() ){
+        if( !cassandraConfig.getLocalDataCenter().isEmpty() ){
 
             loadBalancingPolicy = new DCAwareRoundRobinPolicy.Builder()
-                .withLocalDc( cassandraFig.getLocalDataCenter() ).build();
+                .withLocalDc( cassandraConfig.getLocalDataCenter() ).build();
         }else{
             loadBalancingPolicy = new DCAwareRoundRobinPolicy.Builder().build();
         }
 
         final PoolingOptions poolingOptions = new PoolingOptions()
-            .setCoreConnectionsPerHost(HostDistance.LOCAL, cassandraFig.getConnections() / 2)
-            .setMaxConnectionsPerHost(HostDistance.LOCAL, cassandraFig.getConnections())
-            .setIdleTimeoutSeconds(cassandraFig.getTimeout() / 1000)
-            .setPoolTimeoutMillis(cassandraFig.getPoolTimeout());
+            .setCoreConnectionsPerHost(HostDistance.LOCAL, cassandraConfig.getConnections() / 2)
+            .setMaxConnectionsPerHost(HostDistance.LOCAL, cassandraConfig.getConnections())
+            .setIdleTimeoutSeconds( cassandraConfig.getTimeout() / 1000)
+            .setPoolTimeoutMillis( cassandraConfig.getPoolTimeout());
 
         // purposely add a couple seconds to the driver's lower level socket timeouts vs. cassandra timeouts
         final SocketOptions socketOptions = new SocketOptions()
-            .setConnectTimeoutMillis(cassandraFig.getPoolTimeout() + 2000)
-            .setReadTimeoutMillis(cassandraFig.getTimeout() + 2000);
+            .setConnectTimeoutMillis( cassandraConfig.getPoolTimeout() + 2000)
+            .setReadTimeoutMillis( cassandraConfig.getTimeout() + 2000);
 
         final QueryOptions queryOptions = new QueryOptions()
             .setConsistencyLevel(defaultConsistencyLevel);
 
         Cluster.Builder datastaxCluster = Cluster.builder()
-            .withClusterName(cassandraFig.getClusterName())
-            .addContactPoints(cassandraFig.getHosts().split(","))
+            .withClusterName( cassandraConfig.getClusterName())
+            .addContactPoints( cassandraConfig.getHosts().split(","))
             .withMaxSchemaAgreementWaitSeconds(30)
             .withCompression(ProtocolOptions.Compression.LZ4)
             .withLoadBalancingPolicy(loadBalancingPolicy)
             .withPoolingOptions(poolingOptions)
             .withQueryOptions(queryOptions)
             .withSocketOptions(socketOptions)
-            .withProtocolVersion(getProtocolVersion(cassandraFig.getVersion()));
+            .withProtocolVersion(getProtocolVersion( cassandraConfig.getVersion()));
 
         // only add auth credentials if they were provided
-        if ( !cassandraFig.getUsername().isEmpty() && !cassandraFig.getPassword().isEmpty() ){
+        if ( !cassandraConfig.getUsername().isEmpty() && !cassandraConfig.getPassword().isEmpty() ){
             datastaxCluster.withCredentials(
-                cassandraFig.getUsername(),
-                cassandraFig.getPassword()
+                cassandraConfig.getUsername(),
+                cassandraConfig.getPassword()
             );
         }
 

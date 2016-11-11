@@ -16,24 +16,26 @@
  */
 package org.apache.usergrid.services.notifications.apns;
 
-import com.relayrides.pushy.apns.*;
-import com.relayrides.pushy.apns.util.*;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.relayrides.pushy.apns.PushManager;
+import com.relayrides.pushy.apns.PushManagerConfiguration;
+import com.relayrides.pushy.apns.util.SimpleApnsPushNotification;
+import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
-import org.mortbay.util.ajax.JSON;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.concurrent.*;
-
-import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
 import org.apache.usergrid.services.ServicePayload;
 import org.apache.usergrid.services.notifications.ConnectionException;
 import org.apache.usergrid.services.notifications.ProviderAdapter;
 import org.apache.usergrid.services.notifications.TaskTracker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.*;
 
 /**
  * Adapter for Apple push notifications
@@ -46,6 +48,8 @@ public class APNsAdapter implements ProviderAdapter {
     private static final Set<String> validEnvironments = new HashSet<String>();
     private static final String TEST_TOKEN = "ff026b5a4d2761ef13843e8bcab9fc83b47f1dfbd1d977d225ab296153ce06d6";
     private static final String TEST_PAYLOAD = "{}";
+
+    private static ObjectMapper objectMapper = new ObjectMapper();
 
     static {
         validEnvironments.add("development");
@@ -155,7 +159,7 @@ public class APNsAdapter implements ProviderAdapter {
                 payload = "{\"aps\":{\"alert\":\"" + payload + "\"}}";
             }
         } else {
-            payload = JSON.toString(objPayload);
+            payload = objectMapper.writeValueAsString( objPayload );
         }
         if (payload.length() > 2048) {
             throw new IllegalArgumentException(

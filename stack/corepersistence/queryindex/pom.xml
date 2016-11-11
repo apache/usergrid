@@ -97,6 +97,7 @@
                   <groupId>${project.parent.groupId}</groupId>
                   <artifactId>queue</artifactId>
                   <version>${project.version}</version>
+                    <classifier>classes</classifier>
                   <type>jar</type>
               </dependency>
 
@@ -123,6 +124,7 @@
             <artifactId>collection</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
+            <scope>test</scope>
         </dependency>
 
         <dependency>

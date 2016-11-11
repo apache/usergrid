@@ -26,6 +26,9 @@ import java.beans.PropertyChangeListener;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.model.ConsistencyLevel;
+import org.apache.log4j.lf5.viewer.categoryexplorer.CategoryPath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -34,12 +37,17 @@ import com.netflix.astyanax.model.ConsistencyLevel;
  */
 @Singleton
 public class CassandraConfigImpl implements CassandraConfig {
+    private static final Logger logger = LoggerFactory.getLogger( CassandraConfigImpl.class );
 
+    private CassandraFig cassandraFig;
 
     private ConsistencyLevel readCl;
     private ConsistencyLevel writeCl;
     private int[] shardSettings;
     private ConsistencyLevel consistentCl;
+
+    private String applicationKeyspace;
+    private String applicationLocalKeyspace;
 
     // DataStax driver's CL
     private com.datastax.driver.core.ConsistencyLevel dataStaxReadCl;
@@ -51,6 +59,8 @@ public class CassandraConfigImpl implements CassandraConfig {
     @Inject
     public CassandraConfigImpl( final CassandraFig cassandraFig ) {
 
+        this.cassandraFig = cassandraFig;
+
         this.readCl = ConsistencyLevel.valueOf( cassandraFig.getAstyanaxReadCL() );
 
         this.writeCl = ConsistencyLevel.valueOf( cassandraFig.getAstyanaxWriteCL() );
@@ -61,9 +71,19 @@ public class CassandraConfigImpl implements CassandraConfig {
 
         this.dataStaxReadCl = com.datastax.driver.core.ConsistencyLevel.valueOf( cassandraFig.getReadCl());
 
-        this.dataStaxReadConsistentCl = com.datastax.driver.core.ConsistencyLevel.valueOf( cassandraFig.getReadClConsistent());
+        this.dataStaxReadConsistentCl = com.datastax.driver.core.ConsistencyLevel.valueOf(
+            cassandraFig.getReadClConsistent());
 
         this.dataStaxWriteCl = com.datastax.driver.core.ConsistencyLevel.valueOf( cassandraFig.getWriteCl() );
+
+        this.applicationKeyspace = cassandraFig.getApplicationKeyspace();
+
+        this.applicationLocalKeyspace =
+              cassandraFig.getApplicationKeyspace() + "_"
+            + cassandraFig.getLocalDataCenter().replace("-", "_");
+
+        logger.info("Application Keyspace: {}", applicationKeyspace);
+        logger.info("Application Local Keyspace: {}", applicationLocalKeyspace);
 
         //add the listeners to update the values
         cassandraFig.addPropertyChangeListener( new PropertyChangeListener() {
@@ -133,4 +153,80 @@ public class CassandraConfigImpl implements CassandraConfig {
 
       return settings;
     }
+
+    @Override
+    public String getApplicationKeyspace() {
+        return applicationKeyspace;
+    }
+
+    @Override
+    public String getApplicationLocalKeyspace() {
+        return applicationLocalKeyspace;
+    }
+
+    @Override
+    public String getLocalDataCenter() {
+        return cassandraFig.getLocalDataCenter();
+    }
+
+    @Override
+    public int getConnections() {
+        return cassandraFig.getConnections();
+    }
+
+    @Override
+    public int getTimeout() {
+        return cassandraFig.getTimeout();
+    }
+
+    @Override
+    public int getPoolTimeout() {
+        return cassandraFig.getPoolTimeout();
+    }
+
+    @Override
+    public String getClusterName() {
+        return cassandraFig.getClusterName();
+    }
+
+    @Override
+    public String getHosts() {
+        return cassandraFig.getHosts();
+    }
+
+    @Override
+    public String getVersion() {
+        return cassandraFig.getVersion();
+    }
+
+    @Override
+    public String getUsername() {
+        return cassandraFig.getUsername();
+    }
+
+    @Override
+    public String getPassword() {
+        return cassandraFig.getPassword();
+    }
+
+    @Override
+    public String getStrategy() {
+        return cassandraFig.getStrategy();
+    }
+
+    @Override
+    public String getStrategyOptions() {
+        return cassandraFig.getStrategyOptions();
+    }
+
+    @Override
+    public String getStrategyLocal() {
+        return cassandraFig.getStrategyLocal();
+    }
+
+    @Override
+    public String getStrategyOptionsLocal() {
+        return cassandraFig.getStrategyOptionsLocal();
+    }
+
 }

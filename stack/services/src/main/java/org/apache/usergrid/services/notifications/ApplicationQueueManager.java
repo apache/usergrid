@@ -22,7 +22,7 @@ package org.apache.usergrid.services.notifications;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.persistence.entities.Notification;
-import org.apache.usergrid.persistence.queue.QueueMessage;
+import org.apache.usergrid.persistence.queue.LegacyQueueMessage;
 import rx.Observable;
 
 import java.util.List;
@@ -54,7 +54,7 @@ public interface ApplicationQueueManager {
      * @param queuePath
      * @return
      */
-    Observable sendBatchToProviders(List<QueueMessage> messages, String queuePath);
+    Observable sendBatchToProviders(List<LegacyQueueMessage> messages, String queuePath);
 
     /**
      * stop processing and send message to providers to stop

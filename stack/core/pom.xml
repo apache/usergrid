@@ -40,7 +40,6 @@
         </plugins>
     </reporting>
 
-
     <build>
 
         <resources>
@@ -334,6 +333,14 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.hectorclient</groupId>
             <artifactId>hector-test</artifactId>
             <scope>test</scope>
@@ -429,6 +436,7 @@
             <groupId>org.apache.usergrid</groupId>
             <artifactId>queue</artifactId>
             <version>${project.version}</version>
+            <classifier>classes</classifier>
             <type>jar</type>
         </dependency>
 

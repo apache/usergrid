@@ -60,6 +60,11 @@ import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
+import org.apache.usergrid.persistence.qakka.App;
+import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
+import org.apache.usergrid.persistence.qakka.distributed.impl.QueueActorRouterProducer;
+import org.apache.usergrid.persistence.qakka.distributed.impl.QueueSenderRouterProducer;
+import org.apache.usergrid.persistence.qakka.distributed.impl.QueueWriterRouterProducer;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,7 +118,6 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final GraphManagerFactory graphManagerFactory;
     private final CollectionSettingsFactory collectionSettingsFactory;
     private ActorSystemManager actorSystemManager;
-    private UniqueValuesService uniqueValuesService;
     private final LockManager lockManager;
 
     private final QueueManagerFactory queueManagerFactory;
@@ -128,16 +132,17 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.cassandraService = cassandraService;
         this.counterUtils = counterUtils;
         this.injector = injector;
-        this.reIndexService = injector.getInstance(ReIndexService.class);
-        this.entityManagerFig = injector.getInstance(EntityManagerFig.class);
-        this.actorSystemFig = injector.getInstance( ActorSystemFig.class );
-        this.managerCache = injector.getInstance( ManagerCache.class );
-        this.metricsFactory = injector.getInstance( MetricsFactory.class );
-        this.indexService = injector.getInstance( AsyncEventService.class );
-        this.graphManagerFactory = injector.getInstance( GraphManagerFactory.class );
-        this.collectionService = injector.getInstance( CollectionService.class );
-        this.connectionService = injector.getInstance( ConnectionService.class );
-        this.collectionSettingsFactory = injector.getInstance( CollectionSettingsFactory.class );
+
+        this.reIndexService             = injector.getInstance(ReIndexService.class);
+        this.entityManagerFig           = injector.getInstance(EntityManagerFig.class);
+        this.actorSystemFig             = injector.getInstance( ActorSystemFig.class );
+        this.managerCache               = injector.getInstance( ManagerCache.class );
+        this.metricsFactory             = injector.getInstance( MetricsFactory.class );
+        this.indexService               = injector.getInstance( AsyncEventService.class );
+        this.graphManagerFactory        = injector.getInstance( GraphManagerFactory.class );
+        this.collectionService          = injector.getInstance( CollectionService.class );
+        this.connectionService          = injector.getInstance( ConnectionService.class );
+        this.collectionSettingsFactory  = injector.getInstance( CollectionSettingsFactory.class );
 
         Properties properties = cassandraService.getProperties();
         this.entityManagers = createEntityManagerCache( properties );
@@ -148,12 +153,21 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             try {
                 logger.info("Akka cluster starting...");
 
-                this.uniqueValuesService = injector.getInstance( UniqueValuesService.class );
+                // TODO: fix this kludge
+                injector.getInstance( App.class );
                 this.actorSystemManager = injector.getInstance( ActorSystemManager.class );
 
-                actorSystemManager.registerRouterProducer( uniqueValuesService );
+                actorSystemManager.registerRouterProducer( injector.getInstance( UniqueValuesService.class ) );
+                actorSystemManager.registerRouterProducer( injector.getInstance( QueueActorRouterProducer.class ) );
+                actorSystemManager.registerRouterProducer( injector.getInstance( QueueWriterRouterProducer.class ) );
+                actorSystemManager.registerRouterProducer( injector.getInstance( QueueSenderRouterProducer.class ) );
                 actorSystemManager.start();
                 actorSystemManager.waitForClientActor();
+
+                DistributedQueueService distributedQueueService =
+                    injector.getInstance( DistributedQueueService.class );
+
+                distributedQueueService.init();
 
             } catch (Throwable t) {
                 logger.error("Error starting Akka", t);

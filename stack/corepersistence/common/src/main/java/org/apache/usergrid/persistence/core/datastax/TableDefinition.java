@@ -20,108 +20,17 @@
 package org.apache.usergrid.persistence.core.datastax;
 
 
-import com.datastax.driver.core.DataType;
-import com.google.common.base.Preconditions;
+import org.apache.usergrid.persistence.core.CassandraFig;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+public interface TableDefinition {
 
-public class TableDefinition {
-
-
-    public enum CacheOption {
-
-        ALL, KEYS, ROWS, NONE
+    enum ACTION {
+        CREATE, UPDATE
     }
 
+    String getKeyspace();
 
-    private final String tableName;
-    private final Collection<String> partitionKeys;
-    private final Collection<String> columnKeys;
-    private final Map<String, DataType.Name> columns;
-    private final CacheOption cacheOption;
-    private final Map<String, Object> compaction;
-    private final String bloomFilterChance;
-    private final String readRepairChance;
-    private final Map<String, Object> compression;
-    private final String gcGraceSeconds;
-    private final Map<String, String> clusteringOrder;
+    String getTableName();
 
-    public TableDefinition( final String tableName, final Collection<String> partitionKeys,
-                            final Collection<String> columnKeys, final Map<String, DataType.Name> columns,
-                            final CacheOption cacheOption, final Map<String, String> clusteringOrder){
-
-        Preconditions.checkNotNull(tableName, "Table name cannot be null");
-        Preconditions.checkNotNull(partitionKeys, "Primary Key(s) cannot be null");
-        Preconditions.checkNotNull(columns, "Columns cannot be null");
-        Preconditions.checkNotNull(cacheOption, "CacheOption cannot be null");
-
-
-        this.tableName = tableName;
-        this.partitionKeys = partitionKeys;
-        this.columnKeys = columnKeys;
-        this.columns = columns;
-        this.cacheOption = cacheOption;
-        this.clusteringOrder = clusteringOrder;
-
-
-        // this are default settings always used
-        this.compaction = new HashMap<>(1);
-        compaction.put( "class", "LeveledCompactionStrategy" );
-        this.bloomFilterChance = "0.1d";
-        this.readRepairChance = "0.1d";
-        this.compression = new HashMap<>(1);
-        compression.put("sstable_compression", "LZ4Compressor");
-        this.gcGraceSeconds = "864000";
-
-
-
-    }
-
-    public String getTableName() {
-        return tableName;
-    }
-
-    public Collection<String> getPartitionKeys() {
-        return partitionKeys;
-    }
-
-    public Collection<String> getColumnKeys() {
-        return columnKeys;
-    }
-
-    public Map<String, DataType.Name> getColumns() {
-        return columns;
-    }
-
-    public CacheOption getCacheOption() {
-        return cacheOption;
-    }
-
-    public Map<String, Object> getCompaction() {
-        return compaction;
-    }
-
-    public String getBloomFilterChance() {
-        return bloomFilterChance;
-    }
-
-    public String getReadRepairChance() {
-        return readRepairChance;
-    }
-
-    public Map<String, Object> getCompression() {
-        return compression;
-    }
-
-    public String getGcGraceSeconds() {
-        return gcGraceSeconds;
-    }
-
-    public Map<String, String> getClusteringOrder() {
-        return clusteringOrder;
-    }
-
-
+    String getTableCQL( CassandraFig cassandraFig, ACTION tableAction ) throws Exception;
 }

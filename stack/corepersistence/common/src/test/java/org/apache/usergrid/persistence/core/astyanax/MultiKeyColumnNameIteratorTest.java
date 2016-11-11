@@ -118,6 +118,83 @@ public class MultiKeyColumnNameIteratorTest {
             public int[] getShardSettings() {
                 return new int[]{20};
             }
+
+            @Override
+            public String getApplicationKeyspace() {
+                return cassandraFig.getApplicationKeyspace();
+            }
+
+            @Override
+            public String getApplicationLocalKeyspace() {
+                return cassandraFig.getApplicationKeyspace() + "us_east";
+            }
+
+
+            @Override
+            public String getLocalDataCenter() {
+                return cassandraFig.getLocalDataCenter();
+            }
+
+            @Override
+            public int getConnections() {
+                return cassandraFig.getConnections();
+            }
+
+            @Override
+            public int getTimeout() {
+                return cassandraFig.getTimeout();
+            }
+
+            @Override
+            public int getPoolTimeout() {
+                return cassandraFig.getPoolTimeout();
+            }
+
+            @Override
+            public String getClusterName() {
+                return cassandraFig.getClusterName();
+            }
+
+            @Override
+            public String getHosts() {
+                return cassandraFig.getHosts();
+            }
+
+            @Override
+            public String getVersion() {
+                return cassandraFig.getVersion();
+            }
+
+            @Override
+            public String getUsername() {
+                return cassandraFig.getUsername();
+            }
+
+            @Override
+            public String getPassword() {
+                return cassandraFig.getPassword();
+            }
+
+            @Override
+            public String getStrategy() {
+                return cassandraFig.getStrategy();
+            }
+
+            @Override
+            public String getStrategyOptions() {
+                return cassandraFig.getStrategyOptions();
+            }
+
+            @Override
+            public String getStrategyLocal() {
+                return cassandraFig.getStrategyLocal();
+            }
+
+            @Override
+            public String getStrategyOptionsLocal() {
+                return cassandraFig.getStrategyOptionsLocal();
+            }
+
         };
 
 

@@ -9,7 +9,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.queue.QueueFig;
+import org.apache.usergrid.persistence.queue.LegacyQueueFig;
 
 import com.amazonaws.auth.policy.Condition;
 import com.amazonaws.auth.policy.Policy;
@@ -40,7 +40,7 @@ public class AmazonNotificationUtils {
     private static final Logger logger = LoggerFactory.getLogger( AmazonNotificationUtils.class );
 
 
-    public static String createQueue( final AmazonSQSClient sqs, final String queueName, final QueueFig fig )
+    public static String createQueue( final AmazonSQSClient sqs, final String queueName, final LegacyQueueFig fig )
         throws Exception {
 
         final String deadletterQueueName = String.format( "%s_dead", queueName );
