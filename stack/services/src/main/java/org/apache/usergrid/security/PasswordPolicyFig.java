@@ -31,8 +31,8 @@ public interface PasswordPolicyFig extends GuicyFig {
     String MIN_UPPERCASE_ADMIN         = "usergrid.password-policy.min-uppercase-admin";
     String MIN_UPPERCASE               = "usergrid.password-policy.min-uppercase";
 
-    String MIN_DIGITS_ADMIN            = "usergrid.password-policy.min-uppercase-admin";
-    String MIN_DIGITS                  = "usergrid.password-policy.min-uppercase";
+    String MIN_DIGITS_ADMIN            = "usergrid.password-policy.min-digits-admin";
+    String MIN_DIGITS                  = "usergrid.password-policy.min-digits";
 
     String MIN_SPECIAL_CHARS_ADMIN     = "usergrid.password-policy.min-special-chars-admin";
     String MIN_SPECIAL_CHARS           = "usergrid.password-policy.min-special-chars";
