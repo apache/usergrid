@@ -174,7 +174,7 @@ public interface QakkaFig extends GuicyFig, Serializable {
     int getMaxTtlSeconds();
 
     @Key(QUEUE_IN_MEMORY)
-    @Default("false")
+    @Default("true")
     boolean getInMemoryCache();
 
     @Key(QUEUE_IN_MEMORY_REFRESH_ASYNC)

@@ -132,11 +132,9 @@ public class ShardCounterSerializationImpl implements ShardCounterSerialization 
                 inMemoryCounters.get( key ).getIncrement().addAndGet( increment );
                 return;
             }
-        }
 
-        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
+            InMemoryCount inMemoryCount = inMemoryCounters.get( key );
 
-        synchronized ( inMemoryCount ) {
             long totalIncrement = inMemoryCount.getIncrement().addAndGet( increment );
 
             if (totalIncrement > maxInMemoryIncrement) {
@@ -168,11 +166,8 @@ public class ShardCounterSerializationImpl implements ShardCounterSerialization 
                     inMemoryCounters.put( key, new InMemoryCount( value ));
                 }
             }
-        }
 
-        InMemoryCount inMemoryCount = inMemoryCounters.get( key );
-
-        synchronized ( inMemoryCount ) {
+            InMemoryCount inMemoryCount = inMemoryCounters.get( key );
 
             if ( inMemoryCount.needsUpdate() ) {
                 long totalIncrement = inMemoryCount.getIncrement().get();

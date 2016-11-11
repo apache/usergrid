@@ -231,7 +231,9 @@ public class MessageCounterSerializationImpl implements MessageCounterSerializat
             }
         }
 
-        saveIfNeeded( queueName, type );
+        synchronized ( inMemoryCounters ) {
+            saveIfNeeded( queueName, type );
+        }
 
         return inMemoryCounters.get( key ).value();
     }

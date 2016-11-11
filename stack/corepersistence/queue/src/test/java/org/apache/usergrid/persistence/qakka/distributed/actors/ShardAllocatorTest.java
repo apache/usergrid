@@ -53,7 +53,7 @@ import java.util.Optional;
 
 
 public class ShardAllocatorTest extends AbstractTest {
-    private static final Logger logger = LoggerFactory.getLogger( QueueReaderTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( ShardAllocatorTest.class );
 
 
     @Override
@@ -127,7 +127,7 @@ public class ShardAllocatorTest extends AbstractTest {
         // Increment last shard by 20% of max
 
         shardCounterSer.incrementCounter(
-                queueName, Shard.Type.DEFAULT, lastShard.getShardId(), (long)(0.2 * maxPerShard) );
+                queueName, Shard.Type.DEFAULT, lastShard.getShardId(), (long)(0.3 * maxPerShard) );
 
         // Run shard allocator again
 
@@ -191,6 +191,8 @@ public class ShardAllocatorTest extends AbstractTest {
 
         queueManager.createQueue( new Queue( queueName ));
 
+        distributedQueueService.refresh();
+
         try {
 
             // Create number of messages
@@ -198,6 +200,7 @@ public class ShardAllocatorTest extends AbstractTest {
             int numMessages = 400;
 
             for (int i = 0; i < numMessages; i++) {
+
                 queueMessageManager.sendMessages(
                     queueName,
                     Collections.singletonList( region ),
@@ -205,15 +208,16 @@ public class ShardAllocatorTest extends AbstractTest {
                     null, // expiration
                     "application/json",
                     DataType.serializeValue( "{}", ProtocolVersion.NEWEST_SUPPORTED ) );
-                Thread.sleep( 10 );
+
+                Thread.sleep( 50 );
             }
 
             distributedQueueService.refresh();
 
             // Test that approximately right number of shards created
             int shardCount = countShards( cassandraClient, shardCounterSer, queueName, region, Shard.Type.DEFAULT );
-            Assert.assertTrue( shardCount + " is too few shards", shardCount > 7 );
-            Assert.assertTrue( shardCount + " is too many shards", shardCount < 17 );
+            Assert.assertTrue( shardCount + " is too few shards", shardCount > 15 );
+            Assert.assertTrue( shardCount + " is too many shards", shardCount < 40 );
 
         } finally {
             queueManager.deleteQueue( queueName );
