@@ -58,7 +58,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     }
 
     @Override
-    public Cluster getCluster(){
+    public synchronized Cluster getCluster(){
 
         // ensure we can build the cluster if it was previously closed
         if ( cluster.isClosed() ){
@@ -69,7 +69,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     }
 
     @Override
-    public Session getClusterSession(){
+    public synchronized Session getClusterSession(){
 
         // always grab cluster from getCluster() in case it was prematurely closed
         if ( clusterSession == null || clusterSession.isClosed() ){
@@ -80,7 +80,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     }
 
     @Override
-    public Session getApplicationSession(){
+    public synchronized Session getApplicationSession(){
 
         // always grab cluster from getCluster() in case it was prematurely closed
         if ( applicationSession == null || applicationSession.isClosed() ){
@@ -91,7 +91,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
 
     @Override
-    public Session getApplicationLocalSession(){
+    public synchronized Session getApplicationLocalSession(){
 
         // always grab cluster from getCluster() in case it was prematurely closed
         if ( queueMessageSession == null || queueMessageSession.isClosed() ){
@@ -106,7 +106,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
      * @throws Exception
      */
     @Override
-    public void createApplicationKeyspace() throws Exception {
+    public synchronized void createApplicationKeyspace() throws Exception {
 
         boolean exists = getClusterSession().getCluster().getMetadata()
             .getKeyspace(CQLUtils.quote( cassandraConfig.getApplicationKeyspace())) != null;
@@ -135,7 +135,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
      * @throws Exception
      */
     @Override
-    public void createApplicationLocalKeyspace() throws Exception {
+    public synchronized void createApplicationLocalKeyspace() throws Exception {
 
         boolean exists = getClusterSession().getCluster().getMetadata()
             .getKeyspace(CQLUtils.quote( cassandraConfig.getApplicationLocalKeyspace())) != null;
@@ -180,7 +180,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         }
     }
 
-    public Cluster buildCluster(){
+    public synchronized Cluster buildCluster(){
 
         ConsistencyLevel defaultConsistencyLevel;
         try {
