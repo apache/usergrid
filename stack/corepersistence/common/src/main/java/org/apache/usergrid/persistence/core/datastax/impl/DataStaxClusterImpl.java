@@ -207,7 +207,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         final PoolingOptions poolingOptions = new PoolingOptions()
             .setCoreConnectionsPerHost(HostDistance.LOCAL, cassandraConfig.getConnections())
             .setMaxConnectionsPerHost(HostDistance.LOCAL, cassandraConfig.getConnections())
-            .setIdleTimeoutSeconds( cassandraConfig.getPoolTimeout() )
+            .setIdleTimeoutSeconds( cassandraConfig.getPoolTimeout() / 1000 )
             .setPoolTimeoutMillis( cassandraConfig.getPoolTimeout())
             .setMaxRequestsPerConnection(HostDistance.LOCAL, 20000)
             .setMaxRequestsPerConnection(HostDistance.REMOTE, 2000);
