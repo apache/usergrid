@@ -208,7 +208,9 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             .setCoreConnectionsPerHost(HostDistance.LOCAL, cassandraConfig.getConnections())
             .setMaxConnectionsPerHost(HostDistance.LOCAL, cassandraConfig.getConnections())
             .setIdleTimeoutSeconds( cassandraConfig.getTimeout() / 1000)
-            .setPoolTimeoutMillis( cassandraConfig.getPoolTimeout());
+            .setPoolTimeoutMillis( cassandraConfig.getPoolTimeout())
+            .setMaxRequestsPerConnection(HostDistance.LOCAL, 20000)
+            .setMaxRequestsPerConnection(HostDistance.REMOTE, 2000);
 
         // purposely add a couple seconds to the driver's lower level socket timeouts vs. cassandra timeouts
         final SocketOptions socketOptions = new SocketOptions()
