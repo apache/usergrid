@@ -217,8 +217,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         // purposely add a couple seconds to the driver's lower level socket timeouts vs. cassandra timeouts
         final SocketOptions socketOptions = new SocketOptions()
             .setConnectTimeoutMillis( cassandraConfig.getTimeout() + 2000)
-            .setReadTimeoutMillis( cassandraConfig.getTimeout() + 2000)
-            .setReuseAddress();
+            .setReadTimeoutMillis( cassandraConfig.getTimeout() + 2000);
 
         final QueryOptions queryOptions = new QueryOptions()
             .setConsistencyLevel(defaultConsistencyLevel);
