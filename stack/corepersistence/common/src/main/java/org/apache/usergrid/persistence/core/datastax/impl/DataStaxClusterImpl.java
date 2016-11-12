@@ -21,6 +21,8 @@ package org.apache.usergrid.persistence.core.datastax.impl;
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
 import com.datastax.driver.core.policies.LoadBalancingPolicy;
+import com.datastax.driver.core.policies.Policies;
+import com.datastax.driver.core.policies.ReconnectionPolicy;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.core.CassandraConfig;
@@ -215,7 +217,8 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         // purposely add a couple seconds to the driver's lower level socket timeouts vs. cassandra timeouts
         final SocketOptions socketOptions = new SocketOptions()
             .setConnectTimeoutMillis( cassandraConfig.getTimeout() + 2000)
-            .setReadTimeoutMillis( cassandraConfig.getTimeout() + 2000);
+            .setReadTimeoutMillis( cassandraConfig.getTimeout() + 2000)
+            .setReuseAddress();
 
         final QueryOptions queryOptions = new QueryOptions()
             .setConsistencyLevel(defaultConsistencyLevel);
@@ -229,6 +232,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             .withPoolingOptions(poolingOptions)
             .withQueryOptions(queryOptions)
             .withSocketOptions(socketOptions)
+            .withReconnectionPolicy(Policies.defaultReconnectionPolicy())
             .withProtocolVersion(getProtocolVersion( cassandraConfig.getVersion()));
 
         // only add auth credentials if they were provided
