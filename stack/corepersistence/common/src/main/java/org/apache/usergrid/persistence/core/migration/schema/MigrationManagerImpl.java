@@ -35,6 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -134,9 +136,8 @@ public class MigrationManagerImpl implements MigrationManager {
 
         keyspace.createColumnFamily( columnFamily.getColumnFamily(), columnFamily.getOptions() );
 
-        // creation of tables happens with the datastax driver and it auto checks schema on schema queries
         // the CF def creation uses Asytanax, so manually check the schema agreement
-        dataStaxCluster.waitForSchemaAgreement();
+        astyanaxWaitForSchemaAgreement();
 
         logger.info( "Created column family {}", columnFamily.getColumnFamily().getName() );
 
@@ -168,6 +169,26 @@ public class MigrationManagerImpl implements MigrationManager {
         logger.info("Created table: {} in keyspace {}",
             tableDefinition.getTableName(), tableDefinition.getKeyspace());
 
+    }
+
+    private void astyanaxWaitForSchemaAgreement() throws ConnectionException {
+
+        while ( true ) {
+
+            final Map<String, List<String>> versions = keyspace.describeSchemaVersions();
+
+            if ( versions != null && versions.size() == 1 ) {
+                return;
+            }
+
+            //sleep and try it again
+            try {
+                Thread.sleep( 100 );
+            }
+            catch ( InterruptedException e ) {
+                //swallow
+            }
+        }
     }
 
 

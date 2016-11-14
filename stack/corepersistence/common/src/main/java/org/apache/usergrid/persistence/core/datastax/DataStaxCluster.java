@@ -38,4 +38,6 @@ public interface DataStaxCluster {
 
     void waitForSchemaAgreement();
 
+    void shutdown();
+
 }

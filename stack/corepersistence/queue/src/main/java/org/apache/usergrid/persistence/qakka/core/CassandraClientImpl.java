@@ -44,8 +44,8 @@ public class CassandraClientImpl implements CassandraClient {
 
 
     @Override
-    public Session getApplicationSession() {
-        if ( applicationSession == null ) {
+    public synchronized Session getApplicationSession() {
+        if ( applicationSession == null || applicationSession.isClosed() ) {
             applicationSession = dataStaxCluster.getApplicationSession();
         }
         return applicationSession;
@@ -53,8 +53,8 @@ public class CassandraClientImpl implements CassandraClient {
 
 
     @Override
-    public Session getQueueMessageSession() {
-        if ( queueMessageSession == null ) {
+    public synchronized Session getQueueMessageSession() {
+        if ( queueMessageSession == null || queueMessageSession.isClosed() ) {
             queueMessageSession = dataStaxCluster.getApplicationLocalSession();
         }
         return queueMessageSession;

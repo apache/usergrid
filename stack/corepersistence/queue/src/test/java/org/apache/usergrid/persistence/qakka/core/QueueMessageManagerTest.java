@@ -23,9 +23,11 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import jnr.ffi.annotations.In;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
@@ -45,6 +47,7 @@ import org.apache.usergrid.persistence.qakka.serialization.sharding.impl.ShardCo
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLog;
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLogSerialization;
 import org.apache.usergrid.persistence.queue.TestModule;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -66,6 +69,9 @@ public class QueueMessageManagerTest extends AbstractTest {
         return Guice.createInjector( new TestModule() );
     }
 
+    public void shutdown(Injector injector){
+        injector.getInstance(DataStaxCluster.class).shutdown();
+    }
 
     @Test
     public void testBasicOperation() throws Exception {

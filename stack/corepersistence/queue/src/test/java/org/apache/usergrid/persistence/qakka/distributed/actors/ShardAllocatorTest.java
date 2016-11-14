@@ -117,7 +117,7 @@ public class ShardAllocatorTest extends AbstractTest {
 
         ShardCheckRequest checkRequest = new ShardCheckRequest( queueName );
         shardAllocRef.tell( checkRequest, null ); // tell sends message, returns immediately
-        Thread.sleep(1000);
+        Thread.sleep(2000);
 
         // Test that no new shards created
 
@@ -132,7 +132,7 @@ public class ShardAllocatorTest extends AbstractTest {
         // Run shard allocator again
 
         shardAllocRef.tell( checkRequest, null ); // tell sends message, returns immediately
-        Thread.sleep(1000);
+        Thread.sleep(2000);
 
         // Test that, this time, a new shard was created
 
