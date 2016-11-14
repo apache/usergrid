@@ -216,8 +216,8 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
         // purposely add a couple seconds to the driver's lower level socket timeouts vs. cassandra timeouts
         final SocketOptions socketOptions = new SocketOptions()
-            .setConnectTimeoutMillis( cassandraConfig.getTimeout() + 2000)
-            .setReadTimeoutMillis( cassandraConfig.getTimeout() + 2000);
+            .setConnectTimeoutMillis( cassandraConfig.getTimeout())
+            .setReadTimeoutMillis( cassandraConfig.getTimeout());
 
         final QueryOptions queryOptions = new QueryOptions()
             .setConsistencyLevel(defaultConsistencyLevel);
@@ -244,6 +244,17 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
 
         return datastaxCluster.build();
+
+    }
+
+    @Override
+    public void shutdown(){
+
+        logger.info("Received shutdown request, shutting down cluster and keyspace sessions NOW!");
+
+        getApplicationSession().close();
+        getApplicationLocalSession().close();
+        getCluster().close();
 
     }
 
