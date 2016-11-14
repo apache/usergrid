@@ -20,8 +20,10 @@ package org.apache.usergrid.persistence.queue.impl;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.assistedinject.Assisted;
 import org.apache.usergrid.persistence.qakka.core.*;
+import org.apache.usergrid.persistence.qakka.core.Queue;
 import org.apache.usergrid.persistence.qakka.exceptions.QakkaRuntimeException;
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.DatabaseQueueMessage;
 import org.apache.usergrid.persistence.queue.LegacyQueueManager;
@@ -32,9 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 
 public class QakkaQueueManager implements LegacyQueueManager {
@@ -44,6 +44,7 @@ public class QakkaQueueManager implements LegacyQueueManager {
     private final QueueManager        queueManager;
     private final QueueMessageManager queueMessageManager;
     private final Regions             regions;
+    private final Set<String>         queueNames;
 
 
     @Inject
@@ -53,17 +54,17 @@ public class QakkaQueueManager implements LegacyQueueManager {
         QueueMessageManager queueMessageManager,
         Regions             regions
     ) {
-
         this.scope = scope;
         this.queueManager = queueManager;
         this.queueMessageManager = queueMessageManager;
         this.regions = regions;
+        this.queueNames = new HashSet<>();
     }
 
 
     private synchronized void createQueueIfNecessary() {
 
-        if ( queueManager.getQueueConfig(scope.getName()) == null ) {
+        if ( !queueNames.contains( scope.getName() ) && queueManager.getQueueConfig(scope.getName()) == null ) {
 
             // TODO: read defaults from config
             //queueManager.createQueue( new Queue( queueName, "test-type", region, region, 0L, 5, 10, null ));
@@ -71,6 +72,8 @@ public class QakkaQueueManager implements LegacyQueueManager {
             Queue queue = new Queue( scope.getName() );
             queueManager.createQueue( queue );
         }
+
+        queueNames.add( scope.getName() );
     }
 
 
