@@ -21,6 +21,8 @@ package org.apache.usergrid.persistence.core.datastax.impl;
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
 import com.datastax.driver.core.policies.LoadBalancingPolicy;
+import com.datastax.driver.core.policies.Policies;
+import com.datastax.driver.core.policies.ReconnectionPolicy;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.core.CassandraConfig;
@@ -58,7 +60,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     }
 
     @Override
-    public Cluster getCluster(){
+    public synchronized Cluster getCluster(){
 
         // ensure we can build the cluster if it was previously closed
         if ( cluster.isClosed() ){
@@ -69,7 +71,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     }
 
     @Override
-    public Session getClusterSession(){
+    public synchronized Session getClusterSession(){
 
         // always grab cluster from getCluster() in case it was prematurely closed
         if ( clusterSession == null || clusterSession.isClosed() ){
@@ -80,7 +82,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     }
 
     @Override
-    public Session getApplicationSession(){
+    public synchronized Session getApplicationSession(){
 
         // always grab cluster from getCluster() in case it was prematurely closed
         if ( applicationSession == null || applicationSession.isClosed() ){
@@ -91,7 +93,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
 
     @Override
-    public Session getApplicationLocalSession(){
+    public synchronized Session getApplicationLocalSession(){
 
         // always grab cluster from getCluster() in case it was prematurely closed
         if ( queueMessageSession == null || queueMessageSession.isClosed() ){
@@ -106,7 +108,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
      * @throws Exception
      */
     @Override
-    public void createApplicationKeyspace() throws Exception {
+    public synchronized void createApplicationKeyspace() throws Exception {
 
         boolean exists = getClusterSession().getCluster().getMetadata()
             .getKeyspace(CQLUtils.quote( cassandraConfig.getApplicationKeyspace())) != null;
@@ -135,7 +137,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
      * @throws Exception
      */
     @Override
-    public void createApplicationLocalKeyspace() throws Exception {
+    public synchronized void createApplicationLocalKeyspace() throws Exception {
 
         boolean exists = getClusterSession().getCluster().getMetadata()
             .getKeyspace(CQLUtils.quote( cassandraConfig.getApplicationLocalKeyspace())) != null;
@@ -180,7 +182,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         }
     }
 
-    public Cluster buildCluster(){
+    public synchronized Cluster buildCluster(){
 
         ConsistencyLevel defaultConsistencyLevel;
         try {
@@ -205,15 +207,17 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         }
 
         final PoolingOptions poolingOptions = new PoolingOptions()
-            .setCoreConnectionsPerHost(HostDistance.LOCAL, cassandraConfig.getConnections() / 2)
+            .setCoreConnectionsPerHost(HostDistance.LOCAL, cassandraConfig.getConnections())
             .setMaxConnectionsPerHost(HostDistance.LOCAL, cassandraConfig.getConnections())
-            .setIdleTimeoutSeconds( cassandraConfig.getTimeout() / 1000)
-            .setPoolTimeoutMillis( cassandraConfig.getPoolTimeout());
+            .setIdleTimeoutSeconds( cassandraConfig.getPoolTimeout() / 1000 )
+            .setPoolTimeoutMillis( cassandraConfig.getPoolTimeout())
+            .setMaxRequestsPerConnection(HostDistance.LOCAL, 20000)
+            .setMaxRequestsPerConnection(HostDistance.REMOTE, 2000);
 
         // purposely add a couple seconds to the driver's lower level socket timeouts vs. cassandra timeouts
         final SocketOptions socketOptions = new SocketOptions()
-            .setConnectTimeoutMillis( cassandraConfig.getPoolTimeout() + 2000)
-            .setReadTimeoutMillis( cassandraConfig.getTimeout() + 2000);
+            .setConnectTimeoutMillis( cassandraConfig.getTimeout())
+            .setReadTimeoutMillis( cassandraConfig.getTimeout());
 
         final QueryOptions queryOptions = new QueryOptions()
             .setConsistencyLevel(defaultConsistencyLevel);
@@ -227,6 +231,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             .withPoolingOptions(poolingOptions)
             .withQueryOptions(queryOptions)
             .withSocketOptions(socketOptions)
+            .withReconnectionPolicy(Policies.defaultReconnectionPolicy())
             .withProtocolVersion(getProtocolVersion( cassandraConfig.getVersion()));
 
         // only add auth credentials if they were provided
@@ -239,6 +244,17 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
 
         return datastaxCluster.build();
+
+    }
+
+    @Override
+    public void shutdown(){
+
+        logger.info("Received shutdown request, shutting down cluster and keyspace sessions NOW!");
+
+        getApplicationSession().close();
+        getApplicationLocalSession().close();
+        getCluster().close();
 
     }
 
