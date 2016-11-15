@@ -32,6 +32,8 @@ public abstract class AbstractAkkaTest extends AbstractTest {
 
     static AtomicInteger nextPort = new AtomicInteger(3551);
 
+    static App app = null;
+
     protected static int getNextAkkaPort() {
         int ret = nextPort.getAndIncrement();
         logger.info("Returning port {}", ret);
@@ -39,11 +41,13 @@ public abstract class AbstractAkkaTest extends AbstractTest {
     }
 
     @BeforeClass
-    public static void startAkkaCluster() {
-        ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
+    public static synchronized void startAkkaCluster() {
 
-        String region = actorSystemFig.getRegionLocal();
-        App app = getInjector().getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+        if ( app == null ) {
+            ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
+            app = getInjector().getInstance( App.class );
+            app.start( "localhost", getNextAkkaPort(), actorSystemFig.getRegionLocal() );
+        }
+
     }
 }
