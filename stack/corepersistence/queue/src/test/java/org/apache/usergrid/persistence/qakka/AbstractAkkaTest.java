@@ -19,52 +19,18 @@
 
 package org.apache.usergrid.persistence.qakka;
 
-import com.google.inject.Injector;
-import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
-import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-public abstract class AbstractAkkaTest {
+public abstract class AbstractAkkaTest extends AbstractTest {
     private static final Logger logger = LoggerFactory.getLogger( AbstractAkkaTest.class );
 
     static AtomicInteger nextPort = new AtomicInteger(3551);
-
-//    protected static Injector sharedInjector;
-
-    static AtomicBoolean migrated = new AtomicBoolean( false );
-
-    static { new KeyspaceDropper(); }
-
-
-    public AbstractAkkaTest() {
-        if ( !migrated.getAndSet( true ) ) {
-            //setInjector( Guice.createInjector( new TestModule() ) );
-            MigrationManager migrationManager = getInjector().getInstance( MigrationManager.class );
-            try {
-                migrationManager.migrate();
-            } catch (MigrationException e) {
-                logger.error("Error in migration", e);
-            }
-        }
-    }
-
-    protected abstract Injector getInjector();
-
-
-//    protected Injector getInjector() {
-//        return sharedInjector;
-//    }
-//
-//    protected static void setInjector(Injector injector) {
-//        AbstractTest.sharedInjector = injector;
-//    }
-
 
     protected static int getNextAkkaPort() {
         int ret = nextPort.getAndIncrement();
@@ -72,12 +38,12 @@ public abstract class AbstractAkkaTest {
         return ret;
     }
 
-
     @BeforeClass
-    public static void startCassandra() throws Exception {
-        //EmbeddedCassandraServerHelper.startEmbeddedCassandra("/cassandra.yaml");
+    public static void startAkkaCluster() {
+        ActorSystemFig actorSystemFig = getInjector().getInstance( ActorSystemFig.class );
+
+        String region = actorSystemFig.getRegionLocal();
+        App app = getInjector().getInstance( App.class );
+        app.start( "localhost", getNextAkkaPort(), region );
     }
-
-
-
 }

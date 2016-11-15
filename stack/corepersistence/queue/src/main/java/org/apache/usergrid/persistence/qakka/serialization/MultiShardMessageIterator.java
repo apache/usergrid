@@ -92,7 +92,7 @@ public class MultiShardMessageIterator implements Iterator<DatabaseQueueMessage>
                 advance();
             }
 
-            return currentIterator.hasNext();
+            return currentIterator == null ? false : currentIterator.hasNext();
 
         } catch ( NoSuchElementException e ) {
             return false;

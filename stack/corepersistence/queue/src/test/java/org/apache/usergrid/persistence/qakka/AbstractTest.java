@@ -24,30 +24,23 @@ import com.google.inject.Injector;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
 import org.apache.usergrid.persistence.queue.TestModule;
-import org.apache.usergrid.persistence.queue.guice.QueueModule;
-import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
-public class AbstractTest {
+public abstract class AbstractTest {
     private static final Logger logger = LoggerFactory.getLogger( AbstractTest.class );
-
-    static AtomicInteger nextPort = new AtomicInteger(3551);
-
-    protected static Injector sharedInjector;
 
     static AtomicBoolean migrated = new AtomicBoolean( false );
 
     static { new KeyspaceDropper(); }
 
+    static Injector sharedInjector = null;
 
     public AbstractTest() {
         if ( !migrated.getAndSet( true ) ) {
-            setInjector( Guice.createInjector( new TestModule() ) );
             MigrationManager migrationManager = getInjector().getInstance( MigrationManager.class );
             try {
                 migrationManager.migrate();
@@ -57,27 +50,15 @@ public class AbstractTest {
         }
     }
 
-    protected Injector getInjector() {
+    protected static Injector getInjector() {
+        if ( sharedInjector == null ) {
+            sharedInjector = Guice.createInjector( new TestModule() );
+        }
         return sharedInjector;
     }
 
-    protected static void setInjector(Injector injector) {
-        AbstractTest.sharedInjector = injector;
+    protected static void setInjector( Injector injector ) {
+        sharedInjector = injector;
     }
-
-
-    protected int getNextAkkaPort() {
-        int ret = nextPort.getAndIncrement();
-        logger.info("Returning port {} for this {}", ret, this.hashCode());
-        return ret;
-    }
-
-
-    @BeforeClass
-    public static void startCassandra() throws Exception {
-        //EmbeddedCassandraServerHelper.startEmbeddedCassandra("/cassandra.yaml");
-    }
-
-
 
 }

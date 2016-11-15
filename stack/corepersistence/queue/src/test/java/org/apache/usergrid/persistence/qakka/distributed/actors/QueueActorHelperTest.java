@@ -24,6 +24,7 @@ import com.google.inject.Injector;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.qakka.AbstractAkkaTest;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.core.*;
@@ -35,19 +36,15 @@ import org.apache.usergrid.persistence.qakka.serialization.queuemessages.Databas
 import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMessageSerialization;
 import org.apache.usergrid.persistence.queue.TestModule;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.UUID;
 
 
 @NotThreadSafe
-public class QueueActorHelperTest extends AbstractTest {
+public class QueueActorHelperTest extends AbstractAkkaTest {
 
-
-    @Override
-    protected Injector getInjector() {
-        return Guice.createInjector( new TestModule() );
-    }
 
     @Test
     public void loadDatabaseQueueMessage() throws Exception {
@@ -61,8 +58,8 @@ public class QueueActorHelperTest extends AbstractTest {
         QueueManager queueManager     = injector.getInstance( QueueManager.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = injector.getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+//        App app = injector.getInstance( App.class );
+//        app.start( "localhost", getNextAkkaPort(), region );
 
         String queueName = "qat_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
 
@@ -111,8 +108,8 @@ public class QueueActorHelperTest extends AbstractTest {
 
         ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
-        App app = injector.getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+//        App app = injector.getInstance( App.class );
+//        app.start( "localhost", getNextAkkaPort(), region );
 
         String queueName = "qat_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
 
@@ -151,8 +148,8 @@ public class QueueActorHelperTest extends AbstractTest {
         QueueManager queueManager     = injector.getInstance( QueueManager.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = injector.getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+//        App app = injector.getInstance( App.class );
+//        app.start( "localhost", getNextAkkaPort(), region );
 
         // write message to messages_available table
 
@@ -228,8 +225,8 @@ public class QueueActorHelperTest extends AbstractTest {
         QueueManager queueManager     = injector.getInstance( QueueManager.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = injector.getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+//        App app = injector.getInstance( App.class );
+//        app.start( "localhost", getNextAkkaPort(), region );
 
         UUID queueMessageId = QakkaUtils.getTimeUuid();
 
@@ -293,8 +290,8 @@ public class QueueActorHelperTest extends AbstractTest {
         ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = injector.getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+//        App app = injector.getInstance( App.class );
+//        app.start( "localhost", getNextAkkaPort(), region );
 
         String queueName = "qat_queue_" + RandomStringUtils.randomAlphanumeric( 10 );
         queueManager.createQueue( new Queue( queueName ) );

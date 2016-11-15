@@ -196,7 +196,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
         // register our cluster listener
         clusterSystem.actorOf(Props.create(ClusterListener.class, getSeedsByRegion(), getCurrentRegion()),
-            "clusterListener");
+            "clusterListener_" + port );
 
         createClientActors( clusterSystem );
 
@@ -408,7 +408,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
                 // Each clientActor needs to know path to ClusterSingletonProxy and region
                 clientActor = system.actorOf(
-                    Props.create( ClientActor.class, routersByMessageType ), "clientActor" );
+                    Props.create( ClientActor.class, routersByMessageType ), "clientActor_" + port );
 
                 ClusterClientReceptionist.get(system).registerService( clientActor );
 
