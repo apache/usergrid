@@ -149,7 +149,7 @@ public class QueueActorServiceTest extends AbstractAkkaTest {
 
             DatabaseQueueMessage.Type type = DatabaseQueueMessage.Type.DEFAULT;
 
-            int maxRetries = 10;
+            int maxRetries = 30;
             int retries = 0;
             long count = 0;
             while (retries++ < maxRetries) {
