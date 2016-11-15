@@ -29,10 +29,7 @@ import com.google.inject.Injector;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.actorsystem.GuiceActorProducer;
-import org.apache.usergrid.persistence.qakka.AbstractTest;
-import org.apache.usergrid.persistence.qakka.App;
-import org.apache.usergrid.persistence.qakka.QakkaModule;
-import org.apache.usergrid.persistence.qakka.QakkaFig;
+import org.apache.usergrid.persistence.qakka.*;
 import org.apache.usergrid.persistence.qakka.core.*;
 import org.apache.usergrid.persistence.qakka.distributed.messages.ShardCheckRequest;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
@@ -41,10 +38,7 @@ import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardIterato
 import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardSerialization;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.queue.TestModule;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,14 +46,8 @@ import java.util.Collections;
 import java.util.Optional;
 
 
-public class ShardAllocatorTest extends AbstractTest {
+public class ShardAllocatorTest extends AbstractAkkaTest {
     private static final Logger logger = LoggerFactory.getLogger( ShardAllocatorTest.class );
-
-
-    @Override
-    protected Injector getInjector() {
-        return Guice.createInjector( new TestModule() );
-    }
 
 
     @Test
@@ -183,8 +171,8 @@ public class ShardAllocatorTest extends AbstractTest {
         Assert.assertEquals( "test assumes 'queue.shard.max.size' is 10 ", 10, qakkaFig.getMaxShardSize() );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = injector.getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+//        App app = injector.getInstance( App.class );
+//        app.start( "localhost", getNextAkkaPort(), region );
 
         String rando = RandomStringUtils.randomAlphanumeric( 20 );
         String queueName = "queue_" + rando;

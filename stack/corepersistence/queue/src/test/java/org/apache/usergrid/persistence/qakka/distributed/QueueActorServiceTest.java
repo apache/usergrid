@@ -26,6 +26,7 @@ import com.google.inject.Injector;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.cassandra.utils.UUIDGen;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.qakka.AbstractAkkaTest;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.QakkaModule;
@@ -37,6 +38,7 @@ import org.apache.usergrid.persistence.qakka.serialization.queuemessages.QueueMe
 import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferLogSerialization;
 import org.apache.usergrid.persistence.queue.TestModule;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,14 +49,8 @@ import java.util.UUID;
 
 
 @NotThreadSafe
-public class QueueActorServiceTest extends AbstractTest {
+public class QueueActorServiceTest extends AbstractAkkaTest {
     private static final Logger logger = LoggerFactory.getLogger( QueueActorServiceTest.class );
-
-
-    @Override
-    protected Injector getInjector() {
-        return Guice.createInjector( new TestModule() );
-    }
 
 
     @Test
@@ -65,8 +61,8 @@ public class QueueActorServiceTest extends AbstractTest {
         ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
 
-        App app = injector.getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+//        App app = injector.getInstance( App.class );
+//        app.start( "localhost", getNextAkkaPort(), region );
 
         DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
         QueueMessageSerialization serialization = injector.getInstance( QueueMessageSerialization.class );
@@ -119,8 +115,8 @@ public class QueueActorServiceTest extends AbstractTest {
         ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
 
-        App app = injector.getInstance( App.class );
-        app.start("localhost", getNextAkkaPort(), region);
+//        App app = injector.getInstance( App.class );
+//        app.start("localhost", getNextAkkaPort(), region);
 
         DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
         QueueMessageSerialization serialization         = injector.getInstance( QueueMessageSerialization.class );
@@ -195,8 +191,8 @@ public class QueueActorServiceTest extends AbstractTest {
         ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
 
-        App app = injector.getInstance( App.class );
-        app.start("localhost", getNextAkkaPort(), region);
+//        App app = injector.getInstance( App.class );
+//        app.start("localhost", getNextAkkaPort(), region);
 
         DistributedQueueService distributedQueueService = injector.getInstance( DistributedQueueService.class );
         QueueMessageSerialization serialization         = injector.getInstance( QueueMessageSerialization.class );

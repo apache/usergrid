@@ -28,6 +28,7 @@ import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
+import org.apache.usergrid.persistence.qakka.AbstractAkkaTest;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.QakkaFig;
@@ -49,6 +50,7 @@ import org.apache.usergrid.persistence.qakka.serialization.transferlog.TransferL
 import org.apache.usergrid.persistence.queue.TestModule;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,19 +61,16 @@ import java.util.stream.Collectors;
 
 
 @NotThreadSafe
-public class QueueMessageManagerTest extends AbstractTest {
+public class QueueMessageManagerTest extends AbstractAkkaTest {
     private static final Logger logger = LoggerFactory.getLogger( QueueMessageManagerTest.class );
 
     // TODO: test that multiple threads pulling from same queue will never pop same item
 
-    @Override
-    protected Injector getInjector() {
-        return Guice.createInjector( new TestModule() );
-    }
 
     public void shutdown(Injector injector){
         injector.getInstance(DataStaxCluster.class).shutdown();
     }
+
 
     @Test
     public void testBasicOperation() throws Exception {
@@ -84,8 +83,8 @@ public class QueueMessageManagerTest extends AbstractTest {
         ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = injector.getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+//        App app = injector.getInstance( App.class );
+//        app.start( "localhost", getNextAkkaPort(), region );
 
         // create queue and send one message to it
         QueueManager queueManager = injector.getInstance( QueueManager.class );
@@ -156,8 +155,8 @@ public class QueueMessageManagerTest extends AbstractTest {
         InMemoryQueue inMemoryQueue   = injector.getInstance( InMemoryQueue.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = injector.getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+//        App app = injector.getInstance( App.class );
+//        app.start( "localhost", getNextAkkaPort(), region );
 
         // create some number of queue messages
 
@@ -255,8 +254,8 @@ public class QueueMessageManagerTest extends AbstractTest {
         QueueMessageSerialization qms = injector.getInstance( QueueMessageSerialization.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = injector.getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+//        App app = injector.getInstance( App.class );
+//        app.start( "localhost", getNextAkkaPort(), region );
 
         // create queue messages, every other one with missing data
 
@@ -314,8 +313,8 @@ public class QueueMessageManagerTest extends AbstractTest {
         ActorSystemFig actorSystemFig = injector.getInstance( ActorSystemFig.class );
 
         String region = actorSystemFig.getRegionLocal();
-        App app = injector.getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+//        App app = injector.getInstance( App.class );
+//        app.start( "localhost", getNextAkkaPort(), region );
 
         // create some number of queue messages
 

@@ -23,10 +23,12 @@ package org.apache.usergrid.persistence.queue;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
+import org.apache.usergrid.persistence.qakka.AbstractAkkaTest;
 import org.apache.usergrid.persistence.qakka.AbstractTest;
 import org.apache.usergrid.persistence.qakka.App;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -38,15 +40,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
-public class LegacyQueueManagerTest extends AbstractTest {
+public class LegacyQueueManagerTest extends AbstractAkkaTest {
 
     public static long queueSeed = System.currentTimeMillis();
-
-    // give each test its own injector
-    @Override
-    protected Injector getInjector() {
-        return Guice.createInjector( new TestModule() );
-    }
 
 
     @Test
@@ -57,8 +53,8 @@ public class LegacyQueueManagerTest extends AbstractTest {
         ActorSystemFig actorSystemFig = myInjector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
 
-        App app = myInjector.getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+//        App app = myInjector.getInstance( App.class );
+//        app.start( "localhost", getNextAkkaPort(), region );
 
         final LegacyQueueScopeImpl scope =
             new LegacyQueueScopeImpl( "testQueue" + queueSeed++, LegacyQueueScope.RegionImplementation.LOCAL );
@@ -93,8 +89,8 @@ public class LegacyQueueManagerTest extends AbstractTest {
         ActorSystemFig actorSystemFig = myInjector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
 
-        App app = myInjector.getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+//        App app = myInjector.getInstance( App.class );
+//        app.start( "localhost", getNextAkkaPort(), region );
 
         final LegacyQueueScopeImpl scope =
             new LegacyQueueScopeImpl( "testQueue" + queueSeed++, LegacyQueueScope.RegionImplementation.LOCAL );
@@ -132,8 +128,8 @@ public class LegacyQueueManagerTest extends AbstractTest {
         ActorSystemFig actorSystemFig = myInjector.getInstance( ActorSystemFig.class );
         String region = actorSystemFig.getRegionLocal();
 
-        App app = myInjector.getInstance( App.class );
-        app.start( "localhost", getNextAkkaPort(), region );
+//        App app = myInjector.getInstance( App.class );
+//        app.start( "localhost", getNextAkkaPort(), region );
 
         final LegacyQueueScopeImpl scope =
             new LegacyQueueScopeImpl( "testQueue" + queueSeed++, LegacyQueueScope.RegionImplementation.LOCAL );
