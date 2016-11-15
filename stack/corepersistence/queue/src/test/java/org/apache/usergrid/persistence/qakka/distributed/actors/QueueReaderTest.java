@@ -98,7 +98,7 @@ public class QueueReaderTest extends AbstractTest {
         QueueRefreshRequest refreshRequest = new QueueRefreshRequest( queueName, false );
 
         // need to wait for refresh to complete
-        int maxRetries = 10;
+        int maxRetries = 30;
         int retries = 0;
         while ( inMemoryQueue.size( queueName ) < qakkaFig.getQueueInMemorySize() && retries++ < maxRetries ) {
             queueReaderRef.tell( refreshRequest, null ); // tell sends message, returns immediately

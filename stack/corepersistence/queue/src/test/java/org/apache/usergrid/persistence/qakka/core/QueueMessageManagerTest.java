@@ -358,7 +358,7 @@ public class QueueMessageManagerTest extends AbstractAkkaTest {
             List<QueueMessage> messages = qmm.getNextMessages( queueName, numMessages/2 );
             Assert.assertEquals( numMessages/2, messages.size() );
 
-            Thread.sleep(500);
+            Thread.sleep(3000);
 
             // now half messages should be available and half in flight
             Assert.assertEquals( numMessages/2, qmm.getQueueDepth( queueName, available ) );
