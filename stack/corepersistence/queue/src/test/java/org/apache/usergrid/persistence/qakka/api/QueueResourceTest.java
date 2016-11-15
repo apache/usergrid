@@ -30,6 +30,7 @@ import org.apache.usergrid.persistence.qakka.QakkaFig;
 import org.apache.usergrid.persistence.qakka.api.impl.StartupListener;
 import org.apache.usergrid.persistence.qakka.core.QueueMessage;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +46,7 @@ import java.util.*;
 import static org.junit.Assert.fail;
 
 
+@Ignore("The QueueResource not used in Usergrid, only needed for running Qakka standalone")
 public class QueueResourceTest extends AbstractRestTest {
     private static final Logger logger = LoggerFactory.getLogger( QueueResourceTest.class );
 
