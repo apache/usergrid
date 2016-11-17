@@ -113,13 +113,18 @@ public class GuiceFactory implements FactoryBean<Injector> {
             cpProps.put( "cassandra.cluster_name", getAndValidateProperty( "cassandra.cluster" ) );
 
             cpProps
-                .put( "collections.keyspace.strategy.class", getAndValidateProperty( "cassandra.keyspace.strategy" ) );
+                .put( "cassandra.strategy", getAndValidateProperty( "cassandra.keyspace.strategy" ) );
 
-            cpProps.put( "collections.keyspace.local.strategy.options",
-                getAndValidateProperty( "cassandra.keyspace.local.replication" ) );
+            cpProps
+                .put( "cassandra.strategy.local", getAndValidateProperty( "cassandra.keyspace.strategy.local" ) );
 
-            cpProps.put( "collections.keyspace.strategy.options",
+            cpProps.put( "cassandra.strategy.options",
                 getAndValidateProperty( "cassandra.keyspace.replication" ) );
+
+            cpProps.put( "cassandra.strategy.options.local",
+                getAndValidateProperty( "cassandra.keyspace.replication.local" ) );
+
+
 
             if (logger.isDebugEnabled()) {
                 logger.debug("Set Cassandra properties for Core Persistence: {}", cpProps.toString());
