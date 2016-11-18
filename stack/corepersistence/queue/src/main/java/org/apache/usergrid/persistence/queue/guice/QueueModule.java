@@ -27,8 +27,6 @@ import org.apache.usergrid.persistence.queue.impl.QueueManagerFactoryImpl;
 import org.apache.usergrid.persistence.queue.impl.SNSQueueManagerImpl;
 import org.safehaus.guicyfig.GuicyFigModule;
 
-import java.util.Properties;
-
 
 /**
  * Simple module for wiring our collection api
@@ -37,16 +35,17 @@ public class QueueModule extends AbstractModule {
 
     private LegacyQueueManager.Implementation implementation;
 
+
     public QueueModule( String queueManagerType ) {
 
-        if ( "LOCAL".equals( queueManagerType ) ) {
-            this.implementation = LegacyQueueManager.Implementation.LOCAL;
-        }
-        else if ( "DISTRIBUTED_SNS".equals( queueManagerType ) ) {
+        if ( "DISTRIBUTED_SNS".equals( queueManagerType ) ) {
             this.implementation = LegacyQueueManager.Implementation.DISTRIBUTED_SNS;
         }
         else if ( "DISTRIBUTED".equals( queueManagerType ) ) {
             this.implementation = LegacyQueueManager.Implementation.DISTRIBUTED;
+        }
+        else {
+            this.implementation = LegacyQueueManager.Implementation.LOCAL;
         }
     }
 
@@ -61,7 +60,6 @@ public class QueueModule extends AbstractModule {
         switch (implementation) {
 
             case LOCAL:
-
                 install( new FactoryModuleBuilder().implement( LegacyQueueManager.class, LocalQueueManager.class )
                     .build( LegacyQueueManagerInternalFactory.class ) );
                 break;
