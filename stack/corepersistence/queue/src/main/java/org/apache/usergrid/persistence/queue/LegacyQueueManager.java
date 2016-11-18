@@ -27,6 +27,15 @@ import java.util.List;
 public interface LegacyQueueManager {
 
     /**
+     * Different implementations
+     */
+    enum Implementation {
+        LOCAL,           // local in-memory queue
+        DISTRIBUTED,     // built-in Akka-based queue
+        DISTRIBUTED_SNS; // SNS queue
+    }
+
+    /**
      * Read messages from queue
      * @param limit
      * @param klass class to cast the return from

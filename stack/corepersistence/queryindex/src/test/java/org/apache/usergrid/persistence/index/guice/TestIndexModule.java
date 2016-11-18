@@ -32,6 +32,8 @@ import com.google.inject.TypeLiteral;
 
 import rx.Observable;
 
+import java.util.Properties;
+
 
 public class TestIndexModule extends TestModule {
 
@@ -42,7 +44,11 @@ public class TestIndexModule extends TestModule {
         install( new CommonModule());
 
         // configure collections and our core astyanax framework
-        install( new IndexModule(){
+
+        Properties properties = new Properties();
+        properties.setProperty( "elasticsearch.queue_impl", "DISTRIBUTED" );
+
+        install( new IndexModule( properties ) {
             @Override
             public  void configureMigrationProvider(){
 
