@@ -35,7 +35,7 @@ public class TestModule  extends AbstractModule {
 
         install( new CommonModule() );
         install( new ActorSystemModule() );
-        install( new QueueModule() );
+        install( new QueueModule( "DISTRIBUTED" ) );
 
     }
 

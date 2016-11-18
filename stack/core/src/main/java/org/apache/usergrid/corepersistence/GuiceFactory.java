@@ -148,7 +148,7 @@ public class GuiceFactory implements FactoryBean<Injector> {
             Module serviceModule =(Module)applicationContext.getBean("serviceModule");
             moduleList.add( serviceModule);
         }
-        moduleList.add(new CoreModule());
+        moduleList.add(new CoreModule( systemProperties ));
         moduleList.add(new PersistenceModule(applicationContext));
         //we have to inject a couple of spring beans into our Guice.  Wire it with PersistenceModule
         injector = Guice.createInjector( moduleList );

@@ -27,7 +27,7 @@ import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
-import org.apache.usergrid.persistence.queue.LocalQueueManager;
+import org.apache.usergrid.persistence.queue.LegacyQueueManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
 import org.apache.usergrid.persistence.queue.LegacyQueueFig;
 import org.apache.usergrid.persistence.queue.LegacyQueueManagerFactory;
@@ -35,6 +35,8 @@ import org.apache.usergrid.persistence.queue.LegacyQueueManagerFactory;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+
+import static org.apache.usergrid.persistence.queue.LegacyQueueManager.Implementation.LOCAL;
 
 
 /**
@@ -100,88 +102,25 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     private AsyncEventService getIndexService() {
         final String value = indexProcessorFig.getQueueImplementation();
 
-        final Implementations impl = Implementations.valueOf(value);
+        final LegacyQueueManager.Implementation impl = LegacyQueueManager.Implementation.valueOf(value);
 
-        switch (impl) {
+        final AsyncEventServiceImpl asyncEventService = new AsyncEventServiceImpl(
+            queueManagerFactory,
+            indexProcessorFig,
+            indexProducer,
+            metricsFactory,
+            entityCollectionManagerFactory,
+            indexLocationStrategyFactory,
+            entityIndexFactory,
+            eventBuilder,
+            mapManagerFactory,
+            queueFig,
+            rxTaskScheduler );
 
-            case LOCAL:
-                AsyncEventServiceImpl eventService =
-                    new AsyncEventServiceImpl(scope -> new LocalQueueManager(),
-                        indexProcessorFig,
-                        indexProducer,
-                        metricsFactory,
-                        entityCollectionManagerFactory,
-                        indexLocationStrategyFactory,
-                        entityIndexFactory,
-                        eventBuilder,
-                        mapManagerFactory,
-                        queueFig,rxTaskScheduler);
-                eventService.MAX_TAKE = 1000;
-                return eventService;
-
-            case SQS:
-                throw new IllegalArgumentException(
-                    "Configuration value of SQS is no longer allowed. Use SNS instead with only a single region.");
-
-            case SNS:
-                return new AsyncEventServiceImpl(
-                    queueManagerFactory,
-                    indexProcessorFig,
-                    indexProducer,
-                    metricsFactory,
-                    entityCollectionManagerFactory,
-                    indexLocationStrategyFactory,
-                    entityIndexFactory,
-                    eventBuilder,
-                    mapManagerFactory,
-                    queueFig,
-                    rxTaskScheduler );
-
-            case MULTIREGION:
-                return new AsyncEventServiceImpl(
-                    queueManagerFactory,
-                    indexProcessorFig,
-                    indexProducer,
-                    metricsFactory,
-                    entityCollectionManagerFactory,
-                    indexLocationStrategyFactory,
-                    entityIndexFactory,
-                    eventBuilder,
-                    mapManagerFactory,
-                    queueFig,
-                    rxTaskScheduler );
-
-            default:
-                throw new IllegalArgumentException("Configuration value of " + getErrorValues() + " are allowed");
-        }
-    }
-
-
-    private String getErrorValues() {
-        String values = "";
-
-        for (final Implementations impl : Implementations.values()) {
-            values += impl + ", ";
+        if ( impl.equals( LOCAL )) {
+            asyncEventService.MAX_TAKE = 1000;
         }
 
-        values = values.substring(0, values.length() - 2);
-
-        return values;
-    }
-
-
-    /**
-     * Different implementations
-     */
-    public static enum Implementations {
-        TEST,
-        LOCAL,
-        SQS,         // deprecated
-        SNS,         // deprecated
-        MULTIREGION; // built-in Akka-based queue
-
-        public String asString() {
-            return toString();
-        }
+        return asyncEventService;
     }
 }

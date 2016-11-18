@@ -3106,6 +3106,7 @@ public class CpEntityManager implements EntityManager {
             Entity refreshEntity = create("refresh", map);
             EntityIndex.IndexRefreshCommandInfo indexRefreshCommandInfo
                 = managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
+
             try {
                 for (int i = 0; i < 20; i++) {
                     if (searchCollection(
@@ -3118,7 +3119,7 @@ public class CpEntityManager implements EntityManager {
                         hasFinished = true;
                         break;
                     }
-                    Thread.sleep(100);
+                    Thread.sleep(500);
 
                     indexRefreshCommandInfo
                         = managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();

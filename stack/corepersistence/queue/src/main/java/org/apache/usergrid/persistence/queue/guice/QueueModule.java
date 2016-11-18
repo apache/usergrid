@@ -21,19 +21,34 @@ package org.apache.usergrid.persistence.queue.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import org.apache.usergrid.persistence.qakka.QakkaModule;
-import org.apache.usergrid.persistence.queue.LegacyQueueFig;
-import org.apache.usergrid.persistence.queue.LegacyQueueManager;
-import org.apache.usergrid.persistence.queue.LegacyQueueManagerFactory;
-import org.apache.usergrid.persistence.queue.LegacyQueueManagerInternalFactory;
+import org.apache.usergrid.persistence.queue.*;
 import org.apache.usergrid.persistence.queue.impl.QakkaQueueManager;
 import org.apache.usergrid.persistence.queue.impl.QueueManagerFactoryImpl;
+import org.apache.usergrid.persistence.queue.impl.SNSQueueManagerImpl;
 import org.safehaus.guicyfig.GuicyFigModule;
+
+import java.util.Properties;
 
 
 /**
  * Simple module for wiring our collection api
  */
 public class QueueModule extends AbstractModule {
+
+    private LegacyQueueManager.Implementation implementation;
+
+    public QueueModule( String queueManagerType ) {
+
+        if ( "LOCAL".equals( queueManagerType ) ) {
+            this.implementation = LegacyQueueManager.Implementation.LOCAL;
+        }
+        else if ( "DISTRIBUTED_SNS".equals( queueManagerType ) ) {
+            this.implementation = LegacyQueueManager.Implementation.DISTRIBUTED_SNS;
+        }
+        else if ( "DISTRIBUTED".equals( queueManagerType ) ) {
+            this.implementation = LegacyQueueManager.Implementation.DISTRIBUTED;
+        }
+    }
 
 
     @Override
@@ -43,8 +58,29 @@ public class QueueModule extends AbstractModule {
 
         bind(LegacyQueueManagerFactory.class).to(QueueManagerFactoryImpl.class);
 
-        install( new FactoryModuleBuilder().implement(LegacyQueueManager.class, QakkaQueueManager.class)
-            .build(LegacyQueueManagerInternalFactory.class));
+        switch (implementation) {
+
+            case LOCAL:
+
+                install( new FactoryModuleBuilder().implement( LegacyQueueManager.class, LocalQueueManager.class )
+                    .build( LegacyQueueManagerInternalFactory.class ) );
+                break;
+
+            case DISTRIBUTED_SNS:
+                install( new FactoryModuleBuilder().implement( LegacyQueueManager.class, SNSQueueManagerImpl.class )
+                    .build( LegacyQueueManagerInternalFactory.class ) );
+                break;
+
+            case DISTRIBUTED:
+                install( new FactoryModuleBuilder().implement( LegacyQueueManager.class, QakkaQueueManager.class )
+                    .build( LegacyQueueManagerInternalFactory.class ) );
+                break;
+
+            default:
+                throw new IllegalArgumentException(
+                    "Queue implemetation value of " + implementation + " not allowed");
+
+        }
 
         install( new QakkaModule() );
     }
