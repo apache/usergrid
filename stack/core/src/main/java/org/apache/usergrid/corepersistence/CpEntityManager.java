@@ -3119,7 +3119,9 @@ public class CpEntityManager implements EntityManager {
                         hasFinished = true;
                         break;
                     }
-                    Thread.sleep(500);
+                    int sleepTime = 500;
+                    logger.info("Sleeping {} ms during refreshIndex", sleepTime);
+                    Thread.sleep(sleepTime);
 
                     indexRefreshCommandInfo
                         = managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
