@@ -60,7 +60,8 @@ public class QakkaQueueManager implements LegacyQueueManager {
         this.regions = regions;
         this.queueNames = new HashSet<>();
 
-        createQueueIfNecessary();
+        // Can't create queue here, actor system may not yet be started
+        //createQueueIfNecessary();
     }
 
 
