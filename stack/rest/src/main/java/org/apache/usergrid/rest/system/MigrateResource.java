@@ -86,7 +86,7 @@ public class MigrateResource extends AbstractContextResource {
                 logger.info( "Migrating Schema" );
 
                 try {
-                    getMigrationManager().migrate();
+                    getMigrationManager().migrate(false);
                 }
                 catch ( Exception e ) {
                     logger.error( "Unable to migrate data", e );
