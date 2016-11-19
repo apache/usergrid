@@ -875,6 +875,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                 catch ( Throwable t ) {
                                     final long sleepTime = indexProcessorFig.getFailureRetryTime();
 
+                                    // there might be an error here during tests, just clean the cache
+                                    queue.clearQueueNameCache();
+
                                     logger.error( "Failed to dequeue.  Sleeping for {} milliseconds", sleepTime, t );
 
                                     if ( drainList != null ) {
