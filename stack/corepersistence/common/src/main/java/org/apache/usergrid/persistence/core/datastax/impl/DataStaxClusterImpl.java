@@ -22,7 +22,6 @@ import com.datastax.driver.core.*;
 import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
 import com.datastax.driver.core.policies.LoadBalancingPolicy;
 import com.datastax.driver.core.policies.Policies;
-import com.datastax.driver.core.policies.ReconnectionPolicy;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.core.CassandraConfig;
@@ -56,7 +55,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             cluster.getConfiguration().getPoolingOptions().getPoolTimeoutMillis() / 1000);
 
         // always initialize the keyspaces
-        this.createApplicationKeyspace();
+        this.createApplicationKeyspace(false);
     }
 
     @Override
@@ -106,19 +105,23 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     /**
      * Execute CQL that will create the keyspace if it doesn't exist and alter it if it does.
      * @throws Exception
+     * @param forceCheck
      */
     @Override
-    public synchronized void createApplicationKeyspace() throws Exception {
+    public synchronized void createApplicationKeyspace(boolean forceCheck) throws Exception {
 
-        // using the datastax client seems to have stale data ( as seen in tests that drop keyspaces )
-        //boolean exists = getClusterSession().getCluster().getMetadata()
-        //    .getKeyspace(CQLUtils.quote( cassandraConfig.getApplicationKeyspace())) != null;
+        boolean exists;
+        if(!forceCheck) {
+            // this gets info from client's metadata
+            exists = getClusterSession().getCluster().getMetadata()
+                .getKeyspace(CQLUtils.quote(cassandraConfig.getApplicationKeyspace())) != null;
+        }else{
+            exists = getClusterSession()
+                .execute("select * from system.schema_keyspaces where keyspace_name = '"+cassandraConfig.getApplicationKeyspace()+"'")
+                .one() != null;
+        }
 
-        Row row = getClusterSession()
-            .execute("select * from system.schema_keyspaces where keyspace_name = '"+cassandraConfig.getApplicationKeyspace()+"'")
-            .one();
-
-        if(row != null){
+        if(exists){
             logger.info("Not creating keyspace {}, it already exists.", cassandraConfig.getApplicationKeyspace());
             return;
         }
@@ -141,19 +144,23 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     /**
      * Execute CQL that will create the keyspace if it doesn't exist and alter it if it does.
      * @throws Exception
+     * @param forceCheck
      */
     @Override
-    public synchronized void createApplicationLocalKeyspace() throws Exception {
+    public synchronized void createApplicationLocalKeyspace(boolean forceCheck) throws Exception {
 
-        // using the datastax client seems to have stale data ( as seen in tests that drop keyspaces )
-        //boolean exists = getClusterSession().getCluster().getMetadata()
-        //    .getKeyspace(CQLUtils.quote( cassandraConfig.getApplicationLocalKeyspace())) != null;
+        boolean exists;
+        if(!forceCheck) {
+            // this gets info from client's metadata
+            exists = getClusterSession().getCluster().getMetadata()
+                .getKeyspace(CQLUtils.quote(cassandraConfig.getApplicationLocalKeyspace())) != null;
+        }else{
+            exists = getClusterSession()
+                .execute("select * from system.schema_keyspaces where keyspace_name = '"+cassandraConfig.getApplicationLocalKeyspace()+"'")
+                .one() != null;
+        }
 
-        Row row = getClusterSession()
-            .execute("select * from system.schema_keyspaces where keyspace_name = '"+cassandraConfig.getApplicationLocalKeyspace()+"'")
-            .one();
-
-        if (row != null) {
+        if (exists) {
             logger.info("Not creating keyspace {}, it already exists.", cassandraConfig.getApplicationLocalKeyspace());
             return;
         }

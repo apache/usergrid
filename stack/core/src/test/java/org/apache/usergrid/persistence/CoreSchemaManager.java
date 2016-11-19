@@ -18,8 +18,6 @@ package org.apache.usergrid.persistence;
 
 
 import org.apache.usergrid.locking.LockManager;
-import org.apache.usergrid.persistence.queue.LegacyQueueManager;
-import org.apache.usergrid.persistence.queue.impl.QakkaQueueManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +51,7 @@ public class CoreSchemaManager implements SchemaManager {
     @Override
     public void create() {
         try {
-            setup.initSchema();
+            setup.initSchema(true);
             lockManager.setup();
         }
         catch ( Exception ex ) {

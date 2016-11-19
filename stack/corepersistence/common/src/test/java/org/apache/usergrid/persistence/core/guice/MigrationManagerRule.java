@@ -45,7 +45,7 @@ public class MigrationManagerRule extends ExternalResource {
         this.migrationManager = migrationManager;
 
         try {
-            this.migrationManager.migrate();
+            this.migrationManager.migrate(false);
         } catch ( MigrationException e ) {
             throw new RuntimeException(e);
         }
@@ -60,7 +60,7 @@ public class MigrationManagerRule extends ExternalResource {
     protected void before() throws MigrationException {
         logger.info( "Starting migration" );
 
-        migrationManager.migrate();
+        migrationManager.migrate(false);
 
         logger.info("Migrating data");
 

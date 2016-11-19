@@ -21,13 +21,11 @@ package org.apache.usergrid.persistence.qakka;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationException;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
-import org.apache.usergrid.persistence.qakka.core.Queue;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.distributed.impl.QueueActorRouterProducer;
 import org.apache.usergrid.persistence.qakka.distributed.impl.QueueSenderRouterProducer;
@@ -69,7 +67,7 @@ public class App implements MetricsService {
         if ( qakkaFig.getStandalone() ) {
 
             try {
-                migrationManager.migrate();
+                migrationManager.migrate(false);
             } catch (MigrationException e) {
                 throw new QakkaRuntimeException( "Error running migration", e );
             }

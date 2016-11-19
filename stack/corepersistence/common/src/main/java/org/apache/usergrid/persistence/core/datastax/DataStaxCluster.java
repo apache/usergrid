@@ -32,9 +32,9 @@ public interface DataStaxCluster {
 
     Session getApplicationLocalSession();
 
-    void createApplicationKeyspace() throws Exception;
+    void createApplicationKeyspace(boolean forceCheck) throws Exception;
 
-    void createApplicationLocalKeyspace() throws Exception;
+    void createApplicationLocalKeyspace(boolean forceCheck) throws Exception;
 
     void waitForSchemaAgreement();
 
