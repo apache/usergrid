@@ -24,6 +24,7 @@ import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Timer;
+import com.datastax.driver.core.exceptions.InvalidQueryException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -871,26 +872,30 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
                                     //take since  we're in flight
                                     inFlight.addAndGet( drainList.size() );
-                                }
-                                catch ( Throwable t ) {
+
+                                } catch ( Throwable t ) {
+
                                     final long sleepTime = indexProcessorFig.getFailureRetryTime();
 
                                     // there might be an error here during tests, just clean the cache
                                     queue.clearQueueNameCache();
 
-                                    logger.error( "Failed to dequeue.  Sleeping for {} milliseconds", sleepTime, t );
+                                    if ( t instanceof InvalidQueryException ) {
+
+                                        // don't fill up log with exceptions when keyspace and column
+                                        // families are not ready during bootstrap/setup
+                                        logger.warn( "Failed to dequeue due to '{}'. Sleeping for {} ms",
+                                            t.getMessage(), sleepTime );
+
+                                    } else {
+                                        logger.error( "Failed to dequeue. Sleeping for {} ms", sleepTime, t);
+                                    }
 
                                     if ( drainList != null ) {
                                         inFlight.addAndGet( -1 * drainList.size() );
                                     }
 
-
-                                    try {
-                                        Thread.sleep( sleepTime );
-                                    }
-                                    catch ( InterruptedException ie ) {
-                                        //swallow
-                                    }
+                                    try { Thread.sleep( sleepTime ); } catch ( InterruptedException ie ) {}
 
                                     indexErrorCounter.inc();
                                 }
