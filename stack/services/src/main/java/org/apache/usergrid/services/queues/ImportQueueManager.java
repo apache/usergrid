@@ -79,4 +79,9 @@ public class ImportQueueManager implements LegacyQueueManager {
     public void deleteQueue() {
 
     }
+
+    @Override
+    public void clearQueueNameCache(){
+        //no-op
+    }
 }

@@ -18,8 +18,6 @@
  */
 package org.apache.usergrid.persistence.queue;
 
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-
 
 public interface LegacyQueueScope {
 
@@ -36,10 +34,10 @@ public interface LegacyQueueScope {
      * Get the name of the the map
      * @return
      */
-    public String getName();
+    String getName();
 
     /**
      * Get the Usergrid region enum
      */
-    public RegionImplementation getRegionImplementation();
+    RegionImplementation getRegionImplementation();
 }
