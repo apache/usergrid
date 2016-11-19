@@ -114,6 +114,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             .getKeyspace(CQLUtils.quote( cassandraConfig.getApplicationKeyspace())) != null;
 
         if(exists){
+            logger.info("Not creating keyspace {}, it already exists.", cassandraConfig.getApplicationKeyspace());
             return;
         }
 
@@ -143,6 +144,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             .getKeyspace(CQLUtils.quote( cassandraConfig.getApplicationLocalKeyspace())) != null;
 
         if (exists) {
+            logger.info("Not creating keyspace {}, it already exists.", cassandraConfig.getApplicationLocalKeyspace());
             return;
         }
 
