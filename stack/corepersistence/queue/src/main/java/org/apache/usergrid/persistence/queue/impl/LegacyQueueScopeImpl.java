@@ -29,9 +29,6 @@ public class LegacyQueueScopeImpl implements LegacyQueueScope {
         this.regionImpl = regionImpl;
     }
 
-
-
-
     @Override
     public String getName() {
         return name;

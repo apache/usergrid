@@ -22,6 +22,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import org.apache.usergrid.persistence.qakka.QakkaModule;
 import org.apache.usergrid.persistence.queue.*;
+import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
 import org.apache.usergrid.persistence.queue.impl.QakkaQueueManager;
 import org.apache.usergrid.persistence.queue.impl.QueueManagerFactoryImpl;
 import org.apache.usergrid.persistence.queue.impl.SNSQueueManagerImpl;

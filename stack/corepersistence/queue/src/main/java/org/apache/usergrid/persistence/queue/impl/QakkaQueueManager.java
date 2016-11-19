@@ -71,9 +71,8 @@ public class QakkaQueueManager implements LegacyQueueManager {
 
             Queue queue = new Queue( scope.getName() );
             queueManager.createQueue( queue );
+            queueNames.add( scope.getName() );
         }
-
-        queueNames.add( scope.getName() );
     }
 
 
@@ -191,5 +190,11 @@ public class QakkaQueueManager implements LegacyQueueManager {
     @Override
     public void deleteQueue() {
         queueManager.deleteQueue( scope.getName() );
+    }
+
+
+    @Override
+    public void clearQueueNameCache(){
+        queueNames.clear();
     }
 }

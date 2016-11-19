@@ -84,4 +84,9 @@ public interface LegacyQueueManager {
      * purge messages
      */
     void deleteQueue();
+
+    /**
+     * Clears the in memory hash set of created and available queues ( useful for tests that drop data and start over )
+     */
+    void clearQueueNameCache();
 }

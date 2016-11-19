@@ -20,7 +20,6 @@
 package org.apache.usergrid.persistence.qakka.core.impl;
 
 import com.google.inject.Inject;
-import com.google.inject.spi.Message;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.qakka.core.QakkaUtils;
@@ -34,12 +33,15 @@ import org.apache.usergrid.persistence.qakka.serialization.queues.DatabaseQueue;
 import org.apache.usergrid.persistence.qakka.serialization.queues.QueueSerialization;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.Shard;
 import org.apache.usergrid.persistence.qakka.serialization.sharding.ShardSerialization;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class QueueManagerImpl implements QueueManager {
+    private static final Logger logger = LoggerFactory.getLogger( QueueManagerImpl.class );
     private final ActorSystemFig              actorSystemFig;
     private final QueueSerialization          queueSerialization;
     private final DistributedQueueService     distributedQueueService;
@@ -65,8 +67,9 @@ public class QueueManagerImpl implements QueueManager {
     @Override
     public void  createQueue(Queue queue) {
 
-        List<String> regions = new ArrayList<>();
+        logger.info("Creating queue with name: {}", queue.getName());
 
+        List<String> regions = new ArrayList<>();
         if ( Regions.LOCAL.equals( queue.getRegions() ) || StringUtils.isEmpty( queue.getRegions() ) ) {
             regions.add( actorSystemFig.getRegionLocal() );
 

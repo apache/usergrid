@@ -702,4 +702,9 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
 
         return sqs;
     }
+
+    @Override
+    public void clearQueueNameCache(){
+       //no-op
+    }
 }

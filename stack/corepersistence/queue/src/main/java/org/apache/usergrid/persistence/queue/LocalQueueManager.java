@@ -20,6 +20,8 @@
 
 package org.apache.usergrid.persistence.queue;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +41,13 @@ public class LocalQueueManager implements LegacyQueueManager {
     private static final Logger logger = LoggerFactory.getLogger(LocalQueueManager.class);
 
     public ArrayBlockingQueue<LegacyQueueMessage> queue = new ArrayBlockingQueue<>(10000);
+
+    private LegacyQueueScope scope;
+
+    @Inject
+    public LocalQueueManager(@Assisted LegacyQueueScope scope){
+        this.scope = scope;
+    }
 
     @Override
     public    List<LegacyQueueMessage> getMessages(int limit, Class klass) {
@@ -104,6 +113,11 @@ public class LocalQueueManager implements LegacyQueueManager {
 
     @Override
     public void deleteQueue() {
+        //no-op
+    }
 
+    @Override
+    public void clearQueueNameCache(){
+        //no-op
     }
 }
