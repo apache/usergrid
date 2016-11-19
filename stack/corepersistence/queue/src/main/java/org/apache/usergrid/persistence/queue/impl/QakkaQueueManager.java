@@ -59,6 +59,8 @@ public class QakkaQueueManager implements LegacyQueueManager {
         this.queueMessageManager = queueMessageManager;
         this.regions = regions;
         this.queueNames = new HashSet<>();
+
+        createQueueIfNecessary();
     }
 
 

@@ -275,6 +275,9 @@ public class QueueListener  {
                             consecutiveExceptions.set(0);
                         }catch (Exception ex){
                             logger.error("failed to dequeue",ex);
+
+                            // clear the queue name cache b/c tests might have wiped the keyspace
+                            legacyQueueManager.clearQueueNameCache();
                             try {
                                 long sleeptime = sleepWhenNoneFound*consecutiveExceptions.incrementAndGet();
                                 long maxSleep = 15000;

@@ -91,8 +91,6 @@ public class CoreSchemaManager implements SchemaManager {
             //swallow if it just doesn't exist
         }
         logger.info( "keyspaces dropped" );
-        SpringResource.getInstance().getBean( Injector.class )
-            .getInstance( LegacyQueueManager.class ).clearQueueNameCache();
         logger.info( "dropping indices" );
         final EsProvider provider =
             SpringResource.getInstance().getBean( Injector.class ).getInstance( EsProvider.class );
