@@ -43,7 +43,7 @@ public abstract class AbstractTest {
         if ( !migrated.getAndSet( true ) ) {
             MigrationManager migrationManager = getInjector().getInstance( MigrationManager.class );
             try {
-                migrationManager.migrate();
+                migrationManager.migrate(false);
             } catch (MigrationException e) {
                 logger.error("Error in migration", e);
             }

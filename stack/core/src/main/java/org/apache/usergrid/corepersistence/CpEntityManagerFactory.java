@@ -711,7 +711,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
 
     @Override
     public void setup() throws Exception {
-        getSetup().initSchema();
+        getSetup().initSchema(false);
         lockManager.setup();
     }
 
@@ -720,7 +720,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     public void bootstrap() throws Exception {
 
         // Always make sure the database schema is initialized
-        getSetup().initSchema();
+        getSetup().initSchema(false);
 
         // Roll the new 2.x Migration classes to the latest version supported
         getSetup().runDataMigration();

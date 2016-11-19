@@ -69,13 +69,13 @@ public class MigrationManagerImpl implements MigrationManager {
 
 
     @Override
-    public void migrate() throws MigrationException {
+    public void migrate(boolean forceCheckKeyspaces) throws MigrationException {
 
         try {
 
-            dataStaxCluster.createApplicationKeyspace();
+            dataStaxCluster.createApplicationKeyspace(forceCheckKeyspaces);
 
-            dataStaxCluster.createApplicationLocalKeyspace();
+            dataStaxCluster.createApplicationLocalKeyspace(forceCheckKeyspaces);
 
             for ( Migration migration : migrations ) {
 

@@ -414,7 +414,7 @@ public class GraphManagerShardConsistencyIT {
 
         final MigrationManager migrationManager = getInstance( injectors, MigrationManager.class );
 
-        migrationManager.migrate();
+        migrationManager.migrate(false);
 
         return injectors;
     }
