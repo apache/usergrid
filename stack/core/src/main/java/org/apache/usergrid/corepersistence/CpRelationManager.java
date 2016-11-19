@@ -679,6 +679,7 @@ public class CpRelationManager implements RelationManager {
             if ( found ) {
                 break;
             }
+            logger.info("Sleeping {} ms during searchCollectionConsistent", sleepTime);
             Thread.sleep( sleepTime );
         }
         while ( !found && length <= maxLength );
