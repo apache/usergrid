@@ -110,10 +110,15 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     @Override
     public synchronized void createApplicationKeyspace() throws Exception {
 
-        boolean exists = getClusterSession().getCluster().getMetadata()
-            .getKeyspace(CQLUtils.quote( cassandraConfig.getApplicationKeyspace())) != null;
+        // using the datastax client seems to have stale data ( as seen in tests that drop keyspaces )
+        //boolean exists = getClusterSession().getCluster().getMetadata()
+        //    .getKeyspace(CQLUtils.quote( cassandraConfig.getApplicationKeyspace())) != null;
 
-        if(exists){
+        Row row = getClusterSession()
+            .execute("select * from system.schema_keyspaces where keyspace_name = '"+cassandraConfig.getApplicationKeyspace()+"'")
+            .one();
+
+        if(row != null){
             logger.info("Not creating keyspace {}, it already exists.", cassandraConfig.getApplicationKeyspace());
             return;
         }
@@ -140,10 +145,15 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     @Override
     public synchronized void createApplicationLocalKeyspace() throws Exception {
 
-        boolean exists = getClusterSession().getCluster().getMetadata()
-            .getKeyspace(CQLUtils.quote( cassandraConfig.getApplicationLocalKeyspace())) != null;
+        // using the datastax client seems to have stale data ( as seen in tests that drop keyspaces )
+        //boolean exists = getClusterSession().getCluster().getMetadata()
+        //    .getKeyspace(CQLUtils.quote( cassandraConfig.getApplicationLocalKeyspace())) != null;
 
-        if (exists) {
+        Row row = getClusterSession()
+            .execute("select * from system.schema_keyspaces where keyspace_name = '"+cassandraConfig.getApplicationLocalKeyspace()+"'")
+            .one();
+
+        if (row != null) {
             logger.info("Not creating keyspace {}, it already exists.", cassandraConfig.getApplicationLocalKeyspace());
             return;
         }
