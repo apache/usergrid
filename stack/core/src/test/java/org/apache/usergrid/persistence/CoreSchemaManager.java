@@ -18,6 +18,7 @@ package org.apache.usergrid.persistence;
 
 
 import org.apache.usergrid.locking.LockManager;
+import org.apache.usergrid.persistence.queue.LegacyQueueManager;
 import org.apache.usergrid.persistence.queue.impl.QakkaQueueManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +91,8 @@ public class CoreSchemaManager implements SchemaManager {
             //swallow if it just doesn't exist
         }
         logger.info( "keyspaces dropped" );
-        SpringResource.getInstance().getBean( Injector.class ).getInstance( QakkaQueueManager.class );
+        SpringResource.getInstance().getBean( Injector.class )
+            .getInstance( LegacyQueueManager.class ).clearQueueNameCache();
         logger.info( "dropping indices" );
         final EsProvider provider =
             SpringResource.getInstance().getBean( Injector.class ).getInstance( EsProvider.class );
