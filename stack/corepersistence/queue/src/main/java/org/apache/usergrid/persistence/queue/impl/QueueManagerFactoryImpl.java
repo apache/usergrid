@@ -55,7 +55,7 @@ public class QueueManagerFactoryImpl implements LegacyQueueManagerFactory {
                         LegacyQueueManager manager = defaultManager.get( scope.getName() );
                         if ( manager == null ) {
                             logger.info("Using LocalQueueManager for scope {}", scope.getName() );
-                            manager = new LocalQueueManager();
+                            manager = new LocalQueueManager(scope);
                             defaultManager.put( scope.getName(), manager );
                         }
                         return manager;
