@@ -67,9 +67,6 @@ public class CoreSchemaManager implements SchemaManager {
     public void populateBaseData() {
         try {
 
-            setup.initSchema();
-            lockManager.setup();
-
             setup.runDataMigration();
             setup.initMgmtApp();
         }
