@@ -131,6 +131,7 @@ public class MigrationManagerImpl implements MigrationManager {
                 keyspaceDefinition.getColumnFamily( columnFamily.getColumnFamily().getName() );
 
         if ( existing != null ) {
+            logger.info("Not creating columnfamily {}, it already exists.", columnFamily.getColumnFamily().getName());
             return;
         }
 
@@ -145,13 +146,20 @@ public class MigrationManagerImpl implements MigrationManager {
 
     private void createTable(TableDefinition tableDefinition ) throws Exception {
 
-        KeyspaceMetadata keyspaceMetadata = dataStaxCluster.getClusterSession().getCluster().getMetadata()
-            .getKeyspace(CQLUtils.quote( tableDefinition.getKeyspace() ) );
+        // this snippet will use the drivers metadata info, but that doesn't play nice with tests
+        // use the system table to verify instead
 
-        boolean exists =  keyspaceMetadata != null
-            && keyspaceMetadata.getTable( tableDefinition.getTableName() ) != null;
+        //KeyspaceMetadata keyspaceMetadata = dataStaxCluster.getClusterSession().getCluster().getMetadata()
+        //    .getKeyspace(CQLUtils.quote( tableDefinition.getKeyspace() ) );
+        //boolean exists =  keyspaceMetadata != null
+        //    && keyspaceMetadata.getTable( tableDefinition.getTableName() ) != null;
+
+        boolean exists = dataStaxCluster.getClusterSession()
+            .execute("select * from system.schema_columnfamilies where keyspace_name='"+tableDefinition.getKeyspace()
+                +"' and columnfamily_name='"+tableDefinition.getTableName()+"'").one() != null;
 
         if( exists ){
+            logger.info("Not creating table {}, it already exists.", tableDefinition.getTableName());
             return;
         }
 
