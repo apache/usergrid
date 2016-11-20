@@ -64,12 +64,13 @@ public class CQLUtils {
         return mapper.writeValueAsString(map).replace("\"", "'");
     }
 
-    public static String quote( String value){
-
+    public static String quote( String value ){
         return "\"" + value + "\"";
-
     }
 
+    public static String unquote( String value ) {
+        return value.replace("\"", "");
+    }
     public static String spaceSeparatedKeyValue(Map<String, ?> columns){
 
         StringJoiner columnsSchema = new StringJoiner(",");

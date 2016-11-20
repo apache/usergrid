@@ -156,7 +156,7 @@ public class MigrationManagerImpl implements MigrationManager {
 
         boolean exists = dataStaxCluster.getClusterSession()
             .execute("select * from system.schema_columnfamilies where keyspace_name='"+tableDefinition.getKeyspace()
-                +"' and columnfamily_name='"+tableDefinition.getTableName()+"'").one() != null;
+                +"' and columnfamily_name='"+CQLUtils.unquote(tableDefinition.getTableName())+"'").one() != null;
 
         if( exists ){
             logger.info("Not creating table {}, it already exists.", tableDefinition.getTableName());
