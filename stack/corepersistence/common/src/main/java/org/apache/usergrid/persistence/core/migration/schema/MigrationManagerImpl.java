@@ -19,7 +19,6 @@
 package org.apache.usergrid.persistence.core.migration.schema;
 
 
-import com.datastax.driver.core.KeyspaceMetadata;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
@@ -69,13 +68,13 @@ public class MigrationManagerImpl implements MigrationManager {
 
 
     @Override
-    public void migrate(boolean forceCheckKeyspaces) throws MigrationException {
+    public void migrate(boolean forceCheckSchema) throws MigrationException {
 
         try {
 
-            dataStaxCluster.createApplicationKeyspace(forceCheckKeyspaces);
+            dataStaxCluster.createApplicationKeyspace(forceCheckSchema);
 
-            dataStaxCluster.createApplicationLocalKeyspace(forceCheckKeyspaces);
+            dataStaxCluster.createApplicationLocalKeyspace(forceCheckSchema);
 
             for ( Migration migration : migrations ) {
 
@@ -104,7 +103,7 @@ public class MigrationManagerImpl implements MigrationManager {
                 if ( tables != null && !tables.isEmpty() ) {
                     for (TableDefinition tableDefinition : tables) {
 
-                        createTable(tableDefinition);
+                        createTable(tableDefinition, forceCheckSchema);
 
                     }
                 }
@@ -144,16 +143,19 @@ public class MigrationManagerImpl implements MigrationManager {
 
     }
 
-    private void createTable(TableDefinition tableDefinition ) throws Exception {
+    private void createTable(TableDefinition tableDefinition, boolean forceCheckSchema) throws Exception {
 
-        KeyspaceMetadata keyspaceMetadata = dataStaxCluster.getClusterSession().getCluster().getMetadata()
-            .getKeyspace(CQLUtils.quote( tableDefinition.getKeyspace() ) );
-        boolean exists =  keyspaceMetadata != null
-            && keyspaceMetadata.getTable( tableDefinition.getTableName() ) != null;
-
-        //boolean exists = dataStaxCluster.getClusterSession()
-        //    .execute("select * from system.schema_columnfamilies where keyspace_name='"+tableDefinition.getKeyspace()
-        //        +"' and columnfamily_name='"+CQLUtils.unquote(tableDefinition.getTableName())+"'").one() != null;
+        boolean exists;
+        if(!forceCheckSchema){
+            exists = dataStaxCluster.getClusterSession().getCluster()
+                .getMetadata()
+                .getKeyspace(CQLUtils.quote( tableDefinition.getKeyspace() ) )
+                .getTable( tableDefinition.getTableName() ) != null;
+        }else{
+            exists = dataStaxCluster.getClusterSession()
+                .execute("select * from system.schema_columnfamilies where keyspace_name='"+tableDefinition.getKeyspace()
+                    +"' and columnfamily_name='"+CQLUtils.unquote(tableDefinition.getTableName())+"'").one() != null;
+        }
 
         if( exists ){
             logger.info("Not creating table {}, it already exists.", tableDefinition.getTableName());
