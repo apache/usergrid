@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.core.datastax.impl;
 
 import com.datastax.driver.core.*;
+import com.datastax.driver.core.exceptions.NoHostAvailableException;
 import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
 import com.datastax.driver.core.policies.LoadBalancingPolicy;
 import com.datastax.driver.core.policies.Policies;
@@ -76,7 +77,24 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
         // always grab cluster from getCluster() in case it was prematurely closed
         if ( clusterSession == null || clusterSession.isClosed() ){
-            clusterSession = getCluster().connect();
+            int retries = 3;
+            int retryCount = 0;
+            while ( retryCount < retries){
+                try{
+                    retryCount++;
+                    clusterSession = getCluster().connect();
+                    break;
+                }catch(NoHostAvailableException e){
+                    if(retryCount == retries){
+                        throw e;
+                    }
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ie) {
+                        // swallow
+                    }
+                }
+            }
         }
 
         return clusterSession;
@@ -87,7 +105,24 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
         // always grab cluster from getCluster() in case it was prematurely closed
         if ( applicationSession == null || applicationSession.isClosed() ){
-            applicationSession = getCluster().connect( CQLUtils.quote( cassandraConfig.getApplicationKeyspace() ) );
+            int retries = 3;
+            int retryCount = 0;
+            while ( retryCount < retries){
+                try{
+                    retryCount++;
+                    applicationSession = getCluster().connect( CQLUtils.quote( cassandraConfig.getApplicationKeyspace() ) );
+                    break;
+                }catch(NoHostAvailableException e){
+                    if(retryCount == retries){
+                        throw e;
+                    }
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ie) {
+                        // swallow
+                    }
+                }
+            }
         }
         return applicationSession;
     }
@@ -98,7 +133,24 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
         // always grab cluster from getCluster() in case it was prematurely closed
         if ( queueMessageSession == null || queueMessageSession.isClosed() ){
-            queueMessageSession = getCluster().connect( CQLUtils.quote( cassandraConfig.getApplicationLocalKeyspace() ) );
+            int retries = 3;
+            int retryCount = 0;
+            while ( retryCount < retries){
+                try{
+                    retryCount++;
+                    queueMessageSession = getCluster().connect( CQLUtils.quote( cassandraConfig.getApplicationLocalKeyspace() ) );
+                    break;
+                }catch(NoHostAvailableException e){
+                    if(retryCount == retries){
+                        throw e;
+                    }
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ie) {
+                        // swallow
+                    }
+                }
+            }
         }
         return queueMessageSession;
     }
