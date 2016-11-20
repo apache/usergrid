@@ -53,7 +53,7 @@ public class CoreSchemaManager implements SchemaManager {
     @Override
     public void create() {
         try {
-            setup.initSchema(true);
+            setup.initSchema(false);
             lockManager.setup();
         }
         catch ( Exception ex ) {
