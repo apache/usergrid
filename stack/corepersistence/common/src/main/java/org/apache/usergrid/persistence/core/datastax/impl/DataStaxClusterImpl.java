@@ -49,7 +49,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     @Inject
     public DataStaxClusterImpl(final CassandraConfig cassandraFig ) throws Exception {
         this.cassandraConfig = cassandraFig;
-        this.cluster = buildCluster();
+        this.cluster = getCluster();
 
         logger.info("Initialized datastax cluster client. Hosts={}, Idle Timeout={}s,  Pool Timeout={}s",
             cluster.getMetadata().getAllHosts().toString(),
@@ -64,7 +64,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     public synchronized Cluster getCluster(){
 
         // ensure we can build the cluster if it was previously closed
-        if ( cluster.isClosed() ){
+        if ( cluster == null || cluster.isClosed() ){
             cluster = buildCluster();
         }
 
