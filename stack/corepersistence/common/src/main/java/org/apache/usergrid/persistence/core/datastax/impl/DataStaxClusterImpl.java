@@ -31,6 +31,8 @@ import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
+
 
 @Singleton
 public class DataStaxClusterImpl implements DataStaxCluster {
@@ -135,6 +137,8 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
         getClusterSession().execute(createApplicationKeyspace);
 
+        waitForSchemaAgreement();
+
         logger.info("Created keyspace: {}", cassandraConfig.getApplicationKeyspace());
 
     }
@@ -175,9 +179,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
         getClusterSession().execute(createQueueMessageKeyspace);
 
-        if ( forceCheck ){
-            waitForSchemaAgreement();
-        }
+        waitForSchemaAgreement();
 
         logger.info("Created keyspace: {}", cassandraConfig.getApplicationLocalKeyspace());
 
@@ -246,6 +248,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             .setConsistencyLevel(defaultConsistencyLevel)
             .setMetadataEnabled(true); // choose whether to have the driver store metadata such as schema info
 
+        //String clusterName = !isBlank(name) ? name : cassandraConfig.getClusterName();
         Cluster.Builder datastaxCluster = Cluster.builder()
             .withClusterName( cassandraConfig.getClusterName())
             .addContactPoints( cassandraConfig.getHosts().split(","))
