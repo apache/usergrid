@@ -175,6 +175,10 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
         getClusterSession().execute(createQueueMessageKeyspace);
 
+        if ( forceCheck ){
+            waitForSchemaAgreement();
+        }
+
         logger.info("Created keyspace: {}", cassandraConfig.getApplicationLocalKeyspace());
 
     }
@@ -239,12 +243,13 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             .setReadTimeoutMillis( cassandraConfig.getTimeout());
 
         final QueryOptions queryOptions = new QueryOptions()
-            .setConsistencyLevel(defaultConsistencyLevel);
+            .setConsistencyLevel(defaultConsistencyLevel)
+            .setMetadataEnabled(false); // don't store metadata state in the driver
 
         Cluster.Builder datastaxCluster = Cluster.builder()
             .withClusterName( cassandraConfig.getClusterName())
             .addContactPoints( cassandraConfig.getHosts().split(","))
-            .withMaxSchemaAgreementWaitSeconds(30)
+            .withMaxSchemaAgreementWaitSeconds(45)
             .withCompression(ProtocolOptions.Compression.LZ4)
             .withLoadBalancingPolicy(loadBalancingPolicy)
             .withPoolingOptions(poolingOptions)
