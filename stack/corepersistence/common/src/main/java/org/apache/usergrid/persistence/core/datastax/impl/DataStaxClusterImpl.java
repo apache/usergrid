@@ -244,7 +244,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
         final QueryOptions queryOptions = new QueryOptions()
             .setConsistencyLevel(defaultConsistencyLevel)
-            .setMetadataEnabled(false); // don't store metadata state in the driver
+            .setMetadataEnabled(true); // choose whether to have the driver store metadata such as schema info
 
         Cluster.Builder datastaxCluster = Cluster.builder()
             .withClusterName( cassandraConfig.getClusterName())
