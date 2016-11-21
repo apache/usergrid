@@ -352,6 +352,10 @@
 
                 <exclusions>
                     <exclusion>
+                        <artifactId>netty-all</artifactId>
+                        <groupId>io.netty</groupId>
+                    </exclusion>
+                    <exclusion>
                         <groupId>org.antlr</groupId>
                         <artifactId>antlr-runtime</artifactId>
                     </exclusion>
@@ -468,7 +472,7 @@
 
                     <exclusion>
                         <groupId>net.jpountz.lz4</groupId>
-                        <artifactId>*</artifactId>
+                        <artifactId>lz4</artifactId>
                     </exclusion>
 
                     <exclusion>
@@ -631,12 +635,6 @@
             </dependency>
 
             <!-- Other Commercial Dependencies -->
-
-            <dependency>
-                <groupId>com.datastax.hector</groupId>
-                <artifactId>hector-composite</artifactId>
-                <version>0.8.0-rc1-SNAPSHOT</version>
-            </dependency>
 
             <dependency>
                 <groupId>com.fasterxml.uuid</groupId>

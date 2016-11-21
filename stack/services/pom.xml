@@ -296,7 +296,7 @@
             <artifactId>jclouds-netty</artifactId>
             <exclusions>
                 <exclusion>
-                    <artifactId>*</artifactId>
+                    <artifactId>netty-all</artifactId>
                     <groupId>io.netty</groupId>
                 </exclusion>
             </exclusions>
