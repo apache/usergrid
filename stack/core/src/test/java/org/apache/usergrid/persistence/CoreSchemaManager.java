@@ -85,9 +85,11 @@ public class CoreSchemaManager implements SchemaManager {
             dataStaxCluster.getClusterSession()
                 .execute("DROP KEYSPACE "+ CQLUtils.quote(cassandraFig.getApplicationKeyspace()));
             dataStaxCluster.waitForSchemaAgreement();
+
+            dataStaxCluster.getClusterSession().close(); // close session so it's meta will get refreshed
         }
         catch ( Exception e ) {
-            //swallow if it just doesn't exist
+            logger.error("Error dropping application keyspace: {}", cassandraFig.getApplicationKeyspace());
         }
         logger.info( "keyspaces dropped" );
         logger.info( "dropping indices" );
