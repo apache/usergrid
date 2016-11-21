@@ -51,11 +51,14 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     public DataStaxClusterImpl(final CassandraConfig cassandraFig ) throws Exception {
         this.cassandraConfig = cassandraFig;
         this.cluster = getCluster();
+        this.clusterSession = getClusterSession();
+        this.applicationSession = getApplicationSession();
+        this.queueMessageSession = getApplicationLocalSession();
 
         logger.info("Initialized datastax cluster client. Hosts={}, Idle Timeout={}s,  Pool Timeout={}s",
-            cluster.getMetadata().getAllHosts().toString(),
-            cluster.getConfiguration().getPoolingOptions().getIdleTimeoutSeconds(),
-            cluster.getConfiguration().getPoolingOptions().getPoolTimeoutMillis() / 1000);
+            getCluster().getMetadata().getAllHosts().toString(),
+            getCluster().getConfiguration().getPoolingOptions().getIdleTimeoutSeconds(),
+            getCluster().getConfiguration().getPoolingOptions().getPoolTimeoutMillis() / 1000);
 
         // always initialize the keyspaces
         this.createApplicationKeyspace(false);
@@ -294,16 +297,16 @@ public class DataStaxClusterImpl implements DataStaxCluster {
         // purposely add a couple seconds to the driver's lower level socket timeouts vs. cassandra timeouts
         final SocketOptions socketOptions = new SocketOptions()
             .setConnectTimeoutMillis( cassandraConfig.getTimeout())
-            .setReadTimeoutMillis( cassandraConfig.getTimeout());
+            .setReadTimeoutMillis( cassandraConfig.getTimeout())
+            .setKeepAlive(true);
 
         final QueryOptions queryOptions = new QueryOptions()
             .setConsistencyLevel(defaultConsistencyLevel)
             .setMetadataEnabled(true); // choose whether to have the driver store metadata such as schema info
 
-        //String clusterName = !isBlank(name) ? name : cassandraConfig.getClusterName();
         Cluster.Builder datastaxCluster = Cluster.builder()
-            .withClusterName( cassandraConfig.getClusterName())
-            .addContactPoints( cassandraConfig.getHosts().split(","))
+            .withClusterName(cassandraConfig.getClusterName())
+            .addContactPoints(cassandraConfig.getHosts().split(","))
             .withMaxSchemaAgreementWaitSeconds(45)
             .withCompression(ProtocolOptions.Compression.LZ4)
             .withLoadBalancingPolicy(loadBalancingPolicy)
@@ -311,7 +314,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
             .withQueryOptions(queryOptions)
             .withSocketOptions(socketOptions)
             .withReconnectionPolicy(Policies.defaultReconnectionPolicy())
-            .withProtocolVersion(getProtocolVersion( cassandraConfig.getVersion()));
+            .withProtocolVersion(getProtocolVersion(cassandraConfig.getVersion()));
 
         // only add auth credentials if they were provided
         if ( !cassandraConfig.getUsername().isEmpty() && !cassandraConfig.getPassword().isEmpty() ){

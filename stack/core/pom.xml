@@ -133,7 +133,7 @@
                     <artifactId>*</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>netty</artifactId>
+                    <artifactId>*</artifactId>
                     <groupId>io.netty</groupId>
                 </exclusion>
             </exclusions>

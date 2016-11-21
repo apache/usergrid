@@ -80,7 +80,7 @@ limitations under the License.
         <commons.collections.version>3.2.1</commons.collections.version>
         <commons.io.version>2.4</commons.io.version>
         <commons.lang.version>3.1</commons.lang.version>
-        <datastax.version>2.1.10.3</datastax.version>
+        <datastax.version>2.1.9</datastax.version>
         <elasticsearch.version>1.7.5</elasticsearch.version>
         <fasterxml-uuid.version>3.1.3</fasterxml-uuid.version>
         <guava.version>18.0</guava.version>
@@ -131,7 +131,7 @@ limitations under the License.
                         <systemPropertyVariables>
                             <archaius.deployment.environment>UNIT</archaius.deployment.environment>
                         </systemPropertyVariables>
-                        <argLine>-Xms2G -Xmx4G</argLine>
+                        <argLine>-Xms2G -Xmx4G -Dlog4j.configuration=file:${basedir}/src/test/resources/log4j.properties</argLine>
                         <excludedGroups>org.apache.usergrid.StressTest,org.apache.usergrid.ExperimentalTest
                         </excludedGroups>
                     </configuration>
