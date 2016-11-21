@@ -51,9 +51,6 @@ public class DataStaxClusterImpl implements DataStaxCluster {
     public DataStaxClusterImpl(final CassandraConfig cassandraFig ) throws Exception {
         this.cassandraConfig = cassandraFig;
         this.cluster = getCluster();
-        this.clusterSession = getClusterSession();
-        this.applicationSession = getApplicationSession();
-        this.queueMessageSession = getApplicationLocalSession();
 
         logger.info("Initialized datastax cluster client. Hosts={}, Idle Timeout={}s,  Pool Timeout={}s",
             getCluster().getMetadata().getAllHosts().toString(),
@@ -62,6 +59,7 @@ public class DataStaxClusterImpl implements DataStaxCluster {
 
         // always initialize the keyspaces
         this.createApplicationKeyspace(false);
+        this.createApplicationLocalKeyspace(false);
     }
 
     @Override
