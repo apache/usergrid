@@ -103,7 +103,11 @@
                 </exclusion>
                 <exclusion>
                     <groupId>net.jpountz.lz4</groupId>
-                    <artifactId>*</artifactId>
+                    <artifactId>lz4</artifactId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>netty-all</artifactId>
+                    <groupId>io.netty</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
