@@ -16,28 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package org.apache.usergrid.persistence.qakka.api.impl;
-
-import org.apache.usergrid.persistence.qakka.api.ApiResponse;
-import org.apache.usergrid.persistence.qakka.exceptions.NotFoundException;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+package org.apache.usergrid.persistence.qakka;
 
 
-@Provider
-public class NotFoundMapper implements ExceptionMapper<NotFoundException> {
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.UUID;
 
-    public Response toResponse( NotFoundException ex ) {
+public interface URIStrategy {
 
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setMessage( ex.getMessage() );
+    URI queueURI(String queueName) throws URISyntaxException;
 
-        return Response.status(404).entity( apiResponse ).type( MediaType.APPLICATION_JSON ).build();
-    }
-
+    URI queueMessageDataURI(String queueName, UUID queueMessageId) throws URISyntaxException;
 }
-

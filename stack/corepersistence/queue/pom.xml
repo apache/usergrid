@@ -31,14 +31,10 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>queue</artifactId>
     <name>Usergrid Queue</name>
-    <packaging>war</packaging>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <servlet.version>3.0.1</servlet.version>
-        <jersey.version>2.21</jersey.version>
-        <guice-bridge.version>2.4.0</guice-bridge.version>
     </properties>
 
 
@@ -152,6 +148,7 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!--
         <dependency>
             <groupId>org.apache.usergrid</groupId>
             <artifactId>common</artifactId>
@@ -163,86 +160,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
-        <!--
-                <dependency>
-                    <groupId>com.datastax.cassandra</groupId>
-                    <artifactId>cassandra-driver-core</artifactId>
-                    <version>2.1.9</version>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>com.google.guava</groupId>
-                            <artifactId>guava</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-
-                <dependency>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                    <version>1.7.13</version>
-                </dependency>
-
-                <dependency>
-                    <groupId>com.fasterxml.uuid</groupId>
-                    <artifactId>java-uuid-generator</artifactId>
-                    <version>3.1.4</version>
-                </dependency>
-
-                <dependency>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-lang3</artifactId>
-                    <version>3.3.2</version>
-                </dependency>
         -->
-
-        <!-- Java EE & Jersey -->
-
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>${servlet.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json-jackson</artifactId>
-            <version>${jersey.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
-            <version>${jersey.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-servlet</artifactId>
-            <version>${jersey.version}</version>
-        </dependency>
-
-        <!-- added for Guice Jersey integration -->
-        <dependency>
-            <groupId>org.glassfish.hk2</groupId>
-            <artifactId>guice-bridge</artifactId>
-            <version>${guice-bridge.version}</version>
-        </dependency>
-
-        <!-- added for Guice Jersey integration -->
-        <dependency>
-            <groupId>com.google.inject.extensions</groupId>
-            <artifactId>guice-servlet</artifactId>
-            <version>${guice.version}</version>
-        </dependency>
-
-        <!-- added to enable logging from within Jersey -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jul-to-slf4j</artifactId>
-            <version>1.7.5</version>
-        </dependency>
 
         <!-- Testing -->
 
@@ -254,9 +172,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-jetty</artifactId>
-            <version>${jersey.version}</version>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-jersey2-jaxrs</artifactId>
+            <version>1.5.0</version>
         </dependency>
 
     </dependencies>

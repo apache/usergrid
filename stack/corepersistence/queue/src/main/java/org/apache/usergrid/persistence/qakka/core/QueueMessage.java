@@ -19,10 +19,15 @@
 
 package org.apache.usergrid.persistence.qakka.core;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.UUID;
 
+
+@ApiModel(value="QueueMessage", description="A Queue Message")
 @XmlRootElement
 public class QueueMessage implements Serializable {
 
@@ -72,6 +77,7 @@ public class QueueMessage implements Serializable {
         this.dataReceived     = dataReceived;
     }
 
+    @ApiModelProperty( value = "UUID of Queue Message in local region.", required = false )
     public UUID getQueueMessageId() {
         return queueMessageId;
     }
@@ -80,26 +86,32 @@ public class QueueMessage implements Serializable {
         this.queueMessageId = queueMessageId;
     }
 
+    @ApiModelProperty( value = "Name of Queue for message.", required = true )
     public String getQueueName() {
         return queueName;
     }
 
+    @ApiModelProperty( value = "Region from which was sent", required = false )
     public String getSendingRegion() {
         return sendingRegion;
     }
 
+    @ApiModelProperty( value = "Regions to which message will be sent", required = false )
     public String getReceivingRegion() {
         return receivingRegion;
     }
 
+    @ApiModelProperty( value = "UUID of Message Data associated with this Queue Message", required = false )
     public UUID getMessageId() {
         return messageId;
     }
 
+    @ApiModelProperty( hidden = true )
     public Long getDelayUntilDate() {
         return delayUntilDate;
     }
 
+    @ApiModelProperty( hidden = true )
     public Long getDelayUntilMs() {
         if ( delayUntilDate == null ) {
             return null;
@@ -115,10 +127,12 @@ public class QueueMessage implements Serializable {
         this.delayUntilDate = System.currentTimeMillis() + delayMs;
     }
 
+    @ApiModelProperty( hidden = true )
     public Long getExpirationDate() {
         return expirationDate;
     }
 
+    @ApiModelProperty( hidden = true )
     public Long getExpirationMs() {
         if ( expirationDate == null ) {
             return null;
@@ -138,10 +152,12 @@ public class QueueMessage implements Serializable {
         return createDate;
     }
 
+    @ApiModelProperty( value = "Date that message was received by system.", required = false )
     public void setCreateDate(Long createDate) {
         this.createDate = createDate;
     }
 
+    @ApiModelProperty( hidden = true )
     public Long getRetries() {
         return retries;
     }
@@ -150,6 +166,7 @@ public class QueueMessage implements Serializable {
         this.retries = retries;
     }
 
+    @ApiModelProperty( hidden = true )
     public Boolean getDataReceived() {
         return dataReceived;
     }
@@ -158,7 +175,7 @@ public class QueueMessage implements Serializable {
         this.dataReceived = dataReceived;
     }
 
-
+    @ApiModelProperty( value = "Embedded JSON to be sent with Queue Message.", required = false )
     public String getData() {
         return data;
     }
@@ -167,6 +184,7 @@ public class QueueMessage implements Serializable {
         this.data = data;
     }
 
+    @ApiModelProperty( value = "Content-type of data associated with QueueMessage.", required = false )
     public String getContentType() {
         return contentType;
     }
@@ -175,6 +193,7 @@ public class QueueMessage implements Serializable {
         this.contentType = contentType;
     }
 
+    @ApiModelProperty( value = "URL of data associated with Queue Message (if not embedded JSON)", required = false )
     public String getHref() {
         return href;
     }

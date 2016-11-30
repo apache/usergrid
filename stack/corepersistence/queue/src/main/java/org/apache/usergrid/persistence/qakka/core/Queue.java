@@ -19,10 +19,14 @@
 
 package org.apache.usergrid.persistence.qakka.core;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import org.apache.usergrid.persistence.qakka.serialization.queues.DatabaseQueue;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+
+@ApiModel(value="Queue", description="Specifies the configuration for a Queue.")
 @XmlRootElement
 public class Queue {
 
@@ -80,6 +84,7 @@ public class Queue {
                 databaseQueue.getDeadLetterQueue());
     }
 
+    @ApiModelProperty( value = "Name of queue, must be unique.", required = true )
     public String getName() {
         return name;
     }
@@ -87,10 +92,7 @@ public class Queue {
         this.name = name;
     }
 
-    public String getQueueType() {
-        return queueType;
-    }
-
+    @ApiModelProperty( hidden = true )
     public String getRegions() {
         return regions;
     }
@@ -98,6 +100,7 @@ public class Queue {
         this.regions = regions;
     }
 
+    @ApiModelProperty( hidden = true )
     public String getDefaultDestinations() {
         return defaultDestinations;
     }
@@ -105,6 +108,7 @@ public class Queue {
         this.defaultDestinations = defaultDestinations;
     }
 
+    @ApiModelProperty( hidden = true )
     public Long getDefaultDelayMs() {
         return defaultDelayMs;
     }
@@ -112,6 +116,7 @@ public class Queue {
         this.defaultDelayMs = defaultDelayMs;
     }
 
+    @ApiModelProperty( hidden = true )
     public Integer getRetryCount() {
         return retryCount;
     }
@@ -119,6 +124,7 @@ public class Queue {
         this.retryCount = retryCount;
     }
 
+    @ApiModelProperty( hidden = true )
     public Integer getHandlingTimeoutSec() {
         return handlingTimeoutSec;
     }
@@ -126,6 +132,7 @@ public class Queue {
         this.handlingTimeoutSec = handlingTimeoutSec;
     }
 
+    @ApiModelProperty( hidden = true )
     public String getDeadLetterQueue() {
         return deadLetterQueue;
     }

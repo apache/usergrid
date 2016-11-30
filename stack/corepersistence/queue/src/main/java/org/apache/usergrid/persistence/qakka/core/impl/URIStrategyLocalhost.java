@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.usergrid.persistence.qakka.api.impl;
+package org.apache.usergrid.persistence.qakka.core.impl;
 
 import com.google.inject.Inject;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
-import org.apache.usergrid.persistence.qakka.api.URIStrategy;
+import org.apache.usergrid.persistence.qakka.URIStrategy;
 
 import java.net.URI;
 import java.net.URISyntaxException;

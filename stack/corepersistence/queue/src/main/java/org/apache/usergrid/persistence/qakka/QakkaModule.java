@@ -22,10 +22,8 @@ package org.apache.usergrid.persistence.qakka;
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.multibindings.Multibinder;
-import com.netflix.config.ConfigurationManager;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
-import org.apache.usergrid.persistence.qakka.api.URIStrategy;
-import org.apache.usergrid.persistence.qakka.api.impl.URIStrategyLocalhost;
+import org.apache.usergrid.persistence.qakka.core.impl.URIStrategyLocalhost;
 import org.apache.usergrid.persistence.qakka.core.*;
 import org.apache.usergrid.persistence.qakka.core.impl.QueueManagerImpl;
 import org.apache.usergrid.persistence.qakka.core.impl.QueueMessageManagerImpl;
@@ -55,21 +53,10 @@ import org.safehaus.guicyfig.GuicyFigModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 
 public class QakkaModule extends AbstractModule {
     private static final Logger logger = LoggerFactory.getLogger( QakkaModule.class );
 
-    static {
-        try {
-            // TODO: reconcile with usergrid props
-            // load properties from one properties file using Netflix Archaius so that GuicyFig will see them
-            ConfigurationManager.loadCascadedPropertiesFromResources( "qakka" );
-        } catch (Throwable t) {
-            logger.warn("Unable to load qakka.properties (can be ignored in Usergrid)");
-        }
-    }
 
     @Override
     protected void configure() {

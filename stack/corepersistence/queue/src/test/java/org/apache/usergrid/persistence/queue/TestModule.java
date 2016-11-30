@@ -19,15 +19,30 @@
 package org.apache.usergrid.persistence.queue;
 
 import com.google.inject.AbstractModule;
+import com.netflix.config.ConfigurationManager;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemModule;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 import org.apache.usergrid.persistence.queue.guice.QueueModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
  * Created by Dave Johnson (snoopdave@apache.org) on 9/14/16.
  */
 public class TestModule  extends AbstractModule {
+    private static final Logger logger = LoggerFactory.getLogger( TestModule.class );
+
+    static {
+        try {
+            // use qakka.properties for tests
+
+            // load properties from one properties file using Netflix Archaius so that GuicyFig will see them
+            ConfigurationManager.loadCascadedPropertiesFromResources( "qakka" );
+        } catch (Throwable t) {
+            logger.error("Unable to load qakka.properties");
+        }
+    }
 
 
     @Override

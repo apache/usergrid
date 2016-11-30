@@ -22,7 +22,7 @@ package org.apache.usergrid.persistence.qakka.core.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
-import org.apache.usergrid.persistence.qakka.api.URIStrategy;
+import org.apache.usergrid.persistence.qakka.URIStrategy;
 import org.apache.usergrid.persistence.qakka.core.*;
 import org.apache.usergrid.persistence.qakka.distributed.DistributedQueueService;
 import org.apache.usergrid.persistence.qakka.exceptions.BadRequestException;
