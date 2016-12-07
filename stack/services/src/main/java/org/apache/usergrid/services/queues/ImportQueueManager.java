@@ -26,17 +26,17 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.usergrid.persistence.queue.QueueManager;
-import org.apache.usergrid.persistence.queue.QueueMessage;
+import org.apache.usergrid.persistence.queue.LegacyQueueManager;
+import org.apache.usergrid.persistence.queue.LegacyQueueMessage;
 
 
 /**
  * Manages the queueManager implementation for Import
  */
-public class ImportQueueManager implements QueueManager {
+public class ImportQueueManager implements LegacyQueueManager {
 
     @Override
-    public List<QueueMessage> getMessages(final int limit, final Class klass) {
+    public List<LegacyQueueMessage> getMessages(final int limit, final Class klass) {
         return new ArrayList<>();
     }
 
@@ -47,13 +47,13 @@ public class ImportQueueManager implements QueueManager {
 
 
     @Override
-    public void commitMessage( final QueueMessage queueMessage ) {
+    public void commitMessage( final LegacyQueueMessage queueMessage ) {
 
     }
 
 
     @Override
-    public void commitMessages( final List<QueueMessage> queueMessages ) {
+    public void commitMessages( final List<LegacyQueueMessage> queueMessages ) {
 
     }
 
@@ -65,18 +65,23 @@ public class ImportQueueManager implements QueueManager {
 
 
     @Override
-    public <T extends Serializable> void sendMessage( final T body ) throws IOException {
+    public <T extends Serializable> void sendMessageToLocalRegion(final T body ) throws IOException {
 
     }
 
 
     @Override
-    public <T extends Serializable> void sendMessageToTopic( final T body ) throws IOException {
+    public <T extends Serializable> void sendMessageToAllRegions(final T body ) throws IOException {
 
     }
 
     @Override
     public void deleteQueue() {
 
+    }
+
+    @Override
+    public void clearQueueNameCache(){
+        //no-op
     }
 }

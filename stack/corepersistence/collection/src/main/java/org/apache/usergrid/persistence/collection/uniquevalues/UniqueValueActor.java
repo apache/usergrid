@@ -17,6 +17,7 @@
 package org.apache.usergrid.persistence.collection.uniquevalues;
 
 import akka.actor.UntypedActor;
+import com.google.inject.Inject;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -34,8 +35,6 @@ public class UniqueValueActor extends UntypedActor {
 
     private final String name = RandomStringUtils.randomAlphanumeric( 4 );
 
-    //private MetricsService metricsService;
-
     private final ActorSystemManager actorSystemManager;
 
     private final UniqueValuesTable table;
@@ -43,11 +42,11 @@ public class UniqueValueActor extends UntypedActor {
     private int count = 0;
 
 
-    public UniqueValueActor() {
+    @Inject
+    public UniqueValueActor( UniqueValuesTable table, ActorSystemManager actorSystemManager ) {
 
-        // TODO: is there a way to avoid this ugly kludge? see also: ClusterSingletonRouter
-        this.table = UniqueValuesServiceImpl.injector.getInstance( UniqueValuesTable.class );
-        this.actorSystemManager = UniqueValuesServiceImpl.injector.getInstance( ActorSystemManager.class );
+        this.table = table;
+        this.actorSystemManager = actorSystemManager;
     }
 
     @Override

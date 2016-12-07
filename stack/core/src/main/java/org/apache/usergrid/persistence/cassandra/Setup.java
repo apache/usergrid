@@ -21,8 +21,9 @@ public interface Setup {
     /**
      * Initialize all configuration for the system setup. Creates keyspaces and elasticsearch indexes
      * @throws Exception
+     * @param forceCheckSchema
      */
-    void initSchema() throws Exception;
+    void initSchema(boolean forceCheckSchema) throws Exception;
 
 
     /**

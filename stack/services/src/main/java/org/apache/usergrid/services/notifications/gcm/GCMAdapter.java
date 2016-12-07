@@ -16,11 +16,12 @@
  */
 package org.apache.usergrid.services.notifications.gcm;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.gcm.server.*;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Notifier;
 import org.apache.usergrid.services.notifications.InactiveDeviceManager;
-import org.mortbay.util.ajax.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +44,8 @@ public class GCMAdapter implements ProviderAdapter {
     private static int BATCH_SIZE = 1000;
     private final Notifier notifier;
     private EntityManager entityManager;
+
+    private static ObjectMapper objectMapper = new ObjectMapper();
 
     private ConcurrentHashMap<Long,Batch> batches;
 
@@ -147,9 +150,9 @@ public class GCMAdapter implements ProviderAdapter {
             throw new IllegalArgumentException(
                     "GCM Payload must be either a Map or a String");
         }
-        if (JSON.toString(mapPayload).length() > 4096) {
-            throw new IllegalArgumentException(
-                    "GCM payloads must be 4096 characters or less");
+        String payloadString = objectMapper.writeValueAsString( mapPayload );
+        if ( payloadString.length() > 4096) {
+            throw new IllegalArgumentException( "GCM payloads must be 4096 characters or less");
         }
         return mapPayload;
     }

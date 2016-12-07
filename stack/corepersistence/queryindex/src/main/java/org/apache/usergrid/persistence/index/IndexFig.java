@@ -40,8 +40,6 @@ public interface IndexFig extends GuicyFig {
 
     String ELASTICSEARCH_ALIAS_POSTFIX = "elasticsearch.alias_postfix";
 
-    String ELASTICSEARCH_STARTUP = "elasticsearch.startup";
-
     String ELASTICSEARCH_NUMBER_OF_SHARDS = "elasticsearch.number_shards";
 
     String ELASTICSEARCH_NUMBER_OF_REPLICAS = "elasticsearch.number_replicas";
@@ -83,7 +81,7 @@ public interface IndexFig extends GuicyFig {
     /**
      * The Elasticsearch cluster name.
      */
-    @Default( "usergrid" )
+    @Default( "elasticsearch" )
     @Key( ELASTICSEARCH_CLUSTER_NAME )
     String getClusterName();
 
@@ -100,13 +98,6 @@ public interface IndexFig extends GuicyFig {
     @Default( "2" ) // TODO: does this timeout get extended on each query?
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
     int getQueryCursorTimeout();
-
-    /**
-     * How Elasticsearch should be started.  Valid values: embedded, forked, or remote
-     */
-    @Default( "remote" )
-    @Key( ELASTICSEARCH_STARTUP )
-    String getStartUp();
 
     /**
      * Force an index refresh after every write. Should only be TRUE for testing purposes.

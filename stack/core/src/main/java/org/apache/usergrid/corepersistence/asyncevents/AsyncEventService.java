@@ -43,9 +43,11 @@ public interface AsyncEventService extends ReIndexAction {
     void queueInitializeApplicationIndex( final ApplicationScope applicationScope );
 
     /**
-     * Queue an entity to be indexed.  This will start processing immediately. For implementations that are realtime (akka, in memory)
-     * We will return a distributed future.  For SQS impls, this will return immediately, and the result will not be available.
+     * Queue an entity to be indexed.  This will start processing immediately.
+     * For implementations that are realtime (akka, in memory) We will return a distributed future.
+     * For SQS impls, this will return immediately, and the result will not be available.
      * After SQS is removed, the tests should be enhanced to ensure that we're processing our queues correctly.
+     *
      * @param applicationScope
      * @param entity The entity to index.  Should be fired when an entity is updated
      * @param updatedAfter
@@ -54,9 +56,10 @@ public interface AsyncEventService extends ReIndexAction {
 
 
     /**
-     * Fired when a new edge is added to an entity. Such as initial entity creation, adding to a collection, or creating a connection
+     * Fired when a new edge is added to an entity. Such as initial entity creation,
+     * adding to a collection, or creating a connection
      *
-     * TODO: We shouldn't take an entity here, only the id.  It doesn't make sense in a distributed context to pass the entity
+     * TODO: We shouldn't take an entity here, only the id. It doesn't make sense in a distributed context
      *
      * @param applicationScope
      * @param entity
@@ -81,8 +84,9 @@ public interface AsyncEventService extends ReIndexAction {
     /**
      *
      * @param indexOperationMessage
+     * @param forUtilityQueue
      */
-    void queueIndexOperationMessage( final IndexOperationMessage indexOperationMessage );
+    void queueIndexOperationMessage(final IndexOperationMessage indexOperationMessage, boolean forUtilityQueue);
 
     /**
      * @param applicationScope

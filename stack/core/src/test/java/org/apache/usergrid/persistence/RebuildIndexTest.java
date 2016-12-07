@@ -49,10 +49,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
-//@RunWith(JukitoRunner.class)
-//@UseModules({ GuiceModule.class })
-
-
 @NotThreadSafe
 public class RebuildIndexTest extends AbstractCoreIT {
     private static final Logger logger = LoggerFactory.getLogger( RebuildIndexTest.class );

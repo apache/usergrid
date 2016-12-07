@@ -74,11 +74,19 @@
             <exclusions>
                 <exclusion>
                     <groupId>net.jpountz.lz4</groupId>
-                    <artifactId>*</artifactId>
+                    <artifactId>lz4</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>netty</artifactId>
+                    <artifactId>netty-all</artifactId>
                     <groupId>io.netty</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>logback-classic</artifactId>
+                    <groupId>ch.qos.logback</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>logback-core</artifactId>
+                    <groupId>ch.qos.logback</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -211,17 +219,16 @@
             <exclusions>
                 <exclusion>
                     <groupId>io.netty</groupId>
-                    <artifactId>*</artifactId>
+                    <artifactId>netty-all</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
 
-        <!-- LZ4 compression used for Datastax Java Driver:
-             https://datastax.github.io/java-driver/2.1.7/features/compression/ -->
+        <!-- LZ4 compression used for Datastax Java Driver -->
         <dependency>
             <groupId>net.jpountz.lz4</groupId>
             <artifactId>lz4</artifactId>
-            <version>1.2.0</version>
+            <version>1.3.0</version>
         </dependency>
 
     </dependencies>

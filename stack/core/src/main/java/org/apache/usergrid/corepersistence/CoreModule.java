@@ -44,6 +44,7 @@ import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphN
 import org.apache.usergrid.persistence.index.guice.IndexModule;
 import org.safehaus.guicyfig.GuicyFigModule;
 
+import java.util.Properties;
 import java.util.concurrent.ThreadPoolExecutor;
 
 
@@ -52,6 +53,11 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public class CoreModule extends AbstractModule {
 
+    private final Properties properties;
+
+    public CoreModule( Properties properties ) {
+        this.properties = properties;
+    }
 
     @Override
     protected void configure() {
@@ -79,7 +85,8 @@ public class CoreModule extends AbstractModule {
                 bind( new TypeLiteral<MigrationDataProvider<GraphNode>>() {} ).to( AllNodesInGraphImpl.class );
             }
         } );
-        install( new IndexModule() {
+
+        install( new IndexModule( properties ) {
             @Override
             public void configureMigrationProvider() {
                 bind( new TypeLiteral<MigrationDataProvider<ApplicationScope>>() {} )

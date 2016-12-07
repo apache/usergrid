@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.actorsystem;
 
 
 import akka.actor.*;
+import akka.cluster.Cluster;
 import akka.cluster.client.ClusterClient;
 import akka.cluster.client.ClusterClientReceptionist;
 import akka.cluster.client.ClusterClientSettings;
@@ -161,6 +162,11 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
     }
 
+    private String getClusterName(){
+        // better to not change this so rolling restarts of usergrid are unaffected
+        return "ClusterSystem";
+    }
+
 
     private void initAkka() {
         logger.info("Initializing Akka");
@@ -188,6 +194,10 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
         clusterSystem = createClusterSystem( config );
 
+        // register our cluster listener
+        clusterSystem.actorOf(Props.create(ClusterListener.class, getSeedsByRegion(), getCurrentRegion()),
+            "clusterListener" );
+
         createClientActors( clusterSystem );
 
         mediator = DistributedPubSub.get( clusterSystem ).mediator();
@@ -213,7 +223,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
                     // we are testing, create seeds-by-region map for one region, one seed
 
-                    String seed = "akka.tcp://ClusterSystem" + "@" + hostname + ":" + port;
+                    String seed = "akka.tcp://"+getClusterName()+ "@" + hostname + ":" + port;
                     seedsByRegion.put( currentRegion, seed );
                     logger.info( "Akka testing, only starting one seed" );
 
@@ -237,7 +247,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                             regionPort = port; // unless we are testing
                         }
 
-                        String seed = "akka.tcp://ClusterSystem" + "@" + hostname + ":" + regionPort;
+                        String seed = "akka.tcp://"+getClusterName()+ "@" + hostname + ":" + regionPort;
 
                         logger.info( "Adding seed [{}] for region [{}]", seed, region );
 
@@ -284,6 +294,16 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
                 put( "akka", new HashMap<String, Object>() {{
 
+                    put( "blocking-io-dispatcher", new HashMap<String, Object>() {{
+                        put( "type", "Dispatcher" );
+                        put( "executor", actorSystemFig.getClusterIoExecutorType() );
+                        put( actorSystemFig.getClusterIoExecutorType() , new HashMap<String, Object>() {{
+                            put( "fixed-pool-size", actorSystemFig.getClusterIoExecutorThreadPoolSize() );
+                            put( "rejection-policy",actorSystemFig.getClusterIoExecutorRejectionPolicy() );
+                        }} );
+                    }} );
+
+
                     put( "remote", new HashMap<String, Object>() {{
                         put( "netty.tcp", new HashMap<String, Object>() {{
                             put( "hostname", hostname );
@@ -293,12 +313,23 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                     }} );
 
                     put( "cluster", new HashMap<String, Object>() {{
+
+                        // this sets default if router does not set
                         put( "max-nr-of-instances-per-node", numInstancesPerNode);
+
                         put( "roles", Collections.singletonList("io") );
                         put( "seed-nodes", new ArrayList<String>() {{
                             for (String seed : seeds) {
                                 add( seed );
                             }
+                        }} );
+                        put( "failure-detector", new HashMap<String, Object>() {{
+                            put( "threshold", "20" );
+                            put( "acceptable-heartbeat-pause", "6 s" );
+                            put( "heartbeat-interval", "1 s" );
+                            put( "heartbeat-request", new HashMap<String, Object>() {{
+                                put( "expected-response-after", "3 s" );
+                            }} );
                         }} );
                     }} );
 
@@ -308,6 +339,8 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
             for ( RouterProducer routerProducer : routerProducers ) {
                 routerProducer.addConfiguration( configMap );
             }
+
+            logger.debug("Actor system configMap: " + configMap );
 
             config = ConfigFactory.parseMap( configMap )
                 .withFallback( ConfigFactory.load( "application.conf" ) );
@@ -324,10 +357,10 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
     /**
      * Create cluster system for this the current region
      */
-    private ActorSystem createClusterSystem( Config config ) {
+    private synchronized ActorSystem createClusterSystem( Config config ) {
 
         // there is only 1 akka system for a Usergrid cluster
-        final String clusterName = "ClusterSystem";
+        final String clusterName = getClusterName();
 
         if ( clusterSystem == null) {
 
@@ -348,13 +381,13 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                 }
             }
 
-            // add a shutdown hook to clean all actor systems if the JVM exits without the servlet container knowing
-//            Runtime.getRuntime().addShutdownHook(new Thread() {
-//                @Override
-//                public void run() {
-//                    shutdownAll();
-//                }
-//            });
+            //add a shutdown hook to clean all actor systems if the JVM exits without the servlet container knowing
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    leaveCluster();
+                }
+            });
 
         }
 
@@ -363,7 +396,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
 
     /**
-     * Create RequestActor for each region.
+     * Create ClientActor for each region.
      */
     private void createClientActors( ActorSystem system ) {
 
@@ -381,7 +414,8 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
             } else {
 
-                List<String> regionSeeds = getSeedsByRegion().get( region );
+                logger.info( "Creating clusterClient for region [{}]", region );
+
                 Set<ActorPath> seedPaths = new HashSet<>(20);
                 for ( String seed : getSeedsByRegion().get( region ) ) {
                     seedPaths.add( ActorPaths.fromString( seed + "/system/receptionist") );
@@ -404,7 +438,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
 
     private void waitForClientActor( ActorRef ra ) {
 
-        logger.info( "Waiting on RequestActor [{}]...", ra.path() );
+        logger.info( "Waiting on ClientActor [{}]...", ra.path() );
 
         started = false;
 
@@ -421,27 +455,28 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                     started = true;
                     break;
                 }
-                logger.info( "Waiting for RequestActor [{}] region [{}] for [{}s]", ra.path(), currentRegion, retries );
+                logger.info( "Waiting for ClientActor [{}] region [{}] for [{}s]", ra.path(), currentRegion, retries );
                 Thread.sleep( 1000 );
 
             } catch (Exception e) {
-                logger.error( "Error: Timeout waiting for RequestActor [{}]", ra.path() );
+                logger.error( "Error: Timeout waiting for ClientActor [{}]", ra.path() );
             }
             retries++;
         }
 
         if (started) {
-            logger.info( "RequestActor [{}] has started", ra.path() );
+            logger.info( "ClientActor [{}] has started", ra.path() );
         } else {
-            throw new RuntimeException( "RequestActor ["+ra.path()+"] did not start in time" );
+            throw new RuntimeException( "ClientActor ["+ra.path()+"] did not start in time" );
         }
     }
 
     @Override
-    public void shutdownAll(){
+    public void leaveCluster(){
 
-        logger.info("Shutting down Akka cluster: {}", clusterSystem.name());
-        clusterSystem.shutdown();
+        Cluster cluster = Cluster.get(clusterSystem);
+        logger.info("Downing self: {} from cluster: {}", cluster.selfAddress(), clusterSystem.name());
+        cluster.leave(cluster.selfAddress());
     }
 
 }

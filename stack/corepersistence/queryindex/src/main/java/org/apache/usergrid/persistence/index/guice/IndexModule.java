@@ -23,7 +23,6 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import org.apache.usergrid.persistence.core.migration.data.DataMigration;
 import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.*;
 import com.google.inject.AbstractModule;
 
@@ -36,8 +35,17 @@ import org.apache.usergrid.persistence.queue.guice.QueueModule;
 
 import org.safehaus.guicyfig.GuicyFigModule;
 
+import java.util.Properties;
+
 
 public abstract class IndexModule extends AbstractModule {
+
+    private final Properties properties;
+
+    public IndexModule( Properties properties ) {
+        this.properties = properties;
+    }
+
 
     @Override
     protected void configure() {
@@ -46,7 +54,7 @@ public abstract class IndexModule extends AbstractModule {
         install(new GuicyFigModule(IndexFig.class));
 
         install(new MapModule());
-        install(new QueueModule());
+        install(new QueueModule( properties.getProperty( "elasticsearch.queue_impl" ) ));
 
         bind( EntityIndexFactory.class ).to( EsEntityIndexFactoryImpl.class );
         bind(IndexCache.class).to(EsIndexCacheImpl.class);

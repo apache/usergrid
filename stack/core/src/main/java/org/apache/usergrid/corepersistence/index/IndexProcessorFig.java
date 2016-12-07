@@ -36,6 +36,8 @@ public interface IndexProcessorFig extends GuicyFig {
 
     String ELASTICSEARCH_WORKER_COUNT = "elasticsearch.worker_count";
 
+    String ELASTICSEARCH_WORKER_COUNT_UTILITY = "elasticsearch.worker_count_utility";
+
     String EVENT_CONCURRENCY_FACTOR = "event.concurrency.factor";
 
     String ELASTICSEARCH_QUEUE_IMPL = "elasticsearch.queue_impl";
@@ -82,6 +84,13 @@ public interface IndexProcessorFig extends GuicyFig {
     int getWorkerCount();
 
     /**
+     * The number of worker threads used to read utility requests from the queue ( mostly re-index ).
+     */
+    @Default("2")
+    @Key(ELASTICSEARCH_WORKER_COUNT_UTILITY)
+    int getWorkerCountUtility();
+
+    /**
      * Set the implementation to use for queuing.
      * Valid values: TEST, LOCAL, SQS, SNS
      * NOTE: SQS and SNS equate to the same implementation of Amazon queue services.
@@ -90,7 +99,7 @@ public interface IndexProcessorFig extends GuicyFig {
     @Key(ELASTICSEARCH_QUEUE_IMPL)
     String getQueueImplementation();
 
-    @Default("100")
+    @Default("500")
     @Key(REINDEX_BUFFER_SIZE)
     int getReindexBufferSize();
 

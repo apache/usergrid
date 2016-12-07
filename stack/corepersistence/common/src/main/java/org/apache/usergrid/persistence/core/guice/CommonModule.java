@@ -45,7 +45,6 @@ import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerializ
 import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
-import org.apache.usergrid.persistence.core.migration.schema.MigrationManagerFig;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManagerImpl;
 
 import com.google.inject.AbstractModule;
@@ -63,7 +62,7 @@ public class CommonModule extends AbstractModule {
     protected void configure() {
 
         //noinspection unchecked
-        install(new GuicyFigModule(MigrationManagerFig.class, CassandraFig.class));
+        install(new GuicyFigModule(CassandraFig.class));
 
         // bind our Cassandra cluster to the Astyanax Implementation
         bind(CassandraCluster.class).to(CassandraClusterImpl.class).asEagerSingleton();

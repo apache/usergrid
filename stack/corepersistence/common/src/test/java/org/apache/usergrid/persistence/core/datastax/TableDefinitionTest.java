@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.core.datastax;
 
 
+import org.apache.usergrid.persistence.core.datastax.impl.TableDefinitionImpl;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class TableDefinitionTest {
     public void testNullTableName(){
 
         try{
-            TableDefinition table1 = new TableDefinition(null, null, null, null, null, null);
+            TableDefinitionImpl table1 = new TableDefinitionImpl(null, null, null, null, null, null, null);
         } catch (NullPointerException npe){
             assertEquals("Table name cannot be null", npe.getMessage());
         }
@@ -44,7 +45,7 @@ public class TableDefinitionTest {
     public void testNullPrimaryKeys(){
 
         try{
-            TableDefinition table1 = new TableDefinition("table1", null, null, null, null, null);
+            TableDefinitionImpl table1 = new TableDefinitionImpl(null, "table1", null, null, null, null, null);
         } catch (NullPointerException npe){
             assertEquals("Primary Key(s) cannot be null", npe.getMessage());
         }
@@ -56,7 +57,7 @@ public class TableDefinitionTest {
     public void testNullColumns(){
 
         try{
-            TableDefinition table1 = new TableDefinition("table1",
+            TableDefinitionImpl table1 = new TableDefinitionImpl(null, "table1",
                 new ArrayList<>(), null, null, null, null);
         } catch (NullPointerException npe){
             assertEquals("Columns cannot be null", npe.getMessage());
@@ -69,7 +70,7 @@ public class TableDefinitionTest {
     public void testNullCacheOption(){
 
         try{
-            TableDefinition table1 = new TableDefinition("table1",
+            TableDefinitionImpl table1 = new TableDefinitionImpl(null, "table1",
                 new ArrayList<>(),
                 new ArrayList<>(), new HashMap<>(), null, null);
         } catch (NullPointerException npe){

@@ -20,6 +20,8 @@ package org.apache.usergrid.corepersistence;
 
 import org.apache.usergrid.persistence.core.guice.TestModule;
 
+import java.util.Properties;
+
 
 /**
  * Test guice module for our core guice configuration
@@ -29,6 +31,8 @@ public class TestCoreModule extends TestModule {
     @Override
     protected void configure() {
 
-        install( new CoreModule() );
+        Properties properties = new Properties();
+        properties.setProperty( "elasticsearch.queue_impl", "DISTRIBUTED" );
+        install( new CoreModule( properties ) );
     }
 }

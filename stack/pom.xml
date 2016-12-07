@@ -100,9 +100,9 @@
         <amber-version>0.22-incubating</amber-version>
         <astyanax.version>3.9.0</astyanax.version>
         <aws.version>1.10.20</aws.version>
-        <cassandra-version>1.2.18</cassandra-version>
+        <cassandra-version>2.1.14</cassandra-version>
         <guava.version>18.0</guava.version>
-        <guice.version>4.0-beta5</guice.version>
+        <guice.version>4.0</guice.version>
         <hector-om-version>3.0-03</hector-om-version>
         <hector-version>1.1-4</hector-version>
         <hector-test-version>1.1-4</hector-test-version>
@@ -352,6 +352,10 @@
 
                 <exclusions>
                     <exclusion>
+                        <artifactId>netty-all</artifactId>
+                        <groupId>io.netty</groupId>
+                    </exclusion>
+                    <exclusion>
                         <groupId>org.antlr</groupId>
                         <artifactId>antlr-runtime</artifactId>
                     </exclusion>
@@ -468,8 +472,17 @@
 
                     <exclusion>
                         <groupId>net.jpountz.lz4</groupId>
-                        <artifactId>*</artifactId>
+                        <artifactId>lz4</artifactId>
+                    </exclusion>
 
+                    <exclusion>
+                        <artifactId>logback-classic</artifactId>
+                        <groupId>ch.qos.logback</groupId>
+                    </exclusion>
+
+                    <exclusion>
+                        <artifactId>logback-core</artifactId>
+                        <groupId>ch.qos.logback</groupId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -622,12 +635,6 @@
             </dependency>
 
             <!-- Other Commercial Dependencies -->
-
-            <dependency>
-                <groupId>com.datastax.hector</groupId>
-                <artifactId>hector-composite</artifactId>
-                <version>0.8.0-rc1-SNAPSHOT</version>
-            </dependency>
 
             <dependency>
                 <groupId>com.fasterxml.uuid</groupId>

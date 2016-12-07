@@ -27,14 +27,16 @@ import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
-import org.apache.usergrid.persistence.queue.LocalQueueManager;
+import org.apache.usergrid.persistence.queue.LegacyQueueManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
-import org.apache.usergrid.persistence.queue.QueueFig;
-import org.apache.usergrid.persistence.queue.QueueManagerFactory;
+import org.apache.usergrid.persistence.queue.LegacyQueueFig;
+import org.apache.usergrid.persistence.queue.LegacyQueueManagerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+
+import static org.apache.usergrid.persistence.queue.LegacyQueueManager.Implementation.LOCAL;
 
 
 /**
@@ -45,7 +47,7 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
 
     private final IndexProcessorFig indexProcessorFig;
 
-    private final QueueManagerFactory queueManagerFactory;
+    private final LegacyQueueManagerFactory queueManagerFactory;
     private final MetricsFactory metricsFactory;
     private final RxTaskScheduler rxTaskScheduler;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
@@ -54,14 +56,14 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     private final EntityIndexFactory entityIndexFactory;
     private final IndexProducer indexProducer;
     private final MapManagerFactory mapManagerFactory;
-    private final QueueFig queueFig;
+    private final LegacyQueueFig queueFig;
 
     private AsyncEventService asyncEventService;
 
 
     @Inject
     public AsyncIndexProvider(final IndexProcessorFig indexProcessorFig,
-                              final QueueManagerFactory queueManagerFactory,
+                              final LegacyQueueManagerFactory queueManagerFactory,
                               final MetricsFactory metricsFactory,
                               @EventExecutionScheduler final RxTaskScheduler rxTaskScheduler,
                               final EntityCollectionManagerFactory entityCollectionManagerFactory,
@@ -70,7 +72,7 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
                               final EntityIndexFactory entityIndexFactory,
                               final IndexProducer indexProducer,
                               final MapManagerFactory mapManagerFactory,
-                              final QueueFig queueFig) {
+                              final LegacyQueueFig queueFig) {
 
         this.indexProcessorFig = indexProcessorFig;
         this.queueManagerFactory = queueManagerFactory;
@@ -100,50 +102,25 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     private AsyncEventService getIndexService() {
         final String value = indexProcessorFig.getQueueImplementation();
 
-        final Implementations impl = Implementations.valueOf(value);
+        final LegacyQueueManager.Implementation impl = LegacyQueueManager.Implementation.valueOf(value);
 
-        switch (impl) {
-            case LOCAL:
-                AsyncEventServiceImpl eventService = new AsyncEventServiceImpl(scope -> new LocalQueueManager(), indexProcessorFig, indexProducer, metricsFactory,
-                    entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory, eventBuilder,mapManagerFactory, queueFig,rxTaskScheduler);
-                eventService.MAX_TAKE = 1000;
-                return eventService;
-            case SQS:
-                throw new IllegalArgumentException("Configuration value of SQS is no longer allowed. Use SNS instead with only a single region");
-            case SNS:
-                return new AsyncEventServiceImpl(queueManagerFactory, indexProcessorFig, indexProducer, metricsFactory,
-                    entityCollectionManagerFactory, indexLocationStrategyFactory,entityIndexFactory, eventBuilder, mapManagerFactory, queueFig, rxTaskScheduler );
-            default:
-                throw new IllegalArgumentException("Configuration value of " + getErrorValues() + " are allowed");
-        }
-    }
+        final AsyncEventServiceImpl asyncEventService = new AsyncEventServiceImpl(
+            queueManagerFactory,
+            indexProcessorFig,
+            indexProducer,
+            metricsFactory,
+            entityCollectionManagerFactory,
+            indexLocationStrategyFactory,
+            entityIndexFactory,
+            eventBuilder,
+            mapManagerFactory,
+            queueFig,
+            rxTaskScheduler );
 
-
-    private String getErrorValues() {
-        String values = "";
-
-        for (final Implementations impl : Implementations.values()) {
-            values += impl + ", ";
+        if ( impl.equals( LOCAL )) {
+            asyncEventService.MAX_TAKE = 1000;
         }
 
-        values = values.substring(0, values.length() - 2);
-
-        return values;
-    }
-
-
-    /**
-     * Different implementations
-     */
-    public static enum Implementations { //TODO see about removing SNS and SQS and use AMZN? - michaelarusso
-        TEST,
-        LOCAL,
-        SQS,
-        SNS;
-
-
-        public String asString() {
-            return toString();
-        }
+        return asyncEventService;
     }
 }

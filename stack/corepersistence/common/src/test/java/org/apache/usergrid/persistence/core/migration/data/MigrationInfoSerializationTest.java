@@ -71,7 +71,7 @@ public class MigrationInfoSerializationTest {
         //drop the column family, then run setup
         keyspace.dropColumnFamily( MigrationInfoSerializationImpl.CF_MIGRATION_INFO.getName() );
 
-        migrationManager.migrate();
+        migrationManager.migrate(false);
 
         //test getting nothing works
         final String emptyStatus = migrationInfoSerialization.getStatusMessage(migrationModule);

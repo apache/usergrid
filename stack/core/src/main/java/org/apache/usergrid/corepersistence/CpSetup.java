@@ -75,13 +75,13 @@ public class CpSetup implements Setup {
 
 
     @Override
-    public void initSchema() throws Exception {
+    public void initSchema(boolean forceCheckSchema) throws Exception {
 
         // Initialize the management app index in Elasticsearch
         this.emf.initializeManagementIndex();
 
         // Create the schema (including keyspace) in Cassandra
-        setupSchema();
+        setupSchema(forceCheckSchema);
         setupLegacySchema();
 
     }
@@ -135,13 +135,14 @@ public class CpSetup implements Setup {
     /**
      * Initialize schema from the new 2.x Migration classes which contain schema individually
      *
+     * @param forceCheckSchema
      */
 
-    private void setupSchema() throws Exception {
+    private void setupSchema(boolean forceCheckSchema) throws Exception {
 
         MigrationManager m = injector.getInstance( MigrationManager.class );
         try {
-            m.migrate();
+            m.migrate(forceCheckSchema);
         }
         catch ( MigrationException ex ) {
             throw new RuntimeException( "Error migrating Core Persistence", ex );

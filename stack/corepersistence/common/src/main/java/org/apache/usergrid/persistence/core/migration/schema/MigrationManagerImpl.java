@@ -19,25 +19,24 @@
 package org.apache.usergrid.persistence.core.migration.schema;
 
 
-import java.util.Collection;
-import java.util.Set;
-
-import com.datastax.driver.core.KeyspaceMetadata;
-import org.apache.usergrid.persistence.core.CassandraFig;
-import org.apache.usergrid.persistence.core.datastax.CQLUtils;
-import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
-import org.apache.usergrid.persistence.core.datastax.TableDefinition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
 import com.netflix.astyanax.ddl.KeyspaceDefinition;
+import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.datastax.CQLUtils;
+import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -69,11 +68,13 @@ public class MigrationManagerImpl implements MigrationManager {
 
 
     @Override
-    public void migrate() throws MigrationException {
+    public void migrate(boolean forceCheckSchema) throws MigrationException {
 
         try {
 
-            dataStaxCluster.createApplicationKeyspace();
+            dataStaxCluster.createApplicationKeyspace(forceCheckSchema);
+
+            dataStaxCluster.createApplicationLocalKeyspace(forceCheckSchema);
 
             for ( Migration migration : migrations ) {
 
@@ -85,7 +86,9 @@ public class MigrationManagerImpl implements MigrationManager {
                 if ((columnFamilies == null || columnFamilies.size() == 0) &&
                     (tables == null || tables.size() == 0)) {
                     logger.warn(
-                        "Class {} implements {} but returns null for getColumnFamilies and getTables for migration.  Either implement this method or remove the interface from the class",
+                        "Class {} implements {} but returns null for getColumnFamilies and " +
+                            "getTables for migration.  Either implement this method or remove " +
+                            "the interface from the class",
                         migration.getClass().getSimpleName(), Migration.class.getSimpleName());
                     continue;
                 }
@@ -100,7 +103,7 @@ public class MigrationManagerImpl implements MigrationManager {
                 if ( tables != null && !tables.isEmpty() ) {
                     for (TableDefinition tableDefinition : tables) {
 
-                        createTable(tableDefinition);
+                        createTable(tableDefinition, forceCheckSchema);
 
                     }
                 }
@@ -127,39 +130,72 @@ public class MigrationManagerImpl implements MigrationManager {
                 keyspaceDefinition.getColumnFamily( columnFamily.getColumnFamily().getName() );
 
         if ( existing != null ) {
+            logger.info("Not creating columnfamily {}, it already exists.", columnFamily.getColumnFamily().getName());
             return;
         }
 
         keyspace.createColumnFamily( columnFamily.getColumnFamily(), columnFamily.getOptions() );
 
-        // creation of tables happens with the datastax driver and it auto checks schema on schema queries
         // the CF def creation uses Asytanax, so manually check the schema agreement
-        dataStaxCluster.waitForSchemaAgreement();
+        astyanaxWaitForSchemaAgreement();
 
         logger.info( "Created column family {}", columnFamily.getColumnFamily().getName() );
 
     }
 
-    private void createTable(TableDefinition tableDefinition ) throws Exception {
+    private void createTable(TableDefinition tableDefinition, boolean forceCheckSchema) throws Exception {
 
-        KeyspaceMetadata keyspaceMetadata = dataStaxCluster.getClusterSession().getCluster().getMetadata()
-            .getKeyspace(CQLUtils.quote(cassandraFig.getApplicationKeyspace()));
-
-        boolean exists =  keyspaceMetadata != null && keyspaceMetadata.getTable(tableDefinition.getTableName()) != null;
+        boolean exists;
+        if(!forceCheckSchema){
+            exists = dataStaxCluster.getClusterSession().getCluster()
+                .getMetadata()
+                .getKeyspace(CQLUtils.quote( tableDefinition.getKeyspace() ) )
+                .getTable( tableDefinition.getTableName() ) != null;
+        }else{
+            exists = dataStaxCluster.getClusterSession()
+                .execute("select * from system.schema_columnfamilies where keyspace_name='"+tableDefinition.getKeyspace()
+                    +"' and columnfamily_name='"+CQLUtils.unquote(tableDefinition.getTableName())+"'").one() != null;
+        }
 
         if( exists ){
+            logger.info("Not creating table {}, it already exists.", tableDefinition.getTableName());
             return;
         }
 
-        String CQL = CQLUtils.getTableCQL(cassandraFig, tableDefinition, CQLUtils.ACTION.CREATE);
+        String CQL = tableDefinition.getTableCQL(cassandraFig, TableDefinition.ACTION.CREATE);
         if (logger.isDebugEnabled()) {
             logger.debug(CQL);
         }
-        dataStaxCluster.getApplicationSession()
-            .execute(CQL);
 
-        logger.info("Created table: {}", tableDefinition.getTableName());
+        if ( tableDefinition.getKeyspace().equals( cassandraFig.getApplicationKeyspace() )) {
+            dataStaxCluster.getApplicationSession().execute( CQL );
+        } else {
+            dataStaxCluster.getApplicationLocalSession().execute( CQL );
+        }
 
+        logger.info("Created table: {} in keyspace {}",
+            tableDefinition.getTableName(), tableDefinition.getKeyspace());
+
+    }
+
+    private void astyanaxWaitForSchemaAgreement() throws ConnectionException {
+
+        while ( true ) {
+
+            final Map<String, List<String>> versions = keyspace.describeSchemaVersions();
+
+            if ( versions != null && versions.size() == 1 ) {
+                return;
+            }
+
+            //sleep and try it again
+            try {
+                Thread.sleep( 100 );
+            }
+            catch ( InterruptedException e ) {
+                //swallow
+            }
+        }
     }
 
 

@@ -18,18 +18,18 @@ package org.apache.usergrid.persistence;
 
 
 import org.apache.usergrid.locking.LockManager;
+import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.datastax.CQLUtils;
+import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.usergrid.cassandra.SchemaManager;
 import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.cassandra.Setup;
 import org.apache.usergrid.persistence.index.impl.EsProvider;
 
 import com.google.inject.Injector;
-
-import me.prettyprint.hector.api.Cluster;
 
 
 /** @author zznate */
@@ -37,21 +37,23 @@ public class CoreSchemaManager implements SchemaManager {
     private static final Logger logger = LoggerFactory.getLogger( CoreSchemaManager.class );
 
     private final Setup setup;
-    private final Cluster cluster;
+    private final CassandraFig cassandraFig;
     private final LockManager lockManager;
+    private final DataStaxCluster dataStaxCluster;
 
 
-    public CoreSchemaManager( final Setup setup, final Cluster cluster, Injector injector ) {
+    public CoreSchemaManager( final Setup setup, Injector injector ) {
         this.setup = setup;
-        this.cluster = cluster;
+        this.cassandraFig = injector.getInstance( CassandraFig.class );
         this.lockManager = injector.getInstance( LockManager.class );
+        this.dataStaxCluster = injector.getInstance( DataStaxCluster.class );
     }
 
 
     @Override
     public void create() {
         try {
-            setup.initSchema();
+            setup.initSchema(true);
             lockManager.setup();
         }
         catch ( Exception ex ) {
@@ -64,9 +66,6 @@ public class CoreSchemaManager implements SchemaManager {
     @Override
     public void populateBaseData() {
         try {
-
-            setup.initSchema();
-            lockManager.setup();
 
             setup.runDataMigration();
             setup.initMgmtApp();
@@ -83,23 +82,17 @@ public class CoreSchemaManager implements SchemaManager {
     public void destroy() {
         logger.info( "dropping keyspaces" );
         try {
-            cluster.dropKeyspace( CassandraService.getApplicationKeyspace() );
-        }
-        catch ( RuntimeException ire ) {
-            //swallow if it just doesn't exist
-        }
+            dataStaxCluster.getClusterSession()
+                .execute("DROP KEYSPACE "+ CQLUtils.quote(cassandraFig.getApplicationKeyspace()));
+            dataStaxCluster.waitForSchemaAgreement();
 
-
-        try {
-            cluster.dropKeyspace( CassandraService.getApplicationKeyspace() );
+            dataStaxCluster.getClusterSession().close(); // close session so it's meta will get refreshed
         }
-        catch ( RuntimeException ire ) {
-            //swallow if it just doesn't exist
+        catch ( Exception e ) {
+            logger.error("Error dropping application keyspace: {}", cassandraFig.getApplicationKeyspace());
         }
-
         logger.info( "keyspaces dropped" );
-
-
+        logger.info( "dropping indices" );
         final EsProvider provider =
             SpringResource.getInstance().getBean( Injector.class ).getInstance( EsProvider.class );
 

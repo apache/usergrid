@@ -113,10 +113,18 @@ public class GuiceFactory implements FactoryBean<Injector> {
             cpProps.put( "cassandra.cluster_name", getAndValidateProperty( "cassandra.cluster" ) );
 
             cpProps
-                .put( "collections.keyspace.strategy.class", getAndValidateProperty( "cassandra.keyspace.strategy" ) );
+                .put( "cassandra.strategy", getAndValidateProperty( "cassandra.keyspace.strategy" ) );
 
-            cpProps.put( "collections.keyspace.strategy.options",
+            cpProps
+                .put( "cassandra.strategy.local", getAndValidateProperty( "cassandra.keyspace.strategy.local" ) );
+
+            cpProps.put( "cassandra.strategy.options",
                 getAndValidateProperty( "cassandra.keyspace.replication" ) );
+
+            cpProps.put( "cassandra.strategy.options.local",
+                getAndValidateProperty( "cassandra.keyspace.replication.local" ) );
+
+
 
             if (logger.isDebugEnabled()) {
                 logger.debug("Set Cassandra properties for Core Persistence: {}", cpProps.toString());
@@ -140,7 +148,7 @@ public class GuiceFactory implements FactoryBean<Injector> {
             Module serviceModule =(Module)applicationContext.getBean("serviceModule");
             moduleList.add( serviceModule);
         }
-        moduleList.add(new CoreModule());
+        moduleList.add(new CoreModule( systemProperties ));
         moduleList.add(new PersistenceModule(applicationContext));
         //we have to inject a couple of spring beans into our Guice.  Wire it with PersistenceModule
         injector = Guice.createInjector( moduleList );

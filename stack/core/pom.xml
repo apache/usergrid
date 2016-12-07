@@ -40,7 +40,6 @@
         </plugins>
     </reporting>
 
-
     <build>
 
         <resources>
@@ -131,10 +130,10 @@
                 </exclusion>
                 <exclusion>
                     <groupId>net.jpountz.lz4</groupId>
-                    <artifactId>*</artifactId>
+                    <artifactId>lz4</artifactId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>netty</artifactId>
+                    <artifactId>netty-all</artifactId>
                     <groupId>io.netty</groupId>
                 </exclusion>
             </exclusions>
@@ -334,6 +333,14 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.usergrid</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.hectorclient</groupId>
             <artifactId>hector-test</artifactId>
             <scope>test</scope>
@@ -429,6 +436,7 @@
             <groupId>org.apache.usergrid</groupId>
             <artifactId>queue</artifactId>
             <version>${project.version}</version>
+            <classifier>classes</classifier>
             <type>jar</type>
         </dependency>
 
