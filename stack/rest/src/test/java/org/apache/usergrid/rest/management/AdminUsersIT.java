@@ -17,6 +17,9 @@
 
 package org.apache.usergrid.rest.management;
 
+import com.sun.jersey.api.client.UniformInterfaceException;
+import net.jcip.annotations.NotThreadSafe;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.usergrid.management.MockImapClient;
 import org.apache.usergrid.persistence.core.util.StringUtils;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
@@ -24,30 +27,30 @@ import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.mgmt.ManagementResource;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.apache.usergrid.management.AccountCreationProps.*;
+import static org.apache.usergrid.security.PasswordPolicy.ERROR_POLICY_VIOLIATION;
 import static org.junit.Assert.*;
 
 
 /**
  * Contains all tests relating to Admin Users
  */
+@NotThreadSafe
 public class AdminUsersIT extends AbstractRestIT {
 
     ManagementResource management;
@@ -86,6 +89,55 @@ public class AdminUsersIT extends AbstractRestIT {
             fail( "We shouldn't be able to get a token using the old password" );
         }catch(ClientErrorException uie) {
             errorParse( 400,"invalid_grant",uie );
+        }
+    }
+
+
+    /**
+     * Test that creating user with password that violates policy results in informative error message.
+     */
+    @Test
+    public void createUserWithInvalidPassword() throws IOException {
+
+        String rando = RandomStringUtils.randomAlphanumeric(10);
+        Form userForm = new Form();
+        userForm.param( "username", "user_" + rando );
+        userForm.param( "name", rando);
+        userForm.param( "email", "user_" + rando + "@example.com" );
+        userForm.param( "password", "abc" );
+
+        try {
+            management().users().post( User.class, userForm );
+            fail("Invalid password should have caused error");
+
+        } catch( ClientErrorException uie ) {
+            errorParse( 400, ERROR_POLICY_VIOLIATION, uie );
+        }
+
+    }
+
+
+    /**
+     * Test that setting a password that violates policy results in informative error message.
+     */
+    @Test
+    public void resetPasswordWithInvalidNewPassword() throws IOException {
+
+        String username = clientSetup.getUsername();
+        String password = clientSetup.getPassword();
+
+        Map<String, Object> passwordPayload = new HashMap<String, Object>();
+
+        // Default password policy is lenient, only requires length of 4
+        passwordPayload.put( "newpassword", "abc" );
+        passwordPayload.put( "oldpassword", password );
+
+        try {
+            management.users().user( username ).password().post( Entity.class, passwordPayload );
+            fail("Invalid password should have caused error");
+
+        } catch( ClientErrorException uie ) {
+            errorParse( 400, ERROR_POLICY_VIOLIATION, uie );
         }
     }
 
@@ -187,7 +239,6 @@ public class AdminUsersIT extends AbstractRestIT {
      * TODO:test for parallel test that changing the properties here won't affect other tests
      * @throws Exception
      */
-    @Ignore("breaks other tests")
     @Test
     public void testUnconfirmedAdminLogin()  throws Exception{
 
@@ -273,7 +324,6 @@ public class AdminUsersIT extends AbstractRestIT {
      * Test that the system admin doesn't need a confirmation email
      * @throws Exception
      */
-    @Ignore("breaks other tests")
     @Test
     public void testSystemAdminNeedsNoConfirmation() throws Exception{
         //Save original properties to return them to normal at the end of the test
@@ -311,7 +361,6 @@ public class AdminUsersIT extends AbstractRestIT {
      * Test that the test account doesn't need confirmation and is created automatically.
      * @throws Exception
      */
-    @Ignore("Test doesn't pass because the test account isn't getting correct instantiated")
     @Test
     public void testTestUserNeedsNoConfirmation() throws Exception{
         //Save original properties to return them to normal at the end of the test
@@ -343,16 +392,11 @@ public class AdminUsersIT extends AbstractRestIT {
         }
     }
 
-    /**
-     * Update the current management user and make sure the change persists
-     * @throws Exception
-     */
-    @Ignore("Fails because we cannot GET a management user with a super user token - only with an Admin level token."
-        + "But, we can PUT with a superuser token. This test will work once that issue has been resolved.")
     @Test
-    public void updateManagementUser() throws Exception {
+    public void updateManagementUserNoToken() throws Exception {
 
-        Organization newOrg = createOrgPayload( "updateManagementUser", null );
+
+        Organization newOrg = createOrgPayload( "updateManagementUserNoToken", null );
 
 
         Organization orgReturned = clientSetup.getRestClient().management().orgs().post( newOrg );
@@ -361,24 +405,175 @@ public class AdminUsersIT extends AbstractRestIT {
 
         //Add a property to management user
         Entity userProperty = new Entity(  ).chainPut( "company","usergrid" );
-        management().users().user( newOrg.getUsername() ).put( userProperty );
 
-        Entity userUpdated = updateAdminUser( userProperty, orgReturned );
+        try{
+            management().users().user( newOrg.getUsername() ).put( userProperty );
+        } catch( NotAuthorizedException e ){
 
-        assertEquals( "usergrid",userUpdated.getAsString( "company" ) );
+            int status = e.getResponse().getStatus();
+            assertEquals(401, status);
+        }
 
-        //Update property with new management value.
-        userProperty = new Entity(  ).chainPut( "company","Apigee" );
-
-        userUpdated = updateAdminUser( userProperty, orgReturned);
-
-        assertEquals( "Apigee",userUpdated.getAsString( "company" ) );
     }
 
-    private Entity updateAdminUser(Entity userProperty, Organization organization){
-        management().users().user( organization.getUsername() ).put( userProperty );
+    @Test
+    public void updateManagementUserSuperuserToken() throws Exception {
 
-        return management().users().user( organization.getUsername() ).get();
+
+        Organization newOrg = createOrgPayload( "updateManagementUserSuperuserToken", null );
+
+
+        Organization orgReturned = clientSetup.getRestClient().management().orgs().post( newOrg );
+
+        assertNotNull( orgReturned.getOwner() );
+
+        //Add a property to management user
+        Entity userProperty = new Entity(  ).chainPut( "company","usergrid" );
+
+        management.token().setToken( clientSetup.getSuperuserToken());
+        management().users().user( newOrg.getUsername() ).put( userProperty );
+
+
+    }
+
+    @Test
+    public void updateManagementUserAdminToken() throws Exception {
+
+        Organization newOrg = createOrgPayload( "updateManagementUserAdminToken", null );
+
+
+        Organization orgReturned = clientSetup.getRestClient().management().orgs().post( newOrg );
+
+        assertNotNull( orgReturned.getOwner() );
+
+        String orgName = orgReturned.getName();
+
+        //Add a property to management user
+        Entity userProperty = new Entity(  ).chainPut( "company","usergrid" );
+
+        User adminUser = orgReturned.getOwner();
+
+        Token adminToken = management.token().get(adminUser.getUsername(), orgName);
+        assertNotNull(adminToken);
+        management.token().setToken( adminToken );
+        management().users().user( newOrg.getUsername() ).put( userProperty );
+
+    }
+
+    @Test
+    public void updateManagementUserWrongAdminToken() throws Exception {
+
+        Organization newOrg = createOrgPayload( "updateManagementUserWrongAdminToken", null );
+        Organization orgReturned = clientSetup.getRestClient().management().orgs().post( newOrg );
+        assertNotNull( orgReturned.getOwner() );
+
+        // add a new management user to the org for the purpose of a 'wrong' user trying update others
+        Entity adminUserPayload = new Entity();
+        String wrongAdminUsername = "wrongAdminUser"+UUIDUtils.newTimeUUID();
+        adminUserPayload.put( "username", wrongAdminUsername );
+        adminUserPayload.put( "name", wrongAdminUsername );
+        adminUserPayload.put( "email", wrongAdminUsername+"@usergrid.com" );
+        adminUserPayload.put( "password", wrongAdminUsername );
+        management().orgs().org( clientSetup.getOrganizationName() ).users().post(User.class ,adminUserPayload );
+
+
+        // get token of the newly added wrongAdminUser
+        Token wrongAdminToken = management.token().get(wrongAdminUsername, wrongAdminUsername);
+        assertNotNull(wrongAdminToken);
+        management.token().setToken( wrongAdminToken );
+
+        try{
+            //Add a property to management user
+            Entity userProperty = new Entity(  ).chainPut( "company","usergrid" );
+            management().users().user( newOrg.getUsername() ).put( userProperty );
+            fail("Should not have been allowed");
+
+        } catch( NotAuthorizedException e ){
+
+            int status = e.getResponse().getStatus();
+            assertEquals(401, status);
+        }
+
+    }
+
+
+    @Test
+    public void testAdminRemovalFromOrg() throws Exception {
+        Organization newOrg = createOrgPayload( "testAdminRemovalFromOrg", null );
+        Organization orgReturned = clientSetup.getRestClient().management().orgs().post(newOrg);
+        User owner = orgReturned.getOwner();
+        assertNotNull(owner);
+        String orgName = orgReturned.getName();
+        Token ownerToken = management.token().get(owner.getUsername(), orgName);
+
+        // add a new admin user to the org
+        Entity adminUserPayload = new Entity();
+        String newAdminUserName = "newAdminUser"+UUIDUtils.newTimeUUID();
+        adminUserPayload.put( "username", newAdminUserName );
+        adminUserPayload.put( "name", newAdminUserName );
+        adminUserPayload.put( "email", newAdminUserName+"@usergrid.com" );
+        adminUserPayload.put( "password", newAdminUserName );
+
+        management.token().setToken(ownerToken);
+        management.orgs().org(orgName).users().post(User.class, adminUserPayload);
+
+        // get token of the new admin user
+        Token adminToken = management.token().get(newAdminUserName, newAdminUserName);
+        assertNotNull(adminToken);
+
+        // get org info
+        try {
+            management.token().setToken(adminToken);
+            management.orgs().org(orgName).get();
+        }
+        catch (Exception e) {
+            // should have been allowed
+            fail("Should have worked: " + e.getMessage());
+        }
+
+        // remove access
+        try {
+            management.token().setToken(ownerToken);
+            management.orgs().org(orgName).users().user(newAdminUserName).delete();
+        }
+        catch (Exception e) {
+            // should have been allowed
+            fail("Should have worked: " + e.getMessage());
+        }
+
+        // get org info (should be unsuccessful)
+        try {
+            management.token().setToken(adminToken);
+            management.orgs().org(orgName).get();
+            fail("Should not have allowed org access");
+        }
+        catch (NotAuthorizedException nae) {
+            // this is the right return
+
+        }
+        catch (Exception e) {
+            fail("Should have been unauthorized: " + e.getMessage());
+        }
+
+        // restore access
+        try {
+            management.token().setToken(ownerToken);
+            management.orgs().org(orgName).users().user(newAdminUserName).put(new Entity());
+        }
+        catch (Exception e) {
+            // should have been allowed
+            fail("Should have worked: " + e.getMessage());
+        }
+
+        // get org info
+        try {
+            management.token().setToken(adminToken);
+            management.orgs().org(orgName).get();
+        }
+        catch (Exception e) {
+            // should have been allowed
+            fail("Should have worked: " + e.getMessage());
+        }
 
     }
 
@@ -390,7 +585,7 @@ public class AdminUsersIT extends AbstractRestIT {
     @Test
     public void reactivateTest() throws Exception {
         //call reactivate endpoint on default user
-        clientSetup.getRestClient().management().users().user( clientSetup.getUsername() ).reactivate();
+        clientSetup.getRestClient().management().users().user( clientSetup.getUsername() ).reactivate().get();
         refreshIndex();
 
         //Create mocked inbox and check to see if you recieved an email in the users inbox.
@@ -398,24 +593,32 @@ public class AdminUsersIT extends AbstractRestIT {
         assertFalse( inbox.isEmpty() );
     }
 
-    @Ignore("Test is broken due to viewables not being properly returned in the embedded tomcat")
+
     @Test
     public void checkFormPasswordReset() throws Exception {
 
-
+        // initiate password reset
         management().users().user( clientSetup.getUsername() ).resetpw().post(new Form());
+        refreshIndex();
 
-        //Create mocked inbox
+        // create mocked inbox, get password reset email and extract token
         List<Message> inbox = Mailbox.get( clientSetup.getEmail() );
         assertFalse( inbox.isEmpty() );
 
         MockImapClient client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
         client.processMail();
 
-        //Get email with confirmation token and extract token
-        Message confirmation = inbox.get( 0 );
-        assertEquals( "User Account Confirmation: " + clientSetup.getEmail(), confirmation.getSubject() );
-        String token = getTokenFromMessage( confirmation );
+        // Get email with confirmation token and extract token
+
+        String token = null;
+        Iterator<Message> msgIterator = inbox.iterator();
+        while ( token == null && msgIterator.hasNext() ) {
+            Message msg = msgIterator.next();
+            if ( msg.getSubject().equals("Password Reset") ) {
+                token = getTokenFromMessage( msg );
+            }
+        }
+        assertNotNull( token );
 
         Form formData = new Form();
         formData.param( "token", token );
@@ -434,36 +637,55 @@ public class AdminUsersIT extends AbstractRestIT {
 
         assertTrue( html.contains( "invalid token" ) );
     }
-//
-//     TODO: will work once resetpw viewables work
-//    @Test
-//    @Ignore( "causes problems in build" )
-//    public void passwordResetIncorrectUserName() throws Exception {
-//
-//        String email = "test2@usergrid.com";
-//        setup.getMgmtSvc().createAdminUser( "test2", "test2", "test2@usergrid.com", "sesa2me", false, false );
-//        UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( email );
-//        String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser( userInfo.getUuid(), 15000 );
-//
-//        assertTrue( setup.getMgmtSvc().checkPasswordResetTokenForAdminUser( userInfo.getUuid(), resetToken ) );
-//
-//        Form formData = new Form();
-//        formData.add( "token", resetToken );
-//        formData.add( "password1", "sesa2me" );
-//        formData.add( "password2", "sesa2me" );
-//
-//        String html = resource().path( "/management/users/" + "noodle" + userInfo.getUsername() + "/resetpw" )
-//                                .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
-//
-//        assertTrue( html.contains( "Incorrect username entered" ) );
-//
-//        html = resource().path( "/management/users/" + userInfo.getUsername() + "/resetpw" )
-//                         .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
-//
-//        assertTrue( html.contains( "password set" ) );
-//    }
-//
-//
+
+
+    @Test
+    public void passwordResetIncorrectUserName() throws Exception {
+
+        // initiate password reset
+        management().users().user( clientSetup.getUsername() ).resetpw().post(new Form());
+        refreshIndex();
+
+        // create mocked inbox, get password reset email and extract token
+        List<Message> inbox = Mailbox.get( clientSetup.getEmail() );
+        assertFalse( inbox.isEmpty() );
+
+        MockImapClient client = new MockImapClient( "mockserver.com", "test-user-47", "somepassword" );
+        client.processMail();
+
+        // Get email with confirmation token and extract token
+        String token = null;
+        Iterator<Message> msgIterator = inbox.iterator();
+        while ( token == null && msgIterator.hasNext() ) {
+            Message msg = msgIterator.next();
+            if ( msg.getSubject().equals("Password Reset") ) {
+                token = getTokenFromMessage( msg );
+            }
+        }
+        assertNotNull( token );
+
+        Form formData = new Form();
+        formData.param( "token", token );
+        formData.param( "password1", "sesame" );
+        formData.param( "password2", "sesame" );
+
+        try {
+
+            String html = management().users().user( "mr_fatfinger" ).resetpw().getTarget().request()
+                .post( javax.ws.rs.client.Entity.form( formData ), String.class );
+
+            fail("Password reset request should have failed");
+
+        } catch ( BadRequestException expected ) {
+            String body = expected.getResponse().readEntity( String.class );
+            assertTrue( body.contains( "Could not find" ) );
+        }
+
+        String html = management().users().user( clientSetup.getUsername() ).resetpw().getTarget().request()
+            .post( javax.ws.rs.client.Entity.form(formData), String.class );
+
+        assertTrue( html.contains( "password set" ) );
+    }
 
 
     /**
@@ -519,64 +741,89 @@ public class AdminUsersIT extends AbstractRestIT {
         }
     }
 
-      //TODO: won't work until resetpw viewables are fixed in the embedded environment.
-//    @Test
-//    public void checkPasswordChangeTime() throws Exception {
-//
-//        final TestUser user = context.getActiveUser();
-//        String email = user.getEmail();
-//        UserInfo userInfo = setup.getMgmtSvc().getAdminUserByEmail( email );
-//        String resetToken = setup.getMgmtSvc().getPasswordResetTokenForAdminUser( userInfo.getUuid(), 15000 );
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        Form formData = new Form();
-//        formData.add( "token", resetToken );
-//        formData.add( "password1", "sesame" );
-//        formData.add( "password2", "sesame" );
-//
-//        String html = resource().path( "/management/users/" + userInfo.getUsername() + "/resetpw" )
-//                                .type( MediaType.APPLICATION_FORM_URLENCODED_TYPE ).post( String.class, formData );
-//        assertTrue( html.contains( "password set" ) );
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        JsonNode node = mapper.readTree( resource().path( "/management/token" )
-//                                                   .queryParam( "grant_type", "password" )
-//                                                   .queryParam( "username", email ).queryParam( "password", "sesame" )
-//                                                   .accept( MediaType.APPLICATION_JSON )
-//                                                   .get( String.class ));
-//
-//        Long changeTime = node.get( "passwordChanged" ).longValue();
-//        assertTrue( System.currentTimeMillis() - changeTime < 2000 );
-//
-//        Map<String, String> payload = hashMap( "oldpassword", "sesame" ).map( "newpassword", "test" );
-//        node = mapper.readTree( resource().path( "/management/users/" + userInfo.getUsername() + "/password" )
-//                                          .accept( MediaType.APPLICATION_JSON ).type( MediaType.APPLICATION_JSON_TYPE )
-//                                          .post( String.class, payload ));
-//
-//        refreshIndex(context.getOrgName(), context.getAppName());
-//
-//        node = mapper.readTree( resource().path( "/management/token" )
-//                                          .queryParam( "grant_type", "password" )
-//                                          .queryParam( "username", email )
-//                                          .queryParam( "password", "test" )
-//                                          .accept( MediaType.APPLICATION_JSON )
-//                                          .get( String.class ));
-//
-//        Long changeTime2 = node.get( "passwordChanged" ).longValue();
-//        assertTrue( changeTime < changeTime2 );
-//        assertTrue( System.currentTimeMillis() - changeTime2 < 2000 );
-//
-//        node = mapper.readTree( resource().path( "/management/me" ).queryParam( "grant_type", "password" )
-//                                          .queryParam( "username", email ).queryParam( "password", "test" ).accept( MediaType.APPLICATION_JSON )
-//                                          .get( String.class ));
-//
-//        Long changeTime3 = node.get( "passwordChanged" ).longValue();
-//        assertEquals( changeTime2, changeTime3 );
-//    }
-//
-//
+    @Test
+    public void checkPasswordChangeTime() throws Exception {
+
+        // request password reset
+
+        management().users().user( clientSetup.getUsername() ).resetpw().post(new Form());
+        refreshIndex();
+
+        // get resetpw token from email
+
+        List<Message> inbox = Mailbox.get( clientSetup.getEmail() );
+        assertFalse( inbox.isEmpty() );
+        MockImapClient client = new MockImapClient( "mockserver.com", "test-user-46", "somepassword" );
+        client.processMail();
+        String token = null;
+        Iterator<Message> msgIterator = inbox.iterator();
+        while ( token == null && msgIterator.hasNext() ) {
+            Message msg = msgIterator.next();
+            if ( msg.getSubject().equals("Password Reset") ) {
+                token = getTokenFromMessage( msg );
+            }
+        }
+        assertNotNull( token );
+
+        // reset the password to sesame
+
+        Form formData = new Form();
+        formData.param( "token", token );
+        formData.param( "password1", "sesame" );
+        formData.param( "password2", "sesame" );
+        String html = management().users().user( clientSetup.getUsername() ).resetpw().getTarget().request()
+            .post( javax.ws.rs.client.Entity.form(formData), String.class );
+        assertTrue( html.contains( "password set" ) );
+        refreshIndex();
+
+        // login with new password and get token
+
+        Map<String, Object> payload = new HashMap<String, Object>() {{
+            put("grant_type", "password");
+            put("username", clientSetup.getUsername() );
+            put("password", "sesame");
+        }};
+        ApiResponse response = management().token().post( false, payload, null );
+
+        // check password changed time
+
+        Long changeTime = Long.parseLong( response.getProperties().get( "passwordChanged" ).toString() );
+        assertTrue( System.currentTimeMillis() - changeTime < 2000 );
+
+        // change password again by posting JSON
+
+        payload = new HashMap<String, Object>() {{
+            put("oldpassword", "sesame");
+            put("newpassword", "test");
+        }};
+        management().users().user( clientSetup.getUsername() ).password().post( false, payload, null );
+        refreshIndex();
+
+        // get password and check password change time again
+
+        payload = new HashMap<String, Object>() {{
+            put("grant_type", "password");
+            put("username", clientSetup.getUsername() );
+            put("password", "test");
+        }};
+        response = management().token().post( false, payload, null );
+
+        Long changeTime2 = Long.parseLong( response.getProperties().get( "passwordChanged" ).toString() );
+        assertTrue( changeTime < changeTime2 );
+        assertTrue( System.currentTimeMillis() - changeTime2 < 2000 );
+
+        // login via /me end-point and check password change time again
+
+        response = management().me().get( ApiResponse.class, new QueryParameters()
+            .addParam( "grant_type", "password" )
+            .addParam( "username", clientSetup.getUsername() )
+            .addParam( "password", "test" ) );
+
+        Long changeTime3 = Long.parseLong( response.getProperties().get( "passwordChanged" ).toString() );
+        assertEquals( changeTime2, changeTime3 );
+    }
+
+
 
 
     /**
@@ -639,7 +886,6 @@ public class AdminUsersIT extends AbstractRestIT {
         }
     }
 
-    @Ignore("breaks other tests")
     @Test
     public void testProperties(){
         ApiResponse originalTestPropertiesResponse = clientSetup.getRestClient().testPropertiesResource().get();

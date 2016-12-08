@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.exception.NotImplementedException;
 import org.apache.usergrid.mq.*;
 import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -64,30 +65,39 @@ public class QueueResource extends AbstractContextResource {
     @Path("{subPath}")
     public QueueResource getSubPath( @Context UriInfo ui, @PathParam("subPath") String subPath ) throws Exception {
 
-        logger.info( "QueueResource.getSubPath" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.getSubPath");
+        }
 
         return getSubResource( QueueResource.class ).init( mq, queuePath + "/" + subPath );
     }
 
 
+    @CheckPermissionsForPath
     @Path("subscribers")
     public QueueSubscriberResource getSubscribers( @Context UriInfo ui ) throws Exception {
 
-        logger.info( "QueueResource.getSubscribers" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.getSubscribers");
+        }
 
         return getSubResource( QueueSubscriberResource.class ).init( mq, queuePath );
     }
 
 
+    @CheckPermissionsForPath
     @Path("subscriptions")
     public QueueSubscriptionResource getSubscriptions( @Context UriInfo ui ) throws Exception {
 
-        logger.info( "QueueResource.getSubscriptions" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.getSubscriptions");
+        }
 
         return getSubResource( QueueSubscriptionResource.class ).init( mq, queuePath );
     }
 
 
+    @CheckPermissionsForPath
     @Path("properties")
     @GET
     @JSONP
@@ -96,12 +106,15 @@ public class QueueResource extends AbstractContextResource {
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueResource.getProperties" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.getProperties");
+        }
 
         return mq.getQueue( queuePath );
     }
 
 
+    @CheckPermissionsForPath
     @Path("properties")
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
@@ -111,12 +124,15 @@ public class QueueResource extends AbstractContextResource {
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueResource.putProperties" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.putProperties");
+        }
 
         return mq.updateQueue( queuePath, json );
     }
 
 
+    @CheckPermissionsForPath
     @GET
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
@@ -126,19 +142,24 @@ public class QueueResource extends AbstractContextResource {
             throws Exception {
 
         if ( StringUtils.isNotBlank( queuePath ) ) {
-            logger.info( "QueueResource.executeGet: " + queuePath );
+            if (logger.isTraceEnabled()) {
+                logger.trace("QueueResource.executeGet: {}", queuePath);
+            }
 
             QueueQuery query = QueueQuery.fromQueryParams( ui.getQueryParameters() );
             QueueResults results = mq.getFromQueue( queuePath, query );
             return results;
         }
 
-        logger.info( "QueueResource.executeGet" );
+        if (logger.isTraceEnabled()) {
+            logger.trace( "QueueResource.executeGet" );
+        }
 
         return  mq.getQueues( firstQueuePath, limit );
     }
 
 
+    @CheckPermissionsForPath
     @SuppressWarnings("unchecked")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -148,7 +169,9 @@ public class QueueResource extends AbstractContextResource {
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueResource.executePost: " + queuePath );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.executePost: {}", queuePath);
+        }
         Object json = body;
 
         if ( json instanceof Map ) {
@@ -162,6 +185,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
@@ -170,7 +194,9 @@ public class QueueResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueResource.executePut: " + queuePath );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.executePut: {}", queuePath);
+        }
 
         Map<String, Object> results = new HashMap<String, Object>();
 
@@ -178,6 +204,7 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @DELETE
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
@@ -187,10 +214,13 @@ public class QueueResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @Path("transactions")
     public QueueTransactionsResource getTransactions( @Context UriInfo ui ) throws Exception {
 
-        logger.info( "QueueResource.getSubscriptions" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueResource.getSubscriptions");
+        }
 
         return getSubResource( QueueTransactionsResource.class ).init( mq, queuePath );
     }

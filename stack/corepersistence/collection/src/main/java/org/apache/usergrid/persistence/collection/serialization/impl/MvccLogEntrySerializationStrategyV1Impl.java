@@ -32,9 +32,10 @@ import org.apache.cassandra.db.marshal.UUIDType;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.impl.util.LegacyScopeUtils;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.google.inject.Inject;
@@ -56,8 +57,8 @@ public class MvccLogEntrySerializationStrategyV1Impl
     private static final CollectionScopedRowKeySerializer<Id> ROW_KEY_SER =
         new CollectionScopedRowKeySerializer<Id>( ID_SER );
 
-    private static final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> CF_ENTITY_LOG =
-        new MultiTennantColumnFamily<>( "Entity_Log", ROW_KEY_SER, UUIDSerializer.get() );
+    private static final MultiTenantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> CF_ENTITY_LOG =
+        new MultiTenantColumnFamily<>( "Entity_Log", ROW_KEY_SER, UUIDSerializer.get() );
 
 
     @Inject
@@ -73,7 +74,7 @@ public class MvccLogEntrySerializationStrategyV1Impl
 
 
     @Override
-    protected MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> getColumnFamily() {
+    protected MultiTenantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> getColumnFamily() {
         return CF_ENTITY_LOG;
     }
 
@@ -104,15 +105,21 @@ public class MvccLogEntrySerializationStrategyV1Impl
 
 
     @Override
-    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
+    public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
         //create the CF entity data.  We want it reversed b/c we want the most recent version at the top of the
         //row for fast seeks
-        MultiTennantColumnFamilyDefinition cf =
-                new MultiTennantColumnFamilyDefinition( CF_ENTITY_LOG, BytesType.class.getSimpleName(),
+        MultiTenantColumnFamilyDefinition cf =
+                new MultiTenantColumnFamilyDefinition( CF_ENTITY_LOG, BytesType.class.getSimpleName(),
                         ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")",
-                        IntegerType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                        IntegerType.class.getSimpleName(), MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
 
 
         return Collections.singleton( cf );
+    }
+
+    @Override
+    public Collection<TableDefinition> getTables() {
+
+        return Collections.emptyList();
     }
 }

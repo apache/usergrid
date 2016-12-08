@@ -17,18 +17,27 @@
 package org.apache.usergrid.persistence.entities;
 
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.*;
+
+import org.apache.usergrid.persistence.EntityRef;
+import org.apache.usergrid.persistence.PathQuery;
+import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.SimpleEntityRef;
+import org.apache.usergrid.persistence.TypedEntity;
+import org.apache.usergrid.persistence.annotations.EntityCollection;
+import org.apache.usergrid.persistence.annotations.EntityProperty;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.utils.InflectionUtils;
+
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.persistence.annotations.EntityCollection;
-import org.apache.usergrid.persistence.annotations.EntityProperty;
-import org.apache.usergrid.persistence.entities.Device;
-import org.apache.usergrid.persistence.index.query.Identifier;
-
-import static org.apache.usergrid.utils.InflectionUtils.pluralize;
 
 /**
  * The entity class for representing Notifications.
@@ -40,13 +49,13 @@ public class Notification extends TypedEntity {
 
     public static final String RECEIPTS_COLLECTION = "receipts";
 
-    /** Total count */
-    @EntityProperty
-    protected int expectedCount;
+    public enum Priority {
+        NORMAL, HIGH
+    }
 
+    /** The pathQuery/query that Usergrid used to idenitfy the devices to send the notification to */
     @EntityProperty
-    private PathTokens pathTokens;
-    private String pathQuery;
+    private PathTokens pathQuery;
 
     public static enum State {
         CREATED, FAILED, SCHEDULED, STARTED, FINISHED, CANCELED, EXPIRED
@@ -56,57 +65,80 @@ public class Notification extends TypedEntity {
     @EntityProperty
     protected Map<String, Object> payloads;
 
-    /** Time processed */
+    /** Timestamp (ms) when the notification was processed */
     @EntityProperty
     protected Long queued;
 
-    /** Debug logging is on  */
+    /** Timestamp (ms) when the notification was processed */
     @EntityProperty
-    protected boolean debug;
+    protected Long processingFinished;
 
-    /** Time send started */
+    /** Timestamp (ms) when send notification started */
     @EntityProperty
     protected Long started;
 
-    /** Time processed */
+    /** Timestamp (ms) when send notification finished */
     @EntityProperty
     protected Long finished;
 
-    /** Time to deliver to provider */
+    /** Timestamp (ms) to deliver to provider */
     @EntityProperty
     protected Long deliver;
 
-    /** Time to expire the notification */
+    /** Timestamp (ms) to expire the notification*/
     @EntityProperty
     protected Long expire;
+
+    /** Stores the number of devices processed */
+    @EntityProperty
+    protected int deviceProcessedCount;
 
     /** True if notification is canceled */
     @EntityProperty
     protected Boolean canceled;
 
-    /** Error message */
+    /** Flag to enable/disable verbose logging of states  */
+    @EntityProperty
+    protected boolean debug;
+
+    /** Flag to set the notification priority. Valid values "normal" and "high"  */
+    @EntityProperty
+    protected String priority;
+
+    /** Flag to signal Usergrid to use graph traversal + filtering to find devices  */
+    @EntityProperty
+    protected boolean useGraph;
+
+    /** Error messages that may have been encountered by Usergrid when trying to process the notification */
     @EntityProperty
     protected String errorMessage;
+
+    /** Flag to disable the creation, saving, connecting of receipt entities for a notification.  */
+    @EntityProperty
+    protected boolean saveReceipts;
 
     @EntityCollection(type = "receipt")
     protected List<UUID> receipts;
 
-    /** stats (sent & errors) */
+    /** Map containing a count for "sent" and "errors" */
     @EntityProperty
-    protected Map<String, Long> statistics;
+    protected Map<String, Object> statistics;
+
+    @EntityProperty
+    protected Map<String, Object> filters;
 
 
     public Notification() {
-        pathTokens = new PathTokens();
+        pathQuery = new PathTokens();
     }
 
-    @JsonIgnore
-    public List<UUID> getReceipts() {
-        return receipts;
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public PathTokens getPathQuery(){
+        return pathQuery;
     }
 
-    public void setReceipts(List<UUID> receipts) {
-        this.receipts = receipts;
+    public void setPathQuery(PathTokens pathQuery){
+        this.pathQuery = pathQuery;
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
@@ -119,12 +151,30 @@ public class Notification extends TypedEntity {
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public Long getQueued() {
+        return queued;
+    }
+
+    public void setQueued(Long queued) {
+        this.queued = queued;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Long getFinished() {
         return finished;
     }
 
     public void setFinished(Long finished) {
         this.finished = finished;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public Long getProcessingFinished() {
+        return processingFinished;
+    }
+
+    public void setProcessingFinished(Long processingFinished) {
+        this.processingFinished = processingFinished;
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
@@ -145,9 +195,13 @@ public class Notification extends TypedEntity {
         this.expire = expire;
     }
 
-    @JsonIgnore
-    public boolean isExpired() {
-        return expire != null && expire < System.currentTimeMillis();
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public int getDeviceProcessedCount() {
+        return deviceProcessedCount;
+    }
+
+    public void setDeviceProcessedCount(int deviceProcessedCount) {
+        this.deviceProcessedCount = deviceProcessedCount;
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
@@ -160,12 +214,56 @@ public class Notification extends TypedEntity {
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public boolean getSaveReceipts() {
+        return saveReceipts;
+    }
+
+    public void setSaveReceipts(boolean saveReceipts) {
+        this.saveReceipts = saveReceipts;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public boolean getUseGraph() {
+        return useGraph;
+    }
+
+    public void setUseGraph(boolean useGraph) {
+        this.useGraph = useGraph;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public boolean getDebug() {
         return debug;
     }
 
     public void setDebug(boolean debug) {
         this.debug = debug;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public String getPriority() {
+
+        // simply default the priority to normal so it's never null
+        if (priority == null || priority.isEmpty()){
+            priority = "normal";
+        }
+
+        // validate that the priority available is a valid Usergrid notification priority
+        String notificationPriority;
+        try{
+            notificationPriority = Priority.valueOf(priority.toUpperCase()).toString();
+        }catch(IllegalArgumentException e){
+            // it's not a valid Usergrid notification priority, default to normal
+            notificationPriority = Priority.NORMAL.toString();
+        }
+
+        setPriority(notificationPriority.toLowerCase());
+
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
@@ -187,29 +285,39 @@ public class Notification extends TypedEntity {
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-    public Map<String, Long> getStatistics() {
+    public Map<String, Object> getStatistics() {
         return statistics;
     }
 
-    public void setStatistics(Map<String, Long> statistics) {
+    public void setStatistics(Map<String, Object> statistics) {
         this.statistics = statistics;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public Map<String, Object> getFilters() {
+        return filters;
+    }
+
+    public void setFilters(Map<String, Object> filters) {
+        this.filters = filters;
     }
 
     public void updateStatistics(long sent, long errors) {
         if (this.statistics == null) {
-            this.statistics = new HashMap<String, Long>(2);
+            this.statistics = new HashMap<String, Object>(2);
             this.statistics.put("sent", sent);
             this.statistics.put("errors", errors);
         } else {
-            this.statistics.put("sent", sent + this.statistics.get("sent"));
-            this.statistics.put("errors",
-                    errors + this.statistics.get("errors"));
+            //Don't need to account for integers here because this is only called internally
+            //We won't ever need to call updateStatistics for a postedNotification as that only happens once
+            //after the notification is completed.
+            if (this.statistics.get( "sent" ) instanceof Long ) {
+                this.statistics.put( "sent", sent + (Long) this.statistics.get( "sent" ) );
+            }
+            if( this.statistics.get( "errors" ) instanceof Long){
+                this.statistics.put( "errors", errors + (Long) this.statistics.get( "errors" ) );
+            }
         }
-    }
-
-    /** don't bother, I will ignore you */
-    public void setState(State ignored) {
-        // does nothing - state is derived
     }
 
     @EntityProperty(mutable = true, indexed = true)
@@ -230,6 +338,11 @@ public class Notification extends TypedEntity {
         return State.CREATED;
     }
 
+    /** don't bother, I will ignore you */
+    public void setState(State ignored) {
+        // does nothing - state is derived
+    }
+
     @JsonIgnore
     public long getExpireTimeMillis() {
         return getExpire() != null ? getExpire() : 0;
@@ -241,35 +354,18 @@ public class Notification extends TypedEntity {
         return ttlSeconds > 0 ? ttlSeconds : 0;
     }
 
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-    public Long getQueued() {
-        return queued;
-    }
-
-    public void setQueued(Long queued) {
-        this.queued = queued;
-    }
-
-    public void setExpectedCount(int expectedCount) {  this.expectedCount = expectedCount;  }
-
-    @org.codehaus.jackson.map.annotate.JsonSerialize(include = org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion.NON_NULL)
-    public int getExpectedCount() {  return expectedCount;  }
-
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-    public PathTokens getPathTokens(){
-        return pathTokens;
-    }
-
-    public void setPathTokens(PathTokens pathTokens){
-        this.pathTokens = pathTokens;
+    @JsonIgnore
+    public boolean isExpired() {
+        return expire != null && expire < System.currentTimeMillis();
     }
 
     @JsonIgnore
-    public String getPathQuery(){
-        return pathQuery;
+    public List<UUID> getReceipts() {
+        return receipts;
     }
-    public void setPathQuery(String query){
-        pathQuery = query;
+
+    public void setReceipts(List<UUID> receipts) {
+        this.receipts = receipts;
     }
 
     public static class PathTokens{
@@ -282,6 +378,7 @@ public class Notification extends TypedEntity {
         public PathTokens(final SimpleEntityRef applicationRef, final List<PathToken> pathTokens){
             this.applicationRef = applicationRef;
             this.pathTokens = pathTokens;
+
         }
 
         public void setPathTokens(final List<PathToken> pathTokens){
@@ -298,19 +395,60 @@ public class Notification extends TypedEntity {
         }
 
         @JsonIgnore
-        public PathQuery<Device> getPathQuery() {
+        public PathQuery<Device> buildPathQuery() {
             PathQuery pathQuery = null;
-            for (PathToken pathToken : getPathTokens()) {
+            List<PathToken> pathTokens = getPathTokens();
+            for (PathToken pathToken : pathTokens) {
                 String collection = pathToken.getCollection();
                 Query query = new Query();
-                if (pathToken.getIdentifier()!=null) {
-                    query.addIdentifier(pathToken.getIdentifier());
+                if(pathToken.getQl() != null){
+
+                    // if a query is already present, use it's QL
+                    query.setQl(pathToken.getQl());
+
+                }else if (pathToken.getIdentifier()!=null) {
+
+                    // users collection is special case and uses "username" instaed of "name"
+                    // build a query using QL with "username" as Identifier.Type.USERNAME doesn't exist
+                    if (collection.equals("users") && pathToken.getIdentifier().getType() == Identifier.Type.NAME){
+                        query.setQl("select * where username ='"+pathToken.getIdentifier().getName()+"'");
+                    }else{
+                        query.addIdentifier(pathToken.getIdentifier());
+                    }
+
                 }
                 query.setLimit(100);
                 query.setCollection(collection);
 
                 if (pathQuery == null) {
                     pathQuery = new PathQuery(getApplicationRef(), query);
+
+                    if ( pathTokens.size() == 1 && collection.equals(InflectionUtils.pluralize(Group.ENTITY_TYPE) )){
+
+                        final Query usersQuery = new Query();
+                        usersQuery.setQl("select *");
+                        usersQuery.setCollection("users");
+                        usersQuery.setLimit(100);
+
+                        final Query devicesQuery = new Query();
+                        devicesQuery.setQl("select *");
+                        devicesQuery.setCollection("devices");
+                        devicesQuery.setLimit(100);
+
+
+                        // build up the chain so the proper iterators can be used later
+                        pathQuery = pathQuery.chain( usersQuery );//.chain( devicesQuery );
+
+                    }else if(pathTokens.size() == 1 && collection.equals(InflectionUtils.pluralize(User.ENTITY_TYPE))){
+
+                        final Query devicesQuery = new Query();
+                        devicesQuery.setQl("select *");
+                        devicesQuery.setCollection("devices");
+                        devicesQuery.setLimit(100);
+
+                        pathQuery = pathQuery.chain( devicesQuery );
+                    }
+
                 } else {
                     pathQuery = pathQuery.chain(query);
                 }
@@ -323,6 +461,7 @@ public class Notification extends TypedEntity {
     public static class PathToken{
         private  String collection;
         private  Identifier identifier;
+        private String ql;
 
         public PathToken(){
 
@@ -330,8 +469,15 @@ public class Notification extends TypedEntity {
 
         public PathToken( final String collection, final Identifier identifier){
             this.collection = collection;
-
             this.identifier = identifier;
+            this.ql = null;
+
+        }
+
+        public PathToken( final String collection, final String ql){
+            this.collection = collection;
+            this.ql = ql;
+            this.identifier = null;
 
         }
 
@@ -347,6 +493,13 @@ public class Notification extends TypedEntity {
         }
         public void setIdentifier(Identifier identifier){
             this.identifier = identifier;
+        }
+
+        public String getQl() {
+            return ql;
+        }
+        public void setQl(String ql){
+            this.ql = ql;
         }
 
 

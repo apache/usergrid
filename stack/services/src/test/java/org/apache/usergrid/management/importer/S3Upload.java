@@ -40,7 +40,6 @@ import org.jclouds.netty.config.NettyPayloadModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 

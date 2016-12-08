@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.exceptions.UnsupportedRestOperationException;
 
 
 /**
@@ -63,12 +64,12 @@ public class RefreshIndexResource extends AbstractContextResource {
             Properties props = management.getProperties();
             String testProp = ( String ) props.get( "usergrid.test" );
             if ( testProp == null || !Boolean.parseBoolean( testProp ) ) {
-                throw new UnsupportedOperationException();
+                throw new UnsupportedRestOperationException("Properties");
             }
 
             UUID appid = UUIDUtils.tryExtractUUID(appIdString);
             if(appid == null){
-                throw new IllegalArgumentException("app id is null");
+                throw new IllegalArgumentException("app_id query parameter not a valid UUID");
             }
             // refresh the system apps or app lookup below may fail
             EntityManager em = this.getEmf().getEntityManager(appid);

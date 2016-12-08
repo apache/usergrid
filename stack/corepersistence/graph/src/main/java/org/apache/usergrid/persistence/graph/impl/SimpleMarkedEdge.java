@@ -29,29 +29,63 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * Simple bean to represent our edge
+ *
  * @author tnine
  */
-public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
+public class SimpleMarkedEdge extends SimpleEdge implements MarkedEdge {
 
-    private final boolean deleted;
+    private boolean isDeleted;
+    private boolean isSourceNodeDeleted;
+    private boolean isTargetNodeDeleted;
 
 
-    public SimpleMarkedEdge( final Id sourceNode, final String type, final Id targetNode, final long timestamp, final boolean deleted) {
-
-        super(sourceNode, type, targetNode, timestamp);
-        this.deleted = deleted;
+    /**
+     * Unused but required for Jackson
+     */
+    public SimpleMarkedEdge() {
     }
 
 
-    public SimpleMarkedEdge(final Edge edge, final boolean deleted){
-        this(edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getTimestamp(), deleted);
+    public SimpleMarkedEdge( final Id sourceNode, final String type, final Id targetNode, final long timestamp,
+                             final boolean isDeleted ) {
+
+        this( sourceNode, type, targetNode, timestamp, isDeleted, false, false );
+    }
+
+
+    public SimpleMarkedEdge( final Id sourceNode, final String type, final Id targetNode, final long timestamp,
+                             final boolean isDeleted, final boolean isSourceNodeDeleted,
+                             final boolean isTargetNodeDeleted ) {
+        super( sourceNode, type, targetNode, timestamp );
+        this.isDeleted = isDeleted;
+        this.isSourceNodeDeleted = isSourceNodeDeleted;
+        this.isTargetNodeDeleted = isTargetNodeDeleted;
+    }
+
+
+    public SimpleMarkedEdge( final Edge edge, final boolean isDeleted ) {
+        this( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getTimestamp(), isDeleted );
     }
 
 
     @Override
     @JsonIgnore
     public boolean isDeleted() {
-        return deleted;
+        return isDeleted;
+    }
+
+
+    @Override
+    @JsonIgnore
+    public boolean isSourceNodeDelete() {
+        return isSourceNodeDeleted;
+    }
+
+
+    @Override
+    @JsonIgnore
+    public boolean isTargetNodeDeleted() {
+        return isTargetNodeDeleted;
     }
 
 
@@ -69,7 +103,7 @@ public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
 
         final SimpleMarkedEdge that = ( SimpleMarkedEdge ) o;
 
-        if ( deleted != that.deleted ) {
+        if ( isDeleted != that.isDeleted ) {
             return false;
         }
 
@@ -80,7 +114,9 @@ public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + ( deleted ? 1 : 0 );
+        result = 31 * result + ( isDeleted ? 1 : 0 );
+        result = 31 * result + ( isSourceNodeDeleted ? 1 : 0 );
+        result = 31 * result + ( isTargetNodeDeleted ? 1 : 0 );
         return result;
     }
 
@@ -88,8 +124,10 @@ public class SimpleMarkedEdge extends  SimpleEdge implements MarkedEdge {
     @Override
     public String toString() {
         return "SimpleMarkedEdge{" +
-                "deleted=" + deleted +
-                "} " + super.toString();
+            "deleted=" + isDeleted +
+            ", isSourceNodeDeleted=" + isSourceNodeDeleted +
+            ", isTargetNodeDeleted=" + isTargetNodeDeleted +
+            "} " + super.toString();
     }
 }
 

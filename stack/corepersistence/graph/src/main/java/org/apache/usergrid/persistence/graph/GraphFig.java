@@ -55,6 +55,11 @@ public interface GraphFig extends GuicyFig {
     String SHARD_CACHE_TIMEOUT = "usergrid.graph.shard.cache.timeout";
 
     /**
+     * Provide the ability to default disable the cache for obtaining the read shard group
+     */
+    String SHARD_READ_CACHE_ENABLED = "usergrid.graph.shard.read.cache.enabled";
+
+    /**
      * Number of worker threads to refresh the cache
      */
     String SHARD_CACHE_REFRESH_WORKERS = "usergrid.graph.shard.refresh.worker.count";
@@ -91,6 +96,8 @@ public interface GraphFig extends GuicyFig {
 
     String COUNTER_WRITE_FLUSH_QUEUE_SIZE = "usergrid.graph.shard.counter.queue.size";
 
+    String SMART_SHARD_SEEK_ENABLED = "usergrid.graph.smartshard.seek.enabled";
+
 
 
 
@@ -109,7 +116,7 @@ public interface GraphFig extends GuicyFig {
     double getShardRepairChance();
 
 
-    @Default( "500000" )
+    @Default( "50000" )
     @Key( SHARD_SIZE )
     long getShardSize();
 
@@ -118,12 +125,16 @@ public interface GraphFig extends GuicyFig {
     @Key(SHARD_CACHE_TIMEOUT)
     long getShardCacheTimeout();
 
-    @Default("60000")
+    @Default("false")
+    @Key(SHARD_READ_CACHE_ENABLED)
+    boolean getShardReadCacheEnabled();
+
+    @Default("90000")
     @Key(SHARD_MIN_DELTA)
     long getShardMinDelta();
 
 
-    @Default("250000")
+    @Default("100000")
     @Key(SHARD_CACHE_SIZE)
     long getShardCacheSize();
 
@@ -133,7 +144,7 @@ public interface GraphFig extends GuicyFig {
     int getShardCacheRefreshWorkerCount();
 
 
-    @Default( "10" )
+    @Default( "20" )
     @Key( SHARD_AUDIT_WORKERS )
     int getShardAuditWorkerCount();
 
@@ -154,5 +165,11 @@ public interface GraphFig extends GuicyFig {
     @Default("1000")
     @Key(COUNTER_WRITE_FLUSH_QUEUE_SIZE)
     int getCounterFlushQueueSize();
+
+    @Default("true")
+    @Key(SMART_SHARD_SEEK_ENABLED)
+    boolean getSmartShardSeekEnabled();
+
+
 }
 

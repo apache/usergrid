@@ -41,7 +41,7 @@ import javax.ws.rs.client.WebTarget;
  * Start and stop embedded Tomcat.
  */
 public class TomcatRuntime extends ExternalResource {
-    private static final Logger log = LoggerFactory.getLogger( TomcatRuntime.class );
+    private static final Logger logger = LoggerFactory.getLogger( TomcatRuntime.class );
 
 
     private static final String WEBAPP_PATH = System.getProperty("webapp.directory");
@@ -137,9 +137,9 @@ public class TomcatRuntime extends ExternalResource {
                 tomcat.addWebapp( "/", new File( webAppsPath ).getAbsolutePath() );
 
 
-                log.info( "-----------------------------------------------------------------" );
-                log.info( "Starting Tomcat embedded port {} dir {}", port, dataDir.getAbsolutePath() );
-                log.info( "-----------------------------------------------------------------" );
+                logger.info( "-----------------------------------------------------------------" );
+                logger.info( "Starting Tomcat embedded port {} dir {}", port, dataDir.getAbsolutePath() );
+                logger.info( "-----------------------------------------------------------------" );
                 tomcat.start();
 
                 waitForTomcat();
@@ -178,12 +178,12 @@ public class TomcatRuntime extends ExternalResource {
                     Client c = ClientBuilder.newClient();
                     WebTarget wr = c.target( url );
                     wr.request().get( String.class );
-                    log.info( "Tomcat is started." );
+                    logger.info( "Tomcat is started." );
                     started = true;
                     break;
                 }
                 catch ( Exception e ) {
-                    log.info( "Waiting for Tomcat on url {}", url );
+                    logger.info( "Waiting for Tomcat on url {}", url );
                 }
             }
             if ( !started ) {

@@ -17,9 +17,10 @@
 package org.apache.usergrid.security.tokens;
 
 
-import java.util.Map;
-
 import org.apache.usergrid.security.AuthPrincipalInfo;
+
+import java.util.Map;
+import java.util.UUID;
 
 
 public interface TokenService {
@@ -31,11 +32,20 @@ public interface TokenService {
     public String createToken( TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
                                Map<String, Object> state, long duration ) throws Exception;
 
+    public String createToken( TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
+                               Map<String, Object> state, long duration, UUID workflowOrgId ) throws Exception;
+
     public void importToken( String token, TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
-                               Map<String, Object> state, long duration ) throws Exception;
+                             Map<String, Object> state, long duration ) throws Exception;
+
+    public void importToken( String token, TokenCategory tokenCategory, String type, AuthPrincipalInfo principal,
+                               Map<String, Object> state, long duration, UUID workflowOrgId ) throws Exception;
 
     /** Get the token info for the string version of this token */
     public TokenInfo getTokenInfo( String token ) throws Exception;
+
+    /** Get the token info for the string version of this token, update of access time optional */
+    public TokenInfo getTokenInfo( String token, boolean updateAccessTime ) throws Exception;
 
     /** Get the max token age in milliseconds */
     public long getMaxTokenAge( String token );
@@ -55,4 +65,10 @@ public interface TokenService {
      * given principal uuid and application uuid
      */
     public void removeTokens( AuthPrincipalInfo principal ) throws Exception;
+
+
+    /**
+     * checks if the external SSO provider is enabled.
+     */
+    public boolean isExternalSSOProviderEnabled();
 }

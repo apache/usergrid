@@ -28,6 +28,8 @@ import org.safehaus.guicyfig.Key;
 @FigSingleton
 public interface IndexFig extends GuicyFig {
 
+    String VALIDATION_DEFAULT_VALUE = "default-property";
+
     String ELASTICSEARCH_HOSTS = "elasticsearch.hosts";
 
     String ELASTICSEARCH_PORT = "elasticsearch.port";
@@ -37,8 +39,6 @@ public interface IndexFig extends GuicyFig {
     String ELASTICSEARCH_NODENAME = "elasticsearch.node_name";
 
     String ELASTICSEARCH_ALIAS_POSTFIX = "elasticsearch.alias_postfix";
-
-    String ELASTICSEARCH_STARTUP = "elasticsearch.startup";
 
     String ELASTICSEARCH_NUMBER_OF_SHARDS = "elasticsearch.number_shards";
 
@@ -60,6 +60,8 @@ public interface IndexFig extends GuicyFig {
 
     String ELASTICSEARCH_CLIENT_TYPE = "elasticsearch.client.type";
 
+    String ELASTICSEARCH_VERSION_QUERY_LIMIT = "elasticsearch.version_query_limit";
+
 
     /**
      * Comma-separated list of Elasticsearch hosts.
@@ -67,6 +69,7 @@ public interface IndexFig extends GuicyFig {
     @Default( "127.0.0.1" )
     @Key( ELASTICSEARCH_HOSTS )
     String getHosts();
+
 
     /**
      * The port used when connecting to Elasticsearch.
@@ -78,7 +81,7 @@ public interface IndexFig extends GuicyFig {
     /**
      * The Elasticsearch cluster name.
      */
-    @Default( "usergrid" )
+    @Default( "elasticsearch" )
     @Key( ELASTICSEARCH_CLUSTER_NAME )
     String getClusterName();
 
@@ -95,13 +98,6 @@ public interface IndexFig extends GuicyFig {
     @Default( "2" ) // TODO: does this timeout get extended on each query?
     @Key( QUERY_CURSOR_TIMEOUT_MINUTES )
     int getQueryCursorTimeout();
-
-    /**
-     * How Elasticsearch should be started.  Valid values: embedded, forked, or remote
-     */
-    @Default( "remote" )
-    @Key( ELASTICSEARCH_STARTUP )
-    String getStartUp();
 
     /**
      * Force an index refresh after every write. Should only be TRUE for testing purposes.
@@ -178,7 +174,7 @@ public interface IndexFig extends GuicyFig {
      * Return the type of Elasticsearch client.  Valid values are NODE or TRANSPORT.
      */
     @Key( ELASTICSEARCH_CLIENT_TYPE )
-    @Default( "NODE")
+    @Default( "TRANSPORT")
     String getClientType();
 
     /**
@@ -199,4 +195,8 @@ public interface IndexFig extends GuicyFig {
     @Default("1000")
     @Key( "elasticsearch_queue_error_sleep_ms" )
     long getSleepTimeForQueueError();
+
+    @Default("100")
+    @Key( ELASTICSEARCH_VERSION_QUERY_LIMIT )
+    int getVersionQueryLimit();
 }

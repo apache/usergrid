@@ -41,7 +41,7 @@ import com.google.common.base.Preconditions;
  */
 public class ShardEntryGroup {
 
-    private static final Logger LOG = LoggerFactory.getLogger( ShardEntryGroup.class );
+    private static final Logger logger = LoggerFactory.getLogger( ShardEntryGroup.class );
 
     private List<Shard> shards;
 
@@ -143,12 +143,16 @@ public class ShardEntryGroup {
 
 
         if(compactionTarget != null){
-            LOG.debug( "Returning shards {} and {} as read shards", compactionTarget, staticShard );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Returning shards {} and {} as read shards", compactionTarget, staticShard);
+            }
             return Arrays.asList( compactionTarget, staticShard );
         }
 
 
-        LOG.debug( "Returning shards {} read shard", staticShard );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Returning shards {} read shard", staticShard);
+        }
         return  Collections.singleton( staticShard );
     }
 
@@ -168,7 +172,9 @@ public class ShardEntryGroup {
 
             final Shard compactionTarget = getCompactionTarget();
 
-            LOG.debug( "Returning shard {} as write shard", compactionTarget);
+            if (logger.isTraceEnabled()) {
+                logger.trace("Returning shard {} as write shard", compactionTarget);
+            }
 
             return Collections.singleton( compactionTarget  );
 
@@ -177,7 +183,9 @@ public class ShardEntryGroup {
         final Shard staticShard = getRootShard();
 
 
-        LOG.debug( "Returning shard {} as write shard", staticShard);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Returning shard {} as write shard", staticShard);
+        }
 
         return Collections.singleton( staticShard );
 
@@ -188,7 +196,8 @@ public class ShardEntryGroup {
      * Return true if we have a pending compaction
      */
     public boolean isCompactionPending() {
-        return !isTooSmallToCompact();
+        //if we have a compaction target, a compaction is pending
+        return getCompactionTarget() != null;
     }
 
 
@@ -291,9 +300,18 @@ public class ShardEntryGroup {
                  * cache refresh, we can't compact yet.
                  */
 
-                && currentTime - delta > maxCreatedTime;
+                && !isNew( currentTime );
     }
 
+
+    /**
+     * Return true if our current time - delta is newer than our maxCreatedtime
+     * @param currentTime
+     * @return
+     */
+    public boolean isNew(final long currentTime){
+        return currentTime - delta <= maxCreatedTime;
+    }
 
     /**
      * Return true if this shard can be deleted AFTER all of the data in it has been moved
@@ -307,7 +325,7 @@ public class ShardEntryGroup {
         final Shard compactionTarget = getCompactionTarget();
 
 
-        return !shard.isCompacted() && ( compactionTarget != null && compactionTarget.getShardIndex() != shard
+        return !shard.isCompacted() && !shard.isMinShard() &&  ( compactionTarget != null && compactionTarget.getShardIndex() != shard
                 .getShardIndex() );
     }
 

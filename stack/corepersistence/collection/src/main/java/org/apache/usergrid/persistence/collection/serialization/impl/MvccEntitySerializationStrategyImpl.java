@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,11 +41,11 @@ import org.apache.usergrid.persistence.collection.mvcc.entity.impl.MvccEntityImp
 import org.apache.usergrid.persistence.collection.serialization.MvccEntitySerializationStrategy;
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
 import org.apache.usergrid.persistence.collection.serialization.impl.util.LegacyScopeUtils;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.astyanax.ColumnNameIterator;
 import org.apache.usergrid.persistence.core.astyanax.ColumnParser;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.ScopedRowKey;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -75,13 +76,13 @@ import rx.schedulers.Schedulers;
  */
 public abstract class MvccEntitySerializationStrategyImpl implements MvccEntitySerializationStrategy {
 
-    private static final Logger log = LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( MvccLogEntrySerializationStrategyImpl.class );
 
 
     protected final Keyspace keyspace;
     protected final SerializationFig serializationFig;
     protected final CassandraFig cassandraFig;
-    private final MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID>  columnFamily;
+    private final MultiTenantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> columnFamily;
 
 
     @Inject
@@ -185,7 +186,7 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
                 return Observable.just( listObservable ).map( scopedRowKeys -> {
 
                     try {
-                        return keyspace.prepareQuery( columnFamily ).getKeySlice( rowKeys )
+                        return keyspace.prepareQuery( columnFamily ).getKeySlice( scopedRowKeys )
                                        .withColumnRange( maxVersion, null, false, 1 ).execute().getResult();
                     }
                     catch ( ConnectionException e ) {
@@ -333,13 +334,19 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
 
         //create the CF entity data.  We want it reversed b/c we want the most recent version at the top of the
         //row for fast seeks
-        MultiTennantColumnFamilyDefinition cf =
-                new MultiTennantColumnFamilyDefinition( columnFamily, BytesType.class.getSimpleName(),
+        MultiTenantColumnFamilyDefinition cf =
+                new MultiTenantColumnFamilyDefinition( columnFamily, BytesType.class.getSimpleName(),
                         ReversedType.class.getSimpleName() + "(" + UUIDType.class.getSimpleName() + ")",
-                        BytesType.class.getSimpleName(), MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                        BytesType.class.getSimpleName(), MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
 
 
         return Collections.singleton( cf );
+    }
+
+    @Override
+    public Collection<TableDefinition> getTables() {
+
+        return Collections.emptyList();
     }
 
 
@@ -419,9 +426,9 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
                 deSerialized = column.getValue( entityJsonSerializer );
             }
             catch ( DataCorruptionException e ) {
-                log.error(
-                        "DATA CORRUPTION DETECTED when de-serializing entity with Id {} and version {}.  This means the"
-                                + " write was truncated.", id, version, e );
+                logger.error(
+                        "DATA CORRUPTION DETECTED when de-serializing entity with Id {} and version {}.  This means the write was truncated.",
+                        id, version, e );
                 //return an empty entity, we can never load this one, and we don't want it to bring the system
                 //to a grinding halt
                 return new MvccEntityImpl( id, version, MvccEntity.Status.DELETED, Optional.<Entity>absent(),0 );
@@ -446,6 +453,6 @@ public abstract class MvccEntitySerializationStrategyImpl implements MvccEntityS
      * Get the column family to perform operations with
      * @return
      */
-    protected abstract MultiTennantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> getColumnFamily();
+    protected abstract MultiTenantColumnFamily<ScopedRowKey<CollectionPrefixedKey<Id>>, UUID> getColumnFamily();
 
 }

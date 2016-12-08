@@ -21,7 +21,12 @@ package org.apache.usergrid.persistence.collection.mvcc.stage.write;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.Session;
+import com.google.inject.Inject;
+import org.apache.usergrid.persistence.core.test.ITRunner;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,12 +58,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-
 @UseModules( TestCollectionModule.class )
 public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
 
-    private static final Logger log = LoggerFactory.getLogger(WriteOptimisticVerifyTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(WriteOptimisticVerifyTest.class);
 
     @Override
     protected void validateStage( final CollectionIoEvent<MvccEntity> event ) {
@@ -110,6 +113,7 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         when( scope.getApplication() )
             .thenReturn( new SimpleId( UUIDGenerator.newTimeUUID(), "organization" ) );
 
+        final Session session = mock(Session.class);
 
         // there is an entity
         final Entity entity = generateEntity();
@@ -135,30 +139,27 @@ public class WriteOptimisticVerifyTest extends AbstractMvccEntityStageTest {
         UniqueValueSerializationStrategy uvstrat = mock( UniqueValueSerializationStrategy.class);
         UniqueValue uv1 = new UniqueValueImpl(entity.getField("name"), entity.getId(), entity.getVersion());
         UniqueValue uv2 = new UniqueValueImpl(  entity.getField("identifier"), entity.getId(), entity.getVersion());
-        MutationBatch mb = mock( MutationBatch.class );
-        when( uvstrat.delete(scope, uv1) ).thenReturn(mb);
-        when( uvstrat.delete(scope, uv2) ).thenReturn(mb);
 
         // Run the stage, conflict should be detected
         final MvccEntity mvccEntity = fromEntity( entity );
         boolean conflictDetected = false;
 
         WriteOptimisticVerify newStage = new WriteOptimisticVerify( mvccLog );
-        RollbackAction rollbackAction = new RollbackAction( mvccLog, uvstrat );
+        RollbackAction rollbackAction = new RollbackAction( mvccLog, uvstrat, session );
 
         try {
             newStage.call( new CollectionIoEvent<>(scope, mvccEntity));
 
         } catch (WriteOptimisticVerifyException e) {
-            log.info("Error", e);
+            logger.info("Error", e);
             conflictDetected = true;
             rollbackAction.call( e );
         }
         assertTrue( conflictDetected );
 
         // check that unique values were deleted
-        verify( uvstrat, times(1) ).delete(scope,  uv1 );
-        verify( uvstrat, times(1) ).delete(scope,  uv2 );
+        verify( uvstrat, times(1) ).deleteCQL(scope,  uv1 );
+        verify( uvstrat, times(1) ).deleteCQL(scope,  uv2 );
     }
 
 }

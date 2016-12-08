@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.datastax.driver.core.Session;
+import org.apache.cassandra.cql.BatchStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,9 +70,10 @@ import rx.schedulers.Schedulers;
 public class MvccEntityDataMigrationImpl implements DataMigration{
 
 
-    private static final Logger LOGGER = LoggerFactory.getLogger( MvccEntityDataMigrationImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( MvccEntityDataMigrationImpl.class );
 
     private final Keyspace keyspace;
+    private final Session session;
     private final VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions;
     private final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3;
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
@@ -80,12 +83,14 @@ public class MvccEntityDataMigrationImpl implements DataMigration{
 
     @Inject
     public MvccEntityDataMigrationImpl( final Keyspace keyspace,
+                                        final Session session,
                                         final VersionedMigrationSet<MvccEntitySerializationStrategy> allVersions,
                                         final MvccEntitySerializationStrategyV3Impl mvccEntitySerializationStrategyV3,
                                         final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
                                         final MvccLogEntrySerializationStrategy mvccLogEntrySerializationStrategy,
                                         final MigrationDataProvider<EntityIdScope> migrationDataProvider ) {
         this.keyspace = keyspace;
+        this.session = session;
         this.allVersions = allVersions;
         this.mvccEntitySerializationStrategyV3 = mvccEntitySerializationStrategyV3;
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
@@ -149,7 +154,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration{
                                     new EntityToSaveMessage(currentScope, allVersions.next());
                                 subscriber.onNext(message);
                             }catch (Exception e){
-                                LOGGER.error("Failed to load entity " +entityIdScope.getId(),e);
+                                logger.error("Failed to load entity {}", entityIdScope.getId(),e);
                             }
                         }
 
@@ -163,8 +168,9 @@ public class MvccEntityDataMigrationImpl implements DataMigration{
 
                         final List<Id> toSaveIds = new ArrayList<>( entities.size() );
 
+                    final com.datastax.driver.core.BatchStatement uniqueBatch = new com.datastax.driver.core.BatchStatement();
 
-                        for ( EntityToSaveMessage message : entities ) {
+                    for ( EntityToSaveMessage message : entities ) {
                             try {
                                 final MutationBatch entityRewrite = migration.to.write(message.scope, message.entity);
 
@@ -197,17 +203,14 @@ public class MvccEntityDataMigrationImpl implements DataMigration{
                                 // time with
                                 // no TTL so that cleanup can clean up
                                 // older values
+
+
                                 for (final Field field : EntityUtils.getUniqueFields(message.entity.getEntity().get())) {
 
                                     final UniqueValue written = new UniqueValueImpl(field, entityId, version);
 
-                                    final MutationBatch mb = uniqueValueSerializationStrategy.write(message.scope, written);
+                                    uniqueBatch.add(uniqueValueSerializationStrategy.writeCQL(message.scope, written, -1));
 
-
-                                    // merge into our
-                                    // existing mutation
-                                    // batch
-                                    totalBatch.mergeShallow(mb);
                                 }
 
 
@@ -224,7 +227,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration{
                                     totalBatch.mergeShallow(mb);
                                 }
                             }catch (Exception e){
-                                LOGGER.error("Failed to migrate entity "+ message.entity.getId().getUuid()+ " :: " + message.entity.getId().getType(),e);
+                                logger.error("Failed to migrate entity {} :: {}", message.entity.getId().getUuid(), message.entity.getId().getType(),e);
                             }
 
 
@@ -232,7 +235,7 @@ public class MvccEntityDataMigrationImpl implements DataMigration{
 
                         }
 
-                        executeBatch( migration.to.getImplementationVersion(), totalBatch, observer, atomicLong );
+                        executeBatch( migration.to.getImplementationVersion(), totalBatch, observer, atomicLong, uniqueBatch );
 
                         //now run our cleanup task
 
@@ -252,10 +255,13 @@ public class MvccEntityDataMigrationImpl implements DataMigration{
     }
 
 
-    protected void executeBatch( final int targetVersion, final MutationBatch batch, final ProgressObserver po,
-                                 final AtomicLong count ) {
+    protected void executeBatch(final int targetVersion, final MutationBatch batch, final ProgressObserver po,
+                                final AtomicLong count, com.datastax.driver.core.BatchStatement uniqueBatch) {
         try {
+
             batch.execute();
+            session.execute(uniqueBatch);
+
 
             po.update( targetVersion, "Finished copying " + count + " entities to the new format" );
         }

@@ -18,13 +18,15 @@ package org.apache.usergrid.persistence.index;/*
  */
 
 
-import java.util.List;
+
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
-import rx.Observable;
+
+import com.google.common.base.Optional;
 
 
 public interface EntityIndexBatch {
@@ -34,8 +36,8 @@ public interface EntityIndexBatch {
      *
      * @param indexEdge  The edge to index the document into
      * @param entity     Entity to be indexed.
-     */
-    EntityIndexBatch index( final IndexEdge indexEdge, final Entity entity );
+     * */
+    EntityIndexBatch index(final IndexEdge indexEdge, final Entity entity );
 
     /**
      * Remove index of entity
@@ -53,6 +55,9 @@ public interface EntityIndexBatch {
      */
     EntityIndexBatch deindex( final SearchEdge searchEdge, final CandidateResult result );
 
+
+    EntityIndexBatch index(final IndexEdge indexEdge, final Entity entity, final Optional<Set<String>> fieldsToIndex );
+
     /**
      * Remove index of entity.
      *
@@ -63,7 +68,7 @@ public interface EntityIndexBatch {
     EntityIndexBatch deindex( final SearchEdge searchEdge, final Id id, final UUID version );
 
 
-
+    EntityIndexBatch deindex( final CandidateResult candidateResult);
 
     /**
      * get the batches

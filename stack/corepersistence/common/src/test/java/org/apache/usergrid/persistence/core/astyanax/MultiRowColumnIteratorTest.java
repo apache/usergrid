@@ -28,8 +28,9 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.usergrid.persistence.core.CassandraConfig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -53,7 +54,6 @@ import com.netflix.astyanax.util.RangeBuilder;
 import rx.Observable;
 import rx.Observer;
 import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 import static org.junit.Assert.assertEquals;
@@ -66,6 +66,9 @@ public class MultiRowColumnIteratorTest {
 
     @Inject
     public CassandraFig cassandraFig;
+
+    @Inject
+    public CassandraCluster cassandraCluster;
 
     protected static Keyspace keyspace;
 
@@ -98,16 +101,109 @@ public class MultiRowColumnIteratorTest {
                 return ConsistencyLevel.CL_QUORUM;
             }
 
+            @Override
+            public com.datastax.driver.core.ConsistencyLevel getDataStaxReadCl() {
+                return com.datastax.driver.core.ConsistencyLevel.LOCAL_ONE;
+            }
+
+            @Override
+            public com.datastax.driver.core.ConsistencyLevel getDataStaxReadConsistentCl() {
+                return com.datastax.driver.core.ConsistencyLevel.ALL;
+            }
+
+
+            @Override
+            public com.datastax.driver.core.ConsistencyLevel getDataStaxWriteCl() {
+                return com.datastax.driver.core.ConsistencyLevel.QUORUM;
+            }
+
 
             @Override
             public int[] getShardSettings() {
                 return new int[]{20};
             }
+
+            @Override
+            public String getApplicationKeyspace() {
+                return cassandraFig.getApplicationKeyspace();
+            }
+
+            @Override
+            public String getApplicationLocalKeyspace() {
+                return cassandraFig.getApplicationKeyspace() + "us_east";
+            }
+
+
+            @Override
+            public String getLocalDataCenter() {
+                return cassandraFig.getLocalDataCenter();
+            }
+
+            @Override
+            public int getConnections() {
+                return cassandraFig.getConnections();
+            }
+
+            @Override
+            public int getTimeout() {
+                return cassandraFig.getTimeout();
+            }
+
+            @Override
+            public int getPoolTimeout() {
+                return cassandraFig.getPoolTimeout();
+            }
+
+            @Override
+            public String getClusterName() {
+                return cassandraFig.getClusterName();
+            }
+
+            @Override
+            public String getHosts() {
+                return cassandraFig.getHosts();
+            }
+
+            @Override
+            public String getVersion() {
+                return cassandraFig.getVersion();
+            }
+
+            @Override
+            public String getUsername() {
+                return cassandraFig.getUsername();
+            }
+
+            @Override
+            public String getPassword() {
+                return cassandraFig.getPassword();
+            }
+
+            @Override
+            public String getStrategy() {
+                return cassandraFig.getStrategy();
+            }
+
+            @Override
+            public String getStrategyOptions() {
+                return cassandraFig.getStrategyOptions();
+            }
+
+            @Override
+            public String getStrategyLocal() {
+                return cassandraFig.getStrategyLocal();
+            }
+
+            @Override
+            public String getStrategyOptionsLocal() {
+                return cassandraFig.getStrategyOptionsLocal();
+            }
+
         };
 
 
         AstyanaxKeyspaceProvider astyanaxKeyspaceProvider =
-                new AstyanaxKeyspaceProvider( cassandraFig, cassandraConfig );
+                new AstyanaxKeyspaceProvider( cassandraCluster );
 
         keyspace = astyanaxKeyspaceProvider.get();
 
@@ -153,7 +249,7 @@ public class MultiRowColumnIteratorTest {
 
         final ColumnSearch<Long> ascendingSearch = new ColumnSearch<Long>() {
             @Override
-            public void buildRange( final RangeBuilder rangeBuilder, final Long value ) {
+            public void buildRange(final RangeBuilder rangeBuilder, final Long value, Long end) {
                 rangeBuilder.setStart( value );
             }
 
@@ -198,7 +294,7 @@ public class MultiRowColumnIteratorTest {
 
         final ColumnSearch<Long> descendingSearch = new ColumnSearch<Long>() {
             @Override
-            public void buildRange( final RangeBuilder rangeBuilder, final Long value ) {
+            public void buildRange(final RangeBuilder rangeBuilder, final Long value, Long end) {
                 rangeBuilder.setStart( value );
                 buildRange( rangeBuilder );
             }
@@ -273,7 +369,7 @@ public class MultiRowColumnIteratorTest {
 
         final ColumnSearch<Long> ascendingSearch = new ColumnSearch<Long>() {
             @Override
-            public void buildRange( final RangeBuilder rangeBuilder, final Long value ) {
+            public void buildRange(final RangeBuilder rangeBuilder, final Long value, Long end) {
                 rangeBuilder.setStart( value );
             }
 
@@ -322,7 +418,7 @@ public class MultiRowColumnIteratorTest {
 
         final ColumnSearch<Long> descendingSearch = new ColumnSearch<Long>() {
             @Override
-            public void buildRange( final RangeBuilder rangeBuilder, final Long value ) {
+            public void buildRange(final RangeBuilder rangeBuilder, final Long value, Long end) {
                 rangeBuilder.setStart( value );
                 buildRange( rangeBuilder );
             }
@@ -411,7 +507,7 @@ public class MultiRowColumnIteratorTest {
 
         final ColumnSearch<Long> ascendingSearch = new ColumnSearch<Long>() {
             @Override
-            public void buildRange( final RangeBuilder rangeBuilder, final Long value ) {
+            public void buildRange(final RangeBuilder rangeBuilder, final Long value, Long end) {
                 rangeBuilder.setStart( value );
             }
 
@@ -456,7 +552,7 @@ public class MultiRowColumnIteratorTest {
 
         final ColumnSearch<Long> descendingSearch = new ColumnSearch<Long>() {
             @Override
-            public void buildRange( final RangeBuilder rangeBuilder, final Long value ) {
+            public void buildRange(final RangeBuilder rangeBuilder, final Long value, Long end) {
                 rangeBuilder.setStart( value );
                 buildRange( rangeBuilder );
             }

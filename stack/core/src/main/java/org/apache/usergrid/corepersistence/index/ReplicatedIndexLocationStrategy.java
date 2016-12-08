@@ -25,6 +25,8 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.index.IndexAlias;
 import org.apache.usergrid.persistence.index.IndexLocationStrategy;
 
+import java.io.Serializable;
+
 /**
  * Strategy to replicate an index naming convention and publish elsewhere
  */
@@ -110,7 +112,7 @@ public class ReplicatedIndexLocationStrategy implements IndexLocationStrategy {
     public void setNumberOfReplicas(int replicas) {
         numberReplicas = replicas;
     }
-    public static class ReplicatedIndexAlias implements IndexAlias{
+    public static class ReplicatedIndexAlias implements IndexAlias, Serializable {
 
         private String readAlias;
         private String writeAlias;

@@ -113,14 +113,13 @@ public interface EntityIndex extends CPManager {
     CandidateResults getAllEdgeDocuments(final IndexEdge edge, final Id entityId);
 
     /**
-     * Returns all entity documents that match the entityId and come before the marked version
+     * Returns all entity docs that match the entityId being the nodeId ( aka connections where entityId = sourceNode)
      *
      * @param entityId      The entityId to match when searching
      * @param markedVersion The version that has been marked for deletion. All version before this one must be deleted.
      * @return
      */
-    CandidateResults getAllEntityVersionsBeforeMarkedVersion(final Id entityId, final UUID markedVersion);
-
+    CandidateResults getNodeDocsOlderThanMarked(final Id entityId, final UUID markedVersion);
     /**
      * delete all application records
      *

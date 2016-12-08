@@ -190,7 +190,8 @@ module.exports = function(grunt) {
         '!css/main.min.css',
         '!js/libs/',
         '!js/generated/*.js',
-        '!js/generated-templates/*.js'
+        '!js/generated-templates/*.js',
+        'getStatus.js'
       ],
       tasks: ['build-dev']
     },
@@ -302,7 +303,7 @@ module.exports = function(grunt) {
           // includes files within path
           {
             expand: true,
-            src: ['*.html', 'config.js', '*.ico', 'helpJson.json'],
+            src: ['*.html', 'config.js', '*.ico', 'helpJson.json', 'getStatus.js'],
             dest: distPath,
             filter: 'isFile'
           }, {

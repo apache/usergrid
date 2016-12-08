@@ -22,7 +22,7 @@ package org.apache.usergrid.services.notifications;
 
 import org.apache.usergrid.batch.JobExecution;
 import org.apache.usergrid.persistence.entities.Notification;
-import org.apache.usergrid.persistence.queue.QueueMessage;
+import org.apache.usergrid.persistence.queue.LegacyQueueMessage;
 import rx.Observable;
 
 import java.util.List;
@@ -32,14 +32,15 @@ import java.util.List;
  */
 public interface ApplicationQueueManager {
 
-    public static final String DEFAULT_QUEUE_PROPERTY = "usergrid.notifications.listener.queue";
+    String DEFAULT_QUEUE_PROPERTY = "usergrid.notifications.listener.queue";
 
-    public static final String NOTIFIER_ID_POSTFIX = ".notifier.id";
+    String NOTIFIER_ID_POSTFIX = ".notifier.id";
 
-    public static final  String DEFAULT_QUEUE_NAME = "push"; //keep this short as AWS limits queue name size to 80 chars
+    String DEFAULT_QUEUE_NAME = "push"; //keep this short as AWS limits queue name size to 80 chars
 
     /**
      * send notification to queue
+     *
      * @param notification
      * @param jobExecution
      * @throws Exception
@@ -48,11 +49,12 @@ public interface ApplicationQueueManager {
 
     /**
      * send notifications to providers
+     *
      * @param messages
      * @param queuePath
      * @return
      */
-    Observable sendBatchToProviders(List<QueueMessage> messages, String queuePath);
+    Observable sendBatchToProviders(List<LegacyQueueMessage> messages, String queuePath);
 
     /**
      * stop processing and send message to providers to stop
@@ -61,6 +63,7 @@ public interface ApplicationQueueManager {
 
     /**
      * check for inactive devices, apple and google require this
+     *
      * @throws Exception
      */
     void asyncCheckForInactiveDevices() throws Exception;

@@ -17,34 +17,28 @@
 package org.apache.usergrid.security.shiro.utils;
 
 
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
+import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.usergrid.management.ApplicationInfo;
-import org.apache.usergrid.management.OrganizationInfo;
-import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
-import org.apache.usergrid.security.shiro.principals.UserPrincipal;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.UnavailableSecurityManagerException;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
+import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.management.OrganizationInfo;
+import org.apache.usergrid.management.UserInfo;
+import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.security.shiro.PrincipalCredentialsToken;
+import org.apache.usergrid.security.shiro.principals.UserPrincipal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.BiMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import org.apache.usergrid.persistence.index.query.Identifier;
-import static org.apache.usergrid.security.shiro.Realm.ROLE_ADMIN_USER;
-import static org.apache.usergrid.security.shiro.Realm.ROLE_APPLICATION_ADMIN;
-import static org.apache.usergrid.security.shiro.Realm.ROLE_APPLICATION_USER;
-import static org.apache.usergrid.security.shiro.Realm.ROLE_ORGANIZATION_ADMIN;
-import static org.apache.usergrid.security.shiro.Realm.ROLE_SERVICE_ADMIN;
+import static org.apache.usergrid.security.shiro.Realm.*;
 
 
 public class SubjectUtils {
@@ -429,7 +423,9 @@ public class SubjectUtils {
             currentUser.checkPermission( permission );
         }
         catch ( org.apache.shiro.authz.UnauthenticatedException e ) {
-            logger.debug( "checkPermission(): Subject is anonymous" );
+            if (logger.isTraceEnabled()) {
+                logger.trace("checkPermission(): Subject is anonymous");
+            }
         }
     }
 

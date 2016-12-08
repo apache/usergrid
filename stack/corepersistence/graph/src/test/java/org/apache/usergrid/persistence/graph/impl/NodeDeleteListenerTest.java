@@ -70,7 +70,7 @@ import static org.mockito.Mockito.when;
 @UseModules( { TestGraphModule.class } )
 public class NodeDeleteListenerTest {
 
-    private static final Logger log = LoggerFactory.getLogger( NodeDeleteListenerTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( NodeDeleteListenerTest.class );
 
 
     @Inject
@@ -319,7 +319,7 @@ public class NodeDeleteListenerTest {
      * since it has no other targets
      */
     @Test
-    @Ignore("This needs to be re-enable.  The counters for sharding fall over in cass, needs fixes")
+    @Ignore("Pending re-enable of delete functionality")
     public void testMultiDelete() throws ConnectionException, InterruptedException {
 
         GraphManager em = emf.createEdgeManager( scope );
@@ -359,8 +359,8 @@ public class NodeDeleteListenerTest {
 
         assertEquals( edgeCount, countSaved );
 
-        log.info( "Saved {} source edges", sourceCount );
-        log.info( "Saved {} target edges", targetCount );
+        logger.info( "Saved {} source edges", sourceCount );
+        logger.info( "Saved {} target edges", targetCount );
 
         long deleteVersion = Long.MAX_VALUE;
 
@@ -368,7 +368,6 @@ public class NodeDeleteListenerTest {
 
         int count = deleteListener.receive( scope, toDelete, UUIDGenerator.newTimeUUID() ).toBlocking().last();
 
-        //TODO T.N. THIS SHOULD WORK!!!!  It fails intermittently with RX 0.17.1 with too many scheduler threads (which was wrong), try this again after the next release
         assertEquals( edgeCount, count );
 
         //now verify we can't get any of the info back

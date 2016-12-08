@@ -38,7 +38,7 @@ public abstract class AbstractMigrationPlugin implements MigrationPlugin {
 
 
 
-    private static final Logger LOG = LoggerFactory.getLogger( AbstractMigrationPlugin.class );
+    private static final Logger logger = LoggerFactory.getLogger( AbstractMigrationPlugin.class );
 
 
     private final Set<DataMigration> entityDataMigrations;
@@ -57,7 +57,7 @@ public abstract class AbstractMigrationPlugin implements MigrationPlugin {
 
         //run until complete
         while(runMigration( observer )){
-         LOG.info( "Migration complete, checking for next run" );
+         logger.info( "Migration complete, checking for next run" );
         }
 
     }
@@ -102,7 +102,7 @@ public abstract class AbstractMigrationPlugin implements MigrationPlugin {
         }
 
         if(migrationToExecute == null){
-            LOG.info( "No migrations found to execute" );
+            logger.info( "No migrations found to execute" );
             return false;
         }
 

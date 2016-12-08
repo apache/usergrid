@@ -41,7 +41,6 @@ public class MatrixQueryTests extends AbstractRestIT {
      *
      * @throws Exception
      */
-    @Ignore
     @Test
     public void connectionsTest() throws Exception {
 
@@ -105,7 +104,6 @@ public class MatrixQueryTests extends AbstractRestIT {
         assertEquals(1, user3likes.getResponse().getEntityCount());
     }
 
-    @Ignore
     @Test
     public void largeRootElements() {
 

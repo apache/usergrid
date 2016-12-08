@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.graph.impl.stage;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -51,7 +50,6 @@ import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
 import rx.Observable;
 import rx.functions.Action0;
 import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 
 /**
@@ -60,7 +58,7 @@ import rx.schedulers.Schedulers;
 public class NodeDeleteListenerImpl implements NodeDeleteListener {
 
 
-    private static final Logger LOG = LoggerFactory.getLogger( NodeDeleteListenerImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( NodeDeleteListenerImpl.class );
 
     private final NodeSerialization nodeSerialization;
     private final EdgeSerialization storageSerialization;
@@ -112,7 +110,9 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
 
                         final Optional<Long> maxVersion = nodeSerialization.getMaxVersion( scope, node );
 
-                        LOG.debug( "Node with id {} has max version of {}", node, maxVersion.orNull() );
+                        if (logger.isTraceEnabled()) {
+                            logger.trace("Node with id {} has max version of {}", node, maxVersion.orNull());
+                        }
 
 
                         if ( !maxVersion.isPresent() ) {
@@ -157,26 +157,26 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
 
         //get all edges pointing to the target node and buffer then into groups for deletion
         Observable<MarkedEdge> targetEdges =
-                getEdgesTypesToTarget( scope, new SimpleSearchEdgeType( node, null, null ) )
-                        .subscribeOn( Schedulers.io() ).flatMap( edgeType -> Observable.create( new ObservableIterator<MarkedEdge>( "getTargetEdges" ) {
+                getEdgesTypesToTarget(scope, new SimpleSearchEdgeType(node, null, null))
+                        .flatMap(edgeType -> Observable.create(new ObservableIterator<MarkedEdge>("getTargetEdges") {
                             @Override
                             protected Iterator<MarkedEdge> getIterator() {
-                                return storageSerialization.getEdgesToTarget( scope,
-                                        new SimpleSearchByEdgeType( node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
+                                return storageSerialization.getEdgesToTarget(scope,
+                                    new SimpleSearchByEdgeType(node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent()));
                             }
-                        } ) );
+                        }));
 
 
         //get all edges pointing to the source node and buffer them into groups for deletion
         Observable<MarkedEdge> sourceEdges =
-                getEdgesTypesFromSource( scope, new SimpleSearchEdgeType( node, null, null ) )
-                        .subscribeOn( Schedulers.io() ).flatMap( edgeType -> Observable.create( new ObservableIterator<MarkedEdge>( "getSourceEdges" ) {
+                getEdgesTypesFromSource(scope, new SimpleSearchEdgeType(node, null, null))
+                        .flatMap(edgeType -> Observable.create(new ObservableIterator<MarkedEdge>("getSourceEdges") {
                             @Override
                             protected Iterator<MarkedEdge> getIterator() {
-                                return storageSerialization.getEdgesFromSource( scope,
-                                        new SimpleSearchByEdgeType( node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING,  Optional.<Edge>absent() ) );
+                                return storageSerialization.getEdgesFromSource(scope,
+                                    new SimpleSearchByEdgeType(node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent()));
                             }
-                        } ) );
+                        }));
 
         //merge both source and target into 1 observable.  We'll need to check them all regardless of order
         return Observable.merge( targetEdges, sourceEdges )
@@ -184,7 +184,9 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
                 //buffer and delete marked edges in our buffer size so we're making less trips to cassandra
                 .buffer( graphFig.getScanPageSize() ).flatMap( markedEdges -> {
 
-                    LOG.debug( "Batching {} edges for node {} for deletion", markedEdges.size(), node );
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Batching {} edges for node {} for deletion", markedEdges.size(), node);
+                    }
 
                     final MutationBatch batch = keyspace.prepareMutationBatch();
 
@@ -219,14 +221,18 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
                     //we want them running on the i/o thread from the Observable emitting all the edges
 
                     //
-                    LOG.debug( "About to audit {} source types", sourceNodes.size() );
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("About to audit {} source types", sourceNodes.size());
+                    }
 
                     Observable<Integer> sourceMetaCleanup =
                             Observable.from( sourceNodes ).flatMap( targetPair -> edgeMetaRepair
                                     .repairSources( scope, targetPair.id, targetPair.edgeType, maxVersion ) ).last();
 
 
-                    LOG.debug( "About to audit {} target types", targetNodes.size() );
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("About to audit {} target types", targetNodes.size());
+                    }
 
                     Observable<Integer> targetMetaCleanup =
                             Observable.from( targetNodes ).flatMap( targetPair -> edgeMetaRepair
@@ -235,12 +241,7 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
 
                     //run both the source/target edge type cleanup, then proceed
                     return Observable.merge( sourceMetaCleanup, targetMetaCleanup ).lastOrDefault( null )
-                                     .flatMap( new Func1<Integer, Observable<MarkedEdge>>() {
-                                         @Override
-                                         public Observable<MarkedEdge> call( final Integer integer ) {
-                                             return Observable.from( markedEdges );
-                                         }
-                                     } );
+                                     .flatMap(integer -> Observable.from( markedEdges ));
                 } );
     }
 

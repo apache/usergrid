@@ -29,6 +29,7 @@ public interface MigrationManager {
     /**
      * Perform any migration necessary in the application.  Will only create keyspaces and column families if they do
      * not exist
+     * @param forceCheckSchema
      */
-    public void migrate() throws MigrationException;
+    void migrate(boolean forceCheckSchema) throws MigrationException;
 }

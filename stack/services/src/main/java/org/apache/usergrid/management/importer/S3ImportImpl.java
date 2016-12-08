@@ -17,12 +17,10 @@
 
 package org.apache.usergrid.management.importer;
 
-import com.amazonaws.SDKGlobalConfiguration;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.lucene.document.StringField;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
@@ -119,7 +117,10 @@ public class S3ImportImpl implements S3Import {
 
         PageSet<? extends StorageMetadata> pageSets =
             blobStore.list(bucketName, new ListContainerOptions().recursive());
-        logger.debug("   Found {} files in bucket {}", pageSets.size(), bucketName);
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("   Found {} files in bucket {}", pageSets.size(), bucketName);
+        }
 
         List<String> blobFileNames = new ArrayList<>();
         for ( Object pageSet : pageSets ) {

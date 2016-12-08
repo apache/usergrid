@@ -19,6 +19,7 @@ package org.apache.usergrid.rest.test.resource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.usergrid.cassandra.ClearShiroSubject;
 import org.apache.usergrid.rest.TomcatRuntime;
 import org.apache.usergrid.rest.test.resource.endpoints.ApplicationsResource;
 import org.apache.usergrid.rest.test.resource.endpoints.NamedResource;
@@ -173,8 +174,14 @@ public class AbstractRestIT extends JerseyTest {
     }
 
     public void refreshIndex() {
-        //TODO: add error checking and logging
-        clientSetup.refreshIndex();
+        //TODO see how we can refresh index (not async) for tests so sleep may not be needed
+        try {
+            Thread.sleep(250); //ensure index docs are finished being sent to Elasticsearch by Usergrid before refresh
+            clientSetup.refreshIndex();
+        } catch (InterruptedException e) {
+            System.out.println("Error refreshing index");
+            e.printStackTrace();
+        }
     }
 
 

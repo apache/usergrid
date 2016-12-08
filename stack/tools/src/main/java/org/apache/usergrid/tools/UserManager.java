@@ -18,6 +18,7 @@ package org.apache.usergrid.tools;
 
 
 import com.google.common.collect.BiMap;
+import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.UserInfo;
 
 import org.apache.commons.cli.CommandLine;
@@ -65,7 +66,7 @@ public class UserManager extends ToolBase {
         logger.info( mapToFormattedJsonString( orgs ) );
 
         logger.info("--- User dictionaries:");
-        EntityManager em = emf.getEntityManager( CassandraService.MANAGEMENT_APPLICATION_ID );
+        EntityManager em = emf.getEntityManager( CpNamingUtils.MANAGEMENT_APPLICATION_ID );
         User user = em.get( userInfo.getUuid(), User.class );
         Set<String> dictionaries = em.getDictionaries( user );
         for (String dictionary : dictionaries) {

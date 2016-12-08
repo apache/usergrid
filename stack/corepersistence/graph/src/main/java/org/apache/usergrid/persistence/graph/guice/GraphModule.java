@@ -54,22 +54,21 @@ import org.apache.usergrid.persistence.graph.serialization.impl.TargetIdObservab
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.EdgeDataMigrationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphMigration;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphMigrationPlugin;
-import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.AsyncTaskExecutor;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardSerialization;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.EdgeShardStrategy;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardAllocation;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardApproximation;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.NodeShardCache;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupCompaction;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardGroupDeletion;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.ShardedEdgeSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardApproximationImpl;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardCounterSerialization;
-import org.apache.usergrid.persistence.graph.serialization.impl.shard.count.NodeShardCounterSerializationImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.AsyncTaskExecutorImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.EdgeShardSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardAllocationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.NodeShardCacheImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardGroupCompactionImpl;
+import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardGroupDeletionImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardedEdgeSerializationImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeColumnFamilies;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.SizebasedEdgeShardStrategy;
@@ -111,9 +110,13 @@ public abstract class GraphModule extends AbstractModule {
          */
 
         bind(NodeShardAllocation.class).to( NodeShardAllocationImpl.class );
-        bind( NodeShardApproximation.class ).to( NodeShardApproximationImpl.class );
         bind( NodeShardCache.class ).to( NodeShardCacheImpl.class );
-        bind( NodeShardCounterSerialization.class ).to( NodeShardCounterSerializationImpl.class );
+
+        /**
+         * Binding for task tracker
+         */
+        bind( AsyncTaskExecutor.class ).to( AsyncTaskExecutorImpl.class );
+        bind( ShardGroupDeletion.class ).to( ShardGroupDeletionImpl.class );
 
         /**
          * Bind our strategies based on their internal annotations.
@@ -173,7 +176,6 @@ public abstract class GraphModule extends AbstractModule {
         migrationBinding.addBinding().to( Key.get( EdgeColumnFamilies.class ) );
 
         migrationBinding.addBinding().to( Key.get( EdgeShardSerialization.class ) );
-        migrationBinding.addBinding().to( Key.get( NodeShardCounterSerialization.class ) );
 
         //Get the old version and the new one
         migrationBinding.addBinding().to( Key.get( EdgeMetadataSerializationV1Impl.class) );

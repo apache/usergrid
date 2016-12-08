@@ -25,6 +25,8 @@ import org.apache.usergrid.persistence.PersistenceModule;
 import org.apache.usergrid.persistence.core.guice.TestModule;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 
+import java.util.Properties;
+
 
 public class TestIndexModule extends TestModule {
 
@@ -32,12 +34,14 @@ public class TestIndexModule extends TestModule {
     @Override
     protected void configure() {
 
-
         //TODO, refactor to guice to get rid of this
-        final ApplicationContext singleton = ConcurrentProcessSingleton.getInstance().getSpringResource().getAppContext();
+        final ApplicationContext singleton =
+            ConcurrentProcessSingleton.getInstance().getSpringResource().getAppContext();
 
         //this will break, we need to untagle this and move to guice in core completely
-        install( new CoreModule() );
+        Properties properties = new Properties();
+        properties.setProperty( "elasticsearch.queue_impl", "DISTRIBUTED" );
+        install( new CoreModule( properties ) );
         install( new PersistenceModule( singleton ) );
     }
 }

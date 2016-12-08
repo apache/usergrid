@@ -19,30 +19,28 @@
 package org.apache.usergrid.persistence.core.migration.schema;
 
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.netflix.astyanax.Keyspace;
+import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
+import com.netflix.astyanax.ddl.KeyspaceDefinition;
+import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.datastax.CQLUtils;
+import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
-import org.apache.usergrid.persistence.core.migration.util.AstayanxUtils;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.connectionpool.exceptions.BadRequestException;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.connectionpool.exceptions.NotFoundException;
-import com.netflix.astyanax.ddl.ColumnFamilyDefinition;
-import com.netflix.astyanax.ddl.KeyspaceDefinition;
-
 
 /**
- * Implementation of the migration manager to set up keyspace
+ * Implementation of the migration manager to set up column families / tables
  *
  * @author tnine
  */
@@ -52,46 +50,67 @@ public class MigrationManagerImpl implements MigrationManager {
 
     private static final Logger logger = LoggerFactory.getLogger( MigrationManagerImpl.class );
 
+    private final CassandraFig cassandraFig;
     private final Set<Migration> migrations;
     private final Keyspace keyspace;
-
-    private final MigrationManagerFig fig;
+    private final DataStaxCluster dataStaxCluster;
 
 
     @Inject
-    public MigrationManagerImpl( final Keyspace keyspace, final Set<Migration> migrations,
-                                 MigrationManagerFig fig ) {
+    public MigrationManagerImpl( final CassandraFig cassandraFig, final Keyspace keyspace,
+                                 final Set<Migration> migrations, final DataStaxCluster dataStaxCluster) {
+
+        this.cassandraFig = cassandraFig;
         this.keyspace = keyspace;
         this.migrations = migrations;
-        this.fig = fig;
+        this.dataStaxCluster = dataStaxCluster;
     }
 
 
     @Override
-    public void migrate() throws MigrationException {
-
+    public void migrate(boolean forceCheckSchema) throws MigrationException {
 
         try {
 
-            testAndCreateKeyspace();
+            dataStaxCluster.createApplicationKeyspace(forceCheckSchema);
+
+            dataStaxCluster.createApplicationLocalKeyspace(forceCheckSchema);
 
             for ( Migration migration : migrations ) {
 
-                final Collection<MultiTennantColumnFamilyDefinition> columnFamilies = migration.getColumnFamilies();
+                final Collection<MultiTenantColumnFamilyDefinition> columnFamilies = migration.getColumnFamilies();
+
+                final Collection<TableDefinition> tables = migration.getTables();
 
 
-                if ( columnFamilies == null || columnFamilies.size() == 0 ) {
+                if ((columnFamilies == null || columnFamilies.size() == 0) &&
+                    (tables == null || tables.size() == 0)) {
                     logger.warn(
-                            "Class {} implements {} but returns null column families for migration.  Either implement"
-                                    + " this method or remove the interface from the class", migration.getClass(),
-                            Migration.class );
+                        "Class {} implements {} but returns null for getColumnFamilies and " +
+                            "getTables for migration.  Either implement this method or remove " +
+                            "the interface from the class",
+                        migration.getClass().getSimpleName(), Migration.class.getSimpleName());
                     continue;
                 }
 
-                for ( MultiTennantColumnFamilyDefinition cf : columnFamilies ) {
-                    testAndCreateColumnFamilyDef( cf );
+                if (columnFamilies != null && !columnFamilies.isEmpty()) {
+                    for (MultiTenantColumnFamilyDefinition cf : columnFamilies) {
+                        testAndCreateColumnFamilyDef(cf);
+                    }
                 }
+
+
+                if ( tables != null && !tables.isEmpty() ) {
+                    for (TableDefinition tableDefinition : tables) {
+
+                        createTable(tableDefinition, forceCheckSchema);
+
+                    }
+                }
+
+
             }
+
         }
         catch ( Throwable t ) {
             logger.error( "Unable to perform migration", t );
@@ -103,7 +122,7 @@ public class MigrationManagerImpl implements MigrationManager {
     /**
      * Check if the column family exists.  If it dosn't create it
      */
-    private void testAndCreateColumnFamilyDef( MultiTennantColumnFamilyDefinition columnFamily )
+    private void testAndCreateColumnFamilyDef( MultiTenantColumnFamilyDefinition columnFamily )
             throws ConnectionException {
         final KeyspaceDefinition keyspaceDefinition = keyspace.describeKeyspace();
 
@@ -111,87 +130,55 @@ public class MigrationManagerImpl implements MigrationManager {
                 keyspaceDefinition.getColumnFamily( columnFamily.getColumnFamily().getName() );
 
         if ( existing != null ) {
+            logger.info("Not creating columnfamily {}, it already exists.", columnFamily.getColumnFamily().getName());
             return;
         }
 
         keyspace.createColumnFamily( columnFamily.getColumnFamily(), columnFamily.getOptions() );
 
+        // the CF def creation uses Asytanax, so manually check the schema agreement
+        astyanaxWaitForSchemaAgreement();
+
         logger.info( "Created column family {}", columnFamily.getColumnFamily().getName() );
 
-        waitForMigration();
     }
 
+    private void createTable(TableDefinition tableDefinition, boolean forceCheckSchema) throws Exception {
 
-    /**
-     * Check if they keyspace exists.  If it doesn't create it
-     */
-    private void testAndCreateKeyspace() throws ConnectionException {
-
-
-        KeyspaceDefinition keyspaceDefinition = null;
-
-        try {
-            keyspaceDefinition = keyspace.describeKeyspace();
-
-        }catch( NotFoundException nfe){
-            //if we execute this immediately after a drop keyspace in 1.2.x, Cassandra is returning the NFE instead of a BadRequestException
-            //swallow and log, then continue to create the keyspaces.
-            logger.info( "Received a NotFoundException when attempting to describe keyspace.  It does not exist" );
-        }
-        catch(Exception e){
-            AstayanxUtils.isKeyspaceMissing("Unable to connect to cassandra", e);
+        boolean exists;
+        if(!forceCheckSchema){
+            exists = dataStaxCluster.getClusterSession().getCluster()
+                .getMetadata()
+                .getKeyspace(CQLUtils.quote( tableDefinition.getKeyspace() ) )
+                .getTable( tableDefinition.getTableName() ) != null;
+        }else{
+            exists = dataStaxCluster.getClusterSession()
+                .execute("select * from system.schema_columnfamilies where keyspace_name='"+tableDefinition.getKeyspace()
+                    +"' and columnfamily_name='"+CQLUtils.unquote(tableDefinition.getTableName())+"'").one() != null;
         }
 
-
-        if ( keyspaceDefinition != null ) {
+        if( exists ){
+            logger.info("Not creating table {}, it already exists.", tableDefinition.getTableName());
             return;
         }
 
-
-        ImmutableMap.Builder<String, Object> strategyOptions = getKeySpaceProps();
-
-
-        ImmutableMap<String, Object> options =
-                ImmutableMap.<String, Object>builder().put( "strategy_class", fig.getStrategyClass() )
-                            .put( "strategy_options", strategyOptions.build() ).build();
-
-
-        keyspace.createKeyspace( options );
-
-        strategyOptions.toString();
-
-        logger.info( "Created keyspace {} with options {}", keyspace.getKeyspaceName(), options.toString() );
-
-        waitForMigration();
-    }
-
-
-    /**
-     * Get keyspace properties
-     */
-    private ImmutableMap.Builder<String, Object> getKeySpaceProps() {
-        ImmutableMap.Builder<String, Object> keyspaceProps = ImmutableMap.<String, Object>builder();
-
-        String optionString = fig.getStrategyOptions();
-
-        if(optionString == null){
-            return keyspaceProps;
+        String CQL = tableDefinition.getTableCQL(cassandraFig, TableDefinition.ACTION.CREATE);
+        if (logger.isDebugEnabled()) {
+            logger.debug(CQL);
         }
 
-
-
-        for ( String key : optionString.split( "," ) ) {
-
-            final String[] options = key.split( ":" );
-
-            keyspaceProps.put( options[0], options[1] );
+        if ( tableDefinition.getKeyspace().equals( cassandraFig.getApplicationKeyspace() )) {
+            dataStaxCluster.getApplicationSession().execute( CQL );
+        } else {
+            dataStaxCluster.getApplicationLocalSession().execute( CQL );
         }
 
-        return keyspaceProps;
+        logger.info("Created table: {} in keyspace {}",
+            tableDefinition.getTableName(), tableDefinition.getKeyspace());
+
     }
 
-
-    private void waitForMigration() throws ConnectionException {
+    private void astyanaxWaitForSchemaAgreement() throws ConnectionException {
 
         while ( true ) {
 
@@ -210,4 +197,7 @@ public class MigrationManagerImpl implements MigrationManager {
             }
         }
     }
+
+
+
 }

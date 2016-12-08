@@ -60,16 +60,12 @@ public class SearchConnectionFilter extends AbstractElasticSearchFilter {
 
     @Override
     protected SearchTypes getSearchTypes() {
-        final SearchTypes searchTypes = SearchTypes.fromNullableTypes( connectedEntityType.orNull() );
-
-        return searchTypes;
+        return SearchTypes.fromNullableTypes( connectedEntityType.orNull() );
     }
 
 
     @Override
     protected SearchEdge getSearchEdge( final Id id ) {
-        final SearchEdge searchEdge = createConnectionSearchEdge( id, connectionName );
-
-        return searchEdge;
+        return createConnectionSearchEdge( id, connectionName );
     }
 }

@@ -19,32 +19,37 @@
 package org.apache.usergrid.persistence.core.guice;
 
 
+import com.datastax.driver.core.Session;
+import com.netflix.astyanax.Keyspace;
+import org.apache.usergrid.persistence.core.CassandraConfig;
+import org.apache.usergrid.persistence.core.CassandraConfigImpl;
+import org.apache.usergrid.persistence.core.CassandraFig;
+import org.apache.usergrid.persistence.core.astyanax.*;
+import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
+import org.apache.usergrid.persistence.core.datastax.DataStaxSessionProvider;
+import org.apache.usergrid.persistence.core.datastax.impl.DataStaxClusterImpl;
+import org.safehaus.guicyfig.GuicyFigModule;
+
+import org.apache.usergrid.persistence.core.consistency.TimeService;
+import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
 import org.apache.usergrid.persistence.core.guicyfig.ClusterFig;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactoryImpl;
 import org.apache.usergrid.persistence.core.metrics.MetricsFig;
-import org.apache.usergrid.persistence.core.migration.data.*;
-import org.safehaus.guicyfig.GuicyFigModule;
-
-import org.apache.usergrid.persistence.core.astyanax.AstyanaxKeyspaceProvider;
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfigImpl;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
-import org.apache.usergrid.persistence.core.consistency.TimeService;
-import org.apache.usergrid.persistence.core.consistency.TimeServiceImpl;
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationManager;
+import org.apache.usergrid.persistence.core.migration.data.DataMigrationManagerImpl;
+import org.apache.usergrid.persistence.core.migration.data.MigrationInfoCache;
+import org.apache.usergrid.persistence.core.migration.data.MigrationInfoCacheImpl;
+import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerialization;
+import org.apache.usergrid.persistence.core.migration.data.MigrationInfoSerializationImpl;
 import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManager;
-import org.apache.usergrid.persistence.core.migration.schema.MigrationManagerFig;
 import org.apache.usergrid.persistence.core.migration.schema.MigrationManagerImpl;
-import org.apache.usergrid.persistence.core.rx.RxSchedulerFig;
-import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
-import org.apache.usergrid.persistence.core.rx.RxTaskSchedulerImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.multibindings.Multibinder;
-import com.netflix.astyanax.Keyspace;
 
 
 /**
@@ -55,8 +60,18 @@ public class CommonModule extends AbstractModule {
 
     @Override
     protected void configure() {
+
         //noinspection unchecked
-        install(new GuicyFigModule(MigrationManagerFig.class, CassandraFig.class));
+        install(new GuicyFigModule(CassandraFig.class));
+
+        // bind our Cassandra cluster to the Astyanax Implementation
+        bind(CassandraCluster.class).to(CassandraClusterImpl.class).asEagerSingleton();
+
+        // bind our Datastax cluster
+        bind(DataStaxCluster.class).to(DataStaxClusterImpl.class).asEagerSingleton();
+
+        // bind our Session to the DataStaxSessionProvider
+        bind(Session.class).toProvider(DataStaxSessionProvider.class).asEagerSingleton();
 
         // bind our keyspace to the AstyanaxKeyspaceProvider
         bind(Keyspace.class).toProvider(AstyanaxKeyspaceProvider.class).asEagerSingleton();
@@ -91,16 +106,11 @@ public class CommonModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), MigrationPlugin.class);
 
 
-        /**
-         * RX java scheduler configuration
-         */
-
-        install(new GuicyFigModule(RxSchedulerFig.class));
 
         install(new GuicyFigModule(ClusterFig.class));
         bind(SettingsValidationCluster.class).asEagerSingleton(); //validate props from ClusterFig on startup
 
-        bind(RxTaskScheduler.class).to(RxTaskSchedulerImpl.class);
+
     }
 
 

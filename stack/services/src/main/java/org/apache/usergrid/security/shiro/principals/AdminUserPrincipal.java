@@ -37,6 +37,9 @@ import static org.apache.usergrid.security.shiro.utils.SubjectUtils.getPermissio
 public class AdminUserPrincipal extends UserPrincipal {
     private static final Logger logger = LoggerFactory.getLogger(AdminUserPrincipal.class);
 
+    /**
+     * Needed for Jackson, do not remove
+     */
     public AdminUserPrincipal() {
     }
 
@@ -93,30 +96,7 @@ public class AdminUserPrincipal extends UserPrincipal {
 
             grant(info, SubjectUtils.getPermissionFromPath(emf.getManagementAppId(), "get,put,post,delete", "/**"));
 
-            // get all organizations
-            try {
-
-                Map<UUID, String> allOrganizations = management.getOrganizations();
-
-                if (allOrganizations != null) {
-
-                    for (UUID id : allOrganizations.keySet()) {
-                        grant(info, "organizations:admin,access,get,put,post,delete:" + id);
-                    }
-                    organizationSet.putAll(allOrganizations);
-
-                    Map<UUID, String> allApplications =
-                        management.getApplicationsForOrganizations(allOrganizations.keySet());
-
-                    if ((allApplications != null) && ! allApplications.isEmpty()) {
-                        grant(info, "applications:admin,access,get,put,post,delete:" + StringUtils
-                            .join(allApplications.keySet(), ','));
-                        applicationSet.putAll(allApplications);
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Unable to construct superuser permissions", e);
-            }
+            // don't need to load organizations here for superuser/sysadmin because it has access to everything
         }
 
         else {

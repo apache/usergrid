@@ -16,20 +16,26 @@
  */
 package org.apache.usergrid.persistence.entities;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.apache.usergrid.persistence.TypedEntity;
+import org.apache.usergrid.persistence.annotations.EntityProperty;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashMap;
 import java.util.UUID;
-import org.apache.usergrid.persistence.annotations.EntityProperty;
-import org.mortbay.util.ajax.JSON;
 
 @XmlRootElement
 public class Receipt extends TypedEntity {
 
     public static final String ENTITY_TYPE = "receipt";
     public static final String NOTIFICATION_CONNECTION = "notification";
+
+    private static ObjectMapper objectMapper = new ObjectMapper();
+    static private final TypeReference<HashMap> hashMapTypeRef = new TypeReference<HashMap>() {};
+
+
 
     /** device id **/
     @EntityProperty
@@ -65,27 +71,28 @@ public class Receipt extends TypedEntity {
     public Receipt() {
     }
 
-    public Receipt(UUID notificationUUID, String notifierId, Object payload,UUID deviceId) {
+    public Receipt(UUID notificationUUID, String notifierId, Object payload, UUID deviceId) {
         this.notificationUUID = notificationUUID;
         this.notifierId = notifierId;
         HashMap receiptPayload;
-        if(! (payload instanceof HashMap) ){
-            if(payload instanceof String){
+
+        if (!(payload instanceof HashMap)) {
+            if (payload instanceof String) {
                 try {
-                    receiptPayload = (HashMap) JSON.parse((String) payload);
-                }catch (Exception e){
+                    receiptPayload = (HashMap) objectMapper.readValue( (String)payload, hashMapTypeRef );
+                } catch (Exception e) {
                     receiptPayload = new HashMap<>();
-                    receiptPayload.put("payload", payload);
+                    receiptPayload.put( "payload", payload );
                 }
-            }else {
+            } else {
                 receiptPayload = new HashMap<>();
-                receiptPayload.put("payload", payload);
+                receiptPayload.put( "payload", payload );
             }
-        }else{
-            receiptPayload = (HashMap)payload;
+        } else {
+            receiptPayload = (HashMap) payload;
         }
         this.payload = receiptPayload;
-        this.setDeviceId(deviceId);
+        this.setDeviceId( deviceId );
     }
 
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)

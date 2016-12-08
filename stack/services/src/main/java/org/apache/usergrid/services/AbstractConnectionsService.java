@@ -17,30 +17,23 @@
 package org.apache.usergrid.services;
 
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.usergrid.persistence.ConnectionRef;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.Query;
+import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.Query.Level;
-import org.apache.usergrid.persistence.Results;
-import org.apache.usergrid.persistence.Schema;
-import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.index.query.Identifier;
 import org.apache.usergrid.services.ServiceParameter.IdParameter;
 import org.apache.usergrid.services.ServiceParameter.NameParameter;
 import org.apache.usergrid.services.ServiceParameter.QueryParameter;
 import org.apache.usergrid.services.ServiceResults.Type;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
-
+import org.apache.usergrid.services.exceptions.UnsupportedServiceOperationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.schedulers.Schedulers;
+
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.apache.usergrid.services.ServiceParameter.filter;
 import static org.apache.usergrid.services.ServiceParameter.firstParameterIsName;
@@ -218,9 +211,9 @@ public class AbstractConnectionsService extends AbstractService {
         // the context of the entity they're trying to load isn't owned by the owner
         // in the path, don't return it
         if ( !em.isConnectionMember( context.getOwner(), context.getCollectionName(), entity ) ) {
-            logger.info( "Someone tried to GET entity {} they don't own. Entity id {} with owner {}", new Object[] {
+            logger.info( "Someone tried to GET entity {} they don't own. Entity id {} with owner {}",
                     getEntityType(), id, context.getOwner()
-            } );
+            );
             throw new ServiceResourceNotFoundException( context );
         }
 
@@ -240,7 +233,7 @@ public class AbstractConnectionsService extends AbstractService {
 
         ServiceResults results = getItemsByQuery( context, context.getQuery() );
 
-        if ( results.size() == 0 ) {
+        if ( results == null || results.size() == 0 ) {
             throw new ServiceResourceNotFoundException( context );
         }
 
@@ -270,7 +263,8 @@ public class AbstractConnectionsService extends AbstractService {
 
             //TODO T.N. USERGRID-1919 actually validate this is connected
 
-            Entity entity = em.getUniqueEntityFromAlias( query.getEntityType(), name );
+            // this is purely read only, don't use unique index repair
+            Entity entity = em.getUniqueEntityFromAlias( query.getEntityType(), name, false);
             if ( entity == null ) {
                 return null;
             }
@@ -281,11 +275,13 @@ public class AbstractConnectionsService extends AbstractService {
 
         int count = query.getLimit();
         Level level = Level.REFS;
+
         if ( !context.moreParameters() ) {
             count = Query.MAX_LIMIT;
             level = Level.ALL_PROPERTIES;
-            if (logger.isDebugEnabled()) {
-            	logger.debug("Query does not have more parameters, overwriting limit to: {} and level to {}" ,
+
+            if (logger.isTraceEnabled()) {
+            	logger.trace("Query does not have more parameters, overwriting limit to: {} and level to {}" ,
                     count, level.name());
             }
         }
@@ -303,18 +299,15 @@ public class AbstractConnectionsService extends AbstractService {
         Results r = null;
 
         if ( connecting() ) {
+            query.setConnecting(true);
             if ( query.hasQueryPredicates() ) {
-                logger.debug( "Attempted query of backwards connections" );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Attempted query of backwards connections");
+                }
                 return null;
             }
             else {
-//            	r = em.getSourceEntities( context.getOwner().getUuid(), query.getConnectionType(),
-//            			query.getEntityType(), level );
-                // usergrid-2389: User defined limit in the query is ignored. Fixed it by adding
-                // the limit to the method parameter downstream.
-            	r = em.getSourceEntities(
-                    new SimpleEntityRef(context.getOwner().getType(), context.getOwner().getUuid()),
-                    query.getConnectionType(), query.getEntityType(), level, query.getLimit());
+                r = em.searchTargetEntities(context.getOwner(),query);
             }
         }
         else {
@@ -367,13 +360,18 @@ public class AbstractConnectionsService extends AbstractService {
             if ( query.containsSingleNameOrEmailIdentifier() ) {
                 String name = query.getSingleNameOrEmailIdentifier();
 
-                entity = em.getUniqueEntityFromAlias( query.getEntityType(), name );
+                // use unique index repair here before any write logic if there are problems
+                entity = em.getUniqueEntityFromAlias( query.getEntityType(), name, true);
                 if ( entity == null ) {
                     throw new ServiceResourceNotFoundException( context );
                 }
             }
             else {
                 entity = em.create( query.getEntityType(), context.getProperties() );
+                //if entity is null here it throws NPE. Fixing it to throw 404.
+                if ( entity == null ) {
+                    throw new ServiceResourceNotFoundException( context );
+                }
             }
             entity = importEntity( context, entity );
 
@@ -383,6 +381,18 @@ public class AbstractConnectionsService extends AbstractService {
         }
 
         return getItemsByQuery( context, query );
+    }
+
+
+    @Override
+    public ServiceResults postCollectionSettings( final ServiceRequest request ) throws Exception {
+        throw new UnsupportedServiceOperationException( request );
+    }
+
+
+    @Override
+    public ServiceResults getCollectionSettings( final ServiceRequest serviceRequest ) throws Exception {
+        throw new UnsupportedServiceOperationException( serviceRequest );
     }
 
 
@@ -512,7 +522,8 @@ public class AbstractConnectionsService extends AbstractService {
                 nameProperty = "name";
             }
 
-            Entity entity = em.getUniqueEntityFromAlias( query.getEntityType(), name );
+            // use unique index repair here before any write logic if there are problems
+            Entity entity = em.getUniqueEntityFromAlias( query.getEntityType(), name, true);
             if ( entity == null ) {
                 throw new ServiceResourceNotFoundException( context );
             }

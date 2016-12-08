@@ -26,12 +26,9 @@ import org.elasticsearch.common.primitives.Longs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Created by ApigeeCorporation on 9/4/14.
- */
 public class ApplicationQueueMessage implements Serializable {
 
-    private static final Logger log = LoggerFactory.getLogger(ApplicationQueueMessage.class);
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationQueueMessage.class);
     private UUID applicationId;
     private UUID notificationId;
     private UUID deviceId;

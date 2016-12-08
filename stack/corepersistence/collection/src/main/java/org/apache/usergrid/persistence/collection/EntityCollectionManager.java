@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.collection;
 
 
 import java.util.Collection;
+import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Entity;
@@ -39,19 +40,21 @@ public interface EntityCollectionManager {
      * completely overwrite the previous values, if it exists.
      *
      * @param entity The entity to update
+     * @param region The authoritative region for the entity type or null to use current region.
      *
      * @return the Observable with the updated entity in the body
      */
-    Observable<Entity> write( Entity entity );
+    Observable<Entity> write( Entity entity, String region );
 
 
     /**
      * @param entityId MarkCommit the entity as deleted.  Will not actually remove it from cassandra.  This operation will
      * also remove all unique properties for this entity
      *
+     * @param region
      * @return The observable of the id after the operation has completed
      */
-    Observable<Id> mark( Id entityId );
+    Observable<Id> mark(Id entityId, String region);
 
     /**
      * @param entityId The entity id to load.
@@ -75,9 +78,10 @@ public interface EntityCollectionManager {
      * Get a fieldset of all fields from the entities
      * @param entityType The type of entity.  From the "type" field in the id.
      * @param fields The collection of fields to search
+     * @param useReadRepair
      * @return
      */
-    Observable<FieldSet> getEntitiesFromFields( String entityType, Collection<Field> fields );
+    Observable<FieldSet> getEntitiesFromFields(String entityType, Collection<Field> fields, boolean useReadRepair);
 
     /**
      * Gets the Id for a field
@@ -98,11 +102,18 @@ public interface EntityCollectionManager {
     Observable<EntitySet> load( Collection<Id> entityIds );
 
     /**
-     * Get all versions of the log entry, from Max to min
+     * Get all versions of the log entry, from min to max
      * @param entityId
      * @return An observable stream of mvccLog entries
      */
     Observable<MvccLogEntry> getVersions(final Id entityId);
+
+    /**
+     * Get all versions of the log entry, from max to min
+     * @param entityId
+     * @return An observable stream of mvccLog entries
+     */
+    Observable<MvccLogEntry> getVersionsFromMaxToMin(final Id entityId, final UUID startVersion);
 
     /**
      * Delete these versions from cassandra.  Must be atomic so that read log entries are only removed.  Entity data
@@ -112,10 +123,8 @@ public interface EntityCollectionManager {
      */
     Observable<MvccLogEntry> delete( final Collection<MvccLogEntry> entries );
 
-
     /**
      * Returns health of entity data store.
      */
     Health getHealth();
-
 }

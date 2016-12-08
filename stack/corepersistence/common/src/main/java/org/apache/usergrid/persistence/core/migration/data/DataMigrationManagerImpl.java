@@ -42,7 +42,7 @@ import com.google.inject.Singleton;
 @Singleton
 public class DataMigrationManagerImpl implements DataMigrationManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger( DataMigrationManagerImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( DataMigrationManagerImpl.class );
 
     private final Map<String, MigrationPlugin> migrationPlugins;
 
@@ -230,7 +230,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
 
             update( migrationVersion, storedMessage );
 
-            LOG.error( storedMessage );
+            logger.error( storedMessage );
 
             failed = true;
 
@@ -243,6 +243,9 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
             StringWriter stackTrace = new StringWriter();
             throwable.printStackTrace( new PrintWriter( stackTrace ) );
 
+            //todo shouldn't we log this?  I added it so we have a record.
+            logger.error("Data Migration Manager processing failed", throwable);
+
 
             final String storedMessage = String.format( "Failed to migrate, reason is appended.  Error '%s' %s", reason,
                     stackTrace.toString() );
@@ -250,7 +253,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
             update( migrationVersion, storedMessage );
 
 
-            LOG.error( "Unable to migrate version {} due to reason {}.", migrationVersion, reason, throwable );
+            logger.error( "Unable to migrate version {} due to reason {}.", migrationVersion, reason, throwable );
 
             failed = true;
 
@@ -263,7 +266,7 @@ public class DataMigrationManagerImpl implements DataMigrationManager {
             final String formattedOutput = String.format( "Migration version %d.  %s", migrationVersion, message );
 
             //Print this to the info log
-            LOG.info( formattedOutput );
+            logger.info( formattedOutput );
 
             migrationInfoSerialization.setStatusMessage( pluginName, formattedOutput );
         }

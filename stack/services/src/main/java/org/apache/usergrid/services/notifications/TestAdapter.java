@@ -22,11 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-import java.util.Date;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.apache.usergrid.persistence.EntityManager;
+
 import org.apache.usergrid.services.ServicePayload;
 import org.apache.usergrid.services.notifications.apns.APNsAdapter;
 import org.apache.usergrid.services.notifications.apns.APNsNotification;
@@ -51,12 +49,12 @@ public class TestAdapter implements ProviderAdapter {
     }
 
     @Override
-    public void testConnection() throws ConnectionException {
+    public void testConnection() throws Exception {
     }
 
     @Override
     public void sendNotification(
-            String providerId, 
+            String providerId,
             final Object payload,
             Notification notification,
             TaskTracker tracker)
@@ -86,12 +84,16 @@ public class TestAdapter implements ProviderAdapter {
 
     @Override
     public void doneSendingNotifications() throws Exception {
-        log.debug("doneSendingNotifications()");
+        if (log.isDebugEnabled()) {
+            log.debug("doneSendingNotifications()");
+        }
     }
 
     @Override
     public void removeInactiveDevices() throws Exception {
-        log.debug("getInactiveDevices()");
+        if (log.isDebugEnabled()) {
+            log.debug("getInactiveDevices()");
+        }
     }
 
     @Override

@@ -38,4 +38,11 @@ public class DirectedEdge {
         this.timestamp = timestamp;
         this.id = id;
     }
+
+    @Override
+    public String toString(){
+
+        return "DirectedEdge{ uuid="+id.getUuid()+", type="+id.getType()+", timestamp="+timestamp+" }";
+
+    }
 }

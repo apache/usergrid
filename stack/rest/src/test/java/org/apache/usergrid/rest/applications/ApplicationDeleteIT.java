@@ -40,6 +40,8 @@ import java.util.UUID;
 
 import static org.junit.Assert.fail;
 
+import static org.apache.usergrid.rest.management.organizations.applications
+    .ApplicationResource.CONFIRM_APPLICATION_IDENTIFIER;
 
 public class ApplicationDeleteIT extends AbstractRestIT {
 
@@ -48,16 +50,6 @@ public class ApplicationDeleteIT extends AbstractRestIT {
     public static final int INDEXING_WAIT = 3000;
 
 
-    /**
-     * Test most common use cases.
-     * <pre>
-     *  - create app with collection of things
-     *  - delete the app
-     *  - test that attempts to get the app, its collections and entities throw 400 with message
-     *  - test that we cannot delete the app a second time
-     *  - test that we can create a new app with the same name as the deleted app
-     * </pre>
-     */
     @Test
     public void testBasicOperation() throws Exception {
 
@@ -73,6 +65,65 @@ public class ApplicationDeleteIT extends AbstractRestIT {
 
         // delete the app
 
+        clientSetup.getRestClient().management().orgs()
+            .org(orgName).apps().app(appToDeleteId.toString() ).getTarget()
+            .queryParam("access_token", orgAdminToken.getAccessToken() )
+            .queryParam(CONFIRM_APPLICATION_IDENTIFIER, appToDeleteId)
+            .request().delete();
+
+        // test that we can create a new application with the same name
+
+        ApiResponse appCreateAgainResponse = null;
+
+        int retries = 0;
+        while ( retries++ < 30 ) {
+            try {
+                appCreateAgainResponse = clientSetup.getRestClient()
+                    .management().orgs().org( orgName ).app().getTarget()
+                    .queryParam( "access_token", orgAdminToken.getAccessToken() ).request()
+                    .post( javax.ws.rs.client.Entity.json( new Application( appToDeleteName ) ), ApiResponse.class );
+
+                break;
+
+            } catch (Exception e) {
+                logger.error("App not deleted yet. Waiting ... ({})", retries);
+                Thread.sleep( 1000 );
+            }
+        }
+
+        Assert.assertNotNull( appCreateAgainResponse );
+
+        Assert.assertEquals("Must be able to create app with same name as deleted app",
+            (orgName + "/" + appToDeleteName).toLowerCase(),
+            appCreateAgainResponse.getEntities().get(0).get( "name" ));
+    }
+
+
+    /**
+     * Test most common use cases.
+     * <pre>
+     *  - create app with collection of things
+     *  - delete the app
+     *  - test that attempts to get the app, its collections and entities throw 400 with message
+     *  - test that we cannot delete the app a second time
+     *  - test that we can create a new app with the same name as the deleted app
+     * </pre>
+     */
+    @Test
+    public void testCommonUseCases() throws Exception {
+
+        // create app with a collection of "things"
+
+        String orgName = clientSetup.getOrganization().getName();
+        String appToDeleteName = clientSetup.getAppName() + "_appToDelete";
+        Token orgAdminToken = getAdminToken( clientSetup.getUsername(), clientSetup.getUsername());
+
+        List<Entity> entities = new ArrayList<>();
+
+        UUID appToDeleteId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
+
+        // delete the app without specifying confirm_application_identifier
+
         final Response response = clientSetup.getRestClient().management().orgs()
             .org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
@@ -84,13 +135,15 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         clientSetup.getRestClient().management().orgs()
             .org(orgName).apps().app(appToDeleteId.toString() ).getTarget()
             .queryParam("access_token", orgAdminToken.getAccessToken() )
-            .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
+            .queryParam(CONFIRM_APPLICATION_IDENTIFIER, appToDeleteId)
             .request()
             .delete();
 
+
         // test that we can no longer get the app
 
-        try {
+        try { // using /management/orgs/{org-name}/app/{app-name}
+
             clientSetup.getRestClient().management().orgs()
                 .org(orgName).apps().app(appToDeleteName).getTarget()
                 .queryParam("access_token", orgAdminToken.getAccessToken())
@@ -106,7 +159,8 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         }
 
 
-        try {
+        try { // using /{org-name}/{app-name} path
+
             clientSetup.getRestClient().org( orgName ).app( appToDeleteName ).getTarget()
                        .queryParam( "access_token", orgAdminToken.getAccessToken() ).request()
                        .get( ApiResponse.class );
@@ -175,18 +229,32 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         final Response response1 = clientSetup.getRestClient().management()
             .orgs().org( orgName ).apps().app( appToDeleteId.toString() )
             .getTarget().queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
+            .queryParam( CONFIRM_APPLICATION_IDENTIFIER, appToDeleteId )
             .request()
             .delete();
         Assert.assertEquals( "Error must be 404", 404, response1.getStatus() );
 
         // test that we can create a new application with the same name
 
-        ApiResponse appCreateAgainResponse = clientSetup.getRestClient()
-            .management().orgs().org( orgName ).app().getTarget()
-            .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .request()
-            .post( javax.ws.rs.client.Entity.json( new Application( appToDeleteName ) ), ApiResponse.class );
+        ApiResponse appCreateAgainResponse = null;
+
+        int retries = 0;
+        while ( retries++ < 20 ) {
+            try {
+                appCreateAgainResponse = clientSetup.getRestClient()
+                    .management().orgs().org( orgName ).app().getTarget()
+                    .queryParam( "access_token", orgAdminToken.getAccessToken() ).request()
+                    .post( javax.ws.rs.client.Entity.json( new Application( appToDeleteName ) ), ApiResponse.class );
+
+                break;
+
+            } catch (Exception e) {
+                logger.error("App not deleted yet. Waiting ... ({})", retries);
+                Thread.sleep( 1000 );
+            }
+        }
+
+        Assert.assertNotNull( appCreateAgainResponse );
 
         Assert.assertEquals("Must be able to create app with same name as deleted app",
             (orgName + "/" + appToDeleteName).toLowerCase(),
@@ -223,7 +291,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         clientSetup.getRestClient().management().orgs()
             .org( orgName ).apps().app( appToDeleteName ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
+            .queryParam(CONFIRM_APPLICATION_IDENTIFIER, appToDeleteName)
             .request()
             .delete();
 
@@ -303,13 +371,26 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         clientSetup.getRestClient().management().orgs()
             .org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .queryParam("app_delete_confirm", "confirm_delete_of_application_and_data")
+            .queryParam(CONFIRM_APPLICATION_IDENTIFIER, appToDeleteId)
             .request()
             .delete();
 
         // create new app with same name
 
-        createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
+        UUID newAppId = null;
+        int retries = 0;
+        while ( retries++ < 20 ) {
+            try {
+                newAppId = createAppWithCollection( orgName, appToDeleteName, orgAdminToken, entities );
+                break;
+
+            } catch ( Exception e ) {
+                logger.error("Application not deleted yet. Waiting... ({})", retries);
+                Thread.sleep(1000);
+            }
+        }
+
+        Assert.assertNotNull( newAppId );
 
         // attempt to restore original app, should get 409
 
@@ -345,20 +426,32 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         clientSetup.getRestClient().management()
             .orgs().org( orgName ).apps().app( appToDeleteId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
-            .request()
-            .delete();
+            .queryParam( CONFIRM_APPLICATION_IDENTIFIER, appToDeleteId )
+            .request().delete();
 
         // create new app with same name
 
-        UUID newAppId = createAppWithCollection(orgName, appToDeleteName, orgAdminToken, entities);
+        UUID newAppId = null;
+        int retries = 0;
+        while ( retries++ < 20 ) {
+            try {
+                newAppId = createAppWithCollection( orgName, appToDeleteName, orgAdminToken, entities );
+                break;
+
+            } catch ( Exception e ) {
+                logger.error("Application not deleted yet. Waiting... ({})", retries);
+                Thread.sleep(1000);
+            }
+        }
+
+        Assert.assertNotNull( newAppId );
 
         // attempt to delete new app, it should fail
 
         final Response response = clientSetup.getRestClient().management()
             .orgs().org( orgName ).apps().app( newAppId.toString() ).getTarget()
             .queryParam( "access_token", orgAdminToken.getAccessToken() )
-            .queryParam( "app_delete_confirm", "confirm_delete_of_application_and_data" )
+            .queryParam( CONFIRM_APPLICATION_IDENTIFIER, newAppId )
             .request()
             .delete();
 

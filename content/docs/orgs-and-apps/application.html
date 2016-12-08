@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Application &mdash; Apache Usergrid 1.0 documentation</title>
+  <title>Application &mdash; Apache Usergrid 2.x documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
+    <link rel="top" title="Apache Usergrid 2.x documentation" href="../index.html"/>
         <link rel="next" title="Admin user" href="admin-user.html"/>
         <link rel="prev" title="Organization" href="organization.html"/> 
 
@@ -59,7 +59,7 @@
           
           
             <div class="version">
-              1.0
+              2.x
             </div>
           
         
@@ -80,19 +80,19 @@
         
           
           
-              <p class="caption"><span class="caption-text">Introduction</span></p>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Getting Started</span></p>
+<p class="caption"><span class="caption-text">Using Usergrid</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/creating-account.html">Creating a Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/using-the-api.html">Using the API</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Data Storage</span></p>
 <ul>
@@ -190,6 +190,16 @@
 <li class="toctree-l3"><a class="reference internal" href="#id6">Example - Response</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#deleting-and-restoring-applications">Deleting and restoring Applications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#delete-application-request-uri">Delete Application: Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#delete-application-example-request">Delete Application: Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#delete-application-example-response">Delete Application: Example - Response</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#restore-application-request-uri">Restore Application: Request URI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#restore-application-example-request">Restore Application: Example - Request</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#restore-application-example-response">Restore Application: Example - Response</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#application-delete-and-restore-limitations">Application Delete and Restore Limitations</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="admin-user.html">Admin user</a></li>
@@ -204,11 +214,9 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Installing the Stack</span></p>
+<p class="caption"><span class="caption-text">Installing Usergrid</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../installation/ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../installation/ug2-deploy-to-tomcat.html">Usergrid 2: Deploy to Tomcat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/deployment-guide.html">Usergrid 2.1.0 Deployment Guide</a></li>
 </ul>
 <p class="caption"><span class="caption-text">More about Usergrid</span></p>
 <ul>
@@ -439,6 +447,137 @@ for details.</p>
 </div>
 </div>
 </div>
+<div class="section" id="deleting-and-restoring-applications">
+<h2>Deleting and restoring Applications<a class="headerlink" href="#deleting-and-restoring-applications" title="Permalink to this headline">¶</a></h2>
+<p>Usergrid allows you to clean-up your Organizations by deleting old
+Applications that you no longer need. With this feature, Applications
+are not really deleted but they are hidden from view and may be restored
+later. (At some point in the future, Usergrid may get the ability to
+completely obliterate an Application, but that ability does not exist at
+the time of this writing.)</p>
+<div class="section" id="delete-application-request-uri">
+<h3>Delete Application: Request URI<a class="headerlink" href="#delete-application-request-uri" title="Permalink to this headline">¶</a></h3>
+<p>Only an authenticated Admin User can delete and restore Applications. To
+delete an application, you send an authenticated HTTP <strong>DELETE</strong> request
+to the /management end-point. The Request URI must specify the
+Organization and the Application, both by identifier (name or UUID).
+Here is the Request URI pattern:</p>
+<div class="highlight-python"><div class="highlight"><pre>/management/organizations|orgs/{org_name}|{uuid}/applications|apps/{app_name}
+</pre></div>
+</div>
+<p>Parameters</p>
+<p>This is intentionally redundant, but you must confirm that you really
+want to delete the Application by specifying its name or UUID, same as
+that which you used in the Request URI.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="42%" />
+<col width="58%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>string confirm_application_id</td>
+<td>Application identifier (either name or UUID)</td>
+</tr>
+</tbody>
+</table>
+<p>Note: You also need to provide a valid access token with the API call.
+See <a class="reference external" href="../security_and_auth/authenticating-users-and-application-clients.html">Authenticating users and application
+clients</a>
+for details.</p>
+</div>
+<div class="section" id="delete-application-example-request">
+<h3>Delete Application: Example - Request<a class="headerlink" href="#delete-application-example-request" title="Permalink to this headline">¶</a></h3>
+<p>This example deletes an aApplication named &#8216;testapp1&#8217;</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X DELETE &quot;https://api.usergrid.com/management/orgs/testorg/apps/testapp1?confirm_application_id=testapp1&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="delete-application-example-response">
+<h3>Delete Application: Example - Response<a class="headerlink" href="#delete-application-example-response" title="Permalink to this headline">¶</a></h3>
+<p>The response echos back the action that was taken and the params, and an
+HTTP 200 OK status message confirms that the Application has been
+deleted.</p>
+<div class="highlight-python"><div class="highlight"><pre>HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+Content-Length: 276
+Content-Type: application/json
+Date: Mon, 06 Jun 2016 18:52:04 GMT
+Server: Apache-Coyote/1.1
+Set-Cookie: rememberMe=deleteMe; Path=/; Max-Age=0; Expires=Sun, 05-Jun-2016 18:52:04 GMT
+{
+    &quot;action&quot;: &quot;delete&quot;,
+    &quot;application&quot;: &quot;d44dfc30-2c13-11e6-8b07-0a669fe1d66e&quot;,
+    &quot;applicationName&quot;: &quot;delete&quot;,
+    &quot;duration&quot;: 3,
+    &quot;organization&quot;: &quot;test-organization&quot;,
+    &quot;params&quot;: {
+        &quot;confirm_application_identifier&quot;: [
+            &quot;testapp1&quot;
+        ]
+    },
+    &quot;timestamp&quot;: 1465239124645
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="restore-application-request-uri">
+<h3>Restore Application: Request URI<a class="headerlink" href="#restore-application-request-uri" title="Permalink to this headline">¶</a></h3>
+<p>To Restore an Application that has been deleted you must know the
+Application&#8217;s UUID. If you do a PUT to that application&#8217;s old URI, using
+he UUID to identify it, then the Application will be restored.</p>
+</div>
+<div class="section" id="restore-application-example-request">
+<h3>Restore Application: Example - Request<a class="headerlink" href="#restore-application-example-request" title="Permalink to this headline">¶</a></h3>
+<p>For example, to restore &#8216;testapp1&#8217; that we deleted above:</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X PUT &quot;https://api.usergrid.com/management/orgs/test-organization/apps/d44dfc30-2c13-11e6-8b07-0a669fe1d66e access_token==YWMtZR...&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="restore-application-example-response">
+<h3>Restore Application: Example - Response<a class="headerlink" href="#restore-application-example-response" title="Permalink to this headline">¶</a></h3>
+<p>Here&#8217;s the response that indicates via HTTP 200 OK that the Application
+has been restored.</p>
+<div class="highlight-python"><div class="highlight"><pre>HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+Content-Length: 223
+Content-Type: application/json
+Date: Mon, 06 Jun 2016 19:03:16 GMT
+Server: Apache-Coyote/1.1
+Set-Cookie: rememberMe=deleteMe; Path=/; Max-Age=0; Expires=Sun, 05-Jun-2016 19:03:16 GMT
+
+{
+    &quot;action&quot;: &quot;restore&quot;,
+    &quot;application&quot;: &quot;d44dfc30-2c13-11e6-8b07-0a669fe1d66e&quot;,
+    &quot;applicationName&quot;: &quot;delete&quot;,
+    &quot;duration&quot;: 3,
+    &quot;organization&quot;: &quot;test-organization&quot;,
+    &quot;params&quot;: {},
+    &quot;timestamp&quot;: 1465239796913
+}
+</pre></div>
+</div>
+</div>
+<div class="section" id="application-delete-and-restore-limitations">
+<h3>Application Delete and Restore Limitations<a class="headerlink" href="#application-delete-and-restore-limitations" title="Permalink to this headline">¶</a></h3>
+<p>At the time of this writing there are a couple of limitations regarding
+Application Delete and Restore:</p>
+<ul class="simple">
+<li>Within an Organization, you cannot delete an Application with the
+same name as an Application that you have deleted before.</li>
+<li>Within an Organization, you cannot restore an Application is an
+application with the very same name has been added since the orginal
+one was deleted.</li>
+</ul>
+<p>Hopefully, these unnecessary limitations will be fixed soon; they are
+tracked by this JIRA issue
+<a class="reference external" href="https://issues.apache.org/jira/browse/USERGRID-1299">USERGRID-1299</a></p>
+</div>
+</div>
 </div>
 
 
@@ -482,7 +621,7 @@ for details.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0',
+            VERSION:'2.x',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

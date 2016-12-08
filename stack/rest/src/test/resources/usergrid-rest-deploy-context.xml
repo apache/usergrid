@@ -21,6 +21,36 @@
 	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.1.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
-    <import resource="classpath:/usergrid-test-context.xml" />
+    <bean id="properties"
+          class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+        <property name="singleton" value="true" />
+        <property name="ignoreResourceNotFound" value="true" />
+        <property name="locations">
+            <list>
+                <value>classpath:/usergrid-default.properties</value>
+                <value>classpath:/usergrid-test.properties</value>
+            </list>
+        </property>
+    </bean>
+
+
+    <import resource="usergrid-rest-context.xml"/>
+
+    <bean id="traceTagManager" class="org.apache.usergrid.persistence.cassandra.util.TraceTagManager">
+        <property name="reportUnattached" value="false"/>
+        <property name="traceEnabled" value="false"/>
+    </bean>
+
+    <bean id="setup" class="org.apache.usergrid.corepersistence.CpSetup">
+        <constructor-arg ref="entityManagerFactory"/>
+        <constructor-arg ref="cassandraService"/>
+        <constructor-arg ref="injector"/>
+    </bean>
+
+    <!-- refer to a named schemaManager from the DataControl annotation thusly -->
+    <bean id="coreManager" class="org.apache.usergrid.persistence.CoreSchemaManager">
+        <constructor-arg ref="setup"/>
+        <constructor-arg ref="injector"/>
+    </bean>
 
 </beans>

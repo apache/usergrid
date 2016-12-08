@@ -36,7 +36,7 @@ import static org.junit.Assert.*;
  * @since 4.0
  */
 public class AndOrQueryTest extends QueryTestBase {
-    private static Logger log = LoggerFactory.getLogger(AndOrQueryTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(AndOrQueryTest.class);
 
 
     /**
@@ -154,7 +154,7 @@ public class AndOrQueryTest extends QueryTestBase {
         for (int i = 0; i < returnSize; i++, index--) {
             count++;
             Entity activity = activities.getResponse().getEntities().get(i);
-            log.info(String.valueOf(activity.get("ordinal")) + " " + String.valueOf(activity.get("madeup")));
+            logger.info(String.valueOf(activity.get("ordinal")) + " " + String.valueOf(activity.get("madeup")));
             //if the entity is in the first half, the property "madeup" should be false
             if (index < numOfEntities / 2) {
                 assertFalse(Boolean.parseBoolean(String.valueOf(activity.get("madeup"))));
@@ -198,7 +198,7 @@ public class AndOrQueryTest extends QueryTestBase {
             count++;
             Entity activity = activities.getResponse().getEntities().get(i);
             long ordinal = Long.parseLong(String.valueOf(activity.get("ordinal")));
-            log.info(ordinal + " " + String.valueOf(activity.get("verb")));
+            logger.info(ordinal + " " + String.valueOf(activity.get("verb")));
             //if the entity is in the first three quarters, the property "verb" should be "go"
             if (ordinal < (numOfEntities - numOfEntities / 4)) {
                 assertEquals("go", String.valueOf(activity.get("verb")));

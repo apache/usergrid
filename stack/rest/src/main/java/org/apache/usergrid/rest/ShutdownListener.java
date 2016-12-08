@@ -18,21 +18,17 @@
 package org.apache.usergrid.rest;
 
 
+import com.google.inject.Injector;
 import org.apache.usergrid.batch.service.JobSchedulerService;
-import org.apache.usergrid.batch.service.SchedulerService;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
+import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import javax.servlet.http.HttpSessionAttributeListener;
-import javax.servlet.http.HttpSessionEvent;
-import javax.servlet.http.HttpSessionListener;
-import javax.servlet.http.HttpSessionBindingEvent;
 import java.util.Properties;
 
 
@@ -62,6 +58,20 @@ public class ShutdownListener implements ServletContextListener {
     public void contextDestroyed(ServletContextEvent sce) {
 
         logger.info("ShutdownListener invoked");
+
+        ApplicationContext ctx = WebApplicationContextUtils
+            .getWebApplicationContext(sce.getServletContext());
+
+        Injector injector = ctx.getBean(Injector.class);
+        ActorSystemManager actorSystemManager = injector.getInstance(ActorSystemManager.class);
+
+        // leave akka cluster
+        actorSystemManager.leaveCluster();
+
+        DataStaxCluster dataStaxCluster = injector.getInstance(DataStaxCluster.class);
+
+        // shutdown the connections to the database
+        dataStaxCluster.shutdown();
 
         boolean started = Boolean.parseBoolean(
             properties.getProperty(JobServiceBoostrap.START_SCHEDULER_PROP, "true"));

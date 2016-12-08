@@ -29,8 +29,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.base.Optional;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.model.field.*;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,10 +49,6 @@ import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.persistence.model.field.ArrayField;
-import org.apache.usergrid.persistence.model.field.IntegerField;
-import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.util.EntityUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 
@@ -72,7 +69,7 @@ import static org.junit.Assert.fail;
 @UseModules( { TestIndexModule.class } )
 public class EntityIndexTest extends BaseIT {
 
-    private static final Logger log = LoggerFactory.getLogger(EntityIndexTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(EntityIndexTest.class);
 
     @Inject
     public EntityIndexFactory eif;
@@ -137,6 +134,7 @@ public class EntityIndexTest extends BaseIT {
         entity1.setField( new StringField( "testfield", "test" ) );
         entity1.setField(new IntegerField("ordinal", 0));
         entity1.setField(new UUIDField("testuuid", uuid));
+        entity1.setField( new NullField("nullfield"));
 
 
         batch.index( indexEdge, entity1 );
@@ -166,8 +164,8 @@ public class EntityIndexTest extends BaseIT {
 
         timer.stop();
 
-        assertEquals(2, candidateResults.size());
-        log.debug("Query time {}ms", timer.getTime());
+        assertEquals( 2, candidateResults.size() );
+        logger.debug( "Query time {}ms", timer.getTime() );
 
         final CandidateResult candidate1 = candidateResults.get(0);
 
@@ -269,7 +267,7 @@ public class EntityIndexTest extends BaseIT {
 
         testQuery( searchEdge, searchTypes,  "name = 'Lowe Kelley'", 1 );
 
-        log.info("hi");
+        logger.info("hi");
     }
 
 
@@ -312,7 +310,7 @@ public class EntityIndexTest extends BaseIT {
         indexProducer.put(batch.build()).subscribe();;
         EntityIndex.IndexRefreshCommandInfo info =  entityIndex.refreshAsync().toBlocking().first();
         long time = info.getExecutionTime();
-        log.info("refresh took ms:" + time);
+        logger.info("refresh took ms:" + time);
     }
 
 
@@ -345,7 +343,7 @@ public class EntityIndexTest extends BaseIT {
         }
 
         timer.stop();
-        log.info( "Total time to index {} entries {}ms, average {}ms/entry",
+        logger.info( "Total time to index {} entries {}ms, average {}ms/entry",
             new Object[] { count, timer.getTime(), timer.getTime() / count } );
     }
 
@@ -385,46 +383,6 @@ public class EntityIndexTest extends BaseIT {
     }
 
 
-    /**
-     * Tests that we aggregate results only before the halfway version point.
-     */
-    @Test
-    public void testScollingDeindex() {
-
-        int numberOfEntities = 1000;
-        int versionToSearchFor = numberOfEntities / 2;
-
-        IndexEdge searchEdge = new IndexEdgeImpl( appId, "mehCars", SearchEdge.NodeType.SOURCE, 1 );
-
-        UUID entityUUID = UUID.randomUUID();
-        Id entityId = new SimpleId( "mehCar" );
-
-        Map entityMap = new HashMap() {{
-            put( "name", "Toyota Corolla" );
-            put( "introduced", 1966 );
-            put( "topspeed", 111 );
-        }};
-
-        Entity[] entity = new Entity[numberOfEntities];
-        for(int i = 0; i < numberOfEntities; i++) {
-            entity[i] = EntityIndexMapUtils.fromMap( entityMap );
-            EntityUtils.setId( entity[i], entityId );
-            EntityUtils.setVersion( entity[i], UUIDGenerator.newTimeUUID() );
-            entity[i].setField( new UUIDField( IndexingUtils.ENTITY_ID_FIELDNAME, entityUUID ) );
-
-            //index the new entity. This is where the loop will be set to create like 100 entities.
-            indexProducer.put(entityIndex.createBatch().index( searchEdge, entity[i]  ).build()).subscribe();
-
-        }
-        entityIndex.refreshAsync().toBlocking().first();
-
-        CandidateResults candidateResults = entityIndex
-            .getAllEntityVersionsBeforeMarkedVersion( entity[versionToSearchFor].getId(),
-                entity[versionToSearchFor].getVersion() );
-        assertEquals( 501, candidateResults.size() );
-    }
-
-
 
     private CandidateResults testQuery( final SearchEdge scope, final SearchTypes searchTypes,
                                       final String queryString,
@@ -432,17 +390,27 @@ public class EntityIndexTest extends BaseIT {
 
         StopWatch timer = new StopWatch();
         timer.start();
-        CandidateResults candidateResults  = entityIndex.search( scope, searchTypes, queryString, num == 0 ?  1 : num  , 0 );
+        CandidateResults candidateResults  = entityIndex.search( scope, searchTypes, queryString, 1000, 0 );
 
         timer.stop();
 
         assertEquals(num, candidateResults.size());
-        log.debug("Query time {}ms", timer.getTime());
+        logger.debug("Query time {}ms", timer.getTime());
         return candidateResults;
     }
 
 
     private void testQueries( final SearchEdge scope, SearchTypes searchTypes) {
+
+        testQuery( scope, searchTypes, "age > 35", 29 );
+
+        testQuery( scope, searchTypes, "age <= 35", 73 );
+
+        testQuery( scope, searchTypes, "age <= 35 or age > 35", 102 );
+
+        // TODO: uncomment this test when you are ready to fix USERGRID-1314
+        // (https://issues.apache.org/jira/browse/USERGRID-1314)
+        // testQuery( scope, searchTypes, "name = 'astro*' or age > 35", 29 );
 
         testQuery( scope, searchTypes, "name = 'Morgan Pierce'", 1 );
 
@@ -1272,6 +1240,70 @@ public class EntityIndexTest extends BaseIT {
         assertTrue( size == 100 );
 
     }
+
+    /**
+     * Tests that we're supporting null fields when indexing at Elasticsearch
+     */
+    @Test
+    public void testNullFields() throws IOException {
+
+        Id appId = new SimpleId( "application" );
+        final String entityType = "thing";
+        IndexEdge indexEdge = new IndexEdgeImpl( appId, "things", SearchEdge.NodeType.SOURCE, 1 );
+        final SearchTypes searchTypes = SearchTypes.fromTypes( entityType );
+        EntityIndexBatch batch = entityIndex.createBatch();
+
+
+        UUID uuid = UUID.randomUUID();
+        Entity entity1 = new Entity( entityType );
+        EntityUtils.setVersion(entity1, UUIDGenerator.newTimeUUID());
+        entity1.setField(new UUIDField(IndexingUtils.ENTITY_ID_FIELDNAME, uuid));
+
+        // create a list and add 3 null values to it
+        List<Object> listOfNulls = new ArrayList<>(3);
+        listOfNulls.add(null);
+        listOfNulls.add(null);
+        listOfNulls.add(null);
+
+
+        List<Object> listOfMixedNulls = new ArrayList<>(3);
+        listOfMixedNulls.add(null);
+        listOfMixedNulls.add("stringvalue");
+        listOfMixedNulls.add(null);
+        listOfMixedNulls.add(10);
+
+        entity1.setField( new UUIDField("uuid", uuid, true));
+        entity1.setField( new ArrayField<>( "arrayofnulls", listOfNulls) );
+        entity1.setField( new ArrayField<>( "arrayofmixednulls", listOfMixedNulls) );
+        entity1.setField( new NullField("nullfield"));
+
+
+
+        batch.index( indexEdge, entity1 );
+        indexProducer.put(batch.build()).subscribe();
+
+
+        entityIndex.refreshAsync().toBlocking().first();
+
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        CandidateResults candidateResults =
+            entityIndex.search( indexEdge, searchTypes, "select * where uuid = '"+uuid+"'", 100, 0 );
+
+        timer.stop();
+
+        assertEquals(1, candidateResults.size());
+        logger.debug("Query time {}ms", timer.getTime());
+
+        final CandidateResult candidate1 = candidateResults.get(0);
+
+        //check the id and version
+        assertEquals( entity1.getId(), candidate1.getId() );
+        assertEquals(entity1.getVersion(), candidate1.getVersion());
+
+    }
+
 
 
 }

@@ -24,8 +24,6 @@ import java.util.Iterator;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 
-import com.google.common.base.Optional;
-
 
 /**
  * Interface used to create and retrieve shards
@@ -38,11 +36,10 @@ public interface NodeShardAllocation {
      * Get all shards for the given info.  If none exist, a default shard should be allocated.  The nodeId is the source node
      *
      * @param scope The application scope
-     * @param maxShardId The max value to start seeking from.  Values <= this will be returned if specified
      * @param directedEdgeMeta The directed edge metadata to use
      * @return A list of all shards <= the current shard.  This will always return 0l if no shards are allocated
      */
-    public Iterator<ShardEntryGroup> getShards( final ApplicationScope scope, Optional<Shard> maxShardId, final DirectedEdgeMeta directedEdgeMeta );
+    public Iterator<ShardEntryGroup> getShards(final ApplicationScope scope, final DirectedEdgeMeta directedEdgeMeta);
 
 
     /**

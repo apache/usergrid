@@ -98,3 +98,107 @@ Note: You also need to provide a valid access token with the API call. See [Auth
       }
     }
     
+
+## Deleting and restoring Applications
+Usergrid allows you to clean-up your Organizations by deleting old Applications that you no longer need.
+With this feature, Applications are not really deleted but they are hidden from view and may be restored later. (At some point in the future, Usergrid may get the ability to completely obliterate an Application, but that ability does not exist at the time of this writing.)
+
+### Delete Application: Request URI
+
+Only an authenticated Admin User can delete and restore Applications. 
+To delete an application, you send an authenticated HTTP **DELETE** request to the /management end-point.
+The Request URI must specify the Organization and the Application, both by identifier (name or UUID).
+Here is the Request URI pattern:
+
+	/management/organizations|orgs/{org_name}|{uuid}/applications|apps/{app_name}
+    
+Parameters
+
+This is intentionally redundant, but you must confirm that you really want to delete the Application
+by specifying its name or UUID, same as that which you used in the Request URI.
+
+Parameter	                     Description
+---------                      -----------
+string confirm_application_id  Application identifier (either name or UUID)
+
+Note: You also need to provide a valid access token with the API call. See [Authenticating users and application clients](../security_and_auth/authenticating-users-and-application-clients.html) for details.
+
+
+### Delete Application: Example - Request
+
+This  example deletes an aApplication named 'testapp1'
+
+    curl -X DELETE "https://api.usergrid.com/management/orgs/testorg/apps/testapp1?confirm_application_id=testapp1"
+    
+### Delete Application: Example - Response
+
+The response echos back the action that was taken and the params, and an HTTP 200 OK status message confirms that the Application has been deleted.
+
+    HTTP/1.1 200 OK
+    Access-Control-Allow-Origin: *
+	Content-Length: 276
+	Content-Type: application/json
+	Date: Mon, 06 Jun 2016 18:52:04 GMT
+	Server: Apache-Coyote/1.1
+	Set-Cookie: rememberMe=deleteMe; Path=/; Max-Age=0; Expires=Sun, 05-Jun-2016 18:52:04 GMT
+	{
+	    "action": "delete",
+	    "application": "d44dfc30-2c13-11e6-8b07-0a669fe1d66e",
+	    "applicationName": "delete",
+	    "duration": 3,
+	    "organization": "test-organization",
+	    "params": {
+	        "confirm_application_identifier": [
+	            "testapp1"
+	        ]
+	    },
+	    "timestamp": 1465239124645
+	}
+
+    
+### Restore Application: Request URI
+
+To Restore an Application that has been deleted you must know the Application's UUID. If you do a PUT to that application's old URI, using he UUID to identify it, then the Application will be restored.
+ 
+### Restore Application: Example - Request
+
+For example, to restore 'testapp1' that we deleted above:
+
+	curl -X PUT "https://api.usergrid.com/management/orgs/test-organization/apps/d44dfc30-2c13-11e6-8b07-0a669fe1d66e access_token==YWMtZR..."
+	
+### Restore Application: Example - Response
+
+Here's the response that indicates via HTTP 200 OK that the Application has been restored.
+	
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Origin: *
+	Content-Length: 223
+	Content-Type: application/json
+	Date: Mon, 06 Jun 2016 19:03:16 GMT
+	Server: Apache-Coyote/1.1
+	Set-Cookie: rememberMe=deleteMe; Path=/; Max-Age=0; Expires=Sun, 05-Jun-2016 19:03:16 GMT
+	
+	{
+	    "action": "restore",
+	    "application": "d44dfc30-2c13-11e6-8b07-0a669fe1d66e",
+	    "applicationName": "delete",
+	    "duration": 3,
+	    "organization": "test-organization",
+	    "params": {},
+	    "timestamp": 1465239796913
+	}
+    
+### Application Delete and Restore Limitations
+
+At the time of this writing there are a couple of limitations regarding Application Delete and Restore:
+
+* Within an Organization, you cannot delete an Application with the same name as an Application that you have deleted before.
+* Within an Organization, you cannot restore an Application is an application with the very same name has been added since the orginal one was deleted.
+
+Hopefully, these unnecessary limitations will be fixed soon; they are tracked by this JIRA issue [USERGRID-1299](https://issues.apache.org/jira/browse/USERGRID-1299)
+
+
+
+
+    
+    
