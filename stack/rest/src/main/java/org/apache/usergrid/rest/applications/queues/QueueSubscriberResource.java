@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.mq.QueueManager;
 import org.apache.usergrid.mq.QueueSet;
 import org.apache.usergrid.rest.AbstractContextResource;
+import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -73,12 +74,15 @@ public class QueueSubscriberResource extends AbstractContextResource {
     public QueueSubscriberResource getSubPath( @Context UriInfo ui, @PathParam("subPath") String subPath )
             throws Exception {
 
-        logger.info( "QueueSubscriberResource.getSubPath" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueSubscriberResource.getSubPath");
+        }
 
         return getSubResource( QueueSubscriberResource.class ).init( mq, queuePath, subscriberPath + "/" + subPath );
     }
 
 
+    @CheckPermissionsForPath
     @GET
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
@@ -87,7 +91,9 @@ public class QueueSubscriberResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueSubscriberResource.executeGet: " + queuePath );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueSubscriberResource.executeGet: {}", queuePath);
+        }
 
         QueueSet results = mq.getSubscribers( queuePath, firstSubscriberQueuePath, limit );
 
@@ -95,6 +101,7 @@ public class QueueSubscriberResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
@@ -103,12 +110,15 @@ public class QueueSubscriberResource extends AbstractContextResource {
                                         @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueSubscriberResource.executePost: " + queuePath );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueSubscriberResource.executePost: {}", queuePath);
+        }
 
         return executePut( ui, body, callback );
     }
 
 
+    @CheckPermissionsForPath
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @JSONP
@@ -117,7 +127,9 @@ public class QueueSubscriberResource extends AbstractContextResource {
                                        @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueSubscriberResource.executePut: " + queuePath );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueSubscriberResource.executePut: {}", queuePath);
+        }
 
         Map<String, Object> json = body;
         if ( StringUtils.isNotBlank( subscriberPath ) ) {
@@ -136,6 +148,7 @@ public class QueueSubscriberResource extends AbstractContextResource {
     }
 
 
+    @CheckPermissionsForPath
     @DELETE
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
@@ -143,7 +156,9 @@ public class QueueSubscriberResource extends AbstractContextResource {
                                           @QueryParam("callback") @DefaultValue("callback") String callback )
             throws Exception {
 
-        logger.info( "QueueSubscriberResource.executeDelete: " + queuePath );
+        if (logger.isTraceEnabled()) {
+            logger.trace("QueueSubscriberResource.executeDelete: {}", queuePath);
+        }
 
         if ( StringUtils.isNotBlank( subscriberPath ) ) {
             return mq.unsubscribeFromQueue( queuePath, subscriberPath );

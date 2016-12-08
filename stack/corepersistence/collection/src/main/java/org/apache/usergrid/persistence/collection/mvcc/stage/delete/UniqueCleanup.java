@@ -26,6 +26,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +65,7 @@ public class UniqueCleanup
 
     private final UniqueValueSerializationStrategy uniqueValueSerializationStrategy;
     private final Keyspace keyspace;
+    private final Session session;
 
     private final SerializationFig serializationFig;
 
@@ -70,12 +73,14 @@ public class UniqueCleanup
     @Inject
     public UniqueCleanup( final SerializationFig serializationFig,
                           final UniqueValueSerializationStrategy uniqueValueSerializationStrategy,
-                          final Keyspace keyspace, final MetricsFactory metricsFactory ) {
+                          final Keyspace keyspace, final MetricsFactory metricsFactory,
+                          final Session session ) {
 
         this.serializationFig = serializationFig;
         this.uniqueValueSerializationStrategy = uniqueValueSerializationStrategy;
         this.keyspace = keyspace;
         this.uniqueCleanupTimer = metricsFactory.getTimer( UniqueCleanup.class, "uniquecleanup.base" );
+        this.session = session;
     }
 
 
@@ -89,6 +94,9 @@ public class UniqueCleanup
                 final Id entityId = mvccEntityCollectionIoEvent.getEvent().getId();
                 final ApplicationScope applicationScope = mvccEntityCollectionIoEvent.getEntityCollection();
                 final UUID entityVersion = mvccEntityCollectionIoEvent.getEvent().getVersion();
+                //if it's been deleted, we need to remove everything up to an inclusive of this version.
+                //if it has not, we want to delete everything < this version
+                final boolean isDeleted = !mvccEntityCollectionIoEvent.getEvent().getEntity().isPresent();
 
 
                 //TODO Refactor this logic into a a class that can be invoked from anywhere
@@ -108,7 +116,14 @@ public class UniqueCleanup
                             logger.debug( "Cleaning up version:{} in UniqueCleanup", entityVersion );
                             final UUID uniqueValueVersion = uniqueValue.getEntityVersion();
                             //TODO: should this be equals? That way we clean up the one marked as well
-                            return UUIDComparator.staticCompare( uniqueValueVersion, entityVersion ) > 0;
+
+
+                            if(isDeleted){
+                                return UUIDComparator.staticCompare( uniqueValueVersion, entityVersion ) > 0;
+                            }
+
+                            return UUIDComparator.staticCompare( uniqueValueVersion, entityVersion ) >= 0;
+
                         } )
 
                             //buffer our buffer size, then roll them all up in a single batch mutation
@@ -117,22 +132,20 @@ public class UniqueCleanup
                             //roll them up
 
                         .doOnNext( uniqueValues -> {
-                            final MutationBatch uniqueCleanupBatch = keyspace.prepareMutationBatch();
+
+                            final BatchStatement uniqueCleanupBatch = new BatchStatement();
 
 
                             for ( UniqueValue value : uniqueValues ) {
                                 logger
                                     .debug( "Deleting value:{} from application scope: {} ", value, applicationScope );
                                 uniqueCleanupBatch
-                                    .mergeShallow( uniqueValueSerializationStrategy.delete( applicationScope, value ) );
+                                    .add( uniqueValueSerializationStrategy.deleteCQL( applicationScope, value ) );
                             }
 
-                            try {
-                                uniqueCleanupBatch.execute();
-                            }
-                            catch ( ConnectionException e ) {
-                                throw new RuntimeException( "Unable to execute batch mutation", e );
-                            }
+
+                            session.execute(uniqueCleanupBatch);
+
                         } ).lastOrDefault( Collections.emptyList() ).map( list -> mvccEntityCollectionIoEvent );
 
                 return ObservableTimer.time( uniqueValueCleanup, uniqueCleanupTimer );

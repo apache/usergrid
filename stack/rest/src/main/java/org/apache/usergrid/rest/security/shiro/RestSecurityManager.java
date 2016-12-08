@@ -53,7 +53,7 @@ public class RestSecurityManager extends DefaultWebSecurityManager {
     @Override
     public void setSessionManager( SessionManager sessionManager ) {
         if ( !( sessionManager instanceof HttpRequestSessionManager ) ) {
-            logger.info( "Replacing " + sessionManager + " with HttpRequestSessionManager" );
+            logger.info( "Replacing {} with HttpRequestSessionManager", sessionManager );
             sessionManager = new HttpRequestSessionManager();
         }
         super.setSessionManager( sessionManager );

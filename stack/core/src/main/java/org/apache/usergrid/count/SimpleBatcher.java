@@ -30,7 +30,7 @@ import org.apache.usergrid.count.common.Count;
  * @author zznate
  */
 public class SimpleBatcher extends AbstractBatcher {
-    private Logger log = LoggerFactory.getLogger( SimpleBatcher.class );
+    private static final Logger log = LoggerFactory.getLogger( SimpleBatcher.class );
 
     private boolean blockingSubmit = false;
 

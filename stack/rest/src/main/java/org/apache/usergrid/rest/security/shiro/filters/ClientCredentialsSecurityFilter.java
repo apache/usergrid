@@ -51,7 +51,13 @@ public class ClientCredentialsSecurityFilter extends SecurityFilter {
 
     @Override
     public void filter( ContainerRequestContext request ) {
-        logger.debug("Filtering: " + request.getUriInfo().getBaseUri());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Filtering: {}", request.getUriInfo().getBaseUri());
+        }
+
+        if( bypassSecurityCheck(request) ){
+            return;
+        }
 
         String clientId = httpServletRequest.getParameter( "client_id" );
         String clientSecret = httpServletRequest.getParameter( "client_secret" );

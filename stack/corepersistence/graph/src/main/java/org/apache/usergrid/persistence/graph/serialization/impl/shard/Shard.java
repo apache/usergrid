@@ -19,17 +19,30 @@
 package org.apache.usergrid.persistence.graph.serialization.impl.shard;
 
 
+import com.google.common.base.Optional;
+import org.apache.usergrid.persistence.graph.Edge;
+
 public class Shard implements Comparable<Shard> {
+
+
+    /**
+     * The minimum shard a shardIndex can possibly be set to
+     */
+    public static final Shard MIN_SHARD = new Shard(0, 0, true);
 
     private final long shardIndex;
     private final long createdTime;
-    private final boolean compacted;
+    private boolean compacted;
+    private Optional<DirectedEdge> shardEnd;
+    private boolean deleted;
 
 
     public Shard( final long shardIndex, final long createdTime, final boolean compacted ) {
         this.shardIndex = shardIndex;
         this.createdTime = createdTime;
         this.compacted = compacted;
+        this.shardEnd = Optional.absent();
+        this.deleted = false;
     }
 
 
@@ -54,6 +67,35 @@ public class Shard implements Comparable<Shard> {
      */
     public boolean isCompacted() {
         return compacted;
+    }
+
+    public void setCompacted(final boolean compacted){
+        this.compacted = compacted;
+    }
+
+
+    /**
+     * Returns true if this is the minimum shard
+     * @return
+     */
+    public boolean isMinShard(){
+        return shardIndex == MIN_SHARD.shardIndex;
+    }
+
+    public void setShardEnd(final Optional<DirectedEdge> shardEnd) {
+        this.shardEnd = shardEnd;
+    }
+
+    public Optional<DirectedEdge> getShardEnd() {
+        return shardEnd;
+    }
+
+    public boolean isDeleted(){
+        return deleted;
+    }
+
+    public void setDeleted( final boolean deleted){
+        this.deleted = deleted;
     }
 
 
@@ -134,10 +176,21 @@ public class Shard implements Comparable<Shard> {
 
     @Override
     public String toString() {
-        return "Shard{" +
-                "shardIndex=" + shardIndex +
-                ", createdTime=" + createdTime +
-                ", compacted=" + compacted +
-                '}';
+
+        StringBuilder string = new StringBuilder();
+        string.append("Shard{ ");
+        string.append("shardIndex=").append(shardIndex);
+        string.append(", createdTime=").append(createdTime);
+        string.append(", compacted=").append(compacted);
+        string.append(", shardEndTimestamp=");
+        if(shardEnd.isPresent()){
+            string.append(shardEnd.get().timestamp);
+        }else{
+            string.append("null");
+        }
+        string.append(", isDeleted=").append(deleted);
+        string.append(" }");
+
+        return string.toString();
     }
 }

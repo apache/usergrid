@@ -392,6 +392,79 @@ public class ShardEntryGroupTest {
 
         assertFalse( "Shard added", result );
     }
+
+
+    @Test
+    public void minShardNotDeleted() {
+        Shard minShard = Shard.MIN_SHARD;
+
+        ShardEntryGroup shardEntryGroup = new ShardEntryGroup( 1 );
+
+        shardEntryGroup.addShard( minShard );
+
+        assertTrue( minShard.isMinShard() );
+
+        assertFalse( shardEntryGroup.canBeDeleted( minShard ) );
+    }
+
+    @Test
+    public void isCompactionPending(){
+        //set with no shard
+
+        final Shard minShard = Shard.MIN_SHARD;
+
+        final ShardEntryGroup oneShardGroup = new ShardEntryGroup( 1 );
+
+        oneShardGroup.addShard( minShard );
+
+        assertFalse(oneShardGroup.isCompactionPending());
+
+
+        //now test with 2 shards, 1 marked as non compacted.
+
+        final Shard nextShard = new Shard( 1000, 1000, false );
+
+        final ShardEntryGroup pendingGroup = new ShardEntryGroup( 1 );
+
+        pendingGroup.addShard( nextShard );
+        pendingGroup.addShard( minShard );
+
+        assertTrue(pendingGroup.isCompactionPending());
+
+
+
+    }
+
+
+    @Test
+    public void testIsNew() {
+        //set with no shard
+
+        final long delta = 10000;
+
+        //created at 10000
+        final Shard firstShard = new Shard( 10000, 10000, true );
+
+        final Shard secondShard = new Shard( 10000, 10001, true );
+
+        final ShardEntryGroup shardGroup = new ShardEntryGroup( delta );
+
+        shardGroup.addShard( secondShard );
+        shardGroup.addShard( firstShard );
+
+        final boolean resultCreateTime = shardGroup.isNew( secondShard.getCreatedTime() );
+
+        assertTrue( "This is a new shard", resultCreateTime );
+
+        final boolean resultEqualToDelta = shardGroup.isNew( secondShard.getCreatedTime() + delta );
+
+        assertTrue( "This is a new shard", resultEqualToDelta );
+
+
+        final boolean greaterThan = shardGroup.isNew( secondShard.getCreatedTime() + delta + 1 );
+
+        assertFalse( "This is not a new shard", greaterThan );
+    }
 }
 
 

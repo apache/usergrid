@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 import java.util.concurrent.ExecutionException;
 
+import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.index.*;
 
@@ -32,6 +33,7 @@ import com.google.inject.Inject;
 /**
  * Get index from factory, adds caching
  */
+@Singleton
 public class EsEntityIndexFactoryImpl implements EntityIndexFactory{
 
     private final IndexFig config;

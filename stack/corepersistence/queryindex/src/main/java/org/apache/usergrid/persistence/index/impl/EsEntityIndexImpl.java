@@ -56,17 +56,18 @@ import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.*;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.sum.Sum;
 import org.elasticsearch.search.aggregations.metrics.sum.SumBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,7 +110,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     private static final String VERIFY_TYPE = "entity";
 
     private static final ImmutableMap<String, Object> DEFAULT_PAYLOAD =
-            ImmutableMap.<String, Object>builder().put(IndexingUtils.ENTITY_ID_FIELDNAME, UUIDGenerator.newTimeUUID().toString()).build();
+        ImmutableMap.<String, Object>builder().put(IndexingUtils.ENTITY_ID_FIELDNAME, UUIDGenerator.newTimeUUID().toString()).build();
 
 
     private final ApplicationScope applicationScope;
@@ -195,7 +196,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                 Settings settings = ImmutableSettings.settingsBuilder()
                     .put("index.number_of_shards", numberOfShards)
                     .put("index.number_of_replicas", numberOfReplicas)
-                        //dont' allow unmapped queries, and don't allow dynamic mapping
+                    //dont' allow unmapped queries, and don't allow dynamic mapping
                     .put("index.query.parse.allow_unmapped_fields", false)
                     .put("index.mapper.dynamic", false)
                     .put("action.write_consistency", writeConsistency)
@@ -204,9 +205,9 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                 //Added For Graphite Metrics
                 Timer.Context timeNewIndexCreation = addTimer.time();
                 final CreateIndexResponse cir = admin.indices().prepareCreate(indexName)
-                        .setSettings(settings)
+                    .setSettings(settings)
                     .execute()
-                        .actionGet();
+                    .actionGet();
                 timeNewIndexCreation.stop();
 
                 //create the mappings
@@ -292,23 +293,28 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         // to receive documents. Occasionally we see errors.
         // See this post: http://s.apache.org/index-missing-exception
 
-        logger.debug("Testing new index name: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Testing new index name: read {} write {}", alias.getReadAlias(), alias.getWriteAlias());
+        }
 
         final RetryOperation retryOperation = () -> {
             final String tempId = UUIDGenerator.newTimeUUID().toString();
 
             esProvider.getClient().prepareIndex( alias.getWriteAlias(), VERIFY_TYPE, tempId )
-                 .setSource(DEFAULT_PAYLOAD).get();
+                .setSource(DEFAULT_PAYLOAD).get();
 
-            logger.info( "Successfully created new document with docId {} "
-                 + "in index read {} write {} and type {}",
-                    tempId, alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Successfully created new document with docId {} in index read {} write {} and type {}",
+                    tempId, alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE);
+            }
 
             // delete all types, this way if we miss one it will get cleaned up
             esProvider.getClient().prepareDelete( alias.getWriteAlias(), VERIFY_TYPE, tempId).get();
 
-            logger.info( "Successfully deleted  documents in read {} write {} and type {} with id {}",
-                    alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE, tempId );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Successfully deleted  documents in read {} write {} and type {} with id {}",
+                    alias.getReadAlias(), alias.getWriteAlias(), VERIFY_TYPE, tempId);
+            }
 
             return true;
         };
@@ -327,7 +333,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         //Added For Graphite Metrics
         Timer.Context timePutIndex = mappingTimer.time();
         PutMappingResponse  pitr = esProvider.getClient().admin().indices().preparePutMapping( indexName ).setType( "entity" ).setSource(
-                getMappingsContent() ).execute().actionGet();
+            getMappingsContent() ).execute().actionGet();
         timePutIndex.stop();
         if ( !pitr.isAcknowledged() ) {
             throw new IndexException( "Unable to create default mappings" );
@@ -358,7 +364,9 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         String[] indexes = getIndexes();
         if (indexes.length == 0) {
-            logger.debug("Not refreshing indexes. none found");
+            if (logger.isTraceEnabled()) {
+                logger.trace("Not refreshing indexes. none found");
+            }
         }
         //Added For Graphite Metrics
         RefreshResponse response =
@@ -371,8 +379,10 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                 logger.error("Failed to refresh index:{} reason:{}", sfe.index(), sfe.reason());
             }
         }
-        logger.debug("Refreshed indexes: {},success:{} failed:{} ", StringUtils.join(indexes, ", "),
-            successfulShards, failedShards);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Refreshed indexes: {},success:{} failed:{} ", StringUtils.join(indexes, ", "),
+                successfulShards, failedShards);
+        }
 
         IndexRefreshCommandInfo refreshResults = new IndexRefreshCommandInfo(failedShards == 0,
             System.currentTimeMillis() - start);
@@ -413,7 +423,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final ParsedQuery parsedQuery = ParsedQueryBuilder.build(query);
 
         final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit, offset )
-            .setTimeout( TimeValue.timeValueMillis( queryTimeout ) );
+            .setTimeout(TimeValue.timeValueMillis(queryTimeout));
 
         if ( logger.isDebugEnabled() ) {
             logger.debug( "Searching index (read alias): {}\n  nodeId: {}, edgeType: {},  \n type: {}\n   query: {} ",
@@ -421,7 +431,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                 searchTypes.getTypeNames( applicationScope ), srb );
         }
 
-         //Added For Graphite Metrics
+        //Added For Graphite Metrics
         final Timer.Context timerContext = searchTimer.time();
 
         try {
@@ -429,7 +439,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             searchResponse = srb.execute().actionGet();
         }
         catch ( Throwable t ) {
-            logger.error( "Unable to communicate with Elasticsearch", t );
+            logger.error( "Unable to communicate with Elasticsearch", t.getMessage() );
             failureMonitor.fail( "Unable to execute batch", t );
             throw t;
         }
@@ -451,144 +461,125 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
          */
         IndexValidationUtils.validateSearchEdge(edge);
-        Preconditions.checkNotNull( entityId, "entityId cannot be null" );
+        Preconditions.checkNotNull(entityId, "entityId cannot be null");
 
         SearchResponse searchResponse;
-
         List<CandidateResult> candidates = new ArrayList<>();
 
-        final ParsedQuery parsedQuery = ParsedQueryBuilder.build( "select *" );
+        // never let this fetch more than 100 to save memory
+        final int searchLimit = Math.min(100, indexFig.getVersionQueryLimit());
 
-        final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder();
+        final QueryBuilder nodeIdQuery = QueryBuilders
+            .termQuery(IndexingUtils.EDGE_NODE_ID_FIELDNAME, IndexingUtils.nodeId(edge.getNodeId()));
 
-        //I can't just search on the entity Id.
+        final QueryBuilder entityIdQuery = QueryBuilders
+            .termQuery(IndexingUtils.ENTITY_ID_FIELDNAME, IndexingUtils.entityId(entityId));
 
-        FilterBuilder entityEdgeFilter = FilterBuilders.termFilter(IndexingUtils.EDGE_NODE_ID_FIELDNAME,
-            IndexingUtils.nodeId(edge.getNodeId()));
+        final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder()
+            .addSort(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME, SortOrder.ASC);
 
-        srb.setPostFilter(entityEdgeFilter);
 
         if ( logger.isDebugEnabled() ) {
-            logger.debug( "Searching for marked versions in index (read alias): {}\n  nodeId: {},\n   query: {} ",
+            logger.debug( "Searching for edges in (read alias): {}\n  nodeId: {},\n   query: {} ",
                 this.alias.getReadAlias(),entityId, srb );
         }
 
         try {
-            //Added For Graphite Metrics
 
-            //set the timeout on the scroll cursor to 6 seconds and set the number of values returned per shard to 100.
-            //The settings for the scroll aren't tested and so we aren't sure what vlaues would be best in a production enviroment
-            //TODO: review this and make them not magic numbers when acking this PR.
-            searchResponse = srb.setScroll( new TimeValue( 6000 ) ).setSize( 100 ).execute().actionGet();
+            long queryTimestamp = 0L;
 
 
-            while(true){
-                //add search result hits to some sort of running tally of hits.
-                candidates = aggregateScrollResults( candidates, searchResponse );
+            QueryBuilder timestampQuery =  QueryBuilders
+                .rangeQuery(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME)
+                .gte(queryTimestamp);
 
-                SearchScrollRequestBuilder ssrb = searchRequestBuilderStrategyV2
-                    .getScrollBuilder( searchResponse.getScrollId() )
-                    .setScroll( new TimeValue( 6000 ) );
+            QueryBuilder finalQuery = QueryBuilders.constantScoreQuery(
+                QueryBuilders
+                    .boolQuery()
+                    .must(entityIdQuery)
+                    .must(nodeIdQuery)
+                    .must(timestampQuery)
+            );
 
-                //TODO: figure out how to log exactly what we're putting into elasticsearch
-                //                if ( logger.isDebugEnabled() ) {
-                //                    logger.debug( "Scroll search using query: {} ",
-                //                        ssrb.toString() );
-                //                }
+            searchResponse = srb
+                .setQuery(finalQuery)
+                .setSize(searchLimit)
+                .execute()
+                .actionGet();
 
-                searchResponse = ssrb.execute().actionGet();
+            candidates = aggregateScrollResults(candidates, searchResponse, null);
 
-                if (searchResponse.getHits().getHits().length == 0) {
-                    break;
-                }
-
-
-            }
         }
         catch ( Throwable t ) {
-            logger.error( "Unable to communicate with Elasticsearch", t );
+            logger.error( "Unable to communicate with Elasticsearch", t.getMessage() );
             failureMonitor.fail( "Unable to execute batch", t );
             throw t;
         }
         failureMonitor.success();
 
-        return new CandidateResults( candidates, parsedQuery.getSelectFieldMappings());
+        return new CandidateResults( candidates, Collections.EMPTY_SET);
     }
 
 
     @Override
-    public CandidateResults getAllEntityVersionsBeforeMarkedVersion( final Id entityId, final UUID markedVersion ) {
+    public CandidateResults getNodeDocsOlderThanMarked(final Id entityId, final UUID markedVersion ) {
+
+        // TODO: investigate if functionality via iterator so a caller can page the deletion until all is gone
 
         Preconditions.checkNotNull( entityId, "entityId cannot be null" );
-        Preconditions.checkNotNull( markedVersion, "markedVersion cannot be null" );
+        Preconditions.checkNotNull(markedVersion, "markedVersion cannot be null");
         ValidationUtils.verifyVersion(markedVersion);
 
         SearchResponse searchResponse;
-
         List<CandidateResult> candidates = new ArrayList<>();
 
-        final ParsedQuery parsedQuery = ParsedQueryBuilder.build( "select *" );
+        final long markedTimestamp = markedVersion.timestamp();
 
-        final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder();
+        // never let this fetch more than 100 to save memory
+        final int searchLimit = Math.min(100, indexFig.getVersionQueryLimit());
 
-        FilterBuilder entityIdFilter = FilterBuilders.termFilter(IndexingUtils.ENTITY_ID_FIELDNAME,
-            IndexingUtils.entityId(entityId));
+        // this query will find all the documents where this entity is a source/target node
+        final QueryBuilder nodeQuery = QueryBuilders
+            .termQuery(IndexingUtils.EDGE_NODE_ID_FIELDNAME, IndexingUtils.nodeId(entityId));
 
-        FilterBuilder entityVersionFilter = FilterBuilders.rangeFilter( IndexingUtils.ENTITY_VERSION_FIELDNAME ).lte(markedVersion);
-
-        FilterBuilder andFilter = FilterBuilders.andFilter(entityIdFilter, entityVersionFilter);
-
-        srb.setPostFilter(andFilter);
-
-
-
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Searching for marked versions in index (read alias): {}\n  nodeId: {},\n   query: {} ",
-                this.alias.getReadAlias(),entityId, srb );
-        }
+        final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder()
+            .addSort(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME, SortOrder.ASC);
 
         try {
-            //Added For Graphite Metrics
 
-            //set the timeout on the scroll cursor to 6 seconds and set the number of values returned per shard to 100.
-            //The settings for the scroll aren't tested and so we aren't sure what vlaues would be best in a production enviroment
-            //TODO: review this and make them not magic numbers when acking this PR.
-            searchResponse = srb.setScroll( new TimeValue( 6000 ) ).setSize( 100 ).execute().actionGet();
+            long queryTimestamp = 0L;
 
-            //list that will hold all of the search hits
+            QueryBuilder timestampQuery =  QueryBuilders
+                .rangeQuery(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME)
+                .gte(queryTimestamp)
+                .lt(markedTimestamp);
 
-
-            while(true){
-                //add search result hits to some sort of running tally of hits.
-                candidates = aggregateScrollResults( candidates, searchResponse );
-
-                SearchScrollRequestBuilder ssrb = searchRequestBuilderStrategyV2
-                    .getScrollBuilder( searchResponse.getScrollId() )
-                    .setScroll( new TimeValue( 6000 ) );
-
-                //TODO: figure out how to log exactly what we're putting into elasticsearch
-//                if ( logger.isDebugEnabled() ) {
-//                    logger.debug( "Scroll search using query: {} ",
-//                        ssrb.toString() );
-//                }
-
-                searchResponse = ssrb.execute().actionGet();
-
-                if (searchResponse.getHits().getHits().length == 0) {
-                    break;
-                }
+            QueryBuilder finalQuery = QueryBuilders.constantScoreQuery(
+                QueryBuilders
+                    .boolQuery()
+                    .must(timestampQuery)
+                    .must(nodeQuery)
+            );
 
 
-            }
+            searchResponse = srb
+                .setQuery(finalQuery)
+                .setSize(searchLimit)
+                .execute()
+                .actionGet();
+
+
+            candidates = aggregateScrollResults(candidates, searchResponse, markedVersion);
+
         }
         catch ( Throwable t ) {
-            logger.error( "Unable to communicate with Elasticsearch", t );
+            logger.error( "Unable to communicate with Elasticsearch", t.getMessage() );
             failureMonitor.fail( "Unable to execute batch", t );
             throw t;
         }
         failureMonitor.success();
 
-        return new CandidateResults( candidates, parsedQuery.getSelectFieldMappings());
+        return new CandidateResults( candidates, Collections.EMPTY_SET);
     }
 
 
@@ -615,11 +606,11 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
                 @Override
                 public void onFailure( Throwable e ) {
-                    logger.error( "failed on delete index", e );
+                    logger.error( "Failed on delete index", e.getMessage() );
                 }
             } );
             return Observable.from( response );
-        } ).doOnError( t -> logger.error( "Failed on delete application", t ) );
+        } ).doOnError( t -> logger.error( "Failed on delete application", t.getMessage() ) );
     }
 
 
@@ -632,10 +623,10 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             final ShardOperationFailedException[] failures = indexDeleteByQueryResponse.getFailures();
 
             for ( ShardOperationFailedException failedException : failures ) {
-                logger.error( String.format( "Unable to delete by query %s. "
-                        + "Failed with code %d and reason %s on shard %s in index %s", query.toString(),
+                logger.error("Unable to delete by query {}. Failed with code {} and reason {} on shard {} in index {}",
+                    query.toString(),
                     failedException.status().getStatus(), failedException.reason(),
-                    failedException.shardId(), failedException.index() ) );
+                    failedException.shardId(), failedException.index() );
             }
         }
     }
@@ -650,14 +641,18 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
 
-        logger.debug( "   Hit count: {} Total hits: {}", hits.length, searchHits.getTotalHits() );
+        if (logger.isTraceEnabled()) {
+            logger.trace("   Hit count: {} Total hits: {}", hits.length, searchHits.getTotalHits());
+        }
 
         List<CandidateResult> candidates = new ArrayList<>( hits.length );
 
+
+
         for ( SearchHit hit : hits ) {
+            CandidateResult candidateResult;
 
-            final CandidateResult candidateResult = parseIndexDocId( hit.getId() );
-
+            candidateResult =  parseIndexDocId( hit, query.isGeoQuery() );
             candidates.add( candidateResult );
         }
 
@@ -673,20 +668,51 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         return candidateResults;
     }
 
-    private List<CandidateResult> aggregateScrollResults( List<CandidateResult> candidates,
-                                                          final SearchResponse searchResponse ){
+    private List<CandidateResult> aggregateScrollResults(List<CandidateResult> candidates,
+                                                         final SearchResponse searchResponse, final UUID markedVersion){
 
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
 
         for ( SearchHit hit : hits ) {
 
-            final CandidateResult candidateResult = parseIndexDocId( hit.getId() );
+            final CandidateResult candidateResult = parseIndexDocId( hit );
 
-            candidates.add( candidateResult );
+            // if comparing against the latestVersion, make sure we only add the candidateResult if it's
+            // older than or equal to the latest marked version
+            if (markedVersion != null) {
+
+                if(candidateResult.getVersion().timestamp() <= markedVersion.timestamp()){
+
+                    if(logger.isTraceEnabled()){
+                        logger.trace("Candidate version {} is <= provided entity version {} for entityId {}",
+                            candidateResult.getVersion(),
+                            markedVersion,
+                            candidateResult.getId()
+                        );
+                    }
+
+                    candidates.add(candidateResult);
+
+                }else{
+                    if(logger.isTraceEnabled()){
+                        logger.trace("Candidate version {} is > provided entity version {} for entityId {}. Not" +
+                                "adding to candidate results",
+                            candidateResult.getVersion(),
+                            markedVersion,
+                            candidateResult.getId()
+                        );
+                    }
+                }
+
+            }else{
+                candidates.add(candidateResult);
+            }
         }
 
-        logger.debug( "Aggregated {} out of {} hits ",candidates.size(),searchHits.getTotalHits() );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Aggregated {} out of {} hits ", candidates.size(), searchHits.getTotalHits());
+        }
 
         return  candidates;
 
@@ -702,7 +728,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                 operation.doOp();
             }
             catch ( Exception e ) {
-                logger.error( "Unable to execute operation, retrying", e );
+                logger.error( "Unable to execute operation, retrying", e.getMessage() );
                 try {
                     Thread.sleep( WAIT_TIME );
                 } catch ( InterruptedException ie ) {
@@ -724,11 +750,11 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         try {
             ClusterHealthResponse chr = esProvider.getClient().admin()
-                    .cluster().health(new ClusterHealthRequest()).get();
+                .cluster().health(new ClusterHealthRequest()).get();
             return Health.valueOf( chr.getStatus().name() );
         }
         catch ( Exception ex ) {
-            logger.error( "Error connecting to ElasticSearch", ex );
+            logger.error( "Error connecting to ElasticSearch", ex.getMessage() );
         }
 
         // this is bad, red alert!
@@ -744,15 +770,15 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         try {
             String[] indexNames = this.getIndexes();
-           final ActionFuture<ClusterHealthResponse> future =  esProvider.getClient().admin().cluster().health(
-               new ClusterHealthRequest( indexNames  ) );
+            final ActionFuture<ClusterHealthResponse> future =  esProvider.getClient().admin().cluster().health(
+                new ClusterHealthRequest( indexNames  ) );
 
             //only wait 2 seconds max
             ClusterHealthResponse chr = future.actionGet(2000);
             return Health.valueOf( chr.getStatus().name() );
         }
         catch ( Exception ex ) {
-            logger.error( "Error connecting to ElasticSearch", ex );
+            logger.error( "Error connecting to ElasticSearch", ex.getMessage() );
         }
 
         // this is bad, red alert!

@@ -22,26 +22,22 @@
 package org.apache.usergrid.persistence.graph.serialization.impl;
 
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.db.marshal.UTF8Type;
 
 import org.apache.usergrid.persistence.core.astyanax.BucketScopedRowKey;
 import org.apache.usergrid.persistence.core.astyanax.BucketScopedRowKeySerializer;
-import org.apache.usergrid.persistence.core.astyanax.CassandraConfig;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.astyanax.ColumnSearch;
 import org.apache.usergrid.persistence.core.astyanax.CompositeFieldSerializer;
 import org.apache.usergrid.persistence.core.astyanax.IdRowCompositeSerializer;
 import org.apache.usergrid.persistence.core.astyanax.MultiRowColumnIterator;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamily;
-import org.apache.usergrid.persistence.core.astyanax.MultiTennantColumnFamilyDefinition;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamily;
+import org.apache.usergrid.persistence.core.astyanax.MultiTenantColumnFamilyDefinition;
 import org.apache.usergrid.persistence.core.astyanax.StringColumnParser;
+import org.apache.usergrid.persistence.core.datastax.TableDefinition;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.shard.ExpandingShardLocator;
@@ -99,23 +95,23 @@ public class EdgeMetadataSerializationV2Impl implements EdgeMetadataSerializatio
     /**
      * CFs where the row key contains the source node id
      */
-    private static final MultiTennantColumnFamily<BucketScopedRowKey<Id>, String> CF_SOURCE_EDGE_TYPES =
-            new MultiTennantColumnFamily<>( "Graph_Source_Edge_Types_V2", ROW_KEY_SER, STRING_SERIALIZER );
+    private static final MultiTenantColumnFamily<BucketScopedRowKey<Id>, String> CF_SOURCE_EDGE_TYPES =
+            new MultiTenantColumnFamily<>( "Graph_Source_Edge_Types_V2", ROW_KEY_SER, STRING_SERIALIZER );
 
     //all target id types for source edge type
-    private static final MultiTennantColumnFamily<BucketScopedRowKey<EdgeIdTypeKey>, String> CF_SOURCE_EDGE_ID_TYPES =
-            new MultiTennantColumnFamily<>( "Graph_Source_Edge_Id_Types_V2", EDGE_TYPE_ROW_KEY, STRING_SERIALIZER );
+    private static final MultiTenantColumnFamily<BucketScopedRowKey<EdgeIdTypeKey>, String> CF_SOURCE_EDGE_ID_TYPES =
+            new MultiTenantColumnFamily<>( "Graph_Source_Edge_Id_Types_V2", EDGE_TYPE_ROW_KEY, STRING_SERIALIZER );
 
     /**
      * CFs where the row key is the target node id
      */
-    private static final MultiTennantColumnFamily<BucketScopedRowKey<Id>, String> CF_TARGET_EDGE_TYPES =
-            new MultiTennantColumnFamily<>( "Graph_Target_Edge_Types_V2", ROW_KEY_SER, STRING_SERIALIZER );
+    private static final MultiTenantColumnFamily<BucketScopedRowKey<Id>, String> CF_TARGET_EDGE_TYPES =
+            new MultiTenantColumnFamily<>( "Graph_Target_Edge_Types_V2", ROW_KEY_SER, STRING_SERIALIZER );
 
 
     //all source id types for target edge type
-    private static final MultiTennantColumnFamily<BucketScopedRowKey<EdgeIdTypeKey>, String> CF_TARGET_EDGE_ID_TYPES =
-            new MultiTennantColumnFamily<>( "Graph_Target_Edge_Id_Types_V2", EDGE_TYPE_ROW_KEY, STRING_SERIALIZER );
+    private static final MultiTenantColumnFamily<BucketScopedRowKey<EdgeIdTypeKey>, String> CF_TARGET_EDGE_ID_TYPES =
+            new MultiTenantColumnFamily<>( "Graph_Target_Edge_Id_Types_V2", EDGE_TYPE_ROW_KEY, STRING_SERIALIZER );
 
 
     private static final Comparator<String> STRING_COMPARATOR = new Comparator<String>() {
@@ -321,7 +317,7 @@ public class EdgeMetadataSerializationV2Impl implements EdgeMetadataSerializatio
      */
     private MutationBatch removeEdgeType( final ApplicationScope scope, final Id rowKeyId, final String edgeType,
                                           final long version,
-                                          final MultiTennantColumnFamily<BucketScopedRowKey<Id>, String> cf ) {
+                                          final MultiTenantColumnFamily<BucketScopedRowKey<Id>, String> cf ) {
 
 
         //write target<--source edge type meta data
@@ -352,7 +348,7 @@ public class EdgeMetadataSerializationV2Impl implements EdgeMetadataSerializatio
      */
     private MutationBatch removeIdType( final ApplicationScope scope, final Id rowId, final String idType,
                                         final String edgeType, final long version,
-                                        final MultiTennantColumnFamily<BucketScopedRowKey<EdgeIdTypeKey>, String> cf ) {
+                                        final MultiTenantColumnFamily<BucketScopedRowKey<EdgeIdTypeKey>, String> cf ) {
 
 
         final EdgeIdTypeKey edgeIdTypeKey = new EdgeIdTypeKey( rowId, edgeType );
@@ -400,7 +396,7 @@ public class EdgeMetadataSerializationV2Impl implements EdgeMetadataSerializatio
      * @param cf The column family to execute on
      */
     private Iterator<String> getEdgeTypes( final ApplicationScope scope, final SearchEdgeType search,
-                                           final MultiTennantColumnFamily<BucketScopedRowKey<Id>, String> cf ) {
+                                           final MultiTenantColumnFamily<BucketScopedRowKey<Id>, String> cf ) {
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateSearchEdgeType( search );
 
@@ -438,7 +434,7 @@ public class EdgeMetadataSerializationV2Impl implements EdgeMetadataSerializatio
      * @param cf The column family to search
      */
     public Iterator<String> getIdTypes( final ApplicationScope scope, final SearchIdType search,
-                                        final MultiTennantColumnFamily<BucketScopedRowKey<EdgeIdTypeKey>, String> cf ) {
+                                        final MultiTenantColumnFamily<BucketScopedRowKey<EdgeIdTypeKey>, String> cf ) {
         ValidationUtils.validateApplicationScope( scope );
         GraphValidation.validateSearchEdgeIdType( search );
 
@@ -465,19 +461,25 @@ public class EdgeMetadataSerializationV2Impl implements EdgeMetadataSerializatio
 
 
     @Override
-    public Collection<MultiTennantColumnFamilyDefinition> getColumnFamilies() {
+    public Collection<MultiTenantColumnFamilyDefinition> getColumnFamilies() {
         return Arrays.asList( graphCf( CF_SOURCE_EDGE_TYPES ), graphCf( CF_TARGET_EDGE_TYPES ),
                 graphCf( CF_SOURCE_EDGE_ID_TYPES ), graphCf( CF_TARGET_EDGE_ID_TYPES ) );
+    }
+
+    @Override
+    public Collection<TableDefinition> getTables() {
+
+        return Collections.emptyList();
     }
 
 
     /**
      * Helper to generate an edge definition by the type
      */
-    private MultiTennantColumnFamilyDefinition graphCf( MultiTennantColumnFamily cf ) {
-        return new MultiTennantColumnFamilyDefinition( cf, BytesType.class.getSimpleName(),
+    private MultiTenantColumnFamilyDefinition graphCf(MultiTenantColumnFamily cf ) {
+        return new MultiTenantColumnFamilyDefinition( cf, BytesType.class.getSimpleName(),
                 UTF8Type.class.getSimpleName(), BytesType.class.getSimpleName(),
-                MultiTennantColumnFamilyDefinition.CacheOption.KEYS );
+                MultiTenantColumnFamilyDefinition.CacheOption.KEYS );
     }
 
 
@@ -489,7 +491,7 @@ public class EdgeMetadataSerializationV2Impl implements EdgeMetadataSerializatio
         //resume from the last if specified.  Also set the range
         return new ColumnSearch<String>() {
             @Override
-            public void buildRange( final RangeBuilder rangeBuilder, final String value ) {
+            public void buildRange(final RangeBuilder rangeBuilder, final String value, String end) {
                 rangeBuilder.setLimit( graphFig.getScanPageSize() );
 
 
@@ -517,7 +519,7 @@ public class EdgeMetadataSerializationV2Impl implements EdgeMetadataSerializatio
 
             @Override
             public void buildRange( final RangeBuilder rangeBuilder ) {
-                buildRange( rangeBuilder, null );
+                buildRange( rangeBuilder, null, null);
             }
 
 

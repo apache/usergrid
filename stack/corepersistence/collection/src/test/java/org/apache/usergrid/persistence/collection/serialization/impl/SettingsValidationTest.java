@@ -23,7 +23,7 @@ package org.apache.usergrid.persistence.collection.serialization.impl;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.collection.serialization.SerializationFig;
-import org.apache.usergrid.persistence.core.astyanax.CassandraFig;
+import org.apache.usergrid.persistence.core.CassandraFig;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;

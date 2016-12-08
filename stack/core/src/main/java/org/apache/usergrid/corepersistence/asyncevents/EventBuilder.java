@@ -21,6 +21,7 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
@@ -37,14 +38,6 @@ import rx.Observable;
  * Interface for constructing an observable stream to perform asynchonous events
  */
 public interface EventBuilder {
-
-    /**
-     * Return the cold observable of entity index update operations
-     * @param applicationScope
-     * @param entity
-     * @return
-     */
-    Observable<IndexOperationMessage> buildEntityIndexUpdate( ApplicationScope applicationScope, Entity entity );
 
     /**
      * Return the cold observable of the new edge operation
@@ -64,12 +57,14 @@ public interface EventBuilder {
     Observable<IndexOperationMessage> buildDeleteEdge( ApplicationScope applicationScope, Edge edge );
 
     /**
-     * Return a ben with 2 obervable streams for entity delete.
+     * Return a bin with 2 observable streams for entity delete.
      * @param applicationScope
      * @param entityId
      * @return
      */
-    EventBuilderImpl.EntityDeleteResults buildEntityDelete( ApplicationScope applicationScope, Id entityId );
+    EntityDeleteResults buildEntityDelete(ApplicationScope applicationScope, Id entityId );
+
+
 
     /**
      * Re-index an entity in the scope provided
@@ -78,19 +73,38 @@ public interface EventBuilder {
      */
     Observable<IndexOperationMessage> buildEntityIndex( EntityIndexOperation entityIndexOperation );
 
+
+    /**
+     * Find all versions of the entity older than the latest and de-index them.
+     * @param applicationScope
+     * @param entityId
+     * @param markedVersion
+     * @return
+     */
+    Observable<IndexOperationMessage> deIndexOldVersions( ApplicationScope applicationScope,
+                                                          Id entityId, UUID markedVersion );
+
     /**
      * A bean to hold both our observables so the caller can choose the subscription mechanism.  Note that
-     * indexOperationMessages should be subscribed and completed BEFORE the getEntitiesCompacted is subscribed
+     * indexOperationMessages should be subscribed and completed BEFORE the getEntitiesDeleted is subscribed
      */
     final class EntityDeleteResults {
         private final Observable<IndexOperationMessage> indexOperationMessageObservable;
-        private final Observable<List<MvccLogEntry>> entitiesCompacted;
+        private final Observable<List<MvccLogEntry>> entitiesDeleted;
+
+
+
+        private final Observable<Id> compactedNode;
+
+
 
 
         public EntityDeleteResults( final Observable<IndexOperationMessage> indexOperationMessageObservable,
-                                    final Observable<List<MvccLogEntry>> entitiesCompacted ) {
+                                    final Observable<List<MvccLogEntry>> entitiesDeleted,
+                                    final Observable<Id> compactedNode) {
             this.indexOperationMessageObservable = indexOperationMessageObservable;
-            this.entitiesCompacted = entitiesCompacted;
+            this.entitiesDeleted = entitiesDeleted;
+            this.compactedNode = compactedNode;
         }
 
 
@@ -98,9 +112,14 @@ public interface EventBuilder {
             return indexOperationMessageObservable;
         }
 
-
-        public Observable<List<MvccLogEntry>> getEntitiesCompacted() {
-            return entitiesCompacted;
+        public Observable<List<MvccLogEntry>> getEntitiesDeleted() {
+            return entitiesDeleted;
         }
+
+        public Observable<Id> getCompactedNode() {
+            return compactedNode;
+        }
+
+
     }
 }

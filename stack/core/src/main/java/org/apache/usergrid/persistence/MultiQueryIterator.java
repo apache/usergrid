@@ -62,7 +62,7 @@ public class MultiQueryIterator implements ResultsIterator {
             EntityRef ref = source.next();
             Results r = getResultsFor( ref );
             if ( r.size() > 0 ) {
-                currentIterator = new PagingResultsIterator( r, query.getResultsLevel() );
+                currentIterator = new PagingResultsIterator( r, query.getResultsLevel(), null);
                 return currentIterator.hasNext();
             }
         }

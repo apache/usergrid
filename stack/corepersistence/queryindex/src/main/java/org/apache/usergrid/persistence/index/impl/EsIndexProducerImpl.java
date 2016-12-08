@@ -19,6 +19,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.codahale.metrics.Histogram;
@@ -51,12 +52,11 @@ import rx.Observable;
  */
 @Singleton
 public class EsIndexProducerImpl implements IndexProducer {
-    private static final Logger log = LoggerFactory.getLogger( EsIndexProducerImpl.class );
+    private static final Logger logger = LoggerFactory.getLogger( EsIndexProducerImpl.class );
 
     private final IndexFig config;
     private final FailureMonitorImpl failureMonitor;
     private final Client client;
-    private final Timer flushTimer;
     private final IndexFig indexFig;
     private final Counter indexSizeCounter;
     private final Histogram roundtripTimer;
@@ -69,7 +69,6 @@ public class EsIndexProducerImpl implements IndexProducer {
     @Inject
     public EsIndexProducerImpl(final IndexFig config, final EsProvider provider,
                                final MetricsFactory metricsFactory, final IndexFig indexFig) {
-        this.flushTimer = metricsFactory.getTimer(EsIndexProducerImpl.class, "index_buffer.flush");
         this.indexSizeCounter = metricsFactory.getCounter(EsIndexProducerImpl.class, "index_buffer.size");
         this.roundtripTimer = metricsFactory.getHistogram(EsIndexProducerImpl.class, "index_buffer.message_cycle");
 
@@ -116,7 +115,9 @@ public class EsIndexProducerImpl implements IndexProducer {
         final int indexOperationSetSize = indexOperationSet.size();
         final int deIndexOperationSetSize = deIndexOperationSet.size();
 
-        log.debug("Emitting {} add and {} remove operations", indexOperationSetSize, deIndexOperationSetSize);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Emitting {} add and {} remove operations", indexOperationSetSize, deIndexOperationSetSize);
+        }
 
         indexSizeCounter.dec(indexOperationSetSize);
         indexSizeCounter.dec(deIndexOperationSetSize);
@@ -128,12 +129,16 @@ public class EsIndexProducerImpl implements IndexProducer {
         final Observable<BatchOperation> batchOps = Observable.merge(index, deIndex);
 
         //buffer into the max size we can send ES and fire them all off until we're completed
-        final Observable<BulkRequestBuilder> requests = batchOps.buffer(indexFig.getIndexBatchSize())
+        final Observable<BulkRequestBuilder> requests = batchOps
+            .buffer(250, TimeUnit.MILLISECONDS, indexFig.getIndexBatchSize())
+
             //flatten the buffer into a single batch execution
             .flatMap(individualOps -> Observable.from(individualOps)
                 //collect them
                 .collect(() -> initRequest(), (bulkRequestBuilder, batchOperation) -> {
-                    log.debug("adding operation {} to bulkRequestBuilder {}", batchOperation, bulkRequestBuilder);
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("adding operation {} to bulkRequestBuilder {}", batchOperation, bulkRequestBuilder);
+                    }
                     batchOperation.doOperation(client, bulkRequestBuilder);
                 }))
                 //write them
@@ -188,7 +193,7 @@ public class EsIndexProducerImpl implements IndexProducer {
         try {
             responses = bulkRequest.execute().actionGet( );
         } catch ( Throwable t ) {
-            log.error( "Unable to communicate with elasticsearch", t );
+            logger.error( "Unable to communicate with elasticsearch", t );
             failureMonitor.fail( "Unable to execute batch", t );
             throw t;
         }finally{
@@ -206,7 +211,7 @@ public class EsIndexProducerImpl implements IndexProducer {
 
             if ( response.isFailed() ) {
                 // log error and continue processing
-                log.error( "Unable to index id={}, type={}, index={}, failureMessage={} ", response.getId(),
+                logger.error( "Unable to index id={}, type={}, index={}, failureMessage={} ", response.getId(),
                     response.getType(), response.getIndex(),  response.getFailureMessage() );
                 //if index is overloaded on the queue fail.
                 if(response.getFailure()!=null && response.getFailure().getStatus() == RestStatus.TOO_MANY_REQUESTS){
@@ -221,8 +226,8 @@ public class EsIndexProducerImpl implements IndexProducer {
         if ( error ) {
             if(hasTooManyRequests){
                 try{
-                    log.warn("Encountered Queue Capacity Exception from ElasticSearch slowing by "
-                        + indexFig.getSleepTimeForQueueError() );
+                    logger.warn("Encountered Queue Capacity Exception from ElasticSearch slowing by {}",
+                        indexFig.getSleepTimeForQueueError() );
                     Thread.sleep(indexFig.getSleepTimeForQueueError());
                 }catch (Exception e){
                     //move on

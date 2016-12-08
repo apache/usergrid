@@ -20,62 +20,53 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import org.apache.usergrid.persistence.index.impl.IndexProducer;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import com.google.inject.Inject;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.corepersistence.TestIndexModule;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
+import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValueActor;
+import org.apache.usergrid.persistence.collection.uniquevalues.UniqueValuesService;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.test.UseModules;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.CandidateResults;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexFig;
-import org.apache.usergrid.persistence.index.SearchEdge;
-import org.apache.usergrid.persistence.index.SearchTypes;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.impl.EsRunner;
-import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.index.impl.IndexOperation;
+import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
+import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
-
-import com.google.inject.Inject;
-
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import rx.Observable;
 import rx.schedulers.Schedulers;
+
+import java.util.*;
 
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.createCollectionEdge;
 import static org.apache.usergrid.corepersistence.util.CpNamingUtils.getApplicationScope;
 import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 
 @RunWith( EsRunner.class )
 @UseModules( { TestIndexModule.class } )
+@NotThreadSafe//anything that changes the system version state is not safe to be run concurrently
 public class IndexServiceTest {
 
     @Inject
     public IndexService indexService;
-
 
     @Inject
     public GraphManagerFactory graphManagerFactory;
@@ -99,12 +90,35 @@ public class IndexServiceTest {
 
     public ApplicationScope applicationScope;
 
+    @Inject
+    ActorSystemManager actorSystemManager;
+
+    @Inject
+    UniqueValuesService uniqueValuesService;
+
+
+    private static Map<Integer, Boolean> startedAkka = new HashMap<>();
+
+
+    protected synchronized void initAkka(
+        int port, ActorSystemManager actorSystemManager, UniqueValuesService uniqueValuesService ) {
+
+        if ( startedAkka.get(port) == null ) {
+
+            actorSystemManager.registerRouterProducer( uniqueValuesService );
+            actorSystemManager.start( "localhost", port, "us-east" );
+            actorSystemManager.waitForClientActor();
+
+            startedAkka.put( port, true );
+        }
+    }
+
 
     @Before
     public void setup() {
         applicationScope = getApplicationScope( UUIDGenerator.newTimeUUID() );
-
         graphManager = graphManagerFactory.createEdgeManager( applicationScope );
+        initAkka( 2555, actorSystemManager, uniqueValuesService );
     }
 
 
@@ -141,7 +155,6 @@ public class IndexServiceTest {
     @Test( )
     public void testSingleCollectionConnection() throws InterruptedException {
 
-
         ApplicationScope applicationScope =
             new ApplicationScopeImpl( new SimpleId( UUID.randomUUID(), "application" ) );
 
@@ -154,7 +167,7 @@ public class IndexServiceTest {
         final EntityCollectionManager collectionManager =
             entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
-        collectionManager.write( testEntity ).toBlocking().last();
+        collectionManager.write( testEntity, null ).toBlocking().last();
 
         final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
 
@@ -227,7 +240,7 @@ public class IndexServiceTest {
         final EntityCollectionManager collectionManager =
             entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
-        collectionManager.write( testEntity ).toBlocking().last();
+        collectionManager.write( testEntity, null ).toBlocking().last();
 
         final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
 
@@ -244,7 +257,7 @@ public class IndexServiceTest {
 //        final int edgeCount = indexFig.getIndexBatchSize()*2;
         final int edgeCount = 100;
 
-        final List<Edge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
+        final List<MarkedEdge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
             final Id connectingId = createId( "connecting" );
             final Edge edge = CpNamingUtils.createConnectionEdge( connectingId, "likes", testEntity.getId() );
 
@@ -338,6 +351,12 @@ public class IndexServiceTest {
 
         final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( connectionSearch );
 
+        //ensure that no edges remain
+        CandidateResults connectionResultsEmpty = EntityIndex.search( connectionSearchEdge,
+            SearchTypes.fromTypes( "thing" ),"select *",10,0 );
+
+        assertEquals(1,connectionResultsEmpty.size());
+
         //step 1
         //(We need to mark then delete things in the graph manager.)
         final Edge toBeMarkedEdge = graphManager.markEdge( connectionSearch ).toBlocking().firstOrDefault( null );
@@ -350,9 +369,13 @@ public class IndexServiceTest {
 
         assertEquals( 1, indexOperationMessage.getDeIndexRequests().size() );
 
+        indexProducer.put(indexOperationMessage).toBlocking().last();
+
+        Thread.sleep(1000); // wait for the operation to flush at Elasticsearch
+
         //ensure that no edges remain
-        final CandidateResults connectionResultsEmpty = EntityIndex.search( connectionSearchEdge,
-            SearchTypes.fromTypes( "things" ),"select *",10,0 );
+        connectionResultsEmpty = EntityIndex.search( connectionSearchEdge,
+            SearchTypes.fromTypes( "thing" ),"select *",10,0 );
 
         assertEquals(0,connectionResultsEmpty.size());
 
@@ -377,7 +400,8 @@ public class IndexServiceTest {
         //Write multiple connection edges
         final int edgeCount = 5;
 
-        final List<Edge> connectionSearchEdges = createConnectionSearchEdges( testEntity, graphManager, edgeCount );
+        final List<MarkedEdge>
+            connectionSearchEdges = createConnectionSearchEdges( testEntity, graphManager, edgeCount );
 
         indexService.indexEntity( applicationScope, testEntity ).flatMap(mesage -> indexProducer.put(mesage)).toBlocking().getIterator();
 
@@ -473,7 +497,7 @@ public class IndexServiceTest {
         final EntityCollectionManager collectionManager =
             entityCollectionManagerFactory.createCollectionManager( applicationScope );
 
-        collectionManager.write( testEntity ).toBlocking().last();
+        collectionManager.write( testEntity, null ).toBlocking().last();
 
         //create our collection edge
         final Edge collectionEdge =
@@ -485,10 +509,10 @@ public class IndexServiceTest {
     }
 
 
-    private List<Edge> createConnectionSearchEdges(
-        final Entity testEntity, final GraphManager graphManager, final int edgeCount ) {
+    private List<MarkedEdge> createConnectionSearchEdges( final Entity testEntity, final GraphManager graphManager,
+                                                          final int edgeCount ) {
 
-        final List<Edge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
+        final List<MarkedEdge> connectionSearchEdges = Observable.range( 0, edgeCount ).flatMap( integer -> {
 
             //create our connection edge.
             final Id connectingId = createId( "connecting" );

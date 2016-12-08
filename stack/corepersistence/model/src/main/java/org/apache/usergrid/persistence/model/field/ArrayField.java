@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * A marker to signal array handling. Just delegates to list field for easier handling internally
  */
-public class ArrayField<T> extends ListField<T> {
+public final class ArrayField<T> extends ListField<T> {
 
     /**
      * Contructor that intializes with an empty set for adding to later
@@ -43,10 +43,17 @@ public class ArrayField<T> extends ListField<T> {
     /**
      * Add the value to the list
      */
-    public void add( T listItem ) {
+    public final void add( T listItem ) {
         value.add( listItem );
     }
 
+    /**
+     * This type of field is never unique
+     */
+    @Override
+    public boolean isUnique() {
+        return false;
+    }
 
 
 }

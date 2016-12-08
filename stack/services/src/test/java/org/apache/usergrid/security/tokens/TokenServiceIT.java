@@ -52,7 +52,7 @@ import static org.junit.Assert.assertTrue;
 
 public class TokenServiceIT {
 
-    static Logger log = LoggerFactory.getLogger( TokenServiceIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( TokenServiceIT.class );
 
     // app-level data generated only once per test
     private UserInfo adminUser;
@@ -68,7 +68,7 @@ public class TokenServiceIT {
 
     @Before
     public void setup() throws Exception {
-        log.info( "in setup" );
+        logger.info( "in setup" );
         adminUser = newOrgAppAdminRule.getAdminInfo();
     }
 
@@ -87,7 +87,7 @@ public class TokenServiceIT {
 
         String tokenStr = setup.getTokenSvc().createToken( TokenCategory.EMAIL, "email_confirm", null, data, 0 );
 
-        log.info( "token: " + tokenStr );
+        logger.info( "token: " + tokenStr );
 
         TokenInfo tokenInfo = setup.getTokenSvc().getTokenInfo( tokenStr );
 
@@ -111,7 +111,7 @@ public class TokenServiceIT {
 
         String tokenStr = setup.getTokenSvc().createToken( TokenCategory.ACCESS, null, adminPrincipal, null, 0 );
 
-        log.info( "token: " + tokenStr );
+        logger.info( "token: " + tokenStr );
 
         TokenInfo tokenInfo = setup.getTokenSvc().getTokenInfo( tokenStr );
 
@@ -451,7 +451,7 @@ public class TokenServiceIT {
         String tokenStr = setup.getTokenSvc().createToken(
                 TokenCategory.ACCESS, null, adminPrincipal, null, 0 );
 
-        log.info("token: " + tokenStr);
+        logger.info("token: " + tokenStr);
 
         // revoke token and check to make sure it is no longer valid
 

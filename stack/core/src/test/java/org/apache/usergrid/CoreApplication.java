@@ -18,17 +18,12 @@ package org.apache.usergrid;
 
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 import com.google.inject.Injector;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.corepersistence.service.ApplicationService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.index.*;
-import org.apache.usergrid.persistence.index.utils.MapUtils;
-import org.apache.usergrid.persistence.model.entity.Id;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
-import org.apache.usergrid.utils.InflectionUtils;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -49,7 +44,7 @@ import static junit.framework.Assert.assertNotNull;
 
 public class CoreApplication implements Application, TestRule {
 
-    private final static Logger LOG = LoggerFactory.getLogger( CoreApplication.class );
+    private static final  Logger logger = LoggerFactory.getLogger( CoreApplication.class );
     protected UUID id;
     protected String appName;
     protected String orgName;
@@ -153,7 +148,7 @@ public class CoreApplication implements Application, TestRule {
 
 
     protected void after( Description description ) {
-        LOG.info("Test {}: finish with application", description.getDisplayName());
+        logger.info("Test {}: finish with application", description.getDisplayName());
 
 //        try {
 //            setup.getEmf().getEntityManager(id).().get();
@@ -184,7 +179,7 @@ public class CoreApplication implements Application, TestRule {
         );
         assertNotNull(em);
 
-        LOG.info( "Created new application {} in organization {}", appName, orgName );
+        logger.info( "Created new application {} in organization {}", appName, orgName );
 
 //        //wait for the index before proceeding
 //        em.refreshIndex();

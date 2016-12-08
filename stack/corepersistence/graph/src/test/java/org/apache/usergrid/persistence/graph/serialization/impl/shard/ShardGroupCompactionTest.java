@@ -26,16 +26,20 @@ import java.util.Collection;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.core.consistency.TimeService;
+import org.apache.usergrid.persistence.core.executor.TaskExecutorFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.core.util.IdGenerator;
 import org.apache.usergrid.persistence.graph.GraphFig;
 import org.apache.usergrid.persistence.graph.serialization.impl.shard.impl.ShardGroupCompactionImpl;
 
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.netflix.astyanax.Keyspace;
 
 import static org.junit.Assert.assertEquals;
@@ -47,6 +51,8 @@ import static org.mockito.Mockito.when;
 public class ShardGroupCompactionTest {
 
     protected GraphFig graphFig;
+    protected AsyncTaskExecutor asyncTaskExecutor;
+    protected ListeningExecutorService listeningExecutorService;
     protected ApplicationScope scope;
 
 
@@ -58,7 +64,23 @@ public class ShardGroupCompactionTest {
 
         when( graphFig.getShardAuditWorkerQueueSize() ).thenReturn( 1000 );
 
+
+
+        listeningExecutorService = MoreExecutors.listeningDecorator( TaskExecutorFactory
+            .createTaskExecutor( "GraphTaskExecutor", graphFig.getShardAuditWorkerCount(),
+                graphFig.getShardAuditWorkerQueueSize(), TaskExecutorFactory.RejectionAction.ABORT ) );
+
+        asyncTaskExecutor = mock( AsyncTaskExecutor.class );
+
+        when( asyncTaskExecutor.getExecutorService() ).thenReturn( listeningExecutorService );
+
+
         this.scope = new ApplicationScopeImpl( IdGenerator.createId( "application" ) );
+    }
+
+    @After
+    public void shutDown(){
+        listeningExecutorService.shutdownNow();
     }
 
 
@@ -77,6 +99,9 @@ public class ShardGroupCompactionTest {
 
         final EdgeShardSerialization edgeShardSerialization = mock( EdgeShardSerialization.class );
 
+        final NodeShardCache nodeShardCache = mock( NodeShardCache.class );
+
+
         final long delta = 10000;
 
         final long createTime = 20000;
@@ -92,9 +117,8 @@ public class ShardGroupCompactionTest {
         when( timeService.getCurrentTime() ).thenReturn( timeNow );
 
         ShardGroupCompactionImpl compaction =
-                new ShardGroupCompactionImpl( timeService, graphFig, nodeShardAllocation, shardedEdgeSerialization,
-                        edgeColumnFamilies, keyspace, edgeShardSerialization );
-
+            new ShardGroupCompactionImpl( timeService, graphFig, nodeShardAllocation, shardedEdgeSerialization,
+                edgeColumnFamilies, keyspace, edgeShardSerialization, asyncTaskExecutor, nodeShardCache );
 
         DirectedEdgeMeta directedEdgeMeta = DirectedEdgeMeta.fromSourceNode( IdGenerator.createId( "source" ), "test" );
 
@@ -104,7 +128,7 @@ public class ShardGroupCompactionTest {
         }
         catch ( Throwable t ) {
             assertEquals( "Correct error message returned", "Compaction cannot be run yet.  Ignoring compaction.",
-                    t.getMessage() );
+                t.getMessage() );
         }
     }
 

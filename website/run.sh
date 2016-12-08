@@ -1,1 +1,2 @@
-nanoc autocompile
+#!/bin/bash
+nanoc view

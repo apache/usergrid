@@ -35,7 +35,9 @@ import java.util.UUID;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.OrganizationConfig;
+import org.apache.usergrid.management.OrganizationConfigProps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.StringUtils;
@@ -48,16 +50,6 @@ import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
 import org.apache.usergrid.services.ServiceRequest;
 import org.apache.usergrid.services.ServiceResults;
 import org.apache.usergrid.utils.InflectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.xml.bind.annotation.XmlAnyElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.UUID;
 
 import static org.apache.usergrid.utils.InflectionUtils.pluralize;
 
@@ -98,8 +90,9 @@ public class ApiResponse {
     private List<AggregateCounterSet> counters;
     private ClientCredentialsInfo credentials;
     private OrganizationConfig organizationConfig;
+    private OrganizationConfig config; // used for URL building
 
-    protected Map<String, Object> properties = new TreeMap<String, Object>( String.CASE_INSENSITIVE_ORDER );
+    protected Map<String, Object> properties = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 
     protected final Collection<String> IGNORE_QP = Arrays.asList("client_id", "client_secret", "password", "username", "access_token",
                     "client_credentials", "fb_access_token", "fq_access_token", "ping_access_token", "token");
@@ -107,14 +100,30 @@ public class ApiResponse {
     @Autowired
     protected ServerEnvironmentProperties serverEnvironmentProperties;
 
+    @Autowired
+    protected ManagementService management;
+
 
     public ApiResponse() {
         timestamp = System.currentTimeMillis();
     }
 
 
-    public ApiResponse( ServerEnvironmentProperties properties ) {
-        this.serverEnvironmentProperties = properties;
+    public ApiResponse( ServerEnvironmentProperties serverProperties ) {
+        this.serverEnvironmentProperties = serverProperties;
+
+    }
+
+
+    public ApiResponse( ServerEnvironmentProperties serverProperties, ManagementService management ) {
+        this.serverEnvironmentProperties = serverProperties;
+        this.management = management;
+        if(management!=null) {
+            this.config = management.getOrganizationConfigDefaultsOnly();
+        }
+        else {
+            this.config = null;
+        }
         timestamp = System.currentTimeMillis();
     }
 
@@ -184,7 +193,7 @@ public class ApiResponse {
         error = code;
         if ( e instanceof UncaughtException ) {
             errorId = ((UncaughtException) e).getTimeUUID();
-            errorDescription = "Internal Server Error";
+            errorDescription = "Error: " + e.getMessage();
             exception = UncaughtException.class.getName();
         } else {
             errorDescription = description;
@@ -369,6 +378,13 @@ public class ApiResponse {
         this.organization = app.getOrganizationName();
         this.applicationName = app.getApplicationName();
         this.application = app.getUuid();
+        try {
+            this.config = management.getOrganizationConfigByName(this.organization);
+        }
+        catch (Exception e) {
+            // use defaults
+            this.config = management.getOrganizationConfigDefaultsOnly();
+        }
 
         if ( esp != null ) {
             uri = createPath( esp.toString() );
@@ -388,7 +404,7 @@ public class ApiResponse {
             this.entities = entities;
         }
         else {
-            this.entities = new ArrayList<Entity>();
+            this.entities = new ArrayList<>();
         }
     }
 
@@ -408,15 +424,13 @@ public class ApiResponse {
             counters = results.getCounters();
         }
         else {
-            entities = new ArrayList<Entity>();
+            entities = new ArrayList<>();
         }
     }
 
 
     /**
      * Set the response from the EM results
-     * @param results
-     * @return
      */
     public ApiResponse withResults(Results results){
         entities = results.getEntities();
@@ -477,7 +491,7 @@ public class ApiResponse {
 
 
     public ApiResponse withEntity( Entity entity ) {
-        entities = new ArrayList<Entity>();
+        entities = new ArrayList<>();
         entities.add( entity );
         return this;
     }
@@ -494,7 +508,7 @@ public class ApiResponse {
             this.list = list;
         }
         else {
-            this.list = new ArrayList<Object>();
+            this.list = new ArrayList<>();
         }
     }
 
@@ -599,12 +613,12 @@ public class ApiResponse {
 
 
     public void setParams( Map<String, List<String>> params ) {
-        Map<String, List<String>> q = new LinkedHashMap<String, List<String>>();
+        Map<String, List<String>> q = new LinkedHashMap<>();
         for ( String k : params.keySet() ) {
             if (IGNORE_QP.contains(k.toLowerCase())) continue;
             List<String> v = params.get( k );
             if ( v != null ) {
-                q.put( k, new ArrayList<String>( v ) );
+                q.put( k, new ArrayList<>( v ) );
             }
         }
         this.params = q;
@@ -623,7 +637,7 @@ public class ApiResponse {
 
 
     public String getEntityPath( String url_base, Entity entity ) {
-        String entity_uri = null;
+        String entity_uri;
         if ( !Application.ENTITY_TYPE.equals( entity.getType() ) ) {
             entity_uri = createPath( pluralize( entity.getType() ), entity.getUuid().toString() );
         }
@@ -631,20 +645,6 @@ public class ApiResponse {
             entity_uri = createPath();
         }
         return entity_uri;
-    }
-
-
-    public void prepareEntities() {
-        if ( uri != null ) {
-            String url_base = serverEnvironmentProperties.getApiBase();
-            if ( entities != null ) {
-                for ( Entity entity : entities ) {
-                    String entity_uri = getEntityPath( url_base, entity );
-                    entity.setMetadata( "uri", entity_uri );
-                    entity.setMetadata( "path", path + "/" + entity.getUuid() );
-                }
-            }
-        }
     }
 
 
@@ -669,8 +669,9 @@ public class ApiResponse {
 
         StringBuilder builder = new StringBuilder();
 
-        builder.append( serverEnvironmentProperties.getApiBase() );
-        if ( !serverEnvironmentProperties.getApiBase().endsWith( "/" ) ) {
+        String apiBase = config.getProperty(OrganizationConfigProps.ORGPROPERTIES_API_URL_BASE);
+        builder.append( apiBase );
+        if ( !apiBase.endsWith( "/" ) ) {
             builder.append( "/" );
         }
         builder.append( organization );

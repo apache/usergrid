@@ -20,11 +20,17 @@
 package org.apache.usergrid.persistence.core.executor;
 
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -32,41 +38,57 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class TaskExecutorFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(TaskExecutorFactory.class);
+    private static final Logger logger = LoggerFactory.getLogger( TaskExecutorFactory.class );
+
 
     public enum RejectionAction {
+        /**
+         * If there is no capacity left, throw an exception
+         */
         ABORT,
-        CALLERRUNS
+        /**
+         * If there is no capacity left, the caller runs the callable
+         */
+        CALLERRUNS,
+
+        /**
+         * If there is no capacity left, the request is logged and then silently dropped
+         */
+        DROP
     }
+
+
     /**
      * Create a task executor
-     * @param schedulerName
-     * @param maxThreadCount
-     * @param maxQueueSize
-     * @return
      */
     public static ThreadPoolExecutor createTaskExecutor( final String schedulerName, final int maxThreadCount,
                                                          final int maxQueueSize, RejectionAction rejectionAction ) {
 
 
-        final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>( maxQueueSize );
+        final BlockingQueue<Runnable> queue;
 
-
-        if(rejectionAction.equals(RejectionAction.ABORT)){
-
-            return new MaxSizeThreadPool( queue, schedulerName, maxThreadCount );
-
+        if(maxQueueSize == 0){
+            queue = new SynchronousQueue();
+        }else{
+            queue = new ArrayBlockingQueue<>( maxQueueSize );
         }
-        else if(rejectionAction.equals(RejectionAction.CALLERRUNS)){
+
+
+        if ( rejectionAction == RejectionAction.ABORT ) {
+            return new MaxSizeThreadPool( queue, schedulerName, maxThreadCount );
+        }
+        else if ( rejectionAction == RejectionAction.CALLERRUNS ) {
 
             return new MaxSizeThreadPoolCallerRuns( queue, schedulerName, maxThreadCount );
-
-        }else{
-            //default to the thread pool with ABORT policy
-            return new MaxSizeThreadPool( queue, schedulerName, maxThreadCount );
         }
-
+        else if ( rejectionAction == RejectionAction.DROP ) {
+            return new MaxSizeThreadPoolDrops( queue, schedulerName, maxThreadCount );
+        }
+        else {
+            throw new IllegalArgumentException( "Unable to create a scheduler with the arguments provided" );
+        }
     }
+
 
     /**
      * Create a thread pool that will reject work if our audit tasks become overwhelmed
@@ -78,14 +100,29 @@ public class TaskExecutorFactory {
         }
     }
 
+
     /**
      * Create a thread pool that will implement CallerRunsPolicy if our tasks become overwhelmed
      */
     private static final class MaxSizeThreadPoolCallerRuns extends ThreadPoolExecutor {
 
-        public MaxSizeThreadPoolCallerRuns( final BlockingQueue<Runnable> queue, final String poolName, final int maxPoolSize ) {
-            super( maxPoolSize, maxPoolSize, 30, TimeUnit.SECONDS, queue,
-                new CountingThreadFactory( poolName ), new RejectedHandler(poolName) );
+        public MaxSizeThreadPoolCallerRuns( final BlockingQueue<Runnable> queue, final String poolName,
+                                            final int maxPoolSize ) {
+            super( maxPoolSize, maxPoolSize, 30, TimeUnit.SECONDS, queue, new CountingThreadFactory( poolName ),
+                new CallerRunsHandler( poolName ) );
+        }
+    }
+
+
+    /**
+     * Create a thread pool that will implement CallerRunsPolicy if our tasks become overwhelmed
+     */
+    private static final class MaxSizeThreadPoolDrops extends ThreadPoolExecutor {
+
+        public MaxSizeThreadPoolDrops( final BlockingQueue<Runnable> queue, final String poolName,
+                                       final int maxPoolSize ) {
+            super( maxPoolSize, maxPoolSize, 30, TimeUnit.SECONDS, queue, new CountingThreadFactory( poolName ),
+                new DropHandler( poolName ) );
         }
     }
 
@@ -111,29 +148,54 @@ public class TaskExecutorFactory {
             Thread t = new Thread( r, threadName );
 
             //set it to be a daemon thread so it doesn't block shutdown
-            t.setDaemon(true);
+            t.setDaemon( true );
 
             return t;
         }
     }
 
+
     /**
      * The handler that will handle rejected executions and signal the interface
      */
-    private static final class RejectedHandler implements RejectedExecutionHandler {
+    private static final class CallerRunsHandler implements RejectedExecutionHandler {
 
         private final String poolName;
 
-        private RejectedHandler (final String poolName) {this.poolName = poolName;}
+
+        private CallerRunsHandler( final String poolName ) {this.poolName = poolName;}
+
 
         @Override
         public void rejectedExecution( final Runnable r, final ThreadPoolExecutor executor ) {
-            log.warn( "{} task queue full, rejecting task {} and running in thread {}", poolName, r, Thread.currentThread().getName() );
+            if(logger.isDebugEnabled()) {
+                logger.debug("{} task queue full, rejecting task {} and running in thread {}", poolName, r,
+                    Thread.currentThread().getName());
+            }
 
             //We've decided we want to have a "caller runs" policy, to just invoke the task when rejected
 
             r.run();
         }
+    }
 
+
+    /**
+     * The handler that will handle rejected executions and signal the interface
+     */
+    private static final class DropHandler implements RejectedExecutionHandler {
+
+        private final String poolName;
+
+
+        private DropHandler( final String poolName ) {this.poolName = poolName;}
+
+
+        @Override
+        public void rejectedExecution( final Runnable r, final ThreadPoolExecutor executor ) {
+            if(logger.isDebugEnabled()) {
+                logger.warn("{} task queue full, dropping task {}", poolName, r);
+            }
+        }
     }
 }

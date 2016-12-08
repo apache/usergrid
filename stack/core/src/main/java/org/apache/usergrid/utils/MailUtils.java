@@ -121,11 +121,17 @@ public class MailUtils {
 
             Transport transport = session.getTransport();
 
-            transport.connect( host, username, password );
+            // make sure empty strings aren't mistakenly passed in for the user and password to prevent SMTP auth
+            if ( StringUtils.isEmpty(username) || StringUtils.isEmpty(password)){
+                transport.connect( host, null, null );
+            }else{
+                transport.connect( host, username, password );
+            }
+
 
             transport.sendMessage( msg, msg.getAllRecipients() );
             transport.close();
-            logger.info( String.format( LOG_PREFIX_OK, to ) );
+            logger.info( String.format( LOG_PREFIX_OK + " Message-id: "+msg.getMessageID(), to ) );
         }
         catch ( AddressException ae ) {
             logger.error( createErrorMessage( "could not send to bad address", to ), ae );

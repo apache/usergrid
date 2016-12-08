@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.*;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -33,19 +34,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
-import org.apache.usergrid.persistence.ConnectionRef;
-import org.apache.usergrid.persistence.Entity;
-import org.apache.usergrid.persistence.EntityManager;
-import org.apache.usergrid.persistence.index.query.Query;
-import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.tools.bean.ExportOrg;
 import org.apache.usergrid.utils.JsonUtils;
 
 import org.apache.commons.cli.CommandLine;
 
 import com.google.common.collect.BiMap;
-import org.apache.usergrid.persistence.SimpleEntityRef;
-import org.apache.usergrid.persistence.index.query.Query.Level;
 
 
 public class Export extends ExportingToolBase {
@@ -175,7 +169,7 @@ public class Export extends ExportingToolBase {
 
                 Query query = new Query();
                 query.setLimit( MAX_ENTITY_FETCH );
-                query.setResultsLevel( Level.ALL_PROPERTIES );
+                query.setResultsLevel( Query.Level.ALL_PROPERTIES );
 
                 Results entities = em.searchCollection( em.getApplicationRef(), collectionName, query );
 
@@ -239,7 +233,7 @@ public class Export extends ExportingToolBase {
             // Start collection array.
             jg.writeStartArray();
 
-            Results collectionMembers = em.getCollection( entity, collectionName, null, 100000, Level.IDS, false );
+            Results collectionMembers = em.getCollection( entity, collectionName, null, 100000, Query.Level.IDS, false );
 
             List<UUID> entityIds = collectionMembers.getIds();
 
@@ -307,13 +301,13 @@ public class Export extends ExportingToolBase {
             jg.writeFieldName( connectionType );
             jg.writeStartArray();
 
-            Results results = em.getConnectedEntities( 
-                    entity, connectionType, null, Level.IDS );
+            Results results = em.getTargetEntities(
+                    entity, connectionType, null, Query.Level.IDS );
 
             List<ConnectionRef> connections = results.getConnections();
 
             for ( ConnectionRef connectionRef : connections ) {
-                jg.writeObject( connectionRef.getConnectedEntity().getUuid() );
+                jg.writeObject( connectionRef.getTargetRefs().getUuid() );
             }
 
             jg.writeEndArray();
@@ -330,8 +324,8 @@ public class Export extends ExportingToolBase {
    *    write entity_id : { "collectionName" : [ids]
    *  }
    * }
-   * 
-   * 
+   *
+   *
    *   {
    *     entity_id :
    *       { collection_name :
@@ -348,9 +342,9 @@ public class Export extends ExportingToolBase {
    *         ]
    *       }
    *   }
-   * 
+   *
    * http://jackson.codehaus.org/1.8.0/javadoc/org/codehaus/jackson/JsonGenerator.html
-   * 
+   *
    *
    *-
    * List<ConnectedEntityRef> connections = em.getConnections(entityId, query);

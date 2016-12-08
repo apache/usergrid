@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Usergrid 2: Deploy to Tomcat &mdash; Apache Usergrid 1.0 documentation</title>
+  <title>Usergrid 2: Deploy to Tomcat &mdash; Apache Usergrid 2.x documentation</title>
   
 
   
@@ -30,9 +30,7 @@
   
 
   
-    <link rel="top" title="Apache Usergrid 1.0 documentation" href="../index.html"/>
-        <link rel="next" title="Presentations &amp; Videos" href="../reference/presos-and-videos.html"/>
-        <link rel="prev" title="Usegrid 1: Launcher Quick-start" href="ug1-launcher-quick-start.html"/> 
+    <link rel="top" title="Apache Usergrid 2.x documentation" href="../index.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -59,7 +57,7 @@
           
           
             <div class="version">
-              1.0
+              2.x
             </div>
           
         
@@ -80,19 +78,19 @@
         
           
           
-              <p class="caption"><span class="caption-text">Introduction</span></p>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Documentation Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction/overview.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/usergrid-features.html">Usergrid Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/data-model.html">Usergrid Data model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/async-vs-sync.html">Async vs. sync calls</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Getting Started</span></p>
+<p class="caption"><span class="caption-text">Using Usergrid</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-account.html">Creating an Usergrid Account</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/creating-a-new-application.html">Creating a new application</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting-started/using-the-api.html">Using the API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/creating-account.html">Creating a Usergrid Account</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/creating-a-new-application.html">Creating a new application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/using-a-sandbox-app.html">Using a Sandbox Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using-usergrid/using-the-api.html">Using the API</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Data Storage</span></p>
 <ul>
@@ -184,25 +182,9 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../sdks/tbd.html">COMING SOON...</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Installing the Stack</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="ug1-deploy-to-tomcat.html">Usegrid 1: Deploying to Tomcat</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ug1-launcher-quick-start.html">Usegrid 1: Launcher Quick-start</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Usergrid 2: Deploy to Tomcat</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running">Running</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#running-usergrid">Running Usergrid</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#build-the-java-sdk">Build The Java Sdk</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#build-the-stack-itself">Build The Stack Itself</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#deploying-the-stack-locally">Deploying the Stack Locally</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#running-the-portal-locally">Running The Portal Locally</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#example-usergrid-deployment-properties-file">Example <strong>usergrid-deployment.properties</strong> file</a></li>
-</ul>
-</li>
+<p class="caption"><span class="caption-text">Installing Usergrid</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="deployment-guide.html">Usergrid 2.1.0 Deployment Guide</a></li>
 </ul>
 <p class="caption"><span class="caption-text">More about Usergrid</span></p>
 <ul>
@@ -259,7 +241,8 @@
 <li><a class="reference external" href="http://cassandra.apache.org/download/">Cassandra 1.2.1*</a></li>
 <li><a class="reference external" href="https://www.elastic.co/downloads/elasticsearch">ElasticSearch
 1.4+</a></li>
-<li><a class="reference external" href="https://github.com/apache/usergrid/tree/two-dot-o">Usergrid 2.0</a></li>
+<li><a class="reference external" href="https://github.com/apache/usergrid/tree/2.1-release">Usergrid
+2.1</a></li>
 </ul>
 </div>
 <div class="section" id="running">
@@ -279,7 +262,7 @@ elasticsearch and run <code class="docutils literal"><span class="pre">/bin/elas
 <div class="section" id="running-usergrid">
 <h3>Running Usergrid<a class="headerlink" href="#running-usergrid" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="build-the-java-sdk">
-<h4>Build The Java Sdk<a class="headerlink" href="#build-the-java-sdk" title="Permalink to this headline">¶</a></h4>
+<h4>Build The Java SDK<a class="headerlink" href="#build-the-java-sdk" title="Permalink to this headline">¶</a></h4>
 <ol class="arabic simple">
 <li>Navigate to where you cloned the usergrid repo</li>
 <li>Navigate to the <code class="docutils literal"><span class="pre">sdks/java</span></code> directory</li>
@@ -305,19 +288,27 @@ usergrid-deployment.properties. ( An example file is provided below)</li>
 run <code class="docutils literal"><span class="pre">./bin/catalina.sh</span> <span class="pre">start</span></code></li>
 </ol>
 </li>
-<li>Go to a web browser and input the following to initilizing the
-database <code class="docutils literal"><span class="pre">localhost:8080/system/database/setup</span></code>.<ol class="loweralpha">
-<li>The credentials it asks for are the admin credentialls and
-password as defined in the usergrid-deployment.properties.</li>
-<li>You can also do a curl call with basic auth to automatically
-authenticate the call instead of using the web browser.</li>
 </ol>
-</li>
-<li>Then using the same steps as before call
-<code class="docutils literal"><span class="pre">localhost:8080/system/superuser/setup</span></code></li>
-</ol>
+<p>Next, you need to make some API calls to initialize Usergrid&#8217;s storage
+and indexing systems. You can make these API calls using curl or your
+favorite HTTP client. These calls can only be done with the superuser
+credentials that appear in your <strong>usergrid-deployment.properties</strong> file.
+Here&#8217;s how to do the calls with curl (and assuming your superuser
+password is &#8216;test&#8217;):</p>
+<div class="highlight-python"><div class="highlight"><pre>curl -X PUT http://localhost:8080/system/database/setup -u superuser:test
+curl -X PUT http://localhost:8080/system/database/bootstrap -u superuser:test
+curl -X GET http://localhost:8080/system/superuser/setup -u superuser:test
+</pre></div>
+</div>
+<p>Once those three calls execute without error, then you are done. If you
+do see errors the double-check that you have Cassandra and ElasticSearch
+running and that your properties files lists your Cassandra and
+ElasticSearch hostnames correctly. Also check that ElasticSearch cluster
+name (in elasticsearch.yml) matches the one in the Usergrid properties
+file. If the problem persists come talk to us on the Usergrid mailing
+list, we might be able to help.</p>
 <p>The stack is now ready to be queried against, but to get the most out of
-it you&#8217;ll need to initilize and use our portal!</p>
+it you&#8217;ll need to initialize and use our portal!</p>
 </div>
 <div class="section" id="running-the-portal-locally">
 <h4>Running The Portal Locally<a class="headerlink" href="#running-the-portal-locally" title="Permalink to this headline">¶</a></h4>
@@ -342,6 +333,8 @@ it however you like!</p>
 <div class="section" id="example-usergrid-deployment-properties-file">
 <h2>Example <strong>usergrid-deployment.properties</strong> file<a class="headerlink" href="#example-usergrid-deployment-properties-file" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><div class="highlight"><pre># core persistence properties
+
+usergrid.cluster_name property=usergrid
 
 cassandra.embedded=false
 cassandra.version=1.2.18
@@ -458,15 +451,6 @@ sake of ordered lists I put Cassandra first.</td></tr>
           </div>
           <footer>
   
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="../reference/presos-and-videos.html" class="btn btn-neutral float-right" title="Presentations &amp; Videos" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="ug1-launcher-quick-start.html" class="btn btn-neutral" title="Usegrid 1: Launcher Quick-start" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
-  
 
   <hr/>
 
@@ -494,7 +478,7 @@ sake of ordered lists I put Cassandra first.</td></tr>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0',
+            VERSION:'2.x',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

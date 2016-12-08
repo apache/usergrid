@@ -47,6 +47,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.usergrid.TestHelper.*;
 import static org.apache.usergrid.management.AccountCreationProps.*;
 import static org.junit.Assert.*;
+import static org.apache.usergrid.management.OrganizationConfigProps.*;
 
 
 /**
@@ -57,7 +58,7 @@ import static org.junit.Assert.*;
  */
 @NotThreadSafe
 public class EmailFlowIT {
-    private static final Logger LOG = LoggerFactory.getLogger( EmailFlowIT.class );
+    private static final Logger logger = LoggerFactory.getLogger( EmailFlowIT.class );
 
     @Rule
     public org.apache.usergrid.Application app = new CoreApplication( setup );
@@ -77,7 +78,6 @@ public class EmailFlowIT {
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ADMIN_USERS, "false" );
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
         setup.set( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-        setup.set( PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-1@mockserver.com" );
         setup.set( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
 
         final String orgName = uniqueOrg();
@@ -101,7 +101,7 @@ public class EmailFlowIT {
         assertEquals( "User Account Confirmation: " + email, confirmation.getSubject() );
 
         String token = getTokenFromMessage( confirmation );
-        LOG.info( token );
+        logger.info( token );
 
         assertEquals( ActivationState.ACTIVATED,
                 setup.getMgmtSvc().handleConfirmationTokenForAdminUser( org_owner.owner.getUuid(), token ) );
@@ -120,7 +120,6 @@ public class EmailFlowIT {
         setup.set( PROPERTIES_NOTIFY_ADMIN_OF_ACTIVATION, "true" );
         setup.set( PROPERTIES_SYSADMIN_APPROVES_ORGANIZATIONS, "false" );
         setup.set( PROPERTIES_ADMIN_USERS_REQUIRE_CONFIRMATION, "true" );
-        setup.set( PROPERTIES_DEFAULT_SYSADMIN_EMAIL, "sysadmin-2@mockserver.com" );
 
         final String orgName = uniqueOrg();
         final String userName = uniqueUsername();
@@ -141,7 +140,7 @@ public class EmailFlowIT {
         assertEquals( "User Account Confirmation: "+email, confirmation.getSubject() );
 
         String token = getTokenFromMessage( confirmation );
-        LOG.info( token );
+        logger.info( token );
 
         ActivationState state =
                 setup.getMgmtSvc().handleConfirmationTokenForAdminUser( org_owner.owner.getUuid(), token );
@@ -155,14 +154,14 @@ public class EmailFlowIT {
 
         assertEquals( "User Account Confirmed", confirmation.getSubject() );
 
-        List<Message> sysadmin_inbox = Mailbox.get( "sysadmin-2@mockserver.com" );
+        List<Message> sysadmin_inbox = Mailbox.get( "testadmin@usergrid.com" );
         assertFalse( sysadmin_inbox.isEmpty() );
 
         Message activation = sysadmin_inbox.get( 0 );
         assertEquals( "Request For Admin User Account Activation "+email, activation.getSubject() );
 
         token = getTokenFromMessage( activation );
-        LOG.info( token );
+        logger.info( token );
 
         state = setup.getMgmtSvc().handleActivationTokenForAdminUser( org_owner.owner.getUuid(), token );
         assertEquals( ActivationState.ACTIVATED, state );
@@ -244,11 +243,13 @@ public class EmailFlowIT {
         final String appUserUsername = uniqueUsername();
         final String appUserEmail = uniqueEmail();
 
+        OrganizationConfig orgConfig = setup.getMgmtSvc().getOrganizationConfigByUuid(orgOwner.getOrganization().getUuid());
+
         User appUser = setupAppUser( app.getId(), appUserUsername, appUserEmail, false );
 
         String subject = "Request For User Account Activation " + appUserEmail;
-        String activation_url = String.format( setup.get( PROPERTIES_USER_ACTIVATION_URL ), orgName, appName,
-            appUser.getUuid().toString() );
+        String activation_url = orgConfig.getFullUrl(WorkflowUrl.USER_ACTIVATION_URL, orgName, appName,
+                appUser.getUuid().toString());
 
         setup.refreshIndex(app.getId());
 
@@ -266,19 +267,19 @@ public class EmailFlowIT {
 
         // activation url ok
         String mailContent = ( String ) ( ( MimeMultipart ) activation.getContent() ).getBodyPart( 1 ).getContent();
-        LOG.info( mailContent );
+        logger.info( mailContent );
         assertTrue( StringUtils.contains( mailContent.toLowerCase(), activation_url.toLowerCase() ) );
 
         // token ok
         String token = getTokenFromMessage( activation );
-        LOG.info( token );
+        logger.info( token );
         ActivationState activeState =
                 setup.getMgmtSvc().handleActivationTokenForAppUser( app.getId(), appUser.getUuid(), token );
         assertEquals( ActivationState.ACTIVATED, activeState );
 
         subject = "Password Reset";
-        String reset_url =
-                String.format( setup.get( PROPERTIES_USER_RESETPW_URL ), orgName, appName, appUser.getUuid().toString() );
+        String reset_url = orgConfig.getFullUrl(WorkflowUrl.USER_RESETPW_URL, orgName, appName,
+                appUser.getUuid().toString());
 
         // reset_pwd
         setup.getMgmtSvc().startAppUserPasswordResetFlow( app.getId(), appUser );
@@ -294,12 +295,12 @@ public class EmailFlowIT {
 
         // resetpwd url ok
         mailContent = ( String ) ( ( MimeMultipart ) reset.getContent() ).getBodyPart( 1 ).getContent();
-        LOG.info( mailContent );
+        logger.info( mailContent );
         assertTrue( StringUtils.contains( mailContent.toLowerCase(), reset_url.toLowerCase() ) );
 
         // token ok
         token = getTokenFromMessage( reset );
-        LOG.info( token );
+        logger.info( token );
         assertTrue( setup.getMgmtSvc().checkPasswordResetTokenForAppUser( app.getId(), appUser.getUuid(), token ) );
 
         // ensure revoke works
@@ -338,9 +339,11 @@ public class EmailFlowIT {
 
         User user = setupAppUser( app.getId(), appUserUsername, appUserEmail, true );
 
+        OrganizationConfig orgConfig = setup.getMgmtSvc().getOrganizationConfigByUuid(orgOwner.getOrganization().getUuid());
+
         String subject = "User Account Confirmation: "+appUserEmail;
-        String urlProp = setup.get( PROPERTIES_USER_CONFIRMATION_URL );
-        String confirmation_url = String.format( urlProp, orgName, appName, user.getUuid().toString() );
+        String confirmation_url = orgConfig.getFullUrl(WorkflowUrl.USER_CONFIRMATION_URL, orgName, appName,
+                user.getUuid().toString());
 
         // request confirmation
         setup.getMgmtSvc().startAppUserActivationFlow( app.getId(), user );
@@ -356,12 +359,12 @@ public class EmailFlowIT {
 
         // confirmation url ok
         String mailContent = ( String ) ( ( MimeMultipart ) confirmation.getContent() ).getBodyPart( 1 ).getContent();
-        LOG.info( mailContent );
+        logger.info( mailContent );
         assertTrue( StringUtils.contains( mailContent.toLowerCase(), confirmation_url.toLowerCase() ) );
 
         // token ok
         String token = getTokenFromMessage( confirmation );
-        LOG.info( token );
+        logger.info( token );
         ActivationState activeState =
                 setup.getMgmtSvc().handleConfirmationTokenForAppUser( app.getId(), user.getUuid(), token );
         assertEquals( ActivationState.CONFIRMED_AWAITING_ACTIVATION, activeState );
@@ -393,7 +396,7 @@ public class EmailFlowIT {
     private void testProperty( String propertyName, boolean containsSubstitution ) {
         String propertyValue = setup.get( propertyName );
         assertTrue( propertyName + " was not found", isNotBlank( propertyValue ) );
-        LOG.info( propertyName + "=" + propertyValue );
+        logger.info( propertyName + "=" + propertyValue );
 
         if ( containsSubstitution ) {
             Map<String, String> valuesMap = new HashMap<String, String>();

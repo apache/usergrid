@@ -83,7 +83,7 @@ public class NotifiersServiceIT extends AbstractServiceIT {
         }
     }
 
-    @Ignore("Mock doesn't work")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. Mock doesn't work")
     @Test
     public void badGcmToken() throws Exception {
         app.clear();
@@ -123,6 +123,7 @@ public class NotifiersServiceIT extends AbstractServiceIT {
         }
     }
 
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. Mock doesn't work")
     @Test
     public void goodAPNsCreation() throws Exception {
 
@@ -146,7 +147,7 @@ public class NotifiersServiceIT extends AbstractServiceIT {
         assertArrayEquals(notifier.getP12Certificate(), certBytes);
     }
 
-    @Ignore("Mock doesn't work")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. Mock doesn't work")
     @Test
     public void badAPNsCertificate() throws Exception {
 
@@ -157,7 +158,7 @@ public class NotifiersServiceIT extends AbstractServiceIT {
         app.put("environment", "development");
 
         InputStream fis = getClass().getClassLoader().getResourceAsStream(
-                "pushtest_prod.p12");
+                "pushtest_dev_recent.p12");
         byte[] certBytes = IOUtils.toByteArray(fis);
         app.put("p12Certificate", certBytes);
         fis.close();
@@ -170,7 +171,7 @@ public class NotifiersServiceIT extends AbstractServiceIT {
         }
     }
 
-    @Ignore("Mock doesn't work")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. Mock doesn't work")
     @Test
     public void badAPNsPassword() throws Exception {
 
@@ -195,7 +196,7 @@ public class NotifiersServiceIT extends AbstractServiceIT {
     }
 
     @Test
-    @Ignore("No longer needed to verify")
+    @Ignore("Pending https://issues.apache.org/jira/browse/USERGRID-1113. No longer needed to verify")
     public void encryption() throws Exception {
 
         app.clear();

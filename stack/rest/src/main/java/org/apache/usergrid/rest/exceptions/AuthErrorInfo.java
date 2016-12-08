@@ -35,6 +35,7 @@ public enum AuthErrorInfo {
     OAUTH2_UNSUPPORTED_GRANT_TYPE( "unsupported_grant_type", "Unable to authenticate (OAuth)" ), //
     OAUTH2_INVALID_SCOPE( "invalid_scope", "Unable to authenticate (OAuth" ), //
     INVALID_AUTH_ERROR( "auth_invalid", "Unable to authenticate" ), //
+    INVALID_CLIENT_CREDENTIALS_ERROR( "auth_invalid_credentials", "Unable to authenticate due to invalid client credentials" ),
     MISSING_CREDENTIALS_ERROR( "auth_missing_credentials", "Unable to authenticate due to missing credentials" ), //
     BAD_CREDENTIALS_SYNTAX_ERROR( "auth_bad_credentials_syntax",
             "Unable to authenticate due to improperly constructed credentials" ), //
@@ -43,6 +44,7 @@ public enum AuthErrorInfo {
     INVALID_USERNAME_OR_PASSWORD_ERROR( "auth_invalid_username_or_password",
             "Unable to authenticate due to username or password being incorrect" ), //
     UNVERIFIED_OAUTH_ERROR( "auth_unverified_oath", "Unable to authenticate OAuth credentials" ), //
+    EXTERNALSSOPROVIDER_UNACTIVATED_ADMINUSER("externalssoprovider_unactivated_adminuser","Admin user not found or does not have access to any organizations."),
     NO_DOMAIN_ERROR( "auth_no_application", "Unable to authenticate due to application not found" ), //
     NOT_DOMAIN_OWNER_ERROR( "auth_not_application_owner", "" ), //
     EXPIRED_ACCESS_TOKEN_ERROR( "expired_token", "Unable to authenticate due to expired access token" ), //

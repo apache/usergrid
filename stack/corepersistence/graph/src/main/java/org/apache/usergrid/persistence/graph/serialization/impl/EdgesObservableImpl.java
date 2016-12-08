@@ -61,7 +61,9 @@ public class EdgesObservableImpl implements EdgesObservable {
 
         return edgeTypes.flatMap(  edgeType -> {
 
-                logger.debug( "Loading edges of edgeType {} from {}", edgeType, sourceNode );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Loading edges of edgeType {} from {}", edgeType, sourceNode);
+                }
 
                 return gm.loadEdgesFromSource(
                     new SimpleSearchByEdgeType( sourceNode, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
@@ -82,7 +84,9 @@ public class EdgesObservableImpl implements EdgesObservable {
 
         return edgeTypes.flatMap(  edgeType -> {
 
-                logger.debug( "Loading edges of edgeType {} from {}", edgeType, sourceNode );
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Loading edges of edgeType {} from {}", edgeType, sourceNode);
+                }
 
                 return gm.loadEdgesFromSource(
                     new SimpleSearchByEdgeType( sourceNode, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
@@ -100,7 +104,9 @@ public class EdgesObservableImpl implements EdgesObservable {
 
         return edgeTypes.flatMap( edgeType -> {
 
-            logger.debug( "Loading edges of edgeType {} from {}", edgeType, sourceNode );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Loading edges of edgeType {} from {}", edgeType, sourceNode);
+            }
 
             return gm.loadEdgesFromSourceByType(
                 new SimpleSearchByIdType( sourceNode, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
@@ -119,7 +125,9 @@ public class EdgesObservableImpl implements EdgesObservable {
 
         return edgeTypes.flatMap( edgeType -> {
 
-            logger.debug( "Loading edges of edgeType {} to {}", edgeType, targetNode );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Loading edges of edgeType {} to {}", edgeType, targetNode);
+            }
 
             return gm.loadEdgesToTarget(
                 new SimpleSearchByEdgeType( targetNode, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,

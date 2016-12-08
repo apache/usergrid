@@ -22,8 +22,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.usergrid.persistence.cache.CacheScope;
-import org.apache.usergrid.persistence.cache.ScopedCache;
 import org.junit.runner.Description;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +44,7 @@ import static org.apache.usergrid.utils.InflectionUtils.pluralize;
 
 
 public class ServiceApplication extends CoreApplication {
-    private static final Logger LOG = LoggerFactory.getLogger( ServiceApplication.class );
+    private static final Logger logger = LoggerFactory.getLogger( ServiceApplication.class );
 
     protected ServiceManager sm;
     protected ServiceITSetup svcSetup;
@@ -100,7 +98,7 @@ public class ServiceApplication extends CoreApplication {
     public ServiceResults invokeService( ServiceAction action, Object... params ) throws Exception {
         ServiceRequest request = sm.newRequest( action, parameters( params ), payload( properties ) );
 
-        LOG.info( "Request: {} {}", action, request.toString() );
+        logger.info( "Request: {} {}", action, request.toString() );
         dumpProperties( properties );
         ServiceResults results = request.execute();
         assertNotNull( results );
@@ -115,8 +113,8 @@ public class ServiceApplication extends CoreApplication {
 
 
     public void dumpProperties( Map<String, Object> properties ) {
-        if ( properties != null && LOG.isInfoEnabled() ) {
-            LOG.info( "Input:\n {}", JsonUtils.mapToFormattedJsonString( properties ) );
+        if ( properties != null && logger.isInfoEnabled() ) {
+            logger.info( "Input:\n {}", JsonUtils.mapToFormattedJsonString( properties ) );
         }
     }
 
@@ -147,7 +145,7 @@ public class ServiceApplication extends CoreApplication {
     public ServiceResults testBatchRequest( ServiceAction action, int expectedCount, List<Map<String, Object>> batch,
                                             Object... params ) throws Exception {
         ServiceRequest request = sm.newRequest( action, parameters( params ), batchPayload( batch ) );
-        LOG.info( "Request: " + action + " " + request.toString() );
+        logger.info( "Request: " + action + " " + request.toString() );
         // dump( "Batch", batch );
         ServiceResults results = request.execute();
         assertNotNull( results );
@@ -164,7 +162,7 @@ public class ServiceApplication extends CoreApplication {
 
     public ServiceResults testDataRequest( ServiceAction action, Object... params ) throws Exception {
         ServiceRequest request = sm.newRequest( action, parameters( params ), payload( properties ) );
-        LOG.info( "Request: {} {}", action, request.toString() );
+        logger.info( "Request: {} {}", action, request.toString() );
         dumpProperties( properties );
         ServiceResults results = request.execute();
         assertNotNull( results );

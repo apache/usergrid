@@ -17,16 +17,22 @@
 package org.apache.usergrid.rest.management;
 
 
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.cassandra.SpringResource;
+import org.apache.usergrid.management.OrganizationConfig;
+import org.apache.usergrid.management.OrganizationConfigProps;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.User;
+import org.apache.usergrid.setup.ConcurrentProcessSingleton;
 import org.junit.Test;
 import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.usergrid.management.ManagementService;
 
 import javax.mail.*;
 import javax.mail.internet.MimeMultipart;
@@ -42,6 +48,7 @@ import static org.apache.usergrid.management.AccountCreationProps.*;
 import static org.junit.Assert.*;
 
 
+@NotThreadSafe  // each test resets the test properties at the end of the test
 public class RegistrationIT extends AbstractRestIT {
 
     private static final Logger logger = LoggerFactory.getLogger(RegistrationIT.class);
@@ -138,8 +145,10 @@ public class RegistrationIT extends AbstractRestIT {
 
     /**
      * Test checking that we should be able to add a admin with no password attached to them.
+     *
      * @throws Exception
      */
+
     @Test
     public void addNewAdminUserWithNoPwdToOrganization() throws Exception {
 
@@ -155,14 +164,21 @@ public class RegistrationIT extends AbstractRestIT {
             // this should send resetpwd  link in email to newly added org admin user(that did not exist
             ///in usergrid) and "User Invited To Organization" email
             String adminToken = getAdminToken().getAccessToken();
-            Entity node = postAddAdminToOrg(this.clientSetup.getOrganizationName(), this.clientSetup.getUsername()+"@servertest.com", "");
+            Entity node = postAddAdminToOrg(
+                this.clientSetup.getOrganizationName(),
+                this.clientSetup.getUsername()+"@servertest.com",
+                "changeme");
             UUID userId = node.getUuid();
 
             refreshIndex();
 
             String subject = "Password Reset";
-            Map<String, Object> testProperties = this.getRemoteTestProperties();
-            String reset_url = String.format((String) testProperties.get(PROPERTIES_ADMIN_RESETPW_URL), userId.toString());
+
+            SpringResource springResource = ConcurrentProcessSingleton.getInstance().getSpringResource();
+            ManagementService mgmt = springResource.getBean( ManagementService.class );
+            OrganizationConfig orgConfig = mgmt.getOrganizationConfigByName(this.clientSetup.getOrganizationName());
+
+            String reset_url = orgConfig.getFullUrl(OrganizationConfigProps.WorkflowUrl.ADMIN_RESETPW_URL, userId);
             String invited = "User Invited To Organization";
 
             Message[] msgs = getMessages("servertest.com", this.clientSetup.getUsername(), "password");

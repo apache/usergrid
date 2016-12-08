@@ -23,6 +23,9 @@ package org.apache.usergrid.corepersistence.results;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.usergrid.corepersistence.pipeline.read.ResultsPage;
 import org.apache.usergrid.persistence.Results;
 
@@ -39,6 +42,7 @@ import rx.Observable;
 public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
 
 
+    private static final Logger logger = LoggerFactory.getLogger( ObservableQueryExecutor.class );
 
     private Results results;
     private Optional<String> cursor;
@@ -103,6 +107,9 @@ public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
     public boolean hasNext() {
 
         if ( !complete && results == null) {
+            if(logger.isTraceEnabled()){
+                logger.trace("Iterator not complete and there are results object is null, advancing");
+            }
             advance();
         }
 
@@ -131,8 +138,16 @@ public abstract class ObservableQueryExecutor<T> implements QueryExecutor {
             observable = buildNewResultsPage( cursor ).map( resultsPage -> createResultsInternal( resultsPage ) ).defaultIfEmpty(
             new Results() );
 
+        if (logger.isTraceEnabled()) {
+            logger.trace("Trying to load results page");
+        }
+
         //take the first from our observable
         final Results resultsPage = observable.take(1).toBlocking().first();
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("Results page loaded {}", resultsPage);
+        }
 
         //set the results for the iterator
         this.results = resultsPage;

@@ -37,7 +37,7 @@ import java.util.Map;
  * remove inactive devices.
  */
 public class InactiveDeviceManager {
-    private static final Logger LOG = LoggerFactory.getLogger(InactiveDeviceManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(InactiveDeviceManager.class);
     private final Notifier notifier;
     private EntityManager entityManager;
 
@@ -48,7 +48,9 @@ public class InactiveDeviceManager {
     public void removeInactiveDevices( Map<String,Date> inactiveDeviceMap  ){
         final String notfierPostFix = ApplicationQueueManagerImpl.NOTIFIER_ID_POSTFIX;
         if (inactiveDeviceMap != null && inactiveDeviceMap.size() > 0) {
-            LOG.debug("processing {} inactive devices",  inactiveDeviceMap.size());
+            if (logger.isDebugEnabled()) {
+                logger.debug("processing {} inactive devices", inactiveDeviceMap.size());
+            }
             Map<String, Object> clearPushtokenMap = new HashMap<String, Object>( 2);
             clearPushtokenMap.put(notifier.getName() + notfierPostFix,  "");
             clearPushtokenMap.put(notifier.getUuid() + notfierPostFix,  "");
@@ -69,7 +71,7 @@ public class InactiveDeviceManager {
                         entityManager.updateProperties(e, clearPushtokenMap);
                     }
                 }catch (Exception e){
-                    LOG.error("failed to remove token",e);
+                    logger.error("failed to remove token",e);
                 }
             }
         }

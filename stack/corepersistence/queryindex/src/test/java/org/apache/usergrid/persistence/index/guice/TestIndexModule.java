@@ -19,6 +19,7 @@
 package org.apache.usergrid.persistence.index.guice;
 
 
+import org.apache.usergrid.persistence.actorsystem.ActorSystemModule;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import org.apache.usergrid.persistence.core.guice.CommonModule;
@@ -31,16 +32,23 @@ import com.google.inject.TypeLiteral;
 
 import rx.Observable;
 
+import java.util.Properties;
+
 
 public class TestIndexModule extends TestModule {
 
     @Override
     protected void configure() {
 
+        install( new ActorSystemModule());
         install( new CommonModule());
 
         // configure collections and our core astyanax framework
-        install( new IndexModule(){
+
+        Properties properties = new Properties();
+        properties.setProperty( "elasticsearch.queue_impl", "DISTRIBUTED" );
+
+        install( new IndexModule( properties ) {
             @Override
             public  void configureMigrationProvider(){
 

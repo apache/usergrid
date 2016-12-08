@@ -36,9 +36,11 @@
 		http://www.springframework.org/schema/util
 		http://www.springframework.org/schema/util/spring-util-3.1.xsd">
 
-	
+
 	<bean id="properties"
 		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+        <property name="properties" ref="sysProps"/>
+        <property name="localOverride" value="true"/>
 		<property name="singleton" value="true" />
 		<property name="ignoreResourceNotFound" value="true" />
 		<property name="locations">
@@ -49,6 +51,11 @@
 			</list>
 		</property>
 	</bean>
+
+    <bean id="sysProps" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="targetClass"><value>java.lang.System</value></property>
+        <property name="targetMethod"><value>getProperties</value></property>
+    </bean>
 
 	<bean id="propertyPlaceholderConfigurer"
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">

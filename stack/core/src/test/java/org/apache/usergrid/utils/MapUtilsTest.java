@@ -26,16 +26,16 @@ import org.slf4j.LoggerFactory;
 
 public class MapUtilsTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger( MapUtilsTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( MapUtilsTest.class );
 
 
     @Test
     public void testMapUtils() {
 
         Map<String, ?> map = MapUtils.putPath( "a.b.c", 5 );
-        LOG.info( JsonUtils.mapToFormattedJsonString( map ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( map ) );
 
         map = MapUtils.putPath( map, "a.c", 6 );
-        LOG.info( JsonUtils.mapToFormattedJsonString( map ) );
+        logger.info( JsonUtils.mapToFormattedJsonString( map ) );
     }
 }

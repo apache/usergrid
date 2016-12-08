@@ -1,7 +1,13 @@
 package org.apache.usergrid.persistence.collection.mvcc.stage.delete;
 
 
+import com.datastax.driver.core.Session;
+import com.google.inject.Inject;
+import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
+import org.apache.usergrid.persistence.core.test.ITRunner;
+import org.apache.usergrid.persistence.core.test.UseModules;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 
 import org.apache.usergrid.persistence.collection.MvccEntity;
@@ -32,12 +38,17 @@ import static org.mockito.Mockito.when;
 /** @author tnine */
 public class MarkCommitTest extends AbstractMvccEntityStageTest {
 
+    @Inject
+
+
     /** Standard flow */
     @Test
     public void testStartStage() throws Exception {
 
 
         final ApplicationScope context = mock( ApplicationScope.class );
+
+        final Session session = mock(Session.class);
 
 
         //mock returning a mock mutation when we do a log entry write
@@ -71,13 +82,14 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
 
 
         //run the stage
-        WriteCommit newStage = new WriteCommit( logStrategy, mvccEntityStrategy, uniqueValueStrategy );
+        WriteCommit newStage
+            = new WriteCommit( logStrategy, mvccEntityStrategy, uniqueValueStrategy, null, null, null, session);
+
 
 
         //verify the observable is correct
-        Entity result  = newStage.call( new CollectionIoEvent<MvccEntity>( context, mvccEntityInput ) );
-
-
+        Entity result  = newStage.call(
+            new CollectionIoEvent<MvccEntity>( context, mvccEntityInput ) ).getEvent().getEntity().get();
 
 
         //verify the log entry is correct
@@ -121,7 +133,8 @@ public class MarkCommitTest extends AbstractMvccEntityStageTest {
                 .thenReturn( entityMutation );
 
 
-        new MarkCommit( logStrategy, mvccEntityStrategy, uniqueValueSerializationStrategy, serializationFig, keyspace ).call( event );
+        new MarkCommit( logStrategy, mvccEntityStrategy, uniqueValueSerializationStrategy, serializationFig,
+            null, null, null, keyspace ).call( event );
 
         //TODO: This doesn't assert anything, this needs fixed (should be a fail technically)
     }

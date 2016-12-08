@@ -24,12 +24,11 @@ import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.OrganizationOwnerInfo;
 import org.apache.usergrid.management.exceptions.ManagementException;
-import org.apache.usergrid.persistence.index.query.Identifier;
+import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
-import org.apache.usergrid.rest.management.ManagementResource;
-import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
+import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,11 +39,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
-import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
-import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isPermittedAccessToOrganization;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.usergrid.persistence.Schema.PROPERTY_PATH;
 
 
 @Component( "org.apache.usergrid.rest.management.organizations.OrganizationsResource" )
@@ -59,12 +57,77 @@ public class OrganizationsResource extends AbstractContextResource {
 
     public static final String ORGANIZATION_PROPERTIES = "properties";
     public static final String ORGANIZATION_CONFIGURATION = "configuration";
+    public static final String USERGRID_SYSADMIN_LOGIN_NAME = "usergrid.sysadmin.login.name";
+    public static final String USERGRID_SUPERUSER_ADDORG_ENABLED ="usergrid.superuser.addorg.enable";
 
     @Autowired
     private ApplicationCreator applicationCreator;
 
 
     public OrganizationsResource() {
+    }
+
+
+    @GET
+    @RequireSystemAccess
+    @Produces(MediaType.APPLICATION_JSON)
+    public ApiResponse getAllOrganizations(@Context UriInfo ui) throws Exception{
+
+        ApiResponse response = createApiResponse();
+
+        String cursor = ui.getQueryParameters().getFirst("cursor");
+        String limitString = ui.getQueryParameters().getFirst("limit");
+        int limit = 10;
+        if( isNotEmpty(limitString)){
+            try {
+                limit = Integer.valueOf(limitString);
+            }catch (NumberFormatException e){
+                // do nothing let it be default
+            }
+        }
+        if (limit < 1) {
+            limit = 1;
+        } else if (limit > 1000) {
+            limit = 1000;
+        }
+
+
+
+        EntityManager em = emf.getManagementEntityManager();
+        Query query = new Query();
+        query.setCursor(cursor);
+        query.setLimit(limit);
+        Results results = em.searchCollection(em.getApplicationRef(), Schema.COLLECTION_GROUPS, query);
+
+        List<OrganizationInfo> orgs = new ArrayList<>( results.size() );
+        OrganizationInfo orgInfo;
+        for ( Entity entity : results.getEntities() ) {
+
+            String path = ( String ) entity.getProperty( PROPERTY_PATH );
+            orgInfo = new OrganizationInfo( entity.getUuid(), path );
+            orgs.add( orgInfo );
+        }
+
+        List<Object> jsonOrgList = new ArrayList<>();
+
+        for(OrganizationInfo org: orgs){
+
+
+            Map<String, Object> jsonOrg = new HashMap<>();
+            Map<String, UUID> apps = management.getApplicationsForOrganization(org.getUuid()).inverse();
+
+            jsonOrg.put("name", org.getName());
+            jsonOrg.put("uuid", org.getUuid());
+            jsonOrg.put("properties", org.getProperties());
+            jsonOrg.put("applications", apps);
+            jsonOrgList.add(jsonOrg);
+        }
+
+        response.setProperty("organizations", jsonOrgList);
+        response.setCount(orgs.size());
+        response.setCursor(results.getCursor());
+
+        return response;
     }
 
     @Path(RootResource.ORGANIZATION_ID_PATH)
@@ -102,7 +165,9 @@ public class OrganizationsResource extends AbstractContextResource {
                                             @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
 
-        logger.debug("newOrganization");
+        if (logger.isTraceEnabled()) {
+            logger.trace("newOrganization");
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "new organization" );
@@ -139,7 +204,9 @@ public class OrganizationsResource extends AbstractContextResource {
                                                     @QueryParam( "callback" ) @DefaultValue( "" ) String callback )
             throws Exception {
 
-        logger.debug( "New organization: {}", organizationNameForm );
+        if (logger.isTraceEnabled()) {
+            logger.trace("New organization: {}", organizationNameForm);
+        }
 
         String organizationName = organizationNameForm != null ? organizationNameForm : organizationNameQuery;
         String username = usernameForm != null ? usernameForm : usernameQuery;
@@ -158,12 +225,16 @@ public class OrganizationsResource extends AbstractContextResource {
                                              String email, String password, Map<String, Object> userProperties,
                                              Map<String, Object> orgProperties, String callback ) throws Exception {
 
-        final boolean externalTokensEnabled =
-                !StringUtils.isEmpty( properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        /* Providing no password in this request signifies that an existing admin users should be associated to the
+        newly requested organization. */
 
-        if ( externalTokensEnabled ) {
-            throw new IllegalArgumentException( "Organization / Admin Users must be created via " +
-                    properties.getProperty( ManagementResource.USERGRID_CENTRAL_URL ) );
+        // Always let the sysadmin create an org, but otherwise follow the behavior specified with
+        // the property 'usergrid.management.allow-public-registration'
+        if ( ( System.getProperty("usergrid.management.allow-public-registration") != null
+            && !Boolean.valueOf(System.getProperty("usergrid.management.allow-public-registration"))
+            && !userServiceAdmin(null) ) ) {
+
+                throw new IllegalArgumentException("Public organization registration is disabled");
         }
 
         Preconditions
@@ -172,7 +243,9 @@ public class OrganizationsResource extends AbstractContextResource {
         Preconditions.checkArgument(
             StringUtils.isNotBlank( organizationName ), "The organization parameter was missing" );
 
-        logger.debug( "New organization: {}", organizationName );
+        if (logger.isDebugEnabled()) {
+            logger.debug("New organization: {}", organizationName);
+        }
 
         ApiResponse response = createApiResponse();
         response.setAction( "new organization" );
@@ -188,6 +261,12 @@ public class OrganizationsResource extends AbstractContextResource {
 
         applicationCreator.createSampleFor( organizationOwner.getOrganization() );
 
+        // ( DO NOT REMOVE ) Execute any post processing which may be overridden by external classes using UG as
+        // a dependency
+        management.createAdminUserPostProcessing(organizationOwner.getOwner(), null);
+        management.createOrganizationPostProcessing(organizationOwner.getOrganization(), null);
+        management.addUserToOrganizationPostProcessing(organizationOwner.getOwner(), organizationName, null);
+
         response.setData( organizationOwner );
         response.setSuccess();
 
@@ -195,22 +274,4 @@ public class OrganizationsResource extends AbstractContextResource {
         return response;
     }
 
-    /*
-     * @POST
-     *
-     * @Consumes(MediaType.MULTIPART_FORM_DATA) public JSONWithPadding
-     * newOrganizationFromMultipart(@Context UriInfo ui,
-     *
-     * @FormDataParam("organization") String organization,
-     *
-     * @FormDataParam("username") String username,
-     *
-     * @FormDataParam("name") String name,
-     *
-     * @FormDataParam("email") String email,
-     *
-     * @FormDataParam("password") String password) throws Exception { return
-     * newOrganizationFromForm(ui, organization, username, name, email,
-     * password); }
-     */
 }

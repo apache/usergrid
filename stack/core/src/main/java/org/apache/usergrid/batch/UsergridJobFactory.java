@@ -33,7 +33,7 @@ public class UsergridJobFactory implements JobFactory {
     @Autowired
     private ApplicationContext context;
 
-    private Logger logger = LoggerFactory.getLogger( UsergridJobFactory.class );
+    private static final Logger logger = LoggerFactory.getLogger( UsergridJobFactory.class );
 
 
     @Override

@@ -134,7 +134,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         Entity film2 = em.create( "film", properties2 );
 
         for ( int j=0; j<maxRetries; j++ ) {
-            if ( setup.getEmf().lookupApplication( orgName + "/" + appName ).isPresent()) {
+            if ( setup.getEmf().lookupApplication( orgName + "/" + appName ) != null ) {
                 break;
             }
             Thread.sleep( 500 );
@@ -171,7 +171,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         assertTrue("Deleted app must be found in in deleted apps collection", found);
 
         // attempt to get entities in application's collections in various ways should all fail
-        found =  setup.getEmf().lookupApplication( orgName + "/" + appName ).isPresent() ;
+        found =  setup.getEmf().lookupApplication( orgName + "/" + appName ) != null;
 
         assertFalse("Lookup of deleted app must fail", found);
 
@@ -211,7 +211,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         assertTrue("Restored app not found in apps collection", found);
 
         // TODO: this assertion should work!
-        assertTrue(setup.getEmf().lookupApplication( orgName + "/" + appName ).isPresent());
+        assertTrue(setup.getEmf().lookupApplication( orgName + "/" + appName ) != null );
     }
 
 
@@ -307,7 +307,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
 
         UUID appId = setup.createApplication(orgName, appName);
 
-        UUID lookedUpId = setup.getEmf().lookupApplication( orgAppName ).get();
+        UUID lookedUpId = setup.getEmf().lookupApplication( orgAppName );
 
         Assert.assertEquals(appId, lookedUpId);
     }

@@ -24,6 +24,8 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.Results;
+import org.apache.usergrid.tools.export.ExportConnection;
+import org.apache.usergrid.tools.export.ExportEntity;
 import org.apache.usergrid.utils.StringUtils;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -35,13 +37,15 @@ import rx.Scheduler;
 import rx.Subscriber;
 import rx.functions.Action0;
 import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -49,13 +53,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Export all entities and connections of a Usergrid app.
- * 
+ *
  * Exports data files to specified directory.
- * 
+ *
  * Will create as many output files as there are writeThreads (by default: 10).
- * 
+ *
  * Will create two types of files: *.entities for Usegrird entities and *.collections for entity to entity connections.
- * 
+ *
  * Every line of the data files is a complete JSON object.
  */
 public class ExportApp extends ExportingToolBase {
@@ -63,7 +67,7 @@ public class ExportApp extends ExportingToolBase {
 
     static final String APPLICATION_NAME = "application";
     private static final String WRITE_THREAD_COUNT = "writeThreads";
-   
+
     String applicationName;
     String organizationName;
 
@@ -76,7 +80,7 @@ public class ExportApp extends ExportingToolBase {
     Map<Thread, JsonGenerator> entityGeneratorsByThread  = new HashMap<Thread, JsonGenerator>();
     Map<Thread, JsonGenerator> connectionGeneratorsByThread = new HashMap<Thread, JsonGenerator>();
 
-    int writeThreadCount = 10; // set via CLI option; limiting write will limit output files 
+    int writeThreadCount = 10; // set via CLI option; limiting write will limit output files
 
 
     @Override
@@ -96,9 +100,9 @@ public class ExportApp extends ExportingToolBase {
         return options;
     }
 
-    
+
     /**
-     * Tool entry point. 
+     * Tool entry point.
      */
     @Override
     public void runTool(CommandLine line) throws Exception {
@@ -134,67 +138,66 @@ public class ExportApp extends ExportingToolBase {
         writeScheduler = Schedulers.from( writeThreadPoolExecutor );
 
         Observable<String> collectionsObservable = Observable.create( new CollectionsObservable( em ) );
-        
-        collectionsObservable.flatMap( new Func1<String, Observable<ExportEntity>>() {
 
-            public Observable<ExportEntity> call(String collection) {
+        logger.debug( "Starting export" );
 
-                return Observable.create( new EntityObservable( em, collection ) )
-                        .doOnNext( new EntityWriteAction() ).subscribeOn( writeScheduler );
-            }
+        collectionsObservable.flatMap( collection -> {
 
-        }, writeThreadCount ).flatMap( new Func1<ExportEntity, Observable<ExportConnection>>() {
+            return Observable.create( new EntityObservable( em, collection ) )
+                    .doOnNext( new EntityWriteAction() ).subscribeOn( writeScheduler );
 
-            public Observable<ExportConnection> call(ExportEntity exportEntity) {
 
-                return Observable.create( new ConnectionsObservable( em, exportEntity ) )
-                        .doOnNext( new ConnectionWriteAction() ).subscribeOn( writeScheduler );
-            }
+        } ).flatMap( exportEntity -> {
 
-        }, writeThreadCount )
-            .doOnCompleted( new FileWrapUpAction() )
-            .toBlocking().last();
+            return Observable.create( new ConnectionsObservable( em, exportEntity ) )
+                    .doOnNext( new ConnectionWriteAction() ).subscribeOn( writeScheduler );
+
+        } ).doOnCompleted( new FileWrapUpAction() ).toBlocking().lastOrDefault(null);
     }
-   
-    
+
+
     // ----------------------------------------------------------------------------------------
     // reading data
 
-    
+
     /**
      * Emits collection names found in application.
      */
     class CollectionsObservable implements rx.Observable.OnSubscribe<String> {
         EntityManager em;
-                
+
         public CollectionsObservable(EntityManager em) {
             this.em = em;
         }
 
         public void call(Subscriber<? super String> subscriber) {
-            
+
             int count = 0;
             try {
                 Map<String, Object> collectionMetadata = em.getApplicationCollectionMetadata();
+
+                logger.debug( "Emitting {} collection names for application {}",
+                    collectionMetadata.size(), em.getApplication().getName() );
+
                 for ( String collection : collectionMetadata.keySet() ) {
                     subscriber.onNext( collection );
                     count++;
                 }
-                
+
             } catch (Exception e) {
                 subscriber.onError( e );
             }
-            
+
             subscriber.onCompleted();
             logger.info( "Completed. Read {} collection names", count );
         }
     }
 
-    
+
     /**
      * Emits entities of collection.
      */
-    class EntityObservable implements rx.Observable.OnSubscribe<ExportEntity> {
+    private class EntityObservable implements rx.Observable.OnSubscribe<ExportEntity> {
         EntityManager em;
         String collection;
 
@@ -206,9 +209,9 @@ public class ExportApp extends ExportingToolBase {
         public void call(Subscriber<? super ExportEntity> subscriber) {
 
             logger.info("Starting to read entities of collection {}", collection);
-            
-            subscriber.onStart();
-            
+
+            //subscriber.onStart();
+
             try {
                 int count = 0;
 
@@ -229,16 +232,16 @@ public class ExportApp extends ExportingToolBase {
                                 }
                                 dictionariesByName.put( dictionary, dict );
                             }
-                            
-                            ExportEntity exportEntity = new ExportEntity( 
-                                    organizationName, 
-                                    applicationName, 
-                                    entity, 
+
+                            ExportEntity exportEntity = new ExportEntity(
+                                    organizationName,
+                                    applicationName,
+                                    entity,
                                     dictionariesByName );
-                            
+
                             subscriber.onNext( exportEntity );
                             count++;
-                            
+
                         } catch (Exception e) {
                             logger.error("Error reading entity " + entity.getUuid() +" from collection " + collection);
                         }
@@ -252,18 +255,18 @@ public class ExportApp extends ExportingToolBase {
 
                 subscriber.onCompleted();
                 logger.info("Completed collection {}. Read {} entities", collection, count);
-                
+
             } catch ( Exception e ) {
                 subscriber.onError(e);
             }
         }
     }
 
-    
+
     /**
      * Emits connections of an entity.
      */
-    class ConnectionsObservable implements rx.Observable.OnSubscribe<ExportConnection> {
+    private class ConnectionsObservable implements rx.Observable.OnSubscribe<ExportConnection> {
         EntityManager em;
         ExportEntity exportEntity;
 
@@ -274,57 +277,62 @@ public class ExportApp extends ExportingToolBase {
 
         public void call(Subscriber<? super ExportConnection> subscriber) {
 
-            logger.info( "Starting to read connections for entity {} type {}",
-                    exportEntity.getEntity().getName(), exportEntity.getEntity().getType() );
-            
+//            logger.debug( "Starting to read connections for entity {} type {}",
+//                    exportEntity.getEntity().getName(), exportEntity.getEntity().getType() );
+
             int count = 0;
-            
+
             try {
                 Set<String> connectionTypes = em.getConnectionTypes( exportEntity.getEntity() );
                 for (String connectionType : connectionTypes) {
 
-                    Results results = em.getConnectedEntities( 
-                            exportEntity.getEntity().getUuid(), connectionType, null, Results.Level.CORE_PROPERTIES );
+                    Results results = em.getTargetEntities(
+                            exportEntity.getEntity(), connectionType, null, Query.Level.CORE_PROPERTIES );
 
                     for (Entity connectedEntity : results.getEntities()) {
                         try {
-                            
-                            ExportConnection connection = new ExportConnection( 
+
+                            ExportConnection connection = new ExportConnection(
                                     applicationName,
                                     organizationName,
-                                    connectionType, 
-                                    exportEntity.getEntity().getUuid(), 
+                                    connectionType,
+                                    exportEntity.getEntity().getUuid(),
                                     connectedEntity.getUuid());
-                            
+
                             subscriber.onNext( connection );
                             count++;
 
                         } catch (Exception e) {
-                            logger.error( "Error reading connection entity " 
+                            logger.error( "Error reading connection entity "
                                 + exportEntity.getEntity().getUuid() + " -> " + connectedEntity.getType());
                         }
                     }
                 }
-                
+
             } catch (Exception e) {
                 subscriber.onError( e );
             }
-            
+
             subscriber.onCompleted();
-            logger.info("Completed entity {} type {} connections count {}",
-                new Object[] { exportEntity.getEntity().getName(), exportEntity.getEntity().getType(), count });
+
+            if ( count == 0 ) {
+                logger.debug("Completed entity {} type {} no connections",
+                    new Object[] { exportEntity.getEntity().getUuid(), exportEntity.getEntity().getType() });
+            }
+//            logger.debug("Completed entity {} type {} connections count {}",
+//                new Object[] { exportEntity.getEntity().getUuid(), exportEntity.getEntity().getType(), count });
         }
     }
 
-    
+
     // ----------------------------------------------------------------------------------------
     // writing data
-    
-    
+
+
     /**
      * Writes entities to JSON file.
      */
-    class EntityWriteAction implements Action1<ExportEntity> {
+    private class EntityWriteAction implements Action1<ExportEntity> {
 
         public void call(ExportEntity entity) {
 
@@ -358,11 +366,11 @@ public class ExportApp extends ExportingToolBase {
         }
     }
 
-    
+
     /**
      * Writes connection to JSON file.
      */
-    class ConnectionWriteAction implements Action1<ExportConnection> {
+    private class ConnectionWriteAction implements Action1<ExportConnection> {
 
         public void call(ExportConnection conn) {
 
@@ -396,7 +404,7 @@ public class ExportApp extends ExportingToolBase {
         }
     }
 
-    
+
     private class FileWrapUpAction implements Action0 {
         @Override
         public void call() {
@@ -424,113 +432,5 @@ public class ExportApp extends ExportingToolBase {
                 }
             }
         }
-    }
-}
-
-
-/**
- * Represents entity data to be serialized to JSON.
- */
-class ExportEntity {
-    private String organization;
-    private String application;
-    private Entity entity;
-    private Map<String, Object> dictionaries;
-    public ExportEntity( String organization, String application, Entity entity, Map<String, Object> dictionaries ) {
-        this.organization = organization;
-        this.application = application;
-        this.entity = entity;
-        this.dictionaries = dictionaries;
-    }
-
-    public String getApplication() {
-        return application;
-    }
-
-    public void setApplication(String application) {
-        this.application = application;
-    }
-
-    public Entity getEntity() {
-        return entity;
-    }
-
-    public void setEntity(Entity entity) {
-        this.entity = entity;
-    }
-
-    public Map<String, Object> getDictionaries() {
-        return dictionaries;
-    }
-
-    public void setDictionaries(Map<String, Object> dictionaries) {
-        this.dictionaries = dictionaries;
-    }
-
-    public String getOrganization() {
-        return organization;
-    }
-
-    public void setOrganization(String organization) {
-        this.organization = organization;
-    }
-}
-
-
-/**
- * Represents connection data to be serialized to JSON.
- */
-class ExportConnection {
-    private String organization;
-    private String application;
-    private String connectionType;
-    private UUID sourceUuid;
-    private UUID targetUuid;
-    public ExportConnection(String organization, String application, String connectionType, UUID sourceUuid, UUID targetUuid) {
-        this.organization= organization;
-        this.application = application;
-        this.connectionType = connectionType;
-        this.sourceUuid = sourceUuid;
-        this.targetUuid = targetUuid;
-    }
-
-    public String getApplication() {
-        return application;
-    }
-
-    public void setApplication(String application) {
-        this.application = application;
-    }
-
-    public String getConnectionType() {
-        return connectionType;
-    }
-
-    public void setConnectionType(String connectionType) {
-        this.connectionType = connectionType;
-    }
-
-    public UUID getSourceUuid() {
-        return sourceUuid;
-    }
-
-    public void setSourceUuid(UUID sourceUuid) {
-        this.sourceUuid = sourceUuid;
-    }
-
-    public UUID getTargetUuid() {
-        return targetUuid;
-    }
-
-    public void setTargetUuid(UUID targetUuid) {
-        this.targetUuid = targetUuid;
-    }
-
-    public String getOrganization() {
-        return organization;
-    }
-
-    public void setOrganization(String organization) {
-        this.organization = organization;
     }
 }

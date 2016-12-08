@@ -17,17 +17,6 @@
 package org.apache.usergrid.corepersistence;
 
 
-import java.util.UUID;
-
-import com.google.inject.Binding;
-import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
-import org.apache.usergrid.corepersistence.util.CpNamingUtils;
-import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
-import org.apache.usergrid.persistence.index.EntityIndex;
-import org.apache.usergrid.persistence.index.EntityIndexFactory;
-import org.apache.usergrid.persistence.index.IndexLocationStrategy;
-import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,15 +37,11 @@ import me.prettyprint.hector.api.ddl.ComparatorType;
 
 import static me.prettyprint.hector.api.factory.HFactory.createColumnFamilyDefinition;
 import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.getCfDefs;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.APPLICATIONS_CF;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_APPLICATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.DEFAULT_ORGANIZATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.MANAGEMENT_APPLICATION;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.PRINCIPAL_TOKEN_CF;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.PROPERTIES_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
 import static org.apache.usergrid.persistence.cassandra.CassandraService.getApplicationKeyspace;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.keyspaceForApplication;
 
 
 /**
@@ -90,26 +75,25 @@ public class CpSetup implements Setup {
 
 
     @Override
-    public void initSubsystems() throws Exception {
-        //a no op, creating the injector creates the connections
-        //init our index if required
+    public void initSchema(boolean forceCheckSchema) throws Exception {
+
+        // Initialize the management app index in Elasticsearch
         this.emf.initializeManagementIndex();
-        setupStaticKeyspace();
-        setupSystemKeyspace();
+
+        // Create the schema (including keyspace) in Cassandra
+        setupSchema(forceCheckSchema);
+        setupLegacySchema();
 
     }
 
 
-    public void createDefaultApplications() throws Exception {
+    @Override
+    public void initMgmtApp() throws Exception {
 
-        setupSystemKeyspace();
-
-        setupStaticKeyspace();
-
-        injector.getInstance( DataMigrationManager.class ).migrate();
 
         try {
-            emf.initializeApplicationV2( DEFAULT_ORGANIZATION, emf.getManagementAppId(), MANAGEMENT_APPLICATION, null );
+            emf.initializeApplicationV2( DEFAULT_ORGANIZATION, emf.getManagementAppId(),
+                MANAGEMENT_APPLICATION, null, false);
         }
         catch ( ApplicationAlreadyExistsException ex ) {
             logger.warn( "Application {}/{} already exists", DEFAULT_ORGANIZATION, MANAGEMENT_APPLICATION );
@@ -118,36 +102,19 @@ public class CpSetup implements Setup {
             logger.warn( "Organization {} already exists", DEFAULT_ORGANIZATION );
         }
 
-        injector.getInstance( DataMigrationManager.class ).migrate();
-    }
-
-
-    /**
-     * Perform migration of the 2.0 code
-     */
-    private void migrate() {
-        MigrationManager m = injector.getInstance( MigrationManager.class );
-        try {
-            m.migrate();
-        }
-        catch ( MigrationException ex ) {
-            throw new RuntimeException( "Error migrating Core Persistence", ex );
-        }
     }
 
 
     @Override
-    public void setupSystemKeyspace() throws Exception {
+    public void runDataMigration() throws Exception {
 
-        logger.info( "Initialize system keyspace" );
+        injector.getInstance( DataMigrationManager.class ).migrate();
 
-        migrate();
+    }
 
-        cass.createColumnFamily( getApplicationKeyspace(),
-            createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF, ComparatorType.BYTESTYPE ) );
+    private void setupLegacySchema() throws Exception {
 
-        cass.createColumnFamily( getApplicationKeyspace(),
-            createColumnFamilyDefinition( getApplicationKeyspace(), PROPERTIES_CF, ComparatorType.BYTESTYPE ) );
+        logger.info( "Initialize keyspace and legacy column families" );
 
         cass.createColumnFamily( getApplicationKeyspace(),
             createColumnFamilyDefinition( getApplicationKeyspace(), TOKENS_CF, ComparatorType.BYTESTYPE ) );
@@ -155,49 +122,31 @@ public class CpSetup implements Setup {
         cass.createColumnFamily( getApplicationKeyspace(),
             createColumnFamilyDefinition( getApplicationKeyspace(), PRINCIPAL_TOKEN_CF, ComparatorType.UUIDTYPE ) );
 
-        logger.info( "System keyspace initialized" );
-    }
-
-
-    /**
-     * Initialize application keyspace.
-     *
-     * @param applicationId the application id
-     * @param applicationName the application name
-     *
-     * @throws Exception the exception
-     */
-
-    public void setupApplicationKeyspace( final UUID applicationId, String applicationName ) throws Exception {
-
-        migrate();
-    }
-
-
-    @Override
-    public void setupStaticKeyspace() throws Exception {
-
-        migrate();
-
-        // Need this legacy stuff for queues
-
-        logger.info( "Creating static application keyspace " + getApplicationKeyspace() );
-
-        cass.createColumnFamily( getApplicationKeyspace(),
-            createColumnFamilyDefinition( getApplicationKeyspace(), APPLICATIONS_CF,
-                ComparatorType.BYTESTYPE ) );
-
         cass.createColumnFamilies( getApplicationKeyspace(),
             getCfDefs( ApplicationCF.class, getApplicationKeyspace() ) );
 
         cass.createColumnFamilies( getApplicationKeyspace(),
             getCfDefs( QueuesCF.class, getApplicationKeyspace() ) );
 
+        logger.info( "Keyspace and legacy column families initialized" );
     }
 
 
-    @Override
-    public boolean keyspacesExist() {
-        return true;
+    /**
+     * Initialize schema from the new 2.x Migration classes which contain schema individually
+     *
+     * @param forceCheckSchema
+     */
+
+    private void setupSchema(boolean forceCheckSchema) throws Exception {
+
+        MigrationManager m = injector.getInstance( MigrationManager.class );
+        try {
+            m.migrate(forceCheckSchema);
+        }
+        catch ( MigrationException ex ) {
+            throw new RuntimeException( "Error migrating Core Persistence", ex );
+        }
     }
+
 }

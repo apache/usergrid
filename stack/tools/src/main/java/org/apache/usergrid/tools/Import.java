@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import com.google.common.base.Optional;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
@@ -369,7 +370,7 @@ public class Import extends ToolBase {
         UUID appId = emf.lookupApplication( applicationName );
 
         //no org in path, this is a pre public beta so we need to create the new path
-        if ( appId == null && !applicationName.contains( "/" ) ) {
+        if ( appId != null && !applicationName.contains( "/" ) ) {
             String fileName = collectionFileName.replace( "collections", "application" );
 
             File applicationFile = new File( importDir, fileName );
@@ -414,7 +415,7 @@ public class Import extends ToolBase {
 
 
         if ( appId == null ) {
-            logger.error( "Unable to find application with name {}.  Skipping collections", appId );
+            logger.error( "Unable to find application with name {}.  Skipping collections", applicationName );
             return;
         }
 
@@ -424,7 +425,7 @@ public class Import extends ToolBase {
 
         JsonParser jp = getJsonParserForFile( collectionFile );
 
-        jp.nextToken(); // START_OBJECT this is the outter hashmap
+        jp.nextToken(); // START_OBJECT this is the outer hashmap
 
 
         EntityManager em = emf.getEntityManager( appId );

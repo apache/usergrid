@@ -64,7 +64,7 @@ public class DatabaseResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "cassandra setup" );
 
-        logger.info( "Setting up Cassandra" );
+        logger.info( "Setting up Cassandra (runDatabaseSetup)" );
 
 
         emf.setup();
@@ -87,10 +87,10 @@ public class DatabaseResource extends AbstractContextResource {
         ApiResponse response = createApiResponse();
         response.setAction( "cassandra setup" );
 
-        logger.info( "Setting up Cassandra" );
+        logger.info( "Setting up Cassandra (runSystemSetup)" );
 
 
-        emf.boostrap();
+        emf.bootstrap();
         management.setup();
 
         response.setSuccess();

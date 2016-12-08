@@ -30,6 +30,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.ext.Provider;
 
 
 /**
@@ -37,12 +38,10 @@ import javax.ws.rs.core.Context;
  *
  * @author zznate
  */
-@Resource
-@PreMatching
-@Component
+@Provider
 public class TracingFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
-    private Logger logger = LoggerFactory.getLogger( TracingFilter.class );
+    private static final Logger logger = LoggerFactory.getLogger( TracingFilter.class );
 
     @Autowired
     private TraceTagManager traceTagManager;

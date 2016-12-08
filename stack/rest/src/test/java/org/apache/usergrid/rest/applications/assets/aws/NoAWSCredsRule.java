@@ -57,8 +57,8 @@ public class NoAWSCredsRule  extends AbstractRestIT implements TestRule {
                 try {
                      Map<String,Object> properties = getRemoteTestProperties();
                     //TODO: GREY change this so that it checks for the properties, then if it doesn't have them, mark the tests as ignored.
-                    accessId = (String)properties.get( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
-                    secretKey = (String)properties.get( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
+                    accessId = (String)System.getProperty( SDKGlobalConfiguration.ACCESS_KEY_ENV_VAR );
+                    secretKey = (String)System.getProperty( SDKGlobalConfiguration.SECRET_KEY_ENV_VAR );
                     bucketName =(String) properties.get( "usergrid.binary.bucketname" );
 
                     if(accessId==null||secretKey==null||bucketName==null){

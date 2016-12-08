@@ -32,6 +32,7 @@ import java.util.UUID;
 import static org.junit.Assert.*;
 
 
+@Ignore("Pending merge of export-feature branch. ")
 public class ExportResourceIT extends AbstractRestIT {
 
 
@@ -40,7 +41,6 @@ public class ExportResourceIT extends AbstractRestIT {
 
     }
 
-    @Ignore
     @Test
     public void exportApplicationUUIDRetTest() throws Exception {
 
@@ -54,7 +54,6 @@ public class ExportResourceIT extends AbstractRestIT {
 
     }
 
-    @Ignore
     @Test
     public void exportCollectionUUIDRetTest() throws Exception {
 
@@ -81,7 +80,6 @@ public class ExportResourceIT extends AbstractRestIT {
      * Check that you can get the org export uuid returned and that you can check the status of the job using that uuid.
      * @throws Exception
      */
-    @Ignore
     @Test
     public void exportGetOrganizationJobStatTest() throws Exception {
 
@@ -123,7 +121,6 @@ public class ExportResourceIT extends AbstractRestIT {
      * @throws Exception
      */
 
-    @Ignore
     @Test
     public void exportGetApplicationJobStatTest() throws Exception {
 
@@ -160,7 +157,6 @@ public class ExportResourceIT extends AbstractRestIT {
     }
 
 
-    @Ignore
     @Test
     public void exportGetCollectionJobStatTest() throws Exception {
 
@@ -192,7 +188,6 @@ public class ExportResourceIT extends AbstractRestIT {
 //
 //
 //    //    //do an unauthorized test for both post and get
-@Ignore
 @Test
     public void exportGetWrongUUID() throws Exception {
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
@@ -209,7 +204,6 @@ public class ExportResourceIT extends AbstractRestIT {
 
 
     //
-    @Ignore
     @Test
     public void exportPostApplicationNullPointerProperties() throws Exception {
         try {
@@ -225,7 +219,6 @@ public class ExportResourceIT extends AbstractRestIT {
     }
 
 
-    @Ignore
     @Test
     public void exportPostOrganizationNullPointerProperties() throws Exception {
         try {
@@ -239,7 +232,6 @@ public class ExportResourceIT extends AbstractRestIT {
     }
 
     //
-    @Ignore
     @Test
     public void exportPostCollectionNullPointer() throws Exception {
         try {
@@ -255,7 +247,6 @@ public class ExportResourceIT extends AbstractRestIT {
         }
     }
 
-    @Ignore
     @Test
     public void exportGetCollectionUnauthorized() throws Exception {
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
@@ -272,7 +263,6 @@ public class ExportResourceIT extends AbstractRestIT {
         }
     }
 
-    @Ignore
     @Test
     public void exportGetApplicationUnauthorized() throws Exception {
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
@@ -288,7 +278,6 @@ public class ExportResourceIT extends AbstractRestIT {
         }
     }
 
-    @Ignore
     @Test
     public void exportGetOrganizationUnauthorized() throws Exception {
         UUID fake = UUID.fromString( "AAAAAAAA-FFFF-FFFF-FFFF-AAAAAAAAAAAA" );
@@ -303,7 +292,6 @@ public class ExportResourceIT extends AbstractRestIT {
         }
     }
 
-    @Ignore
     @Test
     public void exportPostOrganizationNullPointerStorageInfo() throws Exception {
         HashMap<String, Object> payload = payloadBuilder();
@@ -323,7 +311,6 @@ public class ExportResourceIT extends AbstractRestIT {
     }
 
 
-    @Ignore
     @Test
     public void exportPostApplicationNullPointerStorageInfo() throws Exception {
         HashMap<String, Object> payload = payloadBuilder();
@@ -344,7 +331,6 @@ public class ExportResourceIT extends AbstractRestIT {
         }
     }
 
-    @Ignore
     @Test
     public void exportPostCollectionNullPointerStorageInfo() throws Exception {
         HashMap<String, Object> payload = payloadBuilder();
@@ -366,7 +352,6 @@ public class ExportResourceIT extends AbstractRestIT {
         }
     }
 
-    @Ignore
     @Test
     public void exportPostOrganizationNullPointerStorageProvider() throws Exception {
         HashMap<String, Object> payload = payloadBuilder();
@@ -386,7 +371,6 @@ public class ExportResourceIT extends AbstractRestIT {
     }
 
 
-    @Ignore
     @Test
     public void exportPostApplicationNullPointerStorageProvider() throws Exception {
         HashMap<String, Object> payload = payloadBuilder();
@@ -407,7 +391,6 @@ public class ExportResourceIT extends AbstractRestIT {
         }
     }
 
-    @Ignore
     @Test
     public void exportPostCollectionNullPointerStorageProvider() throws Exception {
         HashMap<String, Object> payload = payloadBuilder();
@@ -430,7 +413,6 @@ public class ExportResourceIT extends AbstractRestIT {
     }
 
 
-    @Ignore
     @Test
     public void exportPostOrganizationNullPointerStorageVerification() throws Exception {
         HashMap<String, Object> payload = payloadBuilder();
@@ -482,7 +464,6 @@ public class ExportResourceIT extends AbstractRestIT {
         }
     }
 
-    @Ignore
     @Test
     public void exportPostApplicationNullPointerStorageVerification() throws Exception {
         HashMap<String, Object> payload = payloadBuilder();
@@ -537,7 +518,6 @@ public class ExportResourceIT extends AbstractRestIT {
         }
     }
 
-    @Ignore
     @Test
     public void exportPostCollectionNullPointerStorageVerification() throws Exception {
         HashMap<String, Object> payload = payloadBuilder();

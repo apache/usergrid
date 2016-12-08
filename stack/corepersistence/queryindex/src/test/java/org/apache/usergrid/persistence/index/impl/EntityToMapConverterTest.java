@@ -24,10 +24,9 @@
 package org.apache.usergrid.persistence.index.impl;
 
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
+import org.apache.usergrid.persistence.model.field.*;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -35,17 +34,6 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
 import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.model.entity.Entity;
-import org.apache.usergrid.persistence.model.field.ArrayField;
-import org.apache.usergrid.persistence.model.field.BooleanField;
-import org.apache.usergrid.persistence.model.field.DoubleField;
-import org.apache.usergrid.persistence.model.field.EntityObjectField;
-import org.apache.usergrid.persistence.model.field.Field;
-import org.apache.usergrid.persistence.model.field.FloatField;
-import org.apache.usergrid.persistence.model.field.IntegerField;
-import org.apache.usergrid.persistence.model.field.LocationField;
-import org.apache.usergrid.persistence.model.field.LongField;
-import org.apache.usergrid.persistence.model.field.StringField;
-import org.apache.usergrid.persistence.model.field.UUIDField;
 import org.apache.usergrid.persistence.model.field.value.EntityObject;
 import org.apache.usergrid.persistence.model.field.value.Location;
 import org.apache.usergrid.persistence.model.util.EntityUtils;
@@ -55,6 +43,7 @@ import rx.functions.Action2;
 
 import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -123,9 +112,9 @@ public class EntityToMapConverterTest {
         assertEquals( IndexingUtils.createContextName( scope, indexEdge ), edgeSearch );
 
 
-        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final Set<EntityField> fieldsSet = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
 
-        assertEquals( 0, fields.size() );
+        assertEquals( 0, fieldsSet.size() );
     }
 
 
@@ -180,6 +169,12 @@ public class EntityToMapConverterTest {
             ( field, entityField ) -> assertEquals( field.getValue(), entityField.get( IndexingUtils.FIELD_DOUBLE ) ) );
     }
 
+    @Test
+    public void testNullField() {
+        testSingleField( new NullField( "NameNullField" ),
+            ( field, entityField ) -> assertEquals( field.getValue(), entityField.get( IndexingUtils.FIELD_NULL) ) );
+    }
+
 
     @Test
     public void testLocationField() {
@@ -215,8 +210,9 @@ public class EntityToMapConverterTest {
         final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, entity );
 
 
-        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
-
+        final Set<EntityField> fieldSet = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final List<EntityField> fields = new ArrayList<>();
+        fields.addAll(fieldSet);
         assertEquals( 1, fields.size() );
 
         final EntityField esField = fields.get( 0 );
@@ -240,7 +236,8 @@ public class EntityToMapConverterTest {
         array.add( "two" );
         array.add( "three" );
 
-        testPrimitiveArray( array, IndexingUtils.FIELD_STRING );
+        // all unique values, we expect 3 values
+        testPrimitiveArray( array, IndexingUtils.FIELD_STRING, 3 );
     }
 
 
@@ -255,7 +252,8 @@ public class EntityToMapConverterTest {
         array.add( false );
         array.add( true );
 
-        testPrimitiveArray( array, IndexingUtils.FIELD_BOOLEAN );
+        // 3 are duplicates, we expect only 2 values
+        testPrimitiveArray( array, IndexingUtils.FIELD_BOOLEAN, 2 );
     }
 
 
@@ -269,7 +267,8 @@ public class EntityToMapConverterTest {
         array.add( 2 );
         array.add( 3 );
 
-        testPrimitiveArray( array, IndexingUtils.FIELD_LONG );
+        // all unique values, we expect 3 values
+        testPrimitiveArray( array, IndexingUtils.FIELD_LONG, 3 );
     }
 
 
@@ -283,7 +282,8 @@ public class EntityToMapConverterTest {
         array.add( 2l );
         array.add( 3l );
 
-        testPrimitiveArray( array, IndexingUtils.FIELD_LONG );
+        // all unique values, we expect 3 values
+        testPrimitiveArray( array, IndexingUtils.FIELD_LONG, 3 );
     }
 
 
@@ -297,7 +297,8 @@ public class EntityToMapConverterTest {
         array.add( 2.0f );
         array.add( 3.0f );
 
-        testPrimitiveArray( array, IndexingUtils.FIELD_DOUBLE );
+        // all unique values, we expect 3 values
+        testPrimitiveArray( array, IndexingUtils.FIELD_DOUBLE, 3 );
     }
 
 
@@ -311,7 +312,8 @@ public class EntityToMapConverterTest {
         array.add( 2.0d );
         array.add( 3.0d );
 
-        testPrimitiveArray( array, IndexingUtils.FIELD_DOUBLE );
+        // all unique values, we expect 3 values
+        testPrimitiveArray( array, IndexingUtils.FIELD_DOUBLE, 3 );
     }
 
 
@@ -320,7 +322,7 @@ public class EntityToMapConverterTest {
      *
      * @param indexType the field name for the expected type in ES
      */
-    private <T> void testPrimitiveArray( final ArrayField<T> array, final String indexType ) {
+    private <T> void testPrimitiveArray( final ArrayField<T> array, final String indexType, int expectedCount ) {
 
         Entity entity = new Entity( "test" );
 
@@ -341,17 +343,29 @@ public class EntityToMapConverterTest {
         final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, entity );
 
 
-        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final Set<EntityField> fieldSet = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final List<EntityField> fields = new ArrayList<>();
+        fields.addAll(fieldSet);
 
-        assertEquals( array.size(), fields.size() );
+        assertEquals( expectedCount, fields.size() );
 
 
-        for ( int i = 0; i < array.size(); i++ ) {
+        // take the incoming test ArrayField value and unique it since the conversion uses a Set and won't allow dups
+        Set<T> uniqueInputSet = new HashSet<>();
+        array.getValue().forEach( item -> uniqueInputSet.add(item));
+        List<T> uniqueInputList = new ArrayList<>();
+        uniqueInputList.addAll(uniqueInputSet);
+        ArrayField<T> uniqueArrayField = new ArrayField<>( array.getName(), uniqueInputList);
+
+
+        for ( int i = 0; i < uniqueArrayField.size(); i++ ) {
             final EntityField field = fields.get( i );
 
-            assertEquals( array.getName(), field.get( IndexingUtils.FIELD_NAME ) );
+            assertEquals( uniqueArrayField.getName(), field.get( IndexingUtils.FIELD_NAME ) );
 
-            assertEquals( array.getValue().get( i ), field.get( indexType ) );
+            // we already verified our size and it is unique, just check contains so we don't have to sort a list
+            //noinspection SuspiciousMethodCalls
+            assertTrue( uniqueArrayField.getValue().contains( field.get( indexType ) ) );
         }
     }
 
@@ -450,8 +464,9 @@ public class EntityToMapConverterTest {
 
         final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, rootEntity );
 
-
-        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final Set<EntityField> fieldSet = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final List<EntityField> fields = new ArrayList<>();
+        fields.addAll(fieldSet);
 
         assertEquals( 1, fields.size() );
 
@@ -572,7 +587,9 @@ public class EntityToMapConverterTest {
         final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, rootEntity );
 
 
-        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final Set<EntityField> fieldSet = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final List<EntityField> fields = new ArrayList<>();
+        fields.addAll(fieldSet);
 
         assertEquals( 1, fields.size() );
 
@@ -636,7 +653,9 @@ public class EntityToMapConverterTest {
         final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, rootEntity );
 
 
-        final List<EntityField> fields = ( List<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final Set<EntityField> fieldSet = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final List<EntityField> fields = new ArrayList<>();
+        fields.addAll(fieldSet);
 
         assertEquals( 1, fields.size() );
 
@@ -650,4 +669,110 @@ public class EntityToMapConverterTest {
 
         assertEquals( "value", field.get( IndexingUtils.FIELD_STRING ) );
     }
+
+    /**
+     * Objects nested within arrays are allowed to be indexed (just not n+1 nested arrays themselves)
+     */
+    @Test
+    public void testObjectNestedInArray() {
+
+        final ArrayField<Object> array = new ArrayField<>("array");
+
+        // this should not get indexed
+        final ArrayField<Object> nestedArray1 = new ArrayField<>("nestedArray");
+        nestedArray1.add("1");
+
+        // this should get indexed
+        final EntityObject nestedObject1 = new EntityObject();
+        final ArrayField<Object> objectArray = new ArrayField<>("nestedArrayInObject");
+        final EntityObject nestedObject2 = new EntityObject();
+        nestedObject2.setField(new StringField("nestedKey", "nestedValue"));
+        objectArray.add(nestedObject2);
+        nestedObject1.setField(objectArray);
+
+        array.add(nestedArray1);
+        array.add(nestedObject1);
+
+        Entity rootEntity = new Entity( "test" );
+        rootEntity.setField( array );
+
+        final UUID version = UUIDGenerator.newTimeUUID();
+        EntityUtils.setVersion( rootEntity, version );
+
+        final ApplicationScope scope = new ApplicationScopeImpl( createId( "application" ) );
+        final IndexEdge indexEdge =
+            new IndexEdgeImpl( createId( "source" ), "testEdgeType", SearchEdge.NodeType.SOURCE, 1000 );
+
+        final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, rootEntity );
+
+        final Set<EntityField> fieldSet = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+        final List<EntityField> fields = new ArrayList<>();
+        fields.addAll(fieldSet);
+        // if size of fields is not == 1, then we either
+        // 1) did not index anything or 2) indexed the nested array that shouldn't be indexed at all
+        assertEquals( 1, fields.size() );
+
+        final EntityField field = fields.get( 0 );
+        final String path = "array.nestedArrayInObject.nestedKey".toLowerCase();
+
+        assertEquals( path, field.get( IndexingUtils.FIELD_NAME ) );
+
+    }
+
+
+    /**
+     * Objects nested within arrays are allowed to be indexed (just not n+1 nested arrays themselves)
+     */
+    @Test
+    public void testNullsWithinArray() {
+
+        final ArrayField<Object> array = new ArrayField<>("array");
+
+        // add a couple null values
+        array.add(null);
+        array.add("test");
+
+        // this should get indexed
+        Entity rootEntity = new Entity( "test" );
+        rootEntity.setField( array );
+
+        final UUID version = UUIDGenerator.newTimeUUID();
+        EntityUtils.setVersion( rootEntity, version );
+
+        final ApplicationScope scope = new ApplicationScopeImpl( createId( "application" ) );
+        final IndexEdge indexEdge =
+            new IndexEdgeImpl( createId( "source" ), "testEdgeType", SearchEdge.NodeType.SOURCE, 1000 );
+
+        final Map<String, Object> entityMap = EntityToMapConverter.convert( scope, indexEdge, rootEntity );
+        final Set<EntityField> fields = ( Set<EntityField> ) entityMap.get( IndexingUtils.ENTITY_FIELDS );
+
+        List<EntityField> fieldsArray = new ArrayList<>();
+        fieldsArray.addAll(fields);
+
+
+        assertEquals( 2, fields.size() );
+
+        final EntityField field = fieldsArray.get( 0 );
+        final EntityField field1 = fieldsArray.get( 1 );
+
+        // the fields get re-sorted on array to list conversion
+        assertEquals( "test", field.get( IndexingUtils.FIELD_STRING ) );
+        assertEquals( null, field1.get( IndexingUtils.FIELD_NULL ) );
+
+    }
+
+    @Test
+    public void entityFieldEquality() {
+
+        final EntityField e1 = EntityField.create("testname", "testvalue");
+        final EntityField e2 = EntityField.create("testname", "testvalue");
+
+        final EntityField e3 = EntityField.create("testname", "testvalue1");
+
+        assertTrue( e1.equals(e2));
+        assertTrue( !e1.equals(e3));
+
+    }
+
+
 }

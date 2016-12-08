@@ -28,7 +28,9 @@ import org.apache.usergrid.corepersistence.pipeline.read.EdgePath;
 import org.apache.usergrid.corepersistence.pipeline.read.search.ElasticsearchCursorSerializer;
 import org.apache.usergrid.corepersistence.pipeline.read.traverse.EdgeCursorSerializer;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
 
 import com.google.common.base.Optional;
 
@@ -40,19 +42,12 @@ public class CursorTest {
 
     @Test
     public void testCursors(){
+         //test encoding edge
+
+        final MarkedEdge edge1 = new SimpleMarkedEdge( createId("source1"), "edgeType1",  createId("target1"), 100, false, false, false  );
 
 
-
-
-
-
-
-        //test encoding edge
-
-        final Edge edge1 = new SimpleEdge( createId("source1"), "edgeType1",  createId("target1"), 100  );
-
-
-        final Edge edge2 = new SimpleEdge( createId("source2"), "edgeType2",  createId("target2"), 110  );
+        final MarkedEdge edge2 = new SimpleMarkedEdge( createId("source2"), "edgeType2",  createId("target2"), 110, false, false, false  );
 
 
 
@@ -64,11 +59,12 @@ public class CursorTest {
 
         final EdgePath<Integer> filter3Path = new EdgePath<>( 3, query2, ElasticsearchCursorSerializer.INSTANCE, Optional.absent() );
 
-        final EdgePath<Edge> filter2Path = new EdgePath<Edge>(2, edge2, EdgeCursorSerializer.INSTANCE, Optional.of( filter3Path ));
+        final EdgePath<MarkedEdge> filter2Path =
+            new EdgePath<>( 2, edge2, EdgeCursorSerializer.INSTANCE, Optional.of( filter3Path ) );
 
         final EdgePath<Integer> filter1Path = new EdgePath<>( 1, query1, ElasticsearchCursorSerializer.INSTANCE, Optional.of(filter2Path) );
 
-        final EdgePath<Edge> filter0Path = new EdgePath<>( 0, edge1, EdgeCursorSerializer.INSTANCE, Optional.of( filter1Path ) );
+        final EdgePath<MarkedEdge> filter0Path = new EdgePath<>( 0, edge1, EdgeCursorSerializer.INSTANCE, Optional.of( filter1Path ) );
 
 
 
@@ -91,7 +87,7 @@ public class CursorTest {
 
         assertEquals(query2, parsedQuery2);
 
-        final Edge parsedEdge2 = requestCursor.getCursor( 2, EdgeCursorSerializer.INSTANCE );
+        final MarkedEdge parsedEdge2 = requestCursor.getCursor( 2, EdgeCursorSerializer.INSTANCE );
 
         assertEquals( edge2, parsedEdge2 );
 
@@ -100,7 +96,7 @@ public class CursorTest {
         assertEquals( query1, parsedQuery1 );
 
 
-        final Edge parsedEdge1 = requestCursor.getCursor( 0, EdgeCursorSerializer.INSTANCE );
+        final MarkedEdge parsedEdge1 = requestCursor.getCursor( 0, EdgeCursorSerializer.INSTANCE );
 
         assertEquals(edge1, parsedEdge1);
 

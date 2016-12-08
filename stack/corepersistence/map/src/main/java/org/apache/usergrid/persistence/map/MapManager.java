@@ -90,4 +90,11 @@ public interface MapManager {
      * @param key The key used to delete the entry
      */
     void delete( final String key );
+
+    /**
+     * Return a page of keys that exist within the map.  Keys are sorted ascending in lexicographical ordering.
+     * @param cursor
+     * @param limit
+     */
+    MapKeyResults getKeys(final String cursor, final int limit);
 }

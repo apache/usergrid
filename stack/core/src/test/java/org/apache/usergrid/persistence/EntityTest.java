@@ -39,7 +39,6 @@ public class EntityTest {
 
 
     @Test
-    // @Ignore( "Fix this then enable EntityTest.testEntityClasses:45 » ConcurrentModification" )
     public void testEntityClasses() throws Exception {
         logger.info( "testEntityClasses" );
 
@@ -75,7 +74,6 @@ public class EntityTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    // @Ignore( "Fix this and enable: EntityTest.testJson:83 » ConcurrentModification" )
     public void testJson() throws Exception {
 
         User user = new User();

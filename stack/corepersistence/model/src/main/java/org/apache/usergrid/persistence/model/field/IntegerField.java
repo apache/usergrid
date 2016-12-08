@@ -20,7 +20,7 @@ package org.apache.usergrid.persistence.model.field;
 /**
  * @author: tnine
  */
-public class IntegerField extends AbstractField<Integer> {
+public final class IntegerField extends AbstractField<Integer> {
 
     public IntegerField(String name, Integer value) {
         super(name, value);
@@ -35,7 +35,7 @@ public class IntegerField extends AbstractField<Integer> {
 
 
     @Override
-    public FieldTypeName getTypeName() {
+    public final FieldTypeName getTypeName() {
         return FieldTypeName.INTEGER;
     }
 }

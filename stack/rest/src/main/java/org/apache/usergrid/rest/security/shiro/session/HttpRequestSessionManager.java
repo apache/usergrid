@@ -25,7 +25,7 @@ import org.apache.shiro.session.Session;
 import org.apache.shiro.session.SessionException;
 import org.apache.shiro.session.mgt.SessionContext;
 import org.apache.shiro.session.mgt.SessionKey;
-import org.apache.shiro.session.mgt.SessionManager;
+import org.apache.shiro.web.session.mgt.WebSessionManager;
 import org.apache.shiro.web.util.WebUtils;
 
 
@@ -34,7 +34,7 @@ import org.apache.shiro.web.util.WebUtils;
  * on each request. This necessarily means that a mechanism like form-based authentication isn't viable, but the
  * intention is primarily for uses in stateless apis.
  */
-public class HttpRequestSessionManager implements SessionManager {
+public class HttpRequestSessionManager implements WebSessionManager {
 
     static final String REQUEST_ATTRIBUTE_KEY = "__SHIRO_REQUEST_SESSION";
 
@@ -84,5 +84,10 @@ public class HttpRequestSessionManager implements SessionManager {
 
     protected Session createSession( HttpServletRequest request, String host ) {
         return new HttpServletRequestSession( request, host );
+    }
+
+    @Override
+    public boolean isServletContainerSessions() {
+        return false;
     }
 }

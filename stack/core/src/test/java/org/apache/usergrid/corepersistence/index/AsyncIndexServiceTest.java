@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.EntityManagerFactory;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.index.*;
 import org.junit.Before;
 import org.junit.Rule;
@@ -54,7 +55,6 @@ import com.google.inject.Inject;
 import net.jcip.annotations.NotThreadSafe;
 
 import rx.Observable;
-import rx.schedulers.Schedulers;
 
 import static org.apache.usergrid.persistence.core.util.IdGenerator.createId;
 import static org.junit.Assert.assertEquals;
@@ -120,7 +120,7 @@ public abstract class AsyncIndexServiceTest {
         final EntityCollectionManager collectionManager =
             entityCollectionManagerFactory.createCollectionManager(applicationScope);
 
-        collectionManager.write(testEntity).toBlocking().last();
+        collectionManager.write(testEntity, null ).toBlocking().last();
 
         final GraphManager graphManager = graphManagerFactory.createEdgeManager( applicationScope );
 
@@ -135,7 +135,7 @@ public abstract class AsyncIndexServiceTest {
          */
 
 
-        final List<Edge> connectionSearchEdges = Observable.range( 0, 500 ).flatMap(integer -> {
+        final List<MarkedEdge> connectionSearchEdges = Observable.range( 0, 500 ).flatMap(integer -> {
             final Id connectingId = createId("connecting");
             final Edge edge = CpNamingUtils.createConnectionEdge(connectingId, "likes", testEntity.getId());
 
@@ -144,7 +144,7 @@ public abstract class AsyncIndexServiceTest {
 
 
         //queue up processing
-        asyncEventService.queueEntityIndexUpdate( applicationScope, testEntity );
+        asyncEventService.queueEntityIndexUpdate( applicationScope, testEntity, 0);
 
 
         final EntityIndex EntityIndex =

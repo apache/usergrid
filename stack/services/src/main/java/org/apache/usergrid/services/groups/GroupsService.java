@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.persistence.EntityRef;
 import org.apache.usergrid.persistence.Query;
 import org.apache.usergrid.persistence.entities.Role;
-import org.apache.usergrid.services.AbstractPathBasedColllectionService;
+import org.apache.usergrid.services.AbstractPathBasedCollectionService;
 import org.apache.usergrid.services.ServiceContext;
 import org.apache.usergrid.services.ServicePayload;
 import org.apache.usergrid.services.ServiceResults;
@@ -42,7 +42,7 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.services.ServiceResults.genericServiceResults;
 
 
-public class GroupsService extends AbstractPathBasedColllectionService {
+public class GroupsService extends AbstractPathBasedCollectionService {
 
     private static final Logger logger = LoggerFactory.getLogger( GroupsService.class );
 
@@ -51,7 +51,9 @@ public class GroupsService extends AbstractPathBasedColllectionService {
 
     public GroupsService() {
         super();
-        logger.debug( "/groups" );
+        if (logger.isTraceEnabled()) {
+            logger.trace("/groups");
+        }
 
         // rolenames is the one case of Entity Dictionary name not equal to path segment
         declareEntityDictionary( new EntityDictionaryEntry( "rolenames", "roles" ) );
@@ -69,7 +71,9 @@ public class GroupsService extends AbstractPathBasedColllectionService {
             throw new IllegalArgumentException( "You must provide a 'path' property when creating a group" );
         }
 
-        logger.debug( "Creating group with path {}", path );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Creating group with path {}", path);
+        }
 
         Preconditions.checkArgument( matcher.matchesAllOf( path ), "Illegal characters found in group name: " + path );
 
@@ -95,6 +99,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
         em.addGroupToRole( groupId, roleName );
         ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
         scopedCache.invalidate();
+        localShiroCache.invalidateAll();
         return getGroupRoles( groupId );
     }
 
@@ -103,6 +108,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
         em.removeGroupFromRole( groupId, roleName );
         ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
         scopedCache.invalidate();
+        localShiroCache.invalidateAll();
         return getGroupRoles( groupId );
     }
 
@@ -157,6 +163,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
             em.grantGroupPermission( entityRef.getUuid(), permission );
             ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
             scopedCache.invalidate();
+            localShiroCache.invalidateAll();
 
             return genericServiceResults().withData( em.getGroupPermissions( entityRef.getUuid() ) );
         }
@@ -226,6 +233,7 @@ public class GroupsService extends AbstractPathBasedColllectionService {
             }
             ScopedCache scopedCache = cacheFactory.getScopedCache(new CacheScope(em.getApplication().asId()));
             scopedCache.invalidate();
+            localShiroCache.invalidateAll();
 
             return genericServiceResults().withData( em.getGroupPermissions( entityRef.getUuid() ) );
         }

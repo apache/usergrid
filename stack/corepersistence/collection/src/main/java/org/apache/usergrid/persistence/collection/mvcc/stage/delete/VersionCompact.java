@@ -91,7 +91,7 @@ public class VersionCompact
                         if ( logger.isDebugEnabled() ) {
                             logger.debug(
                                 "Deleting log entry and version data for entity id {} and version {} in app scope {}",
-                                new Object[] { entityId, version, scope } );
+                                entityId, version, scope );
                         }
 
 

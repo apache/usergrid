@@ -32,7 +32,7 @@ import static org.apache.commons.lang.StringUtils.substring;
 
 public class AESUtils {
 
-    private static final Logger LOG = LoggerFactory.getLogger( AESUtils.class );
+    private static final Logger logger = LoggerFactory.getLogger( AESUtils.class );
 
     private static byte[] linebreak = { };
     private static Cipher cipher;
@@ -45,7 +45,7 @@ public class AESUtils {
             coder = new Base64( 32, linebreak, true );
         }
         catch ( Throwable t ) {
-            LOG.error( "Cipher error", t );
+            logger.error( "Cipher error", t );
         }
     }
 
@@ -59,7 +59,7 @@ public class AESUtils {
             return new String( coder.encode( cipherText ) );
         }
         catch ( Exception e ) {
-            LOG.error( "Encryption error", e );
+            logger.error( "Encryption error", e );
         }
         return null;
     }
@@ -76,7 +76,7 @@ public class AESUtils {
             return new String( decrypted );
         }
         catch ( Exception e ) {
-            LOG.error( "Decryption error", e );
+            logger.error( "Decryption error", e );
         }
         return null;
     }

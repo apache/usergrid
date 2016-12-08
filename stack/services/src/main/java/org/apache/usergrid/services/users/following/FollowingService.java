@@ -46,7 +46,9 @@ public class FollowingService extends AbstractConnectionsService {
 
     public void copyActivityFeed( final EntityRef connectingEntity, final EntityRef connectedEntityRef )
             throws Exception {
-        logger.info( "Copying activities to feed..." );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Copying activities to feed...");
+        }
         TaskExecutor taskExecutor = ( TaskExecutor ) getApplicationContext().getBean( "taskExecutor" );
         taskExecutor.execute( new Runnable() {
             @Override

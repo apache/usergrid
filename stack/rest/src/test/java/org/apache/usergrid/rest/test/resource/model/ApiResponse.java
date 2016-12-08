@@ -1,6 +1,3 @@
-/**
- * Created by ApigeeCorporation on 12/4/14.
- */
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with

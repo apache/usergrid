@@ -9,7 +9,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.persistence.queue.QueueFig;
+import org.apache.usergrid.persistence.queue.LegacyQueueFig;
 
 import com.amazonaws.auth.policy.Condition;
 import com.amazonaws.auth.policy.Policy;
@@ -40,7 +40,7 @@ public class AmazonNotificationUtils {
     private static final Logger logger = LoggerFactory.getLogger( AmazonNotificationUtils.class );
 
 
-    public static String createQueue( final AmazonSQSClient sqs, final String queueName, final QueueFig fig )
+    public static String createQueue( final AmazonSQSClient sqs, final String queueName, final LegacyQueueFig fig )
         throws Exception {
 
         final String deadletterQueueName = String.format( "%s_dead", queueName );
@@ -131,7 +131,7 @@ public class AmazonNotificationUtils {
             return null;
         }
         catch ( Exception e ) {
-            logger.error( String.format( "Failed to get URL for Queue [%s] from SQS", queueName ), e );
+            logger.error( "Failed to get URL for Queue [{}] from SQS", queueName, e );
             throw e;
         }
 
@@ -177,8 +177,8 @@ public class AmazonNotificationUtils {
     public static String getTopicArn( final AmazonSNSClient sns, final String queueName, final boolean createOnMissing )
         throws Exception {
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Looking up Topic ARN: {}", queueName );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Looking up Topic ARN: {}", queueName );
         }
 
         ListTopicsResult listTopicsResult = sns.listTopics();
@@ -190,25 +190,31 @@ public class AmazonNotificationUtils {
             if ( queueName.equals( arn.substring( arn.lastIndexOf( ':' ) ) ) ) {
                 topicArn = arn;
 
-                logger.info( "Found existing topic arn=[{}] for queue=[{}]", topicArn, queueName );
+                if (logger.isTraceEnabled()) {
+                    logger.trace( "Found existing topic arn=[{}] for queue=[{}]", topicArn, queueName );
+                }
             }
         }
 
         if ( topicArn == null && createOnMissing ) {
-            logger.info( "Creating topic for queue=[{}]...", queueName );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Creating topic for queue=[{}]...", queueName);
+            }
 
             CreateTopicResult createTopicResult = sns.createTopic( queueName );
             topicArn = createTopicResult.getTopicArn();
 
-            logger.info( "Successfully created topic with name {} and arn {}", queueName, topicArn );
+            if (logger.isTraceEnabled()) {
+                logger.trace("Successfully created topic with name {} and arn {}", queueName, topicArn);
+            }
         }
         else {
             logger.error( "Error looking up topic ARN for queue=[{}] and createOnMissing=[{}]", queueName,
                 createOnMissing );
         }
 
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Returning Topic ARN=[{}] for Queue=[{}]", topicArn, queueName );
+        if ( logger.isTraceEnabled() ) {
+            logger.trace( "Returning Topic ARN=[{}] for Queue=[{}]", topicArn, queueName );
         }
 
 

@@ -67,7 +67,8 @@ public class UniqueFieldRowKeySerializer implements CompositeFieldSerializer<Fie
                 break;
             default:
                 throw new RuntimeException(
-                    String.format( "Type %s is not a supported type for unique values", fieldType ) );
+                    String.format( "Field %s has type %s: not a supported type for unique values",
+                        field.getName(), fieldType ) );
         }
 
 

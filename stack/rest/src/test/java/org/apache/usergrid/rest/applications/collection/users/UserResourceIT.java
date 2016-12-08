@@ -18,6 +18,7 @@ package org.apache.usergrid.rest.applications.collection.users;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,8 @@ import java.util.UUID;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource.model.*;
+
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -36,10 +39,15 @@ import org.slf4j.LoggerFactory;
 import org.apache.usergrid.rest.applications.utils.UserRepo;
 import org.apache.usergrid.utils.UUIDUtils;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 
+import javax.ws.rs.core.MediaType;
+
+import static org.apache.usergrid.security.PasswordPolicy.ERROR_POLICY_VIOLIATION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -55,7 +63,7 @@ import static org.junit.Assert.fail;
 
 public class UserResourceIT extends AbstractRestIT {
 
-    private static Logger log = LoggerFactory.getLogger(UserResourceIT.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserResourceIT.class);
     UserRepo userRepo;
     CollectionEndpoint usersResource;
     CollectionEndpoint userResource;
@@ -690,7 +698,7 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void test_POST_batch() throws IOException {
 
-        log.info("UserResourceIT.test_POST_batch");
+        logger.info("UserResourceIT.test_POST_batch");
 
 
         List<Entity> batch = new ArrayList<>();
@@ -769,6 +777,7 @@ public class UserResourceIT extends AbstractRestIT {
     }
 
 
+
     @Test
     public void test_PUT_password_ok() {
         Entity entity = usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
@@ -791,7 +800,7 @@ public class UserResourceIT extends AbstractRestIT {
     @Test
     public void setUserPasswordAsAdmin() throws IOException {
         usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
-        String newPassword = "foo";
+        String newPassword = "foofoo";
         refreshIndex();
 
         // change the password as admin. The old password isn't required
@@ -809,8 +818,8 @@ public class UserResourceIT extends AbstractRestIT {
     public void passwordMismatchErrorUser() {
         usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
 
-        String origPassword = "foo";
-        String newPassword = "bar";
+        String origPassword = "foofoo";
+        String newPassword = "barbar";
 
         ChangePasswordEntity data = new ChangePasswordEntity(origPassword, newPassword);
 
@@ -822,6 +831,36 @@ public class UserResourceIT extends AbstractRestIT {
         }
 
         assertEquals(0, responseStatus);
+    }
+
+
+    @Test
+    public void createAppUserWithInvalidPassword() {
+
+        try {
+            Entity entity = usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "foo"));
+            fail("Invalid password should have caused error");
+
+        } catch( ClientErrorException uie ) {
+            errorParse( 400, ERROR_POLICY_VIOLIATION, uie );
+        }
+    }
+
+
+    @Test
+    public void testChangePassordToInvalidValue() {
+
+        Entity entity = usersResource.post(new User("edanuff", "edanuff", "edanuff@email.com", "sesame"));
+        refreshIndex();
+
+        try {
+            usersResource.entity(entity).collection("password").post(new ChangePasswordEntity("sesame", "abc"));
+            fail("Invalid password should have caused error");
+
+        } catch( ClientErrorException uie ) {
+            errorParse( 400, ERROR_POLICY_VIOLIATION, uie );
+        }
+
     }
 
 
@@ -1004,7 +1043,7 @@ public class UserResourceIT extends AbstractRestIT {
             assertTrue(false);
         } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
-            log.info("Error Response Body: " + uie.getResponse().readEntity(String.class));
+            logger.info("Error Response Body: " + uie.getResponse().readEntity(String.class));
         }
 
         assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), status);
@@ -1015,7 +1054,7 @@ public class UserResourceIT extends AbstractRestIT {
             assertTrue(false);
         } catch (ClientErrorException uie) {
             status = uie.getResponse().getStatus();
-            log.info("Error Response Body: " + uie.getResponse().readEntity(String.class));
+            logger.info("Error Response Body: " + uie.getResponse().readEntity(String.class));
         }
 
         assertEquals(Response.Status.FORBIDDEN.getStatusCode(), status);
@@ -1128,5 +1167,112 @@ public class UserResourceIT extends AbstractRestIT {
         Collection response = this.app().collection("curts").get(new QueryParameters().setQuery(ql));
 
         assertEquals(response.getResponse().getEntities().get(0).get("uuid").toString(), userId.toString());
+    }
+
+
+
+    @Test
+    public void testCredentialsTransfer() throws Exception {
+
+        usersResource.post(new User("test_1", "Test1 User", "test_1@test.com", "test123")); // client.setApiUrl(apiUrl);
+        refreshIndex();
+
+        //Entity appInfo = this.app().get().getResponse().getEntities().get(0);
+
+        Token token = this.app().token().post(new Token("test_1", "test123"));
+
+        assertNotNull(token.getAccessToken());
+
+        final String superUserName = this.clientSetup.getSuperuserName();
+        final String superUserPassword = this.clientSetup.getSuperuserPassword();
+
+
+        //get the credentials info
+        final CollectionEndpoint collection  = userResource.entity("test_1").collection( "credentials" );
+
+        final WebTarget resource  = collection.getTarget();
+
+
+        final HttpAuthenticationFeature httpBasicAuth = HttpAuthenticationFeature.basicBuilder()
+            .credentials( superUserName, superUserPassword ).build();
+
+
+        final ApiResponse response =  resource.register( httpBasicAuth ).request()
+                    .accept( MediaType.APPLICATION_JSON ).get(
+            org.apache.usergrid.rest.test.resource.model.ApiResponse.class );
+
+
+
+
+        //now get the credentials sub object
+
+        final Map<String, Object> credentials = ( Map<String, Object> ) response.getProperties().get( "credentials" );
+
+
+
+        //get out the hash and change it so we can validate
+        final String originalSecret = ( String ) credentials.get( "secret" );
+
+
+        //here we modify the hash a little, this way we can break password validation, then re-set it to ensure we're actually updating the credentials info correctly.
+        final String borkedSecret = originalSecret.substring( 0, originalSecret.length() -1 );
+
+        credentials.put( "secret", borkedSecret );
+
+        //now PUT it
+
+
+        final Map<String, Map<String, Object>> wrapper = new HashMap<>(  );
+        wrapper.put( "credentials", credentials );
+
+        final WebTarget putResource  = collection.getTarget();
+
+
+
+       putResource.register( httpBasicAuth ).request()
+                   .accept( MediaType.APPLICATION_JSON )
+                   .put( javax.ws.rs.client.Entity.json(wrapper),  org.apache.usergrid.rest.test.resource.model.ApiResponse.class );
+
+
+        //now try to get a password, it should fail because the hash is no longer correct
+
+        int status = 0;
+
+        // bad access token
+        try {
+            this.app().token().post(new Token("test_1", "test123"));
+            fail("Should have thrown an exception");
+        } catch (BadRequestException uie) {
+            status = uie.getResponse().getStatus();
+            logger.info("Error Response Body: {}" , uie.getResponse().getEntity());
+        }
+
+        assertEquals( Response.Status.BAD_REQUEST.getStatusCode(), status);
+
+
+        //now put the correct one
+
+
+        credentials.put( "secret", originalSecret );
+
+
+        final WebTarget putResource2  = collection.getTarget();
+
+
+
+        putResource2.register( httpBasicAuth ).request()
+                          .accept( MediaType.APPLICATION_JSON )
+                          .put( javax.ws.rs.client.Entity.json( wrapper ),
+                              org.apache.usergrid.rest.test.resource.model.ApiResponse.class );
+
+
+
+
+
+        //now auth, should be good
+        final Token nextToken = this.app().token().post(new Token("test_1", "test123"));
+
+        assertNotNull( nextToken.getAccessToken() );
+
     }
 }
