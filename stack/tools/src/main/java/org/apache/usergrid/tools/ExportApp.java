@@ -16,6 +16,9 @@
  */
 package org.apache.usergrid.tools;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -27,9 +30,6 @@ import org.apache.usergrid.persistence.Results;
 import org.apache.usergrid.tools.export.ExportConnection;
 import org.apache.usergrid.tools.export.ExportEntity;
 import org.apache.usergrid.utils.StringUtils;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.util.MinimalPrettyPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
