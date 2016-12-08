@@ -26,10 +26,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import org.apache.usergrid.persistence.*;
-import org.codehaus.jackson.JsonEncoding;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.usergrid.management.OrganizationInfo;
@@ -116,7 +116,8 @@ public class Export extends ExportingToolBase {
             logger.info( application.getValue() + " : " + application.getKey() );
 
             // Get the JSon serializer.
-            JsonGenerator jg = getJsonGenerator( createOutputFile( "application", application.getValue() ) );
+            com.fasterxml.jackson.core.JsonGenerator jg =
+                getJsonGenerator( createOutputFile( "application", application.getValue() ) );
 
             // load the dictionary
             EntityManager rootEm = emf.getEntityManager( emf.getManagementAppId() );
@@ -157,7 +158,8 @@ public class Export extends ExportingToolBase {
             jg.writeObject( nsEntity );
 
             // Create a GENERATOR for the application collections.
-            JsonGenerator collectionsJg = getJsonGenerator( createOutputFile( "collections", application.getValue() ) );
+            JsonGenerator collectionsJg =
+                getJsonGenerator( createOutputFile( "collections", application.getValue() ) );
             collectionsJg.writeStartObject();
 
             Map<String, Object> metadata = em.getApplicationCollectionMetadata();
@@ -387,7 +389,7 @@ public class Export extends ExportingToolBase {
         try {
 
             File outFile = createOutputFile( "organization", acc.getName() );
-            JsonGenerator jg = getJsonGenerator( outFile );
+            com.fasterxml.jackson.core.JsonGenerator jg = getJsonGenerator( outFile );
             jg.writeObject( acc );
             jg.close();
         }

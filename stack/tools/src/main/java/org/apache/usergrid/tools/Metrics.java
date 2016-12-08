@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import org.apache.usergrid.persistence.index.query.CounterResolution;
-import org.codehaus.jackson.JsonGenerator;
 import org.apache.usergrid.management.ApplicationInfo;
 import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.UserInfo;
