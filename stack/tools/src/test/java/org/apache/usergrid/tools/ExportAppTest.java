@@ -57,7 +57,6 @@ public class ExportAppTest extends AbstractServiceIT {
         String appName = "app_" + rand;
         String userName = "user_" + rand;
 
-
         ExportDataCreator creator = new ExportDataCreator();
         creator.startTool( new String[] {
                 "-organization", orgName,
@@ -65,7 +64,8 @@ public class ExportAppTest extends AbstractServiceIT {
                 "-username", userName,
                 "-host", "localhost:9160",
                 "-eshost", "localhost:9200",
-                "-escluster", "elasticsearch"
+                "-escluster", "elasticsearch",
+                "-ugcluster","usergrid"
 
         }, false);
 
@@ -82,7 +82,8 @@ public class ExportAppTest extends AbstractServiceIT {
                 "-host", "localhost:9160",
                 "-eshost", "localhost:9200",
                 "-escluster", "elasticsearch",
-                "-outputDir", directoryName
+                "-outputDir", directoryName,
+                "-ugcluster","usergrid"
         }, false );
 
         logger.info( "100 read and 100 write threads = " + (System.currentTimeMillis() - start) / 1000 + "s" );

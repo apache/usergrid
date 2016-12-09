@@ -80,6 +80,7 @@ public abstract class ToolBase {
     }
 
     public void startTool( String[] args, boolean exit ) {
+
         CommandLineParser parser = new GnuParser();
         CommandLine line = null;
         try {
@@ -100,8 +101,6 @@ public abstract class ToolBase {
         //job scheduler also not needed for tools
         System.setProperty("usergrid.scheduler.enabled", "false");
         System.setProperty("usergrid.cluster.enabled", "false");
-
-
 
 
         if ( line.hasOption( "host" ) ) {
