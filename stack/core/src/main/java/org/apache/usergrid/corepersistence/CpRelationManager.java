@@ -832,15 +832,17 @@ public class CpRelationManager implements RelationManager {
 
     @Override
     public Set<String> getConnectionTypes( boolean filterConnection ) throws Exception {
-        Set<String> connections = cast( em.getDictionaryAsSet( headEntity, Schema.DICTIONARY_CONNECTED_TYPES ) );
 
-        if ( connections == null ) {
-            return null;
-        }
-        if ( filterConnection && ( connections.size() > 0 ) ) {
-            connections.remove( "connection" );
-        }
-        return connections;
+        final GraphManager gm = managerCache.getGraphManager( applicationScope );
+
+        Observable<String> edges =
+            gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( cpHeadEntity.getId(), null, null ) );
+
+        return edges.collect( () -> new HashSet<String>(), ( edgeSet, edge ) -> {
+            edgeSet.add( CpNamingUtils.getNameFromEdgeType( edge ) );
+
+        } ).toBlocking().last();
+
     }
 
 
