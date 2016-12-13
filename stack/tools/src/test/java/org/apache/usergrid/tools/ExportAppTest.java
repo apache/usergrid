@@ -62,6 +62,8 @@ public class ExportAppTest extends AbstractServiceIT {
                 "-organization", orgName,
                 "-application", appName,
                 "-username", userName,
+                "-users", "10",
+                "-collections", "5",
                 "-host", "localhost:9160",
                 "-eshost", "localhost:9200",
                 "-escluster", "elasticsearch",
@@ -103,7 +105,8 @@ public class ExportAppTest extends AbstractServiceIT {
                 "-host", "localhost:9160",
                 "-eshost", "localhost:9200",
                 "-escluster", "elasticsearch",
-                "-outputDir", directoryName + "1"
+                "-outputDir", directoryName + "1",
+                "-ugcluster","usergrid"
         }, false );
 
         logger.info( "1 thread time = " + (System.currentTimeMillis() - start) / 1000 + "s" );
