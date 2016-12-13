@@ -60,6 +60,10 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( firstUserEntity, "likes", secondUserEntity );
 
+        Set<String> connectionTypes = em.getConnectionTypes(firstUserEntity);
+        assertEquals( 1, connectionTypes.size());
+        assertEquals("likes", connectionTypes.iterator().next());
+
         app.refreshIndex();
 
         Results r = em.getTargetEntities(firstUserEntity, "likes", null, Level.IDS);

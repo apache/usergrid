@@ -321,7 +321,6 @@ public class CpNamingUtils {
      */
     public static String getNameFromEdgeType( final String edgeName ) {
 
-
         if ( isCollectionEdgeType( edgeName ) ) {
             return getCollectionName( edgeName ) ;
         }
