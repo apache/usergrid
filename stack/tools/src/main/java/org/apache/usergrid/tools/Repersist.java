@@ -18,6 +18,7 @@ package org.apache.usergrid.tools;
 
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
@@ -31,17 +32,30 @@ import java.util.UUID;
 
 
 /**
- * Iterate through all data in a list of apps and re-persist every entity in every collection.
+ * Iterate through all data in a list of apps and get each or update entity.
  */
 public class Repersist extends ToolBase {
     static final Logger logger = LoggerFactory.getLogger( Repersist.class );
 
+    int count = 0;
+
     @Override
     @SuppressWarnings("static-access")
     public Options createOptions() {
+
         Options options = super.createOptions();
-        options.addOption("apps", true, "Comma-separated list of apps to re-persisted in {appName}/{orgName} format");
-        options.addOption("wait (ms)", true, "Time to  wait between entity re-persist");
+
+        Option appsOpton = new Option("apps", true,
+            "Comma-separated list of apps to re-persisted in {appName}/{orgName} format");
+        appsOpton.setRequired(true);
+        options.addOption( appsOpton );
+
+        options.addOption("wait", true,
+            "Time in milliseconds to  wait between entity re-persist");
+
+        options.addOption("update", false,
+            "Tool will update each and every entity in the listed apps");
+
         return options;
     }
 
@@ -55,10 +69,12 @@ public class Repersist extends ToolBase {
 
         long wait = 100;
         try {
-            Long.parseLong(line.getOptionValue("wait"));
+            wait = Long.parseLong(line.getOptionValue("wait"));
         } catch( Exception e ) {
             logger.error("Incorrect or missing wait time, using default: " + wait);
         }
+
+        boolean update = line.hasOption("update");
 
         for ( String orgApp : orgApps ) {
 
@@ -66,12 +82,13 @@ public class Repersist extends ToolBase {
             String org = orgAppParts[0];
             String app = orgAppParts[1];
 
-            repersist( org, org + "/" + app, wait );
+            repersist( org, org + "/" + app, update, wait );
         }
 
     }
 
-    private void repersist( String organizationName, String applicationName, long wait ) throws Exception {
+    private void repersist( String organizationName, String applicationName, boolean update, long wait )
+        throws Exception {
 
         logger.info( "\n\nRepersisting {}/{}\n", organizationName, applicationName );
 
@@ -87,25 +104,29 @@ public class Repersist extends ToolBase {
 
         for ( String collectionName : collectionMetadata.keySet() ) {
 
-            int count = 0;
-
             Query query = new Query();
             query.setLimit( MAX_ENTITY_FETCH );
 
             Results results = em.searchCollection( em.getApplicationRef(), collectionName, query );
 
             while (results.size() > 0) {
+
                 for (Entity entity : results.getEntities()) {
-
-                    // repersist
-                    em.update(entity);
+                    if ( update ) {
+                        // TODO: can we do this without updating the update of each entity?
+                        em.update(entity);
+                    }
                     count++;
+                    if ( count % 1000 == 0 ) {
+                        logger.info("Processed {} entities", count);
+                    }
                     Thread.sleep( wait );
-
                 }
+
                 if (results.getCursor() == null) {
                     break;
                 }
+
                 query.setCursor( results.getCursor() );
                 results = em.searchCollection( em.getApplicationRef(), collectionName, query );
             }
@@ -113,7 +134,6 @@ public class Repersist extends ToolBase {
             logger.info("Completed app {}/{} collection {}. Persisted {} entities",
                 organizationName, applicationName, collectionName, count);
         }
-
 
     }
 
