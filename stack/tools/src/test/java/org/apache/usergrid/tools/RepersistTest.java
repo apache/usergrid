@@ -24,6 +24,8 @@ import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.junit.Assert.assertEquals;
+
 
 public class RepersistTest extends AbstractServiceIT {
     static final Logger logger = LoggerFactory.getLogger( RepersistTest.class );
@@ -48,6 +50,8 @@ public class RepersistTest extends AbstractServiceIT {
             "-organization", orgName,
             "-application", appName,
             "-username", userName,
+            "-users", "5",
+            "-collections", "1",
             "-host", "localhost:9160",
             "-eshost", "localhost:9200",
             "-escluster", "elasticsearch",
@@ -66,6 +70,8 @@ public class RepersistTest extends AbstractServiceIT {
                 "-ugcluster","usergrid"
 
         }, false);
+
+        assertEquals( 38, repersist.count );
 
     }
 
