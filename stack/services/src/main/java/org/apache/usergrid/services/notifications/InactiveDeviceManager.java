@@ -55,18 +55,13 @@ public class InactiveDeviceManager {
             clearPushtokenMap.put(notifier.getName() + notfierPostFix,  "");
             clearPushtokenMap.put(notifier.getUuid() + notfierPostFix,  "");
 
-            // todo: this could be done in a single query
             for (Map.Entry<String, Date> entry : inactiveDeviceMap.entrySet()) {
                 try {
-                    // name
+                    logger.info( "processing {} inactive device", entry.getKey() );
+                    // name and uuid will be reset in one step
                     Query query = Query.fromQL( notifier.getName() + notfierPostFix  + " = '" + entry.getKey() + "'");
                     Results results = entityManager.searchCollection(entityManager.getApplication(), "devices", query);
-                    for (Entity e : results.getEntities()) {
-                        entityManager.updateProperties(e, clearPushtokenMap);
-                    }
-                    // uuid
-                    query = Query.fromQL( notifier.getName() + notfierPostFix  + " = " + entry.getKey() + "");
-                    results = entityManager.searchCollection(entityManager.getApplication(),  "devices", query);
+                    logger.info( "updating {} inactive devices", results.size() );
                     for (Entity e : results.getEntities()) {
                         entityManager.updateProperties(e, clearPushtokenMap);
                     }
