@@ -335,7 +335,7 @@ public class ScopedCacheSerializationImpl<K,V> implements ScopedCacheSerializati
 
         }
         stuff.flip();
-        return stuff.duplicate();
+        return stuff;
 
     }
 

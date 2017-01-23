@@ -498,7 +498,7 @@ public class MapSerializationImpl implements MapSerialization {
 
         }
         stuff.flip();
-        return stuff.duplicate();
+        return stuff;
 
     }
 
