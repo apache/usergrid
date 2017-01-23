@@ -148,7 +148,7 @@ public class WriteCommit implements Func1<CollectionIoEvent<MvccEntity>, Collect
         logMutation.mergeShallow( entityMutation );
 
         // akkaFig may be null when this is called from JUnit tests
-        if ( actorSystemFig != null && actorSystemFig.getEnabled() ) {
+        if ( actorSystemFig != null && actorSystemFig.getEnabled() && uniqueValuesFig.getUnqiueValueViaCluster() ) {
             String authoritativeRegion = ioEvent.getAuthoritativeRegion();
             if ( StringUtils.isEmpty(authoritativeRegion) ) {
                 authoritativeRegion = uniqueValuesFig.getAuthoritativeRegion();

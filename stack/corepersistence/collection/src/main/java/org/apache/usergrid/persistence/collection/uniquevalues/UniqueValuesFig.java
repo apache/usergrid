@@ -28,6 +28,8 @@ import java.io.Serializable;
 @FigSingleton
 public interface UniqueValuesFig extends GuicyFig, Serializable {
 
+    String UNIQUEVALUE_USE_CLUSTER = "collection.uniquevalues.usecluster";
+
     String UNIQUEVALUE_ACTORS = "collection.uniquevalues.actors";
 
     String UNIQUEVALUE_CACHE_TTL = "collection.uniquevalues.cache.ttl";
@@ -40,6 +42,13 @@ public interface UniqueValuesFig extends GuicyFig, Serializable {
 
     String UNIQUEVALUE_REQUEST_RETRY_COUNT = "collection.uniquevalues.request.retrycount";
 
+
+    /**
+     * Tells Usergrid whether or not to use the Akka Cluster sytem to verify unique values ( more consistent)
+     */
+    @Key(UNIQUEVALUE_USE_CLUSTER)
+    @Default("false")
+    boolean getUnqiueValueViaCluster();
 
     /**
      * Unique Value cache TTL in seconds.
