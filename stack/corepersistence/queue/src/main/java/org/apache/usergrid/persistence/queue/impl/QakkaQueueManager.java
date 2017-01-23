@@ -166,6 +166,10 @@ public class QakkaQueueManager implements LegacyQueueManager {
 
         createQueueIfNecessary();
 
+        if(logger.isTraceEnabled()){
+            logger.trace("Committing message with id: {}", queueMessage.getMessageId());
+        }
+
         UUID queueMessageId  = UUID.fromString( queueMessage.getMessageId() );
         queueMessageManager.ackMessage( scope.getName(), queueMessageId );
     }
