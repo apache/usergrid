@@ -115,7 +115,7 @@ public class WriteUniqueVerify implements Action1<CollectionIoEvent<MvccEntity>>
 
     @Override
     public void call( final CollectionIoEvent<MvccEntity> ioevent ) {
-        if ( actorSystemFig != null && actorSystemFig.getEnabled() ) {
+        if ( actorSystemFig != null && actorSystemFig.getEnabled() && uniqueValuesFig.getUnqiueValueViaCluster() ) {
             verifyUniqueFieldsAkka( ioevent );
         } else {
             verifyUniqueFields( ioevent );
