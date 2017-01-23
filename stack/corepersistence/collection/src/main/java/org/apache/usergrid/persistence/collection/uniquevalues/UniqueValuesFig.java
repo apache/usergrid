@@ -47,7 +47,7 @@ public interface UniqueValuesFig extends GuicyFig, Serializable {
      * Tells Usergrid whether or not to use the Akka Cluster sytem to verify unique values ( more consistent)
      */
     @Key(UNIQUEVALUE_USE_CLUSTER)
-    @Default("false")
+    @Default("true")
     boolean getUnqiueValueViaCluster();
 
     /**
