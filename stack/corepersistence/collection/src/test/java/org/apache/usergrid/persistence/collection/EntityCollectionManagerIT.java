@@ -21,6 +21,7 @@ package org.apache.usergrid.persistence.collection;
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.inject.Inject;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemManager;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.collection.guice.TestCollectionModule;
@@ -46,6 +47,7 @@ import org.apache.usergrid.persistence.model.field.Field;
 import org.apache.usergrid.persistence.model.field.IntegerField;
 import org.apache.usergrid.persistence.model.field.StringField;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,6 +66,7 @@ import static org.junit.Assert.*;
 /** @author tnine */
 @RunWith( ITRunner.class )
 @UseModules( TestCollectionModule.class )
+@NotThreadSafe // this added due to multiple datastax client's causing issues during parallel test execution
 public class EntityCollectionManagerIT extends AbstractUniqueValueTest {
     private static final Logger logger = LoggerFactory.getLogger( EntityCollectionManagerIT.class );
 
