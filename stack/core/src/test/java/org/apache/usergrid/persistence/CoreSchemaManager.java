@@ -89,7 +89,7 @@ public class CoreSchemaManager implements SchemaManager {
             dataStaxCluster.getClusterSession().close(); // close session so it's meta will get refreshed
         }
         catch ( Exception e ) {
-            logger.error("Error dropping application keyspace: {}", cassandraFig.getApplicationKeyspace());
+            logger.error("Error dropping application keyspace: {} error: {}", cassandraFig.getApplicationKeyspace(), e);
         }
         logger.info( "keyspaces dropped" );
         logger.info( "dropping indices" );
