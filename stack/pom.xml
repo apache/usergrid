@@ -195,7 +195,9 @@
         <module>core</module>
         <module>services</module>
         <module>rest</module>
+        <!-- Tools Build is not exiting properly so skipping it from being built temporarily
         <module>tools</module>
+        -->
         <!--
         <module>websocket</module>
         -->
