@@ -161,6 +161,10 @@ public class QueueWriter extends UntypedActor {
 
                 QueueAckRequest queueAckRequest = (QueueAckRequest) message;
 
+                if ( logger.isTraceEnabled() ){
+                    logger.trace("Receive QueueAckRequest for message with id: {}", queueAckRequest.getQueueMessageId() );
+                }
+
                 DistributedQueueService.Status status = queueActorHelper.ackQueueMessage(
                     queueAckRequest.getQueueName(),
                     queueAckRequest.getQueueMessageId() );

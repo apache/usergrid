@@ -299,6 +299,10 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     @Override
     public Status ackMessage(String queueName, UUID queueMessageId ) {
 
+        if( logger.isTraceEnabled() ){
+            logger.trace("Acking message for queue {} with id: {}", queueName, queueMessageId);
+        }
+
         Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.ACK_TIME_TOTAL ).time();
         try {
 
