@@ -167,17 +167,16 @@ public class SearchRequestBuilderStrategy {
             // fieldsWithType gives the caller an option to provide any schema related details on properties that
             // might appear in a sort predicate.  loop through these and set a specific sort, rather than adding a sort
             // for all possible types
-            else if ( knownFieldsWithType != null && knownFieldsWithType.size() > 0) {
-                if (knownFieldsWithType.containsKey(propertyName)){
+            else if ( knownFieldsWithType != null && knownFieldsWithType.size() > 0 && knownFieldsWithType.containsKey(propertyName)) {
 
-                    String esFieldName = EsQueryVistor.getFieldNameForClass(knownFieldsWithType.get(propertyName));
-                    // always make sure string sorts use the unanalyzed field
-                    if ( esFieldName.equals(IndexingUtils.FIELD_STRING_NESTED)){
-                        esFieldName = IndexingUtils.FIELD_STRING_NESTED_UNANALYZED;
-                    }
-
-                    srb.addSort( createSort( order, esFieldName, propertyName ) );
+                String esFieldName = EsQueryVistor.getFieldNameForClass(knownFieldsWithType.get(propertyName));
+                // always make sure string sorts use the unanalyzed field
+                if ( esFieldName.equals(IndexingUtils.FIELD_STRING_NESTED)){
+                    esFieldName = IndexingUtils.FIELD_STRING_NESTED_UNANALYZED;
                 }
+
+                srb.addSort( createSort( order, esFieldName, propertyName ) );
+
             }
             //apply regular sort logic which check all possible data types, since this is not a known property name
             else {
