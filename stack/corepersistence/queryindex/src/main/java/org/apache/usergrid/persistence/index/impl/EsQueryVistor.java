@@ -526,6 +526,32 @@ public class EsQueryVistor implements QueryVisitor {
                 "Unkown search type of " + object.getClass().getName() + " encountered" );
     }
 
+    /**
+     * Get the field name for the primitive type
+     */
+    public static String getFieldNameForClass( final Class clazz ) {
+        if ( clazz == String.class || clazz == UUID.class ) {
+            return IndexingUtils.FIELD_STRING_NESTED;
+        }
+
+        if ( clazz == Boolean.class ) {
+            return IndexingUtils.FIELD_BOOLEAN_NESTED;
+        }
+
+
+        if ( clazz == Integer.class || clazz == Long.class ) {
+            return IndexingUtils.FIELD_LONG_NESTED;
+        }
+
+        if ( clazz == Float.class || clazz == Double.class ) {
+            return IndexingUtils.FIELD_DOUBLE_NESTED;
+        }
+
+
+        throw new UnsupportedOperationException(
+            "Unkown search type of " + clazz.getClass().getName() + " encountered" );
+    }
+
 
     /**
      * Lowercase our input

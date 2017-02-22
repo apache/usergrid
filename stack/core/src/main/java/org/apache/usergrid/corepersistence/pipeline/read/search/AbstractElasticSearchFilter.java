@@ -21,6 +21,7 @@ package org.apache.usergrid.corepersistence.pipeline.read.search;
 
 
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
+import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.index.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,8 @@ import com.google.common.base.Optional;
 import rx.Observable;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -80,6 +83,21 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
 
         final SearchTypes searchTypes = getSearchTypes();
 
+        // pull out the basic Usergrid entity info to get known properties and their associated types
+        final Map<String, Class> propertiesWithType = new HashMap<>();
+        for (String type : searchTypes.getTypes()) {
+            try {
+                if ( Schema.getDefaultSchema().getEntityInfo(type) != null ){
+                    Schema.getDefaultSchema().getEntityInfo(type).getProperties().forEach((propName, propValue) ->
+                        propertiesWithType.put(propName, propValue.getType())
+                    );
+                }
+            }catch (Exception e){
+                // do nothing here, clear the potentially partially filled map and fall back to original behavior
+                propertiesWithType.clear();
+                logger.warn("Unable to obtain the default entity type fields with type. Sort may have degraded performance.");
+            }
+        }
 
         //return all ids that are emitted from this edge
         return observable.flatMap( idFilterResult -> {
@@ -105,7 +123,7 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
 
                     try {
                         final CandidateResults candidateResults =
-                            applicationEntityIndex.search( searchEdge, searchTypes, query, limit, currentOffSet );
+                            applicationEntityIndex.search( searchEdge, searchTypes, query, limit, currentOffSet, propertiesWithType );
 
 
                         Collection<SelectFieldMapping> fieldMappingCollection = candidateResults.getGetFieldMappings();

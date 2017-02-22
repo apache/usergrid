@@ -47,6 +47,8 @@ import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
+import java.util.Map;
+
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
 import static org.apache.usergrid.persistence.index.impl.SortBuilder.sortPropertyTermFilter;
 
@@ -79,7 +81,8 @@ public class SearchRequestBuilderStrategy {
      * Get the search request builder
      */
     public SearchRequestBuilder getBuilder( final SearchEdge searchEdge, final SearchTypes searchTypes,
-                                            final ParsedQuery query, final int limit, final int from ) {
+                                            final ParsedQuery query, final int limit, final int from,
+                                            final Map<String, Class> fieldsWithType ) {
 
         Preconditions
             .checkArgument( limit <= EntityIndex.MAX_LIMIT, "limit is greater than max " + EntityIndex.MAX_LIMIT );
@@ -112,7 +115,7 @@ public class SearchRequestBuilderStrategy {
             applyDefaultSortPredicates( srb, geoFields );
         }
         else {
-            applySortPredicates( srb, query, geoFields );
+            applySortPredicates( srb, query, geoFields, fieldsWithType );
         }
 
 
@@ -147,20 +150,13 @@ public class SearchRequestBuilderStrategy {
      * Invoked when there are sort predicates
      */
     private void applySortPredicates( final SearchRequestBuilder srb, final ParsedQuery query,
-                                      final GeoSortFields geoFields ) {
-
+                                      final GeoSortFields geoFields, final Map<String, Class> knownFieldsWithType ) {
 
         //we have sort predicates, sort them
         for ( SortPredicate sp : query.getSortPredicates() ) {
 
-
-            // we do not know the type of the "order by" property and so we do not know what
-            // type prefix to use. So, here we add an order by clause for every possible type
-            // that you can order by: string, number and boolean and we ask ElasticSearch
-            // to ignore any fields that are not present.
             final SortOrder order = sp.getDirection().toEsSort();
             final String propertyName = sp.getPropertyName();
-
 
             //if the user specified a geo field in their sort, then honor their sort order and use the point they
             // specified
@@ -168,23 +164,26 @@ public class SearchRequestBuilderStrategy {
                 final GeoDistanceSortBuilder geoSort = geoFields.applyOrder( propertyName, SortOrder.ASC );
                 srb.addSort( geoSort );
             }
-
-            //apply regular sort logic, since this is not a geo point
+            // fieldsWithType gives the caller an option to provide any schema related details on properties that
+            // might appear in a sort predicate.  loop through these and set a specific sort, rather than adding a sort
+            // for all possible types
+            else if ( knownFieldsWithType != null && knownFieldsWithType.size() > 0) {
+                if (knownFieldsWithType.containsKey(propertyName)){
+                    srb.addSort( createSort( order, EsQueryVistor.getFieldNameForClass(knownFieldsWithType.get(propertyName)), propertyName ) );
+                }
+            }
+            //apply regular sort logic which check all possible data types, since this is not a known property name
             else {
-
 
                 //sort order is arbitrary if the user changes data types.  Double, long, string, boolean are supported
                 //default sort types
-
                 srb.addSort( createSort( order, IndexingUtils.FIELD_DOUBLE_NESTED, propertyName ) );
-
                 srb.addSort( createSort( order, IndexingUtils.FIELD_LONG_NESTED, propertyName ) );
 
                 /**
                  * We always want to sort by the unanalyzed string field to ensure correct ordering
                  */
                 srb.addSort( createSort( order, IndexingUtils.FIELD_STRING_NESTED_UNANALYZED, propertyName ) );
-
                 srb.addSort( createSort( order, IndexingUtils.FIELD_BOOLEAN_NESTED, propertyName ) );
             }
         }
