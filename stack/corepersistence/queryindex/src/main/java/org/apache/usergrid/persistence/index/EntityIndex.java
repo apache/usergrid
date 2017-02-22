@@ -26,6 +26,7 @@ import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.model.entity.Id;
 import rx.Observable;
 
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -101,6 +102,21 @@ public interface EntityIndex extends CPManager {
      */
     CandidateResults search(final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
                             final int limit, final int offset);
+
+    /**
+     * Search on every document in the specified search edge.  Also search by the types if specified
+     *
+     * @param searchEdge        The edge to search on
+     * @param searchTypes       The search types to search
+     * @param query             The query to execute
+     * @param limit             The limit of values to return
+     * @param offset            The offset to query on
+     * @param fieldsWithType    An optional param that allows the caller to provide schema related info which might
+     *                          relate to data in the query, such as sort predicate types
+     * @return
+     */
+    CandidateResults search(final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
+                            final int limit, final int offset, final Map<String, Class> fieldsWithType);
 
 
     /**

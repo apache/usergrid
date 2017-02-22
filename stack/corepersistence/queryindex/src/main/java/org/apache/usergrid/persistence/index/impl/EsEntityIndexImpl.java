@@ -411,6 +411,11 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
     public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
                                     final int limit, final int offset ) {
+        return search(searchEdge, searchTypes, query, limit, offset, new HashMap<>(0));
+    }
+
+    public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
+                                    final int limit, final int offset, final Map<String, Class> fieldsWithType ) {
 
         IndexValidationUtils.validateSearchEdge(searchEdge);
         Preconditions.checkNotNull(searchTypes, "searchTypes cannot be null");
@@ -422,7 +427,8 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         final ParsedQuery parsedQuery = ParsedQueryBuilder.build(query);
 
-        final SearchRequestBuilder srb = searchRequest.getBuilder( searchEdge, searchTypes, parsedQuery, limit, offset )
+        final SearchRequestBuilder srb = searchRequest
+            .getBuilder( searchEdge, searchTypes, parsedQuery, limit, offset, fieldsWithType )
             .setTimeout(TimeValue.timeValueMillis(queryTimeout));
 
         if ( logger.isDebugEnabled() ) {
