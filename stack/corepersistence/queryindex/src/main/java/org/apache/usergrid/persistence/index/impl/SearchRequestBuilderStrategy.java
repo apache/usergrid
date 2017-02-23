@@ -47,6 +47,7 @@ import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createContextName;
@@ -81,18 +82,19 @@ public class SearchRequestBuilderStrategy {
      * Get the search request builder
      */
     public SearchRequestBuilder getBuilder( final SearchEdge searchEdge, final SearchTypes searchTypes,
-                                            final ParsedQuery query, final int limit, final int from,
+                                            final QueryVisitor visitor, final int limit, final int from,
+                                            final List<SortPredicate> sortPredicates,
                                             final Map<String, Class> fieldsWithType ) {
 
         Preconditions
             .checkArgument( limit <= EntityIndex.MAX_LIMIT, "limit is greater than max " + EntityIndex.MAX_LIMIT );
 
+        Preconditions.checkNotNull( visitor, "query visitor cannot be null");
+
         SearchRequestBuilder srb =
             esProvider.getClient().prepareSearch( alias.getReadAlias() ).setTypes( IndexingUtils.ES_ENTITY_TYPE )
                       .setSearchType( SearchType.QUERY_THEN_FETCH );
 
-
-        final QueryVisitor visitor = visitParsedQuery( query );
 
         final Optional<QueryBuilder> queryBuilder = visitor.getQueryBuilder();
 
@@ -111,11 +113,11 @@ public class SearchRequestBuilderStrategy {
 
 
         //no sort predicates, sort by edge time descending, entity id second
-        if ( query.getSortPredicates().size() == 0 ) {
+        if ( sortPredicates.size() == 0 ) {
             applyDefaultSortPredicates( srb, geoFields );
         }
         else {
-            applySortPredicates( srb, query, geoFields, fieldsWithType );
+            applySortPredicates( srb, sortPredicates, geoFields, fieldsWithType );
         }
 
 
@@ -149,17 +151,19 @@ public class SearchRequestBuilderStrategy {
     /**
      * Invoked when there are sort predicates
      */
-    private void applySortPredicates( final SearchRequestBuilder srb, final ParsedQuery query,
+    private void applySortPredicates( final SearchRequestBuilder srb, final List<SortPredicate> sortPredicates,
                                       final GeoSortFields geoFields, final Map<String, Class> knownFieldsWithType ) {
 
-        //we have sort predicates, sort them
-        for ( SortPredicate sp : query.getSortPredicates() ) {
+        Preconditions.checkNotNull(sortPredicates, "sort predicates list cannot be null");
+
+        for ( SortPredicate sp : sortPredicates ) {
 
             final SortOrder order = sp.getDirection().toEsSort();
             final String propertyName = sp.getPropertyName();
 
-            //if the user specified a geo field in their sort, then honor their sort order and use the point they
-            // specified
+            // if the user specified a geo field in their sort, then honor their sort order and use the field they
+            // specified. this is added first so it's known on the response hit when fetching the geo distance later
+            // see org.apache.usergrid.persistence.index.impl.IndexingUtils.parseIndexDocId(org.elasticsearch.search.SearchHit, boolean)
             if ( geoFields.contains( propertyName ) ) {
                 final GeoDistanceSortBuilder geoSort = geoFields.applyOrder( propertyName, SortOrder.ASC );
                 srb.addSort( geoSort );
@@ -245,26 +249,6 @@ public class SearchRequestBuilderStrategy {
         }
 
         return boolQueryFilter;
-    }
-
-
-    /**
-     * Perform our visit of the query once for efficiency
-     */
-    private QueryVisitor visitParsedQuery( final ParsedQuery parsedQuery ) {
-        QueryVisitor v = new EsQueryVistor();
-
-        if ( parsedQuery.getRootOperand() != null ) {
-
-            try {
-                parsedQuery.getRootOperand().visit( v );
-            }
-            catch ( IndexException ex ) {
-                throw new RuntimeException( "Error building ElasticSearch query", ex );
-            }
-        }
-
-        return v;
     }
 
 

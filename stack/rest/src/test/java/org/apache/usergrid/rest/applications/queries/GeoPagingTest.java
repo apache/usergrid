@@ -208,6 +208,52 @@ public class GeoPagingTest extends AbstractRestIT {
     }
   }
 
+    /**
+     * Test to make sure that a geo query with an order by of the geo field returns in the correct order.  This is known
+     * as sorting based on distance to the coordinates in the within operand.
+     * @throws IOException
+     */
+    @Test
+    public void geoQuerywithDistanceSort() throws IOException {
+
+        int maxRangeLimit = 20;
+        final Entity[] cats = new Entity[maxRangeLimit];
+
+        // 1. Create several entities
+        for (int i = 0; i < 20; i++) {
+            Entity cat = new Entity();
+            cat.put("name", "cat" + i);
+            cat.put("location", new MapUtils.HashMapBuilder<String, Double>()
+                .map("latitude", 37.0)
+                .map("longitude", -75.0 - 0.00001*i)); // as we create, make each entity is ascending further away from the later search of 37, -75
+            cats[i] = cat;
+            this.app().collection("cats").post(cat);
+        }
+        this.refreshIndex();
+
+        final QueryParameters params = new QueryParameters();
+        for (int consistent = 0; consistent < 20; consistent++) {
+
+            // 2. Query all of the entities
+            final String query = "select * where location within 100 of 37, -75 order by location asc";
+            params.setQuery(query);
+            params.setLimit(50);
+            Collection collection = this.app().collection("cats").get(params);
+
+            assertEquals(20, collection.getResponse().getEntityCount());
+            final List returnedEntities = collection.getResponse().getEntities();
+
+            // 3. Test that the entities were returned in the order expected
+            for (int i = 0; i < maxRangeLimit; i++) {
+
+                // shouldn't start at 10 since you're excluding it above in the query, it should return 9,8,7
+                final Entity returnedEntity = (Entity)returnedEntities.get(i);
+                final Entity catEntity = cats[i];
+                assertEquals(catEntity.get("name"), returnedEntity.get("name"));
+            }
+        }
+    }
+
 
   /**
    * Creates a store right on top of the center store and checks to see if we can find that store, then find both
