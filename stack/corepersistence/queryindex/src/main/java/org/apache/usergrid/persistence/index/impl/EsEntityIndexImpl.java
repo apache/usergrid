@@ -39,6 +39,8 @@ import org.apache.usergrid.persistence.index.exceptions.IndexException;
 import org.apache.usergrid.persistence.index.migration.IndexDataVersions;
 import org.apache.usergrid.persistence.index.query.ParsedQuery;
 import org.apache.usergrid.persistence.index.query.ParsedQueryBuilder;
+import org.apache.usergrid.persistence.index.query.SortPredicate;
+import org.apache.usergrid.persistence.index.query.tree.QueryVisitor;
 import org.apache.usergrid.persistence.index.utils.IndexValidationUtils;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
@@ -427,8 +429,21 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         final ParsedQuery parsedQuery = ParsedQueryBuilder.build(query);
 
+        if ( parsedQuery == null ){
+            throw new IllegalArgumentException("a null query string cannot be parsed");
+        }
+
+        final QueryVisitor visitor = visitParsedQuery(parsedQuery);
+
+        boolean hasGeoSortPredicates = false;
+
+        for (SortPredicate sortPredicate : parsedQuery.getSortPredicates() ){
+            hasGeoSortPredicates = visitor.getGeoSorts().contains(sortPredicate.getPropertyName());
+        }
+
+
         final SearchRequestBuilder srb = searchRequest
-            .getBuilder( searchEdge, searchTypes, parsedQuery, limit, offset, fieldsWithType )
+            .getBuilder( searchEdge, searchTypes, visitor, limit, offset, parsedQuery.getSortPredicates(), fieldsWithType )
             .setTimeout(TimeValue.timeValueMillis(queryTimeout));
 
         if ( logger.isDebugEnabled() ) {
@@ -455,7 +470,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         failureMonitor.success();
 
-        return parseResults( searchResponse, parsedQuery, limit, offset);
+        return parseResults( searchResponse, parsedQuery, limit, offset, hasGeoSortPredicates);
     }
 
 
@@ -642,7 +657,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
      * Parse the results and return the canddiate results
      */
     private CandidateResults parseResults( final SearchResponse searchResponse, final ParsedQuery query,
-                                           final int limit, final int from ) {
+                                           final int limit, final int from, boolean hasGeoSortPredicates ) {
 
         final SearchHits searchHits = searchResponse.getHits();
         final SearchHit[] hits = searchHits.getHits();
@@ -653,12 +668,10 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
         List<CandidateResult> candidates = new ArrayList<>( hits.length );
 
-
-
         for ( SearchHit hit : hits ) {
             CandidateResult candidateResult;
 
-            candidateResult =  parseIndexDocId( hit, query.isGeoQuery() );
+            candidateResult =  parseIndexDocId( hit, hasGeoSortPredicates );
             candidates.add( candidateResult );
         }
 
@@ -745,6 +758,26 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
 
 
         }
+    }
+
+
+    /**
+     * Perform our visit of the query once for efficiency
+     */
+    private QueryVisitor visitParsedQuery( final ParsedQuery parsedQuery ) {
+        QueryVisitor v = new EsQueryVistor();
+
+        if ( parsedQuery.getRootOperand() != null ) {
+
+            try {
+                parsedQuery.getRootOperand().visit( v );
+            }
+            catch ( IndexException ex ) {
+                throw new RuntimeException( "Error building ElasticSearch query", ex );
+            }
+        }
+
+        return v;
     }
 
 

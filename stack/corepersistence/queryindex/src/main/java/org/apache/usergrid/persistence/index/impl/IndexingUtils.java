@@ -228,10 +228,14 @@ public class IndexingUtils {
         return parseIndexDocId(hit.getId());
     }
 
-    public static CandidateResult parseIndexDocId( final SearchHit hit, boolean isGeo ) {
+    public static CandidateResult parseIndexDocId( final SearchHit hit, boolean hasGeoSortPredicates ) {
 
         final String documentId = hit.getId();
-        final double distance = isGeo ? (double) hit.sortValues()[0] : -1;
+
+        // geosort predicates always added as the first sort in the ES filter, and the distance is represented as the
+        // corresponding sortValue in the searchHit.
+        // see org.apache.usergrid.persistence.index.impl.SearchRequestBuilderStrategy.applySortPredicates()
+        final double distance = hasGeoSortPredicates ? (double) hit.sortValues()[0] : -1;
         return parseIndexDocId(documentId,distance);
     }
 
