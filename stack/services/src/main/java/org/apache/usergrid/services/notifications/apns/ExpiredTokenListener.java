@@ -23,6 +23,7 @@ package org.apache.usergrid.services.notifications.apns;
 import com.relayrides.pushy.apns.ExpiredToken;
 import com.relayrides.pushy.apns.PushManager;
 import com.relayrides.pushy.apns.util.SimpleApnsPushNotification;
+import com.relayrides.pushy.apns.util.TokenUtil;
 import org.apache.usergrid.services.notifications.InactiveDeviceManager;
 
 import java.util.Collection;
@@ -40,7 +41,7 @@ public class ExpiredTokenListener implements com.relayrides.pushy.apns.ExpiredTo
     public void handleExpiredTokens(PushManager<? extends SimpleApnsPushNotification> pushManager, Collection<ExpiredToken> expiredTokens) {
         Map<String,Date> inactiveDeviceMap = new HashMap<>();
         for(ExpiredToken token : expiredTokens){
-            String expiredToken = new String(token.getToken());
+            String expiredToken = TokenUtil.tokenBytesToString( token.getToken() );
             inactiveDeviceMap.put(expiredToken, token.getExpiration());
         }
         if(pushManager instanceof EntityPushManager){
