@@ -18,16 +18,10 @@
 package org.apache.usergrid.rest.applications;
 
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -35,7 +29,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.springframework.context.annotation.Scope;
@@ -44,25 +37,15 @@ import org.springframework.stereotype.Component;
 import org.apache.commons.lang.NullArgumentException;
 import org.apache.commons.lang.StringUtils;
 
-import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
-import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilderImpl;
-import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.persistence.Query;
-import org.apache.usergrid.persistence.exceptions.RequiredPropertyNotFoundException;
-import org.apache.usergrid.persistence.index.utils.UUIDUtils;
-import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
-import org.apache.usergrid.rest.RootResource;
-import org.apache.usergrid.rest.exceptions.RequiredPropertyNotFoundExceptionMapper;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
 import org.apache.usergrid.rest.system.IndexResource;
-import org.apache.usergrid.services.AbstractCollectionService;
 import org.apache.usergrid.services.ServiceAction;
 import org.apache.usergrid.services.ServiceParameter;
 import org.apache.usergrid.services.ServicePayload;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 
 

@@ -78,6 +78,7 @@ public class Query {
     private String collection;
     private String ql;
     private Collection<SelectFieldMapping> selectFields;
+    private boolean analyzeOnly = false;
 
 
     private static ObjectMapper mapper = new ObjectMapper();
@@ -120,6 +121,7 @@ public class Query {
                 ? new ArrayList<>( q.counterFilters ) : null;
         collection = q.collection;
         level = q.level;
+        analyzeOnly = q.analyzeOnly;
 
     }
 
@@ -481,6 +483,13 @@ public class Query {
         this.permissions = permissions;
     }
 
+    public void setAnalyzeOnly(final boolean analyzeOnly){
+        this.analyzeOnly = analyzeOnly;
+    }
+
+    public boolean getAnalyzeOnly(){
+        return analyzeOnly;
+    }
 
     public boolean isMergeSelectResults() {
         return mergeSelectResults;

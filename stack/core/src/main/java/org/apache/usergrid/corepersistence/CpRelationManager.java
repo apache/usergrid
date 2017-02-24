@@ -629,6 +629,7 @@ public class CpRelationManager implements RelationManager {
         final Query toExecute = adjustQuery( query );
         final Optional<String> queryString = query.isGraphSearch()? Optional.<String>absent(): query.getQl();
         final Id ownerId = headEntity.asId();
+        final boolean analyzeOnly = query.getAnalyzeOnly();
 
 
         if(query.getLevel() == Level.IDS ){
@@ -641,6 +642,8 @@ public class CpRelationManager implements RelationManager {
                     final CollectionSearch search =
                         new CollectionSearch( applicationScope, ownerId, collectionName, collection.getType(), toExecute.getLimit(),
                             queryString, cursor );
+
+                    search.setAnalyzeOnly(analyzeOnly);
 
                     return collectionService.searchCollectionIds( search );
                 }
@@ -657,6 +660,8 @@ public class CpRelationManager implements RelationManager {
                 final CollectionSearch search =
                     new CollectionSearch( applicationScope, ownerId, collectionName, collection.getType(), toExecute.getLimit(),
                         queryString, cursor );
+
+                search.setAnalyzeOnly(analyzeOnly);
 
                 return collectionService.searchCollection( search );
             }
@@ -919,6 +924,8 @@ public class CpRelationManager implements RelationManager {
 
         headEntity = em.validate( headEntity );
 
+        final boolean analyzeOnly = query.getAnalyzeOnly();
+
 
         final Query toExecute = adjustQuery( query );
 
@@ -951,6 +958,7 @@ public class CpRelationManager implements RelationManager {
                     final ConnectionSearch search =
                         new ConnectionSearch( applicationScope, sourceId, entityType, connection, toExecute.getLimit(),
                             queryString, cursor, isConnecting );
+                    search.setAnalyzeOnly(analyzeOnly);
                     return connectionService.searchConnectionAsRefs( search );
                 }
             }.next();
@@ -966,6 +974,7 @@ public class CpRelationManager implements RelationManager {
                 final ConnectionSearch search =
                     new ConnectionSearch( applicationScope, sourceId, entityType, connection, toExecute.getLimit(),
                         queryString, cursor, isConnecting );
+                search.setAnalyzeOnly(analyzeOnly);
                 return connectionService.searchConnection( search );
             }
         }.next();

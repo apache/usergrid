@@ -68,7 +68,7 @@ public class CollectionServiceImpl implements CollectionService {
             results = pipelineBuilder.traverseCollection( collectionName ).loadEntities();
         }
         else {
-            results = pipelineBuilder.searchCollection( collectionName, query.get(),search.getEntityType()).loadEntities();
+            results = pipelineBuilder.searchCollection( collectionName, query.get(),search.getEntityType(), search.getAnalyzeOnly()).loadEntities();
         }
 
 

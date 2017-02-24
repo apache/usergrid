@@ -344,7 +344,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         SearchEdge is = CpNamingUtils.createCollectionSearchEdge( rootId, collName );
 
 
-        return ei.search( is, SearchTypes.fromTypes( type ), query, 1000, 0 );
+        return ei.search( is, SearchTypes.fromTypes( type ), query, 1000, 0, false );
     }
 
     /**
