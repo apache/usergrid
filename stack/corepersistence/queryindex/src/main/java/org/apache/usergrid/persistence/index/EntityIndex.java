@@ -76,7 +76,7 @@ public interface EntityIndex extends CPManager {
      * @param edge
      * @return
      */
-    long getEntitySize(final SearchEdge edge);
+    long getTotalEntitySizeInBytes(final SearchEdge edge);
 
     /**
      * Initialize the index if necessary.  This is an idempotent operation and should not create an index
@@ -98,10 +98,12 @@ public interface EntityIndex extends CPManager {
      * @param query       The query to execute
      * @param limit       The limit of values to return
      * @param offset      The offset to query on
+     * @param analyzeOnly This optional param will instruct the query processing to only analyze the query and
+     *                          provide info but not actually execute the query.
      * @return
      */
     CandidateResults search(final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
-                            final int limit, final int offset);
+                            final int limit, final int offset, final boolean analyzeOnly);
 
     /**
      * Search on every document in the specified search edge.  Also search by the types if specified
@@ -113,10 +115,13 @@ public interface EntityIndex extends CPManager {
      * @param offset            The offset to query on
      * @param fieldsWithType    An optional param that allows the caller to provide schema related info which might
      *                          relate to data in the query, such as sort predicate types
+     * @param analyzeOnly       This optional param will instruct the query processing to only analyze the query and
+     *                          provide info but not actually execute the query.
      * @return
      */
     CandidateResults search(final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
-                            final int limit, final int offset, final Map<String, Class> fieldsWithType);
+                            final int limit, final int offset, final Map<String, Class> fieldsWithType,
+                            final boolean analyzeOnly);
 
 
     /**

@@ -353,7 +353,7 @@ public class IndexServiceTest {
 
         //ensure that no edges remain
         CandidateResults connectionResultsEmpty = EntityIndex.search( connectionSearchEdge,
-            SearchTypes.fromTypes( "thing" ),"select *",10,0 );
+            SearchTypes.fromTypes( "thing" ),"select *",10,0, false );
 
         assertEquals(1,connectionResultsEmpty.size());
 
@@ -375,7 +375,7 @@ public class IndexServiceTest {
 
         //ensure that no edges remain
         connectionResultsEmpty = EntityIndex.search( connectionSearchEdge,
-            SearchTypes.fromTypes( "thing" ),"select *",10,0 );
+            SearchTypes.fromTypes( "thing" ),"select *",10,0, false );
 
         assertEquals(0,connectionResultsEmpty.size());
 
@@ -434,7 +434,7 @@ public class IndexServiceTest {
 
             //ensure that no edges remain
             final CandidateResults connectionResultsEmpty = EntityIndex.search( connectionSearchEdge,
-                SearchTypes.fromTypes( "things" ),"select *",10,0 );
+                SearchTypes.fromTypes( "things" ),"select *",10,0, false );
 
             assertEquals(0,connectionResultsEmpty.size());
         }
@@ -535,7 +535,7 @@ public class IndexServiceTest {
         String ql = "select *";
         for ( int i = 0; i < attempts; i++ ) {
             final CandidateResults candidateResults =
-                EntityIndex.search( searchEdge, searchTypes, ql , 100, 0 );
+                EntityIndex.search( searchEdge, searchTypes, ql , 100, 0, false );
 
             if ( candidateResults.size() == expectedSize ) {
                 return candidateResults;

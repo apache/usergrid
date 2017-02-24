@@ -29,6 +29,7 @@ import org.apache.usergrid.persistence.cache.CacheFactory;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
+import org.apache.usergrid.persistence.index.exceptions.QueryAnalyzerException;
 import org.apache.usergrid.security.shiro.utils.LocalShiroCache;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
 import org.apache.usergrid.services.ServiceParameter.IdParameter;
@@ -686,6 +687,7 @@ public abstract class AbstractService implements Service {
                     Query.fromIdentifier( name ), parameters, payload );
         }
         else if ( query != null ) {
+            query.setAnalyzeOnly(request.isAnalyzeQueryOnly());
             return new ServiceContext( this, action, request, previousResults, owner, collectionName, query, parameters,
                     payload );
         }
