@@ -73,7 +73,7 @@ public class AggregationServiceImpl implements AggregationService {
             MathObservable.sumLong(
                 graphManager.getEdgeTypesFromSource(new SimpleSearchEdgeType(applicationScope.getApplication(), CpNamingUtils.EDGE_COLL_PREFIX, Optional.<String>absent()))
                     .map(type -> CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), type))
-                    .map(edge -> entityIndex.getEntitySize(edge))
+                    .map(edge -> entityIndex.getTotalEntitySizeInBytes(edge))
             ), sumTimer).toBlocking().last();
 
         return sum.longValue();
@@ -90,7 +90,7 @@ public class AggregationServiceImpl implements AggregationService {
                         {
                             SearchEdge edge = CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), type);
                             final String collectionName = CpNamingUtils.getCollectionNameFromEdgeName(type);
-                            long sumType =  entityIndex.getEntitySize(edge);
+                            long sumType =  entityIndex.getTotalEntitySizeInBytes(edge);
                             map.put(collectionName,sumType);
                         })
                     )
@@ -103,7 +103,7 @@ public class AggregationServiceImpl implements AggregationService {
     public long getSize(ApplicationScope applicationScope, SearchEdge edge) {
         final IndexLocationStrategy indexLocationStrategy = indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope);
         EntityIndex entityIndex = entityIndexFactory.createEntityIndex(indexLocationStrategy);
-        return entityIndex.getEntitySize(edge);
+        return entityIndex.getTotalEntitySizeInBytes(edge);
     }
 
     @Override

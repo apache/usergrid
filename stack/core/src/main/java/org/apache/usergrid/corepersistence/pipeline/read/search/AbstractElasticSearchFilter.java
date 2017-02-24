@@ -23,6 +23,8 @@ package org.apache.usergrid.corepersistence.pipeline.read.search;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.index.*;
+import org.apache.usergrid.persistence.index.exceptions.QueryAnalyzerEnforcementException;
+import org.apache.usergrid.persistence.index.exceptions.QueryAnalyzerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,19 +56,21 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final String query;
     private final Timer searchTimer;
+    private final boolean analyzeOnly;
 
 
     /**
      * Create a new instance of our command
      */
-    public AbstractElasticSearchFilter( final EntityIndexFactory entityIndexFactory,
-                                        final MetricsFactory metricsFactory,
-                                        final IndexLocationStrategyFactory indexLocationStrategyFactory,
-                                        final String query ) {
+    public AbstractElasticSearchFilter(final EntityIndexFactory entityIndexFactory,
+                                       final MetricsFactory metricsFactory,
+                                       final IndexLocationStrategyFactory indexLocationStrategyFactory,
+                                       final String query, boolean analyzeOnly) {
         this.entityIndexFactory = entityIndexFactory;
         this.indexLocationStrategyFactory = indexLocationStrategyFactory;
         this.query = query;
         this.searchTimer = metricsFactory.getTimer( AbstractElasticSearchFilter.class, "query.search" );
+        this.analyzeOnly = analyzeOnly;
     }
 
 
@@ -123,7 +127,7 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
 
                     try {
                         final CandidateResults candidateResults =
-                            applicationEntityIndex.search( searchEdge, searchTypes, query, limit, currentOffSet, propertiesWithType );
+                            applicationEntityIndex.search( searchEdge, searchTypes, query, limit, currentOffSet, propertiesWithType, analyzeOnly );
 
 
                         Collection<SelectFieldMapping> fieldMappingCollection = candidateResults.getGetFieldMappings();
@@ -156,8 +160,11 @@ public abstract class AbstractElasticSearchFilter extends AbstractPathFilter<Id,
 
                     }
                     catch ( Throwable t ) {
-
-                        logger.error( "Unable to search candidates", t );
+                        // query analyzer exceptions are short circuits initiated by an exception, but is not really an error
+                        // still rethrow because it's mapped later
+                        if (!(t instanceof QueryAnalyzerException || t instanceof QueryAnalyzerEnforcementException) ){
+                            logger.error( "Unable to search candidates", t );
+                        }
                         subscriber.onError( t );
                     }
                 }

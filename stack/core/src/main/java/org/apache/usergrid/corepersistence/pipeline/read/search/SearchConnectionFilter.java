@@ -50,8 +50,9 @@ public class SearchConnectionFilter extends AbstractElasticSearchFilter {
                                    final IndexLocationStrategyFactory indexLocationStrategyFactory,
                                    @Assisted( "query" ) final String query,
                                    @Assisted( "connectionName" ) final String connectionName,
-                                   @Assisted( "connectedEntityType" ) final Optional<String> connectedEntityType ) {
-        super( entityIndexFactory, metricsFactory, indexLocationStrategyFactory, query );
+                                   @Assisted( "connectedEntityType" ) final Optional<String> connectedEntityType,
+                                   @Assisted( "analyzeOnly") final boolean analyzeOnly) {
+        super( entityIndexFactory, metricsFactory, indexLocationStrategyFactory, query, analyzeOnly);
 
         this.connectionName = connectionName;
         this.connectedEntityType = connectedEntityType;
