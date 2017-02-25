@@ -31,6 +31,7 @@ public class QueryAnalyzer {
     public static final String v_operand_count = "operand_count_exceeded";
     public static final String v_large_collection = "large_collection_size_bytes";
     public static final String v_large_index = "large_index_size_bytes";
+    public static final String v_full_collection_sort = "full_collection_sort";
 
     public static final String k_violation = "violation";
     public static final String k_limit = "limit";
@@ -69,6 +70,19 @@ public class QueryAnalyzer {
                 put(k_limit, errorCollectionSizeBytes);
                 put(k_actual, collectionSizeInBytes);
             }});
+
+            // query like "select * order by created asc"
+            if(parsedQuery.getSelectFieldMappings().size() < 1 &&
+                !parsedQuery.getOriginalQuery().toLowerCase().contains("where") &&
+                parsedQuery.getSortPredicates().size() > 0 ){
+
+                violations.add(new HashMap<String, Object>(3){{
+                    put(k_violation, v_full_collection_sort);
+                    put(k_limit, null);
+                    put(k_actual, null);
+                }});
+            }
+
         }
 
         // complex queries can be determined from the # of operands and sort predicates

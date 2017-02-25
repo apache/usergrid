@@ -225,7 +225,7 @@ public interface IndexFig extends GuicyFig {
     int getQueryBreakerErrorSortPredicateCount();
 
 
-    @Default("500000000L") // 500 MB
+    @Default("500000000") // 500 MB
     @Key(USERGRID_QUERYANALYZER_COLLECTIONSIZE)
     long getQueryBreakerErrorCollectionSizeBytes();
 
