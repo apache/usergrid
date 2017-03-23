@@ -21,6 +21,8 @@ package org.apache.usergrid.persistence.index.impl;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.common.base.*;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
@@ -36,6 +38,8 @@ import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.ElasticSearchQueryBuilder.SearchRequestBuilderStrategyV2;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
+import org.apache.usergrid.persistence.index.exceptions.QueryAnalyzerException;
+import org.apache.usergrid.persistence.index.exceptions.QueryAnalyzerEnforcementException;
 import org.apache.usergrid.persistence.index.migration.IndexDataVersions;
 import org.apache.usergrid.persistence.index.query.ParsedQuery;
 import org.apache.usergrid.persistence.index.query.ParsedQueryBuilder;
@@ -54,6 +58,8 @@ import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
+import org.elasticsearch.action.admin.indices.stats.CommonStats;
+import org.elasticsearch.action.admin.indices.stats.IndicesStatsResponse;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -78,6 +84,7 @@ import rx.Observable;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.APPLICATION_ID_FIELDNAME;
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.applicationId;
@@ -127,6 +134,10 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     private IndexCache aliasCache;
     private Timer mappingTimer;
     private Meter refreshIndexMeter;
+
+
+    private Cache<String, Long> sizeCache =
+        CacheBuilder.newBuilder().maximumSize( 1000 ).expireAfterWrite(5, TimeUnit.MINUTES).build();
 
 
     @Inject
@@ -412,12 +423,13 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
     }
 
     public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
-                                    final int limit, final int offset ) {
-        return search(searchEdge, searchTypes, query, limit, offset, new HashMap<>(0));
+                                    final int limit, final int offset, final boolean analyzeOnly ) {
+        return search(searchEdge, searchTypes, query, limit, offset, new HashMap<>(0), analyzeOnly);
     }
 
     public CandidateResults search( final SearchEdge searchEdge, final SearchTypes searchTypes, final String query,
-                                    final int limit, final int offset, final Map<String, Class> fieldsWithType ) {
+                                    final int limit, final int offset, final Map<String, Class> fieldsWithType,
+                                    final boolean analyzeOnly ) {
 
         IndexValidationUtils.validateSearchEdge(searchEdge);
         Preconditions.checkNotNull(searchTypes, "searchTypes cannot be null");
@@ -441,6 +453,36 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             hasGeoSortPredicates = visitor.getGeoSorts().contains(sortPredicate.getPropertyName());
         }
 
+
+        final String cacheKey = applicationScope.getApplication().getUuid().toString()+"_"+searchEdge.getEdgeName();
+        final Object totalEdgeSizeFromCache = sizeCache.getIfPresent(cacheKey);
+        long totalEdgeSizeInBytes;
+        if (totalEdgeSizeFromCache == null){
+            totalEdgeSizeInBytes = getTotalEntitySizeInBytes(searchEdge);
+            sizeCache.put(cacheKey, totalEdgeSizeInBytes);
+        }else{
+            totalEdgeSizeInBytes = (long) totalEdgeSizeFromCache;
+        }
+
+        final Object totalIndexSizeFromCache = sizeCache.getIfPresent(indexLocationStrategy.getIndexRootName());
+        long totalIndexSizeInBytes;
+        if (totalIndexSizeFromCache == null){
+            totalIndexSizeInBytes = getIndexSize();
+            sizeCache.put(indexLocationStrategy.getIndexRootName(), totalIndexSizeInBytes);
+        }else{
+            totalIndexSizeInBytes = (long) totalIndexSizeFromCache;
+        }
+
+        List<Map<String, Object>> violations = QueryAnalyzer.analyze(parsedQuery, totalEdgeSizeInBytes, totalIndexSizeInBytes, indexFig);
+        if(indexFig.enforceQueryBreaker() && violations.size() > 0){
+            throw new QueryAnalyzerEnforcementException(violations, parsedQuery.getOriginalQuery());
+        }else{
+            logger.warn( QueryAnalyzer.violationsAsString(violations, parsedQuery.getOriginalQuery()) );
+        }
+
+        if(analyzeOnly){
+            throw new QueryAnalyzerException(violations, parsedQuery.getOriginalQuery(), applicationScope.getApplication().getUuid());
+        }
 
         final SearchRequestBuilder srb = searchRequest
             .getBuilder( searchEdge, searchTypes, visitor, limit, offset, parsedQuery.getSortPredicates(), fieldsWithType )
@@ -824,9 +866,20 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         return Health.RED;
     }
 
+    private long getIndexSize(){
+        final IndicesStatsResponse statsResponse = esProvider.getClient()
+            .admin()
+            .indices()
+            .prepareStats(indexLocationStrategy.getIndexInitialName())
+            .all()
+            .execute()
+            .actionGet();
+        final CommonStats indexStats = statsResponse.getIndex(indexLocationStrategy.getIndexInitialName()).getTotal();
+        return indexStats.getStore().getSizeInBytes();
+    }
 
     @Override
-    public long getEntitySize(final SearchEdge edge){
+    public long getTotalEntitySizeInBytes(final SearchEdge edge){
         //"term":{"edgeName":"zzzcollzzz|roles"}
         SearchRequestBuilder builder = searchRequestBuilderStrategyV2.getBuilder();
         builder.setQuery(new TermQueryBuilder("edgeSearch",IndexingUtils.createContextName(applicationScope,edge)));

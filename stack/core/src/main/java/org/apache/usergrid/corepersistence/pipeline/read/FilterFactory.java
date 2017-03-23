@@ -96,7 +96,8 @@ public interface FilterFactory {
      */
     SearchCollectionFilter searchCollectionFilter( @Assisted( "query" ) final String query,
                                                    @Assisted( "collectionName" ) final String collectionName,
-                                                   @Assisted( "entityType" ) final String entityType );
+                                                   @Assisted( "entityType" ) final String entityType,
+                                                   @Assisted( "analyzeOnly") final boolean analyzeOnly);
 
 
     /**
@@ -108,8 +109,8 @@ public interface FilterFactory {
      */
     SearchConnectionFilter searchConnectionFilter( @Assisted( "query" ) final String query,
                                                    @Assisted( "connectionName" ) final String connectionName,
-                                                   @Assisted( "connectedEntityType" )
-                                                   final Optional<String> connectedEntityType );
+                                                   @Assisted( "connectedEntityType" ) final Optional<String> connectedEntityType,
+                                                   @Assisted( "analyzeOnly") final boolean analyzeOnly);
 
 
     /**

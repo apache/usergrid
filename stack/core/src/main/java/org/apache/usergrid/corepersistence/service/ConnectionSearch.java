@@ -37,6 +37,8 @@ public class ConnectionSearch {
     private final Optional<String> query;
     private final Optional<String> cursor;
     private final boolean isConnecting;
+    private boolean analyzeOnly;
+
 
 
     public ConnectionSearch( final ApplicationScope applicationScope, final Id sourceNodeId, final Optional<String> entityType,
@@ -50,6 +52,8 @@ public class ConnectionSearch {
         this.query = query;
         this.cursor = cursor;
         this.isConnecting = isConnecting;
+        this.analyzeOnly = false;
+
     }
 
 
@@ -89,5 +93,13 @@ public class ConnectionSearch {
 
     public boolean getIsConnecting(){
         return isConnecting;
+    }
+
+    public boolean getAnalyzeOnly() {
+        return analyzeOnly;
+    }
+
+    public void setAnalyzeOnly(final boolean analyzeOnly){
+        this.analyzeOnly = analyzeOnly;
     }
 }

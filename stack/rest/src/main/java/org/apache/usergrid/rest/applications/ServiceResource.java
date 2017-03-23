@@ -32,7 +32,6 @@ import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.applications.assets.AssetsResource;
 import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
-import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.services.*;
 import org.apache.usergrid.services.assets.data.AssetUtils;
@@ -262,7 +261,7 @@ public class ServiceResource extends AbstractContextResource {
         addQueryParams( getServiceParameters(), ui );
 
         ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
-            returnInboundConnections, returnOutboundConnections );
+            returnInboundConnections, returnOutboundConnections, false);
 
         response.setServiceRequest( r );
 
@@ -316,7 +315,7 @@ public class ServiceResource extends AbstractContextResource {
         addQueryParams( getServiceParameters(), ui );
 
         ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
-            returnInboundConnections, returnOutboundConnections );
+            returnInboundConnections, returnOutboundConnections, false);
 
         response.setServiceRequest( r );
 
@@ -400,13 +399,15 @@ public class ServiceResource extends AbstractContextResource {
            }
         }
 
+        boolean analyzeQueryOnly = Boolean.valueOf(ui.getQueryParameters().getFirst("analyzeOnly"));
+
         boolean collectionGet = false;
         if ( action == ServiceAction.GET ) {
             collectionGet = getServiceParameters().size() == 1;
         }
         addQueryParams( getServiceParameters(), ui );
         ServiceRequest r = services.newRequest( action, tree, getServiceParameters(), payload,
-            returnInboundConnections, returnOutboundConnections );
+            returnInboundConnections, returnOutboundConnections, analyzeQueryOnly);
         response.setServiceRequest( r );
         ServiceResults results = r.execute();
         if ( results != null ) {
