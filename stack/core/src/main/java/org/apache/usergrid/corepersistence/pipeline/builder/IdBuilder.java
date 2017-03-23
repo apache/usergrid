@@ -117,12 +117,13 @@ public class IdBuilder {
      * @param collectionName  The name of the collection
      * @param ql The user's query to execute
      * @param entityType The type of the entity
+     * @param analyzeOnly
      * @return  Candidate results
      */
-    public CandidateBuilder searchCollection( final String collectionName, final String ql, final String entityType  ) {
+    public CandidateBuilder searchCollection(final String collectionName, final String ql, final String entityType, boolean analyzeOnly) {
 
         final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( filterFactory.searchCollectionFilter(
-            ql, collectionName, entityType ) );
+            ql, collectionName, entityType, analyzeOnly ) );
 
         return new CandidateBuilder( newFilter, filterFactory );
     }
@@ -133,13 +134,14 @@ public class IdBuilder {
      * @param connectionName The connection name to search
      * @param ql The query to execute
      * @param entityType The optional type of entity.  If this is absent, all entity types in the connection will be searched
+     * @param analyzeOnly
      * @return  Candidate results
      */
-    public CandidateBuilder searchConnection( final String connectionName, final String ql ,  final Optional<String> entityType) {
+    public CandidateBuilder searchConnection(final String connectionName, final String ql, final Optional<String> entityType, boolean analyzeOnly) {
 
 
         final Pipeline<FilterResult<Candidate>> newFilter = pipeline.withFilter( filterFactory.searchConnectionFilter(
-            ql, connectionName, entityType ) );
+            ql, connectionName, entityType,analyzeOnly ) );
 
         return new CandidateBuilder( newFilter, filterFactory );
     }

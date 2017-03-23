@@ -41,6 +41,7 @@ public class CollectionSearch {
     private final Optional<String> query;
     private final Optional<String> cursor;
     private Level level = Level.ALL;
+    private boolean analyzeOnly;
 
 
     public CollectionSearch( final ApplicationScope applicationScope, final Id collectionOwnerId, final String
@@ -53,6 +54,7 @@ public class CollectionSearch {
         this.limit = limit;
         this.query = query;
         this.cursor = cursor;
+        this.analyzeOnly = false;
     }
 
 
@@ -93,4 +95,12 @@ public class CollectionSearch {
     public void setResultsLevel(Level level){ this.level = level; }
 
     public Level getResultsLevel(){ return level; }
+
+    public boolean getAnalyzeOnly() {
+        return analyzeOnly;
+    }
+
+    public void setAnalyzeOnly(final boolean analyzeOnly){
+        this.analyzeOnly = analyzeOnly;
+    }
 }

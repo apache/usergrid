@@ -31,7 +31,6 @@ import org.apache.usergrid.mq.QueueManager;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityRef;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.entities.Application;
 import org.apache.usergrid.services.ServiceParameter.IdParameter;
 import org.apache.usergrid.services.applications.ApplicationsService;
@@ -358,13 +357,13 @@ public class ServiceManager {
 
 
     public ServiceRequest newRequest( ServiceAction action, List<ServiceParameter> parameters ) throws Exception {
-        return newRequest( action, false, parameters, null, true, true );
+        return newRequest( action, false, parameters, null, true, true, false);
     }
 
 
     public ServiceRequest newRequest( ServiceAction action, List<ServiceParameter> parameters, ServicePayload payload )
             throws Exception {
-        return newRequest( action, false, parameters, payload, true, true );
+        return newRequest( action, false, parameters, payload, true, true, false);
     }
 
 
@@ -381,9 +380,9 @@ public class ServiceManager {
     static ApplicationsService appService = new ApplicationsService();
 
 
-    public ServiceRequest newRequest( ServiceAction action, boolean returnsTree, List<ServiceParameter> parameters,
-                                      ServicePayload payload, boolean returnsInboundConnections,
-                                      boolean returnsOutboundConnections ) throws Exception {
+    public ServiceRequest newRequest(ServiceAction action, boolean returnsTree, List<ServiceParameter> parameters,
+                                     ServicePayload payload, boolean returnsInboundConnections,
+                                     boolean returnsOutboundConnections, boolean analyzeQueryOnly) throws Exception {
 
         if ( em != null ) {
             if ( action != null ) {
@@ -414,12 +413,12 @@ public class ServiceManager {
 
         String serviceName = pluralize( ServiceParameter.dequeueParameter( parameters ).getName() );
         return new ServiceRequest( this, action, serviceName, parameters, payload, returnsTree,
-            returnsInboundConnections, returnsOutboundConnections );
+            returnsInboundConnections, returnsOutboundConnections, analyzeQueryOnly);
     }
 
     public ServiceRequest newRequest( ServiceAction action, boolean returnsTree, List<ServiceParameter> parameters,
                                       ServicePayload payload ) throws Exception {
-        return newRequest( action, returnsTree, parameters, payload, true, true );
+        return newRequest( action, returnsTree, parameters, payload, true, true, false);
     }
 
     public void notifyExecutionEventListeners( ServiceAction action, ServiceRequest request, ServiceResults results,

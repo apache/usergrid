@@ -59,13 +59,14 @@ public class ServiceRequest {
     private final boolean returnsOutboundConnections;
     private final ServicePayload payload;
     private final List<ServiceParameter> originalParameters;
+    private final boolean analyzeQueryOnly;
 
     // return results_set, result_entity, new_service, param_list, properties
 
 
-    public ServiceRequest( ServiceManager services, ServiceAction action, String serviceName,
-                           List<ServiceParameter> parameters, ServicePayload payload, boolean returnsTree,
-                           boolean returnsInboundConnections, boolean returnsOutboundConnections ) {
+    public ServiceRequest(ServiceManager services, ServiceAction action, String serviceName,
+                          List<ServiceParameter> parameters, ServicePayload payload, boolean returnsTree,
+                          boolean returnsInboundConnections, boolean returnsOutboundConnections, boolean analyzeQueryOnly) {
         this.services = services;
         this.action = action;
         parent = null;
@@ -78,6 +79,7 @@ public class ServiceRequest {
         this.returnsTree = returnsTree;
         this.returnsInboundConnections = returnsInboundConnections;
         this.returnsOutboundConnections = returnsOutboundConnections;
+        this.analyzeQueryOnly = analyzeQueryOnly;
         if ( payload == null ) {
             payload = new ServicePayload();
         }
@@ -87,13 +89,13 @@ public class ServiceRequest {
 
     public ServiceRequest( ServiceManager services, ServiceAction action, String serviceName,
                            List<ServiceParameter> parameters, ServicePayload payload, boolean returnsTree) {
-        this( services, action, serviceName, parameters, payload, returnsTree, true, true);
+        this( services, action, serviceName, parameters, payload, returnsTree, true, true, false);
     }
 
 
     public ServiceRequest( ServiceManager services, ServiceAction action, String serviceName,
                            List<ServiceParameter> parameters, ServicePayload payload ) {
-        this( services, action, serviceName, parameters, payload, false, true, true );
+        this( services, action, serviceName, parameters, payload, false, true, true, false);
     }
 
 
@@ -103,6 +105,7 @@ public class ServiceRequest {
         this.returnsTree = parent.returnsTree;
         this.returnsInboundConnections = parent.returnsInboundConnections;
         this.returnsOutboundConnections = parent.returnsOutboundConnections;
+        this.analyzeQueryOnly = parent.analyzeQueryOnly;
         this.action = parent.action;
         this.payload = parent.payload;
         this.parent = parent;
@@ -121,7 +124,7 @@ public class ServiceRequest {
     public ServiceRequest( ServiceManager services, ServiceAction action, ServiceRequest parent, EntityRef owner,
                            String path, String childPath, String serviceName, List<ServiceParameter> parameters,
                            ServicePayload payload, boolean returnsTree, boolean returnsInboundConnections,
-                           boolean returnsOutboundConnections ) {
+                           boolean returnsOutboundConnections, boolean analyzeQueryOnly ) {
         this.services = services;
         this.action = action;
         this.parent = parent;
@@ -134,25 +137,26 @@ public class ServiceRequest {
         this.returnsTree = returnsTree;
         this.returnsInboundConnections = returnsInboundConnections;
         this.returnsOutboundConnections = returnsOutboundConnections;
+        this.analyzeQueryOnly = analyzeQueryOnly;
         this.payload = payload;
     }
 
     public ServiceRequest( ServiceManager services, ServiceAction action, ServiceRequest parent, EntityRef owner,
                            String path, String childPath, String serviceName, List<ServiceParameter> parameters,
                            ServicePayload payload, boolean returnsTree ) {
-        this(services, action, parent, owner, path, childPath, serviceName, parameters, payload, returnsTree, true, true);
+        this(services, action, parent, owner, path, childPath, serviceName, parameters, payload, returnsTree, true, true, false);
     }
 
 
     public static ServiceRequest withPath( ServiceRequest r, String path ) {
         return new ServiceRequest( r.services, r.action, r.parent, r.owner, path, r.childPath, r.serviceName,
-                r.parameters, r.payload, r.returnsTree, r.returnsInboundConnections, r.returnsOutboundConnections );
+                r.parameters, r.payload, r.returnsTree, r.returnsInboundConnections, r.returnsOutboundConnections, r.analyzeQueryOnly );
     }
 
 
     public static ServiceRequest withChildPath( ServiceRequest r, String childPath ) {
         return new ServiceRequest( r.services, r.action, r.parent, r.owner, r.path, childPath, r.serviceName,
-                r.parameters, r.payload, r.returnsTree, r.returnsInboundConnections, r.returnsOutboundConnections );
+                r.parameters, r.payload, r.returnsTree, r.returnsInboundConnections, r.returnsOutboundConnections, r.analyzeQueryOnly );
     }
 
 
@@ -389,5 +393,9 @@ public class ServiceRequest {
 
     public List<ServiceParameter> getOriginalParameters() {
         return originalParameters;
+    }
+
+    public boolean isAnalyzeQueryOnly(){
+        return analyzeQueryOnly;
     }
 }

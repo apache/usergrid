@@ -71,11 +71,11 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
 
         if ( status >= 500 ) {
             // only log real errors as errors
-            logger.error( "{} 5XX Uncaught Exception ({})", e.getClass().getCanonicalName(), status, e );
+            logger.error( "{} 5XX Uncaught Exception ({}), {}", e.getClass().getCanonicalName(), status, e );
 
         } else {
             if (logger.isDebugEnabled()) {
-                logger.debug( "{} Following Exception Thrown ({})", e.getClass().getCanonicalName(), status, e );
+                logger.debug( "{} Following Exception Thrown ({}), {}", e.getClass().getCanonicalName(), status, e );
             }
         }
 
@@ -98,12 +98,19 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
 
 
     public Response toResponse( Status status, String jsonResponse ) {
-        return toResponse( status.getStatusCode(), jsonResponse );
+        return toResponse( status.getStatusCode(), jsonResponse, false );
     }
 
+    public Response toResponse( Status status, String jsonResponse, boolean skipLogging ) {
+        return toResponse( status.getStatusCode(), jsonResponse, skipLogging );
+    }
 
-    protected Response toResponse( int status, String jsonResponse ) {
-        if ( status >= 500 ) {
+    public Response toResponse( int statusCode, String jsonResponse ) {
+        return toResponse( statusCode, jsonResponse, false );
+    }
+
+    protected Response toResponse( int status, String jsonResponse, boolean skipLogging ) {
+        if ( status >= 500 && !skipLogging) {
             // only log real errors as errors
             logger.error( "Server Error ({}):\n{}", status, jsonResponse );
         } else if ( logger.isDebugEnabled() ) {
