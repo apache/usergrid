@@ -949,7 +949,7 @@ public class ManagementServiceImpl implements ManagementService {
     @Override
     public UserInfo createAdminFrom( UUID organizationId, User user, String password ) throws Exception {
 
-        Collection<String> policyVioliations = passwordPolicy.policyCheck( password, false );
+        Collection<String> policyVioliations = passwordPolicy.policyCheck( password, true );
         if ( !policyVioliations.isEmpty() ) {
             throw new PasswordPolicyViolationException( passwordPolicy.getDescription( true ), policyVioliations );
         }
@@ -1011,11 +1011,10 @@ public class ManagementServiceImpl implements ManagementService {
             throws Exception {
 
 
-        logger.info( "createAdminUserInternal: {}", username );
+        logger.debug( "createAdminUserInternal - username: {}, email: {}, name: {}", username, email, name );
 
-        Collection<String> policyVioliations = passwordPolicy.policyCheck( password, true );
-        if ( !policyVioliations.isEmpty() ) {
-            throw new PasswordPolicyViolationException( passwordPolicy.getDescription( true ), policyVioliations );
+        if ( isBlank( password ) ) {
+            password = encodeBase64URLSafeString( bytes( UUID.randomUUID() ) );
         }
 
         if ( username == null ) {
