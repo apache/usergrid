@@ -92,6 +92,38 @@ public class OrganizationsIT extends AbstractRestIT {
         assertEquals( "Apigee", returnedUser.getProperties().get( "company" ) );
     }
 
+    // Admin users are allowed to be created with an email address only, in which a password reset flow is invoked
+    @Test
+    public void createNewOrgUserNoPassword() throws Exception {
+
+        //User property to see if owner properties exist when created.
+        Map<String, Object> userProperties = new HashMap<String, Object>();
+        userProperties.put( "company", "Usergrid" );
+
+        //Create organization
+        Organization organization = createOrgPayload( "createNewOrgUserNoPassword", userProperties );
+
+        //Get back organization response
+        Organization organizationResponse = clientSetup.getRestClient().management().orgs().post( organization );
+
+        assertNotNull( organizationResponse );
+
+
+        //Creates token
+        Token token =
+            clientSetup.getRestClient().management().token().post(false,Token.class, new Token( "password",
+                organization.getUsername(), organization.getPassword() ) ,null);
+        this.management().token().setToken(token);
+
+        assertNotNull( token );
+
+
+        Map<String, Object> newUser = new HashMap<String, Object>(){{put("email", "ed@usergrid.com");}};
+        clientSetup.getRestClient().management().orgs().org( organization.getOrganization() ).users().post(newUser);
+
+        // the test will fail if any exception is thrown
+    }
+
 
     /**
      * Creates a organization with an owner, then attempts to create an organization with the same name ( making sure it
