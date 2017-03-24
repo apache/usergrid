@@ -98,6 +98,55 @@ public class SelectMappingsQueryTest extends QueryTestBase {
         assertEquals( 1, things.getNumOfEntities() );
     }
 
+    @Test
+    public void testStringWithSingleQuote() throws Exception {
+
+        String collectionName = "things";
+
+        String value = "test'value";
+        String escapedValue = "test\\'value";
+
+        // create entity with testProp=value
+        Entity entity = new Entity()
+            .withProp( "testprop", value );
+        app().collection( collectionName ).post( entity );
+        refreshIndex();
+
+        // testProp and TESTPROP should now have otherValue
+
+        QueryParameters params = new QueryParameters()
+            .setQuery( "select * where testprop='" + escapedValue + "'" );
+        Collection things = this.app().collection( "things" ).get( params );
+        assertEquals( 1, things.getNumOfEntities() );
+    }
+
+    @Test
+    public void testStringWithPlus() throws Exception {
+
+        String collectionName = "things";
+        String value = "ed+test@usergrid.com";
+
+        // create entity with value containing a plus symbol
+        Entity entity = new Entity()
+            .withProp( "testprop", value );
+        app().collection( collectionName ).post( entity );
+        refreshIndex();
+
+        // now query this without encoding the plus symbol
+        QueryParameters params = new QueryParameters()
+            .setQuery( "select * where testprop='" + value + "'" );
+        Collection things = this.app().collection( "things" ).get( params );
+        assertEquals( 1, things.getNumOfEntities() );
+
+        // again query with the plus symbol url encoded
+        String escapedValue = "ed%2Btest@usergrid.com";
+        params = new QueryParameters()
+            .setQuery( "select * where testprop='" + escapedValue + "'" );
+        things = this.app().collection( "things" ).get( params );
+        assertEquals( 1, things.getNumOfEntities() );
+
+    }
+
 
     /**
      * Field named testProp can be over-written by field named TESTPROP.

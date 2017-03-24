@@ -303,6 +303,54 @@ public class UserResourceIT extends AbstractRestIT {
 
     }
 
+    @Test
+    public void getUserWithEmailContainingSingleQuote() throws IOException {
+        UUID id = UUIDUtils.newTimeUUID();
+
+        String username = "username-email" + "@usergrid.org";
+        String name = "name" + id;
+        String email = "e'mail" + id + "@usergrid.org";
+
+        User map = new User(username, name, email, null);
+        map.put("email", email);
+
+        usersResource.post(new Entity(map));
+        refreshIndex();
+
+        // get the user with email property value
+        // get the user with username property that has an email value
+        Entity testUser = usersResource.entity(email).get();
+
+        assertEquals(username, testUser.get("username").toString());
+        assertEquals(name, testUser.get("name").toString());
+        assertEquals(email, testUser.get("email").toString());
+
+    }
+
+    @Test
+    public void getUserWithEmailContainingPlus() throws IOException {
+        UUID id = UUIDUtils.newTimeUUID();
+
+        String username = "username-email" + "@usergrid.org";
+        String name = "name" + id;
+        String email = "e+mail" + id + "@usergrid.org";
+
+        User map = new User(username, name, email, null);
+        map.put("email", email);
+
+        usersResource.post(new Entity(map));
+        refreshIndex();
+
+        // get the user with email property value
+        // get the user with username property that has an email value
+        Entity testUser = usersResource.entity(email).get();
+
+        assertEquals(username, testUser.get("username").toString());
+        assertEquals(name, testUser.get("name").toString());
+        assertEquals(email, testUser.get("email").toString());
+
+    }
+
 
     /**
      * Tests that when querying all users, we get the same result size when using "order by"
