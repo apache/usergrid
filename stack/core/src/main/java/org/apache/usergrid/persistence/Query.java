@@ -237,6 +237,7 @@ public class Query {
         }
 
         if ( ql != null ) {
+            ql = ql.replace("+", "%2b"); // ql string supports literal + symbol, encode so it will decode correctly later
             q = Query.fromQL( decode( ql ) );
         }
 

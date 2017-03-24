@@ -363,7 +363,7 @@ public class EsQueryVistor implements QueryVisitor {
 
         //special case so we support our '*' char with wildcard, also should work for uuids
         if ( value instanceof String || value instanceof UUID ) {
-            final String stringValue = ((value instanceof String) ? (String)value : value.toString()).toLowerCase().trim();
+            String stringValue = ((value instanceof String) ? (String)value : value.toString()).toLowerCase().trim();
 
             // or field is just a string that does need a prefix us a query
             if ( stringValue.contains( "*" ) ) {
@@ -375,6 +375,11 @@ public class EsQueryVistor implements QueryVisitor {
                 queryBuilders.push( fieldNameTerm( name, wildcardQuery ) );
                 filterBuilders.push( NoOpFilterBuilder.INSTANCE );
                 return;
+            }
+
+            // Usergrid query parser allows single quotes to be escaped in values
+            if ( stringValue.contains("\\'")) {
+                stringValue = stringValue.replace("\\'", "'");
             }
 
             //it's an exact match, use a filter

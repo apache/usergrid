@@ -476,7 +476,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
         List<Map<String, Object>> violations = QueryAnalyzer.analyze(parsedQuery, totalEdgeSizeInBytes, totalIndexSizeInBytes, indexFig);
         if(indexFig.enforceQueryBreaker() && violations.size() > 0){
             throw new QueryAnalyzerEnforcementException(violations, parsedQuery.getOriginalQuery());
-        }else{
+        }else if (violations.size() > 0){
             logger.warn( QueryAnalyzer.violationsAsString(violations, parsedQuery.getOriginalQuery()) );
         }
 
