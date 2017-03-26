@@ -235,7 +235,7 @@ public interface IndexFig extends GuicyFig {
     long getQueryBreakerErrorIndexSizeBytes();
 
 
-    @Default("true")
+    @Default("false")
     @Key( USERGRID_QUERYANALYZER_ENFORCE )
     boolean enforceQueryBreaker();
 }
