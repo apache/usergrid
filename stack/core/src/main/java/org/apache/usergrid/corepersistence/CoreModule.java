@@ -20,6 +20,8 @@ import com.google.inject.*;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.Multibinder;
 import org.apache.usergrid.corepersistence.asyncevents.*;
+import org.apache.usergrid.corepersistence.export.ExportService;
+import org.apache.usergrid.corepersistence.export.ExportServiceImpl;
 import org.apache.usergrid.corepersistence.index.*;
 import org.apache.usergrid.corepersistence.migration.CoreMigration;
 import org.apache.usergrid.corepersistence.migration.CoreMigrationPlugin;
@@ -136,6 +138,8 @@ public class CoreModule extends AbstractModule {
 
 
         bind( ReIndexService.class ).to( ReIndexServiceImpl.class );
+
+        bind( ExportService.class ).to( ExportServiceImpl.class );
 
         install( new FactoryModuleBuilder().implement( AggregationService.class, AggregationServiceImpl.class )
                                            .build( AggregationServiceFactory.class ) );
