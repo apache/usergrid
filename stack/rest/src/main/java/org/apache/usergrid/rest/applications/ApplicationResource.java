@@ -31,6 +31,7 @@ import org.apache.usergrid.corepersistence.export.ExportService;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
 import org.apache.usergrid.management.ApplicationInfo;
+import org.apache.usergrid.management.OrganizationInfo;
 import org.apache.usergrid.management.exceptions.DisabledAdminUserException;
 import org.apache.usergrid.management.exceptions.DisabledAppUserException;
 import org.apache.usergrid.management.exceptions.UnactivatedAdminUserException;
@@ -705,6 +706,7 @@ public class ApplicationResource extends CollectionResource {
             throw new UnauthorizedException();
         }
 
+        ApplicationInfo appInfo = management.getApplicationInfo(applicationId);
 
         final ExportRequestBuilder request = new ExportRequestBuilderImpl().withApplicationId( applicationId );
         StreamingOutput stream = new StreamingOutput() {
@@ -715,7 +717,7 @@ public class ApplicationResource extends CollectionResource {
         };
         return Response
             .ok(stream)
-            .header("Content-Disposition", "attachment; filename=\"usergrid_export-"+System.currentTimeMillis()+".zip\"")
+            .header("Content-Disposition", "attachment; filename=\""+appInfo.getName().replace("/","_")+"_"+System.currentTimeMillis()+".zip\"")
             .build();
     }
 
