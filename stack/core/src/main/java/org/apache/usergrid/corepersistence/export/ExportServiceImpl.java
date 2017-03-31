@@ -31,6 +31,8 @@ import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.corepersistence.util.ObjectJsonSerializer;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
+import org.apache.usergrid.persistence.collection.EntitySet;
+import org.apache.usergrid.persistence.collection.serialization.impl.EntitySetImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
@@ -41,6 +43,8 @@ import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.map.impl.MapScopeImpl;
 import org.apache.usergrid.persistence.model.entity.Entity;
 
+import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.utils.InflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -48,7 +52,9 @@ import rx.schedulers.Schedulers;
 
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
@@ -58,47 +64,32 @@ import java.util.zip.ZipOutputStream;
 @Singleton
 public class ExportServiceImpl implements ExportService {
 
-    private static final Logger logger = LoggerFactory.getLogger( ReIndexServiceImpl.class );
-
-    private static final MapScope RESUME_MAP_SCOPE =
-        new MapScopeImpl( CpNamingUtils.getManagementApplicationId(), "export-status" );
-
-
-    private static final String MAP_COUNT_KEY = "count";
-    private static final String MAP_STATUS_KEY = "status";
-    private static final String MAP_UPDATED_KEY = "lastUpdated";
-
+    private static final Logger logger = LoggerFactory.getLogger( ExportServiceImpl.class );
 
     private final AllEntityIdsObservable allEntityIdsObservable;
-    private final MapManager mapManager;
-    private final MapManagerFactory mapManagerFactory;
-    private final CollectionSettingsFactory collectionSettingsFactory;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final ManagerCache managerCache;
-
-    ObjectJsonSerializer jsonSerializer = ObjectJsonSerializer.INSTANCE;
+    private final ObjectJsonSerializer jsonSerializer = ObjectJsonSerializer.INSTANCE;
+    private final int exportVersion = 1;
+    private final String keyTotalEntityCount = "__totalEntityCount__";
 
 
 
     @Inject
     public ExportServiceImpl(final AllEntityIdsObservable allEntityIdsObservable,
                              final ManagerCache managerCache,
-                               final MapManagerFactory mapManagerFactory,
-                             final CollectionSettingsFactory collectionSettingsFactory,
                              final EntityCollectionManagerFactory entityCollectionManagerFactory) {
         this.allEntityIdsObservable = allEntityIdsObservable;
-        this.collectionSettingsFactory = collectionSettingsFactory;
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
-        this.mapManagerFactory = mapManagerFactory;
-        this.mapManager = mapManagerFactory.createMapManager( RESUME_MAP_SCOPE );
         this.managerCache = managerCache;
     }
 
 
     @Override
-    public void export(final ExportRequestBuilder exportRequestBuilder, OutputStream stream) throws IOException {
+    public void export(final ExportRequestBuilder exportRequestBuilder, OutputStream stream) throws RuntimeException {
 
         final ZipOutputStream zipOutputStream = new ZipOutputStream(stream);
+        zipOutputStream.setLevel(9); // best compression to reduce the amount of data to stream over the wire
 
         final ApplicationScope appScope = exportRequestBuilder.getApplicationScope().get();
         final Observable<ApplicationScope> applicationScopes = Observable.just(appScope);
@@ -107,142 +98,172 @@ public class ExportServiceImpl implements ExportService {
 
         GraphManager gm = managerCache.getGraphManager( appScope );
 
-        final AtomicInteger entityFileCount = new AtomicInteger();
-        final AtomicInteger connectionFileCount = new AtomicInteger();
+        final AtomicInteger entityFileCount = new AtomicInteger(); // entities are batched into files
+        final AtomicInteger connectionCount = new AtomicInteger();
+        final Map<String, AtomicInteger> collectionStats = new HashMap<>();
+        collectionStats.put(keyTotalEntityCount, new AtomicInteger());
+        final Map<String, Object> infoMap = new HashMap<>();
+        infoMap.put("application", appScope.getApplication().getUuid().toString());
+        infoMap.put("exportVersion", exportVersion);
+        infoMap.put("exportStarted", System.currentTimeMillis());
+
+        logger.info("Starting export of application: {}", appScope.getApplication().getUuid().toString());
 
         allEntityIdsObservable.getEdgesToEntities( applicationScopes, Optional.absent(), Optional.absent() )
-            .buffer( 1000 )
-            .doOnNext( edgeScopes -> {
+            .buffer(500)
+            .map( edgeScopes -> {
 
+                List<Id> entityIds = new ArrayList<>();
+                edgeScopes.forEach( edgeScope -> {
+                    if (edgeScope.getEdge().getTargetNode() != null) {
+                        logger.debug("adding entity to list: {}", edgeScope.getEdge().getTargetNode());
+                        entityIds.add(edgeScope.getEdge().getTargetNode());
+                    }
+                });
+
+                return entityIds;
+
+            })
+            .flatMap( entityIds -> {
+
+                logger.debug("entityIds: {}", entityIds);
+
+                // batch load the entities
+                EntitySet entitySet = ecm.load(entityIds).toBlocking().lastOrDefault(new EntitySetImpl(0));
+
+                final String filenameWithPath = "entities/entities." + entityFileCount.get() + ".json";
 
                 try {
-
-                    final String filenameWithPath = "entities/" +
-                        "entities."+ entityFileCount.get() + ".json";
 
                     logger.debug("adding zip entry: {}", filenameWithPath);
                     zipOutputStream.putNextEntry(new ZipEntry(filenameWithPath));
 
-                    edgeScopes.forEach( edgeScope -> {
+                    entitySet.getEntities().forEach(mvccEntity -> {
 
+                        if (mvccEntity.getEntity().isPresent()) {
+                            Map entityMap = CpEntityMapUtils.toMap(mvccEntity.getEntity().get());
 
-                        try {
-                            // load the entity and convert to a normal map
-                            Entity entity = ecm.load(edgeScope.getEdge().getTargetNode()).toBlocking().lastOrDefault(null);
-                            Map entityMap = CpEntityMapUtils.toMap(entity);
+                            try {
 
-                            if (entity != null) {
+                                collectionStats.putIfAbsent(mvccEntity.getId().getType(), new AtomicInteger());
+                                collectionStats.get(mvccEntity.getId().getType()).incrementAndGet();
+                                collectionStats.get(keyTotalEntityCount).incrementAndGet();
 
-
-
-                                logger.debug("writing and flushing entity to zip stream: {}", jsonSerializer.toString(entityMap));
+                                logger.debug("writing and flushing entity {} to zip stream for file: {}", mvccEntity.getId().getUuid().toString(), filenameWithPath);
                                 zipOutputStream.write(jsonSerializer.toString(entityMap).getBytes());
                                 zipOutputStream.write("\n".getBytes());
+                                zipOutputStream.flush(); // entities can be large, flush after each
 
 
-                            } else {
-                                logger.warn("{}  did not have corresponding entity, not writing", edgeScope.toString());
+                            } catch (IOException e) {
+                                logger.warn("unable to write entry in zip stream for entityId: {}", mvccEntity.getId());
+                                throw new RuntimeException("Unable to export data. Error writing to stream.");
+
                             }
-
-                        } catch (IOException e) {
-                            logger.warn("Unable to create entry in zip export for edge {}", edgeScope);
+                        } else {
+                            logger.warn("entityId {} did not have corresponding entity, not writing", mvccEntity.getId());
                         }
-
-
-                        entityFileCount.addAndGet(1);
-
                     });
 
                     zipOutputStream.closeEntry();
-                    zipOutputStream.flush();
+                    entityFileCount.incrementAndGet();
 
-                } catch (IOException e) {
-                    logger.warn("Unable to create entry in zip export for batch entities");
+                }catch (IOException e){
+                    throw new RuntimeException("Unable to export data. Error writing to stream.");
                 }
 
-                //writeStateMeta( jobId, Status.INPROGRESS, count.addAndGet(1), System.currentTimeMillis() );
+                return Observable.from(entitySet.getEntities());
+
             })
-            .doOnNext( edgeScopes -> {
+            .doOnNext( mvccEntity -> {
 
-                try{
-
-                    final String filenameWithPath = "connections/" +
-                        "connections." + connectionFileCount.get() + ".json";
-
-                    logger.debug("adding zip entry: {}", filenameWithPath);
-                    zipOutputStream.putNextEntry(new ZipEntry(filenameWithPath));
-
-                    edgeScopes.forEach(edgeScope -> gm.getEdgeTypesFromSource(CpNamingUtils.createConnectionTypeSearch(edgeScope.getEdge().getTargetNode()))
+                    gm.getEdgeTypesFromSource(CpNamingUtils.createConnectionTypeSearch(mvccEntity.getId()))
                         .flatMap(emittedEdgeType -> {
 
-                            logger.debug("loading edges of type {} from node {}", emittedEdgeType, edgeScope.getEdge().getTargetNode());
-                            return gm.loadEdgesFromSource(new SimpleSearchByEdgeType(edgeScope.getEdge().getTargetNode(),
+                            logger.debug("loading edges of type {} from node {}", emittedEdgeType, mvccEntity.getId());
+                            return gm.loadEdgesFromSource(new SimpleSearchByEdgeType(mvccEntity.getId(),
                                 emittedEdgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING, Optional.absent()));
 
                         })
+                        .doOnNext(markedEdge -> {
 
-                        .buffer( 1000 )
-                        .doOnNext(markedEdges -> {
+                            if (!markedEdge.isDeleted() && !markedEdge.isTargetNodeDeleted() && markedEdge.getTargetNode() != null ) {
 
+                                // doing the load to just again make sure bad connections are not exported
+                                Entity entity = ecm.load(markedEdge.getTargetNode()).toBlocking().lastOrDefault(null);
 
+                                if (entity != null) {
 
-                                markedEdges.forEach( markedEdge -> {
+                                    try {
+                                        // since a single stream is being written, and connecitons are loaded per entity,
+                                        // it cannot easily be batched eventlyinto files so write them separately
+                                        final String filenameWithPath = "connections/" +
+                                            markedEdge.getSourceNode().getUuid().toString()+"_" +
+                                            CpNamingUtils.getConnectionNameFromEdgeName(markedEdge.getType()) + "_" +
+                                            markedEdge.getTargetNode().getUuid().toString() + ".json";
 
-                                    if (!markedEdge.isDeleted()) {
-
-                                        // doing the load to just again make sure bad connections are not exported
-                                        Entity entity = ecm.load(markedEdge.getTargetNode()).toBlocking().lastOrDefault(null);
-
-                                        if (entity != null) {
-
-                                            try {
-
-                                                final Map<String,String> connectionMap = new HashMap<String,String>(1){{
-                                                    put("sourceNodeUUID", markedEdge.getSourceNode().getUuid().toString() );
-                                                    put("relationship", CpNamingUtils.getConnectionNameFromEdgeName(markedEdge.getType()) );
-                                                    put("targetNodeUUID", markedEdge.getTargetNode().getUuid().toString());
-                                                }};
-
-                                                logger.debug("writing and flushing connection to zip stream: {}", jsonSerializer.toString(connectionMap).getBytes());
-                                                zipOutputStream.write(jsonSerializer.toString(connectionMap).getBytes());
-                                                zipOutputStream.write("\n".getBytes());
+                                        logger.debug("adding zip entry: {}", filenameWithPath);
+                                        zipOutputStream.putNextEntry(new ZipEntry(filenameWithPath));
 
 
-                                            } catch (IOException e) {
-                                                logger.warn("Unable to create entry in zip export for edge {}", markedEdge.toString());
-                                            }
-                                        } else {
-                                            logger.warn("Exported connection has a missing target node, not creating connection in export. Edge: {}", markedEdge);
-                                        }
+                                        final Map<String,String> connectionMap = new HashMap<String,String>(1){{
+                                            put("sourceNodeUUID", markedEdge.getSourceNode().getUuid().toString() );
+                                            put("relationship", CpNamingUtils.getConnectionNameFromEdgeName(markedEdge.getType()) );
+                                            put("targetNodeUUID", markedEdge.getTargetNode().getUuid().toString());
+                                        }};
+
+                                        logger.debug("writing and flushing connection to zip stream: {}", jsonSerializer.toString(connectionMap).getBytes());
+                                        zipOutputStream.write(jsonSerializer.toString(connectionMap).getBytes());
+
+                                        zipOutputStream.closeEntry();
+                                        zipOutputStream.flush();
+
+                                        connectionCount.incrementAndGet();
+
+
+                                    } catch (IOException e) {
+                                        logger.warn("Unable to create entry in zip export for edge {}", markedEdge.toString());
+                                        throw new RuntimeException("Unable to export data. Error writing to stream.");
                                     }
+                                } else {
+                                    logger.warn("Exported connection has a missing target node, not creating connection in export. Edge: {}", markedEdge);
+                                }
+                            }
 
-                                });
-
-
-
-
-                        }).toBlocking().lastOrDefault(null));
-
-                    connectionFileCount.addAndGet(1);
-
-                    zipOutputStream.closeEntry();
-                    zipOutputStream.flush();
-
-
-                } catch (IOException e) {
-                    logger.warn("Unable to create entry in zip export for batch connections");
-                }
-
+                        }).toBlocking().lastOrDefault(null);
             })
             .doOnCompleted(() -> {
 
-                //writeStateMeta( jobId, Status.COMPLETE, count.get(), System.currentTimeMillis() );
+                infoMap.put("exportFinished", System.currentTimeMillis());
+
+
                 try {
+
+                    zipOutputStream.putNextEntry(new ZipEntry("metadata.json"));
+                    zipOutputStream.write(jsonSerializer.toString(infoMap).getBytes());
+                    zipOutputStream.closeEntry();
+
+                    zipOutputStream.putNextEntry(new ZipEntry("stats.json"));
+                    Map<String, Object> stats = new HashMap<>();
+                    stats.put("totalEntities", collectionStats.get(keyTotalEntityCount).get());
+                    stats.put("totalConnections", connectionCount.get());
+                    collectionStats.remove(keyTotalEntityCount);
+                    stats.put("collectionCounts", new HashMap<String, Integer>(collectionStats.size()){{
+                        collectionStats.forEach( (collection,count) -> {
+                            put(InflectionUtils.pluralize(collection),count.get());
+                        });
+                    }});
+                    zipOutputStream.write(jsonSerializer.toString(stats).getBytes());
+                    zipOutputStream.closeEntry();
+
                     logger.debug("closing zip stream");
                     zipOutputStream.close();
 
+                    logger.info("Finished export of application: {}", appScope.getApplication().getUuid().toString());
+
+
                 } catch (IOException e) {
-                    logger.error( "unable to close zip stream");
+                    throw new RuntimeException("Unable to export data due to inability to close zip stream.");
                 }
 
             })
@@ -254,30 +275,6 @@ public class ExportServiceImpl implements ExportService {
     public ExportRequestBuilder getBuilder() {
         return new ExportRequestBuilderImpl();
     }
-
-
-
-
-    /**
-     * Write our state meta data into cassandra so everyone can see it
-     * @param jobId
-     * @param status
-     * @param processedCount
-     * @param lastUpdated
-     */
-    private void writeStateMeta( final String jobId, final Status status, final long processedCount,
-                                 final long lastUpdated ) {
-
-        if(logger.isDebugEnabled()) {
-            logger.debug( "Flushing state for jobId {}, status {}, processedCount {}, lastUpdated {}",
-                    jobId, status, processedCount, lastUpdated);
-        }
-
-        mapManager.putString( jobId + MAP_STATUS_KEY, status.name() );
-        mapManager.putLong( jobId + MAP_COUNT_KEY, processedCount );
-        mapManager.putLong( jobId + MAP_UPDATED_KEY, lastUpdated );
-    }
-
 
 }
 

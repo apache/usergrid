@@ -30,15 +30,15 @@ public interface ExportService {
 
 
     /**
-     * Perform an application export
+     * Perform an application export into the provided OutputStream
      *
      * @param exportRequestBuilder The builder to build the request
      */
-    void export(final ExportRequestBuilder exportRequestBuilder, OutputStream stream) throws IOException;
+    void export(final ExportRequestBuilder exportRequestBuilder, OutputStream stream) throws RuntimeException;
 
 
     /**
-     * Generate a build for the index
+     * Generate a builder for the export request
      */
     ExportRequestBuilder getBuilder();
 

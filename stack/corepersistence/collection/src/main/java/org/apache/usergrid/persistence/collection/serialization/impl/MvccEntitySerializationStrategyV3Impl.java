@@ -146,11 +146,13 @@ public class MvccEntitySerializationStrategyV3Impl implements MvccEntitySerializ
 
         for ( final Id entityId : entityIds ) {
 
-            final ScopedRowKey<Id> rowKey =
-                    ScopedRowKey.fromKey( applicationId, entityId );
+            if ( entityId != null ) { // the size of entityIds is checked as preconditions, but the values are not
+                final ScopedRowKey<Id> rowKey =
+                    ScopedRowKey.fromKey(applicationId, entityId);
 
 
-            rowKeys.add( rowKey );
+                rowKeys.add(rowKey);
+            }
         }
 
         /**
