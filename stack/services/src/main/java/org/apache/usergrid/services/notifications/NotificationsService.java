@@ -134,7 +134,14 @@ public class NotificationsService extends AbstractCollectionService {
         postMeter.mark();
         try {
 
-            validate(null, context.getPayload());
+            validatePayload(null, context.getPayload());
+
+            final Object deliverValue = context.getProperties().get("deliver");
+            if ( deliverValue != null && deliverValue instanceof Number && (long)context.getProperties().get("deliver") < System.currentTimeMillis() ){
+                throw new IllegalArgumentException("Property 'deliver' cannot have a value in the past. It is expected to be a unix timestamp in milliseconds");
+            } else if (  deliverValue != null && !(deliverValue instanceof Number) ){
+                throw new IllegalArgumentException("Property 'deliver' must be a number. It is expected to be a unix timestamp in milliseconds");
+            }
 
             // perform some input validates on useGraph payload property vs. ql= path query
             final List<ServiceParameter> parameters = context.getRequest().getOriginalParameters();
@@ -227,7 +234,7 @@ public class NotificationsService extends AbstractCollectionService {
     public Entity updateEntity(ServiceRequest request, EntityRef ref,
             ServicePayload payload) throws Exception {
 
-        validate(ref, payload);
+        validatePayload(ref, payload);
 
         Notification notification = em.get(ref, Notification.class);
 
@@ -273,7 +280,7 @@ public class NotificationsService extends AbstractCollectionService {
     }
 
     // validate payloads
-    private void validate(EntityRef ref, ServicePayload servicePayload)
+    private void validatePayload(EntityRef ref, ServicePayload servicePayload)
             throws Exception {
         Object obj_payloads = servicePayload.getProperty("payloads");
         if (obj_payloads == null && ref == null) {

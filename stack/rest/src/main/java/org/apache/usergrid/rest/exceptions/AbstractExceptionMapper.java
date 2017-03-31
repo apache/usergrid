@@ -71,8 +71,7 @@ public abstract class AbstractExceptionMapper<E extends java.lang.Throwable> imp
 
         if ( status >= 500 ) {
             // only log real errors as errors
-            logger.error( "{} 5XX Uncaught Exception ({}), {}", e.getClass().getCanonicalName(), status, e );
-
+            logger.error( "{} 5XX Uncaught Exception ({})", e.getClass().getCanonicalName(), status, e );
         } else {
             if (logger.isDebugEnabled()) {
                 logger.debug( "{} Following Exception Thrown ({}), {}", e.getClass().getCanonicalName(), status, e );
