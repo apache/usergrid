@@ -112,7 +112,6 @@ public class TaskManager {
                 this.saveReceipt( notification, new SimpleEntityRef( Device.ENTITY_TYPE, deviceUUID ), receipt, true );
             }
 
-            completed(notifier, deviceUUID);
             finishedBatch();
 
         } catch (Exception e){
