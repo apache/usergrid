@@ -66,8 +66,8 @@ public class OrganizationResource extends AbstractContextResource {
 
     private static final Logger logger = LoggerFactory.getLogger( OrganizationsResource.class );
 
-    @Autowired
-    protected ExportService exportService;
+    //@Autowired
+    //protected ExportService exportService;
 
     OrganizationInfo organization;
 
@@ -281,99 +281,99 @@ public class OrganizationResource extends AbstractContextResource {
         return response;
     }
 
-    @POST
-    @Path("export")
-    @Consumes(APPLICATION_JSON)
-    @RequireOrganizationAccess
-    public Response exportPostJson( @Context UriInfo ui,Map<String, Object> json,
-                                    @QueryParam("callback") @DefaultValue("") String callback )
-            throws OAuthSystemException {
+//    @POST
+//    @Path("export")
+//    @Consumes(APPLICATION_JSON)
+//    @RequireOrganizationAccess
+//    public Response exportPostJson( @Context UriInfo ui,Map<String, Object> json,
+//                                    @QueryParam("callback") @DefaultValue("") String callback )
+//            throws OAuthSystemException {
+//
+//        if (logger.isTraceEnabled()) {
+//            logger.trace("executePostJson");
+//        }
+//
+//        Map<String, String> uuidRet = new HashMap<>();
+//
+//        try {
+//            Object propertiesObj = json.get("properties");
+//            if (propertiesObj == null) {
+//                throw new NullArgumentException("Could not find 'properties'");
+//            }
+//            if (!(propertiesObj instanceof Map)) {
+//                throw new IllegalArgumentException("'properties' not a map");
+//            }
+//
+//            @SuppressWarnings("unchecked")
+//            Map<String,Object> properties = (Map<String,Object>)propertiesObj;
+//
+//            String storage_provider = ( String ) properties.get( "storage_provider" );
+//            if(storage_provider == null) {
+//                throw new NullArgumentException( "Could not find field 'storage_provider'" );
+//            }
+//
+//            Object storageInfoObj = properties.get("storage_info");
+//            if(storageInfoObj == null) {
+//                throw new NullArgumentException( "Could not find field 'storage_info'" );
+//            }
+//            @SuppressWarnings("unchecked")
+//            Map<String,Object> storage_info = (Map<String, Object>)storageInfoObj;
+//
+//            String bucketName = ( String ) storage_info.get( "bucket_location" );
+//            String accessId = ( String ) storage_info.get( "s3_access_id" );
+//            String secretKey = ( String ) storage_info.get( "s3_key" );
+//
+//            if ( bucketName == null ) {
+//                throw new NullArgumentException( "Could not find field 'bucketName'" );
+//            }
+//            if ( accessId == null ) {
+//                throw new NullArgumentException( "Could not find field 's3_access_id'" );
+//            }
+//            if ( secretKey == null ) {
+//
+//                throw new NullArgumentException( "Could not find field 's3_key'" );
+//            }
+//
+//            json.put( "organizationId",organization.getUuid());
+//
+//            UUID jobUUID = exportService.schedule( json );
+//            uuidRet.put( "Export Entity", jobUUID.toString() );
+//        }
+//        catch ( NullArgumentException e ) {
+//            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
+//                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
+//        }
+//        catch ( Exception e ) {
+//            //TODO:throw descriptive error message and or include on in the response
+//            //TODO:fix below, it doesn't work if there is an exception. Make it look like the OauthResponse.
+//            return Response.status(  SC_INTERNAL_SERVER_ERROR ).type( JSONPUtils.jsonMediaType( callback ) )
+//                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
+//        }
+//        return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
+//    }
 
-        if (logger.isTraceEnabled()) {
-            logger.trace("executePostJson");
-        }
-
-        Map<String, String> uuidRet = new HashMap<>();
-
-        try {
-            Object propertiesObj = json.get("properties");
-            if (propertiesObj == null) {
-                throw new NullArgumentException("Could not find 'properties'");
-            }
-            if (!(propertiesObj instanceof Map)) {
-                throw new IllegalArgumentException("'properties' not a map");
-            }
-
-            @SuppressWarnings("unchecked")
-            Map<String,Object> properties = (Map<String,Object>)propertiesObj;
-
-            String storage_provider = ( String ) properties.get( "storage_provider" );
-            if(storage_provider == null) {
-                throw new NullArgumentException( "Could not find field 'storage_provider'" );
-            }
-
-            Object storageInfoObj = properties.get("storage_info");
-            if(storageInfoObj == null) {
-                throw new NullArgumentException( "Could not find field 'storage_info'" );
-            }
-            @SuppressWarnings("unchecked")
-            Map<String,Object> storage_info = (Map<String, Object>)storageInfoObj;
-
-            String bucketName = ( String ) storage_info.get( "bucket_location" );
-            String accessId = ( String ) storage_info.get( "s3_access_id" );
-            String secretKey = ( String ) storage_info.get( "s3_key" );
-
-            if ( bucketName == null ) {
-                throw new NullArgumentException( "Could not find field 'bucketName'" );
-            }
-            if ( accessId == null ) {
-                throw new NullArgumentException( "Could not find field 's3_access_id'" );
-            }
-            if ( secretKey == null ) {
-
-                throw new NullArgumentException( "Could not find field 's3_key'" );
-            }
-
-            json.put( "organizationId",organization.getUuid());
-
-            UUID jobUUID = exportService.schedule( json );
-            uuidRet.put( "Export Entity", jobUUID.toString() );
-        }
-        catch ( NullArgumentException e ) {
-            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
-        }
-        catch ( Exception e ) {
-            //TODO:throw descriptive error message and or include on in the response
-            //TODO:fix below, it doesn't work if there is an exception. Make it look like the OauthResponse.
-            return Response.status(  SC_INTERNAL_SERVER_ERROR ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
-        }
-        return Response.status( SC_ACCEPTED ).entity( uuidRet ).build();
-    }
-
-    @GET
-    @RequireOrganizationAccess
-    @Path("export/{exportEntity: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
-    public Response exportGetJson( @Context UriInfo ui, @PathParam("exportEntity") UUID exportEntityUUIDStr,
-                                   @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
-
-        Export entity;
-        try {
-            entity = smf.getServiceManager( emf.getManagementAppId() ).getEntityManager()
-                        .get( exportEntityUUIDStr, Export.class );
-        }
-        catch ( Exception e ) { //this might not be a bad request and needs better error checking
-            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
-                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
-        }
-
-        if ( entity == null ) {
-            return Response.status( SC_BAD_REQUEST ).build();
-        }
-
-        return Response.status( SC_OK ).entity( entity).build();
-    }
+//    @GET
+//    @RequireOrganizationAccess
+//    @Path("export/{exportEntity: [A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}}")
+//    public Response exportGetJson( @Context UriInfo ui, @PathParam("exportEntity") UUID exportEntityUUIDStr,
+//                                   @QueryParam("callback") @DefaultValue("") String callback ) throws Exception {
+//
+//        Export entity;
+//        try {
+//            entity = smf.getServiceManager( emf.getManagementAppId() ).getEntityManager()
+//                        .get( exportEntityUUIDStr, Export.class );
+//        }
+//        catch ( Exception e ) { //this might not be a bad request and needs better error checking
+//            return Response.status( SC_BAD_REQUEST ).type( JSONPUtils.jsonMediaType( callback ) )
+//                           .entity( ServiceResource.wrapWithCallback( e.getMessage(), callback ) ).build();
+//        }
+//
+//        if ( entity == null ) {
+//            return Response.status( SC_BAD_REQUEST ).build();
+//        }
+//
+//        return Response.status( SC_OK ).entity( entity).build();
+//    }
 
 
     protected Set<String> getSetFromCommaSeparatedString(String input) {

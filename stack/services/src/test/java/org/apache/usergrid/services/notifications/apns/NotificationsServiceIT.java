@@ -33,12 +33,8 @@ import java.util.*;
 
 import org.apache.usergrid.services.ServiceAction;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-
 import static org.apache.usergrid.services.notifications.impl.ApplicationQueueManagerImpl.NOTIFIER_ID_POSTFIX;
+import static org.junit.Assert.*;
 
 
 @NotThreadSafe
@@ -807,6 +803,49 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         } catch (Exception e) {
             fail("Delete should be successful after notification has finished.");
         }
+    }
+
+    @Test
+    public void pushNotificationBadDeliverProperty() throws Exception {
+
+        // try with timestamp in the past
+        app.clear();
+        String payload = getPayload();
+        Map<String, String> payloads = new HashMap<String, String>(1);
+        payloads.put(notifier.getName(), payload);
+        app.put("payloads", payloads);
+        app.put("deliver", System.currentTimeMillis() - 1000); // some time in the past
+        app.put("debug",true);
+
+        // post notification to
+        try {
+            app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications").getEntity();
+        } catch (Exception e) {
+            // should be bad request due to time in the past
+            assertEquals(e.getClass(), IllegalArgumentException.class);
+            assertTrue(e.getMessage().contains("Property 'deliver' cannot have a value in the past"));
+        }
+
+
+        // try with invalid type of a string for deliver, should be a number
+        app.clear();
+        payload = getPayload();
+        payloads = new HashMap<String, String>(1);
+        payloads.put(notifier.getName(), payload);
+        app.put("payloads", payloads);
+        app.put("deliver", "notatime"); // some time in the past
+        app.put("debug",true);
+
+        // post notification
+        try {
+            app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications").getEntity();
+        } catch (Exception e) {
+            // should be bad request due invalid deliver value
+            assertEquals(e.getClass(), IllegalArgumentException.class);
+            assertTrue(e.getMessage().contains("Property 'deliver' must be a number"));
+        }
+
+
     }
 
     private String getPayload(){
