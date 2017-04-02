@@ -91,7 +91,7 @@ public class GeoPagingTest extends AbstractRestIT {
         }
 
     }
-    this.refreshIndex();
+    this.waitForQueueDrainAndRefreshIndex();
     // 2. Query the groups from a nearby location, restricting the search
     //    by creation time to a single entity where created[i-1] < created[i] < created[i+1]
       //since this geo location is contained by an actor it needs to be actor.location.
@@ -150,7 +150,7 @@ public class GeoPagingTest extends AbstractRestIT {
         .map("latitude", -33.889058)
         .map("longitude", 151.124024));
     this.app().collection(collectionType).post(props2);
-    this.refreshIndex();
+    this.waitForQueueDrainAndRefreshIndex();
 
     Collection collection = this.app().collection(collectionType).get();
     assertEquals("Should return both entities", 2, collection.getResponse().getEntityCount());
@@ -182,7 +182,7 @@ public class GeoPagingTest extends AbstractRestIT {
       cats[i] = cat;
       this.app().collection("cats").post(cat);
     }
-    this.refreshIndex();
+    this.waitForQueueDrainAndRefreshIndex();
 
     QueryParameters params = new QueryParameters();
     for (int consistent = 0; consistent < 20; consistent++) {
@@ -229,7 +229,7 @@ public class GeoPagingTest extends AbstractRestIT {
             cats[i] = cat;
             this.app().collection("cats").post(cat);
         }
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         final QueryParameters params = new QueryParameters();
         for (int consistent = 0; consistent < 20; consistent++) {
@@ -279,6 +279,7 @@ public class GeoPagingTest extends AbstractRestIT {
         .map("latitude", -33.746369)
         .map("longitude", 150.952183));
     this.app().collection(collectionType).post(props);
+    this.waitForQueueDrainAndRefreshIndex();
 
     Entity props2 = new Entity();
     props2.put("name", "usergrid2");
@@ -286,7 +287,7 @@ public class GeoPagingTest extends AbstractRestIT {
         .map("latitude", -33.889058)
         .map("longitude", 151.124024));
     this.app().collection(collectionType).post(props2);
-    this.refreshIndex();
+    this.waitForQueueDrainAndRefreshIndex();
 
     // 2. Query from the center point to ensure that one is returned
     Collection collection = this.app().collection(collectionType).get(queryClose);
@@ -326,7 +327,7 @@ public class GeoPagingTest extends AbstractRestIT {
         .map("longitude", 150.952183));
     this.app().collection("users").post(props);
 
-    this.refreshIndex();
+    this.waitForQueueDrainAndRefreshIndex();
     // 2. Create a list of geo points
     List<double[]> points = new ArrayList<>();
     points.add(new double []{33.746369, -89});//Woodland, MS

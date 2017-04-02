@@ -60,7 +60,7 @@ public class IndexIT extends AbstractCoreIT {
             em.create( "item", properties );
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         int i = 0;
 
@@ -133,7 +133,7 @@ public class IndexIT extends AbstractCoreIT {
             em.create( "item", properties );
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Query query = Query.fromQL( "name < 'delta' order by name asc" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
@@ -261,7 +261,7 @@ public class IndexIT extends AbstractCoreIT {
             em.create( "item", properties );
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Query query = Query.fromQL( "group = 1 order by name desc" );
         Results r = em.searchCollection( em.getApplicationRef(), "items", query );
@@ -290,7 +290,7 @@ public class IndexIT extends AbstractCoreIT {
 
         em.create("names", entity1);
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         //should return valid values
         Query query = Query.fromQL("select status where status = 'pickled'");
@@ -338,7 +338,7 @@ public class IndexIT extends AbstractCoreIT {
 
         em.createConnection( entity2Ref, "connecting", entity1Ref );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         //should return valid values
         Query query = Query.fromQL( "select * where status = 'pickled'" );
@@ -357,7 +357,7 @@ public class IndexIT extends AbstractCoreIT {
 
         em.update( entity1Ref );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         //query and check the status has been updated, shouldn't return results
         query = Query.fromQL( "select * where status = 'pickled'" );
@@ -413,7 +413,7 @@ public class IndexIT extends AbstractCoreIT {
 
         em.createConnection( entity2Ref, "connecting", entity1Ref );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         //should return valid values
         Query query = Query.fromQL( "select * where status = 'pickled'" );
@@ -432,7 +432,7 @@ public class IndexIT extends AbstractCoreIT {
 
         em.update( entity1Ref );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         //query and check the status has been updated, shouldn't return results
         query = Query.fromQL( "select * where status = 'pickled'" );
@@ -500,7 +500,7 @@ public class IndexIT extends AbstractCoreIT {
         }};
         em.create("names", entity2);
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // simple single-field select mapping
         {

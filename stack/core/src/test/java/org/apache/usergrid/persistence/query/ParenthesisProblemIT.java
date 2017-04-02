@@ -72,7 +72,7 @@ public class ParenthesisProblemIT extends AbstractCoreIT {
             put("age",1);
         }});
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         final Results entities = em.searchCollection( em.getApplicationRef(), "cats", Query.fromQL(query));
 

@@ -109,7 +109,7 @@ public class BasicGeoTests extends AbstractRestIT {
         assertEquals( lat.toString(), entity.getMap("location").get("latitude").toString() );
         assertEquals( lon.toString(), entity.getMap("location").get("longitude").toString() );
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //2. read back that entity make sure it is accurate
         /*
@@ -144,7 +144,7 @@ public class BasicGeoTests extends AbstractRestIT {
         assertEquals( newLon.toString(), entity.get( "location" ).get("longitude").asText() );
   */
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //4. read back the updated entity, make sure it is accurate
 

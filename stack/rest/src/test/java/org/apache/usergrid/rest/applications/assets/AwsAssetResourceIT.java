@@ -205,7 +205,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
     @Test
     public void octetStreamOnDynamicEntity() throws Exception {
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //  post an asset entity
 
@@ -246,14 +246,14 @@ public class AwsAssetResourceIT extends AbstractRestIT {
     @Test
     public void multipartPostFormOnDynamicEntity() throws Exception {
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         // post data larger than 5M
 
         byte[] data = IOUtils.toByteArray( this.getClass().getResourceAsStream( "/file-bigger-than-5M" ) );
         FormDataMultiPart form = new FormDataMultiPart().field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
         ApiResponse putResponse = pathResource(getOrgAppPath("foos")).post(form);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         UUID assetId = putResponse.getEntities().get(0).getUuid();
         assertNotNull(assetId);
@@ -287,7 +287,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
     @Test
     public void multipartPutFormOnDynamicEntity() throws Exception {
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         // post an entity
 
@@ -303,7 +303,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
             .field( "foo", "bar2" )
             .field( "file", data, MediaType.MULTIPART_FORM_DATA_TYPE );
         ApiResponse putResponse = pathResource( getOrgAppPath( "foos/" + assetId ) ).put( form );
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         // get entity and check asset metadata
 
@@ -336,7 +336,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
     @Test
     public void largeFileInS3() throws Exception {
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         // upload file larger than 5MB
 
@@ -363,7 +363,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
     @Test
     public void fileTooLargeShouldResultInError() throws Exception {
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         // set max file size down to 6mb
         setTestProperty( "usergrid.binary.max-size-mb","6" );
@@ -383,7 +383,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
 
             // attempt to get asset entity, it should contain error
 
-            refreshIndex();
+            waitForQueueDrainAndRefreshIndex();
             ApiResponse getResponse = pathResource( getOrgAppPath( "bars/" +assetId ) ).get( ApiResponse.class );
             Map<String, Object> fileMetadata = (Map<String, Object>)getResponse.getEntities().get(0).get("file-metadata");
             assertNotNull( fileMetadata );
@@ -403,7 +403,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
     @Test
     public void deleteConnectionToAsset() throws IOException {
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         // create the entity that will be the asset, an image
 
@@ -427,7 +427,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
 
         ApiResponse connectResponse = pathResource(
             getOrgAppPath( "imagegalleries/" + imageGalleryId + "/contains/" + uuid ) ).post( ApiResponse.class );
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         // verify connection from imagegallery to asset
 
@@ -438,7 +438,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
         // delete the connection
 
         pathResource( getOrgAppPath( "imagegalleries/" + imageGalleryId + "/contains/" + uuid ) ).delete();
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         // verify that connection is gone
 

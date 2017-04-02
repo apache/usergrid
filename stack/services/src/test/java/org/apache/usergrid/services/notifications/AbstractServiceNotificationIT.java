@@ -28,7 +28,6 @@ import org.apache.usergrid.persistence.SimpleEntityRef;
 import org.apache.usergrid.persistence.entities.Notification;
 import org.apache.usergrid.persistence.entities.Receipt;
 import org.apache.usergrid.services.AbstractServiceIT;
-import org.apache.usergrid.services.notifications.gcm.NotificationsServiceIT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,8 +51,7 @@ public abstract class AbstractServiceNotificationIT extends AbstractServiceIT {
             throws Exception {
         long timeout = System.currentTimeMillis() + 60000;
         while (System.currentTimeMillis() < timeout) {
-            Thread.sleep(200);
-            app.refreshIndex();
+            app.waitForQueueDrainAndRefreshIndex(200);
             notification = app.getEntityManager().get(notification.getUuid(), Notification.class);
             if (notification.getFinished() != null) {
                 return notification;
@@ -95,10 +93,9 @@ public abstract class AbstractServiceNotificationIT extends AbstractServiceIT {
             }
         }
 
-        //assertEquals(expected, receipts.size());
-        if( expected != receipts.size()){
-            logger.warn("Expected receipt count {} does not match actual count {}", expected, receipts.size());
-        }
+
+        assertEquals(expected, receipts.size());
+
 
         for (EntityRef receipt : receipts) {
 

@@ -59,7 +59,7 @@ public class ActivityResourceIT extends AbstractRestIT {
         this.activityDesc = "testActivity" ;
         this.activity = new ActivityEntity().putActor(current).chainPut("title", activityTitle).chainPut("content", activityDesc).chainPut("category", "testCategory").chainPut("verb", "POST");
         this.groupActivityResource = groupsResource.entity(entity).activities();
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
     }
 
 
@@ -87,7 +87,7 @@ public class ActivityResourceIT extends AbstractRestIT {
         {
             throw e;
         }
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Collection results = groupActivityResource.get();
 
@@ -111,7 +111,7 @@ public class ActivityResourceIT extends AbstractRestIT {
         usersResource.entity(current).activities().post(activity);
 
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Collection results = usersResource.entity(current).activities().get();
 
@@ -136,7 +136,7 @@ public class ActivityResourceIT extends AbstractRestIT {
 
         this.app().collection("activities").post(activity);
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Collection results = this.app().collection("activities").get();
 

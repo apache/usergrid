@@ -3089,52 +3089,16 @@ public class CpEntityManager implements EntityManager {
         managerCache.getEntityIndex(applicationScope).addIndex(newIndexName, shards, replicas, writeConsistency);
     }
 
+
     @Override
     public void initializeIndex(){
         managerCache.getEntityIndex(applicationScope).initialize();
     }
-    /**
-     * TODO, these 3 methods are super janky.  During refactoring we should clean this model up
-     */
+
+
     public EntityIndex.IndexRefreshCommandInfo refreshIndex() {
         try {
-            long start = System.currentTimeMillis();
-            // refresh special indexes without calling EntityManager refresh because stack overflow
-            Map<String, Object> map = new org.apache.usergrid.persistence.index.utils.MapUtils.HashMapBuilder<>();
-            map.put("some prop", "test");
-            boolean hasFinished = false;
-            Entity refreshEntity = create("refresh", map);
-            EntityIndex.IndexRefreshCommandInfo indexRefreshCommandInfo
-                = managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
-
-            try {
-                for (int i = 0; i < 20; i++) {
-                    if (searchCollection(
-                        new SimpleEntityRef(
-                            org.apache.usergrid.persistence.entities.Application.ENTITY_TYPE, getApplicationId()),
-                        InflectionUtils.pluralize("refresh"),
-                        Query.fromQL("select * where uuid='" + refreshEntity.getUuid() + "'")
-                    ).size() > 0
-                        ) {
-                        hasFinished = true;
-                        break;
-                    }
-                    int sleepTime = 500;
-                    logger.info("Sleeping {} ms during refreshIndex", sleepTime);
-                    Thread.sleep(sleepTime);
-
-                    indexRefreshCommandInfo
-                        = managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
-                }
-                if(!hasFinished){
-                    throw new RuntimeException("Did not find entity {} during refresh. uuid->"+refreshEntity.getUuid());
-                }
-            }finally {
-                delete(refreshEntity);
-            }
-            Thread.sleep(100);
-
-            return indexRefreshCommandInfo;
+            return managerCache.getEntityIndex(applicationScope).refreshAsync().toBlocking().first();
         } catch (Exception e) {
             throw new RuntimeException("refresh failed",e);
         }

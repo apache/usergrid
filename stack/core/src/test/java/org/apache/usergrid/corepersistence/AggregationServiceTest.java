@@ -48,8 +48,8 @@ public class AggregationServiceTest extends AbstractCoreIT {
         props.put("name", "myname");
         Entity entity1 = this.app.getEntityManager().create("test", props);
         Entity entity2 = this.app.getEntityManager().create("test2", props);
-        this.app.refreshIndex();
-        Thread.sleep(500);
+
+        this.app.waitForQueueDrainAndRefreshIndex(500);
 
         long sum = aggregationService.getApplicationSize(applicationScope);
 
@@ -57,23 +57,24 @@ public class AggregationServiceTest extends AbstractCoreIT {
         Assert.assertTrue(sum > (entity1.getSize() + entity2.getSize()));
 
         long sum1 = aggregationService.getSize(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), "tests"));
-        Assert.assertEquals(sum1, entity1.getSize());
+        Assert.assertEquals(entity1.getSize(), sum1);
 
         long sum2 = aggregationService.getSize(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), "test2s"));
-        Assert.assertEquals(sum2, entity2.getSize());
+        Assert.assertEquals(entity2.getSize(), sum2);
 
         props = new HashMap<>();
         props.put("test", 1234);
         props.put("name", "myname2");
         Entity entity3 = this.app.getEntityManager().create("test", props);
 
-        this.app.refreshIndex();
+        this.app.waitForQueueDrainAndRefreshIndex(500);
+
         long sum3 = aggregationService.getSize(applicationScope, CpNamingUtils.createCollectionSearchEdge(applicationScope.getApplication(), "tests"));
-        Assert.assertEquals(sum3, entity1.getSize() + entity3.getSize());
+        Assert.assertEquals(entity1.getSize() + entity3.getSize(), sum3);
 
         Map<String,Long> sumEach = aggregationService.getEachCollectionSize(applicationScope);
         Assert.assertTrue(sumEach.containsKey("tests") && sumEach.containsKey("test2s"));
-        Assert.assertEquals(sum3, (long) sumEach.get("tests"));
+        Assert.assertEquals((long) sumEach.get("tests"), sum3);
 
     }
 }

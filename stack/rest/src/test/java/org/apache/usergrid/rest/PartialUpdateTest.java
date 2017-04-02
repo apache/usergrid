@@ -61,7 +61,7 @@ public class PartialUpdateTest extends AbstractRestIT {
         String uuid = userNode.get("uuid").toString();
         assertNotNull(uuid);
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Map<String, Object> updateProperties = new LinkedHashMap<String, Object>();
         // update user bart passing only an update to a property
@@ -81,7 +81,7 @@ public class PartialUpdateTest extends AbstractRestIT {
                 fail("Update failed due to: " + uie.getResponse().readEntity(String.class));
             }
 
-            refreshIndex();
+            waitForQueueDrainAndRefreshIndex();
             // retrieve the user from the backend
             userNode = this.app().collection("users").entity(userNode).get();
 
@@ -123,7 +123,7 @@ public class PartialUpdateTest extends AbstractRestIT {
         } catch (ClientErrorException uie) {
             fail("Update failed due to: " + uie.getResponse().readEntity(String.class));
         }
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         userNode = this.app().collection("users").entity(userNode).get();
         assertNotNull(userNode);

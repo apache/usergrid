@@ -235,7 +235,7 @@ public class EmailFlowIT {
         assertNotNull( orgOwner );
 
         ApplicationInfo app = setup.getMgmtSvc().createApplication( orgOwner.getOrganization().getUuid(), appName );
-        this.app.refreshIndex();
+        this.app.waitForQueueDrainAndRefreshIndex();
 
         //turn on app admin approval for app users
         enableAdminApproval(app.getId());

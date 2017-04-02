@@ -23,6 +23,7 @@ import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.usergrid.persistence.actorsystem.ActorSystemFig;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.qakka.MetricsService;
@@ -177,7 +178,7 @@ public class QueueActorHelper {
             }
         }
 
-        newestFetchedUuid.put( queueName, since );
+        updateUUIDPointer(queueName, since);
 
 //        Shard currentShard = multiShardIterator.getCurrentShard();
 //        if ( currentShard != null ) {
@@ -279,7 +280,7 @@ public class QueueActorHelper {
     }
 
 
-    void queueRefresh( String queueName ) {
+    synchronized void queueRefresh( String queueName ) {
 
         Timer.Context timer = metricsService.getMetricRegistry().timer( MetricsService.REFRESH_TIME).time();
 
@@ -327,7 +328,7 @@ public class QueueActorHelper {
 
                 startingShards.put( shardKey, shardId );
 
-                lastRefreshTimeMillis.put( queueName, System.currentTimeMillis() );
+                updateLastRefreshedTime(queueName);
 
                 if ( count > 0 ) {
                     Object shard = shardIdOptional.isPresent() ? shardIdOptional.get() : "null";
@@ -344,6 +345,14 @@ public class QueueActorHelper {
 
     private String createShardKey(String queueName, Shard.Type type, String region ) {
         return queueName + "_" + type + region;
+    }
+
+    private synchronized void updateUUIDPointer(String queueName, UUID newUUIDPointer){
+        newestFetchedUuid.put( queueName, newUUIDPointer );
+    }
+
+    private synchronized void updateLastRefreshedTime(String queueName){
+        lastRefreshTimeMillis.put( queueName, System.currentTimeMillis() );
     }
 
 }

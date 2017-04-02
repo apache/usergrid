@@ -96,7 +96,7 @@ public class GeoIT extends AbstractCoreIT {
         assertNotNull(hotel);
 
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         //2. Query with a globally large distance to verify location
 
@@ -142,7 +142,7 @@ public class GeoIT extends AbstractCoreIT {
         }};
         Entity user = em.create("user", properties);
         assertNotNull(user);
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         //2. Query with a globally large distance to verify location
         Query query = Query.fromQL("select * where location within " + Integer.MAX_VALUE + " of 0, 0");
@@ -154,7 +154,7 @@ public class GeoIT extends AbstractCoreIT {
         user.getDynamicProperties().remove("location");
         em.updateProperties(user, properties);
         em.update(user);
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         //4. Repeat the query, expecting no results
         listResults = em.searchCollection(em.getApplicationRef(), "users", query);
@@ -188,7 +188,7 @@ public class GeoIT extends AbstractCoreIT {
         }};
         Entity user = em.create("user", properties);
         assertNotNull(user);
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         final double lat = 37.776753;
         final double lon = -122.407846;
@@ -234,7 +234,7 @@ public class GeoIT extends AbstractCoreIT {
         }};
         Entity user = em.create("user", properties);
         assertNotNull(user);
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         final double lat = 37.776753;
         final double lon = -122.407846;
@@ -284,12 +284,12 @@ public class GeoIT extends AbstractCoreIT {
 
         Entity user = em.create("user", userProperties);
         assertNotNull(user);
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         //3. Create a connection between the user and the entity
         em.createConnection(user, "likes", restaurant);
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         //4. Test that the user is within 2000m of the entity
         Results emSearchResults = em.searchTargetEntities(user,
             Query.fromQL("location within 5000 of "
@@ -326,7 +326,7 @@ public class GeoIT extends AbstractCoreIT {
             assertNotNull(entity);
             logger.debug("Entity {} created", entity.getProperty("name"));
         }
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         //2. validate the size of the result
         Query query = new Query();
         Results listResults = em.searchCollection(em.getApplicationRef(), "stores", query);
@@ -367,7 +367,7 @@ public class GeoIT extends AbstractCoreIT {
             assertNotNull(entity);
             logger.debug("Entity {} created", entity.getProperty("name"));
         }
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         //2. validate the size of the result
         Query query = new Query();
         Results listResults = em.searchCollection(em.getApplicationRef(), "stores", query);
@@ -540,7 +540,7 @@ public class GeoIT extends AbstractCoreIT {
             em.create("store", data);
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
          // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
         // just to be save
@@ -596,7 +596,7 @@ public class GeoIT extends AbstractCoreIT {
             em.create("store", data);
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         Thread.sleep(2000);
 
         // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
@@ -669,7 +669,7 @@ public class GeoIT extends AbstractCoreIT {
             em.create("store", data);
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
          // earth's circumference is 40,075 kilometers. Up it to 50,000kilometers
         // just to be save
@@ -729,7 +729,7 @@ public class GeoIT extends AbstractCoreIT {
             created.add(e);
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         int startDelta = size - min;
 
@@ -794,7 +794,7 @@ public class GeoIT extends AbstractCoreIT {
             em.create("store", data);
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         //do a direct geo iterator test.  We need to make sure that we short circuit on the correct tile.
 
@@ -838,7 +838,7 @@ public class GeoIT extends AbstractCoreIT {
             assertNotNull(entity);
         }
         //3. refresh the index
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         //4. return the entity manager
         return em;
     }
@@ -857,7 +857,7 @@ public class GeoIT extends AbstractCoreIT {
         latlong.put("longitude", longitude);
 
         em.setProperty(entity, "location", latlong);
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
     }
 
 

@@ -59,7 +59,7 @@ public class InMemoryQueue {
         }
     }
 
-    public void add( String queueName, DatabaseQueueMessage databaseQueueMessage ) {
+    synchronized public void add( String queueName, DatabaseQueueMessage databaseQueueMessage ) {
 
         UUID newest = newestByQueueName.get( queueName );
         if ( newest == null ) {
@@ -76,7 +76,7 @@ public class InMemoryQueue {
         getQueue( queueName ).add( databaseQueueMessage );
     }
 
-    public UUID getNewest( String queueName ) {
+    synchronized public UUID getNewest( String queueName ) {
         if ( getQueue( queueName ).isEmpty() ) {
             newestByQueueName.remove( queueName );
         }

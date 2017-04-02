@@ -82,6 +82,8 @@ public class ServiceInvocationIT extends AbstractServiceIT {
 
         app.testRequest( ServiceAction.POST, 1, null, "users", "edanuff", "likes", cat.getUuid() );
 
+        app.waitForQueueDrainAndRefreshIndex(250);
+
         Entity restaurant = app.doCreate( "restaurant", "Brickhouse" );
 
         app.createConnection( user, "likes", restaurant );
@@ -91,6 +93,8 @@ public class ServiceInvocationIT extends AbstractServiceIT {
         app.testRequest( ServiceAction.GET, 2, "restaurants" );
 
         app.testRequest( ServiceAction.POST, 1, "users", user.getUuid(), "connections", "likes", restaurant.getUuid() );
+
+        app.waitForQueueDrainAndRefreshIndex(250);
 
         app.testRequest( ServiceAction.GET, 1, "users", "edanuff", "likes", "cats" );
 
@@ -104,7 +108,7 @@ public class ServiceInvocationIT extends AbstractServiceIT {
         app.testRequest( ServiceAction.GET, 1, "users", "edanuff", "likes",
                 Query.fromQL( "select * where name='axis*'" ) );
 
-//        TODO, we don't allow this at the RESt level, why is this a test?
+//        TODO, we don't allow this at the REST level, why is this a test?
 //        app.testRequest( ServiceAction.GET, 3, null, "users", "edanuff", "connections" );
 
         app.put( "color", "blacknwhite" );

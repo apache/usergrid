@@ -57,7 +57,7 @@ public class EventsResourceIT extends AbstractRestIT {
         assertNotNull(node.getEntities());
         String advertising = node.getEntity().get("uuid").toString();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         payload = new LinkedHashMap<String, Object>();
         payload.put( "timestamp", 0 );
@@ -74,7 +74,7 @@ public class EventsResourceIT extends AbstractRestIT {
         assertNotNull(node.getEntities());
         String sales = node.getEntity().get("uuid").toString();
 
-        refreshIndex( );
+        waitForQueueDrainAndRefreshIndex( );
 
         payload = new LinkedHashMap<String, Object>();
         payload.put( "timestamp", 0 );
@@ -91,7 +91,7 @@ public class EventsResourceIT extends AbstractRestIT {
         assertNotNull(node.getEntities());
         String marketing = node.getEntity().get( "uuid" ).toString();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         String lastId = null;
 

@@ -69,7 +69,7 @@ public class BrowserCompatibilityTest extends org.apache.usergrid.rest.test.reso
         Entity entity = this.app().collection("things").post(payload);
         assertEquals(entity.get("name"), name);
         String uuid = entity.getAsString("uuid");
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //now get this new entity with "text/html" in the accept header
         Entity returnedEntity = this.app().collection("things").withAcceptHeader(acceptHeader).entity(entity).get();

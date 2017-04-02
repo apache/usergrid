@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 
 @Singleton
@@ -188,7 +189,7 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
                         queueMessage.setData( json );
 
                     } catch (UnsupportedEncodingException e) {
-                        logger.error("Error unencoding data for messageId=" + queueMessage.getMessageId(), e);
+                        logger.error("Error decoding data for messageId=" + queueMessage.getMessageId(), e);
                     }
                 } else {
                     try {
@@ -201,6 +202,12 @@ public class QueueMessageManagerImpl implements QueueMessageManager {
                 }
 
                 queueMessages.add( queueMessage );
+            } else if ( (System.currentTimeMillis() - dbMessage.getQueuedAt()) > TimeUnit.HOURS.toMillis(2) ) {
+                logger.warn("Queue Message does not have corresponding data after 2 hours, removing from queue - " +
+                    "queueName: {}, region: {}, queueMessageId: {}", dbMessage.getQueueName(), dbMessage.getRegion(),
+                    dbMessage.getQueueMessageId());
+                queueMessageSerialization.deleteMessage(dbMessage.getQueueName(), dbMessage.getRegion(),
+                    dbMessage.getShardId(), dbMessage.getType(), dbMessage.getQueueMessageId());
             }
         }
 
