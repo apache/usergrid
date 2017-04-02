@@ -68,7 +68,7 @@ public class OrganizationsIT extends AbstractRestIT {
         assertNotNull( organizationResponse );
 
 //        Thread.sleep( 1000 );
-//        this.refreshIndex();
+//        this.waitForQueueDrainAndRefreshIndex();
 
         //Creates token
         Token token =
@@ -78,7 +78,7 @@ public class OrganizationsIT extends AbstractRestIT {
 
         assertNotNull( token );
 
-        //this.refreshIndex();
+        //this.waitForQueueDrainAndRefreshIndex();
 
         //Assert that the get returns the correct org and owner.
         Organization returnedOrg = clientSetup.getRestClient().management().orgs().org( organization.getOrganization() ).get();
@@ -136,7 +136,7 @@ public class OrganizationsIT extends AbstractRestIT {
         // Create organization
         Organization organization = createOrgPayload( "testCreateDuplicateOrgName", null );
         Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( organization );
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         assertNotNull( orgCreatedResponse );
 
@@ -193,7 +193,7 @@ public class OrganizationsIT extends AbstractRestIT {
         //create the org/owner
         Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post( organization );
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         assertNotNull( orgCreatedResponse );
 
@@ -394,7 +394,7 @@ public class OrganizationsIT extends AbstractRestIT {
         //update the organization.
         management().orgs().org( clientSetup.getOrganizationName() ).put(orgPayload);
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //retrieve the organization
         Organization orgResponse = management().orgs().org( clientSetup.getOrganizationName() ).get();
@@ -408,7 +408,7 @@ public class OrganizationsIT extends AbstractRestIT {
         //update the organization.
         management().orgs().org( clientSetup.getOrganizationName() ).put(orgPayload);
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         orgResponse = management().orgs().org( clientSetup.getOrganizationName() ).get();
 
@@ -433,7 +433,7 @@ public class OrganizationsIT extends AbstractRestIT {
         Organization orgResponse = management().orgs().org( clientSetup.getOrganizationName() ).get();
 
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
         //attempt to post duplicate connection
         Entity userPostResponse = management().orgs().org( clientSetup.getOrganizationName() ).users().user( clientSetup.getEmail() ).put( entity );
 
@@ -461,7 +461,7 @@ public class OrganizationsIT extends AbstractRestIT {
         Organization orgResponse = management().orgs().org( clientSetup.getOrganizationName() ).get();
 
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
         //attempt to post duplicate connection
         try {
             Entity userPostResponse = management().orgs().org( clientSetup.getOrganizationName() ).users().post( Entity.class, entity );

@@ -132,7 +132,7 @@ public class CollectionIT extends AbstractCoreIT {
         activity3 = app.get( activity3.getUuid(), activity3.getType() );
         app.addToCollection( user, "activities", activity3 );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // empty query
         Query query = new Query();
@@ -259,7 +259,7 @@ public class CollectionIT extends AbstractCoreIT {
         activity3 = app.get(activity3.getUuid(), activity3.getType());
         app.addToCollection(user, "activities", activity3);
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // empty query
         Query query = new Query();
@@ -295,7 +295,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity user = em.create( "user", properties );
         assertNotNull( user );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // EntityRef
         Query query = Query.fromQL( "firstname = '" + firstName + "'" );
@@ -315,7 +315,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.update( user );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // search with the old username, should be no results
         query = Query.fromQL( "firstname = '" + firstName + "'" );
@@ -354,7 +354,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity user = em.create( "user", properties );
         assertNotNull( user );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // EntityRef
         final Query query = Query.fromQL( "middlename = '" + middleName + "'" );
@@ -386,7 +386,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity user = em.create( "user", properties );
         assertNotNull( user );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // EntityRef
         final Query query = Query.fromQL( "lastname = '" + lastName + "'" );
@@ -434,7 +434,7 @@ public class CollectionIT extends AbstractCoreIT {
         properties.put("nickname", "ed");
         em.updateProperties(user1, properties);
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         Thread.sleep(1000);
 
         final Query query = Query.fromQL( "nickname = 'ed'" );
@@ -469,7 +469,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity group = em.create( "group", properties );
         assertNotNull( group );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // EntityRef
         final Query query = Query.fromQL( "name = '" + groupName + "'" );
@@ -501,7 +501,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity group = em.create( "group", properties );
         assertNotNull( group );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // EntityRef
 
@@ -559,7 +559,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.addToCollection( user, "activities", em.create( "activity", properties ) );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         final Query query = Query.fromQL( "verb = 'post'" );
 
@@ -593,7 +593,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity user2 = em.create( "user", properties );
         assertNotNull( user2 );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // EntityRef
         Query query = new Query();
@@ -636,7 +636,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity user2 = em.create( "user", properties );
         assertNotNull( user2 );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // EntityRef
         Query query = new Query();
@@ -677,7 +677,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity game2 = em.create( "orquerygame", properties );
         assertNotNull( game2 );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // EntityRef
         Query query = Query
@@ -756,7 +756,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity game2 = em.create( "game", properties );
         assertNotNull( game2 );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // overlap
         Query query = Query.fromQL(
@@ -817,7 +817,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity game2 = em.create( "game", properties );
         assertNotNull( game2 );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // simple not
         Query query = Query.fromQL( "select * where NOT keywords contains 'game'" );
@@ -893,7 +893,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity entity2 = em.create( "game", properties );
         assertNotNull( entity2 );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
 
         // search for games without sub-field Foo should returned zero entities
@@ -949,7 +949,7 @@ public class CollectionIT extends AbstractCoreIT {
         properties.put("keywords", "Action, New");
         em.create( "game", properties );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Query query = Query.fromQL( "select * where keywords contains 'hot' or title contains 'hot'" );
         Results r = em.searchCollection( em.getApplicationRef(), "games", query );
@@ -980,7 +980,7 @@ public class CollectionIT extends AbstractCoreIT {
         properties.put( "keywords", "Action, New" );
         Entity thirdGame = em.create( "game", properties );
 
-        app.refreshIndex();//need to track all batches then resolve promises
+        app.waitForQueueDrainAndRefreshIndex();//need to track all batches then resolve promises
 
         Query query = Query.fromQL( "select * where keywords contains 'new' and title contains 'extreme'" );
         Results r = em.searchCollection( em.getApplicationRef(), "games", query );
@@ -1011,7 +1011,7 @@ public class CollectionIT extends AbstractCoreIT {
             entityIds.add( created.getUuid() );
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Query query = new Query();
         query.setLimit( 50 );
@@ -1039,7 +1039,7 @@ public class CollectionIT extends AbstractCoreIT {
             numDeleted++;
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // wait for indexes to be cleared
         Thread.sleep(1000); //TODO find why we have to wait.  This is a bug
@@ -1096,7 +1096,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         int pageSize = 10;
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         final Query query = Query.fromQL( "index < " + size * 2 + " order by index asc" );
 
         Results r = null;
@@ -1147,7 +1147,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         int pageSize = 10;
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Query query = Query.fromQL( "select * where index >= " + size / 2 + " sort by index asc" );
         query.setLimit( pageSize );
@@ -1201,7 +1201,7 @@ public class CollectionIT extends AbstractCoreIT {
             entityIds.add( created.getUuid() );
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         int pageSize = 10;
 
@@ -1254,7 +1254,7 @@ public class CollectionIT extends AbstractCoreIT {
             entityIds.add( created.getUuid() );
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         int pageSize = 5;
 
@@ -1310,7 +1310,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         Entity saved = em.create( "test", root );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Query query = Query.fromQL( "rootprop1 = 'simpleprop'" );
         Entity entity;
@@ -1357,7 +1357,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         Entity saved = em.create( "test", jsonData );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Query query = Query.fromQL( "intprop = 10" );
 
@@ -1416,7 +1416,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         Entity saved = em.create( "test", props );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Query query = Query.fromQL( "myString = 'My simple string'" );
 
@@ -1441,7 +1441,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.create( "user", properties );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         String s = "select username, email where username = 'edanuff'";
         Query query = Query.fromQL( s );
@@ -1471,7 +1471,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.create( "user", properties );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         String s = "select {name: username, email: email} where username = 'edanuff'";
         Query query = Query.fromQL( s );
@@ -1503,7 +1503,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         final Entity entity = em.create( "user", properties );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         String s = "select * where username = 'ed@anuff.com'";
         Query query = Query.fromQL( s );
@@ -1525,7 +1525,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.createConnection( foo, "testconnection", entity );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // now query via the testConnection, this should work
 
@@ -1569,7 +1569,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.create( "loveobject", properties );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         location = new LinkedHashMap<String, Object>();
         location.put( "Place", "Via Pietro Maroncelli, 48, 62012 Santa Maria Apparente Province of Macerata, Italy" );
@@ -1587,7 +1587,7 @@ public class CollectionIT extends AbstractCoreIT {
 
         em.create( "loveobject", properties );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // String s = "select * where Flag = 'requested'";
         // String s = "select * where Flag = 'requested' and NOT Recipient.Username =
@@ -1632,7 +1632,7 @@ public class CollectionIT extends AbstractCoreIT {
             createdEntities.add( created );
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Results r = em.getCollection( em.getApplicationRef(), "users", null, 50, Level.ALL_PROPERTIES, false );
 
@@ -1729,7 +1729,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity game2 = em.create( "game", properties );
         assertNotNull( game2 );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // overlap
         Query query = new Query();
@@ -1763,7 +1763,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity game2 = em.create( "game", properties );
         assertNotNull( game2 );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // overlap
         Query query = new Query();
@@ -1797,7 +1797,7 @@ public class CollectionIT extends AbstractCoreIT {
         Entity createUser2 = em.create( user2 );
         assertNotNull( createUser2 );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // overlap
         Query query = new Query();

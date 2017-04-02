@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -105,7 +104,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         Entity thing = em.create("thing", new HashMap<String, Object>() {{
             put("name", "thing1");
         }});
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Thread.sleep(1000);
         assertEquals(1, queryCollectionCp("things", "thing", "select *").size());
@@ -116,7 +115,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         em.updateProperties(thing, new HashMap<String, Object>() {{
             put("stuff", "widget");
         }});
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         Thread.sleep(1000);
 
         org.apache.usergrid.persistence.model.entity.Entity cpUpdated = getCpEntity(thing);
@@ -161,7 +160,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
             }}));
             Thread.sleep( writeDelayMs );
         }
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         CandidateResults crs = queryCollectionCp( "things", "thing", "select *");
         Assert.assertEquals( "Expect no stale candidates yet", numEntities, crs.size() );
@@ -210,7 +209,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         Thread.sleep(250); // delete happens asynchronously, wait for some time
 
         //refresh the app index
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Thread.sleep(250); // refresh happens asynchronously, wait for some time
 
@@ -231,7 +230,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
                }
             });
             //refresh the app index
-            app.refreshIndex();
+            app.waitForQueueDrainAndRefreshIndex();
 
             crs = queryCollectionCp("things", "thing", "select *");
 
@@ -265,7 +264,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
                 put("name", dogName);
             }}));
         }
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         CandidateResults crs = queryCollectionCp( "dogs", "dog", "select *");
         Assert.assertEquals("Expect no stale candidates yet", numEntities, crs.size());
@@ -288,7 +287,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
             }
 
         }
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // wait for indexes to be cleared for the deleted entities
         count = 0;
@@ -296,7 +295,7 @@ public class StaleIndexCleanupTest extends AbstractCoreIT {
         do {
             //trigger the repair
             queryCollectionEm("dogs", "select * order by created");
-            app.refreshIndex();
+            app.waitForQueueDrainAndRefreshIndex();
             crs = queryCollectionCp("dogs", "dog", "select *");
         } while ( crs.size() != numEntities && count++ < 15 );
 

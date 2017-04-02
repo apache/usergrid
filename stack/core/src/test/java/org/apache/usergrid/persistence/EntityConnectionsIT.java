@@ -64,7 +64,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         assertEquals( 1, connectionTypes.size());
         assertEquals("likes", connectionTypes.iterator().next());
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Results r = em.getTargetEntities(firstUserEntity, "likes", null, Level.IDS);
 
@@ -128,7 +128,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         logger.info( "\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catB.getUuid() + "\n" );
         em.createConnection( awardA, "awarded", catB );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // List forward connections for cat A
 
@@ -149,7 +149,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         logger.info( "\n\nConnecting " + awardA.getUuid() + " \"awarded\" " + catA.getUuid() + "\n" );
         em.createConnection( awardA, "awarded", catA );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // List forward connections for cat A
 // Not valid with current usages
@@ -256,7 +256,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( secondUserEntity, "likes", arrogantbutcher );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Results r = em.getTargetEntities(firstUserEntity, "likes", "restaurant", Level.IDS);
 
@@ -310,7 +310,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 
         em.createConnection( fredEntity, "likes", wilmaEntity );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
 //        // search for "likes" edges from fred
 //        assertEquals( 1,
@@ -363,7 +363,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         em.createConnection( fredEntity, "likes", JohnEntity );
 
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // now query via the testConnection, this should work
 
@@ -410,7 +410,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
         }
 
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Results r = em.getTargetEntities(firstUserEntity, "likes", null, Level.ALL_PROPERTIES) ;
 
@@ -453,7 +453,7 @@ public class EntityConnectionsIT extends AbstractCoreIT {
 //
 //        em.createConnection( fredEntity, "likes", wilmaEntity );
 //
-//        app.refreshIndex();
+//        app.waitForQueueDrainAndRefreshIndex();
 //
 ////        // search for "likes" edges from fred
 ////        assertEquals( 1,

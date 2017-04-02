@@ -36,6 +36,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
+import static org.apache.usergrid.persistence.queue.LegacyQueueManager.Implementation.DISTRIBUTED;
 import static org.apache.usergrid.persistence.queue.LegacyQueueManager.Implementation.LOCAL;
 
 
@@ -119,6 +120,10 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
 
         if ( impl.equals( LOCAL )) {
             asyncEventService.MAX_TAKE = 1000;
+        }
+
+        if ( impl.equals( DISTRIBUTED )) {
+            asyncEventService.MAX_TAKE = 500;
         }
 
         return asyncEventService;

@@ -181,7 +181,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
             }
             logger.info( "Waiting for app to become available" );
             Thread.sleep(500);
-            refreshIndex();
+            waitForQueueDrainAndRefreshIndex();
         }
         assertNotNull( clientId );
         assertNotNull( clientSecret );
@@ -242,7 +242,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
 
         assertNotNull(entity);
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //retrieve the app using a username and password
         QueryParameters params = new QueryParameters()
@@ -354,7 +354,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
         Entity entity = this.app().collection("users").post(user);
         //assert that it was saved correctly
         assertNotNull(entity);
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //add a ttl to the entity that is greater than the maximum
         entity.chainPut("grant_type", "password").chainPut("ttl", Long.MAX_VALUE);
@@ -392,7 +392,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
         //save the entity
         Entity entity = this.app().collection("users").post(user);
         assertNotNull(entity);
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Retrieve an authentication token for the user, setting the TTL
         Token apiResponse = target().path( String.format( "/%s/%s/token", orgName, appName ) )
@@ -457,7 +457,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
         //save the entity
         Entity entity = this.app().collection("users").post(user);
         assertNotNull(entity);
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         try {
             //Retrieve a token for the new user, setting the TTL to an invalid value
@@ -496,7 +496,7 @@ public class ApplicationResourceIT extends AbstractRestIT {
         //save the entity
         Entity entity = this.app().collection("users").post(user);
         assertNotNull(entity);
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         //Retrieve an authentication token for the user
         Token tokenResponse = this.app().getTarget( false ).path( "token" )
             .queryParam( "grant_type", "password" )

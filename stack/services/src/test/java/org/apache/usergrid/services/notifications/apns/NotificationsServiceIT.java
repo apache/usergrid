@@ -117,7 +117,6 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
                 setup.getEntityIndex().refresh(app.getId());
 
         listener = new QueueListener(ns.getServiceManagerFactory(),ns.getEntityManagerFactory(), new Properties());
-        listener.DEFAULT_SLEEP = 200;
         listener.start();
     }
 
@@ -234,24 +233,24 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         );
 
 
-        // verify Query for CREATED state
+        notificationWaitForComplete(notification);
+        app.waitForQueueDrainAndRefreshIndex(250);
+
+        // verify Query for FINISHED state and that the devices processed is 0
         Query query =  Query.fromEquals( "state", Notification.State.FINISHED.toString() );
         Results results = app.getEntityManager().searchCollection(app.getEntityManager().getApplicationRef(), "notifications", query);
-        Entity entity = results.getEntitiesMap().get(notification.getUuid());
-        assertNotNull(entity);
-
-        notificationWaitForComplete(notification);
+        notification = (Notification)results.getEntitiesMap().get(notification.getUuid()).toTypedEntity();
+        assertEquals(0, notification.getDeviceProcessedCount());
 
         // perform push //
 
-        //ns.getQueueManager().processBatchAndReschedule(notification, null);
         notification = app.getEntityManager().get(e.getUuid(), Notification.class);
 
         // verify Query for FINISHED state
         query = Query.fromEquals("state", Notification.State.FINISHED.toString());
         results = app.getEntityManager().searchCollection(app.getEntityManager().getApplicationRef(),
                 "notifications", query);
-        entity = results.getEntitiesMap().get(notification.getUuid());
+        Entity entity = results.getEntitiesMap().get(notification.getUuid());
         assertNotNull(entity);
 
         notification = (Notification) entity.toTypedEntity();
@@ -501,7 +500,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
     @Test
     public void oneDeviceTwoNotifiers() throws Exception {
 
-        // This test should configure 2 notifiers on a device and ensure that we can send to one of them
+        // This test should configure 2 notifiers on device1 and ensure that we can send to one of them
 
         // create a 2nd notifier //
         Object notifierName1 = "apNs2";
@@ -525,17 +524,19 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         assertEquals(notifier2.getProvider(), PROVIDER);
         assertEquals(notifier2.getEnvironment(), environment1);
 
+
+        // Add a device token for the 2nd notifier
+        app.clear();
         String key2 = notifier2.getName() + NOTIFIER_ID_POSTFIX;
-        device1.setProperty(key2, PUSH_TOKEN);
-        app.getEntityManager().update(device1);
-        setup.getEntityIndex().refresh(app.getId()); // need to refresh the index after an update
+        app.put(key2, PUSH_TOKEN);
+        app.testRequest(ServiceAction.PUT, 1, "devices", device1).getEntity();
 
 
         // create push notification //
         app.clear();
         String payload = getPayload();
         Map<String, String> payloads = new HashMap<String, String>(1);
-        payloads.put(notifier.getUuid().toString(), payload);
+        payloads.put(notifierName, payload);
         app.put("payloads", payloads);
         app.put("debug",true);
 
@@ -543,14 +544,14 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
             "notifications").getEntity();
         app.testRequest(ServiceAction.GET, 1, "notifications", notificationEntity.getUuid());
 
-        Notification notification = app.getEntityManager().get(notificationEntity.getUuid(),
-                Notification.class);
-        assertEquals(
-                notification.getPayloads().get(notifier.getUuid().toString()),
-                payload);
+        Notification notification = app.getEntityManager().get(notificationEntity.getUuid(), Notification.class);
+        assertEquals(payload, notification.getPayloads().get(notifierName));
 
         // perform push //
         notification = notificationWaitForComplete(notification);
+
+        app.waitForQueueDrainAndRefreshIndex(2500);
+
         checkReceipts(notification, 1);
     }
 
@@ -692,6 +693,9 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         // perform push //
         notification = notificationWaitForComplete(notification);
+
+        app.waitForQueueDrainAndRefreshIndex(250);
+
         checkReceipts(notification, 2);
 
         // Statistics are not accurate.  See - https://issues.apache.org/jira/browse/USERGRID-1207

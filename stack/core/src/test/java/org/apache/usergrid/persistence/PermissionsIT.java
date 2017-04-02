@@ -28,8 +28,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.commons.lang3.RandomStringUtils;
-
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.persistence.entities.Role;
 import org.apache.usergrid.persistence.Query.Level;
@@ -147,7 +145,7 @@ public class PermissionsIT extends AbstractCoreIT {
         dump( "group roles", roles );
 
         em.deleteGroupRole( group.getUuid(), "author" );
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         Thread.sleep(1000);
 
         roles = em.getGroupRoles( group.getUuid() );
@@ -156,7 +154,7 @@ public class PermissionsIT extends AbstractCoreIT {
 
         em.addUserToGroupRole( user.getUuid(), group.getUuid(), "admin" );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         Results r = em.getUsersInGroupRole( group.getUuid(), "admin", Level.ALL_PROPERTIES );
         dump( "entities", r.getEntities() );
         assertEquals( "proper number of users in group role not set", 1, r.size() );

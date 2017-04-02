@@ -66,7 +66,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         user = new User(USER,USER,USER+"@apigee.com","password");
         user = new User( this.app().collection("users").post(user));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
     }
 
 
@@ -86,13 +86,13 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         assertEquals( ROLE, node.get("name").toString() );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Post the user with a specific role into the users collection
         node = this.app().collection("roles").entity(node).collection("users").entity(USER).post();
         assertNull( node.get( "error" ) );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // now check the user has the role
         node =  this.app().collection("users").entity(USER).collection("roles").entity(ROLE).get();
@@ -104,7 +104,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         // now delete the role
         this.app().collection("users").entity(USER).collection("roles").entity(ROLE).delete();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // check if the role was deleted
 
@@ -136,14 +136,14 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         assertNull( node.get( "error" ) );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Create a user that is in the group.
         node = this.app().collection("groups").entity(groupPath).collection("users").entity(user).post();
 
         assertNull( node.get( "error" ) );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Get the user and make sure that they are part of the group
         Collection groups = this.app().collection("users").entity(user).collection("groups").get();
@@ -157,7 +157,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         assertNull( response.getError() );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Check that the user no longer exists in the group
         int status = 0;
@@ -193,7 +193,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         assertNull( entity.getError() );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // now try to add permission as the user, this should work
         addPermission( "usercreatedrole", "get,put,post:/foo/**" );
@@ -247,13 +247,13 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         assertNull( node.getError() );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // delete the default role to test permissions later
         ApiResponse response = this.app().collection("roles").entity("default").delete();
 
         assertNull( response.getError() );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // Grants a permission to GET, POST, and PUT the reviews url for the reviewer role
         addPermission( "reviewer", "get,put,post:/reviews/**" );
@@ -266,22 +266,22 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         this.app().collection("groups").post(group);
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // Adds the reviewer to the reviewerGroup
         this.app().collection("groups").entity("reviewergroup").collection("roles").entity("reviewer").post();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // Adds reviewer2 user to the reviewergroup
         this.app().collection("users").entity("reviewer2").collection("groups").entity("reviewergroup").post();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // Adds reviewer1 to the reviewer role
         this.app().collection("users").entity("reviewer1").collection("roles").entity("reviewer").post();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // Set the current context to reviewer1
         this.app().token().post(new Token("reviewer1","password"));
@@ -295,7 +295,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
             .chainPut ("rating", "4").chainPut( "name", "4peaks").chainPut("review", "Huge beer selection" );
         this.app().collection("reviews").post(review);
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // get the reviews and assert they were created
         QueryParameters queryParameters = new QueryParameters();
@@ -330,7 +330,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), status );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //TODO: maybe make this into two different tests?
 
@@ -346,7 +346,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
             .chainPut( "rating", "4" ).chainPut("name", "currycorner").chainPut( "review", "Authentic" );
         this.app().collection("reviews").post(review);
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // get all reviews as reviewer2
         queryParameters = new QueryParameters();
@@ -372,7 +372,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         assertEquals( Response.Status.UNAUTHORIZED.getStatusCode(), status );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         status = 0;
 
@@ -409,7 +409,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         Entity data = new Entity().chainPut("name", "reviewer");
         this.app().collection("roles").post(data);
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // allow access to reviews excluding delete
         addPermission( "reviewer",
@@ -433,13 +433,13 @@ public class PermissionsResourceIT extends AbstractRestIT {
                         "wildcardpermusertwo@apigee.com" );
         assertNotNull( userTwoId );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Add user1 to the reviewer role
         this.app().collection("users").entity(userOneId).collection("roles").entity("reviewer").post();
 
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Add a book to the books collection
         Entity book = new Entity().chainPut( "title", "Ready Player One" ).chainPut("author", "Earnest Cline");
@@ -449,7 +449,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         assertEquals( "Ready Player One", book.get("title").toString() );
         String bookId = book.get("uuid").toString();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //Switch the contex to be that of user1
         this.app().token().post(new Token("wildcardpermuserone","password"));
@@ -461,7 +461,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
         review = this.app().collection("reviews").post(review);
         String reviewId = review.get("uuid").toString();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // POST https://api.usergrid.com/my-org/my-app/users/me/wrote/review/${reviewId}
         this.app().collection("users").entity("me").connection("wrote").collection("review").entity(reviewId).post();
@@ -469,13 +469,13 @@ public class PermissionsResourceIT extends AbstractRestIT {
         // POST https://api.usergrid.com/my-org/my-app/users/me/reviewed/review/${reviewId}
         this.app().collection("users").entity("me").connection("reviewed").collection("books").entity(bookId).post();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // POST https://api.usergrid.com/my-org/my-app/books/${bookId}/review/${reviewId}
         this.app().collection("books").entity(bookId).collection("review").entity(reviewId).post();
 
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // now try to post the same thing to books to verify as userOne does not have correct permissions
         int status = 0;
@@ -522,7 +522,7 @@ public class PermissionsResourceIT extends AbstractRestIT {
 
         //allow patients to add doctors as their followers
         addPermission(  "patient", "delete,post:/users/*/following/users/${user}" );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // create examplepatient
         UUID patientId =  createRoleUser( "examplepatient",  "examplepatient@apigee.com" );
@@ -531,12 +531,12 @@ public class PermissionsResourceIT extends AbstractRestIT {
         // create exampledoctor
         UUID doctorId = createRoleUser( "exampledoctor",  "exampledoctor@apigee.com" );
         assertNotNull( doctorId );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         // assign examplepatient the patient role
         this.app().collection("users").entity(patientId).collection("roles").entity("patient").post();
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         this.app().token().post(new Token("examplepatient","password"));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         //not working yet, used to be ignored
         //        this.app().collection("users").entity("exampledoctor").connection("following")
         // .collection("users").entity("examplepatient").post();

@@ -73,7 +73,7 @@ public class ServiceApplication extends CoreApplication {
         ServiceResults testRequest = testRequest( action, expectedCount, true, params );
 
         if ( !action.equals( ServiceAction.GET )) {
-            this.refreshIndex();
+            this.waitForQueueDrainAndRefreshIndex();
         }
 
         return testRequest;

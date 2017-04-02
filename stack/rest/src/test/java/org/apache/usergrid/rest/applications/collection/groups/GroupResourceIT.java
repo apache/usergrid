@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.Collection;
 import org.apache.usergrid.rest.test.resource.model.Entity;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.ws.rs.ClientErrorException;
@@ -58,7 +57,7 @@ public class GroupResourceIT extends AbstractRestIT {
         Entity entity = this.app().collection("groups").post(payload);
         assertEquals(entity.get("name"), groupName);
         assertEquals(entity.get("path"), groupPath);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
         return entity;
     }
 
@@ -74,7 +73,7 @@ public class GroupResourceIT extends AbstractRestIT {
         Entity entity = this.app().collection("roles").post(payload);
         assertEquals(entity.get("name"), roleName);
         assertEquals(entity.get("title"), roleTitle);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
         return entity;
     }
 
@@ -91,7 +90,7 @@ public class GroupResourceIT extends AbstractRestIT {
         Entity entity = this.app().collection("users").post(payload);
         assertEquals(entity.get("username"), username);
         assertEquals(entity.get("email"), email);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
         return entity;
     }
 
@@ -180,7 +179,7 @@ public class GroupResourceIT extends AbstractRestIT {
         group.put("path", newGroupPath);
         Entity groupResponse = this.app().collection("groups").entity(group).put(group);
         assertEquals(groupResponse.get("path"), newGroupPath);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //4. do a GET to verify the property really was set
         groupResponseGET = this.app().collection("groups").entity(group).get();
@@ -223,7 +222,7 @@ public class GroupResourceIT extends AbstractRestIT {
         // 3. add the user to the group
         Entity response = this.app().collection("users").entity(user).connection().collection("groups").entity(group).post();
         assertEquals(response.get("name"), groupName);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         // 4. make sure the user is in the group
         Collection collection = this.app().collection("groups").entity(group).connection().collection("users").get();
@@ -237,7 +236,7 @@ public class GroupResourceIT extends AbstractRestIT {
 
         //6. remove the user from the group
         this.app().collection("group").entity(group).connection().collection("users").entity(user).delete();
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //6. make sure the connection no longer exists
         collection = this.app().collection("group").entity(group).connection().collection("users").get();
@@ -266,12 +265,12 @@ public class GroupResourceIT extends AbstractRestIT {
         String roleName = "tester";
         String roleTitle = "tester";
         Entity role = this.createRole(roleName, roleTitle);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //3. add role to the group
         Entity response = this.app().collection("roles").entity(role).connection().collection("groups").entity(group).post();
         assertEquals(response.get("name"), groupName);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //4. make sure the role is in the group
         Collection collection = this.app().collection("groups").entity(group).connection().collection("roles").get();
@@ -280,7 +279,7 @@ public class GroupResourceIT extends AbstractRestIT {
 
         //5. remove Role from the group (should only delete the connection)
         this.app().collection("groups").entity(group).connection().collection("roles").entity(role).delete();
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //6. make sure the connection no longer exists
         collection = this.app().collection("groups").entity(group).connection().collection("roles").get();
@@ -294,7 +293,7 @@ public class GroupResourceIT extends AbstractRestIT {
 
         //8. delete the role
         this.app().collection("role").entity(role).delete();
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
         Thread.sleep(5000);
 
         //9. do a GET to make sure the role was deleted
@@ -359,7 +358,7 @@ public class GroupResourceIT extends AbstractRestIT {
         payload.put("name", catName);
         Entity fluffy = this.app().collection("cats").post(payload);
         assertEquals(fluffy.get("name"), catName);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //10. get the cat - permissions should allow this
         fluffy = this.app().collection("cats").uniqueID(catName).get();
@@ -436,7 +435,7 @@ public class GroupResourceIT extends AbstractRestIT {
 
 
         //7. get all the users in the groups
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
         Collection usersInGroup = this.app().collection("groups").uniqueID(groupName).connection("users").get();
         assertEquals(usersInGroup.getResponse().getEntityCount(), 2);
 
@@ -444,7 +443,7 @@ public class GroupResourceIT extends AbstractRestIT {
         this.app().collection("role").uniqueID("Default").delete();
         Entity data = new Entity().chainPut("name", "group1role");
         this.app().collection("roles").post(data);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         Entity perms = new Entity();
         String permission = "get,post,put,delete:/groups/" + group.getUuid() + "/**";
@@ -452,18 +451,18 @@ public class GroupResourceIT extends AbstractRestIT {
         this.app().collection("roles").uniqueID("group1role").connection("permissions").post(perms);
         this.app().collection("roles").uniqueID("group1role").connection("users").uniqueID( user1Username ).post();
         this.app().collection("roles").uniqueID("group1role").connection("users").uniqueID( user2Username ).post();
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //7b. everybody gets access to /activities
         perms = new Entity();
         permission = "get:/activities/**";
         perms.put("permission",permission);
         this.app().collection("roles").uniqueID("Guest").connection("permissions").post(perms);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
         this.app().collection("roles").uniqueID("Guest").connection("users").uniqueID( user1Username ).post();
         this.app().collection("roles").uniqueID("Guest").connection("users").uniqueID( user2Username ).post();
         this.app().collection("roles").uniqueID("Guest").connection("users").uniqueID( user3Username ).post();
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
 
         //8. post an activity to the group
@@ -482,7 +481,7 @@ public class GroupResourceIT extends AbstractRestIT {
         Entity activityResponse = this.app().collection("groups")
             .uniqueID(groupName).connection("activities").post(activity);
         assertEquals(activityResponse.get("content"), content);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         //11. log user1 in, should then be using the app user's token not the admin token
         this.getAppUserToken(user1Username, password);
@@ -565,7 +564,7 @@ public class GroupResourceIT extends AbstractRestIT {
         group.put("title", newTitle);
         Entity groupResponse = this.app().collection("groups").entity(group).put(group);
         assertEquals(groupResponse.get("title"), newTitle);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
         // update that group by giving it a new title and using UUID in URL
         String evenNewerTitle = "Even New Title";
@@ -573,6 +572,6 @@ public class GroupResourceIT extends AbstractRestIT {
         String uuid = group.getAsString("uuid");
         groupResponse = this.app().collection("groups").uniqueID(uuid).put(group);
         assertEquals(groupResponse.get("title"), evenNewerTitle);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
     }
 }

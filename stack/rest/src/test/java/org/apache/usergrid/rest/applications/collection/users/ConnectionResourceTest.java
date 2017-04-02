@@ -63,7 +63,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
         Entity objectOfDesire = new Entity();
         objectOfDesire.put( "codingmunchies", "doritoes" );
         objectOfDesire = this.app().collection( "snacks" ).post( objectOfDesire );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Entity toddWant = this.app().collection( "users" ).entity( todd ).collection( "likes" ).collection( "snacks" )
                               .entity( objectOfDesire ).post();
@@ -93,11 +93,11 @@ public class ConnectionResourceTest extends AbstractRestIT {
         thing2.put( "name", "thing2" );
         thing2 = this.app().collection( "things" ).post( thing2 );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         //create the connection: thing1 likes thing2
         this.app().collection( "things" ).entity( thing1 )
             .connection("likes").collection( "things" ).entity( thing2 ).post();
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //test we have the "likes" in our connection meta data response
         thing1 = this.app().collection( "things" ).entity( thing1 ).get();
@@ -150,14 +150,14 @@ public class ConnectionResourceTest extends AbstractRestIT {
         thing2.put( "name", "thing2" );
         thing2 = this.app().collection( "things" ).post( thing2 );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         //create the connection: thing1 likes thing2
         this.app().collection( "things" ).entity( thing1 )
             .connection("likes").collection( "things" ).entity( thing2 ).post();
         //delete thing2
         this.app().collection( "things" ).entity( thing2 ).delete();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         try {
             //attempt to retrieve thing1
@@ -185,14 +185,14 @@ public class ConnectionResourceTest extends AbstractRestIT {
         thing2.put( "name", "thing2" );
         thing2 = this.app().collection( "things" ).post( thing2 );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         //create the connection: thing1 likes thing2
         this.app().collection( "things" ).entity( thing1 )
             .connection("likes").collection( "things" ).entity( thing2 ).post();
         //delete thing1
         this.app().collection( "things" ).entity( thing1 ).delete();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         try {
             //attempt to retrieve thing1
@@ -236,7 +236,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
         //connect thing1 -> thing3
         connectionEndpoint.entity( thing3 ).post();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //now do a GET, we should see thing2 then thing3
 
@@ -257,7 +257,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
         //now re-post thing 2 it should appear second
         connectionEndpoint.entity( thing2 ).post();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
 
         final ApiResponse order2 = connectionEndpoint.get().getResponse();
@@ -304,7 +304,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
         //connect thing1 -> thing3
         connectionEndpoint.entity( thing3 ).put( thing3 );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         //now do a GET, we should see thing2 then thing3
 
@@ -325,7 +325,7 @@ public class ConnectionResourceTest extends AbstractRestIT {
         //now re-post thing 2 it should appear second
         connectionEndpoint.entity( thing2 ).put( thing2 );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         final ApiResponse order2 = connectionEndpoint.get().getResponse();
 

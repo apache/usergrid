@@ -75,7 +75,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         assertEquals( "user.username not expected value", "edanuff", user.getProperty( "username" ) );
         assertEquals( "user.email not expected value", "ed@anuff.com", user.getProperty( "email" ) );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         EntityRef userRef = em.getAlias( new SimpleEntityRef( "application", applicationId ), "users", "edanuff" );
 
@@ -274,13 +274,13 @@ public class EntityManagerIT extends AbstractCoreIT {
         Entity thing = em.create( "thing", properties );
         logger.info( "Entity created" );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         logger.info( "Starting entity delete" );
         em.delete( thing );
         logger.info( "Entity deleted" );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // now search by username, no results should be returned
 
@@ -310,13 +310,13 @@ public class EntityManagerIT extends AbstractCoreIT {
         Entity user = em.create( "user", properties );
         logger.info( "Entity created" );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         logger.info( "Starting entity delete" );
         em.delete( user );
         logger.info( "Entity deleted" );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         // now search by username, no results should be returned
 
@@ -335,7 +335,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         user = em.create( "user", properties );
         logger.info( "Entity created" );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         final Query userNameQuery = Query.fromQL( "username = '" + name + "'" );
 
@@ -456,7 +456,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         EntityRef appRef = em.get( new SimpleEntityRef( "application", app.getId() ) );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Results r = em.getCollection( appRef, "things", null, 10, Level.ALL_PROPERTIES, false );
 
@@ -548,7 +548,7 @@ public class EntityManagerIT extends AbstractCoreIT {
 
         Entity createdDevice = em.createItemInCollection( createdUser, "devices", "device", device );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Entity returnedDevice = em.get( new SimpleEntityRef( "device", createdDevice.getUuid() ) );
 
@@ -580,7 +580,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         Entity user = em.create( "robot", properties );
         assertNotNull( user );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         assertNotNull( em.get( user.getUuid() ) );
     }
@@ -608,7 +608,7 @@ public class EntityManagerIT extends AbstractCoreIT {
         em.addToCollection(appRef, "fluffies", entityRef);
         em.addToCollection(appRef, "fluffies", entityRef);
 
-        //app.refreshIndex();
+        //app.waitForQueueDrainAndRefreshIndex();
 
         Results results = em.getCollection(appRef,
             "fluffies", null, 10, Level.ALL_PROPERTIES, true);

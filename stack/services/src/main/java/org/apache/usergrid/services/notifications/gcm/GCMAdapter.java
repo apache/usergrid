@@ -16,7 +16,6 @@
  */
 package org.apache.usergrid.services.notifications.gcm;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.gcm.server.*;
 import org.apache.usergrid.persistence.entities.Notification;
@@ -99,7 +98,7 @@ public class GCMAdapter implements ProviderAdapter {
         if(!map.containsKey(priorityKey) && notification.getPriority() != null){
             map.put(priorityKey, notification.getPriority());
         }
-        Batch batch = getBatch( map);
+        Batch batch = getBatch( map );
         batch.add(providerId, tracker);
     }
 

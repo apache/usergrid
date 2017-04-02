@@ -24,7 +24,6 @@ import org.junit.Test;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -57,7 +56,7 @@ public class SystemResourceIT extends AbstractRestIT {
         for(int i =0; i<count;i++) {
             this.app().collection("tests").post(new Entity().chainPut("testval", "test"));
         }
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
         QueryParameters queryParameters = new QueryParameters();
         queryParameters.addParam( "access_token", clientSetup.getSuperuserToken().getAccessToken() );
         queryParameters.addParam("confirmApplicationName", this.clientSetup.getAppName());

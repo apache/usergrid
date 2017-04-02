@@ -132,7 +132,7 @@ public class NotSubPropertyIT {
 
         logger.info( "Writes took {} ms", stop - start );
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         return expected;
     }

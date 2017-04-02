@@ -213,7 +213,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
         // test that we cannot see the application in the list of applications returned
         // by the management resource's get organization's applications end-point
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         ManagementResponse orgAppResponse = clientSetup.getRestClient()
             .management().orgs().org( orgName ).apps().getOrganizationApplications();
@@ -295,7 +295,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .request()
             .delete();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
 
         // restore the app
@@ -308,7 +308,7 @@ public class ApplicationDeleteIT extends AbstractRestIT {
             .request()
             .put( javax.ws.rs.client.Entity.entity( "", MediaType.APPLICATION_JSON )); // must send body
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // test that we can see the application in the list of applications
 

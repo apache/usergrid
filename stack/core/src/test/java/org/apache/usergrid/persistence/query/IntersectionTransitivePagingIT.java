@@ -131,7 +131,7 @@ public class IntersectionTransitivePagingIT{
 
 
         }
-        this.app.refreshIndex();
+        this.app.waitForQueueDrainAndRefreshIndex();
 
         Thread.sleep(1000);
         return expected;

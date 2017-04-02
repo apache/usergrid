@@ -165,7 +165,7 @@ public interface QakkaFig extends GuicyFig, Serializable {
     long getMaxShardSize();
 
     @Key(QUEUE_LONG_POLL_TIME_MILLIS)
-    @Default("5000")
+    @Default("1000")
     long getLongPollTimeMillis();
 
     /** Max time-to-live for queue message and payload data */
@@ -174,7 +174,7 @@ public interface QakkaFig extends GuicyFig, Serializable {
     int getMaxTtlSeconds();
 
     @Key(QUEUE_IN_MEMORY)
-    @Default("true")
+    @Default("false") // in memory not ready yet; leave this to false else msgs could be processed more than once
     boolean getInMemoryCache();
 
     @Key(QUEUE_IN_MEMORY_REFRESH_ASYNC)

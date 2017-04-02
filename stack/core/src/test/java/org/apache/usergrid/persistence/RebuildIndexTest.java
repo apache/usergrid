@@ -125,7 +125,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
         }
 
         logger.info( "Created {} entities", ENTITIES_TO_INDEX );
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex(5000);
 
         // ----------------- test that we can read them, should work fine
 
@@ -163,6 +163,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
         waitForRebuild( status, reIndexService );
 
+        app.waitForQueueDrainAndRefreshIndex(5000);
 
         // ----------------- test that we can read the catherder collection and not the catshepard
 
@@ -233,7 +234,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
         }
 
         logger.info( "Created {} entities", ENTITIES_TO_INDEX );
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex(15000);
 
         // ----------------- test that we can read them, should work fine
 
@@ -246,6 +247,8 @@ public class RebuildIndexTest extends AbstractCoreIT {
         logger.debug( "Deleting app index" );
 
         deleteIndex( em.getApplicationId() );
+
+        app.waitForQueueDrainAndRefreshIndex();
 
         // ----------------- test that we can read them, should fail
 
@@ -283,7 +286,6 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
             logger.info( "Rebuilt index" );
 
-            app.refreshIndex();
         }
         catch ( Exception ex ) {
             logger.error( "Error rebuilding index", ex );
@@ -292,7 +294,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
         // ----------------- test that we can read them
 
-        Thread.sleep( 2000 );
+        app.waitForQueueDrainAndRefreshIndex(15000);
         readData( em, collectionName, ENTITIES_TO_INDEX, 3 );
     }
 
@@ -343,7 +345,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
 
         logger.info( "Created {} entities", ENTITIES_TO_INDEX );
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex(5000);
 
         // ----------------- test that we can read them, should work fine
 
@@ -392,7 +394,6 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
             logger.info( "Rebuilt index" );
 
-            app.refreshIndex();
         }
         catch ( Exception ex ) {
             logger.error( "Error rebuilding index", ex );
@@ -401,7 +402,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
         // ----------------- test that we can read them
 
-        Thread.sleep( 2000 );
+        app.waitForQueueDrainAndRefreshIndex(5000);
         results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q, 3 );
         assertEquals(results.size(),3);
         q = Query.fromQL("select * where location within 100 of "+lat+", "+lon);
@@ -435,7 +436,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
         final Entity secondEntity = em.create( "thing",  entityData);
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex(5000);
 
         // ----------------- test that we can read them, should work fine
 
@@ -493,7 +494,6 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
             logger.info( "Rebuilt index" );
 
-            app.refreshIndex();
         }
         catch ( Exception ex ) {
             logger.error( "Error rebuilding index", ex );
@@ -502,7 +502,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
         // ----------------- test that we can read them
 
-        Thread.sleep( 2000 );
+        app.waitForQueueDrainAndRefreshIndex(5000);
         countEntities( em, collectionName, 1 );
     }
 
@@ -547,14 +547,14 @@ public class RebuildIndexTest extends AbstractCoreIT {
         );
 
         ei.deleteApplication().toBlocking().lastOrDefault( null );
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
     }
 
 
     private int readData( EntityManager em, String collectionName, int expectedEntities, int expectedConnections )
         throws Exception {
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
 
         Query q = Query.fromQL( "select * where key1=1000" ).withLimit( 1000 );
         Results results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q, expectedEntities );
@@ -593,7 +593,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
     private int countEntities( EntityManager em, String collectionName, int expectedEntities)
            throws Exception {
 
-           app.refreshIndex();
+           app.waitForQueueDrainAndRefreshIndex();
 
            Query q = Query.fromQL( "select * where key1=1000" ).withLimit( 1000 );
            Results results = em.searchCollectionConsistent( em.getApplicationRef(), collectionName, q, expectedEntities );
