@@ -133,7 +133,7 @@ public class QueueActorRouter extends UntypedActor {
                     getContext().dispatcher(),
                     getSelf() );
                 shardAllocationSchedulersByQueueName.put( queueName, scheduler );
-                logger.debug( "Created shard allocater for queue {}", queueName );
+                logger.debug( "Created shard allocator for queue {}", queueName );
             }
         }
     }

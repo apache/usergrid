@@ -17,7 +17,6 @@
 package org.apache.usergrid.rest.applications.collection.activities;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +27,6 @@ import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
 import org.apache.usergrid.rest.test.resource.model.Collection;
 import org.apache.usergrid.rest.test.resource.model.Entity;
-import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +58,7 @@ public class PutTest extends AbstractRestIT {
             Entity activity = activities.post(new Entity(props));
         }
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         String query = "select * ";
 
@@ -72,7 +70,7 @@ public class PutTest extends AbstractRestIT {
         props.put( "actor", newActor );
         Entity activity = activities.post(new Entity(props));
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         collection = activities.get(  );
         assertEquals( 6, collection.getResponse().getEntities().size() );

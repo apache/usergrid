@@ -141,7 +141,7 @@ public class ExportResourceIT extends AbstractRestIT {
         assertNotNull( uuid );
 
         exportEntity = null;
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         try {
 
             exportEntity = management().orgs().org( clientSetup.getOrganizationName() )

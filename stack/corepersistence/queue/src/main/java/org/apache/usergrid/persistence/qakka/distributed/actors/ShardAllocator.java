@@ -139,8 +139,8 @@ public class ShardAllocator extends UntypedActor {
                 shardSerialization.createShard( newShard );
                 shardCounterSerialization.incrementCounter( queueName, type, newShard.getShardId(), 0 );
 
-                logger.info("{} Created new shard for queue {} shardId {} timestamp {} counterValue {}",
-                        this.hashCode(), queueName, shard.getShardId(), futureUUID.timestamp(), counterValue );
+                logger.info("Allocated new shard for queue, newShardID: {}, queueName: {}, shardMessageCount: {}, usedPercent: {}%",
+                    newShard.getShardId(), queueName, counterValue, (long)((double)counterValue/(double)qakkaFig.getMaxShardSize()*100) );
 
             } else {
 //                logger.debug("No new shard for queue {} counterValue {} of max {}",

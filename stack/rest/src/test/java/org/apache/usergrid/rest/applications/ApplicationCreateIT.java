@@ -104,7 +104,7 @@ public class ApplicationCreateIT extends AbstractRestIT {
             .management().orgs().org( orgName ).app().post( new Application( appName ) );
         UUID appId = appCreateResponse.getEntities().get(0).getUuid();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         for ( int i=0; i<5; i++ ) {
 
             final String entityName = "entity" + i;

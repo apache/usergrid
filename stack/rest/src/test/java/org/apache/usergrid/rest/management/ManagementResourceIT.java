@@ -213,7 +213,7 @@ public class ManagementResourceIT extends AbstractRestIT {
             users1.add( "follower" + Integer.toString( i ) );
         }
 
-        refreshIndex(  );
+        waitForQueueDrainAndRefreshIndex(  );
 
         checkFeed( "leader1", users1 );
         //try with 11
@@ -230,20 +230,20 @@ public class ManagementResourceIT extends AbstractRestIT {
 
         //create user
         createUser( leader );
-        refreshIndex(   );
+        waitForQueueDrainAndRefreshIndex(   );
 
         String preFollowContent = leader + ": pre-something to look for " + UUID.randomUUID().toString();
 
         addActivity( leader, leader + " " + leader + "son", preFollowContent );
-        refreshIndex(  );
+        waitForQueueDrainAndRefreshIndex(  );
 
         String lastUser = followers.get( followers.size() - 1 );
         int i = 0;
         for ( String user : followers ) {
             createUser( user );
-            refreshIndex( );
+            waitForQueueDrainAndRefreshIndex( );
             follow( user, leader );
-            refreshIndex(  );
+            waitForQueueDrainAndRefreshIndex(  );
         }
         userFeed = getUserFeed( lastUser );
         assertTrue( userFeed.size() == 1 );
@@ -254,7 +254,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         String postFollowContent = leader + ": something to look for " + UUID.randomUUID().toString();
         addActivity( leader, leader + " " + leader + "son", postFollowContent );
 
-        refreshIndex(  );
+        waitForQueueDrainAndRefreshIndex(  );
 
         //check feed
         userFeed = getUserFeed( lastUser );
@@ -321,7 +321,7 @@ public class ManagementResourceIT extends AbstractRestIT {
             .post( new Application( "mgmt-org-app" ) );
 
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Entity appdata = apiResponse.getEntities().get(0);
         assertEquals((clientSetup.getOrganizationName() + "/mgmt-org-app")
@@ -336,7 +336,7 @@ public class ManagementResourceIT extends AbstractRestIT {
         assertEquals("Roles", roles.get("title").toString());
         assertEquals(4, roles.size());
 
-        refreshIndex(   );
+        waitForQueueDrainAndRefreshIndex(   );
 
         // GET /applications/mgmt-org-app
 
@@ -361,7 +361,7 @@ public class ManagementResourceIT extends AbstractRestIT {
     public void checkSizes() throws Exception {
         final String appname = clientSetup.getAppName();
         this.app().collection("testCollection").post(new Entity().chainPut("name","test"));
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         Entity size = management().orgs().org( clientSetup.getOrganizationName() ).app().addToPath(appname).addToPath("_size").get();
         Entity rolesSize = management().orgs().org(clientSetup.getOrganizationName()).app().addToPath(appname).addToPath("roles/_size").get();
         Entity collectionsSize = management().orgs().org(clientSetup.getOrganizationName()).app().addToPath(appname).addToPath("collections/_size").get();

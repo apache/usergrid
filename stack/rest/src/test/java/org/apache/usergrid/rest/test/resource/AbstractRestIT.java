@@ -173,15 +173,21 @@ public class AbstractRestIT extends JerseyTest {
         return this.app().token().post( new Token( username, password ) );
     }
 
-    public void refreshIndex() {
-        //TODO see how we can refresh index (not async) for tests so sleep may not be needed
+    public void waitForQueueDrainAndRefreshIndex(int waitTimeMillis) {
+        // indexing is async, tests will need to wait for stuff to be processed.
+        // this sleep is slightly longer becasue distributed queueing on top of Cassandra can be used without and in-mem
+        // copy.  see Qakka in the persistence module
         try {
-            Thread.sleep(250); //ensure index docs are finished being sent to Elasticsearch by Usergrid before refresh
+            Thread.sleep(waitTimeMillis);
             clientSetup.refreshIndex();
         } catch (InterruptedException e) {
             System.out.println("Error refreshing index");
             e.printStackTrace();
         }
+    }
+
+    public void waitForQueueDrainAndRefreshIndex() {
+        waitForQueueDrainAndRefreshIndex(750);
     }
 
 

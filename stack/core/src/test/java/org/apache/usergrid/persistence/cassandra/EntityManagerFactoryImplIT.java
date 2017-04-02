@@ -26,11 +26,8 @@ import java.util.UUID;
 import org.apache.usergrid.Application;
 import org.apache.usergrid.CoreApplication;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
-import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilderImpl;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
-import org.apache.usergrid.corepersistence.index.ReIndexServiceImpl;
 import org.apache.usergrid.persistence.*;
-import org.apache.usergrid.utils.UUIDUtils;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +40,6 @@ import org.apache.usergrid.persistence.cassandra.util.TraceTagManager;
 import org.apache.usergrid.persistence.cassandra.util.TraceTagReporter;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.setup.ConcurrentProcessSingleton;
-import rx.functions.Func0;
-import rx.functions.Func1;
 import rx.functions.Func2;
 
 import javax.annotation.concurrent.NotThreadSafe;
@@ -140,7 +135,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
             Thread.sleep( 500 );
         }
 
-        this.app.refreshIndex();
+        this.app.waitForQueueDrainAndRefreshIndex();
 
 
         // wait for it to appear in delete apps list
@@ -164,7 +159,7 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
         // delete the application
         setup.getEmf().deleteApplication(deletedAppId);
 
-        this.app.refreshIndex();
+        this.app.waitForQueueDrainAndRefreshIndex();
 
         found = findApps.call( deletedAppId, emf.getDeletedApplications() );
 
@@ -196,14 +191,14 @@ public class EntityManagerFactoryImplIT extends AbstractCoreIT {
             }
         }while (status.getStatus()!= ReIndexService.Status.COMPLETE);
 
-        this.app.refreshIndex();
+        this.app.waitForQueueDrainAndRefreshIndex();
 
         // test to see that app now works and is happy
 
         // it should not be found in the deleted apps collection
         found = findApps.call( deletedAppId, emf.getDeletedApplications());
         assertFalse("Restored app found in deleted apps collection", found);
-        this.app.refreshIndex();
+        this.app.waitForQueueDrainAndRefreshIndex();
 
         apps = setup.getEmf().getApplications();
         found = findApps.call(deletedAppId, apps);

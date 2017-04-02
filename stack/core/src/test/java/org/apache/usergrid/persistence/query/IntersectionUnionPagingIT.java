@@ -135,7 +135,7 @@ public class IntersectionUnionPagingIT {
 
         }
 
-        app.refreshIndex();
+        app.waitForQueueDrainAndRefreshIndex();
         long stop = System.currentTimeMillis();
 
         logger.info( "Writes took {} ms", stop - start );

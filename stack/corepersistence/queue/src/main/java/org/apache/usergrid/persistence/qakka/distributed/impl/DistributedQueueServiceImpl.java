@@ -20,6 +20,8 @@
 package org.apache.usergrid.persistence.qakka.distributed.impl;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.dispatch.OnFailure;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.codahale.metrics.*;
@@ -42,7 +44,9 @@ import org.apache.usergrid.persistence.qakka.serialization.queuemessages.Databas
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.Await;
+import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
+import scala.concurrent.Promise;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -235,12 +239,14 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
     public Collection<DatabaseQueueMessage> getNextMessagesInternal( String queueName, int count ) {
 
         if ( actorSystemManager.getClientActor() == null || !actorSystemManager.isReady() ) {
-            logger.error("Akka Actor System is not ready yet for requests.");
-            return Collections.EMPTY_LIST;
+            logger.warn("Akka Actor System is not ready yet for requests.");
+            return Collections.emptyList();
         }
 
         int maxRetries = qakkaFig.getMaxGetRetries();
         int tries = 0;
+
+        boolean interrupted = false;
 
         QueueGetRequest request = new QueueGetRequest( queueName, count );
         while ( ++tries < maxRetries ) {
@@ -248,7 +254,6 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
                 Timeout t = new Timeout( qakkaFig.getGetTimeoutSeconds(), TimeUnit.SECONDS );
 
                 // ask ClientActor and wait (up to timeout) for response
-
                 Future<Object> fut = Patterns.ask( actorSystemManager.getClientActor(), request, t );
                 Object responseObject = Await.result( fut, t.duration() );
 
@@ -259,8 +264,8 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
                     if ( response != null && response instanceof QueueGetResponse) {
                         QueueGetResponse qprm = (QueueGetResponse)response;
                         if ( qprm.isSuccess() ) {
-                            if (tries > 1) {
-                                logger.warn( "getNextMessage {} SUCCESS after {} tries", queueName, tries );
+                            if (tries > 1 && !interrupted) {
+                                logger.warn( "getNextMessage for queue {} SUCCESS after {} tries", queueName, tries );
                             }
                         }
                         return qprm.getQueueMessages();
@@ -284,10 +289,13 @@ public class DistributedQueueServiceImpl implements DistributedQueueService {
                 }
 
             } catch ( TimeoutException e ) {
-                logger.trace("TIMEOUT popping to queue " + queueName + " retrying " + tries, e );
-
-            } catch ( Exception e ) {
-                logger.debug("ERROR popping to queue " + queueName + " retrying " + tries, e );
+                logger.warn("TIMEOUT popping queue " + queueName + ", attempt:  " + tries, e );
+            } catch(InterruptedException e){
+                interrupted = true;
+                // this might happen, retry the ask again
+                logger.trace("Thread was marked interrupted so unable to wait for the result, attempt: {}", tries);
+            }catch ( Exception e ) {
+                logger.error("ERROR popping queue " + queueName + ", attempt: " + tries, e );
             }
         }
 

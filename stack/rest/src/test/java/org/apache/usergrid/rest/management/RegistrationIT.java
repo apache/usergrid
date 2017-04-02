@@ -170,7 +170,7 @@ public class RegistrationIT extends AbstractRestIT {
                 "changeme");
             UUID userId = node.getUuid();
 
-            refreshIndex();
+            waitForQueueDrainAndRefreshIndex();
 
             String subject = "Password Reset";
 
@@ -239,7 +239,7 @@ public class RegistrationIT extends AbstractRestIT {
 
             //Disgusting data manipulation to parse the form response.
             Map adminUserPostResponse = (management().users().post( User.class, userForm ));
-            refreshIndex();
+            waitForQueueDrainAndRefreshIndex();
 
             Map adminDataMap = ( Map ) adminUserPostResponse.get( "data" );
 

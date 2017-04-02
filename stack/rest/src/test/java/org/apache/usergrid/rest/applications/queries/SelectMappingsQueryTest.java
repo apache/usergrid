@@ -83,7 +83,7 @@ public class SelectMappingsQueryTest extends QueryTestBase {
             .withProp( "testProp", value )
             .withProp( "TESTPROP", otherValue);
         app().collection( collectionName ).post( entity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // testProp and TESTPROP should now have otherValue
 
@@ -110,7 +110,7 @@ public class SelectMappingsQueryTest extends QueryTestBase {
         Entity entity = new Entity()
             .withProp( "testprop", value );
         app().collection( collectionName ).post( entity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // testProp and TESTPROP should now have otherValue
 
@@ -130,7 +130,7 @@ public class SelectMappingsQueryTest extends QueryTestBase {
         Entity entity = new Entity()
             .withProp( "testprop", value );
         app().collection( collectionName ).post( entity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // now query this without encoding the plus symbol
         QueryParameters params = new QueryParameters()
@@ -160,13 +160,13 @@ public class SelectMappingsQueryTest extends QueryTestBase {
         String value = RandomStringUtils.randomAlphabetic( 20 );
         Entity entity = new Entity().withProp( "testProp", value );
         app().collection( collectionName ).post( entity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // override with TESTPROP=newValue
         String newValue = RandomStringUtils.randomAlphabetic( 20 );
         entity = new Entity().withProp( "TESTPROP", newValue );
         app().collection( collectionName ).post( entity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // testProp and TESTPROP should new be queryable by new value
 
@@ -193,13 +193,13 @@ public class SelectMappingsQueryTest extends QueryTestBase {
         String value = RandomStringUtils.randomAlphabetic( 20 );
         Entity entity = new Entity().withProp( "TESTPROP", value );
         app().collection( collectionName ).post( entity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // override with testProp=newValue
         String newValue = RandomStringUtils.randomAlphabetic( 20 );
         entity = new Entity().withProp( "testProp", newValue );
         app().collection( collectionName ).post( entity );
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // testProp and TESTPROP should new be queryable by new value
 

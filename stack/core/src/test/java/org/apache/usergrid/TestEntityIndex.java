@@ -26,4 +26,5 @@ import java.util.UUID;
  */
 public interface TestEntityIndex {
     void refresh(UUID appId);
+    void waitForQueueDrainAndRefresh(UUID appId, int waitTimeMillis);
 }

@@ -152,7 +152,9 @@ public interface Application extends TestRule {
 
     public void remove( EntityRef entityRef ) throws Exception;
 
-    public void refreshIndex();
+    public void waitForQueueDrainAndRefreshIndex(int waitTimeMillis);
+
+    public void waitForQueueDrainAndRefreshIndex();
 
     /**
      * Get the entity manager

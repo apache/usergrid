@@ -246,7 +246,7 @@ public class OrderByTest extends QueryTestBase {
             }
         }
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         //2. Query without 'order by'
         String query = "select * where created > " + created;
         QueryParameters params = new QueryParameters().setQuery(query);
@@ -289,7 +289,7 @@ public class OrderByTest extends QueryTestBase {
             this.app().collection("activity").post(props);
         }
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
         //2. Query a subset of the entities, specifying order and limit
         String query = "select * where created > " + 1 + " order by created desc";
         QueryParameters params = new QueryParameters().setQuery(query).setLimit(5);
@@ -334,7 +334,7 @@ public class OrderByTest extends QueryTestBase {
             logger.info(String.valueOf(Long.parseLong(activities[0].get("created").toString())));
         }
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex(750);
 
 
         ArrayUtils.reverse(activities);

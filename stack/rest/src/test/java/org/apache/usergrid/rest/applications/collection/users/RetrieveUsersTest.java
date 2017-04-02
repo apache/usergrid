@@ -17,19 +17,15 @@
 package org.apache.usergrid.rest.applications.collection.users;
 
 
-import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
-import org.apache.usergrid.rest.test.resource.endpoints.EntityEndpoint;
 import org.apache.usergrid.rest.test.resource.model.Entity;
 import org.apache.usergrid.rest.test.resource.model.QueryParameters;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +51,7 @@ public class RetrieveUsersTest extends AbstractRestIT {
 
 
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         String query = "select *";
         String incorrectQuery = "select * where username = 'Alica'";
@@ -72,7 +68,7 @@ public class RetrieveUsersTest extends AbstractRestIT {
         props.put( "username", "Nina" );
 
         Entity entity = users.post(props);
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Map<String,Object> metadata = (Map)entity.get( "metadata" );
         Map<String,Object> sets = (Map)metadata.get( "sets" );

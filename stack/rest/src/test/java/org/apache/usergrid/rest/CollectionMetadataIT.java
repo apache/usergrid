@@ -63,7 +63,7 @@ public class CollectionMetadataIT extends AbstractRestIT {
         e3 = this.app().collection(collectionName).post(e3);
         assertNotNull(e3);
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // create connections
         // e1 hates e3
@@ -73,7 +73,7 @@ public class CollectionMetadataIT extends AbstractRestIT {
         // e3 has one in (hates) connection
         this.app().collection(collectionName).entity(e1).connection("hates").entity(e3).post();
         this.app().collection(collectionName).entity(e2).connection("likes").entity(e1).post();
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // no query param, "all", and invalid param all the same
         checkMetadata(e1, null, "hates", "likes");

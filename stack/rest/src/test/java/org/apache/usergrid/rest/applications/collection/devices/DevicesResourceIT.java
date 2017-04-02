@@ -17,11 +17,8 @@
 package org.apache.usergrid.rest.applications.collection.devices;
 
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.endpoints.CollectionEndpoint;
@@ -35,7 +32,6 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import org.junit.Ignore;
 
 import javax.ws.rs.ClientErrorException;
 
@@ -51,7 +47,7 @@ public class DevicesResourceIT extends AbstractRestIT {
 
         CollectionEndpoint devicesResource  =this.app().collection("devices");
         Entity entity = devicesResource.entity(uuid).put(payload);
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // create
         assertNotNull( entity );
@@ -62,7 +58,7 @@ public class DevicesResourceIT extends AbstractRestIT {
         ApiResponse deleteResponse =devicesResource.entity(uuid).delete();
         assertNotNull(deleteResponse.getEntities().get(0));
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // check deleted
         try {
@@ -72,7 +68,7 @@ public class DevicesResourceIT extends AbstractRestIT {
         catch ( ClientErrorException e ) {
             assertEquals( 404, e.getResponse().getStatus() );
         }
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // create again
         entity = devicesResource.entity(uuid).put(payload);
@@ -80,7 +76,7 @@ public class DevicesResourceIT extends AbstractRestIT {
 
         assertNotNull( entity );
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         // check existence
         entity = devicesResource.entity(uuid).get();

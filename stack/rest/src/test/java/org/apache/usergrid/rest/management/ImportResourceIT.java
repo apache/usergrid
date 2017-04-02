@@ -193,7 +193,7 @@ public class ImportResourceIT extends AbstractRestIT {
         Organization orgPayload = new Organization(
             newOrgName, newOrgUsername, newOrgEmail, newOrgName, newOrgPassword, null);
         Organization orgCreatedResponse = clientSetup.getRestClient().management().orgs().post(orgPayload);
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
         assertNotNull(orgCreatedResponse);
 
 
@@ -391,8 +391,8 @@ public class ImportResourceIT extends AbstractRestIT {
 //            for ( org.apache.usergrid.persistence.Entity importedThing : importedThings ) {
 //                emApp1.delete( importedThing );
 //            }
-//            emApp1.refreshIndex();
-//            emApp2.refreshIndex();
+//            emApp1.waitForQueueDrainAndRefreshIndex();
+//            emApp2.waitForQueueDrainAndRefreshIndex();
 //
 //            importedThings = emApp2.getCollection(
 //                appId2, "things", null, Query.Level.ALL_PROPERTIES).getEntities();
@@ -438,7 +438,7 @@ public class ImportResourceIT extends AbstractRestIT {
             .addToPath(importEntity.getUuid().toString())
             .get();
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         Entity importGetIncludes = this.management().orgs().org( org ).app()
             .addToPath(app)
@@ -671,7 +671,7 @@ public class ImportResourceIT extends AbstractRestIT {
             Thread.sleep(1000);
         }
 
-        refreshIndex();
+        waitForQueueDrainAndRefreshIndex();
 
         return importEntity;
     }
@@ -697,7 +697,7 @@ public class ImportResourceIT extends AbstractRestIT {
 
         }
 
-        this.refreshIndex();
+        this.waitForQueueDrainAndRefreshIndex();
 
 //        // first two things are related to each other
 //        em.createConnection(new SimpleEntityRef(type, created.get(0).getUuid()),
@@ -705,7 +705,7 @@ public class ImportResourceIT extends AbstractRestIT {
 //        em.createConnection(new SimpleEntityRef(type, created.get(1).getUuid()),
 //            "related", new SimpleEntityRef(type, created.get(0).getUuid()));
 //
-//        em.refreshIndex();
+//        em.waitForQueueDrainAndRefreshIndex();
     }
 
     /**

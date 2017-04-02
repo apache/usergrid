@@ -23,7 +23,6 @@ import com.google.common.base.Optional;
 import com.google.inject.Injector;
 import org.apache.usergrid.AbstractCoreIT;
 import org.apache.usergrid.cassandra.SpringResource;
-import org.apache.usergrid.corepersistence.service.AggregationService;
 import org.apache.usergrid.corepersistence.service.AggregationServiceFactory;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
@@ -32,7 +31,6 @@ import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.graph.SearchByEdgeType;
-import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdge;
 import org.apache.usergrid.persistence.graph.impl.SimpleSearchByEdgeType;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.junit.Assert;
@@ -65,7 +63,7 @@ public class ApplicationServiceIT extends AbstractCoreIT {
             map.put("somekey", UUID.randomUUID());
            Entity entity = entityManager.create("tests", map);
         }
-        this.app.refreshIndex();
+        this.app.waitForQueueDrainAndRefreshIndex();
         Thread.sleep(500);
         ApplicationScope appScope  = CpNamingUtils.getApplicationScope(entityManager.getApplicationId());
         Observable<Id> ids =
@@ -76,7 +74,7 @@ public class ApplicationServiceIT extends AbstractCoreIT {
             this.app.getApplicationService().deleteAllEntities(appScope, 5);
         count = ids.count().toBlocking().last();
         Assert.assertEquals(count, 5);
-        this.app.refreshIndex();
+        this.app.waitForQueueDrainAndRefreshIndex();
         Injector injector = SpringResource.getInstance().getBean(Injector.class);
         GraphManagerFactory factory = injector.getInstance(GraphManagerFactory.class);
         GraphManager graphManager = factory.createEdgeManager(appScope);
