@@ -17,6 +17,7 @@
 package org.apache.usergrid;
 
 
+import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.export.ExportService;
@@ -43,6 +44,8 @@ public interface ServiceITSetup extends CoreITSetup {
     ExportService getExportService();
 
     ImportService getImportService();
+
+    JobSchedulerService getJobSchedulerService();
 
     void refreshIndex(UUID appid);
 

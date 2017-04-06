@@ -16,6 +16,7 @@
  */
 package org.apache.usergrid.services.notifications.apns;
 
+import com.google.common.util.concurrent.Service;
 import com.relayrides.pushy.apns.util.*;
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.io.IOUtils;
@@ -118,6 +119,11 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
         listener = new QueueListener(ns.getServiceManagerFactory(),ns.getEntityManagerFactory(), new Properties());
         listener.start();
+
+        if ( !setup.getJobSchedulerService().isRunning()) {
+            setup.getJobSchedulerService().startAsync();
+            setup.getJobSchedulerService().awaitRunning();
+        }
     }
 
     @After
@@ -290,14 +296,41 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
         notification = app.getEntityManager().get(e.getUuid(), Notification.class);
         assertEquals(Notification.State.SCHEDULED, notification.getState());
 
+    }
 
-//        try {
-//            e = app.testRequest(ServiceAction.DELETE, 1, "notifications",
-//                    e.getUuid()).getEntity();
-//        }catch (Exception deleteException){
-//            LOG.error("Couldn't delete",deleteException);
-//        }
-//        app.getEntityManager().get(e.getUuid(), Notification.class);
+    @Test
+    public void scheduledNotificationAndEnsureSend() throws Exception {
+
+        // create push notification //
+        app.clear();
+        String payload = getPayload();
+        Map<String, String> payloads = new HashMap<String, String>(1);
+        payloads.put(notifier.getUuid().toString(), payload);
+        app.put("payloads", payloads);
+        app.put("deliver", System.currentTimeMillis() + 2000);
+        app.put("debug",true);
+
+        Entity e = app.testRequest(ServiceAction.POST, 1,"devices",device1.getUuid(), "notifications")
+            .getEntity();
+        app.testRequest(ServiceAction.GET, 1, "notifications", e.getUuid());
+
+
+        Notification notification = app.getEntityManager().get(e.getUuid(),
+            Notification.class);
+        assertEquals(
+            notification.getPayloads().get(notifier.getUuid().toString()),
+            payload);
+
+
+        // delay until the scheduler has time to run
+        logger.info("Sleeping while the scheduler does its work");
+        Thread.sleep(5000);
+
+
+        notification = app.getEntityManager().get(e.getUuid(), Notification.class);
+
+        assertEquals(Notification.State.FINISHED, notification.getState());
+
     }
 
     @Test

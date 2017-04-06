@@ -19,6 +19,7 @@ package org.apache.usergrid;
 
 import java.util.Properties;
 
+import org.apache.usergrid.batch.service.JobSchedulerService;
 import org.apache.usergrid.corepersistence.GuiceFactory;
 import org.apache.usergrid.management.AppInfoMigrationPlugin;
 import org.junit.runner.Description;
@@ -36,13 +37,7 @@ import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.security.providers.SignInProviderFactory;
 import org.apache.usergrid.security.tokens.TokenService;
 import org.apache.usergrid.services.ServiceManagerFactory;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.config.PropertiesFactoryBean;
 
-import java.util.Properties;
 import java.util.UUID;
 
 
@@ -59,6 +54,7 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
     private ExportService exportService;
     private ImportService importService;
     private AppInfoMigrationPlugin appInfoMigrationPlugin;
+    private JobSchedulerService jobSchedulerService;
 
 
     public ServiceITSetupImpl() {
@@ -72,6 +68,8 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
         smf =                springResource.getBean( ServiceManagerFactory.class );
         exportService =      springResource.getBean( ExportService.class );
         importService =      springResource.getBean( ImportService.class );
+        jobSchedulerService = springResource.getBean(JobSchedulerService.class);
+
 
         try {
             appInfoMigrationPlugin = springResource.getBean(GuiceFactory.class)
@@ -125,11 +123,18 @@ public class ServiceITSetupImpl extends CoreITSetupImpl implements ServiceITSetu
         return managementService;
     }
 
+
+
     @Override
     public ExportService getExportService() { return exportService; }
 
     @Override
     public ImportService getImportService() { return importService; }
+
+    @Override
+    public JobSchedulerService getJobSchedulerService() {
+        return jobSchedulerService;
+    }
 
 
     public ServiceManagerFactory getSmf() {
