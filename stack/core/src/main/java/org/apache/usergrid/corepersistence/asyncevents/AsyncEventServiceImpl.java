@@ -420,8 +420,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                 if( !(event instanceof ElasticsearchIndexEvent)
                     && !(event instanceof InitializeApplicationIndexEvent)
                       && single.isEmpty() ){
-                        logger.warn("No index operation messages came back from event processing for msg: {} ",
-                            message.getStringBody().trim());
+                        logger.warn("No index operation messages came back from event processing for eventType: {}, msgId: {}, msgBody: {}",
+                            event.getClass().getSimpleName(), message.getMessageId(), message.getStringBody());
                 }
 
 
@@ -481,15 +481,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             entity.getId().getUuid(), entity.getId().getType());
 
         offer(new EntityIndexEvent(queueFig.getPrimaryRegion(),
-            new EntityIdScope(applicationScope, entity.getId()), 0));
-
-        final EntityIndexOperation entityIndexOperation =
-            new EntityIndexOperation( applicationScope, entity.getId(), updatedAfter);
-
-        final IndexOperationMessage indexMessage =
-            eventBuilder.buildEntityIndex( entityIndexOperation ).toBlocking().lastOrDefault(null);
-
-        queueIndexOperationMessage( indexMessage, false);
+            new EntityIdScope(applicationScope, entity.getId()), updatedAfter));
 
     }
 
