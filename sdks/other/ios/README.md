@@ -22,6 +22,7 @@ To find out more about how to use the iOS SDK within Usergrid, see:
 <http://usergrid.apache.org/docs/sdks/ios-new.html>
 
 ##Installing
+
 *Manual:*
 Once you have downloaded the SDK, add the UGAPI folder to your project by dragging and dropping it into your project. 
 
