@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "UsergridSDK-ObjC"
-  s.version      = "1.0.0"
+  s.version      = "0.9.3"
   s.summary      = "Usergrid SDK written in Objective-C"
   s.homepage     = "https://github.com/ocgungor/usergrid"
   s.license      = { :type => "Apache 2.0", :file => "LICENSE" }
