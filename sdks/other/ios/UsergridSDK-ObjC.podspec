@@ -11,8 +11,9 @@ Pod::Spec.new do |s|
                     }
   s.social_media_url = 'https://twitter.com/usergrid'
 
+  s.ios.deployment_target = '8.0'
+
   s.source_files  = "Classes", "UGAPI/**/*.{h,m}"
-  s.exclude_files = "Classes/Exclude"
   s.requires_arc = true
 
 end
