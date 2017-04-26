@@ -30,7 +30,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.EntityManagerFactory;
@@ -72,9 +71,9 @@ import java.util.List;
 import org.apache.commons.codec.binary.Base64;
 
 
-public class  AwsSdkS3BinaryStore implements BinaryStore {
+public class AWSBinaryStore implements BinaryStore {
 
-    private static final Logger logger = LoggerFactory.getLogger(AwsSdkS3BinaryStore.class );
+    private static final Logger logger = LoggerFactory.getLogger(AWSBinaryStore.class );
     private static final long FIVE_MB = ( FileUtils.ONE_MB * 5 );
 
     private AmazonS3 s3Client;
@@ -83,13 +82,17 @@ public class  AwsSdkS3BinaryStore implements BinaryStore {
     private String bucketName;
     private String regionName;
 
-    @Autowired
     private EntityManagerFactory emf;
-
-    @Autowired
     private Properties properties;
+    private String reposLocation;
 
-    public AwsSdkS3BinaryStore( ) {
+    public AWSBinaryStore(Properties properties,
+                          EntityManagerFactory entityManagerFactory,
+                          String reposLocation) {
+        this.properties = properties;
+        this.emf = entityManagerFactory;
+        this.reposLocation = reposLocation;
+
     }
 
     //TODO: GREY rework how the s3 client works because currently it handles initlization and returning of the client

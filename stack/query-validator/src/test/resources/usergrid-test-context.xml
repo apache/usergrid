@@ -44,7 +44,11 @@
     </bean>
 
 
-    <bean id="binaryStore" class="org.apache.usergrid.services.assets.data.LocalFileBinaryStore"/>
+    <bean id="binaryStoreFactory" class="org.apache.usergrid.services.assets.BinaryStoreFactory">
+        <constructor-arg name="properties" ref="properties"/>
+        <constructor-arg name="entityManagerFactory" ref="entityManagerFactory"/>
+        <constructor-arg name="reposLocation" value="${usergrid.temp.files}"/>
+    </bean>
 
     <bean id="setup" class="org.apache.usergrid.corepersistence.CpSetup">
         <constructor-arg ref="entityManagerFactory"/>
