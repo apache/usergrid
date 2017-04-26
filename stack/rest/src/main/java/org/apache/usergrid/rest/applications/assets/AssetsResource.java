@@ -26,10 +26,8 @@ import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.applications.ServiceResource;
 import org.apache.usergrid.rest.security.annotations.CheckPermissionsForPath;
 import org.apache.usergrid.rest.security.annotations.RequireApplicationAccess;
-import org.apache.usergrid.services.assets.data.AssetUtils;
-import org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore;
-import org.apache.usergrid.services.assets.data.BinaryStore;
-import org.apache.usergrid.services.assets.data.LocalFileBinaryStore;
+import org.apache.usergrid.services.assets.BinaryStoreFactory;
+import org.apache.usergrid.services.assets.data.*;
 import org.apache.usergrid.utils.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
@@ -56,15 +54,10 @@ public class AssetsResource extends ServiceResource {
 
     private static final Logger logger = LoggerFactory.getLogger( AssetsResource.class );
 
-    //@Autowired
     private BinaryStore binaryStore;
 
     @Autowired
-    private LocalFileBinaryStore localFileBinaryStore;
-
-    @Autowired
-    private AwsSdkS3BinaryStore awsSdkS3BinaryStore;
-
+    private BinaryStoreFactory binaryStoreFactory;
 
 
     @Override
@@ -123,12 +116,8 @@ public class AssetsResource extends ServiceResource {
                                 // @FormDataParam("file") FormDataContentDisposition fileDetail,
                                 @PathParam("entityId") PathSegment entityId ) throws Exception {
 
-        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
-            this.binaryStore = localFileBinaryStore;
-        }
-        else{
-            this.binaryStore = awsSdkS3BinaryStore;
-        }
+        // needed for testing
+        this.binaryStore = binaryStoreFactory.getBinaryStore( properties.getProperty(PROPERTIES_USERGRID_BINARY_UPLOADER) );
 
         if (uploadedInputStream != null ) {
     		UUID assetId = UUID.fromString( entityId.getPath() );
@@ -162,12 +151,8 @@ public class AssetsResource extends ServiceResource {
     public Response uploadDataStream( @PathParam("entityId") PathSegment entityId, InputStream uploadedInputStream )
             throws Exception {
 
-        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
-            this.binaryStore = localFileBinaryStore;
-        }
-        else{
-            this.binaryStore = awsSdkS3BinaryStore;
-        }
+        // needed for testing
+        this.binaryStore = binaryStoreFactory.getBinaryStore( properties.getProperty(PROPERTIES_USERGRID_BINARY_UPLOADER) );
 
         UUID assetId = UUID.fromString( entityId.getPath() );
         if (logger.isTraceEnabled()) {
@@ -191,12 +176,9 @@ public class AssetsResource extends ServiceResource {
     public Response findAsset( @Context UriInfo ui, @QueryParam("callback") @DefaultValue("callback") String callback,
                                @PathParam("entityId") PathSegment entityId, @HeaderParam("range") String range,
                                @HeaderParam("if-modified-since") String modifiedSince ) throws Exception {
-        if(properties.getProperty( PROPERTIES_USERGRID_BINARY_UPLOADER ).equals( "local" )){
-            this.binaryStore = localFileBinaryStore;
-        }
-        else{
-            this.binaryStore = awsSdkS3BinaryStore;
-        }
+
+        // needed for testing
+        this.binaryStore = binaryStoreFactory.getBinaryStore( properties.getProperty(PROPERTIES_USERGRID_BINARY_UPLOADER) );
 
         UUID assetId = UUID.fromString( entityId.getPath() );
         if (logger.isTraceEnabled()) {

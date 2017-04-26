@@ -25,7 +25,6 @@ import org.apache.usergrid.persistence.EntityManagerFactory;
 import org.apache.usergrid.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -45,11 +44,19 @@ public class LocalFileBinaryStore implements BinaryStore {
 
     private static final long FIVE_MB = ( FileUtils.ONE_MB * 5 );
 
-    @Autowired
     private Properties properties;
 
-    @Autowired
-    private EntityManagerFactory emf;
+    private EntityManagerFactory entityManagerFactory;
+
+    public LocalFileBinaryStore(Properties properties,
+                                EntityManagerFactory entityManagerFactory,
+                                String reposLocation){
+
+        this.properties = properties;
+        this.entityManagerFactory = entityManagerFactory;
+        this.reposLocation = reposLocation;
+
+    }
 
     /** Control where to store the file repository. In the system's temp dir by default. */
     public void setReposLocation( String reposLocation ) {
@@ -92,7 +99,7 @@ public class LocalFileBinaryStore implements BinaryStore {
             maxSizeBytes = 5 * FileUtils.ONE_MB;
         }
 
-        EntityManager em = emf.getEntityManager( appId );
+        EntityManager em = entityManagerFactory.getEntityManager( appId );
         Map<String, Object> fileMetadata = AssetUtils.getFileMetadata( entity );
 
         if ( size > maxSizeBytes ) {

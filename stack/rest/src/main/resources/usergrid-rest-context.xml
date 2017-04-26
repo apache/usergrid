@@ -63,17 +63,10 @@
 		<property name="queueCapacity" value="25" />
 	</bean>
 
-    <bean id="serviceResource"
-           class="org.apache.usergrid.rest.applications.ServiceResource" scope="prototype">
-        <property name="binaryStore" value="${usergrid.binary.uploader}"/>
+    <bean id="binaryStoreFactory" class="org.apache.usergrid.services.assets.BinaryStoreFactory">
+        <constructor-arg name="properties" ref="properties"/>
+        <constructor-arg name="entityManagerFactory" ref="entityManagerFactory"/>
+        <constructor-arg name="reposLocation" value="${usergrid.temp.files}"/>
     </bean>
-
-    <bean id="localFileBinaryStore" class="org.apache.usergrid.services.assets.data.LocalFileBinaryStore">
-        <property name="reposLocation" value="${usergrid.temp.files}"/>
-    </bean>
-
-    <bean id="awsSdkS3BinaryStore" class="org.apache.usergrid.services.assets.data.AwsSdkS3BinaryStore">
-    </bean>
-
 
 </beans>

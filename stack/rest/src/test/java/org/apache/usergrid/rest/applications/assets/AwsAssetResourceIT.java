@@ -21,7 +21,7 @@ import com.amazonaws.SDKGlobalConfiguration;
 
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.io.IOUtils;
-import org.apache.usergrid.rest.applications.assets.aws.NoAWSCredsRule;
+import org.apache.usergrid.rest.applications.assets.rules.NoAWSCredsRule;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.ApiResponse;
 import org.apache.usergrid.rest.test.resource.model.Entity;
@@ -58,7 +58,7 @@ public class AwsAssetResourceIT extends AbstractRestIT {
      * Mark tests as ignored if no AWS creds are present
      */
     @Rule
-    public NoAWSCredsRule awsCredsRule = new NoAWSCredsRule();
+    public NoAWSCredsRule credsRule = new NoAWSCredsRule();
 
     @Before
     public void setup(){

@@ -281,7 +281,7 @@ public class AssetResourceIT extends AbstractRestIT {
 
 
     @Test
-    public void largeFileInS3() throws Exception {
+    public void largeFile() throws Exception {
 
         this.waitForQueueDrainAndRefreshIndex();
 
