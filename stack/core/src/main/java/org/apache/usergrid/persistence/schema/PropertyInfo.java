@@ -142,9 +142,6 @@ public class PropertyInfo {
 
     public void setAliasProperty( boolean aliasProperty ) {
         this.aliasProperty = aliasProperty;
-        if ( aliasProperty ) {
-            mutable = false;
-        }
     }
 
 
