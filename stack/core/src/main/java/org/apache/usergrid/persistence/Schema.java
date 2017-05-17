@@ -1252,7 +1252,7 @@ public class Schema implements SchemaManager {
         property.setName( PROPERTY_NAME );
         property.setRequired( false );
         property.setType( String.class );
-        property.setMutable( false );
+        property.setMutable( true );
         property.setAliasProperty( true );
         property.setIndexed( true );
         property.setBasic( true );
