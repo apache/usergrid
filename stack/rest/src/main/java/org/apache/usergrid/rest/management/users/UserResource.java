@@ -66,6 +66,9 @@ public class UserResource extends AbstractContextResource {
 
     String token = null;
 
+    String loginEndpoint;
+
+
 
     public UserResource() {
     }
@@ -296,6 +299,7 @@ public class UserResource extends AbstractContextResource {
                     if ( ( password1 != null ) && password1.equals( password2 ) ) {
                         management.setAdminUserPassword( user.getUuid(), password1 );
                         management.revokeAccessTokenForAdminUser( user.getUuid(), token );
+                        loginEndpoint = properties.getProperty("usergrid.viewable.loginEndpoint");
                         return handleViewable( "resetpw_set_success", this, organizationId );
                     }
                     else {
@@ -342,6 +346,9 @@ public class UserResource extends AbstractContextResource {
         return errorMsg;
     }
 
+    public String getLoginEndpoint() {
+        return loginEndpoint;
+    }
 
     public String getToken() {
         return token;
