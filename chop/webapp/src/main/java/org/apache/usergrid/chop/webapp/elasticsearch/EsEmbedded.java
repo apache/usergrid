@@ -25,9 +25,11 @@ import com.google.inject.Module;
 import com.google.inject.Singleton;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.node.internal.InternalNode;
+import org.elasticsearch.node.Node;
+//import org.elasticsearch.node.internal.InternalNode;
 import org.safehaus.guicyfig.GuicyFigModule;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,7 +40,7 @@ import java.util.List;
 @Singleton
 public class EsEmbedded {
     private final ElasticSearchFig config;
-    private InternalNode inode;
+	private Node inode;
     private boolean started;
 
 
@@ -65,7 +67,11 @@ public class EsEmbedded {
 
 
     public void stop() {
+		try {
         inode.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
         started = false;
     }
 

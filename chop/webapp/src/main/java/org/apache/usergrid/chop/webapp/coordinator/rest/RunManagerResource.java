@@ -40,8 +40,8 @@ import org.apache.usergrid.chop.webapp.dao.model.BasicModule;
 import org.apache.usergrid.chop.webapp.dao.model.BasicRun;
 import org.apache.usergrid.chop.webapp.dao.model.BasicRunResult;
 import org.apache.usergrid.chop.webapp.elasticsearch.Util;
-
-import org.elasticsearch.indices.IndexMissingException;
+import org.elasticsearch.index.IndexNotFoundException;
+//import org.elasticsearch.indices.IndexMissingException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -109,8 +109,7 @@ public class RunManagerResource extends TestableResource implements RestParams {
 
         try {
             next = runDao.getNextRunNumber( commitId );
-        }
-        catch ( IndexMissingException e ) {
+		} catch (IndexNotFoundException e) {
             LOG.warn( "Got an index missing exception while looking up the next run number." );
             return Response.ok( 0 ).build();
         }

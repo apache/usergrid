@@ -27,6 +27,7 @@ import org.apache.usergrid.chop.webapp.elasticsearch.Util;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 
 import java.io.IOException;
@@ -65,7 +66,7 @@ public class RunnerDao extends Dao {
 
         IndexResponse response = elasticSearchClient.getClient()
                 .prepareIndex( DAO_INDEX_KEY, DAO_TYPE_KEY, runner.getUrl() )
-                .setRefresh( true )
+				// .setRefresh( true )
                 .setSource(
                         jsonBuilder()
                                 .startObject()
@@ -82,8 +83,7 @@ public class RunnerDao extends Dao {
                 )
                 .execute()
                 .actionGet();
-
-        return response.isCreated();
+		return response.getResult().equals(RestStatus.CREATED);// .isCreated();
     }
 
 

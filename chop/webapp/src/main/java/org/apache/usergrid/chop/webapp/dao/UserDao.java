@@ -30,6 +30,7 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 
 import java.io.IOException;
@@ -73,7 +74,7 @@ public class UserDao extends Dao {
 
         IndexResponse response = elasticSearchClient.getClient()
                 .prepareIndex( DAO_INDEX_KEY, DAO_TYPE_KEY, user.getUsername() )
-                .setRefresh( true )
+				// .setRefresh( true )
                 .setSource(
                         jsonBuilder()
                                 .startObject()
@@ -83,7 +84,7 @@ public class UserDao extends Dao {
                 .execute()
                 .actionGet();
 
-        return response.isCreated();
+		return response.getResult().equals(RestStatus.CREATED);// .isCreated();
     }
 
     /**
@@ -160,10 +161,9 @@ public class UserDao extends Dao {
 
         DeleteResponse response = elasticSearchClient.getClient()
                 .prepareDelete( DAO_INDEX_KEY, DAO_TYPE_KEY, username )
-                .setRefresh( true )
+				// .setRefresh( true )
                 .execute()
                 .actionGet();
-
-        return response.isFound();
+		return !response.getResult().equals(RestStatus.NOT_FOUND);// response.isFound();
     }
 }
