@@ -74,6 +74,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.apache.commons.lang.StringUtils.indexOf;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 
@@ -103,10 +104,13 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     public int MAX_TAKE = 10;
     public static final String QUEUE_NAME = "index"; //keep this short as AWS limits queue name size to 80 chars
     public static final String QUEUE_NAME_UTILITY = "utility"; //keep this short as AWS limits queue name size to 80 chars
+    public static final String DEAD_LETTER_SUFFIX = "_dead";
 
 
-    private final LegacyQueueManager queue;
+    private final LegacyQueueManager indexQueue;
     private final LegacyQueueManager utilityQueue;
+    private final LegacyQueueManager indexQueueDead;
+    private final LegacyQueueManager utilityQueueDead;
     private final IndexProcessorFig indexProcessorFig;
     private final LegacyQueueFig queueFig;
     private final IndexProducer indexProducer;
@@ -128,6 +132,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     private final Counter indexErrorCounter;
     private final AtomicLong counter = new AtomicLong();
     private final AtomicLong counterUtility = new AtomicLong();
+    private final AtomicLong counterIndexDead = new AtomicLong();
+    private final AtomicLong counterUtilityDead = new AtomicLong();
     private final AtomicLong inFlight = new AtomicLong();
     private final Histogram messageCycle;
     private final MapManager esMapPersistence;
@@ -162,14 +168,22 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         this.rxTaskScheduler = rxTaskScheduler;
 
-        LegacyQueueScope queueScope =
+        LegacyQueueScope indexQueueScope =
             new LegacyQueueScopeImpl(QUEUE_NAME, LegacyQueueScope.RegionImplementation.ALL);
 
         LegacyQueueScope utilityQueueScope =
             new LegacyQueueScopeImpl(QUEUE_NAME_UTILITY, LegacyQueueScope.RegionImplementation.ALL);
 
-        this.queue = queueManagerFactory.getQueueManager(queueScope);
+        LegacyQueueScope indexQueueDeadScope =
+            new LegacyQueueScopeImpl(QUEUE_NAME, LegacyQueueScope.RegionImplementation.ALL, true);
+
+        LegacyQueueScope utilityQueueDeadScope =
+            new LegacyQueueScopeImpl(QUEUE_NAME_UTILITY, LegacyQueueScope.RegionImplementation.ALL, true);
+
+        this.indexQueue = queueManagerFactory.getQueueManager(indexQueueScope);
         this.utilityQueue = queueManagerFactory.getQueueManager(utilityQueueScope);
+        this.indexQueueDead = queueManagerFactory.getQueueManager(indexQueueDeadScope);
+        this.utilityQueueDead = queueManagerFactory.getQueueManager(utilityQueueDeadScope);
 
         this.indexProcessorFig = indexProcessorFig;
         this.queueFig = queueFig;
@@ -201,7 +215,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         try {
             //signal to SQS
-            this.queue.sendMessageToLocalRegion( operation );
+            this.indexQueue.sendMessageToLocalRegion( operation );
         } catch (IOException e) {
             throw new RuntimeException("Unable to queue message", e);
         } finally {
@@ -218,7 +232,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             if (forUtilityQueue) {
                 this.utilityQueue.sendMessageToAllRegions(operation);
             } else {
-                this.queue.sendMessageToAllRegions(operation);
+                this.indexQueue.sendMessageToAllRegions(operation);
             }
         }
         catch ( IOException e ) {
@@ -237,7 +251,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             if( forUtilityQueue ){
                 this.utilityQueue.sendMessages(operations);
             }else{
-                this.queue.sendMessages(operations);
+                this.indexQueue.sendMessages(operations);
             }
         } catch (IOException e) {
             throw new RuntimeException("Unable to queue message", e);
@@ -264,7 +278,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         final Timer.Context timer = this.readTimer.time();
 
         try {
-            return queue.getMessages(MAX_TAKE, AsyncEvent.class);
+            return indexQueue.getMessages(MAX_TAKE, AsyncEvent.class);
         }
         finally {
             //stop our timer
@@ -288,6 +302,38 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         }
     }
 
+    /**
+     * Take message from index dead letter queue
+     */
+    private List<LegacyQueueMessage> takeFromIndexDeadQueue() {
+
+        final Timer.Context timer = this.readTimer.time();
+
+        try {
+            return indexQueueDead.getMessages(MAX_TAKE, AsyncEvent.class);
+        }
+        finally {
+            //stop our timer
+            timer.stop();
+        }
+    }
+
+    /**
+     * Take message from SQS utility dead letter queue
+     */
+    private List<LegacyQueueMessage> takeFromUtilityDeadQueue() {
+
+        final Timer.Context timer = this.readTimer.time();
+
+        try {
+            return utilityQueueDead.getMessages(MAX_TAKE, AsyncEvent.class);
+        }
+        finally {
+            //stop our timer
+            timer.stop();
+        }
+    }
+
 
     /**
      * Ack message
@@ -300,7 +346,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
             for ( LegacyQueueMessage legacyQueueMessage : messages ) {
                 try {
-                    queue.commitMessage( legacyQueueMessage );
+                    indexQueue.commitMessage( legacyQueueMessage );
                     inFlight.decrementAndGet();
 
                 } catch ( Throwable t ) {
@@ -325,6 +371,28 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     public void ackUtilityQueue(final List<LegacyQueueMessage> messages) {
         try{
             utilityQueue.commitMessages( messages );
+        }catch(Exception e){
+            throw new RuntimeException("Unable to ack messages", e);
+        }
+    }
+
+    /**
+     * ack messages in index dead letter queue
+     */
+    public void ackIndexDeadQueue(final List<LegacyQueueMessage> messages) {
+        try{
+            indexQueueDead.commitMessages( messages );
+        }catch(Exception e){
+            throw new RuntimeException("Unable to ack messages", e);
+        }
+    }
+
+    /**
+     * ack messages in utility dead letter queue
+     */
+    public void ackUtilityDeadQueue(final List<LegacyQueueMessage> messages) {
+        try{
+            utilityQueueDead.commitMessages( messages );
         }catch(Exception e){
             throw new RuntimeException("Unable to ack messages", e);
         }
@@ -744,7 +812,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     @Override
     public long getQueueDepth() {
-        return queue.getQueueDepth();
+        return indexQueue.getQueueDepth();
     }
 
     @Override
@@ -806,15 +874,25 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      * Loop through and start the workers
      */
     public void start() {
-        final int count = indexProcessorFig.getWorkerCount();
+        final int indexCount = indexProcessorFig.getWorkerCount();
         final int utilityCount = indexProcessorFig.getWorkerCountUtility();
+        final int indexDeadCount = indexProcessorFig.getWorkerCountDeadLetter();
+        final int utilityDeadCount = indexProcessorFig.getWorkerCountUtilityDeadLetter();
 
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < indexCount; i++) {
             startWorker(QUEUE_NAME);
         }
 
         for (int i = 0; i < utilityCount; i++) {
             startWorker(QUEUE_NAME_UTILITY);
+        }
+
+        for (int i = 0; i < indexDeadCount; i++) {
+            startDeadQueueWorker(QUEUE_NAME);
+        }
+
+        for (int i = 0; i < utilityDeadCount; i++) {
+            startDeadQueueWorker(QUEUE_NAME_UTILITY);
         }
     }
 
@@ -840,47 +918,166 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             boolean isUtilityQueue = isNotEmpty(type) && type.toLowerCase().contains(QUEUE_NAME_UTILITY.toLowerCase());
 
             Observable<List<LegacyQueueMessage>> consumer =
+                Observable.create( new Observable.OnSubscribe<List<LegacyQueueMessage>>() {
+                    @Override
+                    public void call( final Subscriber<? super List<LegacyQueueMessage>> subscriber ) {
+
+                        //name our thread so it's easy to see
+                        long threadNum = isUtilityQueue ?
+                            counterUtility.incrementAndGet() : counter.incrementAndGet();
+                        Thread.currentThread().setName( "QueueConsumer_" + type+ "_" + threadNum );
+
+                        List<LegacyQueueMessage> drainList = null;
+
+                        do {
+                            try {
+                                if ( isUtilityQueue ){
+                                    drainList = takeFromUtilityQueue();
+                                }else{
+                                    drainList = take();
+
+                                }
+                                //emit our list in it's entity to hand off to a worker pool
+                                subscriber.onNext(drainList);
+
+                                //take since  we're in flight
+                                inFlight.addAndGet( drainList.size() );
+
+                            } catch ( Throwable t ) {
+
+                                final long sleepTime = indexProcessorFig.getFailureRetryTime();
+
+                                // there might be an error here during tests, just clean the cache
+                                indexQueue.clearQueueNameCache();
+
+                                if ( t instanceof InvalidQueryException ) {
+
+                                    // don't fill up log with exceptions when keyspace and column
+                                    // families are not ready during bootstrap/setup
+                                    logger.warn( "Failed to dequeue due to '{}'. Sleeping for {} ms",
+                                        t.getMessage(), sleepTime );
+
+                                } else {
+                                    logger.error( "Failed to dequeue. Sleeping for {} ms", sleepTime, t);
+                                }
+
+                                if ( drainList != null ) {
+                                    inFlight.addAndGet( -1 * drainList.size() );
+                                }
+
+                                try { Thread.sleep( sleepTime ); } catch ( InterruptedException ie ) {}
+
+                                indexErrorCounter.inc();
+                            }
+                        }
+                        while ( true );
+                    }
+                } )        //this won't block our read loop, just reads and proceeds
+                    .flatMap( sqsMessages -> {
+
+                        //do this on a different schedule, and introduce concurrency
+                        // with flatmap for faster processing
+                        return Observable.just( sqsMessages )
+
+                            .map( messages -> {
+                                if ( messages == null || messages.size() == 0 ) {
+                                    // no messages came from the queue, move on
+                                    return null;
+                                }
+
+                                try {
+                                    // process the messages
+                                    List<IndexEventResult> indexEventResults =
+                                        callEventHandlers( messages );
+
+                                    // submit the processed messages to index producer
+                                    List<LegacyQueueMessage> messagesToAck =
+                                        submitToIndex( indexEventResults, isUtilityQueue );
+
+                                    if ( messagesToAck.size() < messages.size() ) {
+                                        logger.warn(
+                                            "Missing {} message(s) from index processing",
+                                            messages.size() - messagesToAck.size() );
+                                    }
+
+                                    // ack each message if making it to this point
+                                    if( messagesToAck.size() > 0 ){
+
+                                        if ( isUtilityQueue ){
+                                            ackUtilityQueue( messagesToAck );
+                                        }else{
+                                            ack( messagesToAck );
+                                        }
+                                    }
+
+                                    return messagesToAck;
+                                }
+                                catch ( Exception e ) {
+                                    logger.error( "Failed to ack messages", e );
+                                    return null;
+                                    //do not rethrow so we can process all of them
+                                }
+                            } ).subscribeOn( rxTaskScheduler.getAsyncIOScheduler() );
+
+                        //end flatMap
+                    }, indexProcessorFig.getEventConcurrencyFactor() );
+
+            //start in the background
+
+            final Subscription subscription = consumer.subscribeOn(Schedulers.newThread()).subscribe();
+
+            subscriptions.add(subscription);
+        }
+    }
+
+
+    private void startDeadQueueWorker(final String type) {
+        Preconditions.checkNotNull(type, "Worker type required");
+        synchronized (mutex) {
+
+            boolean isUtilityDeadQueue = isNotEmpty(type) && type.toLowerCase().contains(QUEUE_NAME_UTILITY.toLowerCase());
+
+            Observable<List<LegacyQueueMessage>> consumer =
                     Observable.create( new Observable.OnSubscribe<List<LegacyQueueMessage>>() {
                         @Override
                         public void call( final Subscriber<? super List<LegacyQueueMessage>> subscriber ) {
 
                             //name our thread so it's easy to see
-                            long threadNum = isUtilityQueue ?
-                                counterUtility.incrementAndGet() : counter.incrementAndGet();
-                            Thread.currentThread().setName( "QueueConsumer_" + type+ "_" + threadNum );
+                            long threadNum = isUtilityDeadQueue ?
+                                counterUtilityDead.incrementAndGet() : counterIndexDead.incrementAndGet();
+                            Thread.currentThread().setName( "QueueDeadLetterConsumer_" + type+ "_" + threadNum );
 
                             List<LegacyQueueMessage> drainList = null;
 
                             do {
                                 try {
-                                    if ( isUtilityQueue ){
-                                        drainList = takeFromUtilityQueue();
+                                    if ( isUtilityDeadQueue ){
+                                        drainList = takeFromUtilityDeadQueue();
                                     }else{
-                                        drainList = take();
-
+                                        drainList = takeFromIndexDeadQueue();
                                     }
                                     //emit our list in it's entity to hand off to a worker pool
-                                        subscriber.onNext(drainList);
+                                    subscriber.onNext(drainList);
 
                                     //take since  we're in flight
                                     inFlight.addAndGet( drainList.size() );
 
                                 } catch ( Throwable t ) {
 
-                                    final long sleepTime = indexProcessorFig.getFailureRetryTime();
+                                    final long sleepTime = indexProcessorFig.getDeadLetterFailureRetryTime();
 
                                     // there might be an error here during tests, just clean the cache
-                                    queue.clearQueueNameCache();
+                                    indexQueueDead.clearQueueNameCache();
 
                                     if ( t instanceof InvalidQueryException ) {
 
                                         // don't fill up log with exceptions when keyspace and column
                                         // families are not ready during bootstrap/setup
-                                        logger.warn( "Failed to dequeue due to '{}'. Sleeping for {} ms",
+                                        logger.warn( "Failed to dequeue dead letters due to '{}'. Sleeping for {} ms",
                                             t.getMessage(), sleepTime );
 
                                     } else {
-                                        logger.error( "Failed to dequeue. Sleeping for {} ms", sleepTime, t);
+                                        logger.error( "Failed to dequeue dead letters. Sleeping for {} ms", sleepTime, t);
                                     }
 
                                     if ( drainList != null ) {
@@ -888,8 +1085,6 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                     }
 
                                     try { Thread.sleep( sleepTime ); } catch ( InterruptedException ie ) {}
-
-                                    indexErrorCounter.inc();
                                 }
                             }
                             while ( true );
@@ -908,31 +1103,23 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                                  }
 
                                                  try {
-                                                     // process the messages
-                                                     List<IndexEventResult> indexEventResults =
-                                                         callEventHandlers( messages );
-
-                                                     // submit the processed messages to index producer
-                                                     List<LegacyQueueMessage> messagesToAck =
-                                                         submitToIndex( indexEventResults, isUtilityQueue );
-
-                                                     if ( messagesToAck.size() < messages.size() ) {
-                                                         logger.warn(
-                                                             "Missing {} message(s) from index processing",
-                                                            messages.size() - messagesToAck.size() );
+                                                     // put the dead letter messages back in the appropriate queue
+                                                     LegacyQueueManager returnQueue = null;
+                                                     if (isUtilityDeadQueue) {
+                                                         logger.warn("Utility dead queue message count: {}", messages.size());
+                                                         returnQueue = utilityQueue;
+                                                     } else {
+                                                         logger.warn("Index dead queue message count: {}", messages.size());
+                                                         returnQueue = indexQueue;
+                                                     }
+                                                     List<LegacyQueueMessage> successMessages = returnQueue.sendQueueMessages(messages);
+                                                     if (isUtilityDeadQueue) {
+                                                         ackUtilityDeadQueue(successMessages);
+                                                     } else {
+                                                         ackIndexDeadQueue(successMessages);
                                                      }
 
-                                                     // ack each message if making it to this point
-                                                     if( messagesToAck.size() > 0 ){
-
-                                                         if ( isUtilityQueue ){
-                                                             ackUtilityQueue( messagesToAck );
-                                                         }else{
-                                                             ack( messagesToAck );
-                                                         }
-                                                     }
-
-                                                     return messagesToAck;
+                                                     return messages;
                                                  }
                                                  catch ( Exception e ) {
                                                      logger.error( "Failed to ack messages", e );
@@ -1042,7 +1229,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
     public String getQueueManagerClass() {
 
-        return queue.getClass().getSimpleName();
+        return indexQueue.getClass().getSimpleName();
 
     }
 

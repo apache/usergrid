@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.queue;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 
 /**ctor
  * Manages queues for usergrid.  Current implementation is sqs based.
@@ -66,6 +67,14 @@ public interface LegacyQueueManager {
      * @throws IOException
      */
     void sendMessages(List bodies) throws IOException;
+
+    /**
+     * send messages to queue
+     * @param queueMessages
+     * @throws IOException
+     * @return set of receipt handles for successfully sent messages
+     */
+    List<LegacyQueueMessage> sendQueueMessages(List<LegacyQueueMessage> queueMessages) throws IOException;
 
     /**
      * send a message to queue

@@ -27,9 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -90,6 +88,22 @@ public class LocalQueueManager implements LegacyQueueManager {
                 throw new RuntimeException(ie);
             }
         }
+    }
+
+    @Override
+    public List<LegacyQueueMessage> sendQueueMessages(List<LegacyQueueMessage> queueMessages) throws IOException {
+        List<LegacyQueueMessage> successMessages = new ArrayList<>();
+        for(LegacyQueueMessage queueMessage : queueMessages){
+            String uuid = UUID.randomUUID().toString();
+            try {
+                LegacyQueueMessage msg = new LegacyQueueMessage(uuid, "handle_" + uuid, queueMessage.getBody(), "put type here");
+                queue.put(msg);
+                successMessages.add(queueMessage);
+            }catch (InterruptedException ie){
+                throw new RuntimeException(ie);
+            }
+        }
+        return successMessages;
     }
 
 

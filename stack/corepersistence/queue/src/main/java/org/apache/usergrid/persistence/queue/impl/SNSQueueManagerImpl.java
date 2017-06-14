@@ -20,15 +20,13 @@ package org.apache.usergrid.persistence.queue.impl;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
 import com.amazonaws.ClientConfiguration;
+import com.amazonaws.services.sqs.model.*;
+import com.sun.javaws.exceptions.InvalidArgumentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,20 +52,6 @@ import com.amazonaws.services.sns.model.SubscribeRequest;
 import com.amazonaws.services.sns.model.SubscribeResult;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.AmazonSQSClient;
-import com.amazonaws.services.sqs.model.BatchResultErrorEntry;
-import com.amazonaws.services.sqs.model.DeleteMessageBatchRequest;
-import com.amazonaws.services.sqs.model.DeleteMessageBatchRequestEntry;
-import com.amazonaws.services.sqs.model.DeleteMessageBatchResult;
-import com.amazonaws.services.sqs.model.DeleteMessageRequest;
-import com.amazonaws.services.sqs.model.DeleteQueueRequest;
-import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
-import com.amazonaws.services.sqs.model.GetQueueUrlResult;
-import com.amazonaws.services.sqs.model.Message;
-import com.amazonaws.services.sqs.model.QueueDoesNotExistException;
-import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
-import com.amazonaws.services.sqs.model.ReceiveMessageResult;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
-import com.amazonaws.services.sqs.model.SendMessageResult;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -99,6 +83,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
     private static final ObjectMapper mapper = new ObjectMapper( JSON_FACTORY );
     private static final int MIN_CLIENT_SOCKET_TIMEOUT = 5000; // millis
     private static final int MIN_VISIBILITY_TIMEOUT = 1; //seconds
+    private static final String DEAD_LETTER_QUEUE_SUFFIX = "_dead";
 
     static {
 
@@ -133,6 +118,11 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
                     queue = new LegacyQueue( result.getQueueUrl() );
                 }
                 catch ( QueueDoesNotExistException queueDoesNotExistException ) {
+                    if (queueName.endsWith(DEAD_LETTER_QUEUE_SUFFIX)) {
+                        // don't auto-create dead letter queues
+                        logger.error("failed to get dead letter queue from service, won't create", queueDoesNotExistException);
+                        throw queueDoesNotExistException;
+                    }
                     logger.error( "Queue {} does not exist, will create", queueName );
                 }
                 catch ( Exception e ) {
@@ -251,8 +241,14 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
             for ( String regionName : regionNames ) {
 
                 regionName = regionName.trim();
-                Regions regions = Regions.fromName( regionName );
-                Region region = Region.getRegion( regions );
+                Region region = null;
+                try {
+                    Regions regions = Regions.fromName(regionName);
+                    region = Region.getRegion(regions);
+                }
+                catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("INVALID REGION FROM CONFIGURATION " + LegacyQueueFig.USERGRID_CLUSTER_REGION_LIST + ": " + regionName, e);
+                }
 
                 AmazonSQSClient sqsClient = createSQSClient( region );
                 AmazonSNSClient snsClient = createSNSClient( region ); // do this stuff synchronously
@@ -380,19 +376,26 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
     }
 
 
-    private String getName() {
+    private String getName(final boolean isDeadLetter) {
         String name =
             clusterFig.getClusterName() + "_" + cassandraConfig.getApplicationKeyspace() + "_" + scope.getName() + "_"
                 + scope.getRegionImplementation();
+        if (isDeadLetter) {
+            name += DEAD_LETTER_QUEUE_SUFFIX;
+        }
         name = name.toLowerCase(); //user lower case values
         Preconditions.checkArgument( name.length() <= 80, "Your name must be < than 80 characters" );
 
         return name;
     }
 
+    private String getName() {
+        return getName(false);
+    }
+
 
     public LegacyQueue getReadQueue() {
-        String queueName = getName();
+        String queueName = getName(scope.isDeadLetterQueue());
 
         try {
             return readQueueUrlMap.get( queueName );
@@ -588,6 +591,43 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
 
 
     @Override
+    public List<LegacyQueueMessage> sendQueueMessages(List<LegacyQueueMessage> queueMessages) throws IOException {
+
+        List<LegacyQueueMessage> successMessages = new ArrayList<>();
+
+        if ( sqs == null ) {
+            logger.error( "SQS client is null, perhaps it failed to initialize successfully" );
+            return successMessages;
+        }
+
+        String url = getReadQueue().getUrl();
+
+        List<SendMessageBatchRequestEntry> entries = new ArrayList<>();
+
+        for (LegacyQueueMessage queueMessage : queueMessages) {
+            entries.add(new SendMessageBatchRequestEntry(queueMessage.getMessageId(), queueMessage.getStringBody()));
+        }
+
+        SendMessageBatchResult result = sqs.sendMessageBatch(url, entries);
+
+        Set<String> successIDs = new HashSet<>();
+        logger.debug("sendQueueMessages: successful: {}, failed: {}", result.getSuccessful().size(), result.getFailed().size());
+
+        for (SendMessageBatchResultEntry batchResultEntry : result.getSuccessful()) {
+            successIDs.add(batchResultEntry.getId());
+        }
+
+        for (LegacyQueueMessage queueMessage : queueMessages) {
+            if (successIDs.contains(queueMessage.getMessageId())) {
+                successMessages.add(queueMessage);
+            }
+        }
+
+        return successMessages;
+    }
+
+
+    @Override
     public <T extends Serializable> void sendMessageToLocalRegion(final T body ) throws IOException {
 
         if ( sqsAsync == null ) {
@@ -663,6 +703,7 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
         DeleteMessageBatchResult result = sqs.deleteMessageBatch( request );
 
         boolean successful = result.getFailed().size() <= 0;
+        logger.debug("commitMessages: successful: {}, failed: {}", result.getSuccessful().size(), result.getFailed().size());
 
         if ( !successful ) {
             for ( BatchResultErrorEntry failed : result.getFailed() ) {
@@ -684,8 +725,14 @@ public class SNSQueueManagerImpl implements LegacyQueueManager {
      * Get the region
      */
     private Region getRegion() {
-        Regions regions = Regions.fromName(fig.getPrimaryRegion());
-        return Region.getRegion(regions);
+        String regionName = fig.getPrimaryRegion();
+        try {
+            Regions regions = Regions.fromName(regionName);
+            return Region.getRegion(regions);
+        }
+        catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("INVALID PRIMARY REGION FROM CONFIGURATION " + LegacyQueueFig.USERGRID_CLUSTER_REGION_LOCAL + ": " + regionName, e);
+        }
     }
 
 
