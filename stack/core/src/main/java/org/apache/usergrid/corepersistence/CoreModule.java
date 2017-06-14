@@ -44,6 +44,7 @@ import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
+import org.apache.usergrid.persistence.queue.LegacyQueueFig;
 import org.safehaus.guicyfig.GuicyFigModule;
 
 import java.util.Properties;

@@ -27,18 +27,22 @@ import org.apache.usergrid.persistence.queue.impl.QakkaQueueManager;
 import org.apache.usergrid.persistence.queue.impl.QueueManagerFactoryImpl;
 import org.apache.usergrid.persistence.queue.impl.SNSQueueManagerImpl;
 import org.safehaus.guicyfig.GuicyFigModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
  * Simple module for wiring our collection api
  */
 public class QueueModule extends AbstractModule {
+    private static final Logger logger = LoggerFactory.getLogger( QueueModule.class );
 
     private LegacyQueueManager.Implementation implementation;
 
 
     public QueueModule( String queueManagerType ) {
 
+        logger.info("QueueManagerType={}", queueManagerType);
         if ( "DISTRIBUTED_SNS".equals( queueManagerType ) ) {
             this.implementation = LegacyQueueManager.Implementation.DISTRIBUTED_SNS;
         }

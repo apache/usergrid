@@ -23,10 +23,18 @@ public class LegacyQueueScopeImpl implements LegacyQueueScope {
 
     private final String name;
     private final RegionImplementation regionImpl;
+    private final boolean isDeadLetterQueue;
 
     public LegacyQueueScopeImpl(final String name, final RegionImplementation regionImpl) {
         this.name = name;
         this.regionImpl = regionImpl;
+        this.isDeadLetterQueue = false;
+    }
+
+    public LegacyQueueScopeImpl(final String name, final RegionImplementation regionImpl, final boolean isDeadLetterQueue) {
+        this.name = name;
+        this.regionImpl = regionImpl;
+        this.isDeadLetterQueue = isDeadLetterQueue;
     }
 
     @Override
@@ -36,6 +44,9 @@ public class LegacyQueueScopeImpl implements LegacyQueueScope {
 
     @Override
     public RegionImplementation getRegionImplementation() {return regionImpl;}
+
+    @Override
+    public boolean isDeadLetterQueue() {return isDeadLetterQueue;}
 
     @Override
     public boolean equals( final Object o ) {
@@ -52,6 +63,13 @@ public class LegacyQueueScopeImpl implements LegacyQueueScope {
             return false;
         }
 
+        if ( regionImpl != queueScope.getRegionImplementation() ) {
+            return false;
+        }
+
+        if ( isDeadLetterQueue != queueScope.isDeadLetterQueue ) {
+            return false;
+        }
 
         return true;
     }
@@ -59,6 +77,11 @@ public class LegacyQueueScopeImpl implements LegacyQueueScope {
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        String deadLetter = "REGULAR";
+        if (isDeadLetterQueue) {
+            deadLetter = "DEADLETTER";
+        }
+        String hashString = name + "|" + regionImpl.name() + "|" + deadLetter;
+        return hashString.hashCode();
     }
 }

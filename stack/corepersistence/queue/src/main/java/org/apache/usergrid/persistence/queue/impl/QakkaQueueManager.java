@@ -195,6 +195,19 @@ public class QakkaQueueManager implements LegacyQueueManager {
 
 
     @Override
+    public List<LegacyQueueMessage> sendQueueMessages( List<LegacyQueueMessage> queueMessages ) throws IOException {
+
+        List<LegacyQueueMessage> successMessages = new ArrayList<>();
+        for ( LegacyQueueMessage queueMessage : queueMessages ) {
+            sendMessageToLocalRegion( (Serializable)queueMessage.getBody() );
+            successMessages.add(queueMessage);
+        }
+
+        return successMessages;
+    }
+
+
+    @Override
     public void deleteQueue() {
         queueManager.deleteQueue( scope.getName() );
     }
