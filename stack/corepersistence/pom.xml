@@ -113,6 +113,7 @@ limitations under the License.
         <module>queue</module>
         <module>cache</module>
         <module>actorsystem</module>
+        <module>token</module>
     </modules>
 
     <build>
