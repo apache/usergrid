@@ -310,9 +310,12 @@ public class TokenServiceImpl implements TokenService {
             long maxTokenTtl = getMaxTtl(TokenCategory.getFromBase64String(token), tokenInfo.getPrincipal());
 
             long inactive = now - tokenInfo.getAccessed();
-            // Long.MIN_VALUE indicates that nothing needs to be updated for token inactive property
-            if (inactive < tokenInfo.getInactive()) {
-               inactive = Long.MIN_VALUE;
+            if (inactive > tokenInfo.getInactive()) {
+                tokenInfo.setInactive(inactive);
+            }else{
+                // Long.MIN_VALUE indicates that nothing needs to be updated for token inactive property in
+                // tokenSerialization.updateTokenAccessTime()
+                inactive = Long.MIN_VALUE;
             }
 
             tokenSerialization.updateTokenAccessTime(uuid, now, inactive, calcTokenTime(tokenInfo.getExpiration(maxTokenTtl)));

@@ -130,22 +130,27 @@ public class TokenSerializationImpl implements TokenSerialization {
     public void deleteTokens(final List<UUID> tokenUUIDs, final ByteBuffer principalKeyBuffer){
 
         Preconditions.checkNotNull(tokenUUIDs, "token UUID list is required");
+        Preconditions.checkNotNull(tokenUUIDs, "principalKeyBuffer is required");
+
+        logger.trace("deleteTokens, token UUIDs: {}", tokenUUIDs);
 
         final BatchStatement batchStatement = new BatchStatement();
 
-        tokenUUIDs.forEach( tokenUUID -> batchStatement.add(
-        QueryBuilder.delete()
-            .from(TOKENS_TABLE)
-            .where(QueryBuilder
-                .eq("key", DataType.uuid().serialize(tokenUUID, ProtocolVersion.NEWEST_SUPPORTED)))));
-
-        if(principalKeyBuffer != null){
+        tokenUUIDs.forEach( tokenUUID ->
             batchStatement.add(
                 QueryBuilder.delete()
-                    .from(PRINCIPAL_TOKENS_TABLE)
+                    .from(TOKENS_TABLE)
                     .where(QueryBuilder
-                        .eq("key", principalKeyBuffer)));
-        }
+                        .eq("key", DataType.uuid().serialize(tokenUUID, ProtocolVersion.NEWEST_SUPPORTED)))
+            )
+        );
+
+        batchStatement.add(
+            QueryBuilder.delete()
+                .from(PRINCIPAL_TOKENS_TABLE)
+                .where(QueryBuilder
+                    .eq("key", principalKeyBuffer)));
+
 
         session.execute(batchStatement);
 
@@ -156,6 +161,9 @@ public class TokenSerializationImpl implements TokenSerialization {
     public void revokeToken(final UUID tokenUUID, final ByteBuffer principalKeyBuffer){
 
         Preconditions.checkNotNull(tokenUUID, "token UUID is required");
+
+        logger.trace("revokeToken, token UUID: {}", tokenUUID);
+
 
         final BatchStatement batchStatement = new BatchStatement();
 
@@ -188,6 +196,8 @@ public class TokenSerializationImpl implements TokenSerialization {
         Preconditions.checkNotNull(inactiveTime, "inactiveTime is required");
         Preconditions.checkNotNull(ttl, "ttl is required");
 
+        logger.trace("updateTokenAccessTime, token UUID: {}, accessedTime: {}, inactiveTime: {}, ttl: {}",
+            tokenUUID, accessedTime, inactiveTime, ttl);
 
         final BatchStatement batchStatement = new BatchStatement();
         final Clause inKey =
@@ -265,6 +275,8 @@ public class TokenSerializationImpl implements TokenSerialization {
 
         });
 
+        logger.trace("getTokenInfo, info: {}", tokenInfo);
+
         return tokenInfo;
     }
 
@@ -277,6 +289,7 @@ public class TokenSerializationImpl implements TokenSerialization {
         Preconditions.checkNotNull(tokenUUID, "tokenInfo is required");
         Preconditions.checkNotNull(ttl, "ttl is required");
 
+        logger.trace("putTokenInfo, token UUID: {}, tokenInfo: {}, ttl: {}", tokenUUID, tokenInfo, ttl);
 
         final BatchStatement batchStatement = new BatchStatement();
         final Using usingTTL = QueryBuilder.ttl(ttl);
@@ -331,6 +344,8 @@ public class TokenSerializationImpl implements TokenSerialization {
         final List<UUID> tokenUUIDs = new ArrayList<>(rows.size());
 
         rows.forEach(row -> tokenUUIDs.add(row.getUUID("column1")));
+
+        logger.trace("getTokensForPrincipal, token UUIDs: {}", tokenUUIDs);
 
         return tokenUUIDs;
     }
