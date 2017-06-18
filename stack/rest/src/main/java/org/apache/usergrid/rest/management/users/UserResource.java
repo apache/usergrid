@@ -30,7 +30,7 @@ import org.apache.usergrid.rest.management.users.organizations.OrganizationsReso
 import org.apache.usergrid.rest.security.annotations.RequireAdminUserAccess;
 import org.apache.usergrid.security.shiro.principals.PrincipalIdentifier;
 import org.apache.usergrid.security.tokens.TokenInfo;
-import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
+import org.apache.usergrid.security.tokens.impl.TokenServiceImpl;
 import org.apache.usergrid.security.tokens.exceptions.TokenException;
 import org.apache.usergrid.services.ServiceResults;
 import org.glassfish.jersey.server.mvc.Viewable;

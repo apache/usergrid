@@ -18,7 +18,7 @@ package org.apache.usergrid.security.sso;
 
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
 import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
+import org.apache.usergrid.security.tokens.impl.TokenServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;

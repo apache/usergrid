@@ -130,7 +130,7 @@
 		</constructor-arg>
 	</bean>
 
-	<bean id="tokenService" class="org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl"/>
+	<bean id="tokenService" class="org.apache.usergrid.security.tokens.impl.TokenServiceImpl"/>
 
 	<bean id="managementService" class="org.apache.usergrid.management.cassandra.ManagementServiceImpl" />
 

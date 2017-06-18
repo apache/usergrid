@@ -20,11 +20,9 @@ package org.apache.usergrid.persistence.token.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.multibindings.Multibinder;
-import org.apache.usergrid.persistence.cache.CacheFactory;
-import org.apache.usergrid.persistence.cache.impl.CacheFactoryImpl;
-import org.apache.usergrid.persistence.cache.impl.TokenSerialization;
-import org.apache.usergrid.persistence.cache.impl.TokenSerializationImpl;
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
+import org.apache.usergrid.persistence.token.TokenSerialization;
+import org.apache.usergrid.persistence.token.impl.TokenSerializationImpl;
 
 
 /**
@@ -35,12 +33,10 @@ public class TokenModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        bind( CacheFactory.class ).to( CacheFactoryImpl.class );
-
         bind( TokenSerialization.class ).to( TokenSerializationImpl.class );
 
         Multibinder<Migration> migrationBinding = Multibinder.newSetBinder( binder(), Migration.class );
-        migrationBinding.addBinding().to(Key.get(TokenSerialization.class));
+        migrationBinding.addBinding().to(  Key.get( TokenSerialization.class ) );
 
     }
 }
