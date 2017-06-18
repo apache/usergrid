@@ -29,7 +29,7 @@ import org.apache.usergrid.rest.RootResource;
 import org.apache.usergrid.rest.exceptions.AuthErrorInfo;
 import org.apache.usergrid.rest.exceptions.RedirectionException;
 import org.apache.usergrid.security.shiro.utils.SubjectUtils;
-import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
+import org.apache.usergrid.security.tokens.impl.TokenServiceImpl;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +46,6 @@ import java.util.UUID;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.usergrid.rest.exceptions.SecurityException.mappableSecurityException;
 import static org.apache.usergrid.security.shiro.utils.SubjectUtils.isServiceAdmin;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER_URL;
 
 
 @Component( "org.apache.usergrid.rest.management.users.UsersResource" )

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.persistence.token.impl;
+package org.apache.usergrid.persistence.token;
 
 
 import org.apache.usergrid.persistence.core.migration.schema.Migration;
@@ -35,15 +35,15 @@ import java.util.UUID;
  */
 public interface TokenSerialization extends Migration {
 
-    void deleteToken(UUID tokenUUID);
+    void deleteTokens(List<UUID> tokenUUIDs, ByteBuffer principalKeyBuffer);
 
     void revokeToken(UUID tokenUUID, ByteBuffer principalKeyBuffer);
 
-    void updateTokenAccessTime(UUID tokenUUID, int accessdTime, int inactiveTime );
+    void updateTokenAccessTime(UUID tokenUUID, long accessedTime, long inactiveTime, int ttl );
 
     Map<String, Object> getTokenInfo(UUID tokenUUID);
 
-    void putTokenInfo(UUID tokenUUID, Map<String, Object> tokenInfo);
+    void putTokenInfo(UUID tokenUUID, Map<String, Object> tokenInfo, ByteBuffer principalKeyBuffer, int ttl);
 
     List<UUID> getTokensForPrincipal(ByteBuffer principalKeyBuffer);
 

@@ -25,7 +25,7 @@ import org.apache.usergrid.rest.management.organizations.OrganizationsResource;
 import org.apache.usergrid.rest.test.resource.AbstractRestIT;
 import org.apache.usergrid.rest.test.resource.model.*;
 import org.apache.usergrid.rest.test.resource.model.Collection;
-import org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl;
+import org.apache.usergrid.security.tokens.impl.TokenServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -38,9 +38,9 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.*;
 
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER_URL;
-import static org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
+import static org.apache.usergrid.security.tokens.impl.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER;
+import static org.apache.usergrid.security.tokens.impl.TokenServiceImpl.USERGRID_EXTERNAL_SSO_PROVIDER_URL;
+import static org.apache.usergrid.security.tokens.impl.TokenServiceImpl.USERGRID_EXTERNAL_SSO_ENABLED;
 import static org.apache.usergrid.utils.MapUtils.hashMap;
 import static org.junit.Assert.*;
 

@@ -63,8 +63,7 @@
 
     <bean id="taskExecutor" class="org.springframework.core.task.SyncTaskExecutor"/>
 
-    <bean id="tokenService" class="org.apache.usergrid.security.tokens.cassandra.TokenServiceImpl">
-        <property name="cassandraService" ref="cassandraService"/>
+    <bean id="tokenService" class="org.apache.usergrid.security.tokens.impl.TokenServiceImpl">
         <property name="entityManagerFactory" ref="entityManagerFactory"/>
     </bean>
 

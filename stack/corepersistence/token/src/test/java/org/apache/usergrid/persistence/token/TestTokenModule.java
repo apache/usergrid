@@ -21,13 +21,12 @@ package org.apache.usergrid.persistence.token;
 
 
 import org.apache.usergrid.persistence.token.guice.TokenModule;
-import org.apache.usergrid.persistence.token.impl.TokenSerialization;
 import org.apache.usergrid.persistence.token.impl.TokenSerializationImpl;
 import org.apache.usergrid.persistence.core.guice.CommonModule;
 
 
 
-public class TokenTestModule extends org.apache.usergrid.persistence.core.guice.TestModule {
+public class TestTokenModule extends org.apache.usergrid.persistence.core.guice.TestModule {
 
     @Override
     protected void configure() {
@@ -35,6 +34,5 @@ public class TokenTestModule extends org.apache.usergrid.persistence.core.guice.
         install( new CommonModule() );
         install( new TokenModule() );
 
-        bind(TokenSerialization.class).to(TokenSerializationImpl.class).asEagerSingleton();
     }
 }
