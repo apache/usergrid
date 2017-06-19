@@ -128,13 +128,16 @@ public class GCMAdapter implements ProviderAdapter {
 
     @Override
     public void removeInactiveDevices( ) throws Exception {
-        Batch batch = getBatch( null);
+        ConcurrentHashMap<Long, Batch> batches = this.batches;
+        Enumeration<Batch> enumeration = batches.elements();
+        while ( enumeration.hasMoreElements() ) {
+            Batch batch = enumeration.nextElement();
         if(batch != null) {
             Map<String,Date> map = batch.getAndClearInactiveDevices();
             InactiveDeviceManager deviceManager = new InactiveDeviceManager(notifier,entityManager);
             deviceManager.removeInactiveDevices(map);
         }
-
+        }
     }
 
     @Override
@@ -225,8 +228,7 @@ public class GCMAdapter implements ProviderAdapter {
 
         void send() throws Exception {
             synchronized (this) {
-                if (ids.size() == 0)
-                    return;
+                if ( ids.size() == 0 ) { return; }
                 Sender sender = new Sender(notifier.getApiKey());
                 Message.Builder builder = new Message.Builder();
                 if(payload.containsKey(ttlKey)){
