@@ -193,7 +193,7 @@ public class TokenSerializationImpl implements TokenSerialization {
 
         Preconditions.checkNotNull(tokenUUID, "token UUID is required");
         Preconditions.checkArgument(accessedTime > -1 , "accessedTime is required to be positive");
-        Preconditions.checkArgument(inactiveTime > -1 , "inactiveTime is required to be positive");
+        Preconditions.checkArgument(inactiveTime == Long.MIN_VALUE || inactiveTime > -1 , "inactiveTime is required to be positive");
         Preconditions.checkArgument(ttl > -1 , "ttl is required to be positive");
 
         logger.trace("updateTokenAccessTime, token UUID: {}, accessedTime: {}, inactiveTime: {}, ttl: {}",
