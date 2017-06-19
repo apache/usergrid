@@ -26,7 +26,6 @@ import java.util.concurrent.ExecutorService;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.services.sqs.model.*;
-import com.sun.javaws.exceptions.InvalidArgumentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
