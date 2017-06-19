@@ -417,11 +417,21 @@ public class TokenServiceImpl implements TokenService {
             throw new InvalidTokenException( "Token not found in database" );
         }
 
-        String type = (String) tokenDetails.get(TOKEN_TYPE);
-        long created = (long) tokenDetails.get(TOKEN_CREATED);
-        long accessed = (long) tokenDetails.get(TOKEN_ACCESSED);
-        long inactive = (long) tokenDetails.get(TOKEN_INACTIVE);
-        long duration = (long) tokenDetails.get(TOKEN_DURATION);
+        String type;
+        long created, accessed, inactive, duration;
+        try {
+            type = (String) tokenDetails.get(TOKEN_TYPE);
+            created = (long) tokenDetails.get(TOKEN_CREATED);
+            accessed = (long) tokenDetails.get(TOKEN_ACCESSED);
+            inactive = (long) tokenDetails.get(TOKEN_INACTIVE);
+            duration = (long) tokenDetails.get(TOKEN_DURATION);
+        } catch (ClassCastException cce){
+            logger.error("Unable to cast token info to primitive type: {}", cce);
+            throw new RuntimeException("Unable to cast token info to primitive type");
+        } catch (NullPointerException npe){
+            logger.error("Unable to obtain token info from serialization layer, on or more missing properties: {}", npe);
+            throw new RuntimeException("Unable to obtain token info from serialization layer, on or more missing properties");
+        }
 
         String principalTypeStr = (String) tokenDetails.get(TOKEN_PRINCIPAL_TYPE);
 
