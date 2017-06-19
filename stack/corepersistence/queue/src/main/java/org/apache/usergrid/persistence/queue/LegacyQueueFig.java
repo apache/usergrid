@@ -106,4 +106,7 @@ public interface LegacyQueueFig extends GuicyFig {
     @Default("false") // 30 seconds
     boolean getQuorumFallback();
 
+    @Key("usergrid.queue.map.message.timeout")
+    @Default("900000") // 15 minutes
+    int getMapMessageTimeout();
 }
