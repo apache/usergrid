@@ -456,7 +456,11 @@ public class TokenServiceImpl implements TokenService {
 
         UUID workflowOrgId = null;
         if (tokenDetails.containsKey(TOKEN_WORKFLOW_ORG_ID)) {
-            workflowOrgId = (UUID) tokenDetails.get(TOKEN_WORKFLOW_ORG_ID);
+            try {
+                workflowOrgId = (UUID) tokenDetails.get(TOKEN_WORKFLOW_ORG_ID);
+            } catch (ClassCastException cce){
+                logger.error("Unable to cast {} to primitive UUID type", TOKEN_WORKFLOW_ORG_ID);
+            }
         }
 
         return new TokenInfo( uuid, type, created, accessed, inactive, duration, principal, state, workflowOrgId );
