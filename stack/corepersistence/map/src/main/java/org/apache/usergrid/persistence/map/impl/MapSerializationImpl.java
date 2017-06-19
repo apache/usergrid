@@ -154,43 +154,44 @@ public class MapSerializationImpl implements MapSerialization {
         Preconditions.checkNotNull( key, "key is required" );
         Preconditions.checkNotNull( value, "value is required" );
 
+        final BatchStatement batchStatement = new BatchStatement();
+
         Statement mapEntry;
         Statement mapKey;
         if (ttl > 0){
             Using timeToLive = QueryBuilder.ttl(ttl);
 
-            mapEntry = QueryBuilder.insertInto(MAP_ENTRIES_TABLE)
+             batchStatement.add(QueryBuilder.insertInto(MAP_ENTRIES_TABLE)
                 .using(timeToLive)
                 .value("key", getMapEntryPartitionKey(scope, key))
                 .value("column1", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED))
-                .value("value", DataType.text().serialize(value, ProtocolVersion.NEWEST_SUPPORTED));
+                .value("value", DataType.text().serialize(value, ProtocolVersion.NEWEST_SUPPORTED)));
 
 
             final int bucket = BUCKET_LOCATOR.getCurrentBucket( scope.getName() );
-            mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
+            batchStatement.add(QueryBuilder.insertInto(MAP_KEYS_TABLE)
                 .using(timeToLive)
                 .value("key", getMapKeyPartitionKey(scope, bucket))
                 .value("column1", DataType.text().serialize(key, ProtocolVersion.NEWEST_SUPPORTED))
-                .value("value", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED));
+                .value("value", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED)));
         }else{
 
-            mapEntry = QueryBuilder.insertInto(MAP_ENTRIES_TABLE)
+            batchStatement.add(QueryBuilder.insertInto(MAP_ENTRIES_TABLE)
                 .value("key", getMapEntryPartitionKey(scope, key))
                 .value("column1", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED))
-                .value("value", DataType.text().serialize(value, ProtocolVersion.NEWEST_SUPPORTED));
+                .value("value", DataType.text().serialize(value, ProtocolVersion.NEWEST_SUPPORTED)));
 
             // get a bucket number for the map keys table
             final int bucket = BUCKET_LOCATOR.getCurrentBucket( scope.getName() );
 
-            mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
+            batchStatement.add(QueryBuilder.insertInto(MAP_KEYS_TABLE)
                 .value("key", getMapKeyPartitionKey(scope, bucket))
                 .value("column1", DataType.text().serialize(key, ProtocolVersion.NEWEST_SUPPORTED))
-                .value("value", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED));
+                .value("value", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED)));
 
         }
 
-        session.execute(mapEntry);
-        session.execute(mapKey);
+        session.execute(batchStatement);
 
     }
 
@@ -211,23 +212,23 @@ public class MapSerializationImpl implements MapSerialization {
         Preconditions.checkNotNull( key, "key is required" );
         Preconditions.checkNotNull( putUuid, "value is required" );
 
+        final BatchStatement batchStatement = new BatchStatement();
 
-        Statement mapEntry = QueryBuilder.insertInto(MAP_ENTRIES_TABLE)
+        batchStatement.add(QueryBuilder.insertInto(MAP_ENTRIES_TABLE)
             .value("key", getMapEntryPartitionKey(scope, key))
             .value("column1", DataType.cboolean().serialize(true, ProtocolVersion.NEWEST_SUPPORTED))
-            .value("value", DataType.uuid().serialize(putUuid, ProtocolVersion.NEWEST_SUPPORTED));
+            .value("value", DataType.uuid().serialize(putUuid, ProtocolVersion.NEWEST_SUPPORTED)));
 
-        session.execute(mapEntry);
 
 
         final int bucket = BUCKET_LOCATOR.getCurrentBucket( scope.getName() );
-        Statement mapKey;
-        mapKey = QueryBuilder.insertInto(MAP_KEYS_TABLE)
+        batchStatement.add(QueryBuilder.insertInto(MAP_KEYS_TABLE)
             .value("key", getMapKeyPartitionKey(scope, bucket))
             .value("column1", DataType.text().serialize(key, ProtocolVersion.NEWEST_SUPPORTED))
-            .value("value", DataType.serializeValue(null, ProtocolVersion.NEWEST_SUPPORTED));
+            .value("value", DataType.serializeValue(null, ProtocolVersion.NEWEST_SUPPORTED)));
 
-        session.execute(mapKey);
+        session.execute(batchStatement);
+
     }
 
 

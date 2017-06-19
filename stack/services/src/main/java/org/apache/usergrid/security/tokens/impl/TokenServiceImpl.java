@@ -14,22 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.usergrid.security.tokens.cassandra;
+package org.apache.usergrid.security.tokens.impl;
 
 
 import com.google.inject.Injector;
-import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.mutation.Mutator;
 import org.apache.usergrid.corepersistence.CpEntityManagerFactory;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.management.ApplicationCreator;
 import org.apache.usergrid.management.ManagementService;
 import org.apache.usergrid.management.UserInfo;
 import org.apache.usergrid.persistence.EntityManagerFactory;
-import org.apache.usergrid.persistence.cassandra.CassandraService;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.token.TokenSerialization;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
 import org.apache.usergrid.security.sso.SSOProviderFactory;
@@ -40,13 +37,10 @@ import org.apache.usergrid.security.tokens.exceptions.BadTokenException;
 import org.apache.usergrid.security.tokens.exceptions.ExpiredTokenException;
 import org.apache.usergrid.security.tokens.exceptions.InvalidTokenException;
 import org.apache.usergrid.security.sso.ExternalSSOProvider;
-import org.apache.usergrid.utils.ConversionUtils;
-import org.apache.usergrid.utils.JsonUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.Assert;
 
 import javax.ws.rs.client.Client;
@@ -54,15 +48,10 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import static java.lang.System.currentTimeMillis;
-import static me.prettyprint.hector.api.factory.HFactory.createColumn;
-import static me.prettyprint.hector.api.factory.HFactory.createMutator;
 import static org.apache.commons.codec.binary.Base64.decodeBase64;
 import static org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString;
 import static org.apache.commons.codec.digest.DigestUtils.sha;
-import static org.apache.usergrid.persistence.cassandra.CassandraPersistenceUtils.getColumnMap;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.PRINCIPAL_TOKEN_CF;
-import static org.apache.usergrid.persistence.cassandra.CassandraService.TOKENS_CF;
-import static org.apache.usergrid.persistence.cassandra.Serializers.*;
+import static org.apache.usergrid.persistence.token.impl.TokenSerializationImpl.*;
 import static org.apache.usergrid.security.AuthPrincipalType.ADMIN_USER;
 import static org.apache.usergrid.security.tokens.TokenCategory.*;
 import static org.apache.usergrid.utils.ConversionUtils.*;
@@ -76,58 +65,6 @@ public class TokenServiceImpl implements TokenService {
     private static final Logger logger = LoggerFactory.getLogger( TokenServiceImpl.class );
 
     public static final String PROPERTIES_AUTH_TOKEN_SECRET_SALT = "usergrid.auth.token_secret_salt";
-    public static final String PROPERTIES_AUTH_TOKEN_EXPIRES_FROM_LAST_USE =
-            "usergrid.auth.token_expires_from_last_use";
-    public static final String PROPERTIES_AUTH_TOKEN_REFRESH_REUSES_ID = "usergrid.auth.token_refresh_reuses_id";
-
-    private static final String TOKEN_UUID = "uuid";
-    private static final String TOKEN_TYPE = "type";
-    private static final String TOKEN_CREATED = "created";
-    private static final String TOKEN_ACCESSED = "accessed";
-    private static final String TOKEN_INACTIVE = "inactive";
-    private static final String TOKEN_DURATION = "duration";
-    private static final String TOKEN_PRINCIPAL_TYPE = "principal";
-    private static final String TOKEN_ENTITY = "entity";
-    private static final String TOKEN_APPLICATION = "application";
-    private static final String TOKEN_STATE = "state";
-    private static final String TOKEN_WORKFLOW_ORG_ID = "workflowOrgId";
-
-
-    private static final String TOKEN_TYPE_ACCESS = "access";
-
-
-    private static final Set<String> TOKEN_PROPERTIES;
-
-
-    static {
-        HashSet<String> set = new HashSet<String>();
-        set.add( TOKEN_UUID );
-        set.add( TOKEN_TYPE );
-        set.add( TOKEN_CREATED );
-        set.add( TOKEN_ACCESSED );
-        set.add( TOKEN_INACTIVE );
-        set.add( TOKEN_PRINCIPAL_TYPE );
-        set.add( TOKEN_ENTITY );
-        set.add( TOKEN_APPLICATION );
-        set.add( TOKEN_STATE );
-        set.add( TOKEN_DURATION );
-        set.add( TOKEN_WORKFLOW_ORG_ID );
-        TOKEN_PROPERTIES = Collections.unmodifiableSet(set);
-    }
-
-
-    private static final HashSet<String> REQUIRED_TOKEN_PROPERTIES = new HashSet<String>();
-
-
-    static {
-        REQUIRED_TOKEN_PROPERTIES.add( TOKEN_UUID );
-        REQUIRED_TOKEN_PROPERTIES.add( TOKEN_TYPE );
-        REQUIRED_TOKEN_PROPERTIES.add( TOKEN_CREATED );
-        REQUIRED_TOKEN_PROPERTIES.add( TOKEN_ACCESSED );
-        REQUIRED_TOKEN_PROPERTIES.add( TOKEN_INACTIVE );
-        REQUIRED_TOKEN_PROPERTIES.add( TOKEN_DURATION );
-    }
-
 
     public static final String TOKEN_SECRET_SALT = "super secret token value";
 
@@ -150,27 +87,27 @@ public class TokenServiceImpl implements TokenService {
     long maxEmailTokenAge = LONG_TOKEN_AGE;
     long maxOfflineTokenAge = LONG_TOKEN_AGE;
 
-    protected CassandraService cassandra;
-
     protected Properties properties;
 
     protected EntityManagerFactory emf;
 
-    protected MetricsFactory metricsFactory;
+    private MetricsFactory metricsFactory;
+
+    private TokenSerialization tokenSerialization;
 
 
     public TokenServiceImpl() {
     }
 
 
-    long getExpirationProperty( String name, long default_expiration ) {
+    private long getExpirationProperty( String name, long default_expiration ) {
         long expires = Long.parseLong(
                 properties.getProperty( "usergrid.auth.token." + name + ".expires", "" + default_expiration ) );
         return expires > 0 ? expires : default_expiration;
     }
 
 
-    long getExpirationForTokenType( TokenCategory tokenCategory ) {
+    private long getExpirationForTokenType( TokenCategory tokenCategory ) {
         Long l = tokenExpirations.get( tokenCategory );
         if ( l != null ) {
             return l;
@@ -179,7 +116,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
 
-    void setExpirationFromProperties( String name ) {
+    private void setExpirationFromProperties( String name ) {
         TokenCategory tokenCategory = TokenCategory.valueOf( name.toUpperCase() );
         long expires = Long.parseLong( properties.getProperty( "usergrid.auth.token." + name + ".expires",
                 "" + getExpirationForTokenType( tokenCategory ) ) );
@@ -372,22 +309,16 @@ public class TokenServiceImpl implements TokenService {
 
             long maxTokenTtl = getMaxTtl(TokenCategory.getFromBase64String(token), tokenInfo.getPrincipal());
 
-            Mutator<UUID> batch = createMutator(cassandra.getUsergridApplicationKeyspace(), ue);
-
-            HColumn<String, Long> col =
-                    createColumn(TOKEN_ACCESSED, now, calcTokenTime(tokenInfo.getExpiration(maxTokenTtl)),
-                            se, le);
-            batch.addInsertion(uuid, TOKENS_CF, col);
-
             long inactive = now - tokenInfo.getAccessed();
             if (inactive > tokenInfo.getInactive()) {
-                col = createColumn(TOKEN_INACTIVE, inactive, calcTokenTime(tokenInfo.getExpiration(maxTokenTtl)),
-                        se, le);
-                batch.addInsertion(uuid, TOKENS_CF, col);
                 tokenInfo.setInactive(inactive);
+            }else{
+                // Long.MIN_VALUE indicates that nothing needs to be updated for token inactive property in
+                // tokenSerialization.updateTokenAccessTime()
+                inactive = Long.MIN_VALUE;
             }
 
-            batch.execute();
+            tokenSerialization.updateTokenAccessTime(uuid, now, inactive, calcTokenTime(tokenInfo.getExpiration(maxTokenTtl)));
         }
 
         return tokenInfo;
@@ -436,17 +367,10 @@ public class TokenServiceImpl implements TokenService {
      */
     @Override
     public void removeTokens( AuthPrincipalInfo principal ) throws Exception {
-        List<UUID> tokenIds = getTokenUUIDS( principal );
 
-        Mutator<ByteBuffer> batch = createMutator( cassandra.getUsergridApplicationKeyspace(), be );
+        final List<UUID> tokenIds = getTokenUUIDS( principal );
+        tokenSerialization.deleteTokens(tokenIds, principalKey( principal ));
 
-        for ( UUID tokenId : tokenIds ) {
-            batch.addDeletion( bytebuffer( tokenId ), TOKENS_CF );
-        }
-
-        batch.addDeletion( principalKey( principal ), PRINCIPAL_TOKEN_CF );
-
-        batch.execute();
     }
 
 
@@ -469,21 +393,16 @@ public class TokenServiceImpl implements TokenService {
             return;
         }
 
-        UUID tokenId = info.getUuid();
-
-        Mutator<ByteBuffer> batch = createMutator( cassandra.getUsergridApplicationKeyspace(), be );
+        final UUID tokenId = info.getUuid();
 
         // clean up the link in the principal -> token index if the principal is
         // on the token
         if ( info.getPrincipal() != null ) {
-            batch.addDeletion( principalKey( info.getPrincipal() ), PRINCIPAL_TOKEN_CF, bytebuffer( tokenId ),
-                    be );
+            tokenSerialization.revokeToken(tokenId, principalKey( info.getPrincipal()));
+        }else{
+            tokenSerialization.revokeToken(tokenId, null);
         }
 
-        // remove the token from the tokens cf
-        batch.addDeletion( bytebuffer( tokenId ), TOKENS_CF );
-
-        batch.execute();
     }
 
 
@@ -491,38 +410,57 @@ public class TokenServiceImpl implements TokenService {
         if ( uuid == null ) {
             throw new InvalidTokenException( "No token specified" );
         }
-        Map<String, ByteBuffer> columns = getColumnMap( cassandra
-                .getColumns( cassandra.getUsergridApplicationKeyspace(), TOKENS_CF, uuid, TOKEN_PROPERTIES, se,
-                        be ) );
-        if ( !hasKeys( columns, REQUIRED_TOKEN_PROPERTIES ) ) {
+
+        Map<String, Object> tokenDetails = tokenSerialization.getTokenInfo(uuid);
+
+        if ( !hasKeys( tokenDetails, REQUIRED_TOKEN_PROPERTIES ) ) {
             throw new InvalidTokenException( "Token not found in database" );
         }
-        String type = string( columns.get( TOKEN_TYPE ) );
-        long created = getLong( columns.get( TOKEN_CREATED ) );
-        long accessed = getLong( columns.get( TOKEN_ACCESSED ) );
-        long inactive = getLong( columns.get( TOKEN_INACTIVE ) );
-        long duration = getLong( columns.get( TOKEN_DURATION ) );
-        String principalTypeStr = string( columns.get( TOKEN_PRINCIPAL_TYPE ) );
+
+        String type;
+        long created, accessed, inactive, duration;
+        try {
+            type = (String) tokenDetails.get(TOKEN_TYPE);
+            created = (long) tokenDetails.get(TOKEN_CREATED);
+            accessed = (long) tokenDetails.get(TOKEN_ACCESSED);
+            inactive = (long) tokenDetails.get(TOKEN_INACTIVE);
+            duration = (long) tokenDetails.get(TOKEN_DURATION);
+        } catch (ClassCastException cce){
+            logger.error("Unable to cast token info to primitive type: {}", cce);
+            throw new RuntimeException("Unable to cast token info to primitive type");
+        } catch (NullPointerException npe){
+            logger.error("Unable to obtain token info from serialization layer, on or more missing properties: {}", npe);
+            throw new RuntimeException("Unable to obtain token info from serialization layer, on or more missing properties");
+        }
+
+        String principalTypeStr = (String) tokenDetails.get(TOKEN_PRINCIPAL_TYPE);
+
         AuthPrincipalType principalType = null;
         if ( principalTypeStr != null ) {
             try {
                 principalType = AuthPrincipalType.valueOf( principalTypeStr.toUpperCase() );
             }
             catch ( IllegalArgumentException e ) {
+                logger.warn("Unable to convert authPrincipal Type from string to enum");
             }
         }
         AuthPrincipalInfo principal = null;
         if ( principalType != null ) {
-            UUID entityId = uuid( columns.get( TOKEN_ENTITY ) );
-            UUID appId = uuid( columns.get( TOKEN_APPLICATION ) );
+            UUID entityId = (UUID) tokenDetails.get(TOKEN_ENTITY);
+            UUID appId = (UUID) tokenDetails.get(TOKEN_APPLICATION);
             principal = new AuthPrincipalInfo( principalType, entityId, appId );
         }
-        @SuppressWarnings("unchecked") Map<String, Object> state =
-                ( Map<String, Object> ) JsonUtils.fromByteBuffer( columns.get( TOKEN_STATE ) );
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> state = ( Map<String, Object> ) tokenDetails.get( TOKEN_STATE );
 
         UUID workflowOrgId = null;
-        if (columns.containsKey(TOKEN_WORKFLOW_ORG_ID)) {
-            workflowOrgId = ConversionUtils.uuid(columns.get(TOKEN_WORKFLOW_ORG_ID));
+        if (tokenDetails.containsKey(TOKEN_WORKFLOW_ORG_ID)) {
+            try {
+                workflowOrgId = (UUID) tokenDetails.get(TOKEN_WORKFLOW_ORG_ID);
+            } catch (ClassCastException cce){
+                logger.error("Unable to cast {} to primitive UUID type", TOKEN_WORKFLOW_ORG_ID);
+            }
         }
 
         return new TokenInfo( uuid, type, created, accessed, inactive, duration, principal, state, workflowOrgId );
@@ -531,81 +469,50 @@ public class TokenServiceImpl implements TokenService {
 
     private void putTokenInfo( TokenInfo tokenInfo ) throws Exception {
 
-        ByteBuffer tokenUUID = bytebuffer( tokenInfo.getUuid() );
-
-        Keyspace ko = cassandra.getUsergridApplicationKeyspace();
-
-        Mutator<ByteBuffer> m = createMutator( ko, be );
-
         int ttl = calcTokenTime( tokenInfo.getDuration() );
+        final Map<String, Object> tokenDetails = new HashMap<>();
 
-        m.addInsertion( tokenUUID, TOKENS_CF,
-                createColumn( TOKEN_UUID, bytebuffer( tokenInfo.getUuid() ), ttl, se, be ) );
-        m.addInsertion( tokenUUID, TOKENS_CF,
-                createColumn( TOKEN_TYPE, bytebuffer( tokenInfo.getType() ), ttl, se, be ) );
-        m.addInsertion( tokenUUID, TOKENS_CF,
-                createColumn( TOKEN_CREATED, bytebuffer( tokenInfo.getCreated() ), ttl, se, be ) );
-        m.addInsertion( tokenUUID, TOKENS_CF,
-                createColumn( TOKEN_ACCESSED, bytebuffer( tokenInfo.getAccessed() ), ttl, se, be ) );
-        m.addInsertion( tokenUUID, TOKENS_CF,
-                createColumn( TOKEN_INACTIVE, bytebuffer( tokenInfo.getInactive() ), ttl, se, be ) );
-        m.addInsertion( tokenUUID, TOKENS_CF,
-                createColumn( TOKEN_DURATION, bytebuffer( tokenInfo.getDuration() ), ttl, se, be ) );
+        tokenDetails.put(TOKEN_UUID, tokenInfo.getUuid());
+        tokenDetails.put(TOKEN_TYPE, tokenInfo.getType());
+        tokenDetails.put(TOKEN_CREATED, tokenInfo.getCreated());
+        tokenDetails.put(TOKEN_ACCESSED, tokenInfo.getAccessed());
+        tokenDetails.put(TOKEN_INACTIVE, tokenInfo.getInactive());
+        tokenDetails.put(TOKEN_DURATION, tokenInfo.getDuration());
 
+        ByteBuffer principalKeyBuffer = null;
         if ( tokenInfo.getPrincipal() != null ) {
 
             AuthPrincipalInfo principalInfo = tokenInfo.getPrincipal();
 
-            m.addInsertion( tokenUUID, TOKENS_CF,
-                    createColumn( TOKEN_PRINCIPAL_TYPE, bytebuffer( principalInfo.getType().toString().toLowerCase() ),
-                            ttl, se, be ) );
-            m.addInsertion( tokenUUID, TOKENS_CF,
-                    createColumn( TOKEN_ENTITY, bytebuffer( principalInfo.getUuid() ), ttl, se, be ) );
-            m.addInsertion( tokenUUID, TOKENS_CF,
-                    createColumn( TOKEN_APPLICATION, bytebuffer( principalInfo.getApplicationId() ), ttl, se,
-                            be ) );
+            tokenDetails.put(TOKEN_PRINCIPAL_TYPE, principalInfo.getType().toString().toLowerCase());
+            tokenDetails.put(TOKEN_ENTITY, principalInfo.getUuid());
+            tokenDetails.put(TOKEN_APPLICATION, principalInfo.getApplicationId());
 
-      /*
-       * write to the PRINCIPAL+TOKEN The format is as follow
-       *
-       * appid+principalId+principalType :{ tokenuuid: 0x00}
-       */
+          /*
+           * write to the PRINCIPAL+TOKEN The format is as follow
+           *
+           * appid+principalId+principalType :{ tokenuuid: 0x00}
+           */
+            principalKeyBuffer = principalKey( principalInfo );
 
-            ByteBuffer rowKey = principalKey( principalInfo );
-            m.addInsertion( rowKey, PRINCIPAL_TOKEN_CF, createColumn( tokenUUID, HOLDER, ttl, be, be ) );
         }
 
         if ( tokenInfo.getState() != null ) {
-            m.addInsertion( tokenUUID, TOKENS_CF,
-                    createColumn( TOKEN_STATE, JsonUtils.toByteBuffer( tokenInfo.getState() ), ttl, se,
-                            be ) );
+            tokenDetails.put(TOKEN_STATE, tokenInfo.getState());
         }
 
         if ( tokenInfo.getWorkflowOrgId() != null ) {
-            m.addInsertion( tokenUUID, TOKENS_CF,
-                    createColumn( TOKEN_WORKFLOW_ORG_ID, bytebuffer( tokenInfo.getWorkflowOrgId() ), ttl, se, be ) );
+            tokenDetails.put(TOKEN_WORKFLOW_ORG_ID, tokenInfo.getWorkflowOrgId());
         }
 
-        m.execute();
+        tokenSerialization.putTokenInfo(tokenInfo.getUuid(), tokenDetails, principalKeyBuffer, ttl);
     }
 
 
     /** Load all the token uuids for a principal info */
     private List<UUID> getTokenUUIDS( AuthPrincipalInfo principal ) throws Exception {
 
-        ByteBuffer rowKey = principalKey( principal );
-
-        List<HColumn<ByteBuffer, ByteBuffer>> cols = cassandra
-                .getColumns( cassandra.getUsergridApplicationKeyspace(), PRINCIPAL_TOKEN_CF, rowKey, null, null, Integer.MAX_VALUE,
-                        false );
-
-        List<UUID> results = new ArrayList<UUID>( cols.size() );
-
-        for ( HColumn<ByteBuffer, ByteBuffer> col : cols ) {
-            results.add( uuid( col.getName() ) );
-        }
-
-        return results;
+        return tokenSerialization.getTokensForPrincipal(principalKey( principal ));
     }
 
 
@@ -688,19 +595,12 @@ public class TokenServiceImpl implements TokenService {
         return maxPersistenceTokenAge;
     }
 
-
-    @Autowired
-    @Qualifier("cassandraService")
-    public void setCassandraService( CassandraService cassandra ) {
-        this.cassandra = cassandra;
-    }
-
-
     @Autowired
     public void setEntityManagerFactory( EntityManagerFactory emf ) {
         this.emf = emf;
         final Injector injector = ((CpEntityManagerFactory)emf).getApplicationContext().getBean( Injector.class );
-        metricsFactory = injector.getInstance(MetricsFactory.class);
+        this.metricsFactory = injector.getInstance(MetricsFactory.class);
+        this.tokenSerialization = injector.getInstance(TokenSerialization.class);
     }
 
 
