@@ -49,6 +49,12 @@ public class SignInProviderFactory {
         return facebookProvider;
     }
 
+    public SignInAsProvider google( Application application ) {
+        GoogleProvider googleProvider =
+                new GoogleProvider( emf.getEntityManager( application.getUuid() ), managementService );
+        googleProvider.configure();
+        return googleProvider;
+    }
 
     public SignInAsProvider foursquare( Application application ) {
         FoursquareProvider foursquareProvider =

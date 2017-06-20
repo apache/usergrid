@@ -57,6 +57,7 @@ import static org.apache.usergrid.rest.utils.JSONPUtils.wrapJSONPResponse;
 import static org.apache.usergrid.rest.utils.JSONPUtils.wrapWithCallback;
 
 
+/** @noinspection Duplicates*/
 @Component
 @Scope("prototype")
 @Produces({
@@ -205,6 +206,42 @@ public class AuthResource extends AbstractContextResource {
 
             return Response.status( SC_OK ).type( jsonMediaType( callback ) )
                            .entity( wrapWithCallback( access_info, callback ) ).build();
+        }
+        catch ( Exception e ) {
+            return generalAuthError( callback, e );
+        }
+    }
+
+    @CheckPermissionsForPath
+    @GET
+    @Path("google")
+    public Response authGoogle( @Context UriInfo ui, @QueryParam("google_access_token") String access_token,
+                            @QueryParam("ttl") long ttl, @QueryParam("callback") @DefaultValue("") String callback )
+            throws Exception {
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("AuthResource.authGoogle");
+        }
+
+        try {
+            if ( StringUtils.isEmpty( access_token ) ) {
+                return missingTokenFail( callback );
+            }
+            SignInAsProvider facebookProvider = signInProviderFactory.google( services.getApplication() );
+            User user = facebookProvider.createOrAuthenticate( access_token );
+
+            if ( user == null ) {
+                return findAndCreateFail( callback );
+            }
+
+            String token = management.getAccessTokenForAppUser( services.getApplicationId(), user.getUuid(), ttl );
+
+            AccessInfo access_info =
+                    new AccessInfo().withExpiresIn( tokens.getMaxTokenAgeInSeconds( token ) ).withAccessToken( token )
+                            .withProperty( "user", user );
+
+            return Response.status( SC_OK ).type( jsonMediaType( callback ) )
+                    .entity( wrapWithCallback( access_info, callback ) ).build();
         }
         catch ( Exception e ) {
             return generalAuthError( callback, e );
