@@ -251,24 +251,39 @@ public class CollectionResource extends ServiceResource {
     }
 
 
-    // TODO: this can't be controlled and until it can be controlled we shouldn' allow muggles to do this.
-    // So system access only.
-    // TODO: use scheduler here to get around people sending a reindex call 30 times.
+
     @POST
     @Path("{itemName}/_reindex")
     @Produces({ MediaType.APPLICATION_JSON,"application/javascript"})
-    @RequireSystemAccess
+    @RequireApplicationAccess
     @JSONP
     public ApiResponse executePostForReindexing(
-        @Context UriInfo ui, String body,
+        @Context UriInfo ui, final Map<String, Object> payload,
         @PathParam("itemName") PathSegment itemName,
         @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
 
         addItemToServiceContext( ui, itemName );
 
         IndexResource indexResource = new IndexResource(injector);
-        return indexResource.rebuildIndexesPost(
+        return indexResource.rebuildIndexCollectionPost(payload,
             services.getApplicationId().toString(),itemName.getPath(),false,callback );
+    }
+
+    @GET
+    @Path("{itemName}/_reindex")
+    @Produces({ MediaType.APPLICATION_JSON,"application/javascript"})
+    @RequireApplicationAccess
+    @JSONP
+    public ApiResponse executeGetForReindexStatus(
+        @Context UriInfo ui, final Map<String, Object> payload,
+        @PathParam("itemName") PathSegment itemName,
+        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+
+        addItemToServiceContext( ui, itemName );
+
+        IndexResource indexResource = new IndexResource(injector);
+        return indexResource.rebuildIndexCollectionGet(services.getApplicationId().toString(), itemName.getPath(),
+            callback );
     }
 
 
@@ -310,18 +325,17 @@ public class CollectionResource extends ServiceResource {
     private ApiResponse executeAndCreateResponse(final CollectionDeleteRequestBuilder request, final String callback ) {
 
 
-        final CollectionDeleteService.CollectionDeleteStatus status = getCollectionDeleteService().deleteCollection( request );
+        final CollectionDeleteService.CollectionDeleteStatus status = getCollectionDeleteService().deleteCollection(request);
 
         final ApiResponse response = createApiResponse();
 
-        response.setAction( "clear collection" );
-        response.setProperty( "jobId", status.getJobId() );
-        response.setProperty( "status", status.getStatus() );
-        response.setProperty( "lastUpdatedEpoch", status.getLastUpdated() );
-        response.setProperty( "numberQueued", status.getNumberProcessed() );
+        response.setAction("clear collection");
+        response.setProperty("jobId", status.getJobId());
+        response.setProperty("status", status.getStatus());
+        response.setProperty("lastUpdatedEpoch", status.getLastUpdated());
+        response.setProperty("numberQueued", status.getNumberProcessed());
         response.setSuccess();
 
         return response;
     }
-
 }
