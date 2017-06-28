@@ -20,6 +20,8 @@
 package org.apache.usergrid.corepersistence.index;
 
 
+import org.apache.usergrid.utils.StringUtils;
+
 /**
  * An interface for re-indexing all entities in an application
  */
@@ -47,6 +49,13 @@ public interface ReIndexService {
      */
     ReIndexStatus getStatus( final String jobId );
 
+    /**
+     * Get the status of a collection job
+     * @param collectionName The collectionName for the rebuild index
+     * @return
+     */
+    ReIndexStatus getStatusForCollection( final String appIdString, final String collectionName );
+
 
     /**
      * The response when requesting a re-index operation
@@ -56,14 +65,27 @@ public interface ReIndexService {
         final Status status;
         final long numberProcessed;
         final long lastUpdated;
+        final String collectionName;
 
 
         public ReIndexStatus( final String jobId, final Status status, final long numberProcessed,
-                              final long lastUpdated ) {
-            this.jobId = jobId;
+                              final long lastUpdated, final String collectionName ) {
+
+            if(StringUtils.isNotEmpty(jobId)){
+                this.jobId = jobId;
+            }else {
+                this.jobId = "";
+            }
+
             this.status = status;
             this.numberProcessed = numberProcessed;
             this.lastUpdated = lastUpdated;
+
+            if(StringUtils.isNotEmpty(collectionName)){
+                this.collectionName = collectionName;
+            }else {
+                this.collectionName = "";
+            }
         }
 
 
@@ -72,6 +94,13 @@ public interface ReIndexService {
          */
         public String getJobId() {
             return jobId;
+        }
+
+        /**
+         * Get the jobId used to resume this operation
+         */
+        public String getCollectionName() {
+            return collectionName;
         }
 
 

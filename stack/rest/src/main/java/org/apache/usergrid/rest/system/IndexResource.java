@@ -28,13 +28,16 @@ import com.google.inject.Injector;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
 import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilderImpl;
 import org.apache.usergrid.corepersistence.index.ReIndexService;
+import org.apache.usergrid.exception.ConflictException;
 import org.apache.usergrid.persistence.EntityManager;
 import org.apache.usergrid.persistence.index.utils.ConversionUtils;
 import org.apache.usergrid.persistence.index.utils.UUIDUtils;
 import org.apache.usergrid.rest.AbstractContextResource;
 import org.apache.usergrid.rest.ApiResponse;
 import org.apache.usergrid.rest.RootResource;
+import org.apache.usergrid.rest.security.annotations.RequireOrganizationAccess;
 import org.apache.usergrid.rest.security.annotations.RequireSystemAccess;
+import org.apache.usergrid.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -182,25 +185,77 @@ public class IndexResource extends AbstractContextResource {
         return executeResumeAndCreateResponse( payload, request, callback );
     }
 
+    @RequireOrganizationAccess
+    @GET
+    @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
+    @JSONP
+    @Produces({ MediaType.APPLICATION_JSON, "application/javascript" })
+    public ApiResponse rebuildIndexCollectionGet( @PathParam( "applicationId" ) final String applicationIdStr,
+                                        @PathParam( "collectionName" ) final String collectionName,
+                                        @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
 
-    @RequireSystemAccess
+
+        throws Exception {
+        if (logger.isTraceEnabled()) {
+            logger.trace("Getting re-index status for app: {}, collection: {}", applicationIdStr, collectionName);
+        }
+
+
+        ReIndexService.ReIndexStatus status = getReIndexService().getStatusForCollection(applicationIdStr, collectionName);
+
+        final ApiResponse response = createApiResponse();
+
+        response.setAction( "get rebuild index status" );
+        response.setProperty( "collection", status.getCollectionName() );
+        response.setProperty( "status", status.getStatus() );
+        response.setProperty( "lastUpdatedEpoch", status.getLastUpdated() );
+        response.setProperty( "numberQueued", status.getNumberProcessed() );
+        response.setSuccess();
+
+        return response;
+    }
+
+    @RequireOrganizationAccess
     @POST
     @Path( "rebuild/" + RootResource.APPLICATION_ID_PATH + "/{collectionName}" )
     @JSONP
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
-    public ApiResponse rebuildIndexesPost( @PathParam( "applicationId" ) final String applicationIdStr,
-                                               @PathParam( "collectionName" ) final String collectionName,
-                                               @QueryParam( "reverse" ) @DefaultValue( "false" ) final Boolean reverse,
-                                               @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
+    public ApiResponse rebuildIndexCollectionPost(final Map<String, Object> payload,
+                                                  @PathParam( "applicationId" ) final String applicationIdStr,
+                                                  @PathParam( "collectionName" ) final String collectionName,
+                                                  @QueryParam( "reverse" ) @DefaultValue( "false" ) final Boolean reverse,
+                                                  @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
+        ReIndexService.ReIndexStatus existingStatus =
+            getReIndexService().getStatusForCollection(applicationIdStr, collectionName);
 
-        logger.info( "Rebuilding collection {} in  application {}", collectionName, applicationIdStr );
+        if(existingStatus.getStatus().equals(ReIndexService.Status.INPROGRESS)){
+            throw new ConflictException("Re-index for collection currently in progress");
+        }
+
+        logger.info( "Re-indexing collection {} in  application {}", collectionName, applicationIdStr );
 
         final UUID appId = UUIDUtils.tryExtractUUID( applicationIdStr );
 
+
         final ReIndexRequestBuilder request =
             createRequest().withApplicationId( appId ).withCollection( collectionName );
+
+        Map<String,Object> newPayload = payload;
+        if(newPayload == null ||  !payload.containsKey( UPDATED_FIELD )){
+            newPayload = new HashMap<>(1);
+            newPayload.put(UPDATED_FIELD,0);
+        }
+
+        Preconditions.checkArgument(newPayload.get(UPDATED_FIELD) instanceof Number,
+            "Property \"updated\" in the payload must be a number in unix timestamp millis format" );
+
+        //add our updated timestamp to the request
+        if ( newPayload.containsKey( UPDATED_FIELD ) ) {
+            final long timestamp = ConversionUtils.getLong(newPayload.get(UPDATED_FIELD));
+            request.withStartTimestamp( timestamp );
+        }
 
         return executeAndCreateResponse( request, callback );
     }
@@ -214,7 +269,6 @@ public class IndexResource extends AbstractContextResource {
     public ApiResponse rebuildIndexesPut( final Map<String, Object> payload,
                                               @PathParam( "applicationId" ) final String applicationIdStr,
                                               @PathParam( "collectionName" ) final String collectionName,
-                                              @QueryParam( "reverse" ) @DefaultValue( "false" ) final Boolean reverse,
                                               @QueryParam( "callback" ) @DefaultValue( "callback" ) String callback )
         throws Exception {
 
@@ -350,7 +404,15 @@ public class IndexResource extends AbstractContextResource {
         final ApiResponse response = createApiResponse();
 
         response.setAction( "rebuild indexes" );
-        response.setProperty( "jobId", status.getJobId() );
+
+        if(StringUtils.isNotEmpty(status.getJobId())){
+            response.setProperty( "jobId", status.getJobId() );
+        }
+
+        if(StringUtils.isNotEmpty(status.getCollectionName())){
+            response.setProperty( "collection", status.getCollectionName() );
+        }
+
         response.setProperty( "status", status.getStatus() );
         response.setProperty( "lastUpdatedEpoch", status.getLastUpdated() );
         response.setProperty( "numberQueued", status.getNumberProcessed() );
