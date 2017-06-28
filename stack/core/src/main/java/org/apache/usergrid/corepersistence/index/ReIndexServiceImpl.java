@@ -75,6 +75,7 @@ public class ReIndexServiceImpl implements ReIndexService {
     private static final String MAP_COUNT_KEY = "count";
     private static final String MAP_STATUS_KEY = "status";
     private static final String MAP_UPDATED_KEY = "lastUpdated";
+    private static final String MAP_SEPARATOR = "|||";
 
 
     private final AllApplicationsObservable allApplicationsObservable;
@@ -140,7 +141,9 @@ public class ReIndexServiceImpl implements ReIndexService {
 
         // create an observable that loads a batch to be indexed
 
-        if(reIndexRequestBuilder.getCollectionName().isPresent()) {
+        final boolean isForCollection = reIndexRequestBuilder.getCollectionName().isPresent();
+
+        if(isForCollection) {
 
             String collectionName =  InflectionUtils.pluralize(
                 CpNamingUtils.getNameFromEdgeType(reIndexRequestBuilder.getCollectionName().get() ));
@@ -175,12 +178,36 @@ public class ReIndexServiceImpl implements ReIndexService {
                 if( edgeScopes.size() > 0 ) {
                     writeCursorState(jobId, edgeScopes.get(edgeScopes.size() - 1));
                 }
-                writeStateMeta( jobId, Status.INPROGRESS, count.get(), System.currentTimeMillis() ); })
-            .doOnCompleted(() -> writeStateMeta( jobId, Status.COMPLETE, count.get(), System.currentTimeMillis() ))
+                if( isForCollection ){
+                    writeStateMetaForCollection(
+                        appId.get().getApplication().getUuid().toString(),
+                        reIndexRequestBuilder.getCollectionName().get(),
+                        Status.INPROGRESS, count.get(),
+                        System.currentTimeMillis() );
+                }else{
+                    writeStateMeta( jobId, Status.INPROGRESS, count.get(), System.currentTimeMillis() );
+                }
+            })
+            .doOnCompleted(() ->{
+                if( isForCollection ){
+                    writeStateMetaForCollection(
+                        appId.get().getApplication().getUuid().toString(),
+                        reIndexRequestBuilder.getCollectionName().get(),
+                        Status.COMPLETE, count.get(),
+                        System.currentTimeMillis() );
+                }else {
+                    writeStateMeta(jobId, Status.COMPLETE, count.get(), System.currentTimeMillis());
+                }
+            })
             .subscribeOn( Schedulers.io() ).subscribe();
 
+        if(isForCollection){
+            return new ReIndexStatus( "", Status.STARTED, 0, 0, reIndexRequestBuilder.getCollectionName().get() );
 
-        return new ReIndexStatus( jobId, Status.STARTED, 0, 0 );
+        }
+
+
+        return new ReIndexStatus( jobId, Status.STARTED, 0, 0, "" );
     }
 
 
@@ -196,36 +223,13 @@ public class ReIndexServiceImpl implements ReIndexService {
         return getIndexResponse( jobId );
     }
 
-
-    /**
-     * Simple collector that counts state, then flushed every time a buffer is provided.  Writes final state when complete
-     */
-    private class FlushingCollector {
-
-        private final String jobId;
-        private long count;
-
-
-        private FlushingCollector( final String jobId ) {
-            this.jobId = jobId;
-        }
-
-
-        public void flushBuffer( final List<EdgeScope> buffer ) {
-            count += buffer.size();
-
-            //write our cursor state
-            if ( buffer.size() > 0 ) {
-                writeCursorState( jobId, buffer.get( buffer.size() - 1 ) );
-            }
-
-            writeStateMeta( jobId, Status.INPROGRESS, count, System.currentTimeMillis() );
-        }
-
-        public void complete(){
-            writeStateMeta( jobId, Status.COMPLETE, count, System.currentTimeMillis() );
-        }
+    @Override
+    public ReIndexStatus getStatusForCollection( final String appIdString, final String collectionName ) {
+        Preconditions.checkNotNull( collectionName, "appIdString must not be null" );
+        Preconditions.checkNotNull( collectionName, "collectionName must not be null" );
+        return getIndexResponseForCollection( appIdString, collectionName );
     }
+
 
 
     /**
@@ -346,7 +350,7 @@ public class ReIndexServiceImpl implements ReIndexService {
         final String stringStatus = mapManager.getString( jobId+MAP_STATUS_KEY );
 
         if(stringStatus == null){
-           return new ReIndexStatus( jobId, Status.UNKNOWN, 0, 0 );
+           return new ReIndexStatus( jobId, Status.UNKNOWN, 0, 0, "" );
         }
 
         final Status status = Status.valueOf( stringStatus );
@@ -354,7 +358,39 @@ public class ReIndexServiceImpl implements ReIndexService {
         final long processedCount = mapManager.getLong( jobId + MAP_COUNT_KEY );
         final long lastUpdated = mapManager.getLong( jobId + MAP_UPDATED_KEY );
 
-        return new ReIndexStatus( jobId, status, processedCount, lastUpdated );
+        return new ReIndexStatus( jobId, status, processedCount, lastUpdated, "" );
+    }
+
+
+    private void writeStateMetaForCollection(final String appIdString, final String collectionName,
+                                             final Status status, final long processedCount, final long lastUpdated ) {
+
+        if(logger.isDebugEnabled()) {
+            logger.debug( "Flushing state for collection {}, status {}, processedCount {}, lastUpdated {}",
+                collectionName, status, processedCount, lastUpdated);
+        }
+
+        mapManager.putString( appIdString + MAP_SEPARATOR + collectionName + MAP_STATUS_KEY, status.name() );
+        mapManager.putLong( appIdString + MAP_SEPARATOR + collectionName + MAP_COUNT_KEY, processedCount );
+        mapManager.putLong( appIdString + MAP_SEPARATOR + collectionName + MAP_UPDATED_KEY, lastUpdated );
+    }
+
+
+    private ReIndexStatus getIndexResponseForCollection( final String appIdString, final String collectionName ) {
+
+        final String stringStatus =
+            mapManager.getString( appIdString + MAP_SEPARATOR + collectionName + MAP_STATUS_KEY );
+
+        if(stringStatus == null){
+            return new ReIndexStatus( "", Status.UNKNOWN, 0, 0, collectionName );
+        }
+
+        final Status status = Status.valueOf( stringStatus );
+
+        final long processedCount = mapManager.getLong( appIdString + MAP_SEPARATOR + collectionName + MAP_COUNT_KEY );
+        final long lastUpdated = mapManager.getLong( appIdString + MAP_SEPARATOR + collectionName + MAP_UPDATED_KEY );
+
+        return new ReIndexStatus( "", status, processedCount, lastUpdated, collectionName );
     }
 }
 
