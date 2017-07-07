@@ -752,8 +752,8 @@ public class CpEntityManager implements EntityManager {
                     // not the right version, skip it
                     continue;
                 }
-                existingCollections.add(existingCollection);
             }
+            existingCollections.add(existingCollection);
         }
 
         Set<String> system_collections = Schema.getDefaultSchema().getCollectionNames( Application.ENTITY_TYPE );
