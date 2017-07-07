@@ -28,6 +28,8 @@ import org.apache.usergrid.persistence.exceptions.UnexpectedEntityTypeException;
 import org.apache.usergrid.persistence.schema.CollectionInfo;
 import org.apache.usergrid.services.exceptions.ServiceResourceNotFoundException;
 
+import java.util.UUID;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -244,7 +246,9 @@ public class CollectionServiceIT extends AbstractServiceIT {
 
         // TODO: This test cannot be supported with Core Persistence
         // try PUT on cats with a new UUID
-        final String catsUuid = "99999990-600c-11e2-b414-14109fd49581";
+        //final String catsUuid = "99999990-600c-11e2-b414-14109fd49581";
+        final String catsUuidStr = "99999990-600c-11e2-b414-14109fd49581";
+        final UUID catsUuid = UUID.fromString(catsUuidStr);
         ServiceResults results = app.testRequest( ServiceAction.PUT, 1, "cats", catsUuid );
         Entity entity = results.getEntity();
         //Assert.assertEquals( entity.getUuid().toString(), catsUuid );

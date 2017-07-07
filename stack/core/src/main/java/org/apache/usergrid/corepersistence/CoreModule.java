@@ -104,6 +104,8 @@ public class CoreModule extends AbstractModule {
         bind( ApplicationIdCacheFactory.class );
         bind( CollectionSettingsFactory.class );
         bind( CollectionSettingsCache.class );
+        bind( CollectionVersionManagerFactory.class );
+        bind( CollectionVersionCache.class );
 
 
         /**
@@ -141,6 +143,8 @@ public class CoreModule extends AbstractModule {
 
         bind( ReIndexService.class ).to( ReIndexServiceImpl.class );
 
+        bind( CollectionDeleteService.class ).to( CollectionDeleteServiceImpl.class );
+
         bind( ExportService.class ).to( ExportServiceImpl.class );
 
         install( new FactoryModuleBuilder().implement( AggregationService.class, AggregationServiceImpl.class )
@@ -156,6 +160,8 @@ public class CoreModule extends AbstractModule {
         install( new GuicyFigModule( ApplicationIdCacheFig.class ) );
 
         install( new GuicyFigModule( CollectionSettingsCacheFig.class ) );
+
+        install( new GuicyFigModule( CollectionVersionFig.class ) );
 
         install( new GuicyFigModule( EntityManagerFig.class ) );
 

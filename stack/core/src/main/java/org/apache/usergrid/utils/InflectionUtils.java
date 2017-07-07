@@ -17,25 +17,59 @@
 package org.apache.usergrid.utils;
 
 
+import org.apache.usergrid.corepersistence.index.CollectionVersionUtil;
+import org.apache.usergrid.corepersistence.index.VersionedCollectionName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class InflectionUtils {
 
+    private static final Logger logger = LoggerFactory.getLogger(InflectionUtils.class );
+
+    private static VersionedCollectionName parseName(Object word) {
+        String name = word.toString().trim();
+        try {
+            return CollectionVersionUtil.parseVersionedName(name);
+        }
+        catch (Exception e) {
+            logger.error("parseName(): failed to parse the versioned name: {}", name);
+            return CollectionVersionUtil.createVersionedName(name, "");
+        }
+    }
+
+    private static String getVersionedName(String name, String version) {
+        try {
+            return CollectionVersionUtil.buildVersionedNameString(name, version, true);
+        }
+        catch (Exception e) {
+            // if versioned invalid, return name
+            return name;
+        }
+    }
+
     public static String pluralize( Object word ) {
-        return Inflector.INSTANCE.pluralize( word );
+        VersionedCollectionName name = parseName(word);
+        String pluralizedName = Inflector.INSTANCE.pluralize(name.getCollectionName());
+        return getVersionedName(pluralizedName, name.getCollectionVersion());
     }
 
 
     public static String singularize( Object word ) {
-        return Inflector.INSTANCE.singularize( word );
+        VersionedCollectionName name = parseName(word);
+        String singuralizedName = Inflector.INSTANCE.singularize(name.getCollectionName());
+        return getVersionedName(singuralizedName, name.getCollectionVersion());
     }
 
 
     public static boolean isPlural( Object word ) {
-        return Inflector.INSTANCE.isPlural( word );
+        VersionedCollectionName name = parseName(word);
+        return Inflector.INSTANCE.isPlural( name.getCollectionName() );
     }
 
 
     public static boolean isSingular( Object word ) {
-        return Inflector.INSTANCE.isSingular( word );
+        VersionedCollectionName name = parseName(word);
+        return Inflector.INSTANCE.isSingular( name.getCollectionName() );
     }
 
 

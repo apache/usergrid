@@ -29,9 +29,7 @@ import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceCounterQuery;
 import org.apache.commons.lang.NullArgumentException;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.index.CollectionSettings;
-import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
-import org.apache.usergrid.corepersistence.index.CollectionSettingsScopeImpl;
+import org.apache.usergrid.corepersistence.index.*;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpEntityMapUtils;
@@ -160,6 +158,8 @@ public class CpEntityManager implements EntityManager {
     private EntityCollectionManager ecm;
 
     public QueueManagerFactory queueManagerFactory;
+    private CollectionDeleteService collectionDeleteService;
+    private CollectionVersionManagerFactory collectionVersionManagerFactory;
 
 
     //    /** Short-term cache to keep us from reloading same Entity during single request. */
@@ -186,7 +186,9 @@ public class CpEntityManager implements EntityManager {
                             final ConnectionService connectionService,
                             final CollectionSettingsFactory collectionSettingsFactory,
                             final UUID applicationId,
-                            final QueueManagerFactory queueManagerFactory) {
+                            final QueueManagerFactory queueManagerFactory,
+                            final CollectionDeleteService collectionDeleteService,
+                            final CollectionVersionManagerFactory collectionVersionManagerFactory) {
 
         this.entityManagerFig = entityManagerFig;
         this.actorSystemFig = actorSystemFig;
@@ -253,6 +255,8 @@ public class CpEntityManager implements EntityManager {
         this.skipAggregateCounters = false;
 
         this.queueManagerFactory = queueManagerFactory;
+        this.collectionDeleteService = collectionDeleteService;
+        this.collectionVersionManagerFactory = collectionVersionManagerFactory;
     }
 
 
@@ -735,7 +739,22 @@ public class CpEntityManager implements EntityManager {
     @Override
     public Set<String> getApplicationCollections() throws Exception {
 
-        Set<String> existingCollections = getRelationManager( getApplication() ).getCollections();
+        Set<String> existingCollections = new HashSet<>();
+        for (String existingCollection : getRelationManager( getApplication() ).getCollections()) {
+            if (Application.isCustomCollectionName(existingCollection)) {
+                // check for correct version
+                VersionedCollectionName v = CollectionVersionUtil.parseVersionedName(existingCollection);
+                CollectionVersionManager cvm = collectionVersionManagerFactory.getInstance(
+                    new CollectionScopeImpl(getApplication().asId(), v.getCollectionName())
+                );
+                String currentVersion = cvm.getCollectionVersion(true);
+                if (!v.getCollectionVersion().equals(currentVersion)) {
+                    // not the right version, skip it
+                    continue;
+                }
+                existingCollections.add(existingCollection);
+            }
+        }
 
         Set<String> system_collections = Schema.getDefaultSchema().getCollectionNames( Application.ENTITY_TYPE );
         if ( system_collections != null ) {
@@ -765,12 +784,13 @@ public class CpEntityManager implements EntityManager {
 
                 if ( !Schema.isAssociatedEntityType( collectionName ) ) {
                     Long count = counts.get( APPLICATION_COLLECTION + collectionName );
+                    String unversionedCollectionName = CollectionVersionUtil.getBaseCollectionName(collectionName);
                     Map<String, Object> entry = new HashMap<String, Object>();
                     entry.put( "count", count != null ? count : 0 );
-                    entry.put( "type", singularize( collectionName ) );
-                    entry.put( "name", collectionName );
-                    entry.put( "title", capitalize( collectionName ) );
-                    metadata.put( collectionName, entry );
+                    entry.put( "type", singularize( unversionedCollectionName ) );
+                    entry.put( "name", unversionedCollectionName );
+                    entry.put( "title", capitalize( unversionedCollectionName ) );
+                    metadata.put( unversionedCollectionName, entry );
                 }
             }
         }
@@ -1870,6 +1890,13 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
+    public void deleteCollection( String collectionName ){
+
+        collectionDeleteService.deleteCollection(applicationId, collectionName);
+
+    }
+
+    @Override
     public void grantRolePermission( String roleName, String permission ) throws Exception {
         roleName = roleName.toLowerCase();
         permission = permission.toLowerCase();
@@ -2471,7 +2498,6 @@ public class CpEntityManager implements EntityManager {
 
         final Entity entity;
 
-        //this is the fall back, why isn't this writt
         if ( entityType == null ) {
              return null;
 //            throw new EntityNotFoundException( String.format( "Counld not find type for uuid {}", uuid ) );

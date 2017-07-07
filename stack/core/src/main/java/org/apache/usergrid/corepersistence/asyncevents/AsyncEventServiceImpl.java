@@ -30,10 +30,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.usergrid.corepersistence.asyncevents.model.*;
-import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
-import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
-import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
-import org.apache.usergrid.corepersistence.index.ReplicatedIndexLocationStrategy;
+import org.apache.usergrid.corepersistence.index.*;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.corepersistence.rx.impl.EdgeScope;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
 import org.apache.usergrid.corepersistence.util.ObjectJsonSerializer;
@@ -70,11 +68,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.apache.commons.lang.StringUtils.indexOf;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 
@@ -113,12 +111,14 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     private final LegacyQueueManager utilityQueueDead;
     private final IndexProcessorFig indexProcessorFig;
     private final LegacyQueueFig queueFig;
+    private final CollectionVersionFig collectionVersionFig;
     private final IndexProducer indexProducer;
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final EntityIndexFactory entityIndexFactory;
     private final EventBuilder eventBuilder;
     private final RxTaskScheduler rxTaskScheduler;
+    private final AllEntityIdsObservable allEntityIdsObservable;
 
     private final Timer readTimer;
     private final Timer writeTimer;
@@ -153,6 +153,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                  final EventBuilder eventBuilder,
                                  final MapManagerFactory mapManagerFactory,
                                  final LegacyQueueFig queueFig,
+                                 final CollectionVersionFig collectionVersionFig,
+                                 final AllEntityIdsObservable allEntityIdsObservable,
                                  @EventExecutionScheduler
                                     final RxTaskScheduler rxTaskScheduler ) {
         this.indexProducer = indexProducer;
@@ -187,6 +189,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         this.indexProcessorFig = indexProcessorFig;
         this.queueFig = queueFig;
+        this.collectionVersionFig = collectionVersionFig;
+        this.allEntityIdsObservable = allEntityIdsObservable;
 
         this.writeTimer = metricsFactory.getTimer(AsyncEventServiceImpl.class, "async_event.write");
         this.readTimer = metricsFactory.getTimer(AsyncEventServiceImpl.class, "async_event.read");
@@ -211,16 +215,25 @@ public class AsyncEventServiceImpl implements AsyncEventService {
      * Offer the EntityIdScope to SQS
      */
     private void offer(final Serializable operation) {
+        offer(operation, false);
+    }
+
+    private void offer(final Serializable operation, boolean forUtilityQueue) {
         final Timer.Context timer = this.writeTimer.time();
 
         try {
             //signal to SQS
-            this.indexQueue.sendMessageToLocalRegion( operation );
+            if (forUtilityQueue) {
+                this.indexQueue.sendMessageToLocalRegion(operation);
+            } else {
+                this.indexQueue.sendMessageToLocalRegion(operation);
+            }
         } catch (IOException e) {
             throw new RuntimeException("Unable to queue message", e);
         } finally {
             timer.stop();
         }
+
     }
 
 
@@ -479,6 +492,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
                     single = handleDeIndexOldVersionEvent((DeIndexOldVersionsEvent) event);
 
+                } else if (event instanceof CollectionDeleteEvent) {
+
+                    handleCollectionDelete(message);
+
                 } else {
 
                     throw new Exception("Unknown EventType for message: "+ message.getStringBody().trim());
@@ -487,6 +504,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
                 if( !(event instanceof ElasticsearchIndexEvent)
                     && !(event instanceof InitializeApplicationIndexEvent)
+                    && !(event instanceof CollectionDeleteEvent)
                       && single.isEmpty() ){
                         logger.warn("No index operation messages came back from event processing for eventType: {}, msgId: {}, msgBody: {}",
                             event.getClass().getSimpleName(), message.getMessageId(), message.getStringBody());
@@ -821,7 +839,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     @Override
     public void queueEntityDelete(final ApplicationScope applicationScope, final Id entityId) {
 
-        logger.trace("Offering EntityDeleteEvent for {}:{}", entityId.getUuid(), entityId.getType());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Offering EntityDeleteEvent for {}:{}", entityId.getUuid(), entityId.getType());
+        }
 
         // sent in region (not offerTopic) as the delete IO happens in-region, then queues a multi-region de-index op
         offer( new EntityDeleteEvent(queueFig.getPrimaryRegion(), new EntityIdScope( applicationScope, entityId ) ) );
@@ -840,12 +860,15 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         final EntityDeleteEvent entityDeleteEvent = ( EntityDeleteEvent ) event;
         final ApplicationScope applicationScope = entityDeleteEvent.getEntityIdScope().getApplicationScope();
         final Id entityId = entityDeleteEvent.getEntityIdScope().getId();
+        final boolean markedOnly = entityDeleteEvent.markedOnly();
 
-        if (logger.isDebugEnabled())
+        if (logger.isDebugEnabled()) {
             logger.debug("Deleting entity id from index in app scope {} with entityId {}", applicationScope, entityId);
+        }
 
-        final EventBuilderImpl.EntityDeleteResults
-            entityDeleteResults = eventBuilder.buildEntityDelete( applicationScope, entityId );
+        final EventBuilderImpl.EntityDeleteResults entityDeleteResults = markedOnly ?
+            eventBuilder.buildEntityDelete( applicationScope, entityId ) :
+            eventBuilder.buildEntityDeleteAllVersions( applicationScope, entityId );
 
 
         // Delete the entities and remove from graph separately
@@ -856,6 +879,76 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         // default this observable's return to empty index operation message if nothing is emitted
         return entityDeleteResults.getIndexObservable().toBlocking().lastOrDefault(new IndexOperationMessage());
 
+    }
+
+    @Override
+    public void queueCollectionDelete(final CollectionScope collectionScope, final String collectionVersion) {
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Offering CollectionDeleteEvent for application={}, collectionName={}, collectionVersion={}",
+                collectionScope.getApplication().getUuid(), collectionScope.getCollectionName(), collectionVersion);
+        }
+
+        // sent in region (not offerTopic) as the delete IO happens in-region, then queues a multi-region de-index op
+        offer(new CollectionDeleteEvent(queueFig.getPrimaryRegion(), collectionScope, collectionVersion), true);
+    }
+
+    private void handleCollectionDelete(final LegacyQueueMessage message) {
+
+        Preconditions.checkNotNull(message, "Queue Message cannot be null for handleCollectionDelete");
+
+        final AsyncEvent event = (AsyncEvent) message.getBody();
+        Preconditions.checkNotNull(event, "QueueMessage body cannot be null for handleCollectionDelete" );
+        Preconditions.checkArgument( event instanceof CollectionDeleteEvent,
+            String.format( "Event Type for handleCollectionDelete must be COLLECTION_DELETE, got %s", event.getClass() ) );
+
+        final CollectionDeleteEvent collectionDeleteEvent = ( CollectionDeleteEvent ) event;
+        final CollectionScope collectionScope = collectionDeleteEvent.getCollectionScope();
+        if (collectionScope == null) {
+            logger.error("CollectionDeleteEvent received with null collectionScope");
+            // ack message, nothing more to do
+            return;
+        }
+        final UUID applicationID = collectionScope.getApplication().getUuid();
+        if (applicationID == null) {
+            logger.error("CollectionDeleteEvent collectionScope has null application");
+            // ack message, nothing more to do
+            return;
+        }
+        String collectionVersion = collectionDeleteEvent.getCollectionVersion();
+        if (collectionVersion == null) {
+            collectionVersion = "";
+        }
+        final ApplicationScope applicationScope = CpNamingUtils.getApplicationScope(applicationID);
+        final String versionedCollectionName =
+            CollectionVersionUtil.buildVersionedNameString(collectionScope.getCollectionName(),
+                collectionVersion, false);
+
+
+        final AtomicInteger count = new AtomicInteger();
+        int maxDeletes = collectionVersionFig.getDeletesPerEvent();
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("handleCollectionDelete: applicationScope={} collectionName={} maxDeletes={}", applicationScope.toString(), versionedCollectionName, maxDeletes);
+        }
+        allEntityIdsObservable.getEdgesToEntities(Observable.just(applicationScope),
+            Optional.fromNullable(CpNamingUtils.getEdgeTypeFromCollectionName(versionedCollectionName.toLowerCase())), Optional.absent())
+            //.takeWhile(edgeScope-> count.intValue() < maxDeletes)
+            .take(maxDeletes)
+            .doOnNext(edgeScope-> {
+
+                offer(new EntityDeleteEvent(queueFig.getPrimaryRegion(),
+                    new EntityIdScope(applicationScope, edgeScope.getEdge().getTargetNode()),false),
+                    true);
+                count.incrementAndGet();
+            }).toBlocking().lastOrDefault(null);
+
+        logger.info("handleCollectionDelete: queued {} entity deletes for deleted collection", count.intValue());
+
+        if (count.intValue() >= maxDeletes) {
+            // requeue collection delete for next chunk of deletes
+            offer (new CollectionDeleteEvent(queueFig.getPrimaryRegion(), collectionScope, collectionVersion), true);
+        }
     }
 
 

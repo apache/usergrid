@@ -22,6 +22,10 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.usergrid.corepersistence.index.CollectionScopeImpl;
+import org.apache.usergrid.corepersistence.index.CollectionVersionManager;
+import org.apache.usergrid.corepersistence.index.CollectionVersionManagerFactory;
+import org.apache.usergrid.corepersistence.index.CollectionVersionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -77,6 +81,8 @@ public class ServiceManager {
     private ServiceManagerFactory smf;
     private QueueManager qm;
 
+    private CollectionVersionManagerFactory cvmf;
+
     private Properties properties;
 
     // search for commercial packages first for SaaS version
@@ -89,11 +95,12 @@ public class ServiceManager {
     }
 
 
-    public ServiceManager init( ServiceManagerFactory smf, EntityManager em, Properties properties, QueueManager qm ) {
+    public ServiceManager init( ServiceManagerFactory smf, EntityManager em, Properties properties, QueueManager qm, CollectionVersionManagerFactory cvmf) {
         this.smf = smf;
         this.em = em;
         this.qm = qm;
         this.properties = properties;
+        this.cvmf = cvmf;
 
         // additional logging to help debug https://issues.apache.org/jira/browse/USERGRID-1291
         if ( em == null ) {
@@ -101,6 +108,9 @@ public class ServiceManager {
         }
         if ( qm == null ) {
             logger.error("QueueManager is null");
+        }
+        if ( cvmf == null ) {
+            logger.error("CollectionVersionManagerFactory is null");
         }
 
         if ( em != null ) {
@@ -180,6 +190,9 @@ public class ServiceManager {
 
 
     public Entity importEntity( ServiceRequest request, Entity entity ) throws Exception {
+        if (logger.isTraceEnabled()) {
+            logger.trace("importEntity: entity.type=", entity.getType());
+        }
         Service service = getEntityService( entity.getType() );
         if ( service != null ) {
             return service.importEntity( request, entity );
@@ -189,6 +202,9 @@ public class ServiceManager {
 
 
     public Entity writeEntity( ServiceRequest request, Entity entity ) throws Exception {
+        if (logger.isTraceEnabled()) {
+            logger.trace("writeEntity: entity.type=", entity.getType());
+        }
         Service service = getEntityService( entity.getType() );
         if ( service != null ) {
             return service.writeEntity( request, entity );
@@ -198,6 +214,9 @@ public class ServiceManager {
 
 
     public Entity updateEntity( ServiceRequest request, EntityRef ref, ServicePayload payload ) throws Exception {
+        if (logger.isTraceEnabled()) {
+            logger.trace("writeEntity: entity.type=", ref.getType());
+        }
         Service service = getEntityService( ref.getType() );
         if ( service != null ) {
             return service.updateEntity( request, ref, payload );
@@ -225,6 +244,34 @@ public class ServiceManager {
 
         if ( info == null ) {
             return null;
+        }
+
+        // use versionedCollectionName if appropriate
+        String versionedCollectionName = info.getCollectionName();
+        String unversionedCollectionName = CollectionVersionUtil.getBaseCollectionName(versionedCollectionName);
+        if (logger.isTraceEnabled()) {
+            logger.trace("getService: serviceType={} incoming collectionName={}", serviceType, versionedCollectionName);
+        }
+
+        // if versioned collection name was passed in, use it, because it may be for an old version
+        if (versionedCollectionName.equals(unversionedCollectionName)) {
+            // no version passed in
+            CollectionVersionManager collectionVersionManager = cvmf.getInstance(new CollectionScopeImpl(applicationId, unversionedCollectionName));
+            // always bypass collection version cache for now
+            String currentCollectionVersion = collectionVersionManager.getCollectionVersion(true);
+
+            if (currentCollectionVersion != "") {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("getService: currentCollectionVersion={}", currentCollectionVersion);
+                }
+                versionedCollectionName = CollectionVersionUtil.buildVersionedNameString(unversionedCollectionName, currentCollectionVersion, false);
+                String versionedItemType = CollectionVersionUtil.buildVersionedNameString(info.getItemType(), currentCollectionVersion, false);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("getService() - using versioned collection name: collectionName={} versionedCollectionName={} versionedItemType={}",
+                        unversionedCollectionName, versionedCollectionName, versionedItemType);
+                }
+                info = ServiceInfo.getVersionedServiceInfo(info, versionedCollectionName, versionedItemType);
+            }
         }
 
         Service service = getServiceInstance( info );

@@ -530,6 +530,8 @@ public interface EntityManager {
 
     Object getCollectionSettings( String collectionName );
 
+    void deleteCollection( String collectionName );
+
     public void grantRolePermission( String roleName, String permission ) throws Exception;
 
     public void grantRolePermissions( String roleName, Collection<String> permissions ) throws Exception;
@@ -743,7 +745,7 @@ public interface EntityManager {
 
     /**
      * Add a new index to the application for scale
-     * @param suffix unique indentifier for additional index
+     * @param newIndexName unique identifier for additional index
      * @param shards number of shards
      * @param replicas number of replicas
      * @param writeConsistency only "one, quorum, or all"

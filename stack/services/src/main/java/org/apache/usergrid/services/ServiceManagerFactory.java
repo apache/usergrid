@@ -22,7 +22,7 @@ import java.util.Properties;
 import java.util.UUID;
 
 import com.google.inject.Injector;
-import org.apache.usergrid.locking.Lock;
+import org.apache.usergrid.corepersistence.index.CollectionVersionManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -46,6 +46,7 @@ public class ServiceManagerFactory implements ApplicationContextAware {
     private SchedulerService schedulerService;
     private LockManager lockManager;
     private QueueManagerFactory qmf;
+    private CollectionVersionManagerFactory cvmf;
 
     private List<ServiceExecutionEventListener> eventListeners;
     private List<ServiceCollectionEventListener> collectionListeners;
@@ -58,6 +59,7 @@ public class ServiceManagerFactory implements ApplicationContextAware {
         this.schedulerService = schedulerService;
         lockManager = injector.getInstance(LockManager.class);
         this.qmf = qmf;
+        this.cvmf = injector.getInstance(CollectionVersionManagerFactory.class);
     }
 
 
@@ -80,7 +82,7 @@ public class ServiceManagerFactory implements ApplicationContextAware {
             qm = qmf.getQueueManager( applicationId );
         }
         ServiceManager sm = new ServiceManager();
-        sm.init( this, em, properties, qm );
+        sm.init( this, em, properties, qm, cvmf);
         return sm;
     }
 

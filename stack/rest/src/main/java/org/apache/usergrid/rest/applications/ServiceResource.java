@@ -22,6 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import com.google.cloud.storage.StorageException;
 import org.apache.commons.lang.StringUtils;
+import org.apache.usergrid.corepersistence.index.CollectionVersionUtil;
+import org.apache.usergrid.corepersistence.index.VersionedCollectionName;
 import org.apache.usergrid.management.OrganizationConfig;
 import org.apache.usergrid.management.OrganizationConfigProps;
 import org.apache.usergrid.persistence.Entity;
@@ -415,6 +417,8 @@ public class ServiceResource extends AbstractContextResource {
                 response.setCount( results.size() );
             }
 
+            stripCollectionVersionsFromTypes(results);
+
             response.setResults( results );
         }
 
@@ -423,6 +427,17 @@ public class ServiceResource extends AbstractContextResource {
         return results;
     }
 
+    private void stripCollectionVersionsFromTypes(ServiceResults r) {
+        for (int i = 0; i < r.getEntities().size(); i++) {
+            Entity e = r.getEntity(i);
+            String oldType = e.getType();
+            VersionedCollectionName v = CollectionVersionUtil.parseVersionedName(oldType);
+            if (v.hasVersion()) {
+                e.setType(v.getCollectionName());
+                r.setEntity(i, e);
+            }
+        }
+    }
 
     @CheckPermissionsForPath
     @GET

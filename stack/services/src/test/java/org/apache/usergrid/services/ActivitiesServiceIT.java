@@ -17,6 +17,7 @@
 package org.apache.usergrid.services;
 
 
+import net.jcip.annotations.NotThreadSafe;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ import static org.junit.Assert.assertNotNull;
 
 
 
+@NotThreadSafe
 public class ActivitiesServiceIT extends AbstractServiceIT {
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger( ActivitiesServiceIT.class );

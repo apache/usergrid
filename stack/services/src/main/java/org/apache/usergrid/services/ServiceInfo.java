@@ -83,6 +83,18 @@ public class ServiceInfo {
         hashCode = hasher.hash().asInt();
     }
 
+    // returns a copy of supplied ServiceInfo, with updated collectionName and itemType
+    public ServiceInfo( ServiceInfo info, String collectionName, String itemType ) {
+        this.name = info.name;
+        this.rootService = info.rootService;
+        this.rootType = info.rootType;
+        this.containerType = info.containerType;
+        this.collectionName = collectionName;
+        this.itemType = itemType;
+        this.patterns = new ArrayList<>(info.patterns);
+        this.collections = new ArrayList<>(info.collections);
+    }
+
 
     public static String normalizeServicePattern( String s ) {
         if ( s == null ) {
@@ -361,6 +373,11 @@ public class ServiceInfo {
         serviceInfoCache.put( servicePattern, info );
 
         return info;
+    }
+
+    public static ServiceInfo getVersionedServiceInfo( ServiceInfo origInfo, String collectionName, String itemType ) {
+        // this is not cached
+        return new ServiceInfo(origInfo, collectionName, itemType);
     }
 
 

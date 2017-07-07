@@ -31,6 +31,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.usergrid.persistence.entities.Application;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -48,6 +51,8 @@ import org.apache.usergrid.services.ServicePayload;
 
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 
+import java.util.UUID;
+
 
 /**
  * A collection resource that stands before the Service Resource. If it cannot find
@@ -61,9 +66,62 @@ import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 })
 public class CollectionResource extends ServiceResource {
 
+    private static final Logger logger = LoggerFactory.getLogger(CollectionResource.class);
+
+    public static final String CONFIRM_COLLECTION_NAME = "confirm_collection_name";
+
     public CollectionResource() {
     }
 
+
+    @POST
+    @Path("{itemName}/clear")
+    @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
+    @RequireApplicationAccess
+    public ApiResponse executeClearCollection(
+        @Context UriInfo ui,
+        @PathParam("itemName") PathSegment itemName,
+        @QueryParam(CONFIRM_COLLECTION_NAME) String confirmCollectionName) throws Exception {
+
+        if (logger.isTraceEnabled()){
+            logger.trace( "CollectionResource.executeDeleteOnCollection" );
+        }
+
+        if (!Application.isCustomCollectionName(itemName.toString())) {
+            throw new IllegalArgumentException(
+                "Cannot clear built-in collections (" + itemName + ")."
+            );
+        }
+
+        if (!itemName.toString().equals(confirmCollectionName)) {
+            throw new IllegalArgumentException(
+                "Cannot delete collection without supplying correct collection name in query parameter " + CONFIRM_COLLECTION_NAME
+            );
+        }
+
+        addItemToServiceContext( ui, itemName );
+
+        UUID applicationId = getApplicationId();
+
+        emf.getEntityManager(applicationId).deleteCollection(itemName.toString());
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("CollectionResource.executeDeleteOnCollection() deleted, appId={} collection={}",
+                applicationId, itemName);
+        }
+
+        ApiResponse response = createApiResponse();
+        response.setAction("delete");
+        response.setApplication(emf.getEntityManager( applicationId ).getApplication());
+        response.setParams(ui.getQueryParameters());
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("CollectionResource.executeDeleteOnCollection() sending response");
+        }
+
+        return response;
+
+    }
 
     /**
      * POST settings for a collection.

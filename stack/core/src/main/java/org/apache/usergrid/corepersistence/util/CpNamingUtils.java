@@ -1,4 +1,3 @@
-package org.apache.usergrid.corepersistence.util;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +17,7 @@ package org.apache.usergrid.corepersistence.util;
  * under the License.
  */
 
+package org.apache.usergrid.corepersistence.util;
 
 import java.util.UUID;
 
@@ -85,6 +85,11 @@ public class CpNamingUtils {
      * The name of the map that holds our entity id->type mapping
      */
     public static String TYPES_BY_UUID_MAP = "zzz_typesbyuuid_zzz";
+
+    /**
+     * The name of the map that holds our collection->version mapping
+     */
+    public static String VERSION_FOR_COLLECTION_MAP = "zzz_versionforcollection_zzz";
 
 
     /**
@@ -313,6 +318,14 @@ public class CpNamingUtils {
      */
     public static MapScope getEntityTypeMapScope( final Id applicationId ) {
         return new MapScopeImpl( applicationId, CpNamingUtils.TYPES_BY_UUID_MAP );
+    }
+
+
+    /**
+     * Get the map scope for the applicationId to store collection name to collection version mapping
+     */
+    public static MapScope getCollectionVersionMapScope( final Id applicationId ) {
+        return new MapScopeImpl( applicationId, CpNamingUtils.VERSION_FOR_COLLECTION_MAP );
     }
 
 

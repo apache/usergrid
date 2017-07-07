@@ -178,7 +178,10 @@ public class RebuildIndexTest extends AbstractCoreIT {
         logger.info( "Started rebuildIndex()" );
 
         String rand = RandomStringUtils.randomAlphanumeric( 5 );
-        final UUID appId = setup.createApplication( "org_" + rand, "app_" + rand );
+        String orgName = "org_" + rand;
+        String appName = "app_" + rand;
+        final UUID appId = setup.createApplication(orgName,appName);
+        logger.info("orgName={} appName={} appId={}", orgName, appName, appId.toString());
 
         final EntityManager em = setup.getEmf().getEntityManager( appId );
 

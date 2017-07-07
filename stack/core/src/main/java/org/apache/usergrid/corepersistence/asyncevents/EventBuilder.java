@@ -64,6 +64,15 @@ public interface EventBuilder {
      */
     EntityDeleteResults buildEntityDelete(ApplicationScope applicationScope, Id entityId );
 
+    /**
+     * Return a bin with 2 observable streams for entity delete. This deletes all versions -- used only for an old
+     * collection version. Does not require versions to be marked for deletion.
+     * @param applicationScope
+     * @param entityId
+     * @return
+     */
+    EntityDeleteResults buildEntityDeleteAllVersions(ApplicationScope applicationScope, Id entityId );
+
 
 
     /**

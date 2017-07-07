@@ -26,6 +26,7 @@ import org.apache.usergrid.corepersistence.TestIndexModule;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventServiceImpl;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.persistence.core.aws.NoAWSCredsRule;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
@@ -84,9 +85,15 @@ public class AsyncEventServiceImplTest extends AsyncIndexServiceTest {
     @Inject
     public EntityIndexFactory entityIndexFactory;
 
+    @Inject
+    public CollectionVersionFig collectionVersionFig;
+
+    @Inject
+    public AllEntityIdsObservable allEntityIdsObservable;
+
     @Override
     protected AsyncEventService getAsyncEventService() {
-        return  new AsyncEventServiceImpl( queueManagerFactory, indexProcessorFig, indexProducer, metricsFactory,  entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory, eventBuilder, mapManagerFactory, queueFig,  rxTaskScheduler );
+        return  new AsyncEventServiceImpl( queueManagerFactory, indexProcessorFig, indexProducer, metricsFactory,  entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory, eventBuilder, mapManagerFactory, queueFig, collectionVersionFig, allEntityIdsObservable, rxTaskScheduler );
     }
 
 

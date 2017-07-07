@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.asyncevents;
 
 
+import org.apache.usergrid.corepersistence.index.CollectionScope;
 import org.apache.usergrid.corepersistence.index.ReIndexAction;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
@@ -94,6 +95,13 @@ public interface AsyncEventService extends ReIndexAction {
      * @param markedVersion
      */
     void queueDeIndexOldVersion(final ApplicationScope applicationScope, final Id entityId, UUID markedVersion);
+
+    /**
+     * The version of a collection has been changed, queue cleanup of old version
+     * @param collectionScope
+     * @param collectionVersion
+     */
+    void queueCollectionDelete(final CollectionScope collectionScope, final String collectionVersion);
 
     /**
      * current queue depth

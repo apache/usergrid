@@ -20,7 +20,6 @@ package org.apache.usergrid.corepersistence.index;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.utils.JsonUtils;
 import org.slf4j.Logger;
@@ -51,13 +50,15 @@ public class CollectionSettingsImpl implements CollectionSettings {
     @Override
     public Optional<Map<String, Object>> getCollectionSettings(final String collectionName ) {
 
+        // collectionName may be a versioned collection name -- get the base name
+        String baseCollectionName = CollectionVersionUtil.parseVersionedName(collectionName).getCollectionName();
+
         String settings;
 
         settings = cache.get(scope);
 
         if( settings == null ) {
-            settings = mapManager.getString(collectionName);
-
+            settings = mapManager.getString(baseCollectionName);
         }
 
         if (settings != null) {
@@ -77,14 +78,22 @@ public class CollectionSettingsImpl implements CollectionSettings {
 
     @Override
     public void putCollectionSettings(final String collectionName, final String collectionSchema ){
-        mapManager.putString( collectionName, collectionSchema );
+
+        // collectionName may be a versioned collection name -- get the base name
+        String baseCollectionName = CollectionVersionUtil.parseVersionedName(collectionName).getCollectionName();
+
+        mapManager.putString( baseCollectionName, collectionSchema );
         cache.put(scope, collectionSchema);
     }
 
 
     @Override
     public void deleteCollectionSettings(final String collectionName){
-        mapManager.delete( collectionName );
+
+        // collectionName may be a versioned collection name -- get the base name
+        String baseCollectionName = CollectionVersionUtil.parseVersionedName(collectionName).getCollectionName();
+
+        mapManager.delete( baseCollectionName );
         cache.invalidate( scope );
     }
 

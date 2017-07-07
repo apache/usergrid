@@ -105,10 +105,10 @@ public class EventBuilderImpl implements EventBuilder {
     //Does the queue entityDelete mark the entity then immediately does to the deleteEntityIndex. seems like
     //it'll need to be pushed up higher so we can do the marking that isn't async or does it not matter?
 
-    @Override
-    public EntityDeleteResults buildEntityDelete(final ApplicationScope applicationScope, final Id entityId ) {
+    private EntityDeleteResults buildEntityDeleteCommon(final ApplicationScope applicationScope, final Id entityId, boolean markedOnly) {
         if (logger.isDebugEnabled()) {
-            logger.debug("Deleting entity id from index in app scope {} with entityId {}", applicationScope, entityId);
+            logger.debug("Deleting entity id ({} versions) from index in app scope {} with entityId {}",
+                markedOnly ? "marked" : "all", applicationScope, entityId);
         }
 
         final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
@@ -116,25 +116,30 @@ public class EventBuilderImpl implements EventBuilder {
 
         //TODO USERGRID-1123: Implement so we don't iterate logs twice (latest DELETED version, then to get all DELETED)
 
-        MvccLogEntry mostRecentlyMarked = ecm.getVersionsFromMaxToMin( entityId, UUIDUtils.newTimeUUID() ).toBlocking()
-            .firstOrDefault( null, mvccLogEntry -> mvccLogEntry.getState() == MvccLogEntry.State.DELETED );
+        MvccLogEntry mostRecentToDelete = markedOnly ?
+            ecm.getVersionsFromMaxToMin( entityId, UUIDUtils.newTimeUUID() ).toBlocking()
+                .firstOrDefault( null, mvccLogEntry -> mvccLogEntry.getState() == MvccLogEntry.State.DELETED ) :
+            ecm.getVersionsFromMaxToMin( entityId, UUIDUtils.newTimeUUID() ).toBlocking()
+                .firstOrDefault( null );
 
         // De-indexing and entity deletes don't check log entries.  We must do that first. If no DELETED logs, then
         // return an empty observable as our no-op.
         Observable<IndexOperationMessage> deIndexObservable = Observable.empty();
         Observable<List<MvccLogEntry>> ecmDeleteObservable = Observable.empty();
 
-        if(mostRecentlyMarked != null){
+        if(mostRecentToDelete != null || !markedOnly){
 
             // fetch entity versions to be de-index by looking in cassandra
-            deIndexObservable =
-                indexService.deIndexEntity(applicationScope, entityId, mostRecentlyMarked.getVersion(),
-                    getVersionsOlderThanMarked(ecm, entityId, mostRecentlyMarked.getVersion()));
+            deIndexObservable = markedOnly ?
+                indexService.deIndexEntity(applicationScope, entityId, mostRecentToDelete.getVersion(),
+                    getVersionsOlderThanMarked(ecm, entityId, mostRecentToDelete.getVersion())) :
+                indexService.deIndexEntity(applicationScope, entityId, UUIDUtils.newTimeUUID(),
+                    getAllVersions(ecm, entityId));
 
             ecmDeleteObservable =
-                ecm.getVersionsFromMaxToMin( entityId, mostRecentlyMarked.getVersion() )
+                ecm.getVersionsFromMaxToMin( entityId, mostRecentToDelete.getVersion() )
                     .filter( mvccLogEntry->
-                        mvccLogEntry.getVersion().timestamp() <= mostRecentlyMarked.getVersion().timestamp() )
+                        mvccLogEntry.getVersion().timestamp() <= mostRecentToDelete.getVersion().timestamp() )
                     .buffer( serializationFig.getBufferSize() )
                     .doOnNext( buffer -> ecm.delete( buffer ) );
         }
@@ -143,6 +148,17 @@ public class EventBuilderImpl implements EventBuilder {
         final Observable<Id> graphCompactObservable = gm.compactNode(entityId);
 
         return new EntityDeleteResults( deIndexObservable, ecmDeleteObservable, graphCompactObservable );
+    }
+
+    @Override
+    public EntityDeleteResults buildEntityDelete(final ApplicationScope applicationScope, final Id entityId ) {
+        return buildEntityDeleteCommon(applicationScope, entityId, true);
+    }
+
+    // this deletes all versions of an entity, only used for collection delete
+    @Override
+    public EntityDeleteResults buildEntityDeleteAllVersions(final ApplicationScope applicationScope, final Id entityId ) {
+        return buildEntityDeleteCommon(applicationScope, entityId, false);
     }
 
     @Override
@@ -206,6 +222,19 @@ public class EventBuilderImpl implements EventBuilder {
 
             });
 
+
+        return versions;
+    }
+
+    private List<UUID> getAllVersions( final EntityCollectionManager ecm,
+                                       final Id entityId ) {
+
+        final List<UUID> versions = new ArrayList<>();
+
+        ecm.getVersionsFromMaxToMin(entityId, UUIDUtils.newTimeUUID())
+            .forEach( mvccLogEntry -> {
+                versions.add(mvccLogEntry.getVersion());
+            });
 
         return versions;
     }

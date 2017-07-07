@@ -20,8 +20,10 @@
 package org.apache.usergrid.corepersistence.asyncevents;
 
 
+import org.apache.usergrid.corepersistence.index.CollectionVersionFig;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
+import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
@@ -58,6 +60,8 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     private final IndexProducer indexProducer;
     private final MapManagerFactory mapManagerFactory;
     private final LegacyQueueFig queueFig;
+    private final CollectionVersionFig collectionVersionFig;
+    private final AllEntityIdsObservable allEntityIdsObservable;
 
     private AsyncEventService asyncEventService;
 
@@ -73,7 +77,9 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
                               final EntityIndexFactory entityIndexFactory,
                               final IndexProducer indexProducer,
                               final MapManagerFactory mapManagerFactory,
-                              final LegacyQueueFig queueFig) {
+                              final LegacyQueueFig queueFig,
+                              final CollectionVersionFig collectionVersionFig,
+                              final AllEntityIdsObservable allEntityIdsObservable) {
 
         this.indexProcessorFig = indexProcessorFig;
         this.queueManagerFactory = queueManagerFactory;
@@ -86,6 +92,8 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
         this.indexProducer = indexProducer;
         this.mapManagerFactory = mapManagerFactory;
         this.queueFig = queueFig;
+        this.collectionVersionFig = collectionVersionFig;
+        this.allEntityIdsObservable = allEntityIdsObservable;
     }
 
 
@@ -116,6 +124,8 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
             eventBuilder,
             mapManagerFactory,
             queueFig,
+            collectionVersionFig,
+            allEntityIdsObservable,
             rxTaskScheduler );
 
         if ( impl.equals( LOCAL )) {

@@ -29,6 +29,8 @@ import org.apache.usergrid.persistence.Entity;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,8 +39,13 @@ import java.util.Map;
  * Classy class class.
  */
 public class AggregationServiceTest extends AbstractCoreIT {
+
+    private static final Logger logger = LoggerFactory.getLogger( AggregationServiceTest.class );
+
+
     @Test
     public void testEntitySize() throws Exception {
+        logger.info("appId={}", this.app.getId());
         ApplicationScope applicationScope = CpNamingUtils.getApplicationScope(this.app.getId());
         Injector injector = SpringResource.getInstance().getBean(Injector.class);
         AggregationServiceFactory factory = injector.getInstance(AggregationServiceFactory.class);

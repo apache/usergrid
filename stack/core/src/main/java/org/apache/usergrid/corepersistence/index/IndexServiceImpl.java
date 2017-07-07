@@ -36,9 +36,7 @@ import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
-import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.map.MapManagerFactory;
-import org.apache.usergrid.persistence.map.MapScope;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
@@ -264,6 +262,10 @@ public class IndexServiceImpl implements IndexService {
 
         final EntityIndex ei = entityIndexFactory.
             createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
+        if (logger.isDebugEnabled()) {
+            logger.debug("deIndexEntity: entityId={}:{}, markedVersion={}, otherVersionsSize={}",
+                entityId.getUuid().toString(), entityId.getType(), markedVersion.toString(), allVersionsBeforeMarked.size());
+        }
 
         // use LONG.MAX_VALUE in search edge because this value is not used elsewhere in lower code foe de-indexing
         // previously .timstamp() was used on entityId, but some entities do not have type-1 UUIDS ( legacy data)

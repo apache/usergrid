@@ -26,9 +26,7 @@ import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import org.apache.commons.lang.StringUtils;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
-import org.apache.usergrid.corepersistence.index.CollectionSettingsFactory;
-import org.apache.usergrid.corepersistence.index.ReIndexRequestBuilder;
-import org.apache.usergrid.corepersistence.index.ReIndexService;
+import org.apache.usergrid.corepersistence.index.*;
 import org.apache.usergrid.corepersistence.service.CollectionService;
 import org.apache.usergrid.corepersistence.service.ConnectionService;
 import org.apache.usergrid.corepersistence.util.CpNamingUtils;
@@ -119,6 +117,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final CollectionSettingsFactory collectionSettingsFactory;
     private ActorSystemManager actorSystemManager;
     private final LockManager lockManager;
+    private final CollectionDeleteService collectionDeleteService;
+    private final CollectionVersionManagerFactory collectionVersionManagerFactory;
 
     private final QueueManagerFactory queueManagerFactory;
 
@@ -143,6 +143,8 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.collectionService          = injector.getInstance( CollectionService.class );
         this.connectionService          = injector.getInstance( ConnectionService.class );
         this.collectionSettingsFactory  = injector.getInstance( CollectionSettingsFactory.class );
+        this.collectionDeleteService    = injector.getInstance( CollectionDeleteService.class );
+        this.collectionVersionManagerFactory = injector.getInstance( CollectionVersionManagerFactory.class );
 
         Properties properties = cassandraService.getProperties();
         this.entityManagers = createEntityManagerCache( properties );
@@ -392,7 +394,9 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             connectionService,
             collectionSettingsFactory,
             applicationId,
-            queueManagerFactory);
+            queueManagerFactory,
+            collectionDeleteService,
+            collectionVersionManagerFactory);
 
         return em;
     }

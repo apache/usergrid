@@ -19,10 +19,7 @@
 
 package org.apache.usergrid.corepersistence.rx.impl;
 
-
-
-
-import  com.google.common.base.Optional;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 

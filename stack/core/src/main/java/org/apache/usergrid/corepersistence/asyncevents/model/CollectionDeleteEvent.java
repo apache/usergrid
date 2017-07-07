@@ -20,40 +20,39 @@
 package org.apache.usergrid.corepersistence.asyncevents.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.usergrid.persistence.collection.serialization.impl.migration.EntityIdScope;
+import org.apache.usergrid.corepersistence.index.CollectionScope;
 
 /**
- * Event that will signal to finish the actual delete (post-mark delete) for an Entity
+ * Event that will signal to queue up entity deletes for a collection delete.
  */
-public final class EntityDeleteEvent extends AsyncEvent {
+public final class CollectionDeleteEvent extends AsyncEvent {
 
 
     @JsonProperty
-    protected EntityIdScope entityIdScope;
+    protected CollectionScope collectionScope;
 
     @JsonProperty
-    protected boolean markedOnly;
+    protected String collectionVersion;
 
-    public EntityDeleteEvent() {
+    /**
+     * Do not delete!  Needed for Jackson
+     */
+    @SuppressWarnings( "unused" )
+    public CollectionDeleteEvent() {
         super();
     }
 
-    public EntityDeleteEvent(String sourceRegion, EntityIdScope entityIdScope) {
-        this(sourceRegion, entityIdScope, true);
-    }
-
-    public EntityDeleteEvent(String sourceRegion, EntityIdScope entityIdScope, boolean markedOnly) {
+    public CollectionDeleteEvent(String sourceRegion, CollectionScope collectionScope, String collectionVersion) {
         super(sourceRegion);
-        this.entityIdScope =  entityIdScope;
-        this.markedOnly = markedOnly;
+        this.collectionScope =  collectionScope;
+        this.collectionVersion =  collectionVersion;
     }
 
-
-    public EntityIdScope getEntityIdScope() {
-        return entityIdScope;
+    public CollectionScope getCollectionScope() {
+        return collectionScope;
     }
 
-    public boolean markedOnly() {
-        return markedOnly;
+    public String getCollectionVersion() {
+        return collectionVersion;
     }
 }

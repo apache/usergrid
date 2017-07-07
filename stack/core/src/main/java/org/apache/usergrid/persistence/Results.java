@@ -522,8 +522,31 @@ public class Results implements Iterable<Entity> {
         level = Level.CORE_PROPERTIES;
     }
 
+    // returns null if index out of range
+    public Entity getEntity( final int index ) {
+        if (index < 0) {
+            return null;
+        }
+        if (entities == null) {
+            // single entity
+            if (entity == null || index > 0) {
+                return null;
+            }
+            return entity;
+        } else {
+            if (index >= entities.size()) {
+                return null;
+            }
+            return entities.get(index);
+        }
+    }
+
     public void setEntity( final int index, final Entity entity){
-        this.entities.set( index, entity );
+        if (entities == null) {
+            this.entity = entity;
+        } else {
+            this.entities.set(index, entity);
+        }
     }
 
 
