@@ -21,7 +21,6 @@ package org.apache.usergrid.persistence.graph.serialization.impl;
 
 
 import com.google.inject.Inject;
-import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.GraphManager;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.apache.usergrid.persistence.graph.serialization.TargetIdObservable;
@@ -29,7 +28,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
-import rx.functions.Func1;
 
 /**
  * Emits the id of all nodes that are target nodes from the given source node
@@ -55,7 +53,7 @@ public class TargetIdObservableImpl implements TargetIdObservable {
     public Observable<Id> getTargetNodes(final GraphManager gm, final Id sourceNode) {
 
         //only search edge types that start with collections
-        return edgesFromSourceObservable.edgesFromSourceDescending( gm, sourceNode ).map( edge -> {
+        return edgesFromSourceObservable.edgesFromSourceDescending( gm, sourceNode, true).map(edge -> {
             final Id targetNode = edge.getTargetNode();
 
             if (logger.isDebugEnabled()) {

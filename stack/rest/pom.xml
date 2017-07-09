@@ -93,7 +93,7 @@
                     <argLine>-Dwebapp.directory=${basedir}/src/main/webapp
                         -Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true -Xmx${ug.heapmax}
                         -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
-                        -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
+                        -javaagent:${settings.localRepository}/com/github/jbellis/jamm/0.3.1/jamm-0.3.1.jar
                         -Djava.util.logging.config.file=${basedir}/src/test/resources/logging.properties ${ug.argline}
                     </argLine>
                     <includes>
@@ -460,7 +460,7 @@
                                 -Dwebapp.directory=${basedir}/src/main/webapp
                                 -Dtest.barrier.timestamp=${maven.build.timestamp} -Dtest.clean.storage=true
                                 -Xmx${ug.heapmax} -Xms${ug.heapmin} -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
-                                -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
+                                -javaagent:${settings.localRepository}/com/github/jbellis/jamm/0.3.1/jamm-0.3.1.jar
                                 -Djava.util.logging.config.file=${basedir}/src/test/resources/logging.properties
                                 ${ug.argline}
                             </argLine>

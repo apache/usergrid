@@ -24,12 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.index.*;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
-import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -82,7 +81,7 @@ public class EventBuilderImpl implements EventBuilder {
 
         if (logger.isDebugEnabled()) {
             logger.debug("Indexing  in app scope {} with entity {} and new edge {}",
-                    applicationScope, entity, newEdge);
+                applicationScope, entity, newEdge);
         }
 
         return indexService.indexEdge( applicationScope, entity, newEdge );
@@ -90,15 +89,38 @@ public class EventBuilderImpl implements EventBuilder {
 
 
     @Override
-    public Observable<IndexOperationMessage> buildDeleteEdge( final ApplicationScope applicationScope, final Edge
+    public IndexOperationMessage buildDeleteEdge( final ApplicationScope applicationScope, final Edge
         edge ) {
         if (logger.isDebugEnabled()) {
             logger.debug("Deleting in app scope {} with edge {}", applicationScope, edge);
         }
 
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
-        return gm.deleteEdge( edge )
-            .flatMap( deletedEdge -> indexService.deleteIndexEdge( applicationScope, deletedEdge ));
+        final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
+
+        final IndexOperationMessage combined = new IndexOperationMessage();
+
+        gm.deleteEdge( edge )
+            .doOnNext( deletedEdge -> {
+
+                logger.debug("Processing deleted edge for de-indexing {}", deletedEdge);
+
+                // get ALL versions of the target node as any connection from this source node needs to be removed
+                ecm.getVersionsFromMaxToMin(deletedEdge.getTargetNode(), UUIDUtils.newTimeUUID())
+                    .doOnNext(mvccLogEntry -> {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Adding edge {} mvccLogEntry {} to de-index batch", deletedEdge.getTargetNode(), mvccLogEntry);
+                        }
+                        combined.ingest(
+                            indexService
+                                .deIndexEdge(applicationScope, deletedEdge, mvccLogEntry.getEntityId(), mvccLogEntry.getVersion())
+                                .toBlocking().lastOrDefault(new IndexOperationMessage()));
+
+                    }).toBlocking().lastOrDefault(null);
+
+            }).toBlocking().lastOrDefault(null);
+
+        return combined;
     }
 
 
@@ -106,43 +128,102 @@ public class EventBuilderImpl implements EventBuilder {
     //it'll need to be pushed up higher so we can do the marking that isn't async or does it not matter?
 
     @Override
-    public EntityDeleteResults buildEntityDelete(final ApplicationScope applicationScope, final Id entityId ) {
+    public IndexOperationMessage buildEntityDelete(final ApplicationScope applicationScope, final Id entityId ) {
+
         if (logger.isDebugEnabled()) {
-            logger.debug("Deleting entity id from index in app scope {} with entityId {}", applicationScope, entityId);
+            logger.debug("Deleting entity id (marked versions) from index in app scope {} with entityId {}",
+                applicationScope, entityId);
         }
 
         final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
 
-        //TODO USERGRID-1123: Implement so we don't iterate logs twice (latest DELETED version, then to get all DELETED)
+        MvccLogEntry mostRecentToDelete =
+            ecm.getVersionsFromMaxToMin( entityId, UUIDUtils.newTimeUUID() )
+                .toBlocking()
+                .firstOrDefault( null, mvccLogEntry -> mvccLogEntry.getState() == MvccLogEntry.State.DELETED );
 
-        MvccLogEntry mostRecentlyMarked = ecm.getVersionsFromMaxToMin( entityId, UUIDUtils.newTimeUUID() ).toBlocking()
-            .firstOrDefault( null, mvccLogEntry -> mvccLogEntry.getState() == MvccLogEntry.State.DELETED );
+//        logger.info("mostRecent stage={} entityId={} version={} state={}",
+//            mostRecentToDelete.getStage().name(), mostRecentToDelete.getEntityId(),
+//            mostRecentToDelete.getVersion().toString(), mostRecentToDelete.getState().name());
 
-        // De-indexing and entity deletes don't check log entries.  We must do that first. If no DELETED logs, then
-        // return an empty observable as our no-op.
-        Observable<IndexOperationMessage> deIndexObservable = Observable.empty();
-        Observable<List<MvccLogEntry>> ecmDeleteObservable = Observable.empty();
-
-        if(mostRecentlyMarked != null){
-
-            // fetch entity versions to be de-index by looking in cassandra
-            deIndexObservable =
-                indexService.deIndexEntity(applicationScope, entityId, mostRecentlyMarked.getVersion(),
-                    getVersionsOlderThanMarked(ecm, entityId, mostRecentlyMarked.getVersion()));
-
-            ecmDeleteObservable =
-                ecm.getVersionsFromMaxToMin( entityId, mostRecentlyMarked.getVersion() )
-                    .filter( mvccLogEntry->
-                        mvccLogEntry.getVersion().timestamp() <= mostRecentlyMarked.getVersion().timestamp() )
-                    .buffer( serializationFig.getBufferSize() )
-                    .doOnNext( buffer -> ecm.delete( buffer ) );
+        if (mostRecentToDelete == null) {
+            logger.info("No entity versions to delete for id {}", entityId.toString());
+        }
+        // if nothing is marked, then abort
+        if(mostRecentToDelete == null){
+            return new IndexOperationMessage();
         }
 
-        // Graph compaction checks the versions inside compactNode, just build this up for the caller to subscribe to
-        final Observable<Id> graphCompactObservable = gm.compactNode(entityId);
+        final List<MvccLogEntry> logEntries = new ArrayList<>();
+        Observable<MvccLogEntry> mvccLogEntryListObservable =
+            ecm.getVersionsFromMaxToMin( entityId, UUIDUtils.newTimeUUID() );
+        mvccLogEntryListObservable
+            .filter( mvccLogEntry-> mvccLogEntry.getVersion().timestamp() <= mostRecentToDelete.getVersion().timestamp() )
+            .buffer( serializationFig.getBufferSize() )
+            .doOnNext( buffer -> ecm.delete( buffer ) )
+            .doOnNext(mvccLogEntries -> {
+                logEntries.addAll(mvccLogEntries);
+            }).toBlocking().lastOrDefault(null);
 
-        return new EntityDeleteResults( deIndexObservable, ecmDeleteObservable, graphCompactObservable );
+        //logger.info("logEntries size={}", logEntries.size());
+
+        IndexOperationMessage combined = new IndexOperationMessage();
+
+        // do the edge deletes and build up de-index messages for each edge deleted
+        // assume we have "server1" and "region1" nodes in the graph with the following relationships (edges/connections):
+        //
+        // region1  -- zzzconnzzz|has -->  server1
+        // server1  -- zzzconnzzz|in  -->  region1
+        //
+        // there will always be a relationship from the appId to each entity based on the entity type (collection):
+        //
+        // application -- zzzcollzzz|servers --> server1
+        // application -- zzzcollzzz|regions --> region1
+        //
+        // When deleting either "server1" or "region1" entity, the connections should get deleted and de-indexed along
+        // with the entry for the entity itself in the collection. The above example should have at minimum 3 things to
+        // be de-indexed. There may be more as either "server1" or "region1" could have multiple versions.
+        //
+        // Further comments using the example of deleting "server1" from the above example.
+        gm.compactNode(entityId).doOnNext(markedEdge -> {
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Processing deleted edge for de-indexing {}", markedEdge);
+            }
+
+            // if the edge was for a connection where the entity to be deleted is the source node, we need to load
+            // the target node's versions so that all versions of connections to that entity can be de-indexed
+            // server1  -- zzzconnzzz|in  -->  region1
+            if(!markedEdge.getTargetNode().getType().equals(entityId.getType())){
+
+                // get ALL versions of the target node as any connection from this source node needs to be removed
+                ecm.getVersionsFromMaxToMin( markedEdge.getTargetNode(), UUIDUtils.newTimeUUID() )
+                    .doOnNext(mvccLogEntry -> {
+                        logger.debug("Adding edge {} mvccLogEntry {} to de-index batch", markedEdge, mvccLogEntry);
+                        combined.ingest(
+                            indexService
+                                .deIndexEdge(applicationScope, markedEdge, mvccLogEntry.getEntityId(), mvccLogEntry.getVersion())
+                                .toBlocking().lastOrDefault(new IndexOperationMessage()));
+
+                    }).toBlocking().lastOrDefault(null);
+
+            }else {
+
+                // for each version of the entity being deleted, de-index the connections where the entity is the target
+                // node ( application -- zzzcollzzz|servers --> server1 ) or (region1  -- zzzconnzzz|has -->  server1)
+                logEntries.forEach(logEntry -> {
+                    logger.debug("Adding edge {} mvccLogEntry {} to de-index batch", markedEdge, logEntry);
+                    combined.ingest(
+                        indexService
+                            .deIndexEdge(applicationScope, markedEdge, logEntry.getEntityId(), logEntry.getVersion())
+                            .toBlocking().lastOrDefault(new IndexOperationMessage()));
+                });
+            }
+
+        }).toBlocking().lastOrDefault(null);
+
+        return combined;
     }
 
     @Override
@@ -185,27 +266,40 @@ public class EventBuilderImpl implements EventBuilder {
 
 
         return indexService.deIndexOldVersions( applicationScope, entityId,
-            getVersionsOlderThanMarked(ecm, entityId, markedVersion), markedVersion);
+            getVersionsOlderThanOrEqualToMarked(ecm, entityId, markedVersion));
 
     }
 
 
-    private List<UUID> getVersionsOlderThanMarked( final EntityCollectionManager ecm,
-                                                   final Id entityId, final UUID markedVersion ){
+    private List<UUID> getVersionsOlderThanOrEqualToMarked(final EntityCollectionManager ecm,
+                                                           final Id entityId, final UUID markedVersion ){
 
         final List<UUID> versions = new ArrayList<>();
 
-        // only take last 5 versions to avoid eating memory. a tool can be built for massive cleanups for old usergrid
+        // only take last 100 versions to avoid eating memory. a tool can be built for massive cleanups for old usergrid
         // clusters that do not have this in-line cleanup
         ecm.getVersionsFromMaxToMin( entityId, markedVersion)
-            .take(5)
+            .take(100)
             .forEach( mvccLogEntry -> {
-                if ( mvccLogEntry.getVersion().timestamp() < markedVersion.timestamp() ) {
+                if ( mvccLogEntry.getVersion().timestamp() <= markedVersion.timestamp() ) {
                     versions.add(mvccLogEntry.getVersion());
                 }
 
             });
 
+
+        return versions;
+    }
+
+    private List<UUID> getAllVersions( final EntityCollectionManager ecm,
+                                       final Id entityId ) {
+
+        final List<UUID> versions = new ArrayList<>();
+
+        ecm.getVersionsFromMaxToMin(entityId, UUIDUtils.newTimeUUID())
+            .forEach( mvccLogEntry -> {
+                versions.add(mvccLogEntry.getVersion());
+            });
 
         return versions;
     }

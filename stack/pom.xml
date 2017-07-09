@@ -661,9 +661,9 @@
             </dependency>
 
             <dependency>
-                <groupId>com.github.stephenc</groupId>
+                <groupId>com.github.jbellis</groupId>
                 <artifactId>jamm</artifactId>
-                <version>0.2.5</version>
+                <version>0.3.1</version>
             </dependency>
 
             <!-- Third Party Non-Commercial Dependencies -->
@@ -1311,7 +1311,7 @@
                     <useSystemClassLoader>false</useSystemClassLoader>
                     <testFailureIgnore>false</testFailureIgnore>
                     <argLine>-Xmx${ug.heapmax} -Xms${ug.heapmin}
-                        -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
+                        -javaagent:${settings.localRepository}/com/github/jbellis/jamm/0.3.1/jamm-0.3.1.jar
                         ${ug.argline}
                     </argLine>
                     <systemPropertyVariables>
@@ -1548,7 +1548,7 @@
                         <version>${surefire.plugin.version}</version>
                         <configuration>
                             <argLine>
-                                -javaagent:${settings.localRepository}/com/github/stephenc/jamm/0.2.5/jamm-0.2.5.jar
+                                -javaagent:${settings.localRepository}/com/github/jbellis/jamm/0.3.1/jamm-0.3.1.jar
                                 ${ug.argline}
                                 -javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${project.build.directory}/jacoco.exec
                             </argLine>
