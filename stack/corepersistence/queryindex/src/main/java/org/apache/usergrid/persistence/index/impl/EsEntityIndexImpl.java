@@ -34,7 +34,6 @@ import org.apache.usergrid.persistence.core.migration.data.VersionedData;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.core.util.Health;
 import org.apache.usergrid.persistence.core.util.StringUtils;
-import org.apache.usergrid.persistence.core.util.ValidationUtils;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.ElasticSearchQueryBuilder.SearchRequestBuilderStrategyV2;
 import org.apache.usergrid.persistence.index.exceptions.IndexException;
@@ -571,68 +570,6 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
                 .actionGet();
 
             candidates = aggregateScrollResults(candidates, searchResponse, null);
-
-        }
-        catch ( Throwable t ) {
-            logger.error( "Unable to communicate with Elasticsearch", t.getMessage() );
-            failureMonitor.fail( "Unable to execute batch", t );
-            throw t;
-        }
-        failureMonitor.success();
-
-        return new CandidateResults( candidates, Collections.EMPTY_SET);
-    }
-
-
-    @Override
-    public CandidateResults getNodeDocsOlderThanMarked(final Id entityId, final UUID markedVersion ) {
-
-        // TODO: investigate if functionality via iterator so a caller can page the deletion until all is gone
-
-        Preconditions.checkNotNull( entityId, "entityId cannot be null" );
-        Preconditions.checkNotNull(markedVersion, "markedVersion cannot be null");
-        ValidationUtils.verifyVersion(markedVersion);
-
-        SearchResponse searchResponse;
-        List<CandidateResult> candidates = new ArrayList<>();
-
-        final long markedTimestamp = markedVersion.timestamp();
-
-        // never let this fetch more than 100 to save memory
-        final int searchLimit = Math.min(100, indexFig.getVersionQueryLimit());
-
-        // this query will find all the documents where this entity is a source/target node
-        final QueryBuilder nodeQuery = QueryBuilders
-            .termQuery(IndexingUtils.EDGE_NODE_ID_FIELDNAME, IndexingUtils.nodeId(entityId));
-
-        final SearchRequestBuilder srb = searchRequestBuilderStrategyV2.getBuilder()
-            .addSort(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME, SortOrder.ASC);
-
-        try {
-
-            long queryTimestamp = 0L;
-
-            QueryBuilder timestampQuery =  QueryBuilders
-                .rangeQuery(IndexingUtils.EDGE_TIMESTAMP_FIELDNAME)
-                .gte(queryTimestamp)
-                .lt(markedTimestamp);
-
-            QueryBuilder finalQuery = QueryBuilders.constantScoreQuery(
-                QueryBuilders
-                    .boolQuery()
-                    .must(timestampQuery)
-                    .must(nodeQuery)
-            );
-
-
-            searchResponse = srb
-                .setQuery(finalQuery)
-                .setSize(searchLimit)
-                .execute()
-                .actionGet();
-
-
-            candidates = aggregateScrollResults(candidates, searchResponse, markedVersion);
 
         }
         catch ( Throwable t ) {

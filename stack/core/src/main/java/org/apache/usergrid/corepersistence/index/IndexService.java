@@ -69,18 +69,15 @@ public interface IndexService {
      */
     Observable<IndexOperationMessage> deleteIndexEdge(final ApplicationScope applicationScope, final Edge edge);
 
-
     /**
-     * De-index all documents with the specified entityId and versions provided.  This will also remove any documents
-     * where the entity is a source/target node ( index docs where this entityId is a part of connections).
-     *
+     * Delete an index edge from the specified scope for a specific entity version
      * @param applicationScope
-     * @param entityId
-     * @param markedVersion
+     * @param edge
      * @return
      */
-    Observable<IndexOperationMessage> deIndexEntity(final ApplicationScope applicationScope, final Id entityId,
-                                                    final UUID markedVersion, final List<UUID> allVersionsBeforeMarked);
+    Observable<IndexOperationMessage> deIndexEdge(final ApplicationScope applicationScope, final Edge edge,
+                                                  final Id entityId, final UUID entityVersion);
+
 
 
     /**
@@ -88,10 +85,9 @@ public interface IndexService {
      *
      * @param applicationScope
      * @param entityId
-     * @param markedVersion
      * @return
      */
     Observable<IndexOperationMessage> deIndexOldVersions(final ApplicationScope applicationScope, final Id entityId,
-                                                         final List<UUID> versions, UUID markedVersion);
+                                                         final List<UUID> versions);
 
 }

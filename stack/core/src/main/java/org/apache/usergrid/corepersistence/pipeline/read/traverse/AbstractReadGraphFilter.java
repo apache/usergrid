@@ -121,12 +121,8 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                 if (isDeleted) {
 
                     logger.info("Edge {} is deleted when seeking, deleting the edge", markedEdge);
-                    final Observable<IndexOperationMessage> indexMessageObservable = eventBuilder.buildDeleteEdge(applicationScope, markedEdge);
-
-                    indexMessageObservable
-                        .compose(applyCollector())
-                        .subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
-                        .subscribe();
+                    final IndexOperationMessage indexOperationMessage = eventBuilder.buildDeleteEdge(applicationScope, markedEdge);
+                    asyncEventService.queueIndexOperationMessage(indexOperationMessage, true);
 
                 }
 
@@ -135,18 +131,8 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                     final Id sourceNodeId = markedEdge.getSourceNode();
                     logger.info("Edge {} has a deleted source node, deleting the entity for id {}", markedEdge, sourceNodeId);
 
-                    final EventBuilderImpl.EntityDeleteResults
-                        entityDeleteResults = eventBuilder.buildEntityDelete(applicationScope, sourceNodeId);
-
-                    entityDeleteResults.getIndexObservable()
-                        .compose(applyCollector())
-                        .subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
-                        .subscribe();
-
-                    Observable.merge(entityDeleteResults.getEntitiesDeleted(),
-                        entityDeleteResults.getCompactedNode())
-                        .subscribeOn(rxTaskScheduler.getAsyncIOScheduler()).
-                        subscribe();
+                    final IndexOperationMessage indexOperationMessage = eventBuilder.buildEntityDelete(applicationScope, sourceNodeId);
+                    asyncEventService.queueIndexOperationMessage(indexOperationMessage, true);
 
                 }
 
@@ -155,19 +141,8 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                     final Id targetNodeId = markedEdge.getTargetNode();
                     logger.info("Edge {} has a deleted target node, deleting the entity for id {}", markedEdge, targetNodeId);
 
-                    final EventBuilderImpl.EntityDeleteResults
-                        entityDeleteResults = eventBuilder.buildEntityDelete(applicationScope, targetNodeId);
-
-                    entityDeleteResults.getIndexObservable()
-                        .compose(applyCollector())
-                        .subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
-                        .subscribe();
-
-                    Observable.merge(entityDeleteResults.getEntitiesDeleted(),
-                        entityDeleteResults.getCompactedNode())
-                        .subscribeOn(rxTaskScheduler.getAsyncIOScheduler()).
-                        subscribe();
-
+                    final IndexOperationMessage indexOperationMessage = eventBuilder.buildEntityDelete(applicationScope, targetNodeId);
+                    asyncEventService.queueIndexOperationMessage(indexOperationMessage, true);
                 }
 
 

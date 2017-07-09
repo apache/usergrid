@@ -35,7 +35,6 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import com.google.common.base.Optional;
 
 import rx.Observable;
-import rx.functions.Func1;
 
 
 /**
@@ -55,7 +54,7 @@ public class EdgesObservableImpl implements EdgesObservable {
      * Get all edges from the source
      */
     @Override
-    public Observable<Edge> edgesFromSourceDescending( final GraphManager gm, final Id sourceNode ) {
+    public Observable<Edge> edgesFromSourceDescending(final GraphManager gm, final Id sourceNode, boolean filterMarked) {
         final Observable<String> edgeTypes =
             gm.getEdgeTypesFromSource( new SimpleSearchEdgeType( sourceNode, null, null ) );
 
@@ -67,7 +66,7 @@ public class EdgesObservableImpl implements EdgesObservable {
 
                 return gm.loadEdgesFromSource(
                     new SimpleSearchByEdgeType( sourceNode, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-                        Optional.<Edge>absent() ) );
+                        Optional.<Edge>absent(), filterMarked ) );
         } );
     }
 
@@ -119,19 +118,16 @@ public class EdgesObservableImpl implements EdgesObservable {
      * Get all edges from the source
      */
     @Override
-    public Observable<Edge> edgesToTarget( final GraphManager gm, final Id targetNode ) {
-        final Observable<String> edgeTypes =
-            gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( targetNode, null, null ) );
+    public Observable<Edge> edgesToTarget(final GraphManager gm, final Id targetNode, boolean filterMarked) {
 
-        return edgeTypes.flatMap( edgeType -> {
-
-            if (logger.isTraceEnabled()) {
+        return gm.getEdgeTypesToTarget( new SimpleSearchEdgeType( targetNode, null, null ) )
+            .flatMap( edgeType -> {
+                if (logger.isTraceEnabled()) {
                 logger.trace("Loading edges of edgeType {} to {}", edgeType, targetNode);
-            }
-
+                }
             return gm.loadEdgesToTarget(
                 new SimpleSearchByEdgeType( targetNode, edgeType, Long.MAX_VALUE, SearchByEdgeType.Order.DESCENDING,
-                    Optional.<Edge>absent() ) );
+                    Optional.<Edge>absent(), filterMarked ) );
         } );
     }
 

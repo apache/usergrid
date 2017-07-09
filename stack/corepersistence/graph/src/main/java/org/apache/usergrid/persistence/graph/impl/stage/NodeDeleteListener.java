@@ -22,6 +22,8 @@ package org.apache.usergrid.persistence.graph.impl.stage;
 import java.util.UUID;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import rx.Observable;
@@ -42,5 +44,5 @@ public interface NodeDeleteListener {
        * @return An observable that emits the total number of edges that have been removed with this node both as the
        *         target and source
        */
-    Observable<Integer> receive( final ApplicationScope scope, final Id node, final UUID timestamp );
+    Observable<MarkedEdge> receive(final ApplicationScope scope, final Id node, final UUID timestamp );
 }

@@ -29,9 +29,7 @@ import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.metrics.ObservableTimer;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
-import org.apache.usergrid.persistence.graph.Edge;
-import org.apache.usergrid.persistence.graph.GraphManager;
-import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.*;
 import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
 import org.apache.usergrid.persistence.graph.serialization.EdgesObservable;
 import org.apache.usergrid.persistence.index.*;
@@ -101,7 +99,7 @@ public class IndexServiceImpl implements IndexService {
 
 
         //we always index in the target scope
-        final Observable<Edge> edgesToTarget = edgesObservable.edgesToTarget( gm, entityId );
+        final Observable<Edge> edgesToTarget = edgesObservable.edgesToTarget( gm, entityId, true);
 
         //we may have to index  we're indexing from source->target here
         final Observable<IndexEdge> sourceEdgesToIndex = edgesToTarget.map( edge -> generateScopeFromSource( edge ) );
@@ -214,10 +212,8 @@ public class IndexServiceImpl implements IndexService {
         return Optional.of(defaultProperties);
     }
 
-    //Steps to delete an IndexEdge.
-    //1.Take the search edge given and search for all the edges in elasticsearch matching that search edge
-    //2. Batch Delete all of those edges returned in the previous search.
-    //TODO: optimize loops further.
+    // DO NOT USE THIS AS THE QUERY TO ES CAN CAUSE EXTREME LOAD
+    // TODO REMOVE THIS AND UPDATE THE TESTS TO NOT USE THIS METHOD
     @Override
     public Observable<IndexOperationMessage> deleteIndexEdge( final ApplicationScope applicationScope,
                                                               final Edge edge ) {
@@ -254,53 +250,28 @@ public class IndexServiceImpl implements IndexService {
         return ObservableTimer.time( batches, addTimer );
     }
 
-
     @Override
-    public Observable<IndexOperationMessage> deIndexEntity( final ApplicationScope applicationScope, final Id entityId,
-                                                            final UUID markedVersion,
-                                                            final List<UUID> allVersionsBeforeMarked ) {
+    public Observable<IndexOperationMessage> deIndexEdge(final ApplicationScope applicationScope, final Edge edge,
+                                                         final Id entityId, final UUID entityVersion){
 
-        final EntityIndex ei = entityIndexFactory.
-            createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
-        if (logger.isDebugEnabled()) {
-            logger.debug("deIndexEntity: entityId={}:{}, markedVersion={}, otherVersionsSize={}",
-                entityId.getUuid().toString(), entityId.getType(), markedVersion.toString(), allVersionsBeforeMarked.size());
-        }
-
-        // use LONG.MAX_VALUE in search edge because this value is not used elsewhere in lower code foe de-indexing
-        // previously .timstamp() was used on entityId, but some entities do not have type-1 UUIDS ( legacy data)
-        final SearchEdge searchEdgeFromSource = createSearchEdgeFromSource( new SimpleEdge( applicationScope.getApplication(),
-            CpNamingUtils.getEdgeTypeFromCollectionName( InflectionUtils.pluralize( entityId.getType() ) ), entityId,
-            Long.MAX_VALUE ) );
-
-
-
-        final EntityIndexBatch batch = ei.createBatch();
-
-        // de-index each version of the entity before the marked version
-        allVersionsBeforeMarked.forEach(version -> batch.deindex(searchEdgeFromSource, entityId, version));
-
-
-        // for now, query the index to remove docs where the entity is source/target node and older than markedVersion
-        // TODO: investigate getting this information from graph
-        CandidateResults candidateResults = ei.getNodeDocsOlderThanMarked(entityId, markedVersion );
-        candidateResults.forEach(candidateResult -> batch.deindex(candidateResult));
-
-        return Observable.just(batch.build());
+        final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope));
+        final EntityIndexBatch entityBatch = ei.createBatch();
+        entityBatch.deindex(generateScopeFromSource( edge ), entityId, entityVersion);
+        return Observable.just(entityBatch.build());
 
     }
+
 
     @Override
     public Observable<IndexOperationMessage> deIndexOldVersions(final ApplicationScope applicationScope,
                                                                 final Id entityId,
-                                                                final List<UUID> versions,
-                                                                UUID markedVersion) {
+                                                                final List<UUID> versions) {
 
         final EntityIndex ei = entityIndexFactory.
             createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope) );
 
-        // use LONG.MAX_VALUE in search edge because this value is not used elsewhere in lower code foe de-indexing
-        // previously .timstamp() was used on entityId, but some entities do not have type-1 UUIDS ( legacy data)
+        // use LONG.MAX_VALUE in search edge because this value is not used elsewhere in lower code for de-indexing
+        // previously .timsetamp() was used on entityId, but some entities do not have type-1 UUIDS ( legacy data)
         final SearchEdge searchEdgeFromSource = createSearchEdgeFromSource( new SimpleEdge( applicationScope.getApplication(),
             CpNamingUtils.getEdgeTypeFromCollectionName( InflectionUtils.pluralize( entityId.getType() ) ), entityId,
             Long.MAX_VALUE ) );

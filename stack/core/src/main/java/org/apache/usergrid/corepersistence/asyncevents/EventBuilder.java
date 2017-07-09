@@ -27,6 +27,7 @@ import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
 import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -54,7 +55,7 @@ public interface EventBuilder {
      * @param edge
      * @return
      */
-    Observable<IndexOperationMessage> buildDeleteEdge( ApplicationScope applicationScope, Edge edge );
+    IndexOperationMessage buildDeleteEdge( ApplicationScope applicationScope, Edge edge );
 
     /**
      * Return a bin with 2 observable streams for entity delete.
@@ -62,7 +63,7 @@ public interface EventBuilder {
      * @param entityId
      * @return
      */
-    EntityDeleteResults buildEntityDelete(ApplicationScope applicationScope, Id entityId );
+    IndexOperationMessage buildEntityDelete(ApplicationScope applicationScope, Id entityId );
 
     /**
      * Return a bin with 2 observable streams for entity delete. This deletes all versions -- used only for an old
@@ -71,7 +72,7 @@ public interface EventBuilder {
      * @param entityId
      * @return
      */
-    EntityDeleteResults buildEntityDeleteAllVersions(ApplicationScope applicationScope, Id entityId );
+    IndexOperationMessage buildEntityDeleteAllVersions(ApplicationScope applicationScope, Id entityId );
 
 
 
@@ -103,17 +104,17 @@ public interface EventBuilder {
 
 
 
-        private final Observable<Id> compactedNode;
+        private final Observable<MarkedEdge> deletedEdges;
 
 
 
 
         public EntityDeleteResults( final Observable<IndexOperationMessage> indexOperationMessageObservable,
                                     final Observable<List<MvccLogEntry>> entitiesDeleted,
-                                    final Observable<Id> compactedNode) {
+                                    final Observable<MarkedEdge> deletedEdges) {
             this.indexOperationMessageObservable = indexOperationMessageObservable;
             this.entitiesDeleted = entitiesDeleted;
-            this.compactedNode = compactedNode;
+            this.deletedEdges = deletedEdges;
         }
 
 
@@ -125,8 +126,8 @@ public interface EventBuilder {
             return entitiesDeleted;
         }
 
-        public Observable<Id> getCompactedNode() {
-            return compactedNode;
+        public Observable<MarkedEdge> getEdgesDeleted() {
+            return deletedEdges;
         }
 
 

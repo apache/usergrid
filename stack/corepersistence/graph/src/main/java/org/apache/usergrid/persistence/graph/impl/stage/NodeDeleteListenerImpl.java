@@ -98,50 +98,34 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
      * @return An observable that emits the total number of edges that have been removed with this node both as the
      *         target and source
      */
-    public Observable<Integer> receive( final ApplicationScope scope, final Id node, final UUID timestamp ) {
+    public Observable<MarkedEdge> receive( final ApplicationScope scope, final Id node, final UUID timestamp ) {
 
 
         return Observable.just( node )
 
                 //delete source and targets in parallel and merge them into a single observable
-                .flatMap( new Func1<Id, Observable<Integer>>() {
-                    @Override
-                    public Observable<Integer> call( final Id node ) {
+                .flatMap( id -> {
 
-                        final Optional<Long> maxVersion = nodeSerialization.getMaxVersion( scope, node );
+                    final Optional<Long> maxVersion = nodeSerialization.getMaxVersion( scope, node );
 
-                        if (logger.isTraceEnabled()) {
-                            logger.trace("Node with id {} has max version of {}", node, maxVersion.orNull());
-                        }
-
-
-                        if ( !maxVersion.isPresent() ) {
-                            return Observable.empty();
-                        }
-
-
-                        //do all the delete, then when done, delete the node
-                        return doDeletes( node, scope, maxVersion.get(), timestamp ).count()
-                                //if nothing is ever emitted, emit 0 so that we know no operations took place.
-                                // Finally remove
-                                // the
-                                // target node in the mark
-                                .doOnCompleted( new Action0() {
-                                    @Override
-                                    public void call() {
-                                        try {
-                                            nodeSerialization.delete( scope, node, maxVersion.get()).execute();
-                                        }
-                                        catch ( ConnectionException e ) {
-                                            throw new RuntimeException( "Unable to connect to casandra", e );
-                                        }
-                                    }
-                                } );
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Node with id {} has max version of {}", node, maxVersion.orNull());
                     }
-                } ).defaultIfEmpty( 0 );
+                    if ( !maxVersion.isPresent() ) {
+                        return Observable.empty();
+                    }
+
+                    // do all the edge deletes and then remove the marked node, return all edges just deleted
+                    return
+                        doDeletes( node, scope, maxVersion.get(), timestamp ).doOnCompleted( () -> {
+                            try {
+                                nodeSerialization.delete( scope, node, maxVersion.get()).execute();
+                            } catch ( ConnectionException e ) {
+                                throw new RuntimeException( "Unable to connect to cassandra", e );
+                            }
+                        });
+                });
     }
-
-
     /**
      * Do the deletes
      */
@@ -162,7 +146,7 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
                             @Override
                             protected Iterator<MarkedEdge> getIterator() {
                                 return storageSerialization.getEdgesToTarget(scope,
-                                    new SimpleSearchByEdgeType(node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent()));
+                                    new SimpleSearchByEdgeType(node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent(), false));
                             }
                         }));
 
@@ -174,7 +158,7 @@ public class NodeDeleteListenerImpl implements NodeDeleteListener {
                             @Override
                             protected Iterator<MarkedEdge> getIterator() {
                                 return storageSerialization.getEdgesFromSource(scope,
-                                    new SimpleSearchByEdgeType(node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent()));
+                                    new SimpleSearchByEdgeType(node, edgeType, maxVersion, SearchByEdgeType.Order.DESCENDING, Optional.<Edge>absent(), false));
                             }
                         }));
 

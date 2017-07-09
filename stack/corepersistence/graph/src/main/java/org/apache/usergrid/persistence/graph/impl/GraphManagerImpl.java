@@ -262,24 +262,16 @@ public class GraphManagerImpl implements GraphManager {
 
 
     @Override
-    public Observable<Id> compactNode( final Id inputNode ) {
-
+    public Observable<MarkedEdge> compactNode( final Id inputNode ) {
 
         final UUID startTime = UUIDGenerator.newTimeUUID();
 
-
-        final Observable<Id> nodeObservable =
-            Observable.just( inputNode ).map( node -> nodeSerialization.getMaxVersion( scope, node ) ).takeWhile(
-                maxTimestamp -> maxTimestamp.isPresent() )
-
+        final Observable<MarkedEdge> nodeObservable =
+            Observable.just( inputNode )
+                .map( node -> nodeSerialization.getMaxVersion( scope, node ) )
+                .takeWhile(maxTimestamp -> maxTimestamp.isPresent() )
                 //map our delete listener
-                .flatMap( timestamp -> nodeDeleteListener.receive( scope, inputNode, startTime ) )
-                    //set to 0 if nothing is emitted
-                .lastOrDefault( 0 )
-                    //log for posterity
-                .doOnNext( count -> logger.trace( "Removed {} edges from node {}", count, inputNode ) )
-                    //return our id
-                .map( count -> inputNode );
+                .flatMap( timestamp -> nodeDeleteListener.receive( scope, inputNode, startTime ) );
 
         return ObservableTimer.time( nodeObservable, this.deleteNodeTimer );
     }

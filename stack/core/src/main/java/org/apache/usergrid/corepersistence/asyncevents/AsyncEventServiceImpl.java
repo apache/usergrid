@@ -57,6 +57,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.queue.*;
 import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
+import org.apache.usergrid.persistence.queue.impl.SNSQueueManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -668,8 +669,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         }
 
         // default this observable's return to empty index operation message if nothing is emitted
-        return eventBuilder.buildDeleteEdge(applicationScope, edge)
-            .toBlocking().lastOrDefault(new IndexOperationMessage());
+        return eventBuilder.buildDeleteEdge(applicationScope, edge);
 
     }
 
@@ -866,18 +866,11 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             logger.debug("Deleting entity id from index in app scope {} with entityId {}", applicationScope, entityId);
         }
 
-        final EventBuilderImpl.EntityDeleteResults entityDeleteResults = markedOnly ?
+        final IndexOperationMessage indexOperationMessage = markedOnly ?
             eventBuilder.buildEntityDelete( applicationScope, entityId ) :
             eventBuilder.buildEntityDeleteAllVersions( applicationScope, entityId );
 
-
-        // Delete the entities and remove from graph separately
-        entityDeleteResults.getEntitiesDeleted().toBlocking().lastOrDefault(null);
-
-        entityDeleteResults.getCompactedNode().toBlocking().lastOrDefault(null);
-
-        // default this observable's return to empty index operation message if nothing is emitted
-        return entityDeleteResults.getIndexObservable().toBlocking().lastOrDefault(new IndexOperationMessage());
+        return indexOperationMessage;
 
     }
 
@@ -983,8 +976,13 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             startWorker(QUEUE_NAME_UTILITY);
         }
 
-        for (int i = 0; i < indexDeadCount; i++) {
-            startDeadQueueWorker(QUEUE_NAME);
+        if( indexQueue instanceof SNSQueueManagerImpl ) {
+            logger.info("Queue manager implementation supports dead letters, start dead letter queue worker.");
+            for (int i = 0; i < indexDeadCount; i++) {
+                startDeadQueueWorker(QUEUE_NAME);
+            }
+        }else{
+            logger.info("Queue manager implementation does NOT support dead letters, NOT starting dead letter queue worker.");
         }
 
         for (int i = 0; i < utilityDeadCount; i++) {
