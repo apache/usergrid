@@ -640,8 +640,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         }
 
         // default this observable's return to empty index operation message if nothing is emitted
-        return eventBuilder.buildDeleteEdge(applicationScope, edge)
-            .toBlocking().lastOrDefault(new IndexOperationMessage());
+        return eventBuilder.buildDeleteEdge(applicationScope, edge);
 
     }
 
@@ -832,20 +831,11 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         final ApplicationScope applicationScope = entityDeleteEvent.getEntityIdScope().getApplicationScope();
         final Id entityId = entityDeleteEvent.getEntityIdScope().getId();
 
-        if (logger.isDebugEnabled())
+        if (logger.isDebugEnabled()) {
             logger.debug("Deleting entity id from index in app scope {} with entityId {}", applicationScope, entityId);
+        }
 
-        final EventBuilderImpl.EntityDeleteResults
-            entityDeleteResults = eventBuilder.buildEntityDelete( applicationScope, entityId );
-
-
-        // Delete the entities and remove from graph separately
-        entityDeleteResults.getEntitiesDeleted().toBlocking().lastOrDefault(null);
-
-        entityDeleteResults.getCompactedNode().toBlocking().lastOrDefault(null);
-
-        // default this observable's return to empty index operation message if nothing is emitted
-        return entityDeleteResults.getIndexObservable().toBlocking().lastOrDefault(new IndexOperationMessage());
+        return eventBuilder.buildEntityDelete( applicationScope, entityId );
 
     }
 
@@ -885,9 +875,6 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             startWorker(AsyncEventQueueType.UTILITY);
         }
 
-        for (int i = 0; i < deleteCount; i++) {
-            startWorker(AsyncEventQueueType.DELETE);
-        }
         if( indexQueue instanceof SNSQueueManagerImpl) {
             logger.info("Queue manager implementation supports dead letters, start dead letter queue workers.");
             for (int i = 0; i < indexDeadCount; i++) {
@@ -902,7 +889,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                 startDeadQueueWorker(AsyncEventQueueType.DELETE);
             }
         }else{
-            logger.info("Queue manager implementation does NOT support dead letters, NOT starting dead letter queue worker.");
+            logger.info("Queue manager implementation does NOT support dead letters, NOT starting dead letter queue workers.");
         }
     }
 
