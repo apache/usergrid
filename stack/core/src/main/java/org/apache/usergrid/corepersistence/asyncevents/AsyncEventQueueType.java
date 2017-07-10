@@ -17,16 +17,19 @@
  * under the License.
  */
 
-package org.apache.usergrid.corepersistence.index;
+package org.apache.usergrid.corepersistence.asyncevents;
 
-import org.junit.runner.RunWith;
-import net.jcip.annotations.NotThreadSafe;
-import org.apache.usergrid.corepersistence.TestIndexModule;
-import org.apache.usergrid.persistence.core.test.UseModules;
-import org.apache.usergrid.persistence.index.impl.EsRunner;
+public enum AsyncEventQueueType {
+    REGULAR ("regular"), UTILITY("utility"), DELETE("delete");
 
-@RunWith( EsRunner.class )
-@UseModules( { TestIndexModule.class } )
-@NotThreadSafe
-public class CollectionVersionTest {
+    private String displayName;
+    AsyncEventQueueType(String displayName) {
+        this.displayName = displayName;
+    }
+
+    @Override
+    public String toString() {
+        return displayName;
+    }
 }
+

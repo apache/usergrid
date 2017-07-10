@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 
 
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventQueueType;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilderImpl;
@@ -122,7 +123,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
 
                     logger.info("Edge {} is deleted when seeking, deleting the edge", markedEdge);
                     final IndexOperationMessage indexOperationMessage = eventBuilder.buildDeleteEdge(applicationScope, markedEdge);
-                    asyncEventService.queueIndexOperationMessage(indexOperationMessage, true);
+                    asyncEventService.queueIndexOperationMessage(indexOperationMessage, AsyncEventQueueType.DELETE);
 
                 }
 
@@ -132,7 +133,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                     logger.info("Edge {} has a deleted source node, deleting the entity for id {}", markedEdge, sourceNodeId);
 
                     final IndexOperationMessage indexOperationMessage = eventBuilder.buildEntityDelete(applicationScope, sourceNodeId);
-                    asyncEventService.queueIndexOperationMessage(indexOperationMessage, true);
+                    asyncEventService.queueIndexOperationMessage(indexOperationMessage, AsyncEventQueueType.DELETE);
 
                 }
 
@@ -142,7 +143,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                     logger.info("Edge {} has a deleted target node, deleting the entity for id {}", markedEdge, targetNodeId);
 
                     final IndexOperationMessage indexOperationMessage = eventBuilder.buildEntityDelete(applicationScope, targetNodeId);
-                    asyncEventService.queueIndexOperationMessage(indexOperationMessage, true);
+                    asyncEventService.queueIndexOperationMessage(indexOperationMessage, AsyncEventQueueType.DELETE);
                 }
 
 
@@ -227,13 +228,13 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
         }
     }
 
-    private Observable.Transformer<IndexOperationMessage, IndexOperationMessage> applyCollector() {
+    private Observable.Transformer<IndexOperationMessage, IndexOperationMessage> applyCollector(AsyncEventQueueType queueType) {
 
         return observable -> observable
             .collect(() -> new IndexOperationMessage(), (collector, single) -> collector.ingest(single))
             .filter(msg -> !msg.isEmpty())
             .doOnNext(indexOperation -> {
-                asyncEventService.queueIndexOperationMessage(indexOperation, false);
+                asyncEventService.queueIndexOperationMessage(indexOperation, queueType);
             });
 
     }
