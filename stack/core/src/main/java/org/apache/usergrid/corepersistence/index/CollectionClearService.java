@@ -21,10 +21,15 @@ package org.apache.usergrid.corepersistence.index;
 
 import java.util.UUID;
 
-public interface CollectionDeleteService {
+public interface CollectionClearService {
 
     /**
-     * Delete the current version of a collection by changing the collection version and queueing up a delete of the old entities
+     * Clear the entities from the current version of a collection by changing the collection version and queueing up a delete of the old entities
      */
-    void deleteCollection(final UUID applicationID, final String baseCollectionName);
+    void clearCollection(final UUID applicationID, final String baseCollectionName);
+
+    /**
+     * Get the current version of a collection
+     */
+    String getCollectionVersion(final UUID applicationID, final String baseCollectionName);
 }

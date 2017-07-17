@@ -26,14 +26,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
-public class CollectionDeleteServiceImpl implements CollectionDeleteService {
-    private static final Logger logger = LoggerFactory.getLogger(CollectionDeleteServiceImpl.class );
+public class CollectionClearServiceImpl implements CollectionClearService {
+    private static final Logger logger = LoggerFactory.getLogger(CollectionClearServiceImpl.class );
 
     private CollectionVersionManagerFactory collectionVersionManagerFactory;
     private AsyncEventService asyncEventService;
 
     @Inject
-    public CollectionDeleteServiceImpl(
+    public CollectionClearServiceImpl(
         final CollectionVersionManagerFactory collectionVersionManagerFactory,
         final AsyncEventService asyncEventService
     )
@@ -43,15 +43,27 @@ public class CollectionDeleteServiceImpl implements CollectionDeleteService {
     }
 
     @Override
-    public void deleteCollection(final UUID applicationID, final String baseCollectionName) {
+    public void clearCollection(final UUID applicationID, final String baseCollectionName) {
         CollectionScope scope = new CollectionScopeImpl(applicationID, baseCollectionName);
         CollectionVersionManager collectionVersionManager = collectionVersionManagerFactory.getInstance(scope);
 
         // change version
         String oldVersion = collectionVersionManager.updateCollectionVersion();
+        logger.info("Collection cleared: appID:{} baseCollectionName:{} oldVersion:{} newVersion:{}",
+            applicationID.toString(), baseCollectionName, oldVersion, collectionVersionManager.getCollectionVersion(false));
 
         // queue up delete of old version entities
         asyncEventService.queueCollectionDelete(scope, oldVersion);
+    }
+
+    @Override
+    public String getCollectionVersion(UUID applicationID, String baseCollectionName) {
+        CollectionScope scope = new CollectionScopeImpl(applicationID, baseCollectionName);
+        CollectionVersionManager collectionVersionManager = collectionVersionManagerFactory.getInstance(scope);
+
+        String currentVersion = collectionVersionManager.getCollectionVersion(true);
+
+        return currentVersion;
     }
 
 }

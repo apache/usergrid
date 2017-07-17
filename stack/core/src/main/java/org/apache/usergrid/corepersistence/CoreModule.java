@@ -143,7 +143,7 @@ public class CoreModule extends AbstractModule {
 
         bind( ReIndexService.class ).to( ReIndexServiceImpl.class );
 
-        bind( CollectionDeleteService.class ).to( CollectionDeleteServiceImpl.class );
+        bind( CollectionClearService.class ).to( CollectionClearServiceImpl.class );
 
         bind( ExportService.class ).to( ExportServiceImpl.class );
 

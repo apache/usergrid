@@ -158,7 +158,7 @@ public class CpEntityManager implements EntityManager {
     private EntityCollectionManager ecm;
 
     public QueueManagerFactory queueManagerFactory;
-    private CollectionDeleteService collectionDeleteService;
+    private CollectionClearService collectionClearService;
     private CollectionVersionManagerFactory collectionVersionManagerFactory;
 
 
@@ -187,7 +187,7 @@ public class CpEntityManager implements EntityManager {
                             final CollectionSettingsFactory collectionSettingsFactory,
                             final UUID applicationId,
                             final QueueManagerFactory queueManagerFactory,
-                            final CollectionDeleteService collectionDeleteService,
+                            final CollectionClearService collectionClearService,
                             final CollectionVersionManagerFactory collectionVersionManagerFactory) {
 
         this.entityManagerFig = entityManagerFig;
@@ -255,7 +255,7 @@ public class CpEntityManager implements EntityManager {
         this.skipAggregateCounters = false;
 
         this.queueManagerFactory = queueManagerFactory;
-        this.collectionDeleteService = collectionDeleteService;
+        this.collectionClearService = collectionClearService;
         this.collectionVersionManagerFactory = collectionVersionManagerFactory;
     }
 
@@ -1890,9 +1890,16 @@ public class CpEntityManager implements EntityManager {
     }
 
     @Override
-    public void deleteCollection( String collectionName ){
+    public void clearCollection(String collectionName ){
 
-        collectionDeleteService.deleteCollection(applicationId, collectionName);
+        collectionClearService.clearCollection(applicationId, collectionName);
+
+    }
+
+    @Override
+    public String getCollectionVersion(String collectionName ){
+
+        return collectionClearService.getCollectionVersion(applicationId, collectionName);
 
     }
 

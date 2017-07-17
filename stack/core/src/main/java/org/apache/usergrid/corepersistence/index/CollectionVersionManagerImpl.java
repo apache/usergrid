@@ -95,7 +95,7 @@ public class CollectionVersionManagerImpl implements CollectionVersionManager {
         }
 
         String oldCollectionVersion = getCollectionVersion(true);
-        String newCollectionVersion = getNewCollectionVersion();
+        String newCollectionVersion = generateNewCollectionVersion();
         mapManager.putLong(MAP_PREFIX_LAST_CHANGED+collectionName, System.currentTimeMillis());
         mapManager.putString(MAP_PREFIX_VERSION+collectionName, newCollectionVersion);
         cache.put(scope, newCollectionVersion);
@@ -104,7 +104,7 @@ public class CollectionVersionManagerImpl implements CollectionVersionManager {
         return oldCollectionVersion;
     }
 
-    private static String getNewCollectionVersion() {
+    private static String generateNewCollectionVersion() {
         return UUIDGenerator.newTimeUUID().toString();
     }
 

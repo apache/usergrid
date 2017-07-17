@@ -530,7 +530,9 @@ public interface EntityManager {
 
     Object getCollectionSettings( String collectionName );
 
-    void deleteCollection( String collectionName );
+    void clearCollection(String collectionName);
+
+    String getCollectionVersion(String collectionName);
 
     public void grantRolePermission( String roleName, String permission ) throws Exception;
 

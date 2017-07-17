@@ -117,7 +117,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
     private final CollectionSettingsFactory collectionSettingsFactory;
     private ActorSystemManager actorSystemManager;
     private final LockManager lockManager;
-    private final CollectionDeleteService collectionDeleteService;
+    private final CollectionClearService collectionClearService;
     private final CollectionVersionManagerFactory collectionVersionManagerFactory;
 
     private final QueueManagerFactory queueManagerFactory;
@@ -143,7 +143,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
         this.collectionService          = injector.getInstance( CollectionService.class );
         this.connectionService          = injector.getInstance( ConnectionService.class );
         this.collectionSettingsFactory  = injector.getInstance( CollectionSettingsFactory.class );
-        this.collectionDeleteService    = injector.getInstance( CollectionDeleteService.class );
+        this.collectionClearService     = injector.getInstance( CollectionClearService.class );
         this.collectionVersionManagerFactory = injector.getInstance( CollectionVersionManagerFactory.class );
 
         Properties properties = cassandraService.getProperties();
@@ -395,7 +395,7 @@ public class CpEntityManagerFactory implements EntityManagerFactory, Application
             collectionSettingsFactory,
             applicationId,
             queueManagerFactory,
-            collectionDeleteService,
+            collectionClearService,
             collectionVersionManagerFactory);
 
         return em;

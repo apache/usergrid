@@ -51,6 +51,8 @@ import org.apache.usergrid.services.ServicePayload;
 
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -75,7 +77,7 @@ public class CollectionResource extends ServiceResource {
 
 
     @POST
-    @Path("{itemName}/clear")
+    @Path("{itemName}/_clear")
     @Produces({MediaType.APPLICATION_JSON, "application/javascript"})
     @RequireApplicationAccess
     public ApiResponse executeClearCollection(
@@ -84,16 +86,16 @@ public class CollectionResource extends ServiceResource {
         @QueryParam(CONFIRM_COLLECTION_NAME) String confirmCollectionName) throws Exception {
 
         if (logger.isTraceEnabled()){
-            logger.trace( "CollectionResource.executeDeleteOnCollection" );
+            logger.trace( "CollectionResource.executeClearCollection" );
         }
 
-        if (!Application.isCustomCollectionName(itemName.toString())) {
+        if (!Application.isCustomCollectionName(itemName.getPath())) {
             throw new IllegalArgumentException(
                 "Cannot clear built-in collections (" + itemName + ")."
             );
         }
 
-        if (!itemName.toString().equals(confirmCollectionName)) {
+        if (!itemName.getPath().equals(confirmCollectionName)) {
             throw new IllegalArgumentException(
                 "Cannot delete collection without supplying correct collection name in query parameter " + CONFIRM_COLLECTION_NAME
             );
@@ -103,7 +105,7 @@ public class CollectionResource extends ServiceResource {
 
         UUID applicationId = getApplicationId();
 
-        emf.getEntityManager(applicationId).deleteCollection(itemName.toString());
+        emf.getEntityManager(applicationId).clearCollection(itemName.getPath());
 
         if (logger.isTraceEnabled()) {
             logger.trace("CollectionResource.executeDeleteOnCollection() deleted, appId={} collection={}",
@@ -111,12 +113,54 @@ public class CollectionResource extends ServiceResource {
         }
 
         ApiResponse response = createApiResponse();
-        response.setAction("delete");
+        response.setAction("post");
         response.setApplication(emf.getEntityManager( applicationId ).getApplication());
         response.setParams(ui.getQueryParameters());
 
         if (logger.isTraceEnabled()) {
-            logger.trace("CollectionResource.executeDeleteOnCollection() sending response");
+            logger.trace("CollectionResource.executeClearCollection() sending response");
+        }
+
+        return response;
+
+    }
+
+    @GET
+    @Path( "{itemName}/_version")
+    @Produces({MediaType.APPLICATION_JSON,"application/javascript"})
+    @RequireApplicationAccess
+    @JSONP
+    public ApiResponse executeGetCollectionVersion(
+        @Context UriInfo ui,
+        @PathParam("itemName") PathSegment itemName,
+        @QueryParam("callback") @DefaultValue("callback") String callback ) throws Exception {
+
+        if (logger.isTraceEnabled()){
+            logger.trace( "CollectionResource.executeGetCollectionVersion" );
+        }
+
+        if (!Application.isCustomCollectionName(itemName.getPath())) {
+            throw new IllegalArgumentException(
+                "Built-in collections are not versioned."
+            );
+        }
+
+        addItemToServiceContext( ui, itemName );
+
+        UUID applicationId = getApplicationId();
+
+        String currentVersion = emf.getEntityManager(applicationId).getCollectionVersion(itemName.getPath());
+
+        ApiResponse response = createApiResponse();
+        response.setAction("get");
+        response.setApplication(emf.getEntityManager( applicationId ).getApplication());
+        Map<String,Object> data = new HashMap<>();
+        data.put("collectionName",itemName.getPath());
+        data.put("version",currentVersion);
+        response.setData(data);
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("CollectionResource.executeGetCollectionVersion() sending response");
         }
 
         return response;
