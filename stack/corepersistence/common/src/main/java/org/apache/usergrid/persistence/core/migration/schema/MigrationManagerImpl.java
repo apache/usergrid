@@ -137,6 +137,7 @@ public class MigrationManagerImpl implements MigrationManager {
             logger.info( "Received a NotFoundException when attempting to describe keyspace.  It does not exist" );
         }
         catch(Exception e){
+            logger.info("describeKeyspace exception: {}", e.getMessage());
             AstayanxUtils.isKeyspaceMissing("Unable to connect to cassandra", e);
         }
 
