@@ -35,13 +35,10 @@ public class AstayanxUtils {
 
         if ( cassandraException instanceof BadRequestException ) {
 
-            //check if it's b/c the keyspace is missing, if so
-            final String message = cassandraException.getMessage();
-
-            //no op, just swallow
-            if(message.contains( "why:Keyspace" ) && message.contains( "does not exist" )){
+            //check if it's b/c the keyspace is missing
+            if (((BadRequestException) cassandraException).isKeyspaceDoestNotExist()) {
                 return;
-            };
+            }
         }
 
        throw new RuntimeException( rethrowMessage, cassandraException );
