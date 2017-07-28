@@ -54,6 +54,7 @@ import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.security.AuthPrincipalInfo;
 import org.apache.usergrid.security.AuthPrincipalType;
+import org.apache.usergrid.security.PasswordPolicy;
 import org.apache.usergrid.security.crypto.EncryptionService;
 import org.apache.usergrid.security.oauth.AccessInfo;
 import org.apache.usergrid.security.oauth.ClientCredentialsInfo;
@@ -172,6 +173,8 @@ public class ManagementServiceImpl implements ManagementService {
 
     protected LocalShiroCache localShiroCache;
 
+    protected PasswordPolicy passwordPolicy;
+
 
     private LoadingCache<UUID, OrganizationConfig> orgConfigByAppCache = CacheBuilder.newBuilder().maximumSize( 1000 )
         .expireAfterWrite( Long.valueOf( System.getProperty(ORG_CONFIG_CACHE_PROP, "30000") ) , TimeUnit.MILLISECONDS)
@@ -215,6 +218,7 @@ public class ManagementServiceImpl implements ManagementService {
         this.service = injector.getInstance(ApplicationService.class);
         this.localShiroCache = injector.getInstance(LocalShiroCache.class);
 
+        this.passwordPolicy = injector.getInstance(PasswordPolicy.class);
     }
 
     @Autowired
@@ -3494,6 +3498,16 @@ public class ManagementServiceImpl implements ManagementService {
             new CacheScope( new SimpleId( CpNamingUtils.MANAGEMENT_APPLICATION_ID, "application" )));
         scopedCache.invalidate();
         localShiroCache.invalidateAll();
+    }
+
+    @Override
+    public Collection<String> passwordPolicyCheck(String password, boolean isAdminUser) {
+        return passwordPolicy.policyCheck(password, isAdminUser);
+    }
+
+    @Override
+    public String getPasswordDescription(boolean isAdminUser) {
+        return passwordPolicy.getDescription(isAdminUser);
     }
 
     @Override
