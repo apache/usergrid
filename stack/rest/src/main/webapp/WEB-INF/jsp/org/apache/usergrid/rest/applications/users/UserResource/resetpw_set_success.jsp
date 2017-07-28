@@ -29,7 +29,7 @@ limitations under the License.
 </head>
 <body>
 
-	<p>New password set for <c:out value="${it.user.email}"/></p>
+	<p>New password set for <c:out value="${it.user.email}" escapeXml="true"/></p>
 
 </body>
 </html>
