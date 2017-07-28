@@ -27,7 +27,7 @@ limitations under the License.
 <body>
 
 	<div class="dialog-area">
-		<c:if test="${!empty it.errorMsg}"><div class="dialog-form-message">${it.errorMsg}</div></c:if>
+		<c:if test="${!empty fn:escnapeXml(it.errorMsg)}"><div class="dialog-form-message">${fn:escapeXml(it.errorMsg)}</div></c:if>
 		<form class="dialog-form" action="" method="post">
 			<fieldset>
 				<p>
@@ -38,7 +38,7 @@ limitations under the License.
 					<input class="text_field" id="email" name="email" type="text" />
 				</p>
 				<p id="human-proof"></p>
-				${it.reCaptchaHtml}
+				${fn:escapeXml(it.reCaptchaHtml)}
 				<p class="buttons">
 					<button type="submit">Submit</button>
 				</p>
