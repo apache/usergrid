@@ -26,7 +26,7 @@ limitations under the License.
 </head>
 <body>
 
-	<p>Your organization <c:out value="${it.organization.name}"/> has been successfully activated.</p>
+	<p>Your organization <c:out value="${it.organization.name}" escapeXml="true"/> has been successfully activated.</p>
 
 </body>
 </html>

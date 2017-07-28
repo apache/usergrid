@@ -2,6 +2,7 @@
 	pageEncoding="ISO-8859-1"%>
 <%@ page import="org.apache.usergrid.rest.AbstractContextResource"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 <!--
 Licensed to the Apache Software Foundation (ASF) under one or more
 contributor license agreements.  See the NOTICE file distributed with
@@ -28,13 +29,13 @@ limitations under the License.
 <body>
 
 	<div class="dialog-area">
-		<c:if test="${!empty it.errorMsg}"><div class="dialog-form-message">${it.errorMsg}</div></c:if>
+		<c:if test="${!empty fn:escapeXml(it.errorMsg)}"><div class="dialog-form-message">${fn:escapeXml(it.errorMsg)}</div></c:if>
 		<form class="dialog-form" action="" method="post">
-			<input type="hidden" name="response_type" value="${it.responseType}">
-			<input type="hidden" name="client_id" value="${it.clientId}">
-			<input type="hidden" name="redirect_uri" value="${it.redirectUri}">
-			<input type="hidden" name="scope" value="${it.scope}">
-			<input type="hidden" name="state" value="${it.state}">
+			<input type="hidden" name="response_type" value="${fn:escapeXml(it.responseType)}">
+			<input type="hidden" name="client_id" value="${fn:escapeXml(it.clientId)}">
+			<input type="hidden" name="redirect_uri" value="${fn:escapeXml(it.redirectUri)}">
+			<input type="hidden" name="scope" value="${fn:escapeXml(it.scope)}">
+			<input type="hidden" name="state" value="${fn:escapeXml(it.state)}">
 			<fieldset>
 				<p>
 					<label for="username">Username</label>
