@@ -23,7 +23,12 @@ public class FakeSchemaManager implements SchemaManager {
     public void create() {
 
     }
-    
+
+    @Override
+    public void create(boolean dropKeyspace) {
+
+    }
+
 
     @Override
     public void populateBaseData() {

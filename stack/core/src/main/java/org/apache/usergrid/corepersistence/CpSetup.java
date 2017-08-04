@@ -76,12 +76,18 @@ public class CpSetup implements Setup {
 
     @Override
     public void initSchema() throws Exception {
+        initSchema(false);
+    }
+
+
+    @Override
+    public void initSchema(boolean dropKeyspace) throws Exception {
 
         // Initialize the management app index in Elasticsearch
         this.emf.initializeManagementIndex();
 
         // Create the schema (including keyspace) in Cassandra
-        setupSchema();
+        setupSchema(dropKeyspace);
         setupLegacySchema();
 
     }
@@ -138,11 +144,11 @@ public class CpSetup implements Setup {
      *
      */
 
-    private void setupSchema() throws Exception {
+    private void setupSchema(boolean dropKeyspace) throws Exception {
 
         MigrationManager m = injector.getInstance( MigrationManager.class );
         try {
-            m.migrate();
+            m.migrate(dropKeyspace);
         }
         catch ( MigrationException ex ) {
             throw new RuntimeException( "Error migrating Core Persistence", ex );

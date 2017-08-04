@@ -23,6 +23,9 @@ public interface SchemaManager {
     /** Create any schema necessary for test execution. */
     void create();
 
+    /** Create any schema necessary for test execution, dropping keyspace if requested. */
+    void create(boolean dropKeyspace);
+
     /** Any breath-of-life data needed for the base system */
     void populateBaseData();
 

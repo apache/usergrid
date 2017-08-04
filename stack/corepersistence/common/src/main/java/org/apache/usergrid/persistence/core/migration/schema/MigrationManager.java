@@ -31,4 +31,9 @@ public interface MigrationManager {
      * not exist
      */
     public void migrate() throws MigrationException;
+
+    /**
+     * Perform any migration necessary in the application.  Will drop keyspaces first if requested.
+     */
+    public void migrate(boolean dropKeyspace) throws MigrationException;
 }
