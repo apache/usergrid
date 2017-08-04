@@ -26,6 +26,14 @@ public interface Setup {
 
 
     /**
+     * Initialize all configuration for the system setup. Creates keyspaces and elasticsearch indexes,
+     * dropping keyspaces first if requested
+     * @throws Exception
+     */
+    void initSchema(boolean dropKeyspace) throws Exception;
+
+
+    /**
      * Bootstrap the root application to allow the system to function.
      * @throws Exception
      */

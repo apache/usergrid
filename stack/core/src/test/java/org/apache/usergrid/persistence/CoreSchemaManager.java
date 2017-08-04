@@ -50,6 +50,12 @@ public class CoreSchemaManager implements SchemaManager {
 
     @Override
     public void create() {
+        create(false);
+    }
+
+
+    @Override
+    public void create(boolean dropKeyspace) {
         try {
             setup.initSchema();
             lockManager.setup();

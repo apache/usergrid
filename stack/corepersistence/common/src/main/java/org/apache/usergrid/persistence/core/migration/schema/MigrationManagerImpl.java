@@ -68,9 +68,19 @@ public class MigrationManagerImpl implements MigrationManager {
 
     @Override
     public void migrate() throws MigrationException {
+        migrate(false);
+    }
+
+
+    @Override
+    public void migrate(boolean dropKeyspace) throws MigrationException {
 
 
         try {
+
+            if (dropKeyspace) {
+                dropKeyspace();
+            }
 
             testAndCreateKeyspace();
 
@@ -117,6 +127,14 @@ public class MigrationManagerImpl implements MigrationManager {
         logger.info( "Created column family {}", columnFamily.getColumnFamily().getName() );
 
         waitForMigration();
+    }
+
+
+    /**
+     * Drop keyspace.
+     */
+    private void dropKeyspace() throws ConnectionException {
+        keyspace.dropKeyspace();
     }
 
 
