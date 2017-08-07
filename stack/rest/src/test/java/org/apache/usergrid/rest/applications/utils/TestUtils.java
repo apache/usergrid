@@ -62,4 +62,8 @@ public class TestUtils {
 
         return UUIDUtils.tryExtractUUID( entity.get( "uuid" ).toString() );
     }
+
+    public static String getCollectionNameWithUUID(String collectionBase) {
+        return collectionBase + "_" + UUIDUtils.newTimeUUID().toString();
+    }
 }
