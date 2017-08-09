@@ -134,7 +134,15 @@ public class MigrationManagerImpl implements MigrationManager {
      * Drop keyspace.
      */
     private void dropKeyspace() throws ConnectionException {
-        keyspace.dropKeyspace();
+        try {
+            keyspace.dropKeyspace();
+        }
+        catch (NotFoundException nfe) {
+            logger.info( "Received a NotFoundException when attempting to drop keyspace.  It does not exist" );
+        }
+        catch (ConnectionException e) {
+            logger.info( "Received a ConnectionException when attempting to drop keyspace: {}", e.getMessage());
+        }
     }
 
 

@@ -98,7 +98,7 @@ public class ConcurrentProcessSingleton {
 
                 // create our schema
                 logger.info("Creating database");
-                schemaManager.create();
+                schemaManager.create(CLEAN_STORAGE);
 
                 logger.info( "Populating database" );
                 schemaManager.populateBaseData();
