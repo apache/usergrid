@@ -80,9 +80,10 @@ public class MigrationManagerImpl implements MigrationManager {
 
             if (dropKeyspace) {
                 dropKeyspace();
+                createKeyspace();
+            } else {
+                testAndCreateKeyspace();
             }
-
-            testAndCreateKeyspace();
 
             for ( Migration migration : migrations ) {
 
@@ -172,13 +173,20 @@ public class MigrationManagerImpl implements MigrationManager {
             return;
         }
 
+        createKeyspace();
 
+    }
+
+    /**
+     * Create keyspace, it must not exist (either have checked for it or dropped it).
+     */
+    private void createKeyspace() throws ConnectionException {
         ImmutableMap.Builder<String, Object> strategyOptions = getKeySpaceProps();
 
 
         ImmutableMap<String, Object> options =
-                ImmutableMap.<String, Object>builder().put( "strategy_class", fig.getStrategyClass() )
-                            .put( "strategy_options", strategyOptions.build() ).build();
+            ImmutableMap.<String, Object>builder().put( "strategy_class", fig.getStrategyClass() )
+                .put( "strategy_options", strategyOptions.build() ).build();
 
 
         keyspace.createKeyspace( options );
