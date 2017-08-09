@@ -57,7 +57,7 @@ public class CoreSchemaManager implements SchemaManager {
     @Override
     public void create(boolean dropKeyspace) {
         try {
-            setup.initSchema();
+            setup.initSchema(dropKeyspace);
             lockManager.setup();
         }
         catch ( Exception ex ) {
@@ -87,24 +87,7 @@ public class CoreSchemaManager implements SchemaManager {
 
     @Override
     public void destroy() {
-        logger.info( "dropping keyspaces" );
-        try {
-            cluster.dropKeyspace( CassandraService.getApplicationKeyspace() );
-        }
-        catch ( RuntimeException ire ) {
-            //swallow if it just doesn't exist
-        }
-
-
-        try {
-            cluster.dropKeyspace( CassandraService.getApplicationKeyspace() );
-        }
-        catch ( RuntimeException ire ) {
-            //swallow if it just doesn't exist
-        }
-
-        logger.info( "keyspaces dropped" );
-
+        logger.info( "keyspace dropping deferred" );
 
         final EsProvider provider =
             SpringResource.getInstance().getBean( Injector.class ).getInstance( EsProvider.class );
