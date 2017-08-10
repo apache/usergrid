@@ -31,7 +31,7 @@ limitations under the License.
 <body>
 
 	<div class="dialog-area">
-		<c:if test="${!empty fn:escapeXml(it.errorMsg)}"><div class="dialog-form-message">${fn:escapeXml(it.errorMsg)}</div></c:if>
+		<c:if test="${!empty it.errorMsg}"><div class="dialog-form-message">${fn:escapeXml(it.errorMsg)}</div></c:if>
 		<form class="dialog-form" action="" method="post">
 			<input type="hidden" name="token" value="${fn:escapeXml(it.token)}">
 			<fieldset>
