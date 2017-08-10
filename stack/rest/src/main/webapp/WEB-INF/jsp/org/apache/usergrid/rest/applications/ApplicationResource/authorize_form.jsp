@@ -29,7 +29,7 @@ limitations under the License.
 <body>
 
 	<div class="dialog-area">
-		<c:if test="${!empty fn:escapeXml(it.errorMsg)}"><div class="dialog-form-message">${fn:escapeXml(it.errorMsg)}</div></c:if>
+		<c:if test="${!empty it.errorMsg}"><div class="dialog-form-message">${fn:escapeXml(it.errorMsg)}</div></c:if>
 		<form class="dialog-form" action="" method="post">
 			<input type="hidden" name="response_type" value="${fn:escapeXml(it.responseType)}">
 			<input type="hidden" name="client_id" value="${fn:escapeXml(it.clientId)}">
