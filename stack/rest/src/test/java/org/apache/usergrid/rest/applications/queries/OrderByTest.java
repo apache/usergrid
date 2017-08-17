@@ -41,21 +41,21 @@ public class OrderByTest extends QueryTestBase {
     @Test
     public void orderByLongAsc() throws IOException {
         int numOfEntities = 20;
-        String collectionName = "activities";
+        String collectionName = "beans";
         //create our test entities
         generateTestEntities(numOfEntities, collectionName);
 
         QueryParameters params = new QueryParameters()
             .setQuery("select * order by ordinal asc")
             .setLimit(numOfEntities);
-        Collection activities = this.app().collection("activities").get(params);
-        assertEquals(numOfEntities, activities.getResponse().getEntityCount());
+        Collection coll = this.app().collection(collectionName).get(params);
+        assertEquals(numOfEntities, coll.getResponse().getEntityCount());
         //results should be ordered by ordinal
         int index = 0;
-        while (activities.hasNext()) {
-            Entity activity = activities.next();
+        while (coll.hasNext()) {
+            Entity entity = coll.next();
             //make sure the correct ordinal properties are returned
-            assertEquals(index++, Long.parseLong(activity.get("ordinal").toString()));
+            assertEquals(index++, Long.parseLong(entity.get("ordinal").toString()));
         }
     }
 
@@ -68,23 +68,23 @@ public class OrderByTest extends QueryTestBase {
     @Test
     public void orderByLongDesc() throws IOException {
         int numOfEntities = 20;
-        String collectionName = "activities";
+        String collectionName = "chickpeas";
         //create our test entities
         generateTestEntities(numOfEntities, collectionName);
 
         QueryParameters params = new QueryParameters()
             .setQuery("select * order by ordinal desc")
             .setLimit(numOfEntities);
-        Collection activities = this.app().collection("activities").get(params);
-        assertEquals(numOfEntities, activities.getResponse().getEntityCount());
+        Collection coll = this.app().collection(collectionName).get(params);
+        assertEquals(numOfEntities, coll.getResponse().getEntityCount());
         //Since the sort order is descending, start at the last entity we created
         int index = numOfEntities - 1;
         //results should be sorted by ordinal
-        while (activities.hasNext()) {
-            Entity activity = activities.next();
+        while (coll.hasNext()) {
+            Entity entity = coll.next();
             //make sure the correct ordinal properties are returned
             //decrement the index to get the next entity in reverse order
-            assertEquals(index--, Long.parseLong(activity.get("ordinal").toString()));
+            assertEquals(index--, Long.parseLong(entity.get("ordinal").toString()));
         }
     }
 
@@ -96,25 +96,25 @@ public class OrderByTest extends QueryTestBase {
     @Test
     public void orderByBooleanAsc() throws IOException {
         int numOfEntities = 20;
-        String collectionName = "activities";
+        String collectionName = "lentils";
         //create our test entities
         generateTestEntities(numOfEntities, collectionName);
 
         QueryParameters params = new QueryParameters()
             .setQuery("select * order by madeup asc")
             .setLimit(numOfEntities);
-        Collection activities = this.app().collection("activities").get(params);
-        assertEquals(numOfEntities, activities.getResponse().getEntityCount());
+        Collection coll = this.app().collection(collectionName).get(params);
+        assertEquals(numOfEntities, coll.getResponse().getEntityCount());
         int index = 0;
         //results should be sorted false, then true
         //The first half of entities returned should have "madeup = false"
         //The second half of entities returned should have "madeup = true"
-        while (activities.hasNext()) {
-            Entity activity = activities.next();
+        while (coll.hasNext()) {
+            Entity entity = coll.next();
             if (index++ < numOfEntities / 2) {
-                assertEquals("false", activity.get("madeup").toString());
+                assertEquals("false", entity.get("madeup").toString());
             } else {
-                assertEquals("true", activity.get("madeup").toString());
+                assertEquals("true", entity.get("madeup").toString());
             }
         }
     }
@@ -127,26 +127,26 @@ public class OrderByTest extends QueryTestBase {
     @Test
     public void orderByBooleanDesc() throws IOException {
         int numOfEntities = 20;
-        String collectionName = "activities";
+        String collectionName = "peas";
         //create our test entities
         generateTestEntities(numOfEntities, collectionName);
 
         QueryParameters params = new QueryParameters()
             .setQuery("select * order by madeup desc")
             .setLimit(numOfEntities);
-        Collection activities = this.app().collection("activities").get(params);
-        assertEquals(numOfEntities, activities.getResponse().getEntityCount());
+        Collection coll = this.app().collection(collectionName).get(params);
+        assertEquals(numOfEntities, coll.getResponse().getEntityCount());
         int index = 0;
         //results should be sorted true, then false
-        while (activities.hasNext()) {
-            Entity activity = activities.next();
+        while (coll.hasNext()) {
+            Entity entity = coll.next();
             //make sure the booleans are ordered correctly
             //The first half of entities returned should have "madeup = true"
             //The second half of entities returned should have "madeup = false"
             if (index++ < numOfEntities / 2) {
-                assertEquals("true", activity.get("madeup").toString());
+                assertEquals("true", entity.get("madeup").toString());
             } else {
-                assertEquals("false", activity.get("madeup").toString());
+                assertEquals("false", entity.get("madeup").toString());
             }
         }
     }
@@ -159,25 +159,25 @@ public class OrderByTest extends QueryTestBase {
     @Test
     public void orderByStringAsc() throws IOException {
         int numOfEntities = 20;
-        String collectionName = "activities";
+        String collectionName = "carrots";
         //create our test entities
         generateTestEntities(numOfEntities, collectionName);
         //Sort by the "verb" property to test alphabetical sorting of string properties
         QueryParameters params = new QueryParameters()
             .setQuery("select * order by verb asc")
             .setLimit(numOfEntities);
-        Collection activities = this.app().collection("activities").get(params);
-        assertEquals(numOfEntities, activities.getResponse().getEntityCount());
+        Collection coll = this.app().collection(collectionName).get(params);
+        assertEquals(numOfEntities, coll.getResponse().getEntityCount());
         int index = 0;
         //results should be sorted "go", then "stop"
-        while (activities.hasNext()) {
-            Entity activity = activities.next();
+        while (coll.hasNext()) {
+            Entity entity = coll.next();
             //The first half of entities returned should have "verb = 'go'"
             //The second half of entities returned should have "verb = 'stop'"
             if (index++ < numOfEntities / 2) {
-                assertEquals("go", activity.get("verb").toString());
+                assertEquals("go", entity.get("verb").toString());
             } else {
-                assertEquals("stop", activity.get("verb").toString());
+                assertEquals("stop", entity.get("verb").toString());
             }
         }
     }
@@ -190,7 +190,7 @@ public class OrderByTest extends QueryTestBase {
     @Test
     public void orderByStringDesc() throws IOException {
         int numOfEntities = 20;
-        String collectionName = "activities";
+        String collectionName = "celery";
         //create our test entities
         generateTestEntities(numOfEntities, collectionName);
 
@@ -198,18 +198,18 @@ public class OrderByTest extends QueryTestBase {
         QueryParameters params = new QueryParameters()
             .setQuery("select * order by verb desc")
             .setLimit(numOfEntities);
-        Collection activities = this.app().collection("activities").get(params);
-        assertEquals(numOfEntities, activities.getResponse().getEntityCount());
+        Collection coll = this.app().collection(collectionName).get(params);
+        assertEquals(numOfEntities, coll.getResponse().getEntityCount());
         int index = 0;
         //results should be sorted "stop", then "go"
-        while (activities.hasNext()) {
-            Entity activity = activities.next();
+        while (coll.hasNext()) {
+            Entity entity = coll.next();
             //The first half of entities returned should have "verb = 'stop'"
             //The second half of entities returned should have "verb = 'go'"
             if (index++ < numOfEntities / 2) {
-                assertEquals("stop", activity.get("verb").toString());
+                assertEquals("stop", entity.get("verb").toString());
             } else {
-                assertEquals("go", activity.get("verb").toString());
+                assertEquals("go", entity.get("verb").toString());
             }
         }
 
@@ -229,6 +229,7 @@ public class OrderByTest extends QueryTestBase {
     @Test
     public void orderByShouldNotAffectResults() throws IOException {
 
+        String collectionName = "mushrooms";
         long created = 0;
         Entity actor = new Entity();
         actor.put("displayName", "Erin");
@@ -239,10 +240,10 @@ public class OrderByTest extends QueryTestBase {
         //1. Insert entities
         for (int i = 0; i < 20; i++) {
             props.put("ordinal", i);
-            Entity activity = this.app().collection("activity").post(props);
-            logger.info("Created", activity.get("created").toString());
+            Entity entity = this.app().collection(collectionName).post(props);
+            logger.info("Created", entity.get("created").toString());
             if (i == 5) {
-                created = Long.parseLong(activity.get("created").toString());
+                created = Long.parseLong(entity.get("created").toString());
             }
         }
 
@@ -250,18 +251,18 @@ public class OrderByTest extends QueryTestBase {
         //2. Query without 'order by'
         String query = "select * where created > " + created;
         QueryParameters params = new QueryParameters().setQuery(query);
-        Collection activitiesWithoutOrderBy = this.app().collection("activities").get(params);
-        assertEquals(10, activitiesWithoutOrderBy.getResponse().getEntityCount());
+        Collection entitiesWithoutOrderBy = this.app().collection(collectionName).get(params);
+        assertEquals(10, entitiesWithoutOrderBy.getResponse().getEntityCount());
         //3. Query with 'order by'
         query = query + " order by created desc";
         params.setQuery(query);
-        Collection activitiesWithOrderBy = this.app().collection("activities").get(params);
+        Collection activitiesWithOrderBy = this.app().collection(collectionName).get(params);
         assertEquals(10, activitiesWithOrderBy.getResponse().getEntityCount());
         //4. Ensure the same entities are returned
-        while (activitiesWithoutOrderBy.hasNext() && activitiesWithOrderBy.hasNext()) {
-            Entity activityWithoutOrderBy = activitiesWithoutOrderBy.next();
-            Entity activityWithOrderBy = activitiesWithOrderBy.next();
-            assertEquals(activityWithoutOrderBy.get("uuid").toString(), activityWithOrderBy.get("uuid").toString());
+        while (entitiesWithoutOrderBy.hasNext() && activitiesWithOrderBy.hasNext()) {
+            Entity entityWithoutOrderBy = entitiesWithoutOrderBy.next();
+            Entity entityWithOrderBy = activitiesWithOrderBy.next();
+            assertEquals(entityWithoutOrderBy.get("uuid").toString(), entityWithOrderBy.get("uuid").toString());
         }
     }
 
@@ -277,6 +278,7 @@ public class OrderByTest extends QueryTestBase {
     @Test
     public void orderByComesBeforeLimitResult() throws IOException {
 
+        String collectionName = "onions";
         Entity actor = new Entity();
         actor.put("displayName", "Erin");
         Entity props = new Entity();
@@ -286,23 +288,23 @@ public class OrderByTest extends QueryTestBase {
         //1. Insert entities
         for (int i = 0; i < 20; i++) {
             props.put("ordinal", i);
-            this.app().collection("activity").post(props);
+            this.app().collection(collectionName).post(props);
         }
 
         waitForQueueDrainAndRefreshIndex();
         //2. Query a subset of the entities, specifying order and limit
         String query = "select * where created > " + 1 + " order by created desc";
         QueryParameters params = new QueryParameters().setQuery(query).setLimit(5);
-        Collection activities = this.app().collection("activities").get(params);
+        Collection coll = this.app().collection(collectionName).get(params);
         //3. Ensure the correct number of results are returned
-        assertEquals(5, activities.getResponse().getEntityCount());
+        assertEquals(5, coll.getResponse().getEntityCount());
 
         //2. Query a subset of the entities, specifying order and limit
          query = " where created > " + 1 + " order by created desc";
          params = new QueryParameters().setQuery(query).setLimit(5);
-         activities = this.app().collection("activities").get(params);
+         coll = this.app().collection(collectionName).get(params);
         //3. Ensure the correct number of results are returned
-        assertEquals(5, activities.getResponse().getEntityCount());
+        assertEquals(5, coll.getResponse().getEntityCount());
     }
 
     /**
@@ -316,8 +318,9 @@ public class OrderByTest extends QueryTestBase {
     @Test
     public void orderByReturnCorrectResults() throws IOException {
 
+        String collectionName = "peppers";
         int size = 20;
-        Entity[] activities = new Entity[size];
+        Entity[] entities = new Entity[size];
 
         Entity actor = new Entity();
         actor.put("displayName", "Erin");
@@ -328,34 +331,34 @@ public class OrderByTest extends QueryTestBase {
         //1. Insert a number of entities and add them to an array
         for (int i = 0; i < size; i++) {
             props.put("ordinal", i);
-            Entity e = this.app().collection("activity").post(props);
-            activities[i] = e;
+            Entity e = this.app().collection(collectionName).post(props);
+            entities[i] = e;
             logger.info(String.valueOf(e.get("uuid").toString()));
-            logger.info(String.valueOf(Long.parseLong(activities[0].get("created").toString())));
+            logger.info(String.valueOf(Long.parseLong(entities[0].get("created").toString())));
         }
 
         waitForQueueDrainAndRefreshIndex(750);
 
 
-        ArrayUtils.reverse(activities);
-        long lastCreated = Long.parseLong(activities[0].get("created").toString());
+        ArrayUtils.reverse(entities);
+        long lastCreated = Long.parseLong(entities[0].get("created").toString());
         //2. Query for the entities in descending order
         String errorQuery = String.format("select * where created <= %d order by created desc", lastCreated);
         int index = 0;
 
         QueryParameters params = new QueryParameters().setQuery(errorQuery);
-        Collection activitiesResponse = this.app().collection("activities").get(params);
+        Collection coll = this.app().collection(collectionName).get(params);
         //3. Validate that the order is correct
         do {
-            int returnSize = activitiesResponse.getResponse().getEntityCount();
+            int returnSize = coll.getResponse().getEntityCount();
             //loop through the current page of results
             for (int i = 0; i < returnSize; i++, index++) {
-                assertEquals( ( activities[index] ).get( "uuid" ).toString(),
-                    activitiesResponse.getResponse().getEntities().get(i).get("uuid").toString());
+                assertEquals( ( entities[index] ).get( "uuid" ).toString(),
+                    coll.getResponse().getEntities().get(i).get("uuid").toString());
             }
             //grab the next page of results
-            activitiesResponse = this.app().collection("activities").getNextPage(activitiesResponse, params, true);
+            coll = this.app().collection(collectionName).getNextPage(coll, params, true);
         }
-        while (activitiesResponse.getCursor() != null);
+        while (coll.getCursor() != null);
     }
 }
