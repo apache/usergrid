@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.index.impl;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,7 +89,9 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         }
 
         //add app id for indexing
-        container.addIndexRequest(new IndexOperation(writeAlias, applicationScope, indexEdge, entity,fieldsToIndex));
+        container.addIndexRequest(new IndexOperation(writeAlias, applicationScope,
+            new IndexEdgeImpl(indexEdge, false),
+            new Entity(entity, false),fieldsToIndex));
         return this;
     }
 
@@ -111,7 +114,9 @@ public class EsEntityIndexBatchImpl implements EntityIndexBatch {
         }
 
 
-        container.addDeIndexRequest(new DeIndexOperation(indexes, applicationScope, searchEdge, id, version));
+        container.addDeIndexRequest(new DeIndexOperation(indexes, applicationScope,
+            new SearchEdgeImpl(searchEdge, false),
+            new SimpleId(id, false), version));
 
         return this;
     }

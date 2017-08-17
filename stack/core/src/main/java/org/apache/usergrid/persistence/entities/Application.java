@@ -40,40 +40,6 @@ public class Application extends TypedEntity implements Serializable {
 
     public static final String ENTITY_TYPE = "application";
 
-    public static final String COLLECTION_USERS = "users";
-
-    public static final String COLLECTION_GROUPS = "groups";
-
-    public static final String COLLECTION_ASSETS = "assets";
-
-    public static final String COLLECTION_ACTIVITIES = "activities";
-
-    public static final String COLLECTION_EVENTS = "events";
-
-    public static final String COLLECTION_FOLDERS = "folders";
-
-    public static final String COLLECTION_DEVICES = "devices";
-
-    public static final String COLLECTION_NOTIFICATIONS = "notifications";
-
-    public static final String COLLECTION_ROLES = "roles";
-
-    public static boolean isCustomCollectionName(String collectionName) {
-        switch (collectionName.toLowerCase()) {
-            case COLLECTION_USERS:
-            case COLLECTION_GROUPS:
-            case COLLECTION_ASSETS:
-            case COLLECTION_ACTIVITIES:
-            case COLLECTION_EVENTS:
-            case COLLECTION_FOLDERS:
-            case COLLECTION_DEVICES:
-            case COLLECTION_NOTIFICATIONS:
-            case COLLECTION_ROLES:
-                return false;
-        }
-        return true;
-    }
-
     @EntityProperty(indexed = true, fulltextIndexed = false, required = true, mutable = false, aliasProperty = true,
             basic = true)
     protected String name;

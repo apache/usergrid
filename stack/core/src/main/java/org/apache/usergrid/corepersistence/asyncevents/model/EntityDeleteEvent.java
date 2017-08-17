@@ -27,33 +27,19 @@ import org.apache.usergrid.persistence.collection.serialization.impl.migration.E
  */
 public final class EntityDeleteEvent extends AsyncEvent {
 
-
     @JsonProperty
     protected EntityIdScope entityIdScope;
-
-    @JsonProperty
-    protected boolean markedOnly;
 
     public EntityDeleteEvent() {
         super();
     }
 
     public EntityDeleteEvent(String sourceRegion, EntityIdScope entityIdScope) {
-        this(sourceRegion, entityIdScope, true);
-    }
-
-    public EntityDeleteEvent(String sourceRegion, EntityIdScope entityIdScope, boolean markedOnly) {
         super(sourceRegion);
         this.entityIdScope =  entityIdScope;
-        this.markedOnly = markedOnly;
     }
-
 
     public EntityIdScope getEntityIdScope() {
         return entityIdScope;
-    }
-
-    public boolean markedOnly() {
-        return markedOnly;
     }
 }

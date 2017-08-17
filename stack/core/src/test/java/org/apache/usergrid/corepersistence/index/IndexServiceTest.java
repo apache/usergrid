@@ -45,6 +45,7 @@ import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.StringField;
+import org.apache.usergrid.persistence.model.util.CollectionUtils;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.junit.Before;
 import org.junit.Test;
@@ -205,7 +206,9 @@ public class IndexServiceTest {
 
         assertEquals( 1, collectionResults.size() );
 
-        assertEquals( testEntity.getId(), collectionResults.get( 0 ).getId() );
+        // with collection versioning, empty versions are included
+        assertEquals(testEntity.getId().getType(), CollectionUtils.stripEmptyVersion(collectionResults.get(0).getId().getType()));
+        assertEquals(testEntity.getId().getUuid(), collectionResults.get(0).getId().getUuid());
 
 
         //query until the connection edge is available
@@ -216,7 +219,9 @@ public class IndexServiceTest {
 
         assertEquals( 1, connectionResults.size() );
 
-        assertEquals( testEntity.getId(), connectionResults.get( 0 ).getId() );
+        // with collection versioning, empty versions are included
+        assertEquals(testEntity.getId().getType(), CollectionUtils.stripEmptyVersion(collectionResults.get(0).getId().getType()));
+        assertEquals(testEntity.getId().getUuid(), collectionResults.get(0).getId().getUuid());
     }
 
     /**
@@ -294,8 +299,9 @@ public class IndexServiceTest {
 
         assertEquals( 1, collectionResults.size() );
 
-        assertEquals( testEntity.getId(), collectionResults.get( 0 ).getId() );
-
+        // with collection versioning, empty versions are included
+        assertEquals(testEntity.getId().getType(), CollectionUtils.stripEmptyVersion(collectionResults.get(0).getId().getType()));
+        assertEquals(testEntity.getId().getUuid(), collectionResults.get(0).getId().getUuid());
 
         final SearchEdge connectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( connectionSearch );
 
@@ -306,7 +312,8 @@ public class IndexServiceTest {
 
         assertEquals( 1, connectionResults.size() );
 
-        assertEquals( testEntity.getId(), connectionResults.get( 0 ).getId() );
+        assertEquals(testEntity.getId().getType(), CollectionUtils.stripEmptyVersion(collectionResults.get(0).getId().getType()));
+        assertEquals(testEntity.getId().getUuid(), collectionResults.get(0).getId().getUuid());
 
 
         final SearchEdge lastConnectionSearchEdge = CpNamingUtils.createSearchEdgeFromSource( lastSearch );
@@ -318,7 +325,8 @@ public class IndexServiceTest {
 
         assertEquals( 1, lastConnectionResults.size() );
 
-        assertEquals( testEntity.getId(), lastConnectionResults.get( 0 ).getId() );
+        assertEquals(testEntity.getId().getType(), CollectionUtils.stripEmptyVersion(lastConnectionResults.get(0).getId().getType()));
+        assertEquals(testEntity.getId().getUuid(), lastConnectionResults.get(0).getId().getUuid());
     }
 
 

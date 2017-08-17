@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.usergrid.corepersistence.index.CollectionScopeImpl;
 import org.apache.usergrid.corepersistence.index.CollectionVersionManager;
 import org.apache.usergrid.corepersistence.index.CollectionVersionManagerFactory;
-import org.apache.usergrid.corepersistence.index.CollectionVersionUtil;
+import org.apache.usergrid.corepersistence.index.CollectionVersionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -49,6 +49,7 @@ import com.google.common.cache.LoadingCache;
 
 import static org.apache.usergrid.persistence.SimpleEntityRef.ref;
 import static org.apache.usergrid.utils.InflectionUtils.pluralize;
+import static org.apache.usergrid.utils.InflectionUtils.singularize;
 
 
 public class ServiceManager {
@@ -225,6 +226,57 @@ public class ServiceManager {
     }
 
 
+    public static String MAP_VERSIONED_COLLECTION_NAME_KEY = "versionedName";
+    public static String MAP_UNVERSIONED_COLLECTION_NAME_KEY = "unversionedName";
+    public static String MAP_VERSIONED_ITEM_TYPE_KEY = "versionedType";
+    public static String MAP_UNVERSIONED_ITEM_TYPE_KEY = "unversionedType";
+    public static String MAP_COLLECTION_VERSION_KEY = "version";
+
+    /**
+     * Returns versioned collection info in Map (
+     * @param collectionName
+     * @param itemType
+     * @return
+     */
+    public Map<String,String> getVersionedCollectionInfo(String collectionName, String itemType) {
+        Map<String,String> collectionInfo = new HashMap<>();
+        String versionedCollectionName = collectionName;
+        String unversionedCollectionName = CollectionVersionUtils.getBaseCollectionName(collectionName);
+        String versionedItemType = itemType;
+        // this works for item type too
+        String unversionedItemType = CollectionVersionUtils.getBaseCollectionName(itemType);
+        String collectionVersion = "";
+        if (collectionName.equals(unversionedCollectionName)) {
+            // no version passed in
+            CollectionVersionManager collectionVersionManager = cvmf.getInstance(new CollectionScopeImpl(applicationId, unversionedCollectionName));
+            // always bypass collection version cache for now
+            collectionVersion = collectionVersionManager.getCollectionVersion(true);
+
+            if (collectionVersion != "") {
+                if (logger.isTraceEnabled()) {
+                    logger.trace("getVersionedCollectionName: currentCollectionVersion={}", collectionVersion);
+                }
+                versionedCollectionName = CollectionVersionUtils.buildVersionedNameString(unversionedCollectionName, collectionVersion, false);
+                versionedItemType = CollectionVersionUtils.buildVersionedNameString(itemType, collectionVersion, false);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("getVersionedCollectionName() - using versioned collection name: collectionName={} versionedCollectionName={} versionedItemType={}",
+                        unversionedCollectionName, versionedCollectionName, versionedItemType);
+                }
+            }
+        } else {
+            // version was passed in
+            collectionVersion = CollectionVersionUtils.getCollectionVersion(versionedCollectionName);
+        }
+        collectionInfo.put(MAP_VERSIONED_COLLECTION_NAME_KEY, versionedCollectionName);
+        collectionInfo.put(MAP_UNVERSIONED_COLLECTION_NAME_KEY, unversionedCollectionName);
+        collectionInfo.put(MAP_VERSIONED_ITEM_TYPE_KEY, versionedItemType);
+        collectionInfo.put(MAP_UNVERSIONED_ITEM_TYPE_KEY, unversionedItemType);
+        collectionInfo.put(MAP_COLLECTION_VERSION_KEY, collectionVersion);
+
+        return collectionInfo;
+    }
+
+
     public Service getService( String serviceType ) {
         return getService( serviceType, true );
     }
@@ -246,32 +298,15 @@ public class ServiceManager {
             return null;
         }
 
-        // use versionedCollectionName if appropriate
-        String versionedCollectionName = info.getCollectionName();
-        String unversionedCollectionName = CollectionVersionUtil.getBaseCollectionName(versionedCollectionName);
+        Map<String,String> collectionInfo = getVersionedCollectionInfo(info.getCollectionName(), info.getItemType());
+        String versionedCollectionName = collectionInfo.get(MAP_VERSIONED_COLLECTION_NAME_KEY);
+        String versionedItemType = collectionInfo.get(MAP_VERSIONED_ITEM_TYPE_KEY);
         if (logger.isTraceEnabled()) {
             logger.trace("getService: serviceType={} incoming collectionName={}", serviceType, versionedCollectionName);
         }
 
-        // if versioned collection name was passed in, use it, because it may be for an old version
-        if (versionedCollectionName.equals(unversionedCollectionName)) {
-            // no version passed in
-            CollectionVersionManager collectionVersionManager = cvmf.getInstance(new CollectionScopeImpl(applicationId, unversionedCollectionName));
-            // always bypass collection version cache for now
-            String currentCollectionVersion = collectionVersionManager.getCollectionVersion(true);
-
-            if (currentCollectionVersion != "") {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("getService: currentCollectionVersion={}", currentCollectionVersion);
-                }
-                versionedCollectionName = CollectionVersionUtil.buildVersionedNameString(unversionedCollectionName, currentCollectionVersion, false);
-                String versionedItemType = CollectionVersionUtil.buildVersionedNameString(info.getItemType(), currentCollectionVersion, false);
-                if (logger.isTraceEnabled()) {
-                    logger.trace("getService() - using versioned collection name: collectionName={} versionedCollectionName={} versionedItemType={}",
-                        unversionedCollectionName, versionedCollectionName, versionedItemType);
-                }
-                info = ServiceInfo.getVersionedServiceInfo(info, versionedCollectionName, versionedItemType);
-            }
+        if (!versionedCollectionName.equals(info.getCollectionName())) {
+            info = ServiceInfo.getVersionedServiceInfo(info, versionedCollectionName, versionedItemType);
         }
 
         Service service = getServiceInstance( info );

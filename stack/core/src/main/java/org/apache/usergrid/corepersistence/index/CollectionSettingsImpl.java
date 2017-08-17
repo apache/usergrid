@@ -51,7 +51,7 @@ public class CollectionSettingsImpl implements CollectionSettings {
     public Optional<Map<String, Object>> getCollectionSettings(final String collectionName ) {
 
         // collectionName may be a versioned collection name -- get the base name
-        String baseCollectionName = CollectionVersionUtil.parseVersionedName(collectionName).getCollectionName();
+        String baseCollectionName = CollectionVersionUtils.parseVersionedName(collectionName).getCollectionName();
 
         String settings;
 
@@ -80,7 +80,7 @@ public class CollectionSettingsImpl implements CollectionSettings {
     public void putCollectionSettings(final String collectionName, final String collectionSchema ){
 
         // collectionName may be a versioned collection name -- get the base name
-        String baseCollectionName = CollectionVersionUtil.parseVersionedName(collectionName).getCollectionName();
+        String baseCollectionName = CollectionVersionUtils.parseVersionedName(collectionName).getCollectionName();
 
         mapManager.putString( baseCollectionName, collectionSchema );
         cache.put(scope, collectionSchema);
@@ -91,7 +91,7 @@ public class CollectionSettingsImpl implements CollectionSettings {
     public void deleteCollectionSettings(final String collectionName){
 
         // collectionName may be a versioned collection name -- get the base name
-        String baseCollectionName = CollectionVersionUtil.parseVersionedName(collectionName).getCollectionName();
+        String baseCollectionName = CollectionVersionUtils.parseVersionedName(collectionName).getCollectionName();
 
         mapManager.delete( baseCollectionName );
         cache.invalidate( scope );

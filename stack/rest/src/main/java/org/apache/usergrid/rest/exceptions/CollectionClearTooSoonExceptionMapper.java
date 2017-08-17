@@ -17,7 +17,7 @@
 package org.apache.usergrid.rest.exceptions;
 
 
-import org.apache.usergrid.corepersistence.asyncevents.CollectionDeleteTooSoonException;
+import org.apache.usergrid.corepersistence.asyncevents.CollectionClearTooSoonException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,15 +28,15 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 
 @Provider
-public class CollectionDeleteTooSoonExceptionMapper extends AbstractExceptionMapper<CollectionDeleteTooSoonException> {
+public class CollectionClearTooSoonExceptionMapper extends AbstractExceptionMapper<CollectionClearTooSoonException> {
 
-    private static final Logger logger = LoggerFactory.getLogger(CollectionDeleteTooSoonExceptionMapper.class);
+    private static final Logger logger = LoggerFactory.getLogger(CollectionClearTooSoonExceptionMapper.class);
 
     @Override
-    public Response toResponse( CollectionDeleteTooSoonException e ) {
+    public Response toResponse( CollectionClearTooSoonException e ) {
 
         if(logger.isTraceEnabled()) {
-            logger.trace("Tried to delete collection too soon after previous deletion", e.getMessage());
+            logger.trace("Tried to clear collection too soon after previous clear", e.getMessage());
         }
 
         return toResponse( BAD_REQUEST, e );

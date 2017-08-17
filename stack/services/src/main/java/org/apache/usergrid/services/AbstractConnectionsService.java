@@ -17,6 +17,7 @@
 package org.apache.usergrid.services;
 
 
+import org.apache.usergrid.corepersistence.index.CollectionVersionUtils;
 import org.apache.usergrid.persistence.*;
 import org.apache.usergrid.persistence.Query.Level;
 import org.apache.usergrid.persistence.index.query.Identifier;
@@ -32,13 +33,16 @@ import rx.Observable;
 import rx.schedulers.Schedulers;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.apache.usergrid.services.ServiceManager.MAP_VERSIONED_COLLECTION_NAME_KEY;
 import static org.apache.usergrid.services.ServiceParameter.filter;
 import static org.apache.usergrid.services.ServiceParameter.firstParameterIsName;
 import static org.apache.usergrid.utils.ClassUtils.cast;
 import static org.apache.usergrid.utils.InflectionUtils.pluralize;
+import static org.apache.usergrid.utils.InflectionUtils.singularize;
 import static org.apache.usergrid.utils.ListUtils.dequeue;
 import static org.apache.usergrid.utils.ListUtils.initCopy;
 
@@ -90,6 +94,9 @@ public class AbstractConnectionsService extends AbstractService {
             cType = dequeue( parameters ).getName();
         }
         if ( cType != null ) {
+            // this is not a versionable collection. If there is a version here, it is because the connection name matches
+            // a versioned collection. Remove the version.
+            cType = CollectionVersionUtils.getBaseCollectionName(cType);
             collectionName = cType;
         }
 
@@ -121,6 +128,9 @@ public class AbstractConnectionsService extends AbstractService {
             }
             else {
                 eType = Schema.normalizeEntityType( s );
+                Map<String,String> collectionInfo = sm.getVersionedCollectionInfo(s, eType);
+                eType = collectionInfo.get(MAP_VERSIONED_COLLECTION_NAME_KEY);
+                //logger.info("connection service collection eType:{}", eType);
                 first_parameter = dequeue( parameters );
                 if ( first_parameter instanceof QueryParameter ) {
                     query = first_parameter.getQuery();

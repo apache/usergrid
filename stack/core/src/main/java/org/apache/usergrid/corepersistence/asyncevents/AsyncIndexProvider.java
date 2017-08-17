@@ -21,12 +21,14 @@ package org.apache.usergrid.corepersistence.asyncevents;
 
 
 import org.apache.usergrid.corepersistence.index.CollectionVersionFig;
+import org.apache.usergrid.corepersistence.index.CollectionVersionManagerFactory;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.corepersistence.index.IndexProcessorFig;
 import org.apache.usergrid.corepersistence.rx.impl.AllEntityIdsObservable;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
 import org.apache.usergrid.persistence.queue.LegacyQueueManager;
@@ -61,6 +63,8 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
     private final MapManagerFactory mapManagerFactory;
     private final LegacyQueueFig queueFig;
     private final CollectionVersionFig collectionVersionFig;
+    private final CollectionVersionManagerFactory collectionVersionManagerFactory;
+    private final GraphManagerFactory graphManagerFactory;
     private final AllEntityIdsObservable allEntityIdsObservable;
 
     private AsyncEventService asyncEventService;
@@ -79,6 +83,8 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
                               final MapManagerFactory mapManagerFactory,
                               final LegacyQueueFig queueFig,
                               final CollectionVersionFig collectionVersionFig,
+                              final CollectionVersionManagerFactory collectionVersionManagerFactory,
+                              final GraphManagerFactory graphManagerFactory,
                               final AllEntityIdsObservable allEntityIdsObservable) {
 
         this.indexProcessorFig = indexProcessorFig;
@@ -93,6 +99,8 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
         this.mapManagerFactory = mapManagerFactory;
         this.queueFig = queueFig;
         this.collectionVersionFig = collectionVersionFig;
+        this.collectionVersionManagerFactory = collectionVersionManagerFactory;
+        this.graphManagerFactory = graphManagerFactory;
         this.allEntityIdsObservable = allEntityIdsObservable;
     }
 
@@ -125,6 +133,8 @@ public class AsyncIndexProvider implements Provider<AsyncEventService> {
             mapManagerFactory,
             queueFig,
             collectionVersionFig,
+            collectionVersionManagerFactory,
+            graphManagerFactory,
             allEntityIdsObservable,
             rxTaskScheduler );
 

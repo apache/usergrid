@@ -491,7 +491,7 @@ public class CpRelationManager implements RelationManager {
                     return;
                 }
             }
-            // handles normal app collection deletes
+            // handles normal app collection delete
             em.delete( itemRef );
             return;
         }

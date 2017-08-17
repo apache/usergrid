@@ -19,12 +19,12 @@
 
 package org.apache.usergrid.corepersistence.asyncevents;
 
-public class CollectionDeleteTooSoonException extends RuntimeException {
+public class CollectionClearTooSoonException extends RuntimeException {
 
     private final long timeLastDeleted;
     private final long timeRequiredBeforeDeleteMsec;
 
-    public CollectionDeleteTooSoonException(final long timeLastDeleted, final long timeRequiredBeforeDeleteMsec) {
+    public CollectionClearTooSoonException(final long timeLastDeleted, final long timeRequiredBeforeDeleteMsec) {
         this.timeLastDeleted = timeLastDeleted;
         this.timeRequiredBeforeDeleteMsec = timeRequiredBeforeDeleteMsec;
     }

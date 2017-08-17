@@ -18,7 +18,7 @@
 package org.apache.usergrid.corepersistence.index;
 
 import com.google.inject.Inject;
-import org.apache.usergrid.corepersistence.asyncevents.CollectionDeleteTooSoonException;
+import org.apache.usergrid.corepersistence.asyncevents.CollectionClearTooSoonException;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.slf4j.Logger;
@@ -78,19 +78,19 @@ public class CollectionVersionManagerImpl implements CollectionVersionManager {
     @Override
     public String getVersionedCollectionName(final boolean bypassCache) {
         String collectionVersion = getCollectionVersion(bypassCache);
-        return CollectionVersionUtil.buildVersionedNameString(collectionName, collectionVersion, false);
+        return CollectionVersionUtils.buildVersionedNameString(collectionName, collectionVersion, false);
     }
 
     // returns old collection version
     @Override
-    public String updateCollectionVersion() throws CollectionDeleteTooSoonException {
+    public String updateCollectionVersion() throws CollectionClearTooSoonException {
         // check for time last changed
         Long timeLastChanged = getTimeLastChanged();
         long timeBetweenDeletes = collectionVersionFig.getTimeBetweenDeletes();
         if (timeLastChanged != null) {
             if (System.currentTimeMillis() - timeLastChanged < timeBetweenDeletes) {
                 // too soon
-                throw new CollectionDeleteTooSoonException(timeLastChanged, timeBetweenDeletes);
+                throw new CollectionClearTooSoonException(timeLastChanged, timeBetweenDeletes);
             }
         }
 

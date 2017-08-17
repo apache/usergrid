@@ -44,7 +44,7 @@ public class CollectionClearTest extends AbstractRestIT {
      * @throws Exception
      */
     @Test
-    public void collectionDelete() throws Exception {
+    public void collectionClear() throws Exception {
 
         String collectionName = "children";
         int numEntities = 10;
@@ -54,47 +54,98 @@ public class CollectionClearTest extends AbstractRestIT {
         String namePrefixAfterClear = "abc";
 
         // verify collection version is empty
-        ApiResponse tempResponse = this.app().collection(collectionName).collection("_version").get().getResponse();
-        LinkedHashMap dataMap = (LinkedHashMap)tempResponse.getData();
-        assertEquals("", dataMap.get("version"));
-        assertEquals(collectionName, dataMap.get("collectionName"));
+        String collectionVersion = getCollectionVersion(collectionName);
+        assertEquals("", collectionVersion);
 
-        createEntities( collectionName, namePrefix, numEntities );
+        createEntities( collectionName, namePrefix, 1, numEntities );
 
         // retrieve entities, provide 1 more than num entities
-        QueryParameters parms = new QueryParameters().setLimit( numEntities + 1 ).setQuery("order by created asc");
-        List<Entity> entities = retrieveEntities(collectionName, namePrefix, parms, numEntities, false);
+        QueryParameters parms = new QueryParameters().setLimit( numEntities + 1 );
+        List<Entity> entities = retrieveEntities(collectionName, namePrefix, parms, 1, numEntities, true);
         assertEquals(numEntities, entities.size());
 
         // clear the collection
-        Map<String, Object> payload = new HashMap<String, Object>();
+        Map<String, Object> payload = new HashMap<>();
         parms = new QueryParameters().setKeyValue("confirm_collection_name", collectionName);
-        tempResponse = this.app().collection(collectionName).collection("_clear").post(true, payload, parms);
+        ApiResponse clearResponse = this.app().collection(collectionName).collection("_clear").post(true, payload, parms);
 
         // verify collection version has changed
-        tempResponse = this.app().collection(collectionName).collection("_version").get().getResponse();
-        dataMap = (LinkedHashMap)tempResponse.getData();
-        String newVersion = (String)dataMap.get("version");
+        String newVersion = getCollectionVersion(collectionName);
         assertNotEquals("", newVersion);
-        assertEquals(collectionName, dataMap.get("collectionName"));
 
         // validate that 0 entities left
-        List<Entity> entitiesAfterClear = retrieveEntities(collectionName, namePrefix, parms, 0, true);
+        List<Entity> entitiesAfterClear = retrieveEntities(collectionName, namePrefix, parms, 1, 0, true);
         assertEquals(0, entitiesAfterClear.size());
 
         // insert more entities using same collectionName
-        createEntities( collectionName, namePrefixAfterClear, numEntitiesAfterClear );
+        createEntities( collectionName, namePrefixAfterClear, 1, numEntitiesAfterClear );
 
         // validate correct number of entities
-        parms = new QueryParameters().setLimit( numEntitiesAfterClear + 1 ).setQuery("order by created asc");
-        List<Entity> newEntities = retrieveEntities(collectionName, namePrefixAfterClear, parms, numEntitiesAfterClear, false);
+        parms = new QueryParameters().setLimit( numEntitiesAfterClear + 1 );
+        List<Entity> newEntities = retrieveEntities(collectionName, namePrefixAfterClear, parms, 1, numEntitiesAfterClear, true);
         assertEquals(numEntitiesAfterClear, newEntities.size());
 
         // verify collection version has not changed
-        tempResponse = this.app().collection(collectionName).collection("_version").get().getResponse();
-        dataMap = (LinkedHashMap)tempResponse.getData();
-        assertEquals(newVersion, dataMap.get("version"));
+        String lastVersion = getCollectionVersion(collectionName);
+        assertEquals(newVersion, lastVersion);
+    }
+
+
+    /**
+     * Tests that old collection entities are deleted.
+     * @throws Exception
+     */
+    @Test
+    public void collectionMultipleClear() throws Exception {
+        String collectionName = "dogs";
+        int numEntities = 2000;
+        String namePrefix = "dog";
+        int numDeleteCycles = 3;
+        int startingEntityNum = 1;
+
+        // should start out as unversioned
+        String currentVersion = getCollectionVersion(collectionName);
+        assertEquals("", currentVersion);
+
+        for (int cycle = 1; cycle <= numDeleteCycles; cycle++) {
+            logger.info("Creating entities {} - {} for cycle {}", startingEntityNum, lastEntityNum(startingEntityNum, numEntities), cycle);
+            createEntities( collectionName, namePrefix, startingEntityNum, numEntities );
+
+            // retrieve entities, provide 1 more than num entities
+            logger.info("Retrieving entities {} - {} for cycle {}", startingEntityNum, lastEntityNum(startingEntityNum, numEntities), cycle);
+            QueryParameters parms = new QueryParameters().setLimit( numEntities + 1 );
+            List<Entity> entities = retrieveEntities(collectionName, namePrefix, parms, startingEntityNum, numEntities, true);
+            assertEquals(numEntities, entities.size());
+
+            // clear collection
+            logger.info("Clearing collection for cycle {}", cycle);
+            String newVersion = clearCollection(collectionName);
+            logger.info("Collection version is {} for cycle {}", newVersion, cycle);
+            assertNotEquals(currentVersion, newVersion);
+
+            // validate that 0 entities left
+            List<Entity> entitiesAfterClear = retrieveEntities(collectionName, namePrefix, parms, 1, 0, true);
+            assertEquals(0, entitiesAfterClear.size());
+
+            currentVersion = newVersion;
+            startingEntityNum = startingEntityNum + numEntities;
+        }
+
+    }
+
+    private int lastEntityNum(int startingEntityNum, int numEntities) {
+        return startingEntityNum + numEntities - 1;
+    }
+
+
+    /**
+     * Get collection version
+     */
+    private String getCollectionVersion(String collectionName) {
+        ApiResponse tempResponse = this.app().collection(collectionName).collection("_version").get().getResponse();
+        LinkedHashMap dataMap = (LinkedHashMap)tempResponse.getData();
         assertEquals(collectionName, dataMap.get("collectionName"));
+        return (String)dataMap.get("version");
     }
 
 
@@ -104,10 +155,10 @@ public class CollectionClearTest extends AbstractRestIT {
      * @param collectionName
      * @param numOfEntities
      */
-    public List<Entity> createEntities(String collectionName, String namePrefix, int numOfEntities ){
+    public List<Entity> createEntities(String collectionName, String namePrefix, int firstEntity, int numOfEntities ){
         List<Entity> entities = new LinkedList<>(  );
 
-        for ( int i = 1; i <= numOfEntities; i++ ) {
+        for ( int i = firstEntity; i <= lastEntityNum(firstEntity, numOfEntities); i++ ) {
             Map<String, Object> entityPayload = new HashMap<String, Object>();
             entityPayload.put( "name", namePrefix + String.valueOf( i ) );
             entityPayload.put( "num", i );
@@ -117,12 +168,8 @@ public class CollectionClearTest extends AbstractRestIT {
             entities.add( entity );
 
             this.app().collection( collectionName ).post( entity );
-
-            if ( i % 100 == 0){
-                logger.info("created {} entities", i);
-            }
         }
-        logger.info("created {} total entities", numOfEntities);
+        logger.info("created {} entities", numOfEntities);
 
         this.waitForQueueDrainAndRefreshIndex();
 
@@ -135,15 +182,15 @@ public class CollectionClearTest extends AbstractRestIT {
      * @param parms
      * @param numOfEntities
      */
-    public List<Entity> retrieveEntities(String collectionName, String namePrefix, QueryParameters parms, int numOfEntities, boolean reverseOrder){
+    public List<Entity> retrieveEntities(String collectionName, String namePrefix, QueryParameters parms, int firstEntity, int numOfEntities, boolean reverseOrder){
         List<Entity> entities = new LinkedList<>(  );
         Collection testCollection = this.app().collection( collectionName ).get(parms, true);
 
         int entityNum;
         if (reverseOrder) {
-            entityNum = numOfEntities;
+            entityNum = lastEntityNum(firstEntity, numOfEntities);
         } else {
-            entityNum = 1;
+            entityNum = firstEntity;
         }
         while (testCollection.getCursor() != null) {
             while (testCollection.hasNext()) {
@@ -174,6 +221,18 @@ public class CollectionClearTest extends AbstractRestIT {
 
         assertEquals(entities.size(), numOfEntities);
         return entities;
+    }
+
+    private String clearCollection(String collectionName) {
+        // clear the collection
+        Map<String, Object> payload = new HashMap<>();
+        QueryParameters parms = new QueryParameters().setKeyValue("confirm_collection_name", collectionName);
+        ApiResponse clearResponse = this.app().collection(collectionName).collection("_clear").post(true, payload, parms);
+
+        // verify collection version has changed
+        String newVersion = getCollectionVersion(collectionName);
+
+        return newVersion;
     }
 
 }

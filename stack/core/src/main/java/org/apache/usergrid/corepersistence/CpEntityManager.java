@@ -47,6 +47,7 @@ import org.apache.usergrid.persistence.collection.FieldSet;
 import org.apache.usergrid.persistence.collection.exception.WriteUniqueVerifyException;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.model.util.CollectionUtils;
 import org.apache.usergrid.persistence.entities.*;
 import org.apache.usergrid.persistence.exceptions.DuplicateUniquePropertyExistsException;
 import org.apache.usergrid.persistence.exceptions.EntityNotFoundException;
@@ -741,9 +742,9 @@ public class CpEntityManager implements EntityManager {
 
         Set<String> existingCollections = new HashSet<>();
         for (String existingCollection : getRelationManager( getApplication() ).getCollections()) {
-            if (Application.isCustomCollectionName(existingCollection)) {
+            if (CollectionUtils.isCustomCollectionOrEntityName(existingCollection)) {
                 // check for correct version
-                VersionedCollectionName v = CollectionVersionUtil.parseVersionedName(existingCollection);
+                VersionedCollectionName v = CollectionVersionUtils.parseVersionedName(existingCollection);
                 CollectionVersionManager cvm = collectionVersionManagerFactory.getInstance(
                     new CollectionScopeImpl(getApplication().asId(), v.getCollectionName())
                 );
@@ -784,7 +785,7 @@ public class CpEntityManager implements EntityManager {
 
                 if ( !Schema.isAssociatedEntityType( collectionName ) ) {
                     Long count = counts.get( APPLICATION_COLLECTION + collectionName );
-                    String unversionedCollectionName = CollectionVersionUtil.getBaseCollectionName(collectionName);
+                    String unversionedCollectionName = CollectionVersionUtils.getBaseCollectionName(collectionName);
                     Map<String, Object> entry = new HashMap<String, Object>();
                     entry.put( "count", count != null ? count : 0 );
                     entry.put( "type", singularize( unversionedCollectionName ) );
@@ -825,7 +826,7 @@ public class CpEntityManager implements EntityManager {
         StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType.toString());
 
         Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
-            Inflector.getInstance().singularize( collectionType ), Arrays.<Field>asList( uniqueLookupRepairField ), uniqueIndexRepair);
+            singularize( collectionType ), Arrays.<Field>asList( uniqueLookupRepairField ), uniqueIndexRepair);
 
         if(fieldSetObservable == null){
 
@@ -849,7 +850,7 @@ public class CpEntityManager implements EntityManager {
             }
 
             fieldSet = ecm.getEntitiesFromFields(
-                Inflector.getInstance().singularize( collectionType ),
+                singularize( collectionType ),
                 Collections.singletonList(uniqueLookupRepairField), uniqueIndexRepair).toBlocking().last();
         }
 
@@ -870,7 +871,7 @@ public class CpEntityManager implements EntityManager {
         StringField uniqueLookupRepairField =  new StringField( propertyName, aliasType);
 
         Observable<FieldSet> fieldSetObservable = ecm.getEntitiesFromFields(
-            Inflector.getInstance().singularize( collectionType ),
+            singularize( collectionType ),
             Collections.singletonList(uniqueLookupRepairField), uniqueIndexRepair);
 
         if(fieldSetObservable == null){
@@ -895,7 +896,7 @@ public class CpEntityManager implements EntityManager {
             }
 
             fieldSet = ecm.getEntitiesFromFields(
-                Inflector.getInstance().singularize( collectionType ),
+                singularize( collectionType ),
                 Collections.singletonList(uniqueLookupRepairField), uniqueIndexRepair).toBlocking().last();
         }
 
@@ -2491,7 +2492,7 @@ public class CpEntityManager implements EntityManager {
                                           final Object propertyValue ) {
 
         //convert to a string, that's what we store
-        final Id results = ecm.getIdField( Inflector.getInstance().singularize( collectionName ), new StringField(
+        final Id results = ecm.getIdField( singularize( collectionName ), new StringField(
                 propertyName, propertyValue.toString() ) ).toBlocking() .lastOrDefault( null );
         return results;
     }

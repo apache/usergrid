@@ -25,6 +25,7 @@ import org.apache.usergrid.persistence.graph.MarkedEdge;
 import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 
 /**
@@ -63,8 +64,22 @@ public class SimpleMarkedEdge extends SimpleEdge implements MarkedEdge {
     }
 
 
-    public SimpleMarkedEdge( final Edge edge, final boolean isDeleted ) {
-        this( edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getTimestamp(), isDeleted );
+    public SimpleMarkedEdge( final Edge edge, final boolean isDeleted, final boolean isSourceNodeDeleted, final boolean isTargetNodeDeleted ) {
+        this(edge.getSourceNode(), edge.getType(), edge.getTargetNode(), edge.getTimestamp(),
+            isDeleted, isSourceNodeDeleted, isTargetNodeDeleted);
+    }
+
+
+    public SimpleMarkedEdge( final MarkedEdge another, final boolean includeEmptyVersion ) {
+        this(
+            new SimpleId(another.getSourceNode(), includeEmptyVersion),
+            another.getType(),
+            new SimpleId(another.getTargetNode(), includeEmptyVersion),
+            another.getTimestamp(),
+            another.isDeleted(),
+            another.isSourceNodeDelete(),
+            another.isTargetNodeDeleted()
+        );
     }
 
 

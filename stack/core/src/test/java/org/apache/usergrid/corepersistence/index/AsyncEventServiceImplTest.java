@@ -31,6 +31,7 @@ import org.apache.usergrid.persistence.core.aws.NoAWSCredsRule;
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.test.UseModules;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
 import org.apache.usergrid.persistence.index.impl.EsRunner;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
@@ -89,11 +90,17 @@ public class AsyncEventServiceImplTest extends AsyncIndexServiceTest {
     public CollectionVersionFig collectionVersionFig;
 
     @Inject
+    public CollectionVersionManagerFactory collectionVersionManagerFactory;
+
+    @Inject
+    public GraphManagerFactory graphManagerFactory;
+
+    @Inject
     public AllEntityIdsObservable allEntityIdsObservable;
 
     @Override
     protected AsyncEventService getAsyncEventService() {
-        return  new AsyncEventServiceImpl( queueManagerFactory, indexProcessorFig, indexProducer, metricsFactory,  entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory, eventBuilder, mapManagerFactory, queueFig, collectionVersionFig, allEntityIdsObservable, rxTaskScheduler );
+        return  new AsyncEventServiceImpl( queueManagerFactory, indexProcessorFig, indexProducer, metricsFactory,  entityCollectionManagerFactory, indexLocationStrategyFactory, entityIndexFactory, eventBuilder, mapManagerFactory, queueFig, collectionVersionFig, collectionVersionManagerFactory, graphManagerFactory, allEntityIdsObservable, rxTaskScheduler );
     }
 
 

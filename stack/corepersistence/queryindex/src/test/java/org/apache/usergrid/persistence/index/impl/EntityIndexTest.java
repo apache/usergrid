@@ -32,6 +32,7 @@ import com.google.common.base.Optional;
 import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.model.field.*;
+import org.apache.usergrid.persistence.model.util.CollectionUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -170,24 +171,29 @@ public class EntityIndexTest extends BaseIT {
         final CandidateResult candidate1 = candidateResults.get(0);
 
         //check the id and version
-        assertEquals( entity1.getId(), candidate1.getId() );
+        // with collection versioning, empty versions are included in results
+        assertEquals(entity1.getId().getType(), CollectionUtils.stripEmptyVersion(candidate1.getId().getType()));
+        assertEquals(entity1.getId().getUuid(), candidate1.getId().getUuid());
         assertEquals(entity1.getVersion(), candidate1.getVersion());
 
 
         final CandidateResult candidate2 = candidateResults.get(1);
 
         //check the id and version
-        assertEquals( entity2.getId(), candidate2.getId() );
+        assertEquals(entity2.getId().getType(), CollectionUtils.stripEmptyVersion(candidate2.getId().getType()));
+        assertEquals(entity2.getId().getUuid(), candidate2.getId().getUuid());
         assertEquals( entity2.getVersion(), candidate2.getVersion() );
 
         //make sure we can query uuids out as strings and not wrapped
         candidateResults =
             entityIndex.search( indexEdge, searchTypes, "select * where testuuid = '"+uuid+"'", 100, 0, false );
-        assertEquals(entity1.getId(),candidateResults.get(0).getId());
+        assertEquals(entity1.getId().getType(), CollectionUtils.stripEmptyVersion(candidateResults.get(0).getId().getType()));
+        assertEquals(entity1.getId().getUuid(), candidateResults.get(0).getId().getUuid());
 
         candidateResults =
             entityIndex.search( indexEdge, searchTypes, "select * where testuuid = "+uuid, 100, 0, false);
-        assertEquals(entity1.getId(),candidateResults.get(0).getId());
+        assertEquals(entity1.getId().getType(), CollectionUtils.stripEmptyVersion(candidateResults.get(0).getId().getType()));
+        assertEquals(entity1.getId().getUuid(), candidateResults.get(0).getId().getUuid());
     }
 
 
@@ -519,7 +525,8 @@ public class EntityIndexTest extends BaseIT {
         final String query = "where username = 'edanuff'";
 
         CandidateResults r = entityIndex.search( indexSCope, SearchTypes.fromTypes( "edanuff" ), query, 10, 0, false);
-        assertEquals( user.getId(), r.get( 0 ).getId());
+        assertEquals(user.getId().getType(), CollectionUtils.stripEmptyVersion(r.get(0).getId().getType()));
+        assertEquals(user.getId().getUuid(), r.get(0).getId().getUuid());
 
         batch.deindex( indexSCope, user.getId(), user.getVersion() );
         indexProducer.put(batch.build()).subscribe();;
@@ -734,7 +741,10 @@ public class EntityIndexTest extends BaseIT {
 
         final CandidateResults r =
             entityIndex.search( indexSCope, SearchTypes.fromTypes(entityId.getType()), query, 10, 0, false);
-        assertEquals(user.getId(), r.get(0).getId());
+
+        // with collection versioning, empty versions are included in results
+        assertEquals(user.getId().getType(), CollectionUtils.stripEmptyVersion(r.get(0).getId().getType()));
+        assertEquals(user.getId().getUuid(), r.get(0).getId().getUuid());
     }
 
 
@@ -774,7 +784,9 @@ public class EntityIndexTest extends BaseIT {
         final CandidateResults r =
             entityIndex.search( indexSCope, SearchTypes.fromTypes( entityId.getType() ), query, 10, 0, false);
 
-        assertEquals(user.getId(), r.get(0).getId());
+        // with collection versioning, empty versions are included in results
+        assertEquals(user.getId().getType(), CollectionUtils.stripEmptyVersion(r.get(0).getId().getType()));
+        assertEquals(user.getId().getUuid(), r.get(0).getId().getUuid());
 
         //shouldn't match
         final String queryNoWildCard = "where string = 'I am'";
@@ -833,8 +845,11 @@ public class EntityIndexTest extends BaseIT {
             entityIndex.search(indexSCope, SearchTypes.fromTypes( first.getId().getType() ), ascQuery, 10 , 0, false);
 
 
-        assertEquals( first.getId(), ascResults.get( 0).getId() );
-        assertEquals( second.getId(), ascResults.get( 1 ).getId() );
+        // with collection versioning, empty versions are included in results
+        assertEquals(first.getId().getType(), CollectionUtils.stripEmptyVersion(ascResults.get(0).getId().getType()));
+        assertEquals(first.getId().getUuid(), ascResults.get(0).getId().getUuid());
+        assertEquals(second.getId().getType(), CollectionUtils.stripEmptyVersion(ascResults.get(1).getId().getType()));
+        assertEquals(second.getId().getUuid(), ascResults.get(1).getId().getUuid());
 
 
         //search in reversed
@@ -844,8 +859,11 @@ public class EntityIndexTest extends BaseIT {
             entityIndex.search(indexSCope, SearchTypes.fromTypes( first.getId().getType() ), descQuery, 10 , 0, false);
 
 
-        assertEquals( second.getId(), descResults.get( 0).getId() );
-        assertEquals( first.getId(), descResults.get( 1 ).getId() );
+        // with collection versioning, empty versions are included when parsing doc IDs
+        assertEquals(second.getId().getType(), CollectionUtils.stripEmptyVersion(descResults.get(0).getId().getType()));
+        assertEquals(second.getId().getUuid(), descResults.get(0).getId().getUuid());
+        assertEquals(first.getId().getType(), CollectionUtils.stripEmptyVersion(descResults.get(1).getId().getType()));
+        assertEquals(first.getId().getUuid(), descResults.get(1).getId().getUuid());
     }
 
 
@@ -899,7 +917,8 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals(1, singleResults.size());
-        assertEquals(first.getId(), singleResults.get(0).getId());
+        assertEquals(first.getId().getType(), CollectionUtils.stripEmptyVersion(singleResults.get(0).getId().getType()));
+        assertEquals(first.getId().getUuid(), singleResults.get(0).getId().getUuid());
 
 
         //search in reversed
@@ -910,8 +929,11 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 2, singleKeywordUnion.size() );
-        assertEquals( second.getId(), singleKeywordUnion.get( 0).getId() );
-        assertEquals( first.getId(), singleKeywordUnion.get( 1 ).getId() );
+        // with collection versioning, empty versions are included when parsing doc IDs
+        assertEquals(second.getId().getType(), CollectionUtils.stripEmptyVersion(singleKeywordUnion.get(0).getId().getType()));
+        assertEquals(second.getId().getUuid(), singleKeywordUnion.get(0).getId().getUuid());
+        assertEquals(first.getId().getType(), CollectionUtils.stripEmptyVersion(singleKeywordUnion.get(1).getId().getType()));
+        assertEquals(first.getId().getUuid(), singleKeywordUnion.get(1).getId().getUuid());
 
 
         final String twoKeywordMatches = "string contains 'alpha' OR string contains 'long'";
@@ -921,8 +943,10 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 2, towMatchResults.size() );
-        assertEquals(second.getId(), towMatchResults.get( 0).getId() );
-        assertEquals(first.getId(), towMatchResults.get( 1 ).getId() );
+        assertEquals(second.getId().getType(), CollectionUtils.stripEmptyVersion(towMatchResults.get(0).getId().getType()));
+        assertEquals(second.getId().getUuid(), towMatchResults.get(0).getId().getUuid());
+        assertEquals(first.getId().getType(), CollectionUtils.stripEmptyVersion(towMatchResults.get(1).getId().getType()));
+        assertEquals(first.getId().getUuid(), towMatchResults.get(1).getId().getUuid());
     }
 
 
@@ -980,7 +1004,8 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 1, notFirstResults.size() );
-        assertEquals(second.getId(), notFirstResults.get( 0 ).getId() );
+        assertEquals(second.getId().getType(), CollectionUtils.stripEmptyVersion(notFirstResults.get(0).getId().getType()));
+        assertEquals(second.getId().getUuid(), notFirstResults.get(0).getId().getUuid());
 
 
         //search in reversed
@@ -991,7 +1016,8 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 1, notSecondUnion.size() );
-        assertEquals( first.getId(), notSecondUnion.get( 0 ).getId() );
+        assertEquals(first.getId().getType(), CollectionUtils.stripEmptyVersion(notSecondUnion.get(0).getId().getType()));
+        assertEquals(first.getId().getUuid(), notSecondUnion.get(0).getId().getUuid());
 
 
         final String notBothReturn = "NOT int = 3";
@@ -1001,8 +1027,10 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 2, notBothReturnResults.size() );
-        assertEquals( second.getId(), notBothReturnResults.get( 0).getId() );
-        assertEquals( first.getId(), notBothReturnResults.get( 1 ).getId() );
+        assertEquals(second.getId().getType(), CollectionUtils.stripEmptyVersion(notBothReturnResults.get(0).getId().getType()));
+        assertEquals(second.getId().getUuid(), notBothReturnResults.get(0).getId().getUuid());
+        assertEquals(first.getId().getType(), CollectionUtils.stripEmptyVersion(notBothReturnResults.get(1).getId().getType()));
+        assertEquals(first.getId().getUuid(), notBothReturnResults.get(1).getId().getUuid());
 
 
         final String notFilterBoth = "(NOT int = 1) AND (NOT int = 2) ";
@@ -1020,8 +1048,10 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 2, noMatchesAndResults.size() );
-        assertEquals( second.getId(), noMatchesAndResults.get( 0).getId() );
-        assertEquals( first.getId(), noMatchesAndResults.get( 1 ).getId() );
+        assertEquals(second.getId().getType(), CollectionUtils.stripEmptyVersion(noMatchesAndResults.get(0).getId().getType()));
+        assertEquals(second.getId().getUuid(), noMatchesAndResults.get(0).getId().getUuid());
+        assertEquals(first.getId().getType(), CollectionUtils.stripEmptyVersion(noMatchesAndResults.get(1).getId().getType()));
+        assertEquals(first.getId().getUuid(), noMatchesAndResults.get(1).getId().getUuid());
 
 
         final String noMatchesOr = "(NOT int = 3) AND (NOT int = 4)";
@@ -1031,8 +1061,10 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 2, noMatchesOrResults.size() );
-        assertEquals( second.getId(), noMatchesOrResults.get( 0).getId() );
-        assertEquals( first.getId(), noMatchesOrResults.get( 1 ).getId() );
+        assertEquals(second.getId().getType(), CollectionUtils.stripEmptyVersion(noMatchesOrResults.get(0).getId().getType()));
+        assertEquals(second.getId().getUuid(), noMatchesOrResults.get(0).getId().getUuid());
+        assertEquals(first.getId().getType(), CollectionUtils.stripEmptyVersion(noMatchesOrResults.get(1).getId().getType()));
+        assertEquals(first.getId().getUuid(), noMatchesOrResults.get(1).getId().getUuid());
     }
 
 
@@ -1090,7 +1122,9 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 1, notFirstResults.size() );
-        assertEquals(second.getId(), notFirstResults.get( 0 ).getId() );
+        // with collection versioning, empty versions are included
+        assertEquals(second.getId().getType(), CollectionUtils.stripEmptyVersion(notFirstResults.get(0).getId().getType()));
+        assertEquals(second.getId().getUuid(), notFirstResults.get(0).getId().getUuid());
 
 
         final String notFirstWildCard = "NOT string = 'I ate*'";
@@ -1100,7 +1134,8 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 1, notFirstWildCardResults.size() );
-        assertEquals(second.getId(), notFirstWildCardResults.get( 0 ).getId() );
+        assertEquals(second.getId().getType(), CollectionUtils.stripEmptyVersion(notFirstWildCardResults.get(0).getId().getType()));
+        assertEquals(second.getId().getUuid(), notFirstWildCardResults.get(0).getId().getUuid());
 
 
         final String notFirstContains = "NOT string contains 'sammich'";
@@ -1110,7 +1145,8 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 1, notFirstContainsResults.size() );
-        assertEquals(second.getId(), notFirstContainsResults.get( 0 ).getId() );
+        assertEquals(second.getId().getType(), CollectionUtils.stripEmptyVersion(notFirstContainsResults.get(0).getId().getType()));
+        assertEquals(second.getId().getUuid(), notFirstContainsResults.get(0).getId().getUuid());
 
 
         //search in reversed
@@ -1121,7 +1157,8 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 1, notSecondUnion.size() );
-        assertEquals( first.getId(), notSecondUnion.get( 0 ).getId() );
+        assertEquals(first.getId().getType(), CollectionUtils.stripEmptyVersion(notSecondUnion.get(0).getId().getType()));
+        assertEquals(first.getId().getUuid(), notSecondUnion.get(0).getId().getUuid());
 
 
         final String notSecondWildcard = "NOT string = 'I drank*'";
@@ -1131,7 +1168,8 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 1, notSecondWildcardUnion.size() );
-        assertEquals( first.getId(), notSecondWildcardUnion.get( 0 ).getId() );
+        assertEquals(first.getId().getType(), CollectionUtils.stripEmptyVersion(notSecondWildcardUnion.get(0).getId().getType()));
+        assertEquals(first.getId().getUuid(), notSecondWildcardUnion.get(0).getId().getUuid());
 
 
         final String notSecondContains = "NOT string contains 'beer'";
@@ -1141,7 +1179,8 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 1, notSecondContainsUnion.size() );
-        assertEquals( first.getId(), notSecondContainsUnion.get( 0 ).getId() );
+        assertEquals(first.getId().getType(), CollectionUtils.stripEmptyVersion(notSecondContainsUnion.get(0).getId().getType()));
+        assertEquals(first.getId().getUuid(), notSecondContainsUnion.get(0).getId().getUuid());
 
 
         final String notBothReturn = "NOT string = 'I'm a foodie'";
@@ -1151,8 +1190,10 @@ public class EntityIndexTest extends BaseIT {
 
 
         assertEquals( 2, notBothReturnResults.size() );
-        assertEquals( second.getId(), notBothReturnResults.get( 0).getId() );
-        assertEquals( first.getId(), notBothReturnResults.get( 1 ).getId() );
+        assertEquals(second.getId().getType(), CollectionUtils.stripEmptyVersion(notBothReturnResults.get(0).getId().getType()));
+        assertEquals(second.getId().getUuid(), notBothReturnResults.get(0).getId().getUuid());
+        assertEquals(first.getId().getType(), CollectionUtils.stripEmptyVersion(notBothReturnResults.get(1).getId().getType()));
+        assertEquals(first.getId().getUuid(), notBothReturnResults.get(1).getId().getUuid());
 
 
         final String notFilterBoth = "(NOT string = 'I ate a sammich') AND (NOT string = 'I drank a beer') ";
@@ -1299,7 +1340,8 @@ public class EntityIndexTest extends BaseIT {
         final CandidateResult candidate1 = candidateResults.get(0);
 
         //check the id and version
-        assertEquals( entity1.getId(), candidate1.getId() );
+        assertEquals(entity1.getId().getType(), CollectionUtils.stripEmptyVersion(candidate1.getId().getType()));
+        assertEquals(entity1.getId().getUuid(), candidate1.getId().getUuid());
         assertEquals(entity1.getVersion(), candidate1.getVersion());
 
     }

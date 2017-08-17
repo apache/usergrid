@@ -26,6 +26,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 import org.apache.usergrid.persistence.index.IndexEdge;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 
 /**
@@ -39,6 +40,15 @@ public class IndexEdgeImpl extends SearchEdgeImpl implements IndexEdge {
     public IndexEdgeImpl( final Id nodeId, final String name, final NodeType nodeType, final long timestamp ) {
         super( nodeId, name, nodeType );
         this.timestamp = timestamp;
+    }
+
+    public IndexEdgeImpl( final IndexEdge another, final boolean includeEmptyVersion) {
+        this(
+            new SimpleId(another.getNodeId(), includeEmptyVersion),
+            another.getEdgeName(),
+            another.getNodeType(),
+            another.getTimestamp()
+        );
     }
 
 

@@ -17,7 +17,7 @@
 package org.apache.usergrid.utils;
 
 
-import org.apache.usergrid.corepersistence.index.CollectionVersionUtil;
+import org.apache.usergrid.corepersistence.index.CollectionVersionUtils;
 import org.apache.usergrid.corepersistence.index.VersionedCollectionName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,17 +29,17 @@ public class InflectionUtils {
     private static VersionedCollectionName parseName(Object word) {
         String name = word.toString().trim();
         try {
-            return CollectionVersionUtil.parseVersionedName(name);
+            return CollectionVersionUtils.parseVersionedName(name);
         }
         catch (Exception e) {
             logger.error("parseName(): failed to parse the versioned name: {}", name);
-            return CollectionVersionUtil.createVersionedName(name, "");
+            return CollectionVersionUtils.createVersionedName(name, "");
         }
     }
 
     private static String getVersionedName(String name, String version) {
         try {
-            return CollectionVersionUtil.buildVersionedNameString(name, version, true);
+            return CollectionVersionUtils.buildVersionedNameString(name, version, true);
         }
         catch (Exception e) {
             // if versioned invalid, return name

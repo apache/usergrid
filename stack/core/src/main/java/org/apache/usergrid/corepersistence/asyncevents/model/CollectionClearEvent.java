@@ -23,9 +23,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.usergrid.corepersistence.index.CollectionScope;
 
 /**
- * Event that will signal to queue up entity deletes for a collection delete.
+ * Event that will signal to queue up entity deletes for a collection clear.
  */
-public final class CollectionDeleteEvent extends AsyncEvent {
+public final class CollectionClearEvent extends AsyncEvent {
 
 
     @JsonProperty
@@ -38,11 +38,11 @@ public final class CollectionDeleteEvent extends AsyncEvent {
      * Do not delete!  Needed for Jackson
      */
     @SuppressWarnings( "unused" )
-    public CollectionDeleteEvent() {
+    public CollectionClearEvent() {
         super();
     }
 
-    public CollectionDeleteEvent(String sourceRegion, CollectionScope collectionScope, String collectionVersion) {
+    public CollectionClearEvent(String sourceRegion, CollectionScope collectionScope, String collectionVersion) {
         super(sourceRegion);
         this.collectionScope =  collectionScope;
         this.collectionVersion =  collectionVersion;

@@ -53,7 +53,7 @@ public class CollectionClearServiceImpl implements CollectionClearService {
             applicationID.toString(), baseCollectionName, oldVersion, collectionVersionManager.getCollectionVersion(false));
 
         // queue up delete of old version entities
-        asyncEventService.queueCollectionDelete(scope, oldVersion);
+        asyncEventService.queueCollectionClear(scope, oldVersion);
     }
 
     @Override

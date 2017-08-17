@@ -28,6 +28,7 @@ import java.util.*;
 import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.CollectionUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -101,7 +102,7 @@ public class GeoPagingTest extends BaseIT {
 
     /**
      * Test that geo-query returns co-located entities in expected order.
-     */
+     nde*/
     @Test
     public void groupQueriesWithDistanceOrderedResults() throws Exception {
 
@@ -150,7 +151,9 @@ public class GeoPagingTest extends BaseIT {
 
 
             final Entity expected = cats[consistent];
-            assertEquals(expected.getId(), candidate.getId());
+            // with collection versioning, empty versions are included
+            assertEquals(expected.getId().getType(), CollectionUtils.stripEmptyVersion(candidate.getId().getType()));
+            assertEquals(expected.getId().getUuid(), candidate.getId().getUuid());
 
 
         }

@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import com.google.cloud.storage.StorageException;
 import org.apache.commons.lang.StringUtils;
-import org.apache.usergrid.corepersistence.index.CollectionVersionUtil;
 import org.apache.usergrid.corepersistence.index.VersionedCollectionName;
 import org.apache.usergrid.management.OrganizationConfig;
 import org.apache.usergrid.management.OrganizationConfigProps;
@@ -40,6 +39,7 @@ import org.apache.usergrid.services.*;
 import org.apache.usergrid.services.assets.BinaryStoreFactory;
 import org.apache.usergrid.services.assets.data.*;
 import org.apache.usergrid.services.exceptions.AwsPropertiesNotFoundException;
+import org.apache.usergrid.corepersistence.index.CollectionVersionUtils;
 import org.apache.usergrid.utils.JsonUtils;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
@@ -47,7 +47,6 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanInfoFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -431,7 +430,7 @@ public class ServiceResource extends AbstractContextResource {
         for (int i = 0; i < r.getEntities().size(); i++) {
             Entity e = r.getEntity(i);
             String oldType = e.getType();
-            VersionedCollectionName v = CollectionVersionUtil.parseVersionedName(oldType);
+            VersionedCollectionName v = CollectionVersionUtils.parseVersionedName(oldType);
             if (v.hasVersion()) {
                 e.setType(v.getCollectionName());
                 r.setEntity(i, e);

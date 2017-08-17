@@ -1,4 +1,4 @@
-package org.apache.usergrid.persistence.index.impl;/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,12 +17,14 @@ package org.apache.usergrid.persistence.index.impl;/*
  * under the License.
  */
 
+package org.apache.usergrid.persistence.index.impl;
 
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.model.util.CollectionUtils;
 import org.apache.usergrid.persistence.index.CandidateResult;
 import org.apache.usergrid.persistence.index.GeoCandidateResult;
 import org.apache.usergrid.persistence.index.IndexEdge;
@@ -69,9 +71,9 @@ public class IndexingUtils {
     private static final Pattern DOCUMENT_PATTERN = Pattern.compile( DOCUMENT_ID_REGEX );
 
     // These are not allowed in document type names: _ . , | #
-    public static final String FIELD_SEPERATOR = ".";
+    public static final String FIELD_SEPARATOR = ".";
 
-    public static final String ID_SEPERATOR = ",";
+    public static final String ID_SEPARATOR = ",";
 
 
     /**
@@ -137,13 +139,17 @@ public class IndexingUtils {
      *
      * TODO make this format more readable and parsable
      */
-    public static String createContextName( final ApplicationScope applicationScope, final SearchEdge scope ) {
+    public static String createContextName( final ApplicationScope applicationScope, final SearchEdge searchEdge ) {
+        SearchEdge strippedSearchEdge = new SearchEdgeImpl(
+            new SimpleId(searchEdge.getNodeId().getUuid(), CollectionUtils.stripEmptyVersion(searchEdge.getNodeId().getType())),
+            searchEdge.getEdgeName(), searchEdge.getNodeType()
+        );
         StringBuilder sb = new StringBuilder();
         idString( sb, APPID_NAME, applicationScope.getApplication() );
-        sb.append( FIELD_SEPERATOR );
-        idString( sb, NODEID_NAME, scope.getNodeId() );
-        sb.append( FIELD_SEPERATOR );
-        appendField( sb, EDGE_NAME, scope.getEdgeName() );
+        sb.append(FIELD_SEPARATOR);
+        idString( sb, NODEID_NAME, strippedSearchEdge.getNodeId() );
+        sb.append(FIELD_SEPARATOR);
+        appendField( sb, EDGE_NAME, strippedSearchEdge.getEdgeName() );
         return sb.toString();
     }
 
@@ -163,34 +169,41 @@ public class IndexingUtils {
     public static String createIndexDocId( final ApplicationScope applicationScope, final Id entityId,
                                            final UUID version, final SearchEdge searchEdge ) {
 
+        // strip empty collection versions to maintain backward compatibility
+        Id strippedEntityId = new SimpleId(entityId.getUuid(), CollectionUtils.stripEmptyVersion(entityId.getType()));
+        SearchEdge strippedSearchEdge = new SearchEdgeImpl(
+            new SimpleId(searchEdge.getNodeId().getUuid(), CollectionUtils.stripEmptyVersion(searchEdge.getNodeId().getType())),
+            searchEdge.getEdgeName(), searchEdge.getNodeType()
+        );
+
         StringBuilder sb = new StringBuilder();
         idString( sb, APPID_NAME, applicationScope.getApplication() );
-        sb.append( FIELD_SEPERATOR );
-        idString( sb, ENTITY_ID_FIELDNAME, entityId );
-        sb.append( FIELD_SEPERATOR );
+        sb.append(FIELD_SEPARATOR);
+        idString( sb, ENTITY_ID_FIELDNAME, strippedEntityId );
+        sb.append(FIELD_SEPARATOR);
         appendField( sb, VERSION_NAME, version.toString() );
-        sb.append( FIELD_SEPERATOR );
-        idString( sb, NODEID_NAME, searchEdge.getNodeId() );
-        sb.append( FIELD_SEPERATOR );
-        appendField( sb, EDGE_NAME, searchEdge.getEdgeName() );
-        sb.append( FIELD_SEPERATOR );
-        appendField( sb, NODE_TYPE_NAME, searchEdge.getNodeType().name() );
+        sb.append(FIELD_SEPARATOR);
+        idString( sb, NODEID_NAME, strippedSearchEdge.getNodeId() );
+        sb.append(FIELD_SEPARATOR);
+        appendField( sb, EDGE_NAME, strippedSearchEdge.getEdgeName() );
+        sb.append(FIELD_SEPARATOR);
+        appendField( sb, NODE_TYPE_NAME, strippedSearchEdge.getNodeType().name() );
 
         return sb.toString();
     }
 
 
-    public static final String entityId( final Id id ) {
+    public static String entityId( final Id id ) {
         return idString( ENTITY_NAME, id );
     }
 
 
-    public static final String applicationId( final Id id ) {
+    public static String applicationId( final Id id ) {
         return idString( APPID_NAME, id );
     }
 
 
-    public static final String nodeId( final Id id ) {
+    public static String nodeId( final Id id ) {
         return idString( NODEID_NAME, id );
     }
 
@@ -198,7 +211,7 @@ public class IndexingUtils {
     /**
      * Construct and Id string with the specified type for the id provided.
      */
-    private static final String idString( final String type, final Id id ) {
+    private static String idString( final String type, final Id id ) {
         final StringBuilder stringBuilder = new StringBuilder();
 
         idString( stringBuilder, type, id );
@@ -211,7 +224,7 @@ public class IndexingUtils {
      * Append the id to the string
      */
     private static final void idString( final StringBuilder builder, final String type, final Id id ) {
-        builder.append( type ).append( "(" ).append( id.getUuid() ).append( ID_SEPERATOR )
+        builder.append( type ).append( "(" ).append( id.getUuid() ).append(ID_SEPARATOR)
                .append( id.getType().toLowerCase() ).append( ")" );
     }
 
@@ -254,7 +267,7 @@ public class IndexingUtils {
 
         //Other fields can be parsed using groups.  The groups start at value 1, group 0 is the entire match
         final String entityUUID = matcher.group(3);
-        final String entityType = matcher.group(4);
+        final String entityType = CollectionUtils.addEmptyVersion(matcher.group(4));
 
         final String versionUUID = matcher.group(5);
 
@@ -297,8 +310,8 @@ public class IndexingUtils {
         StringBuilder sb = new StringBuilder();
 
         idString( sb, APPID_NAME, applicationScope.getApplication() );
-        sb.append( FIELD_SEPERATOR );
-        sb.append( ENTITY_TYPE_NAME).append("(" ).append( type ).append( ")" );
+        sb.append(FIELD_SEPARATOR);
+        sb.append( ENTITY_TYPE_NAME).append("(" ).append( CollectionUtils.stripEmptyVersion(type) ).append( ")" );
         return sb.toString();
     }
 

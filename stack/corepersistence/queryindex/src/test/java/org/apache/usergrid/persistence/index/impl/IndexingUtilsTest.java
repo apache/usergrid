@@ -22,6 +22,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 import java.util.UUID;
 
+import org.apache.usergrid.persistence.model.util.CollectionUtils;
 import org.junit.Test;
 
 import org.apache.usergrid.persistence.core.scope.ApplicationScopeImpl;
@@ -87,7 +88,9 @@ public class IndexingUtilsTest {
         final CandidateResult parsedId = parseIndexDocId( output );
 
         assertEquals(version, parsedId.getVersion());
-        assertEquals(id, parsedId.getId());
+        // with collection versioning, empty versions are included when parsing doc IDs
+        assertEquals(id.getType(), CollectionUtils.stripEmptyVersion(parsedId.getId().getType()));
+        assertEquals(id.getUuid(), parsedId.getId().getUuid());
     }
 
 
@@ -119,7 +122,9 @@ public class IndexingUtilsTest {
         final CandidateResult parsedId = parseIndexDocId( output );
 
         assertEquals(version, parsedId.getVersion());
-        assertEquals(id, parsedId.getId());
+        // with collection versioning, empty versions are included when parsing doc IDs
+        assertEquals(id.getType(), CollectionUtils.stripEmptyVersion(parsedId.getId().getType()));
+        assertEquals(id.getUuid(), parsedId.getId().getUuid());
 
         final UUID appId = parseAppIdFromIndexDocId(output);
         assertEquals(appId,applicationScope.getApplication().getUuid());
@@ -154,7 +159,9 @@ public class IndexingUtilsTest {
         final CandidateResult parsedId = parseIndexDocId( output );
 
         assertEquals(version, parsedId.getVersion());
-        assertEquals(id, parsedId.getId());
+        // with collection versioning, empty versions are included when parsing doc IDs
+        assertEquals(id.getType(), CollectionUtils.stripEmptyVersion(parsedId.getId().getType()));
+        assertEquals(id.getUuid(), parsedId.getId().getUuid());
     }
 
 

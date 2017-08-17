@@ -33,12 +33,16 @@ import org.elasticsearch.client.Client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
  * Represent the properties required to build an index request
  */
 public class IndexOperation implements BatchOperation {
+
+    private static final Logger logger = LoggerFactory.getLogger( IndexOperation.class );
 
     @JsonProperty
     public String writeAlias;
@@ -61,6 +65,7 @@ public class IndexOperation implements BatchOperation {
         this.writeAlias = writeAlias;
         this.data = data;
         this.documentId = documentId;
+        //logger.info("documentId={}", documentId);
     }
 
     /**

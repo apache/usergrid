@@ -44,6 +44,12 @@ public interface Id extends Comparable<Id>, Serializable {
      */
     String getType();
 
+    /**
+     * Get the unique type for this id, using specified empty version handling
+     * @return
+     */
+    String getType(boolean includeEmptyVersion);
+
 
     //Application -> Class "Application"
 

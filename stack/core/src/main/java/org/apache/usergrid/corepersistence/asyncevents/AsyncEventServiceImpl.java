@@ -41,6 +41,11 @@ import org.apache.usergrid.persistence.collection.serialization.impl.migration.E
 import org.apache.usergrid.persistence.core.metrics.MetricsFactory;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.GraphManager;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
+import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.persistence.model.util.CollectionUtils;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.index.EntityIndex;
 import org.apache.usergrid.persistence.index.EntityIndexFactory;
@@ -58,6 +63,7 @@ import org.apache.usergrid.persistence.model.util.UUIDGenerator;
 import org.apache.usergrid.persistence.queue.*;
 import org.apache.usergrid.persistence.queue.impl.LegacyQueueScopeImpl;
 import org.apache.usergrid.persistence.queue.impl.SNSQueueManagerImpl;
+import org.apache.usergrid.corepersistence.index.CollectionVersionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -73,8 +79,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 
 /**
@@ -120,9 +124,11 @@ public class AsyncEventServiceImpl implements AsyncEventService {
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final IndexLocationStrategyFactory indexLocationStrategyFactory;
     private final EntityIndexFactory entityIndexFactory;
+    private final CollectionVersionManagerFactory collectionVersionManagerFactory;
     private final EventBuilder eventBuilder;
     private final RxTaskScheduler rxTaskScheduler;
     private final AllEntityIdsObservable allEntityIdsObservable;
+    private final GraphManagerFactory graphManagerFactory;
 
     private final Timer readTimer;
     private final Timer writeTimer;
@@ -160,6 +166,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                  final MapManagerFactory mapManagerFactory,
                                  final LegacyQueueFig queueFig,
                                  final CollectionVersionFig collectionVersionFig,
+                                 final CollectionVersionManagerFactory collectionVersionManagerFactory,
+                                 final GraphManagerFactory graphManagerFactory,
                                  final AllEntityIdsObservable allEntityIdsObservable,
                                  @EventExecutionScheduler
                                     final RxTaskScheduler rxTaskScheduler ) {
@@ -204,6 +212,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         this.indexProcessorFig = indexProcessorFig;
         this.queueFig = queueFig;
         this.collectionVersionFig = collectionVersionFig;
+        this.collectionVersionManagerFactory = collectionVersionManagerFactory;
+        this.graphManagerFactory = graphManagerFactory;
         this.allEntityIdsObservable = allEntityIdsObservable;
 
         this.writeTimer = metricsFactory.getTimer(AsyncEventServiceImpl.class, "async_event.write");
@@ -471,9 +481,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
                     single = handleDeIndexOldVersionEvent((DeIndexOldVersionsEvent) event);
 
-                } else if (event instanceof CollectionDeleteEvent) {
+                } else if (event instanceof CollectionClearEvent) {
 
-                    handleCollectionDelete(message);
+                    handleCollectionClear(message);
 
                 } else {
 
@@ -483,7 +493,7 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
                 if( !(event instanceof ElasticsearchIndexEvent)
                     && !(event instanceof InitializeApplicationIndexEvent)
-                    && !(event instanceof CollectionDeleteEvent)
+                    && !(event instanceof CollectionClearEvent)
                       && single.isEmpty() ){
                         logger.warn("No index operation messages came back from event processing for eventType: {}, msgId: {}, msgBody: {}",
                             event.getClass().getSimpleName(), message.getMessageId(), message.getStringBody());
@@ -542,8 +552,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                                        final Entity entity, long updatedAfter) {
 
 
-        logger.trace("Offering EntityIndexEvent for {}:{}",
-            entity.getId().getUuid(), entity.getId().getType());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering EntityIndexEvent for {}:{}",
+                entity.getId().getUuid(), entity.getId().getType());
+        }
 
         offer(new EntityIndexEvent(queueFig.getPrimaryRegion(),
             new EntityIdScope(applicationScope, entity.getId()), updatedAfter));
@@ -569,6 +581,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         final ApplicationScope applicationScope = entityIdScope.getApplicationScope();
         final Id entityId = entityIdScope.getId();
         final long updatedAfter = entityIndexEvent.getUpdatedAfter();
+        if (logger.isTraceEnabled()) {
+            logger.trace("handleEntityIndexUpdate entityId={}, type={}", entityId, entityId.getType());
+        }
 
         final EntityIndexOperation entityIndexOperation =
             new EntityIndexOperation( applicationScope, entityId, updatedAfter);
@@ -584,8 +599,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
                              final Entity entity,
                              final Edge newEdge) {
 
-        logger.trace("Offering EdgeIndexEvent for edge type {} entity {}:{}",
-            newEdge.getType(), entity.getId().getUuid(), entity.getId().getType());
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering EdgeIndexEvent for edge type {} entity {}:{}",
+                newEdge.getType(), entity.getId().getUuid(), entity.getId().getType());
+        }
 
         offer( new EdgeIndexEvent( queueFig.getPrimaryRegion(), applicationScope, entity.getId(), newEdge ));
 
@@ -602,6 +619,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             String.format("Event Type for handleEdgeIndex must be EDGE_INDEX, got %s", event.getClass()));
 
         final EdgeIndexEvent edgeIndexEvent = ( EdgeIndexEvent ) event;
+        if (logger.isTraceEnabled()) {
+            logger.trace("handleEdgeIndex entityId={} targetNode={}", edgeIndexEvent.getEntityId(), edgeIndexEvent.getEdge().getTargetNode());
+        }
 
         final EntityCollectionManager ecm =
             entityCollectionManagerFactory.createCollectionManager( edgeIndexEvent.getApplicationScope() );
@@ -682,7 +702,9 @@ public class AsyncEventServiceImpl implements AsyncEventService {
 
         //send to the topic so all regions index the batch
 
-        logger.trace("Offering ElasticsearchIndexEvent for message {}", newMessageId );
+        if (logger.isTraceEnabled()) {
+            logger.trace("Offering ElasticsearchIndexEvent for message {}", newMessageId);
+        }
 
         offerTopic( elasticsearchIndexEvent, queueType );
     }
@@ -839,88 +861,95 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         final EntityDeleteEvent entityDeleteEvent = ( EntityDeleteEvent ) event;
         final ApplicationScope applicationScope = entityDeleteEvent.getEntityIdScope().getApplicationScope();
         final Id entityId = entityDeleteEvent.getEntityIdScope().getId();
-        final boolean markedOnly = entityDeleteEvent.markedOnly();
 
         if (logger.isDebugEnabled()) {
             logger.debug("Deleting entity id from index in app scope {} with entityId {}", applicationScope, entityId);
         }
 
-        final IndexOperationMessage indexOperationMessage = markedOnly ?
-            eventBuilder.buildEntityDelete( applicationScope, entityId ) :
-            eventBuilder.buildEntityDeleteAllVersions( applicationScope, entityId );
+        final IndexOperationMessage indexOperationMessage = eventBuilder.buildEntityDelete( applicationScope, entityId );
 
         return indexOperationMessage;
 
     }
 
     @Override
-    public void queueCollectionDelete(final CollectionScope collectionScope, final String collectionVersion) {
+    public void queueCollectionClear(final CollectionScope collectionScope, final String collectionVersion) {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Offering CollectionDeleteEvent for application={}, collectionName={}, collectionVersion={}",
+            logger.debug("Offering CollectionClearEvent for application={}, collectionName={}, collectionVersion={}",
                 collectionScope.getApplication().getUuid(), collectionScope.getCollectionName(), collectionVersion);
         }
 
         // sent in region (not offerTopic) as the delete IO happens in-region, then queues a multi-region de-index op
-        offer(new CollectionDeleteEvent(queueFig.getPrimaryRegion(), collectionScope, collectionVersion),
+        offer(new CollectionClearEvent(queueFig.getPrimaryRegion(), collectionScope, collectionVersion),
             AsyncEventQueueType.DELETE);
     }
 
-    private void handleCollectionDelete(final LegacyQueueMessage message) {
+    private void handleCollectionClear(final LegacyQueueMessage message) {
 
-        Preconditions.checkNotNull(message, "Queue Message cannot be null for handleCollectionDelete");
+        Preconditions.checkNotNull(message, "Queue Message cannot be null for handleCollectionClear");
 
         final AsyncEvent event = (AsyncEvent) message.getBody();
-        Preconditions.checkNotNull(event, "QueueMessage body cannot be null for handleCollectionDelete" );
-        Preconditions.checkArgument( event instanceof CollectionDeleteEvent,
-            String.format( "Event Type for handleCollectionDelete must be COLLECTION_DELETE, got %s", event.getClass() ) );
+        Preconditions.checkNotNull(event, "QueueMessage body cannot be null for handleCollectionClear" );
+        Preconditions.checkArgument( event instanceof CollectionClearEvent,
+            String.format( "Event Type for handleCollectionClear must be COLLECTION_CLEAR, got %s", event.getClass() ) );
 
-        final CollectionDeleteEvent collectionDeleteEvent = ( CollectionDeleteEvent ) event;
-        final CollectionScope collectionScope = collectionDeleteEvent.getCollectionScope();
+        final CollectionClearEvent collectionClearEvent = (CollectionClearEvent) event;
+        final CollectionScope collectionScope = collectionClearEvent.getCollectionScope();
         if (collectionScope == null) {
-            logger.error("CollectionDeleteEvent received with null collectionScope");
+            logger.error("CollectionClearEvent received with null collectionScope");
             // ack message, nothing more to do
             return;
         }
         final UUID applicationID = collectionScope.getApplication().getUuid();
         if (applicationID == null) {
-            logger.error("CollectionDeleteEvent collectionScope has null application");
+            logger.error("CollectionClearEvent collectionScope has null application");
             // ack message, nothing more to do
             return;
         }
-        String collectionVersion = collectionDeleteEvent.getCollectionVersion();
+        String collectionVersion = collectionClearEvent.getCollectionVersion();
         if (collectionVersion == null) {
             collectionVersion = "";
         }
         final ApplicationScope applicationScope = CpNamingUtils.getApplicationScope(applicationID);
-        final String versionedCollectionName =
-            CollectionVersionUtil.buildVersionedNameString(collectionScope.getCollectionName(),
-                collectionVersion, false);
 
+        final String versionedCollectionName =
+            CollectionVersionUtils.buildVersionedNameString(collectionScope.getCollectionName(),
+                collectionVersion, false, false);
+        logger.info("collectionClear: versionedCollectionName:{}", versionedCollectionName);
+
+        final EntityCollectionManager ecm =
+            entityCollectionManagerFactory.createCollectionManager( applicationScope );
+
+        final GraphManager gm =
+            graphManagerFactory.createEdgeManager(applicationScope);
 
         final AtomicInteger count = new AtomicInteger();
         int maxDeletes = collectionVersionFig.getDeletesPerEvent();
 
         if (logger.isDebugEnabled()) {
-            logger.debug("handleCollectionDelete: applicationScope={} collectionName={} maxDeletes={}", applicationScope.toString(), versionedCollectionName, maxDeletes);
+            logger.debug("handleCollectionClear: applicationScope={} collectionName={} maxDeletes={}", applicationScope.toString(), versionedCollectionName, maxDeletes);
         }
         allEntityIdsObservable.getEdgesToEntities(Observable.just(applicationScope),
             Optional.fromNullable(CpNamingUtils.getEdgeTypeFromCollectionName(versionedCollectionName.toLowerCase())), Optional.absent())
             //.takeWhile(edgeScope-> count.intValue() < maxDeletes)
             .take(maxDeletes)
+            .doOnNext(edgeScope -> {
+                // mark the entity for deletion
+                ecm.mark( edgeScope.getEdge().getTargetNode(), null ).mergeWith( gm.markNode( edgeScope.getEdge().getTargetNode(), CpNamingUtils.createGraphOperationTimestamp() ) ).toBlocking().last();
+            })
             .doOnNext(edgeScope-> {
+                //logger.info("edgeScope sourceNode:{} targetNode:{} type:{}", edgeScope.getEdge().getSourceNode().toString(), edgeScope.getEdge().getTargetNode().toString(), edgeScope.getEdge().getType());
 
-                offer(new EntityDeleteEvent(queueFig.getPrimaryRegion(),
-                    new EntityIdScope(applicationScope, edgeScope.getEdge().getTargetNode()),false),
-                    AsyncEventQueueType.DELETE);
+                queueEntityDelete(applicationScope, edgeScope.getEdge().getTargetNode());
                 count.incrementAndGet();
             }).toBlocking().lastOrDefault(null);
 
-        logger.info("handleCollectionDelete: queued {} entity deletes for deleted collection", count.intValue());
+        logger.info("handleCollectionClear: queued {} entity deletes for cleared collection", count.intValue());
 
         if (count.intValue() >= maxDeletes) {
-            // requeue collection delete for next chunk of deletes
-            offer (new CollectionDeleteEvent(queueFig.getPrimaryRegion(), collectionScope, collectionVersion),
+            // requeue collection clear for next chunk
+            offer (new CollectionClearEvent(queueFig.getPrimaryRegion(), collectionScope, collectionVersion),
                 AsyncEventQueueType.DELETE);
         }
     }

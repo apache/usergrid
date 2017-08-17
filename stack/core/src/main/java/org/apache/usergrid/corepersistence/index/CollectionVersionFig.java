@@ -43,7 +43,7 @@ public interface CollectionVersionFig extends GuicyFig {
     int getCacheTimeout();
 
     @Key(TIME_BETWEEN_DELETES_MS)
-    @Default("60000")
+    @Default("0")
     long getTimeBetweenDeletes();
 
     @Key(DELETES_PER_EVENT)

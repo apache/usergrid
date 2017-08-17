@@ -147,7 +147,7 @@ public class GraphManagerImpl implements GraphManager {
     public Observable<MarkedEdge> writeEdge( final Edge edge ) {
         GraphValidation.validateEdge( edge );
 
-        final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, false );
+        final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, false, false, false );
 
         final Observable<MarkedEdge> observable = Observable.just( markedEdge ).map( edge1 -> {
 
@@ -178,7 +178,7 @@ public class GraphManagerImpl implements GraphManager {
     public Observable<MarkedEdge> markEdge( final Edge edge ) {
         GraphValidation.validateEdge( edge );
 
-        final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, true );
+        final MarkedEdge markedEdge = new SimpleMarkedEdge( edge, true, false, false );
 
         final Observable<MarkedEdge> observable = Observable.just( markedEdge ).map( edge1 -> {
 
@@ -269,6 +269,7 @@ public class GraphManagerImpl implements GraphManager {
         final Observable<MarkedEdge> nodeObservable =
             Observable.just( inputNode )
                 .map( node -> nodeSerialization.getMaxVersion( scope, node ) )
+                //.doOnNext(maxTimestamp -> logger.info("compactNode maxTimestamp={}", maxTimestamp.toString()))
                 .takeWhile(maxTimestamp -> maxTimestamp.isPresent() )
                 //map our delete listener
                 .flatMap( timestamp -> nodeDeleteListener.receive( scope, inputNode, startTime ) );

@@ -28,6 +28,7 @@ import org.apache.usergrid.persistence.collection.MvccLogEntry;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
 import org.apache.usergrid.persistence.graph.Edge;
 import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.index.impl.IndexOperationMessage;
 import org.apache.usergrid.persistence.model.entity.Entity;
 import org.apache.usergrid.persistence.model.entity.Id;
@@ -65,15 +66,6 @@ public interface EventBuilder {
      */
     IndexOperationMessage buildEntityDelete(ApplicationScope applicationScope, Id entityId );
 
-    /**
-     * Return a bin with 2 observable streams for entity delete. This deletes all versions -- used only for an old
-     * collection version. Does not require versions to be marked for deletion.
-     * @param applicationScope
-     * @param entityId
-     * @return
-     */
-    IndexOperationMessage buildEntityDeleteAllVersions(ApplicationScope applicationScope, Id entityId );
-
 
 
     /**
@@ -93,6 +85,30 @@ public interface EventBuilder {
      */
     Observable<IndexOperationMessage> deIndexOldVersions( ApplicationScope applicationScope,
                                                           Id entityId, UUID markedVersion );
+
+    /**
+     * Get id that includes collection version.
+     */
+    Id getCollectionVersionedId(ApplicationScope applicationScope, Id id, boolean forceVersion);
+
+
+    /**
+     * Get entity that includes collection version.
+     */
+    Entity getCollectionVersionedEntity(ApplicationScope applicationScope, Entity entity, boolean forceVersion);
+
+
+    /**
+     * Get edge that includes collection version.
+     */
+    Edge getCollectionVersionedEdge(ApplicationScope applicationScope, Edge edge, boolean forceVersion);
+
+
+    /**
+     * Get edge that includes collection version.
+     */
+    SearchEdge getCollectionVersionedSearchEdge(ApplicationScope applicationScope, SearchEdge searchEdge, boolean forceVersion);
+
 
     /**
      * A bean to hold both our observables so the caller can choose the subscription mechanism.  Note that

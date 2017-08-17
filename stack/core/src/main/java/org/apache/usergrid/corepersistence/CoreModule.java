@@ -41,7 +41,9 @@ import org.apache.usergrid.persistence.core.migration.data.MigrationPlugin;
 import org.apache.usergrid.persistence.core.rx.RxTaskScheduler;
 import org.apache.usergrid.persistence.core.rx.RxTaskSchedulerImpl;
 import org.apache.usergrid.persistence.core.scope.ApplicationScope;
+import org.apache.usergrid.persistence.graph.GraphManagerFactory;
 import org.apache.usergrid.persistence.graph.guice.GraphModule;
+import org.apache.usergrid.persistence.graph.serialization.impl.GraphManagerFactoryImpl;
 import org.apache.usergrid.persistence.graph.serialization.impl.migration.GraphNode;
 import org.apache.usergrid.persistence.index.guice.IndexModule;
 import org.apache.usergrid.persistence.token.guice.TokenModule;
@@ -183,6 +185,8 @@ public class CoreModule extends AbstractModule {
         bind( ApplicationService.class ).to( ApplicationServiceImpl.class );
 
         bind( StatusService.class ).to( StatusServiceImpl.class );
+
+        bind( GraphManagerFactory.class ).to(GraphManagerFactoryImpl.class);
     }
 
 

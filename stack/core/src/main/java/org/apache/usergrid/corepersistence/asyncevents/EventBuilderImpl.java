@@ -24,12 +24,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.usergrid.corepersistence.index.*;
+import org.apache.usergrid.persistence.model.util.CollectionUtils;
+import org.apache.usergrid.persistence.graph.MarkedEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleEdge;
+import org.apache.usergrid.persistence.graph.impl.SimpleMarkedEdge;
+import org.apache.usergrid.persistence.index.IndexEdge;
+import org.apache.usergrid.persistence.index.SearchEdge;
+import org.apache.usergrid.persistence.index.impl.IndexEdgeImpl;
+import org.apache.usergrid.persistence.index.impl.SearchEdgeImpl;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
+import org.apache.usergrid.corepersistence.index.CollectionVersionUtils;
+import org.apache.usergrid.utils.InflectionUtils;
 import org.apache.usergrid.utils.UUIDUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.usergrid.corepersistence.index.EntityIndexOperation;
-import org.apache.usergrid.corepersistence.index.IndexService;
 import org.apache.usergrid.persistence.Schema;
 import org.apache.usergrid.persistence.collection.EntityCollectionManager;
 import org.apache.usergrid.persistence.collection.EntityCollectionManagerFactory;
@@ -62,18 +72,92 @@ public class EventBuilderImpl implements EventBuilder {
     private final EntityCollectionManagerFactory entityCollectionManagerFactory;
     private final GraphManagerFactory graphManagerFactory;
     private final SerializationFig serializationFig;
+    private final CollectionVersionManagerFactory collectionVersionManagerFactory;
 
 
     @Inject
     public EventBuilderImpl( final IndexService indexService,
                              final EntityCollectionManagerFactory entityCollectionManagerFactory,
-                             final GraphManagerFactory graphManagerFactory, final SerializationFig serializationFig ) {
+                             final GraphManagerFactory graphManagerFactory, final SerializationFig serializationFig,
+                             final CollectionVersionManagerFactory collectionVersionManagerFactory) {
         this.indexService = indexService;
         this.entityCollectionManagerFactory = entityCollectionManagerFactory;
         this.graphManagerFactory = graphManagerFactory;
         this.serializationFig = serializationFig;
+        this.collectionVersionManagerFactory = collectionVersionManagerFactory;
     }
 
+
+    @Override
+    public Id getCollectionVersionedId(ApplicationScope applicationScope, Id id, boolean forceVersion) {
+
+        String currentCollectionName = InflectionUtils.pluralize(id.getType());
+
+        // if already versioned, or not a custom (versionable) collection, we're done
+        if (!CollectionUtils.isCustomCollectionOrEntityName(currentCollectionName) ||
+            CollectionVersionUtils.isVersionedName(currentCollectionName)) {
+            return id;
+        }
+
+        CollectionVersionManager cvm = collectionVersionManagerFactory.getInstance(
+            new CollectionScopeImpl(applicationScope.getApplication(), currentCollectionName)
+        );
+        String currentCollectionVersion = cvm.getCollectionVersion(true);
+
+        String newEntityType = CollectionVersionUtils.buildVersionedNameString(id.getType(), currentCollectionVersion,
+            false, forceVersion);
+
+        return new SimpleId(id.getUuid(), newEntityType);
+    }
+
+    @Override
+    public Entity getCollectionVersionedEntity(final ApplicationScope applicationScope, final Entity entity, boolean forceVersion) {
+
+        return new Entity(getCollectionVersionedId(applicationScope, entity.getId(), forceVersion), entity.getVersion() );
+
+    }
+
+    @Override
+    public Edge getCollectionVersionedEdge(final ApplicationScope applicationScope, final Edge edge, boolean forceVersion) {
+        Edge returnEdge;
+        if (edge instanceof SimpleMarkedEdge) {
+            MarkedEdge markedEdge = (MarkedEdge)edge;
+            returnEdge = new SimpleMarkedEdge(
+                getCollectionVersionedId(applicationScope, markedEdge.getSourceNode(), forceVersion),
+                markedEdge.getType(),
+                getCollectionVersionedId(applicationScope, markedEdge.getTargetNode(), forceVersion),
+                markedEdge.getTimestamp(),
+                markedEdge.isDeleted(),
+                markedEdge.isSourceNodeDelete(),
+                markedEdge.isTargetNodeDeleted()
+            );
+        } else { // SimpleEdge
+            returnEdge = new SimpleEdge(getCollectionVersionedId(applicationScope, edge.getSourceNode(), forceVersion), edge.getType(),
+                getCollectionVersionedId(applicationScope, edge.getTargetNode(), forceVersion), edge.getTimestamp());
+        }
+
+        return returnEdge;
+    }
+
+    @Override
+    public SearchEdge getCollectionVersionedSearchEdge(final ApplicationScope applicationScope, final SearchEdge searchEdge, boolean forceVersion) {
+        SearchEdge returnSearchEdge;
+        if (searchEdge instanceof IndexEdgeImpl) {
+            IndexEdge indexEdge = (IndexEdge)searchEdge;
+            returnSearchEdge = new IndexEdgeImpl(
+                getCollectionVersionedId(applicationScope, indexEdge.getNodeId(), forceVersion),
+                indexEdge.getEdgeName(),
+                indexEdge.getNodeType(),
+                indexEdge.getTimestamp()
+            );
+        } else { // SearchEdgeImpl
+            returnSearchEdge = new SearchEdgeImpl(getCollectionVersionedId(applicationScope, searchEdge.getNodeId(), forceVersion),
+                searchEdge.getEdgeName(), searchEdge.getNodeType());
+
+        }
+
+        return returnSearchEdge;
+    }
 
 
     @Override
@@ -126,45 +210,46 @@ public class EventBuilderImpl implements EventBuilder {
     //Does the queue entityDelete mark the entity then immediately does to the deleteEntityIndex. seems like
     //it'll need to be pushed up higher so we can do the marking that isn't async or does it not matter?
 
-    private IndexOperationMessage buildEntityDeleteCommon(final ApplicationScope applicationScope, final Id entityId,
-                                                          boolean markedOnly) {
+    @Override
+    public IndexOperationMessage buildEntityDelete(final ApplicationScope applicationScope, final Id entityId ) {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("Deleting entity id ({} versions) from index in app scope {} with entityId {}",
-                markedOnly ? "marked" : "all", applicationScope, entityId);
+            logger.debug("Deleting entity id (marked versions) from index in app scope {} with entityId {}",
+                applicationScope, entityId);
         }
 
         final EntityCollectionManager ecm = entityCollectionManagerFactory.createCollectionManager( applicationScope );
         final GraphManager gm = graphManagerFactory.createEdgeManager( applicationScope );
 
-        //TODO USERGRID-1123: Implement so we don't iterate logs twice (latest DELETED version, then to get all DELETED)
+        MvccLogEntry mostRecentToDelete =
+            ecm.getVersionsFromMaxToMin( entityId, UUIDUtils.newTimeUUID() )
+                .toBlocking()
+                .firstOrDefault( null, mvccLogEntry -> mvccLogEntry.getState() == MvccLogEntry.State.DELETED );
 
-        MvccLogEntry mostRecentToDelete = markedOnly ?
-            ecm.getVersionsFromMaxToMin( entityId, UUIDUtils.newTimeUUID() ).toBlocking()
-                .firstOrDefault( null, mvccLogEntry -> mvccLogEntry.getState() == MvccLogEntry.State.DELETED ) :
-            ecm.getVersionsFromMaxToMin( entityId, UUIDUtils.newTimeUUID() ).toBlocking()
-                .firstOrDefault( null );
+//        logger.info("mostRecent stage={} entityId={} version={} state={}",
+//            mostRecentToDelete.getStage().name(), mostRecentToDelete.getEntityId(),
+//            mostRecentToDelete.getVersion().toString(), mostRecentToDelete.getState().name());
 
-
-        // if only marked entities should be deleted and nothing is marked, then abort
-        if(markedOnly && mostRecentToDelete == null){
+        if (mostRecentToDelete == null) {
+            logger.info("No entity versions to delete for id {}", entityId.toString());
+        }
+        // if nothing is marked, then abort
+        if(mostRecentToDelete == null){
             return new IndexOperationMessage();
         }
 
         final List<MvccLogEntry> logEntries = new ArrayList<>();
         Observable<MvccLogEntry> mvccLogEntryListObservable =
             ecm.getVersionsFromMaxToMin( entityId, UUIDUtils.newTimeUUID() );
-            if(markedOnly){
-                mvccLogEntryListObservable
-                    .filter(mvccLogEntry -> mvccLogEntry.getState() == MvccLogEntry.State.DELETED);
-            }
-            mvccLogEntryListObservable
-                .filter( mvccLogEntry-> mvccLogEntry.getVersion().timestamp() <= mostRecentToDelete.getVersion().timestamp() )
-                .buffer( serializationFig.getBufferSize() )
-                .doOnNext( buffer -> ecm.delete( buffer ) )
-                .doOnNext(mvccLogEntries -> {
-                        logEntries.addAll(mvccLogEntries);
-                }).toBlocking().lastOrDefault(null);
+        mvccLogEntryListObservable
+            .filter( mvccLogEntry-> mvccLogEntry.getVersion().timestamp() <= mostRecentToDelete.getVersion().timestamp() )
+            .buffer( serializationFig.getBufferSize() )
+            .doOnNext( buffer -> ecm.delete( buffer ) )
+            .doOnNext(mvccLogEntries -> {
+                logEntries.addAll(mvccLogEntries);
+            }).toBlocking().lastOrDefault(null);
+
+        //logger.info("logEntries size={}", logEntries.size());
 
         IndexOperationMessage combined = new IndexOperationMessage();
 
@@ -186,7 +271,9 @@ public class EventBuilderImpl implements EventBuilder {
         // Further comments using the example of deleting "server1" from the above example.
         gm.compactNode(entityId).doOnNext(markedEdge -> {
 
-            logger.debug("Processing deleted edge for de-indexing {}", markedEdge);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Processing deleted edge for de-indexing {}", markedEdge);
+            }
 
             // if the edge was for a connection where the entity to be deleted is the source node, we need to load
             // the target node's versions so that all versions of connections to that entity can be de-indexed
@@ -220,17 +307,6 @@ public class EventBuilderImpl implements EventBuilder {
         }).toBlocking().lastOrDefault(null);
 
         return combined;
-    }
-
-    @Override
-    public IndexOperationMessage buildEntityDelete(final ApplicationScope applicationScope, final Id entityId ) {
-        return buildEntityDeleteCommon(applicationScope, entityId, true);
-    }
-
-    // this deletes all versions of an entity, only used for collection delete
-    @Override
-    public IndexOperationMessage buildEntityDeleteAllVersions(final ApplicationScope applicationScope, final Id entityId ) {
-        return buildEntityDeleteCommon(applicationScope, entityId, false);
     }
 
     @Override

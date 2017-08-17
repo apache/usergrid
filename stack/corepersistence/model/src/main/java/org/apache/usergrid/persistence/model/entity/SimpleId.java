@@ -29,6 +29,8 @@ import org.apache.usergrid.persistence.model.util.Verify;
 import com.fasterxml.uuid.UUIDComparator;
 import com.google.common.base.Preconditions;
 
+import org.apache.usergrid.persistence.model.util.CollectionUtils;
+
 
 /** @author tnine */
 public class SimpleId implements Id, Serializable {
@@ -56,6 +58,11 @@ public class SimpleId implements Id, Serializable {
         this.type = type;
     }
 
+    public SimpleId(final Id another, boolean includeEmptyVersion) {
+        this.uuid = another.getUuid();
+        this.type = another.getType(includeEmptyVersion);
+    }
+
 
     /**
      * Create a new ID.  Should only be used for new entities
@@ -75,6 +82,18 @@ public class SimpleId implements Id, Serializable {
     @Override
     public String getType() {
         return type;
+    }
+
+
+    @Override
+    public String getType(boolean includeEmptyVersion) {
+        String retType;
+        if (includeEmptyVersion) {
+            retType = CollectionUtils.addEmptyVersion(type);
+        } else {
+            retType = CollectionUtils.stripEmptyVersion(type);
+        }
+        return retType;
     }
 
 

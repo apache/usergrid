@@ -31,7 +31,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.usergrid.persistence.entities.Application;
+import org.apache.usergrid.persistence.model.util.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -89,7 +89,7 @@ public class CollectionResource extends ServiceResource {
             logger.trace( "CollectionResource.executeClearCollection" );
         }
 
-        if (!Application.isCustomCollectionName(itemName.getPath())) {
+        if (!CollectionUtils.isCustomCollectionOrEntityName(itemName.getPath())) {
             throw new IllegalArgumentException(
                 "Cannot clear built-in collections (" + itemName + ")."
             );
@@ -139,7 +139,7 @@ public class CollectionResource extends ServiceResource {
             logger.trace( "CollectionResource.executeGetCollectionVersion" );
         }
 
-        if (!Application.isCustomCollectionName(itemName.getPath())) {
+        if (!CollectionUtils.isCustomCollectionOrEntityName(itemName.getPath())) {
             throw new IllegalArgumentException(
                 "Built-in collections are not versioned."
             );

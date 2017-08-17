@@ -33,6 +33,8 @@ import org.apache.usergrid.persistence.model.entity.Id;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createIndexDocId;
 
@@ -42,6 +44,8 @@ import static org.apache.usergrid.persistence.index.impl.IndexingUtils.createInd
  */
 @JsonTypeInfo( use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class" )
 public class DeIndexOperation implements BatchOperation {
+
+    private static final Logger logger = LoggerFactory.getLogger( DeIndexOperation.class );
 
     @JsonProperty
     public String[] indexes;
@@ -59,11 +63,13 @@ public class DeIndexOperation implements BatchOperation {
                              UUID version ) {
         this.indexes = indexes;
         this.documentId = createIndexDocId( applicationScope, id, version, searchEdge );
+        //logger.info("documentId={}", this.documentId);
     }
 
     public DeIndexOperation( String[] indexes, String docId) {
         this.indexes = indexes;
         this.documentId = docId;
+        //logger.info("documentId={}", this.documentId);
     }
 
 

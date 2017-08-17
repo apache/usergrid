@@ -163,7 +163,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
         waitForRebuild( status, reIndexService );
 
-        app.waitForQueueDrainAndRefreshIndex(5000);
+        app.waitForQueueDrainAndRefreshIndex(10000);
 
         // ----------------- test that we can read the catherder collection and not the catshepard
 
@@ -172,7 +172,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
     }
 
 
-    @Test( timeout = 120000 )
+    @Test( timeout = 240000 )
     public void rebuildIndex() throws Exception {
 
         logger.info( "Started rebuildIndex()" );

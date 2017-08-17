@@ -25,6 +25,7 @@ import java.util.*;
 import org.apache.usergrid.corepersistence.index.IndexLocationStrategyFactory;
 import org.apache.usergrid.persistence.index.*;
 import org.apache.usergrid.persistence.index.impl.IndexProducer;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 import org.apache.usergrid.persistence.model.field.DistanceField;
 import org.apache.usergrid.persistence.model.field.DoubleField;
 import org.apache.usergrid.persistence.model.field.EntityObjectField;
@@ -112,7 +113,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
                     candidates.flatMap(candidatesList -> {
                         Collection<SelectFieldMapping> mappings = candidatesList.get(0).getFields();
                         Observable<EntitySet> entitySets = Observable.from(candidatesList)
-                            .map(candidateEntry -> candidateEntry.getCandidateResult().getId()).toList()
+                            .map(candidateEntry -> (Id)new SimpleId(candidateEntry.getCandidateResult().getId(), false)).toList()
                             .flatMap(idList -> entityCollectionManager.load(idList));
                         //now we have a collection, validate our canidate set is correct.
                         return entitySets.map(
@@ -273,7 +274,7 @@ public class CandidateEntityFilter extends AbstractFilter<FilterResult<Candidate
             final CandidateResult candidateResult = candidate.getCandidateResult();
             final boolean isGeo = candidateResult instanceof GeoCandidateResult;
             final SearchEdge searchEdge = candidate.getSearchEdge();
-            final Id candidateId = candidateResult.getId();
+            final Id candidateId = new SimpleId(candidateResult.getId(), false);
             final UUID candidateVersion = candidateResult.getVersion();
 
 

@@ -18,7 +18,7 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import org.apache.usergrid.corepersistence.asyncevents.CollectionDeleteTooSoonException;
+import org.apache.usergrid.corepersistence.asyncevents.CollectionClearTooSoonException;
 
 public interface CollectionVersionManager {
 
@@ -29,7 +29,7 @@ public interface CollectionVersionManager {
 
     String getVersionedCollectionName(final boolean bypassCache);
 
-    String updateCollectionVersion() throws CollectionDeleteTooSoonException;
+    String updateCollectionVersion() throws CollectionClearTooSoonException;
 
     Long getTimeLastChanged();
 

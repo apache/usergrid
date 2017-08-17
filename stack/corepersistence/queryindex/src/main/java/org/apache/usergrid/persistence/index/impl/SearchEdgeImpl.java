@@ -20,6 +20,7 @@ package org.apache.usergrid.persistence.index.impl;
 
 import org.apache.usergrid.persistence.index.SearchEdge;
 import org.apache.usergrid.persistence.model.entity.Id;
+import org.apache.usergrid.persistence.model.entity.SimpleId;
 
 
 /**
@@ -58,6 +59,14 @@ public class SearchEdgeImpl implements SearchEdge {
         this.nodeId = nodeId;
         this.name = name;
         this.nodeType = nodeType;
+    }
+
+    public SearchEdgeImpl( final SearchEdge another, boolean includeEmptyVersion) {
+        this(
+            new SimpleId(another.getNodeId(), includeEmptyVersion),
+            another.getEdgeName(),
+            another.getNodeType()
+        );
     }
 
 

@@ -160,6 +160,10 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
         return obj instanceof String;
     }
 
+    public static Boolean isNullOrEmpty(String s) {
+        return (s == null || s.equals(""));
+    }
+
 
     public static String readClasspathFileAsString( String filePath ) {
         try {

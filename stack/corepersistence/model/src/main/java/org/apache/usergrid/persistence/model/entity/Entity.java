@@ -76,6 +76,12 @@ public class Entity extends EntityObject {
         this.version = version;
     }
 
+    public Entity(final Entity another, boolean includeEmptyVersion) {
+        this(new SimpleId(another.getId(), includeEmptyVersion), another.getVersion());
+        this.setFieldMap(another.getFieldMap());
+        this.setSize(another.getSize());
+    }
+
 
     /**
      * Generate a new entity with the given type and a new id

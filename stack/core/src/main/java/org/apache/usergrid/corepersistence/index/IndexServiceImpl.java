@@ -254,6 +254,9 @@ public class IndexServiceImpl implements IndexService {
     public Observable<IndexOperationMessage> deIndexEdge(final ApplicationScope applicationScope, final Edge edge,
                                                          final Id entityId, final UUID entityVersion){
 
+        if (logger.isTraceEnabled()) {
+            logger.trace("deIndexEdge edge={} entityId={} entityVersion={}", edge.toString(), entityId.toString(), entityVersion.toString());
+        }
         final EntityIndex ei = entityIndexFactory.createEntityIndex(indexLocationStrategyFactory.getIndexLocationStrategy(applicationScope));
         final EntityIndexBatch entityBatch = ei.createBatch();
         entityBatch.deindex(generateScopeFromSource( edge ), entityId, entityVersion);

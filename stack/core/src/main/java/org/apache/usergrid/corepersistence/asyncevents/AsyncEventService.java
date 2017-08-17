@@ -101,7 +101,7 @@ public interface AsyncEventService extends ReIndexAction {
      * @param collectionScope
      * @param collectionVersion
      */
-    void queueCollectionDelete(final CollectionScope collectionScope, final String collectionVersion);
+    void queueCollectionClear(final CollectionScope collectionScope, final String collectionVersion);
 
     /**
      * current queue depth

@@ -18,13 +18,14 @@
 package org.apache.usergrid.corepersistence.index;
 
 
-import com.amazonaws.util.StringUtils;
 import com.google.common.base.Preconditions;
+import org.apache.usergrid.utils.StringUtils;
 
 import java.util.regex.Pattern;
 
-public class CollectionVersionUtil {
-    private static final String VERSIONED_NAME_SEPARATOR = "%~!~%";
+import static org.apache.usergrid.persistence.model.util.CollectionUtils.VERSIONED_NAME_SEPARATOR;
+
+public class CollectionVersionUtils {
 
     public static VersionedCollectionName parseVersionedName(String versionedCollectionNameString) throws IllegalArgumentException {
         Preconditions.checkNotNull(versionedCollectionNameString, "collection name string is required");
@@ -51,6 +52,10 @@ public class CollectionVersionUtil {
         return parseVersionedName(versionedCollectionNameString).getCollectionName();
     }
 
+    public static String getCollectionVersion(String versionedCollectionNameString) throws IllegalArgumentException {
+        return parseVersionedName(versionedCollectionNameString).getCollectionVersion();
+    }
+
     public static boolean collectionNameHasVersion(String collectionNameString) {
         try {
             VersionedCollectionName parsedName = parseVersionedName(collectionNameString);
@@ -61,19 +66,34 @@ public class CollectionVersionUtil {
         }
     }
 
+    public static boolean isVersionedName(String name) {
+        try {
+            return name.contains(VERSIONED_NAME_SEPARATOR);
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
+
     public static String buildVersionedNameString(final String baseName, final String collectionVersion,
                                                    final boolean validateBaseName) throws IllegalArgumentException {
+        return buildVersionedNameString(baseName, collectionVersion, validateBaseName, false);
+    }
+
+    public static String buildVersionedNameString(final String baseName, final String collectionVersion,
+                                                  final boolean validateBaseName, final boolean forceVersion) {
         Preconditions.checkNotNull(baseName, "base name is required");
         if (validateBaseName && baseName.contains(VERSIONED_NAME_SEPARATOR)) {
             throw new IllegalArgumentException("Cannot build versioned name using a base name that already includes the version separator");
         }
-        if (collectionVersion == null || collectionVersion == "") {
+        if (!forceVersion && collectionVersion == null || collectionVersion == "") {
             return baseName;
         }
         return baseName + VERSIONED_NAME_SEPARATOR + collectionVersion;
+
     }
 
-    public static VersionedCollectionName createVersionedName(String baseName, String collectionVersion) {
+    public static VersionedCollectionName createVersionedName(final String baseName, final String collectionVersion) {
         return new VersionedCollectionNameImpl(baseName, collectionVersion);
     }
 

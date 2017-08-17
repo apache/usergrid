@@ -354,6 +354,9 @@ public class IndexResource extends AbstractContextResource {
         response.setProperty( "status", status.getStatus() );
         response.setProperty( "lastUpdatedEpoch", status.getLastUpdated() );
         response.setProperty( "numberQueued", status.getNumberProcessed() );
+        if (request.getUpdateTimestamp().isPresent() && request.getUpdateTimestamp().get() > 0L) {
+            response.setProperty("updatedSince", request.getUpdateTimestamp());
+        }
         response.setSuccess();
 
         return response;
