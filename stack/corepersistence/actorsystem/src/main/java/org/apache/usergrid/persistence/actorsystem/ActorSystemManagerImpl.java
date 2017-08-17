@@ -377,6 +377,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
                 Iterator<Class> messageTypes = routerProducer.getMessageTypes().iterator();
                 while ( messageTypes.hasNext() ) {
                     Class messageType = messageTypes.next();
+                    logger.info("createClusterSystem: routerProducer {}: message type={}", routerProducer.getRouterPath(), messageType.getName());
                     routersByMessageType.put( messageType, routerProducer.getRouterPath() );
                 }
             }
@@ -467,7 +468,7 @@ public class ActorSystemManagerImpl implements ActorSystemManager {
         if (started) {
             logger.info( "ClientActor [{}] has started", ra.path() );
         } else {
-            throw new RuntimeException( "ClientActor ["+ra.path()+"] did not start in time" );
+            throw new RuntimeException( "ClientActor ["+ra.path()+"] did not start in time, validate that akka seeds are configured properly" );
         }
     }
 

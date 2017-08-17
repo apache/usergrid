@@ -501,7 +501,7 @@ public class EsEntityIndexImpl implements EntityIndex,VersionedData {
             searchResponse = srb.execute().actionGet();
         }
         catch ( Throwable t ) {
-            logger.error( "Unable to communicate with Elasticsearch", t.getMessage() );
+            logger.error( "Unable to communicate with Elasticsearch: {}", t.getMessage() );
             failureMonitor.fail( "Unable to execute batch", t );
             throw t;
         }
