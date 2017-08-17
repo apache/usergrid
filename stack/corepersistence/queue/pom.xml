@@ -93,6 +93,12 @@
             <groupId>org.apache.usergrid</groupId>
             <artifactId>common</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>cassandra-all</artifactId>
+                    <groupId>org.apache.cassandra</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
 
@@ -150,18 +156,6 @@
             <groupId>org.apache.usergrid</groupId>
             <artifactId>actorsystem</artifactId>
             <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.usergrid</groupId>
-            <artifactId>common</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>cassandra-all</artifactId>
-                    <groupId>org.apache.cassandra</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <!--

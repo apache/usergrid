@@ -34,7 +34,7 @@ import java.util.Properties;
  */
 public class KeyspaceDropper {
 
-    private static final Logger logger = LoggerFactory.getLogger( AbstractTest.class );
+    private static final Logger logger = LoggerFactory.getLogger( KeyspaceDropper.class );
 
     static { dropTestKeyspaces(); }
 
@@ -57,6 +57,10 @@ public class KeyspaceDropper {
 
         dropTestKeyspace( keyspaceApp, hosts, port );
         dropTestKeyspace( keyspaceQueue, hosts, port );
+
+        // drop local test keyspaces
+        dropTestKeyspace(keyspaceApp + "_", hosts, port);
+        dropTestKeyspace(keyspaceQueue + "_", hosts, port);
     }
 
     public static void dropTestKeyspace( String keyspace, String[] hosts, int port ) {
