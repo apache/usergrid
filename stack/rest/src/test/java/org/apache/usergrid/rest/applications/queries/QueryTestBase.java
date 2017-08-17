@@ -65,7 +65,7 @@ public class QueryTestBase  extends AbstractRestIT {
             logger.info(entities[i].entrySet().toString());
         }
         //refresh the index so that they are immediately searchable
-        this.waitForQueueDrainAndRefreshIndex();
+        this.waitForQueueDrainAndRefreshIndex(1000);
 
         return entities;
     }
