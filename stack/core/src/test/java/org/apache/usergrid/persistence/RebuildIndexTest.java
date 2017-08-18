@@ -77,7 +77,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
     @Test( timeout = 120000 )
     public void rebuildOneCollectionIndex() throws Exception {
 
-        logger.info( "Started rebuildIndex()" );
+        logger.info( "Started rebuildOneCollectionIndex()" );
 
         String rand = RandomStringUtils.randomAlphanumeric( 5 );
         final UUID appId = setup.createApplication( "org_" + rand, "app_" + rand );
@@ -172,7 +172,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
     }
 
 
-    @Test( timeout = 120000 )
+    @Test( timeout = 240000 )
     public void rebuildIndex() throws Exception {
 
         logger.info( "Started rebuildIndex()" );
@@ -234,7 +234,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
         }
 
         logger.info( "Created {} entities", ENTITIES_TO_INDEX );
-        app.waitForQueueDrainAndRefreshIndex(15000);
+        app.waitForQueueDrainAndRefreshIndex(30000);
 
         // ----------------- test that we can read them, should work fine
 
@@ -301,7 +301,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
     @Test( timeout = 120000 )
     public void rebuildIndexGeo() throws Exception {
 
-        logger.info( "Started rebuildIndex()" );
+        logger.info( "Started rebuildIndexGeo()" );
 
         String rand = RandomStringUtils.randomAlphanumeric( 5 );
         final UUID appId = setup.createApplication( "org_" + rand, "app_" + rand );
@@ -414,7 +414,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
     @Test( timeout = 120000 )
     public void rebuildUpdatedSince() throws Exception {
 
-        logger.info( "Started rebuildIndex()" );
+        logger.info( "Started rebuildUpdatedSince()" );
 
         String rand = RandomStringUtils.randomAlphanumeric( 5 );
         final UUID appId = setup.createApplication( "org_" + rand, "app_" + rand );
@@ -436,7 +436,7 @@ public class RebuildIndexTest extends AbstractCoreIT {
 
         final Entity secondEntity = em.create( "thing",  entityData);
 
-        app.waitForQueueDrainAndRefreshIndex(5000);
+        app.waitForQueueDrainAndRefreshIndex(15000);
 
         // ----------------- test that we can read them, should work fine
 

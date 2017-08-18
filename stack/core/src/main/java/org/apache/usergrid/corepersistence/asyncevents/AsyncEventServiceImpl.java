@@ -881,6 +881,8 @@ public class AsyncEventServiceImpl implements AsyncEventService {
         final int utilityCount = indexProcessorFig.getWorkerCountUtility();
         final int indexDeadCount = indexProcessorFig.getWorkerCountDeadLetter();
         final int utilityDeadCount = indexProcessorFig.getWorkerCountUtilityDeadLetter();
+        logger.info("Starting queue workers for indexing: index={} indexDLQ={} utility={} utilityDLQ={}", indexCount, indexDeadCount,
+            utilityCount, utilityDeadCount);
 
         for (int i = 0; i < indexCount; i++) {
             startWorker(QUEUE_NAME);

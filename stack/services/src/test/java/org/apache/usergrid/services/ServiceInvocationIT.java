@@ -102,6 +102,9 @@ public class ServiceInvocationIT extends AbstractServiceIT {
 
         app.testRequest( ServiceAction.GET, 2, "users", "edanuff", "likes", "restaurants" );
 
+        // time for indexing
+        Thread.sleep(10000);
+
         app.testRequest( ServiceAction.GET, 1, "users", "edanuff", "likes", "restaurants",
                 Query.fromQL( "select * where name='Brickhouse'" ) );
 
