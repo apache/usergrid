@@ -40,9 +40,13 @@ public interface IndexProcessorFig extends GuicyFig {
 
     String ELASTICSEARCH_WORKER_COUNT_UTILITY = "elasticsearch.worker_count_utility";
 
+    String ELASTICSEARCH_WORKER_COUNT_DELETE = "elasticsearch.worker_count_delete";
+
     String ELASTICSEARCH_WORKER_COUNT_DEADLETTER = "elasticsearch.worker_count_deadletter";
 
     String ELASTICSEARCH_WORKER_COUNT_UTILITY_DEADLETTER = "elasticsearch.worker_count_utility_deadletter";
+
+    String ELASTICSEARCH_WORKER_COUNT_DELETE_DEADLETTER = "elasticsearch.worker_count_delete_deadletter";
 
     String EVENT_CONCURRENCY_FACTOR = "event.concurrency.factor";
 
@@ -105,6 +109,13 @@ public interface IndexProcessorFig extends GuicyFig {
     int getWorkerCountUtility();
 
     /**
+     * The number of worker threads used to read delete requests from the queue.
+     */
+    @Default("1")
+    @Key(ELASTICSEARCH_WORKER_COUNT_DELETE)
+    int getWorkerCountDelete();
+
+    /**
      * The number of worker threads used to read dead messages from the index dead letter queue and reload them into the index queue.
      */
     @Default("1")
@@ -117,6 +128,13 @@ public interface IndexProcessorFig extends GuicyFig {
     @Default("1")
     @Key(ELASTICSEARCH_WORKER_COUNT_UTILITY_DEADLETTER)
     int getWorkerCountUtilityDeadLetter();
+
+    /**
+     * The number of worker threads used to read dead messages from the delete dead letter queue and reload them into the delete queue.
+     */
+    @Default("1")
+    @Key(ELASTICSEARCH_WORKER_COUNT_DELETE_DEADLETTER)
+    int getWorkerCountDeleteDeadLetter();
 
     /**
      * Set the implementation to use for queuing.
