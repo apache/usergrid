@@ -20,6 +20,7 @@
 package org.apache.usergrid.corepersistence.pipeline.read.traverse;
 
 
+import org.apache.usergrid.corepersistence.asyncevents.AsyncEventQueueType;
 import org.apache.usergrid.corepersistence.asyncevents.AsyncEventService;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilder;
 import org.apache.usergrid.corepersistence.asyncevents.EventBuilderImpl;
@@ -124,7 +125,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                     final Observable<IndexOperationMessage> indexMessageObservable = eventBuilder.buildDeleteEdge(applicationScope, markedEdge);
 
                     indexMessageObservable
-                        .compose(applyCollector())
+                        .compose(applyCollector(AsyncEventQueueType.DELETE))
                         .subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
                         .subscribe();
 
@@ -139,7 +140,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                         entityDeleteResults = eventBuilder.buildEntityDelete(applicationScope, sourceNodeId);
 
                     entityDeleteResults.getIndexObservable()
-                        .compose(applyCollector())
+                        .compose(applyCollector(AsyncEventQueueType.DELETE))
                         .subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
                         .subscribe();
 
@@ -159,7 +160,7 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
                         entityDeleteResults = eventBuilder.buildEntityDelete(applicationScope, targetNodeId);
 
                     entityDeleteResults.getIndexObservable()
-                        .compose(applyCollector())
+                        .compose(applyCollector(AsyncEventQueueType.DELETE))
                         .subscribeOn(rxTaskScheduler.getAsyncIOScheduler())
                         .subscribe();
 
@@ -252,13 +253,13 @@ public abstract class AbstractReadGraphFilter extends AbstractPathFilter<Id, Id,
         }
     }
 
-    private Observable.Transformer<IndexOperationMessage, IndexOperationMessage> applyCollector() {
+    private Observable.Transformer<IndexOperationMessage, IndexOperationMessage> applyCollector(AsyncEventQueueType queueType) {
 
         return observable -> observable
             .collect(() -> new IndexOperationMessage(), (collector, single) -> collector.ingest(single))
             .filter(msg -> !msg.isEmpty())
             .doOnNext(indexOperation -> {
-                asyncEventService.queueIndexOperationMessage(indexOperation, false);
+                asyncEventService.queueIndexOperationMessage(indexOperation, queueType);
             });
 
     }
