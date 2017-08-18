@@ -93,11 +93,14 @@ public class ActivitiesServiceIT extends AbstractServiceIT {
 
         app.testRequest( ServiceAction.GET, 4, null, "users", userC.getUuid(), "feed" );
 
-        app.testRequest( ServiceAction.GET, 2, null, "users", userC.getUuid(), "feed",
-                Query.fromQL( "select * where content contains 'cookie'" ) );
+        // time for indexing
+        Thread.sleep(10000);
 
         app.testRequest( ServiceAction.GET, 1, "users", userC.getUuid(), "feed",
-                Query.fromQL( "select * where verb='post' and content contains 'cookie'" ) );
+            Query.fromQL( "select * where verb='post' and content contains 'cookie'" ) );
+
+        app.testRequest( ServiceAction.GET, 2, null, "users", userC.getUuid(), "feed",
+                Query.fromQL( "select * where content contains 'cookie'" ) );
 
         app.put( "username", "finn" );
         app.put( "email", "finn@ooo.com" );
