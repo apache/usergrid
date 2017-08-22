@@ -875,6 +875,10 @@ public class AsyncEventServiceImpl implements AsyncEventService {
             startWorker(AsyncEventQueueType.UTILITY);
         }
 
+        for (int i = 0; i < deleteCount; i++) {
+            startWorker(AsyncEventQueueType.DELETE);
+        }
+
         if( indexQueue instanceof SNSQueueManagerImpl) {
             logger.info("Queue manager implementation supports dead letters, start dead letter queue workers.");
             for (int i = 0; i < indexDeadCount; i++) {

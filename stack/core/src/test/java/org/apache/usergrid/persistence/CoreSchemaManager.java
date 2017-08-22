@@ -18,6 +18,7 @@ package org.apache.usergrid.persistence;
 
 
 import org.apache.usergrid.locking.LockManager;
+import org.apache.usergrid.persistence.core.CassandraConfig;
 import org.apache.usergrid.persistence.core.CassandraFig;
 import org.apache.usergrid.persistence.core.datastax.CQLUtils;
 import org.apache.usergrid.persistence.core.datastax.DataStaxCluster;
@@ -37,14 +38,14 @@ public class CoreSchemaManager implements SchemaManager {
     private static final Logger logger = LoggerFactory.getLogger( CoreSchemaManager.class );
 
     private final Setup setup;
-    private final CassandraFig cassandraFig;
+    private final CassandraConfig cassandraConfig;
     private final LockManager lockManager;
     private final DataStaxCluster dataStaxCluster;
 
 
     public CoreSchemaManager( final Setup setup, Injector injector ) {
         this.setup = setup;
-        this.cassandraFig = injector.getInstance( CassandraFig.class );
+        this.cassandraConfig = injector.getInstance( CassandraConfig.class );
         this.lockManager = injector.getInstance( LockManager.class );
         this.dataStaxCluster = injector.getInstance( DataStaxCluster.class );
     }
@@ -80,16 +81,21 @@ public class CoreSchemaManager implements SchemaManager {
 
     @Override
     public void destroy() {
-        logger.info( "dropping keyspaces" );
         try {
+            logger.info( "dropping application keyspace" );
             dataStaxCluster.getClusterSession()
-                .execute("DROP KEYSPACE "+ CQLUtils.quote(cassandraFig.getApplicationKeyspace()));
+                .execute("DROP KEYSPACE "+ CQLUtils.quote(cassandraConfig.getApplicationKeyspace()));
+            dataStaxCluster.waitForSchemaAgreement();
+
+            logger.info( "dropping application local keyspace" );
+            dataStaxCluster.getClusterSession()
+                .execute("DROP KEYSPACE "+ CQLUtils.quote(cassandraConfig.getApplicationLocalKeyspace()));
             dataStaxCluster.waitForSchemaAgreement();
 
             dataStaxCluster.getClusterSession().close(); // close session so it's meta will get refreshed
         }
         catch ( Exception e ) {
-            logger.error("Error dropping application keyspace: {} error: {}", cassandraFig.getApplicationKeyspace(), e);
+            logger.error("Error dropping application keyspaces: {} error: {}", cassandraConfig.getApplicationKeyspace(), e);
         }
         logger.info( "keyspaces dropped" );
         logger.info( "dropping indices" );

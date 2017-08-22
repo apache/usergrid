@@ -632,7 +632,7 @@ public class NotificationsServiceIT extends AbstractServiceNotificationIT {
 
 
         // receipts are created and queried, wait a bit longer for this to happen as indexing
-        app.waitForQueueDrainAndRefreshIndex(500);
+        app.waitForQueueDrainAndRefreshIndex(5000);
 
         // get the receipts entity IDs
         List<EntityRef> receipts = getNotificationReceipts(notification);
