@@ -20,7 +20,6 @@ package org.apache.usergrid.corepersistence.index;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import org.apache.usergrid.persistence.map.MapManager;
 import org.apache.usergrid.utils.JsonUtils;
 import org.slf4j.Logger;
